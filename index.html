@@ -57,6 +57,10 @@
     <div class="empty-icon">📚</div>
     <p>No classes yet. Create your first class to get started.</p>
   </div>
+  <div id="shared-with-me-section" class="hidden">
+    <h3 class="section-heading">Shared with me</h3>
+    <div id="shared-class-list" class="class-grid"></div>
+  </div>
 </div>
 
 <!-- ===== SCREEN: Class Detail (Lesson List) ===== -->
@@ -68,6 +72,7 @@
       <button class="btn btn-ghost" id="btn-class-stats">Stats</button>
       <button class="btn btn-ghost" id="btn-edit-class">Edit</button>
       <button class="btn btn-ghost btn-icon" id="btn-prompt-guide" title="AI Prompt Guide">💡</button>
+      <button class="btn btn-ghost" id="btn-share-class">🔗 Share</button>
       <button class="btn btn-outline" id="btn-bulk-import">⬇ Bulk Import</button>
       <button class="btn btn-primary" id="btn-new-lesson">+ Lesson</button>
     </div>
@@ -389,6 +394,63 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
     </div>
   </div>
 
+</div>
+
+<!-- ===== SCREEN: Public Share View ===== -->
+<div id="screen-share" class="screen hidden">
+  <header class="app-header">
+    <h2 id="share-class-name" class="screen-title"></h2>
+    <div class="header-actions">
+      <span id="share-owner-label" class="share-owner-label"></span>
+      <button class="btn btn-primary" id="btn-clone-shared">💾 Save to My Classes</button>
+    </div>
+  </header>
+  <div id="share-lesson-list" class="lesson-list"></div>
+  <div id="share-login-notice" class="share-login-notice hidden">
+    <p>Sign in or create an account to save this class to your library.</p>
+    <button class="btn btn-primary" id="btn-share-go-login">Sign In / Register</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: Share Class ===== -->
+<div id="modal-share" class="modal-overlay hidden">
+  <div class="modal share-modal">
+    <div class="modal-header">
+      <h3>Share Class</h3>
+      <button class="btn btn-ghost btn-sm" id="btn-share-modal-close">✕</button>
+    </div>
+
+    <!-- Share Link -->
+    <div class="share-section">
+      <h4 class="share-section-title">Share Link</h4>
+      <p class="share-section-desc">Anyone with this link can study and save a copy of this class.</p>
+      <div id="share-link-row" class="share-link-row hidden">
+        <input id="share-link-input" class="share-link-input" readonly />
+        <button class="btn btn-outline btn-sm" id="btn-copy-share-link">Copy</button>
+        <button class="btn btn-danger btn-sm" id="btn-revoke-share-link" title="Disable link">✕</button>
+      </div>
+      <button class="btn btn-outline" id="btn-generate-share-link">🔗 Generate Link</button>
+    </div>
+
+    <!-- Invite by username/email -->
+    <div class="share-section">
+      <h4 class="share-section-title">Invite by Name or Email</h4>
+      <p class="share-section-desc">They'll see this class in their "Shared with me" section.</p>
+      <div class="share-invite-row">
+        <input id="share-invite-input" class="input" placeholder="Username or email..." />
+        <button class="btn btn-primary btn-sm" id="btn-send-invite">Invite</button>
+      </div>
+      <div id="share-invite-error" class="share-error hidden"></div>
+    </div>
+
+    <!-- People with access -->
+    <div class="share-section">
+      <h4 class="share-section-title">People with Access</h4>
+      <div id="share-invite-list" class="share-invite-list">
+        <p class="share-empty-text">No one invited yet.</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ===== MODAL: AI Prompt Guide ===== -->

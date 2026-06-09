@@ -37,6 +37,7 @@ app.use("/api/attempts",require("./routes/attempts"));
 app.use("/api/stats",   require("./routes/stats"));
 app.use("/api/export",  require("./routes/exportImport"));
 app.use("/api/import",  require("./routes/exportImport"));
+app.use("/api/share",   require("./routes/share"));
 
 // ── Serve frontend with injected config ──────────────────
 const indexHtml = path.join(ROOT, "index.html");
@@ -45,6 +46,23 @@ app.get("/", (req, res) => {
   const html   = fs.readFileSync(indexHtml, "utf8");
   const config = {
     mode: "server",
+    user: req.session.userId
+      ? { id: req.session.userId, name: req.session.userName, email: req.session.userEmail }
+      : null
+  };
+  const injected = html.replace(
+    "</head>",
+    `<script>window.APP_CONFIG = ${JSON.stringify(config)};</script>\n</head>`
+  );
+  res.send(injected);
+});
+
+// Serve app for share links (frontend handles rendering)
+app.get("/share/:token", (req, res) => {
+  const html   = fs.readFileSync(indexHtml, "utf8");
+  const config = {
+    mode: "server",
+    shareToken: req.params.token,
     user: req.session.userId
       ? { id: req.session.userId, name: req.session.userName, email: req.session.userEmail }
       : null

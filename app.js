@@ -2219,6 +2219,7 @@ document.getElementById("form-login").addEventListener("submit", function(e) {
     currentUser = res.d;
     initUserNav();
     renderHome();
+    renderSharedWithMe();
     showScreen("home");
   }).catch(function() { showAuthError("login", "Network error"); });
 });
@@ -2240,6 +2241,7 @@ document.getElementById("form-register").addEventListener("submit", function(e) 
     currentUser = res.d;
     initUserNav();
     renderHome();
+    renderSharedWithMe();
     showScreen("home");
   }).catch(function() { showAuthError("register", "Network error"); });
 });
@@ -2257,10 +2259,264 @@ document.getElementById("btn-logout").addEventListener("click", function() {
 var store = IS_SERVER ? SQLiteAdapter : LocalStorageAdapter;
 
 if (IS_SERVER && !currentUser) {
-  // Server mode but not logged in — show auth
   showScreen("auth");
 } else {
   initUserNav();
   renderHome();
+  renderSharedWithMe();
   showScreen("home");
 }
+
+/* ============================
+   SHARE FEATURE
+   ============================ */
+
+// ── Shared-with-me section on home screen ──
+
+function renderSharedWithMe() {
+  if (!IS_SERVER || !currentUser) return;
+  fetch("/api/share/shared-with-me", { credentials: "same-origin" })
+    .then(function(r) { return r.json(); })
+    .then(function(classes) {
+      var section = document.getElementById("shared-with-me-section");
+      var grid    = document.getElementById("shared-class-list");
+      if (!classes.length) { section.classList.add("hidden"); return; }
+      section.classList.remove("hidden");
+      grid.innerHTML = "";
+      classes.forEach(function(cls) {
+        var card = document.createElement("div");
+        card.className = "class-card shared-class-card";
+        card.innerHTML =
+          '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
+          '<span class="class-icon">' + cls.icon + '</span>' +
+          '<div class="class-name">' + escHtml(cls.name) + '</div>' +
+          '<div class="class-meta">by ' + escHtml(cls.owner_name) + '</div>' +
+          '<div class="class-card-actions">' +
+            '<button class="btn btn-sm btn-outline" data-clone-invite="' + cls.id + '">💾 Save Copy</button>' +
+          '</div>';
+        card.addEventListener("click", function(e) {
+          if (e.target.closest("[data-clone-invite]")) return;
+          openSharedClassStudy(cls);
+        });
+        card.querySelector("[data-clone-invite]").addEventListener("click", function(e) {
+          e.stopPropagation();
+          cloneInvitedClass(cls.id, cls.name);
+        });
+        grid.appendChild(card);
+      });
+    });
+}
+
+function cloneInvitedClass(classId, name) {
+  fetch("/api/share/clone-invite/" + classId, { method: "POST", credentials: "same-origin" })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.classId) {
+        renderHome();
+        renderSharedWithMe();
+        alert('"' + name + '" saved to your classes!');
+      }
+    });
+}
+
+function openSharedClassStudy(cls) {
+  // Open the class detail but in read-only view (just lessons list)
+  state.currentClass = cls;
+  state.sharedViewMode = true;
+  document.getElementById("class-detail-name").textContent = cls.icon + " " + cls.name;
+  renderLessons();
+  showScreen("class");
+}
+
+// ── Public share token view (on page load) ──
+
+var shareToken = IS_SERVER && window.APP_CONFIG.shareToken;
+if (shareToken) {
+  fetch("/api/share/view/" + shareToken)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { showScreen("home"); return; }
+      renderShareScreen(data, shareToken);
+    });
+}
+
+function renderShareScreen(data, token) {
+  document.getElementById("share-class-name").textContent = data.cls.icon + " " + data.cls.name;
+  document.getElementById("share-owner-label").textContent = "by " + data.ownerName;
+
+  var lessonList = document.getElementById("share-lesson-list");
+  lessonList.innerHTML = "";
+  data.lessons.forEach(function(lesson) {
+    var cards = data.cards.filter(function(c) { return c.lesson_id === lesson.id; });
+    var item = document.createElement("div");
+    item.className = "lesson-item";
+    item.innerHTML =
+      '<div class="lesson-item-info">' +
+        '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
+        '<div class="lesson-meta">' + cards.length + " card" + (cards.length !== 1 ? "s" : "") + '</div>' +
+      '</div>';
+    lessonList.appendChild(item);
+  });
+
+  var cloneBtn  = document.getElementById("btn-clone-shared");
+  var loginNote = document.getElementById("share-login-notice");
+
+  if (currentUser) {
+    cloneBtn.classList.remove("hidden");
+    loginNote.classList.add("hidden");
+    cloneBtn.addEventListener("click", function() {
+      fetch("/api/share/clone/" + token, { method: "POST", credentials: "same-origin" })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.classId) {
+            alert('"' + data.cls.name + '" saved to your classes!');
+            window.location.href = "/";
+          } else {
+            alert(d.error || "Failed to save");
+          }
+        });
+    });
+  } else {
+    cloneBtn.classList.add("hidden");
+    loginNote.classList.remove("hidden");
+    document.getElementById("btn-share-go-login").addEventListener("click", function() {
+      window.location.href = "/";
+    });
+  }
+
+  showScreen("share");
+}
+
+// ── Share modal (owner) ──
+
+var shareModalClassId = null;
+
+document.getElementById("btn-share-class").addEventListener("click", function() {
+  if (!state.currentClass) return;
+  shareModalClassId = state.currentClass.id;
+  openShareModal(shareModalClassId);
+});
+
+document.getElementById("btn-share-modal-close").addEventListener("click", closeShareModal);
+document.getElementById("modal-share").addEventListener("click", function(e) {
+  if (e.target === this) closeShareModal();
+});
+
+function openShareModal(classId) {
+  document.getElementById("share-invite-input").value = "";
+  document.getElementById("share-invite-error").classList.add("hidden");
+  document.getElementById("modal-share").classList.remove("hidden");
+
+  // Load existing share link
+  loadShareLink(classId);
+  // Load invited users
+  loadInviteList(classId);
+}
+
+function closeShareModal() {
+  document.getElementById("modal-share").classList.add("hidden");
+}
+
+function loadShareLink(classId) {
+  var linkRow  = document.getElementById("share-link-row");
+  var genBtn   = document.getElementById("btn-generate-share-link");
+  var input    = document.getElementById("share-link-input");
+
+  // Check if link already exists by trying to fetch invites (we store token on generate)
+  // We use a local state cache
+  if (window._shareLinkCache && window._shareLinkCache[classId]) {
+    showShareLinkRow(window._shareLinkCache[classId]);
+  } else {
+    linkRow.classList.add("hidden");
+    genBtn.classList.remove("hidden");
+  }
+}
+
+function showShareLinkRow(token) {
+  var linkRow = document.getElementById("share-link-row");
+  var genBtn  = document.getElementById("btn-generate-share-link");
+  var input   = document.getElementById("share-link-input");
+  input.value = window.location.origin + "/share/" + token;
+  linkRow.classList.remove("hidden");
+  genBtn.classList.add("hidden");
+}
+
+document.getElementById("btn-generate-share-link").addEventListener("click", function() {
+  if (!shareModalClassId) return;
+  fetch("/api/share/link/" + shareModalClassId, { method: "POST", credentials: "same-origin" })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.token) return;
+      if (!window._shareLinkCache) window._shareLinkCache = {};
+      window._shareLinkCache[shareModalClassId] = d.token;
+      showShareLinkRow(d.token);
+    });
+});
+
+document.getElementById("btn-copy-share-link").addEventListener("click", function() {
+  var input = document.getElementById("share-link-input");
+  navigator.clipboard.writeText(input.value).then(function() {
+    var btn = document.getElementById("btn-copy-share-link");
+    btn.textContent = "✓ Copied";
+    setTimeout(function() { btn.textContent = "Copy"; }, 2000);
+  });
+});
+
+document.getElementById("btn-revoke-share-link").addEventListener("click", function() {
+  if (!shareModalClassId) return;
+  fetch("/api/share/link/" + shareModalClassId, { method: "DELETE", credentials: "same-origin" })
+    .then(function() {
+      if (window._shareLinkCache) delete window._shareLinkCache[shareModalClassId];
+      document.getElementById("share-link-row").classList.add("hidden");
+      document.getElementById("btn-generate-share-link").classList.remove("hidden");
+    });
+});
+
+function loadInviteList(classId) {
+  fetch("/api/share/invites/" + classId, { credentials: "same-origin" })
+    .then(function(r) { return r.json(); })
+    .then(function(users) {
+      var list = document.getElementById("share-invite-list");
+      if (!users.length) {
+        list.innerHTML = '<p class="share-empty-text">No one invited yet.</p>';
+        return;
+      }
+      list.innerHTML = "";
+      users.forEach(function(u) {
+        var row = document.createElement("div");
+        row.className = "share-user-row";
+        row.innerHTML =
+          '<span class="share-user-name">' + escHtml(u.name) + '</span>' +
+          '<span class="share-user-email">' + escHtml(u.email) + '</span>' +
+          '<button class="btn btn-danger btn-sm" data-remove-user="' + u.id + '">Remove</button>';
+        row.querySelector("[data-remove-user]").addEventListener("click", function() {
+          fetch("/api/share/invite/" + classId + "/" + u.id, { method: "DELETE", credentials: "same-origin" })
+            .then(function() { loadInviteList(classId); });
+        });
+        list.appendChild(row);
+      });
+    });
+}
+
+document.getElementById("btn-send-invite").addEventListener("click", function() {
+  var query = document.getElementById("share-invite-input").value.trim();
+  var errEl = document.getElementById("share-invite-error");
+  errEl.classList.add("hidden");
+  if (!query || !shareModalClassId) return;
+
+  fetch("/api/share/invite/" + shareModalClassId, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: query })
+  }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+  .then(function(res) {
+    if (!res.ok) {
+      errEl.textContent = res.d.error || "Failed to invite";
+      errEl.classList.remove("hidden");
+      return;
+    }
+    document.getElementById("share-invite-input").value = "";
+    loadInviteList(shareModalClassId);
+  });
+});

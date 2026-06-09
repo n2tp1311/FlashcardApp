@@ -65,6 +65,21 @@ db.exec(`
     PRIMARY KEY (card_id, user_id)
   );
 
+  CREATE TABLE IF NOT EXISTS class_share_links (
+    class_id   TEXT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
+    token      TEXT UNIQUE NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
+
+  CREATE TABLE IF NOT EXISTS class_invites (
+    id         TEXT PRIMARY KEY,
+    class_id   TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    invited_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    UNIQUE (class_id, user_id)
+  );
+
   CREATE INDEX IF NOT EXISTS idx_classes_user   ON classes(user_id);
   CREATE INDEX IF NOT EXISTS idx_lessons_class  ON lessons(class_id);
   CREATE INDEX IF NOT EXISTS idx_cards_lesson   ON cards(lesson_id);
@@ -72,6 +87,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_attempts_user  ON attempts(user_id);
   CREATE INDEX IF NOT EXISTS idx_attempts_cu    ON attempts(card_id, user_id);
   CREATE INDEX IF NOT EXISTS idx_states_user    ON card_states(user_id);
+  CREATE INDEX IF NOT EXISTS idx_invites_user   ON class_invites(user_id);
+  CREATE INDEX IF NOT EXISTS idx_invites_class  ON class_invites(class_id);
 `);
 
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
