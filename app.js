@@ -1954,6 +1954,79 @@ document.getElementById("bulk-import-input").addEventListener("input", function(
   bulkImportTimer = setTimeout(function() { renderBulkImportPreview(val); }, 300);
 });
 
+const AI_EXTRACTION_PROMPT = `You are a knowledge extraction assistant. Your job is to read the provided text (book chapter, paper, notes, etc.) and convert it into flashcards for a spaced-repetition study app.
+
+## Output format
+
+Output ONLY the raw import text — no explanation, no markdown fences, no extra commentary.
+
+Use this structure:
+
+\`\`\`
+# Lesson Title
+term | definition
+term | definition
+
+# Another Lesson | mcq
+question | correct answer | wrong answer 1 | wrong answer 2 | wrong answer 3
+\`\`\`
+
+Rules:
+- Each \`#\` line starts a new lesson. Group cards by topic/chapter/concept.
+- Default format is term→definition. Add \`| mcq\` after the lesson title to use multiple-choice instead.
+- One card per line. Use \`|\` as the only delimiter between fields.
+- For MCQ: exactly 5 pipe-separated fields: question | correct | wrong1 | wrong2 | wrong3
+- For term→def: exactly 2 fields: term | definition
+- Use \`$...$\` for inline math and \`$$...$$\` for display (block) math — standard LaTeX delimiters.
+- If a LaTeX expression contains \`|\` (e.g. absolute value \`$|x|$\`), write it as \`$\\lvert x \\rvert$\` instead to avoid breaking the pipe delimiter.
+- Keep definitions concise but complete — one concept per card.
+- Do NOT include blank cards, commentary lines, or section headers that aren't lessons.
+
+## Lesson organization
+
+- Create one lesson per major topic, chapter section, or concept cluster.
+- Aim for 5–30 cards per lesson. Split large topics into multiple lessons.
+- Name lessons clearly: prefer "Chapter 3: Hypothesis Testing" over just "Chapter 3".
+- Use term→def for: vocabulary, definitions, formulas, named theorems, people↔contributions.
+- Use MCQ for: nuanced distinctions, common misconceptions, "which of the following", cause-and-effect.
+
+## Card writing rules
+
+- Terms should be atomic — one concept, not a paragraph.
+- Definitions should be self-contained — readable without the term visible.
+- For formulas, put the name as the term and the formula as the definition.
+- For MCQ wrong answers: make them plausible, same grammatical form as the correct answer, and drawn from the same topic area.
+- Avoid "all of the above" / "none of the above" as options.
+- Avoid trivially obvious wrong answers.
+
+---
+
+Now extract flashcards from the following text:
+
+[PASTE YOUR TEXT HERE]`;
+
+document.getElementById("prompt-guide-text").textContent = AI_EXTRACTION_PROMPT;
+
+document.getElementById("btn-prompt-guide").addEventListener("click", function() {
+  document.getElementById("modal-prompt-guide").classList.remove("hidden");
+});
+
+document.getElementById("btn-prompt-guide-close").addEventListener("click", function() {
+  document.getElementById("modal-prompt-guide").classList.add("hidden");
+});
+
+document.getElementById("modal-prompt-guide").addEventListener("click", function(e) {
+  if (e.target === this) this.classList.add("hidden");
+});
+
+document.getElementById("btn-copy-prompt").addEventListener("click", function() {
+  navigator.clipboard.writeText(AI_EXTRACTION_PROMPT).then(function() {
+    var btn = document.getElementById("btn-copy-prompt");
+    btn.textContent = "✓ Copied!";
+    setTimeout(function() { btn.textContent = "📋 Copy Prompt"; }, 2000);
+  });
+});
+
 document.getElementById("btn-bulk-import").addEventListener("click", function() {
   if (!state.currentClass) return;
   document.getElementById("bulk-import-input").value = "";

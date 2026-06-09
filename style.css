@@ -1157,3 +1157,44 @@ code {
   .btn-lg { padding: 10px 16px; font-size: 14px; }
   .class-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ============================
+   PROMPT GUIDE MODAL
+   ============================ */
+.prompt-guide-modal {
+  max-width: 680px;
+  width: 95%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.prompt-guide-desc {
+  color: var(--text2);
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.prompt-guide-box {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.prompt-guide-box pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text1);
+}
+
+.btn-icon {
+  font-size: 18px;
+  padding: 4px 8px;
+}

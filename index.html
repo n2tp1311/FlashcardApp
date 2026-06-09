@@ -67,6 +67,7 @@
     <div class="header-actions">
       <button class="btn btn-ghost" id="btn-class-stats">Stats</button>
       <button class="btn btn-ghost" id="btn-edit-class">Edit</button>
+      <button class="btn btn-ghost btn-icon" id="btn-prompt-guide" title="AI Prompt Guide">💡</button>
       <button class="btn btn-outline" id="btn-bulk-import">⬇ Bulk Import</button>
       <button class="btn btn-primary" id="btn-new-lesson">+ Lesson</button>
     </div>
@@ -388,6 +389,23 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
     </div>
   </div>
 
+</div>
+
+<!-- ===== MODAL: AI Prompt Guide ===== -->
+<div id="modal-prompt-guide" class="modal-overlay hidden">
+  <div class="modal prompt-guide-modal">
+    <div class="modal-header">
+      <h3>AI Extraction Prompt</h3>
+      <button class="btn btn-ghost btn-sm" id="btn-prompt-guide-close">✕</button>
+    </div>
+    <p class="prompt-guide-desc">Paste this prompt into any AI (ChatGPT, Claude, Gemini…) followed by your text to generate flashcards.</p>
+    <div class="prompt-guide-box">
+      <pre id="prompt-guide-text"></pre>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="btn-copy-prompt">📋 Copy Prompt</button>
+    </div>
+  </div>
 </div>
 
 <script src="app.js"></script>
