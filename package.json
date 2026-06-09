@@ -1,0 +1,20 @@
+{
+  "name": "flashcard-app",
+  "version": "2.0.0",
+  "description": "Universal flashcard learning app",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "memorystore": "^1.6.8",
+    "node-sqlite3-wasm": "^0.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

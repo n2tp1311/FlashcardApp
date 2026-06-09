@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard App</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== SCREEN: Auth (Login / Register) ===== -->
+<div id="screen-auth" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-logo">📚</div>
+    <h1 class="auth-title">Flashcards</h1>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-auth="login">Sign In</button>
+      <button class="auth-tab" data-auth="register">Create Account</button>
+    </div>
+
+    <form id="form-login" class="auth-form">
+      <div class="auth-error hidden" id="login-error"></div>
+      <label class="form-label">Email</label>
+      <input type="email" id="login-email" class="form-input" placeholder="you@example.com" autocomplete="email">
+      <label class="form-label">Password</label>
+      <input type="password" id="login-password" class="form-input" placeholder="••••••••" autocomplete="current-password">
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px">Sign In</button>
+    </form>
+
+    <form id="form-register" class="auth-form hidden">
+      <div class="auth-error hidden" id="register-error"></div>
+      <label class="form-label">Name</label>
+      <input type="text" id="register-name" class="form-input" placeholder="Your name" autocomplete="name">
+      <label class="form-label">Email</label>
+      <input type="email" id="register-email" class="form-input" placeholder="you@example.com" autocomplete="email">
+      <label class="form-label">Password</label>
+      <input type="password" id="register-password" class="form-input" placeholder="Min. 6 characters" autocomplete="new-password">
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Home (Class List) ===== -->
+<div id="screen-home" class="screen">
+  <header class="app-header">
+    <h1 class="app-title">Flashcards</h1>
+    <div id="user-nav" class="user-nav hidden">
+      <span id="user-name-display" class="user-name"></span>
+      <button class="btn btn-ghost btn-sm" id="btn-logout">Sign Out</button>
+    </div>
+    <button class="btn btn-primary" id="btn-new-class">+ New Class</button>
+  </header>
+  <div id="class-list" class="class-grid"></div>
+  <div id="empty-home" class="empty-state hidden">
+    <div class="empty-icon">📚</div>
+    <p>No classes yet. Create your first class to get started.</p>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Class Detail (Lesson List) ===== -->
+<div id="screen-class" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-class-back">← Back</button>
+    <h2 id="class-detail-name" class="screen-title"></h2>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="btn-class-stats">Stats</button>
+      <button class="btn btn-ghost" id="btn-edit-class">Edit</button>
+      <button class="btn btn-outline" id="btn-bulk-import">⬇ Bulk Import</button>
+      <button class="btn btn-primary" id="btn-new-lesson">+ Lesson</button>
+    </div>
+  </header>
+  <div id="lesson-list" class="lesson-list"></div>
+  <div id="empty-class" class="empty-state hidden">
+    <div class="empty-icon">📝</div>
+    <p>No lessons yet. Add a lesson to this class.</p>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Lesson Detail (Card List) ===== -->
+<div id="screen-lesson" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-lesson-back">← Back</button>
+    <h2 id="lesson-detail-title" class="screen-title"></h2>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="btn-lesson-stats">Stats</button>
+      <button class="btn btn-ghost" id="btn-edit-lesson">Edit</button>
+      <button class="btn btn-primary" id="btn-study-lesson">Study</button>
+    </div>
+  </header>
+  <div class="lesson-toolbar">
+    <button class="btn btn-sm btn-outline" id="btn-add-card">+ Add Card</button>
+    <button class="btn btn-sm btn-outline" id="btn-bulk-add">+ Bulk Add</button>
+  </div>
+  <div id="card-list" class="card-list"></div>
+  <div id="empty-lesson" class="empty-state hidden">
+    <div class="empty-icon">🃏</div>
+    <p>No cards yet. Add cards to start studying.</p>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Study Setup ===== -->
+<div id="screen-setup" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-setup-back">← Back</button>
+    <h2 class="screen-title">Study Setup</h2>
+  </header>
+  <div class="setup-container">
+    <div class="setup-section">
+      <label class="setup-label">Card Count</label>
+      <div class="pill-group" id="setup-count">
+        <button class="pill" data-value="10">10</button>
+        <button class="pill" data-value="25">25</button>
+        <button class="pill" data-value="50">50</button>
+        <button class="pill active" data-value="all">All</button>
+      </div>
+    </div>
+    <div class="setup-section">
+      <label class="setup-label">Filter</label>
+      <div class="pill-group" id="setup-filter">
+        <button class="pill active" data-value="all">All Cards</button>
+        <button class="pill" data-value="learning">Still Learning</button>
+      </div>
+    </div>
+    <div class="setup-section" id="setup-direction-section">
+      <label class="setup-label">Direction (Term↔Def)</label>
+      <div class="pill-group" id="setup-direction">
+        <button class="pill active" data-value="term-def">Term → Def</button>
+        <button class="pill" data-value="def-term">Def → Term</button>
+      </div>
+    </div>
+    <div class="setup-section">
+      <label class="setup-label">Mode</label>
+      <div class="pill-group" id="setup-mode">
+        <button class="pill active" data-value="flashcard">Flashcards</button>
+        <button class="pill" data-value="quiz">Quiz</button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-start-study">Start Studying</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Flashcard Study ===== -->
+<div id="screen-flashcard" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-fc-back">✕</button>
+    <div class="fc-progress-wrap">
+      <span id="fc-progress-text">1 / 10</span>
+      <div class="progress-bar"><div id="fc-progress-fill" class="progress-fill"></div></div>
+    </div>
+    <button class="btn btn-ghost" id="btn-fc-shuffle">⇌ Shuffle</button>
+  </header>
+  <div class="fc-toolbar">
+    <button class="btn btn-sm btn-ghost" id="btn-fc-reset">↺ Reset</button>
+    <button class="btn btn-sm btn-ghost" id="btn-fc-study-hard">📌 Hard Only</button>
+  </div>
+  <div class="fc-scene" id="fc-scene">
+    <div class="fc-card" id="fc-card">
+      <div class="fc-front">
+        <div class="fc-difficulty-badge" id="fc-diff-badge"></div>
+        <div class="fc-content" id="fc-front-content"></div>
+        <div class="fc-hint">Click to flip</div>
+      </div>
+      <div class="fc-back">
+        <div class="fc-content" id="fc-back-content"></div>
+      </div>
+    </div>
+  </div>
+  <div class="fc-dots" id="fc-dots"></div>
+  <div class="fc-nav">
+    <button class="btn btn-outline btn-lg" id="btn-fc-prev">← Prev</button>
+    <div class="fc-mark-btns">
+      <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Still Learning (1)">✗ Learning</button>
+      <button class="btn btn-success btn-mark" id="btn-fc-known" title="Know It (2)">✓ Know It</button>
+    </div>
+    <button class="btn btn-outline btn-lg" id="btn-fc-next">Next →</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Quiz ===== -->
+<div id="screen-quiz" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-quiz-back">✕</button>
+    <div class="fc-progress-wrap">
+      <span id="quiz-progress-text">1 / 10</span>
+      <div class="progress-bar"><div id="quiz-progress-fill" class="progress-fill"></div></div>
+    </div>
+    <span id="quiz-score-display" class="score-display">0 / 0</span>
+  </header>
+  <div class="quiz-container">
+    <div class="quiz-question-wrap">
+      <div id="quiz-question" class="quiz-question"></div>
+    </div>
+    <div id="quiz-options" class="quiz-options"></div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Quiz Results ===== -->
+<div id="screen-results" class="screen">
+  <header class="app-header">
+    <h2 class="screen-title">Results</h2>
+  </header>
+  <div class="results-container">
+    <div class="results-ring-wrap">
+      <svg class="results-ring" viewBox="0 0 120 120">
+        <circle class="ring-track" cx="60" cy="60" r="50"/>
+        <circle class="ring-fill" id="results-ring-fill" cx="60" cy="60" r="50"/>
+      </svg>
+      <div class="results-pct" id="results-pct">0%</div>
+    </div>
+    <div class="results-grade" id="results-grade"></div>
+    <div class="results-detail" id="results-detail"></div>
+    <div class="results-actions">
+      <button class="btn btn-outline" id="btn-results-retry">↺ Retry</button>
+      <button class="btn btn-outline" id="btn-results-change">⚙ Change Setup</button>
+      <button class="btn btn-primary" id="btn-results-back">← Back to Lesson</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Stats ===== -->
+<div id="screen-stats" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-stats-back">← Back</button>
+    <h2 id="stats-title" class="screen-title">Stats</h2>
+  </header>
+  <div class="stats-tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="hardest">Hardest Cards</button>
+    <button class="tab" data-tab="all">All Attempted</button>
+  </div>
+  <div id="stats-overview" class="stats-panel active"></div>
+  <div id="stats-hardest" class="stats-panel"></div>
+  <div id="stats-all" class="stats-panel"></div>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div id="modal-overlay" class="modal-overlay hidden">
+
+  <!-- Class Form Modal -->
+  <div id="modal-class" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="modal-class-title">New Class</h3>
+      <button class="modal-close" data-modal="class">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Name</label>
+      <input type="text" id="class-name-input" class="form-input" placeholder="e.g. Machine Learning">
+      <label class="form-label">Color</label>
+      <div class="color-picker" id="color-picker"></div>
+      <label class="form-label">Icon</label>
+      <div class="icon-picker" id="icon-picker"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="class" id="btn-cancel-class">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-class">Save</button>
+    </div>
+  </div>
+
+  <!-- Lesson Form Modal -->
+  <div id="modal-lesson" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="modal-lesson-title">New Lesson</h3>
+      <button class="modal-close" data-modal="lesson">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Title</label>
+      <input type="text" id="lesson-title-input" class="form-input" placeholder="e.g. Week 1: Linear Regression">
+      <label class="form-label">Format</label>
+      <div class="pill-group" id="lesson-format-picker">
+        <button class="pill active" data-value="term-def">Term → Definition</button>
+        <button class="pill" data-value="mcq">Multiple Choice</button>
+      </div>
+      <p class="form-hint" id="format-hint">Best for vocabulary, concepts, formulas. Bulk: term | definition</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="lesson">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-lesson">Save</button>
+    </div>
+  </div>
+
+  <!-- Card Form Modal (Term-Def) -->
+  <div id="modal-card-termdef" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="modal-card-termdef-title">Add Card</h3>
+      <button class="modal-close" data-modal="card-termdef">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Term</label>
+      <textarea id="card-term-input" class="form-textarea" rows="2" placeholder="e.g. Ridge regression"></textarea>
+      <div class="preview-label">Preview:</div>
+      <div id="card-term-preview" class="latex-preview"></div>
+      <label class="form-label">Definition</label>
+      <textarea id="card-def-input" class="form-textarea" rows="3" placeholder="e.g. $\hat{\beta} = (X^TX + \lambda I)^{-1}X^Ty$"></textarea>
+      <div class="preview-label">Preview:</div>
+      <div id="card-def-preview" class="latex-preview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="card-termdef">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-termdef">Save</button>
+    </div>
+  </div>
+
+  <!-- Card Form Modal (MCQ) -->
+  <div id="modal-card-mcq" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="modal-card-mcq-title">Add Card</h3>
+      <button class="modal-close" data-modal="card-mcq">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Question</label>
+      <textarea id="card-q-input" class="form-textarea" rows="2" placeholder="e.g. What loss does AdaBoost minimize?"></textarea>
+      <div class="preview-label">Preview:</div>
+      <div id="card-q-preview" class="latex-preview"></div>
+      <label class="form-label">Correct Answer</label>
+      <input type="text" id="card-correct-input" class="form-input" placeholder="e.g. Exponential loss">
+      <div class="preview-label">Preview:</div>
+      <div id="card-correct-preview" class="latex-preview"></div>
+      <label class="form-label">Wrong Answers (3)</label>
+      <input type="text" id="card-wrong1-input" class="form-input" placeholder="Wrong answer 1">
+      <input type="text" id="card-wrong2-input" class="form-input" style="margin-top:6px" placeholder="Wrong answer 2">
+      <input type="text" id="card-wrong3-input" class="form-input" style="margin-top:6px" placeholder="Wrong answer 3">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="card-mcq">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-mcq">Save</button>
+    </div>
+  </div>
+
+  <!-- Bulk Add Modal -->
+  <div id="modal-bulk" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="modal-bulk-title">Bulk Add Cards</h3>
+      <button class="modal-close" data-modal="bulk">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="form-hint" id="bulk-hint"></p>
+      <textarea id="bulk-input" class="form-textarea" rows="10" placeholder="Paste cards here..."></textarea>
+      <div id="bulk-preview" class="bulk-preview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="bulk">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-bulk">Add Cards</button>
+    </div>
+  </div>
+
+  <!-- Bulk Lesson+Card Import Modal -->
+  <div id="modal-bulk-import" class="modal hidden">
+    <div class="modal-header">
+      <h3>Bulk Import Lessons &amp; Cards</h3>
+      <button class="modal-close" data-modal="bulk-import">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="form-hint" style="line-height:1.6">
+        Use <strong>#</strong> to start a lesson. Optionally add <code>| mcq</code> after the title for MCQ format (default is term→def).<br>
+        Then list cards below it, one per line.<br><br>
+        <strong>Term→Def:</strong> <code>term | definition</code><br>
+        <strong>MCQ:</strong> <code>question | correct | wrong1 | wrong2 | wrong3</code>
+      </p>
+      <textarea id="bulk-import-input" class="form-textarea" rows="12" placeholder="# Week 1: Linear Regression
+OLS estimator | $(X^TX)^{-1}X^Ty$
+Ridge regression | $(X^TX + \lambda I)^{-1}X^Ty$
+Bias | Systematic error in an estimator
+
+# Week 2: Classification | mcq
+What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)"></textarea>
+      <div id="bulk-import-preview" class="bulk-import-preview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="bulk-import">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-bulk-import">Import</button>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div id="modal-delete" class="modal hidden">
+    <div class="modal-header">
+      <h3>Confirm Delete</h3>
+      <button class="modal-close" data-modal="delete">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="delete-confirm-text">Are you sure?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="delete">Cancel</button>
+      <button class="btn btn-danger" id="btn-confirm-delete">Delete</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
