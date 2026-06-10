@@ -7,6 +7,10 @@ const { Database } = require("node-sqlite3-wasm");
 const DATA_DIR = path.join(__dirname, "..", "data");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
+// Remove stale lock left by a crashed process
+const lockPath = path.join(DATA_DIR, "flashcards.db.lock");
+try { fs.rmSync(lockPath, { recursive: true, force: true }); } catch (_) {}
+
 const db = new Database(path.join(DATA_DIR, "flashcards.db"));
 
 db.exec("PRAGMA foreign_keys = ON");
