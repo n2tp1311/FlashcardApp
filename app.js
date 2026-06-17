@@ -336,6 +336,42 @@ var LocalStorageAdapter = (function() {
       var attempts = (load(KEY_ATTEMPTS) || []).filter(function(a) { return a.card_id === cardId; });
       return Promise.resolve(computeStats(attempts));
     },
+    getDifficultyMap: function(cardIds) {
+      var allAttempts = load(KEY_ATTEMPTS) || [];
+      var map = {};
+      cardIds.forEach(function(id) {
+        var attempts = allAttempts.filter(function(a) { return a.card_id === id; });
+        map[id] = computeStats(attempts);
+      });
+      return Promise.resolve(map);
+    },
+    saveQuizSession: function(lessonIds, score, total) {
+      var KEY_SESSIONS = "fc-quiz-sessions";
+      var sessions = load(KEY_SESSIONS) || [];
+      var now = Date.now();
+      var pct = total > 0 ? (score / total) * 100 : 0;
+      var interval = pct >= 90 ? 7 : pct >= 70 ? 3 : pct >= 50 ? 1 : 0;
+      var nextReview = interval > 0 ? now + interval * 86400000 : now + 4 * 3600000;
+      sessions.push({ lessonIds: lessonIds, score: score, total: total, takenAt: now, nextReviewAt: nextReview });
+      save(KEY_SESSIONS, sessions);
+      return Promise.resolve();
+    },
+    getDueLessons: function(lessonIds) {
+      var KEY_SESSIONS = "fc-quiz-sessions";
+      var sessions = load(KEY_SESSIONS) || [];
+      var now = Date.now();
+      var due = [];
+      var schedule = {};
+      lessonIds.forEach(function(id) {
+        var last = null;
+        sessions.forEach(function(s) {
+          if (s.lessonIds.indexOf(id) !== -1 && (!last || s.takenAt > last.takenAt)) last = s;
+        });
+        if (!last || last.nextReviewAt <= now) due.push(id);
+        if (last) schedule[id] = Math.floor(last.nextReviewAt / 1000);
+      });
+      return Promise.resolve({ due: due, schedule: schedule });
+    },
     getLessonStats: function(lessonId) {
       var self = this;
       return self.getCards(lessonId).then(function(cards) {
@@ -797,63 +833,82 @@ function renderLessons() {
     }
     empty.classList.add("hidden");
     list.classList.remove("hidden");
-    lessons.forEach(function(lesson) {
-      var item = document.createElement("div");
-      var selected = state.selectMode && state.selectedLessonIds.indexOf(lesson.id) !== -1;
-      item.className = "lesson-item" + (selected ? " selected" : "");
-      item.innerHTML =
-        (state.selectMode
-          ? '<input type="checkbox" class="lesson-check"' + (selected ? " checked" : "") + '>'
-          : '') +
-        '<div class="lesson-info">' +
-          '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
-          '<div class="lesson-meta" id="les-meta-' + lesson.id + '">Loading...</div>' +
-          '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
-            '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="width:0%"></div></div>' +
-            '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +
+    var lessonIds = lessons.map(function(l) { return l.id; });
+
+    // Load due info for all lessons in one call, then render badges
+    store.getDueLessons(lessonIds).then(function(dueInfo) {
+      var now = Math.floor(Date.now() / 1000);
+
+      lessons.forEach(function(lesson) {
+        var item = document.createElement("div");
+        var selected = state.selectMode && state.selectedLessonIds.indexOf(lesson.id) !== -1;
+        var isDue = dueInfo.due.indexOf(lesson.id) !== -1;
+        var nextReviewAt = dueInfo.schedule && dueInfo.schedule[lesson.id];
+        var reviewLabel = "";
+        if (isDue && nextReviewAt) {
+          reviewLabel = "Due for review";
+        } else if (!isDue && nextReviewAt) {
+          var daysLeft = Math.ceil((nextReviewAt - now) / 86400);
+          reviewLabel = "Review in " + daysLeft + " day" + (daysLeft !== 1 ? "s" : "");
+        }
+
+        item.className = "lesson-item" + (selected ? " selected" : "") + (isDue ? " lesson-due" : "");
+        item.innerHTML =
+          (state.selectMode
+            ? '<input type="checkbox" class="lesson-check"' + (selected ? " checked" : "") + '>'
+            : '') +
+          '<div class="lesson-info">' +
+            '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
+            '<div class="lesson-meta" id="les-meta-' + lesson.id + '">Loading...</div>' +
+            (reviewLabel ? '<div class="lesson-due-label' + (isDue ? " is-due" : "") + '">' + reviewLabel + '</div>' : '') +
+            '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
+              '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="width:0%"></div></div>' +
+              '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +
+            '</div>' +
           '</div>' +
-        '</div>' +
-        '<span class="format-badge ' + lesson.format + '">' +
-          (lesson.format === "term-def" ? "Term↔Def" : "MCQ") +
-        '</span>' +
-        (state.selectMode
-          ? ''
-          : '<div class="lesson-actions">' +
-              '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">✏️</button>' +
-              '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">🗑️</button>' +
-            '</div>');
-      item.addEventListener("click", function(e) {
-        if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
-        if (e.target.closest("[data-les-edit],[data-les-del]")) return;
-        openLesson(lesson.id);
-      });
-      if (!state.selectMode) {
-        item.querySelector("[data-les-edit]").addEventListener("click", function(e) {
-          e.stopPropagation();
-          openEditLesson(lesson.id);
+          (isDue ? '<span class="due-badge">Due</span>' : '') +
+          '<span class="format-badge ' + lesson.format + '">' +
+            (lesson.format === "term-def" ? "Term↔Def" : "MCQ") +
+          '</span>' +
+          (state.selectMode
+            ? ''
+            : '<div class="lesson-actions">' +
+                '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">✏️</button>' +
+                '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">🗑️</button>' +
+              '</div>');
+        item.addEventListener("click", function(e) {
+          if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
+          if (e.target.closest("[data-les-edit],[data-les-del]")) return;
+          openLesson(lesson.id);
         });
-        item.querySelector("[data-les-del]").addEventListener("click", function(e) {
-          e.stopPropagation();
-          confirmDelete('Delete lesson "' + lesson.title + '" and all its cards?', function() {
-            store.deleteLesson(lesson.id).then(renderLessons);
+        if (!state.selectMode) {
+          item.querySelector("[data-les-edit]").addEventListener("click", function(e) {
+            e.stopPropagation();
+            openEditLesson(lesson.id);
           });
+          item.querySelector("[data-les-del]").addEventListener("click", function(e) {
+            e.stopPropagation();
+            confirmDelete('Delete lesson "' + lesson.title + '" and all its cards?', function() {
+              store.deleteLesson(lesson.id).then(renderLessons);
+            });
+          });
+        }
+        list.appendChild(item);
+        store.getCards(lesson.id).then(function(cards) {
+          var meta = document.getElementById("les-meta-" + lesson.id);
+          if (meta) meta.textContent = cards.length + " card" + (cards.length !== 1 ? "s" : "");
         });
-      }
-      list.appendChild(item);
-      store.getCards(lesson.id).then(function(cards) {
-        var meta = document.getElementById("les-meta-" + lesson.id);
-        if (meta) meta.textContent = cards.length + " card" + (cards.length !== 1 ? "s" : "");
-      });
-      store.getProgress("lesson", lesson.id).then(function(p) {
-        if (!p || p.total === 0) return;
-        var wrap = document.getElementById("les-prog-wrap-" + lesson.id);
-        var fill = document.getElementById("les-prog-fill-" + lesson.id);
-        var text = document.getElementById("les-prog-text-" + lesson.id);
-        if (!wrap) return;
-        var pct = Math.round(p.known / p.total * 100);
-        wrap.style.display = "";
-        fill.style.width = pct + "%";
-        text.textContent = p.known + " / " + p.total + " known (" + pct + "%)";
+        store.getProgress("lesson", lesson.id).then(function(p) {
+          if (!p || p.total === 0) return;
+          var wrap = document.getElementById("les-prog-wrap-" + lesson.id);
+          var fill = document.getElementById("les-prog-fill-" + lesson.id);
+          var text = document.getElementById("les-prog-text-" + lesson.id);
+          if (!wrap) return;
+          var pct = Math.round(p.known / p.total * 100);
+          wrap.style.display = "";
+          fill.style.width = pct + "%";
+          text.textContent = p.known + " / " + p.total + " known (" + pct + "%)";
+        });
       });
     });
   });
@@ -1377,6 +1432,29 @@ document.getElementById("btn-start-study").addEventListener("click", function() 
   startStudy(count, filter, direction, mode);
 });
 
+function getDifficultyWeight(stats) {
+  if (stats.level === "hard")   return 3;
+  if (stats.level === "medium") return 2;
+  return 1;
+}
+
+function weightedShuffle(cards, statsMap) {
+  var pool = [];
+  cards.forEach(function(c) {
+    var stats = statsMap[c.id] || { level: "new" };
+    var w = getDifficultyWeight(stats);
+    for (var i = 0; i < w; i++) pool.push(c);
+  });
+  pool = shuffle(pool);
+  // Deduplicate while preserving weighted-front order
+  var seen = {};
+  var result = [];
+  pool.forEach(function(c) {
+    if (!seen[c.id]) { seen[c.id] = true; result.push(c); }
+  });
+  return result;
+}
+
 function startStudy(count, filter, direction, mode) {
   var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
   Promise.all(ids.map(function(id) { return store.getCards(id); })).then(function(cardArrays) {
@@ -1388,38 +1466,49 @@ function startStudy(count, filter, direction, mode) {
       });
       state.studyKnownMap = knownMap;
 
-      var filtered = cards;
-      if (filter === "learning") {
-        filtered = cards.filter(function(c) { return knownMap[c.id] !== true; });
-      }
+      // Build stats map for difficulty weighting
+      store.getDifficultyMap(cards.map(function(c) { return c.id; })).then(function(statsMap) {
+        state.studyStatsMap = statsMap;
 
-      if (count !== "all") {
-        var n = parseInt(count, 10);
-        filtered = shuffle(filtered).slice(0, n);
-      } else {
-        filtered = shuffle(filtered);
-      }
+        var filtered = cards;
+        if (filter === "learning") {
+          filtered = cards.filter(function(c) { return knownMap[c.id] !== true; });
+        } else if (filter === "hard") {
+          var hard = cards.filter(function(c) {
+            var s = statsMap[c.id];
+            return !s || s.level === "hard" || s.level === "medium" || s.level === "new";
+          });
+          filtered = hard.length ? hard : cards;
+        }
 
-      if (filtered.length === 0) {
-        alert("No cards match the selected filter.");
-        return;
-      }
+        if (count !== "all") {
+          var n = parseInt(count, 10);
+          filtered = weightedShuffle(filtered, statsMap).slice(0, n);
+        } else {
+          filtered = weightedShuffle(filtered, statsMap);
+        }
 
-      state.studyDirection = direction;
-      state.studyMode = mode;
+        if (filtered.length === 0) {
+          alert("No cards match the selected filter.");
+          return;
+        }
 
-      if (mode === "flashcard") {
-        state.studyCards = filtered;
-        state.studyIndex = 0;
-        state.studyFlipped = false;
-        startFlashcards();
-      } else {
-        state.quizCards  = filtered;
-        state.quizIndex  = 0;
-        state.quizScore  = 0;
-        state.quizResults = [];
-        startQuiz();
-      }
+        state.studyDirection = direction;
+        state.studyMode = mode;
+
+        if (mode === "flashcard") {
+          state.studyCards = filtered;
+          state.studyIndex = 0;
+          state.studyFlipped = false;
+          startFlashcards();
+        } else {
+          state.quizCards  = filtered;
+          state.quizIndex  = 0;
+          state.quizScore  = 0;
+          state.quizResults = [];
+          startQuiz();
+        }
+      });
     });
   });
 }
@@ -1735,6 +1824,18 @@ function showQuizResults() {
   setTimeout(function() {
     document.getElementById("results-ring-fill").style.strokeDashoffset = offset;
   }, 100);
+
+  // Compute days until next review and show it
+  var nextDays = pct >= 90 ? 7 : pct >= 70 ? 3 : pct >= 50 ? 1 : 0;
+  var reviewMsg = nextDays > 0
+    ? "Review reminder in " + nextDays + " day" + (nextDays !== 1 ? "s" : "")
+    : "Needs more practice — review again later today";
+  document.getElementById("results-review-hint").textContent = reviewMsg;
+
+  // Save session so reminder badges update
+  if (state.studyScope) {
+    store.saveQuizSession(state.studyScope.lessonIds, score, total);
+  }
 
   showScreen("results");
 }
@@ -2233,6 +2334,15 @@ var SQLiteAdapter = (function() {
       return req("POST", "/attempts", { cardId: f.cardId, correct: f.correct, source: f.source });
     },
     getCardStats: function() { return Promise.resolve({ total: 0, correct: 0, blended: 0, level: "new" }); },
+    getDifficultyMap: function(cardIds) {
+      return req("POST", "/stats/difficulty-map", { cardIds: cardIds });
+    },
+    saveQuizSession: function(lessonIds, score, total) {
+      return req("POST", "/review/sessions", { lessonIds: lessonIds, score: score, total: total });
+    },
+    getDueLessons: function(lessonIds) {
+      return req("GET", "/review/due?lessonIds=" + lessonIds.join(","));
+    },
     getLessonStats: function(lessonId) { return req("GET", "/stats/lesson/" + lessonId); },
     getHardestCards: function(opts) {
       var scope = opts.scope;

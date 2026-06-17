@@ -38,6 +38,7 @@ app.use("/api/stats",   require("./routes/stats"));
 app.use("/api/export",  require("./routes/exportImport"));
 app.use("/api/import",  require("./routes/exportImport"));
 app.use("/api/share",   require("./routes/share"));
+app.use("/api/review",  require("./routes/review"));
 
 // ── Serve frontend with injected config ──────────────────
 const indexHtml = path.join(ROOT, "index.html");

@@ -945,7 +945,43 @@ code {
   text-align: center;
 }
 
+.results-review-hint {
+  font-size: 13px;
+  color: var(--primary);
+  background: var(--primary-light);
+  border-radius: 20px;
+  padding: 6px 14px;
+  text-align: center;
+  margin-top: 6px;
+}
+
 .results-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Due review badges */
+.due-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: #f59e0b;
+  border-radius: 10px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
+.lesson-due-label {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.lesson-due-label.is-due {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.lesson-item.lesson-due {
+  border-color: #fbbf24;
+}
 
 /* ============================
    STATS

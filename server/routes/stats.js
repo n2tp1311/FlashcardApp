@@ -140,4 +140,25 @@ router.get("/progress/class/:id", requireAuth, (req, res) => {
   res.json({ total, known });
 });
 
+// POST /api/stats/difficulty-map  { cardIds: [...] }
+router.post("/difficulty-map", requireAuth, (req, res) => {
+  const { cardIds } = req.body;
+  if (!Array.isArray(cardIds) || !cardIds.length) return res.json({});
+
+  const placeholders = cardIds.map(() => "?").join(",");
+  const attempts = db.prepare(
+    `SELECT card_id, correct FROM attempts WHERE card_id IN (${placeholders}) AND user_id = ? ORDER BY created_at`
+  ).all(...cardIds, req.session.userId);
+
+  const byCard = {};
+  attempts.forEach(a => {
+    if (!byCard[a.card_id]) byCard[a.card_id] = [];
+    byCard[a.card_id].push(a);
+  });
+
+  const map = {};
+  cardIds.forEach(id => { map[id] = computeStats(byCard[id] || []); });
+  res.json(map);
+});
+
 module.exports = router;

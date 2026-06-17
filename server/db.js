@@ -84,6 +84,18 @@ db.exec(`
     UNIQUE (class_id, user_id)
   );
 
+  CREATE TABLE IF NOT EXISTS quiz_sessions (
+    id             TEXT PRIMARY KEY,
+    user_id        TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    lesson_ids     TEXT NOT NULL,
+    score          INTEGER NOT NULL,
+    total          INTEGER NOT NULL,
+    taken_at       INTEGER NOT NULL DEFAULT (unixepoch()),
+    next_review_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_quiz_sessions_user ON quiz_sessions(user_id);
+
   CREATE INDEX IF NOT EXISTS idx_classes_user   ON classes(user_id);
   CREATE INDEX IF NOT EXISTS idx_lessons_class  ON lessons(class_id);
   CREATE INDEX IF NOT EXISTS idx_cards_lesson   ON cards(lesson_id);
