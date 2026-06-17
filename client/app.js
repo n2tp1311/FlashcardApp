@@ -1392,6 +1392,11 @@ function openSetup(scope) {
   var hasTermDef = state.studyScope.lessons.some(function(l) { return l.format !== "mcq"; });
   document.getElementById("setup-direction-section").style.display = hasTermDef ? "" : "none";
 
+  // Show order picker only when studying multiple lessons
+  var multiLesson = state.studyScope.lessons.length > 1;
+  document.getElementById("setup-order-section").style.display = multiLesson ? "" : "none";
+  if (multiLesson) setPillGroup("setup-order", "interleaved");
+
   showScreen("setup");
 }
 
@@ -1403,7 +1408,7 @@ function setPillGroup(groupId, value) {
 }
 
 // Pill group click handlers
-["setup-count","setup-filter","setup-direction","setup-mode"].forEach(function(groupId) {
+["setup-count","setup-filter","setup-direction","setup-mode","setup-order"].forEach(function(groupId) {
   document.getElementById(groupId).addEventListener("click", function(e) {
     var pill = e.target.closest(".pill");
     if (!pill) return;
@@ -1427,9 +1432,11 @@ document.getElementById("btn-start-study").addEventListener("click", function() 
   var direction = document.querySelector("#setup-direction .pill.active") ?
                   document.querySelector("#setup-direction .pill.active").dataset.value : "term-def";
   var mode      = document.querySelector("#setup-mode .pill.active").dataset.value;
+  var orderEl   = document.querySelector("#setup-order .pill.active");
+  var order     = orderEl ? orderEl.dataset.value : "interleaved";
 
-  state.setupSnapshot = { count: count, filter: filter, direction: direction, mode: mode };
-  startStudy(count, filter, direction, mode);
+  state.setupSnapshot = { count: count, filter: filter, direction: direction, mode: mode, order: order };
+  startStudy(count, filter, direction, mode, order);
 });
 
 function getDifficultyWeight(stats) {
@@ -1455,9 +1462,10 @@ function weightedShuffle(cards, statsMap) {
   return result;
 }
 
-function startStudy(count, filter, direction, mode) {
+function startStudy(count, filter, direction, mode, order) {
   var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
   Promise.all(ids.map(function(id) { return store.getCards(id); })).then(function(cardArrays) {
+    // cardArrays[i] corresponds to ids[i] — preserve lesson grouping for blocked mode
     var cards = cardArrays.reduce(function(acc, arr) { return acc.concat(arr); }, []);
     Promise.all(ids.map(function(id) { return store.getKnownMap(id); })).then(function(maps) {
       var knownMap = {};
@@ -1481,7 +1489,15 @@ function startStudy(count, filter, direction, mode) {
           filtered = hard.length ? hard : cards;
         }
 
-        if (count !== "all") {
+        if (order === "blocked" && ids.length > 1) {
+          // Blocked: shuffle within each lesson group, then concatenate
+          var grouped = cardArrays.map(function(arr) {
+            var g = arr.filter(function(c) { return filtered.some(function(f) { return f.id === c.id; }); });
+            return weightedShuffle(g, statsMap);
+          });
+          filtered = grouped.reduce(function(acc, g) { return acc.concat(g); }, []);
+          if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
+        } else if (count !== "all") {
           var n = parseInt(count, 10);
           filtered = weightedShuffle(filtered, statsMap).slice(0, n);
         } else {
