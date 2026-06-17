@@ -538,6 +538,13 @@ var state = {
   // Setup snapshot (for retry)
   setupSnapshot: null,
 
+  // Study scope (single lesson or multiple selected lessons)
+  studyScope: null,
+
+  // Multi-lesson selection mode
+  selectMode: false,
+  selectedLessonIds: [],
+
   // Cache for server-mode lookups
   currentClassLessons: []
 };
@@ -672,7 +679,7 @@ function openClass(classId) {
     state.currentClass = cls;
     var nameEl = document.getElementById("class-detail-name");
     nameEl.textContent = cls.icon + " " + cls.name;
-    renderLessons();
+    setSelectMode(false);
     showScreen("class");
   });
 }
@@ -792,8 +799,12 @@ function renderLessons() {
     list.classList.remove("hidden");
     lessons.forEach(function(lesson) {
       var item = document.createElement("div");
-      item.className = "lesson-item";
+      var selected = state.selectMode && state.selectedLessonIds.indexOf(lesson.id) !== -1;
+      item.className = "lesson-item" + (selected ? " selected" : "");
       item.innerHTML =
+        (state.selectMode
+          ? '<input type="checkbox" class="lesson-check"' + (selected ? " checked" : "") + '>'
+          : '') +
         '<div class="lesson-info">' +
           '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
           '<div class="lesson-meta" id="les-meta-' + lesson.id + '">Loading...</div>' +
@@ -805,24 +816,29 @@ function renderLessons() {
         '<span class="format-badge ' + lesson.format + '">' +
           (lesson.format === "term-def" ? "Term↔Def" : "MCQ") +
         '</span>' +
-        '<div class="lesson-actions">' +
-          '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">✏️</button>' +
-          '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">🗑️</button>' +
-        '</div>';
+        (state.selectMode
+          ? ''
+          : '<div class="lesson-actions">' +
+              '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">✏️</button>' +
+              '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">🗑️</button>' +
+            '</div>');
       item.addEventListener("click", function(e) {
+        if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
         if (e.target.closest("[data-les-edit],[data-les-del]")) return;
         openLesson(lesson.id);
       });
-      item.querySelector("[data-les-edit]").addEventListener("click", function(e) {
-        e.stopPropagation();
-        openEditLesson(lesson.id);
-      });
-      item.querySelector("[data-les-del]").addEventListener("click", function(e) {
-        e.stopPropagation();
-        confirmDelete('Delete lesson "' + lesson.title + '" and all its cards?', function() {
-          store.deleteLesson(lesson.id).then(renderLessons);
+      if (!state.selectMode) {
+        item.querySelector("[data-les-edit]").addEventListener("click", function(e) {
+          e.stopPropagation();
+          openEditLesson(lesson.id);
         });
-      });
+        item.querySelector("[data-les-del]").addEventListener("click", function(e) {
+          e.stopPropagation();
+          confirmDelete('Delete lesson "' + lesson.title + '" and all its cards?', function() {
+            store.deleteLesson(lesson.id).then(renderLessons);
+          });
+        });
+      }
       list.appendChild(item);
       store.getCards(lesson.id).then(function(cards) {
         var meta = document.getElementById("les-meta-" + lesson.id);
@@ -842,6 +858,68 @@ function renderLessons() {
     });
   });
 }
+
+/* ============================
+   MULTI-LESSON SELECTION
+   ============================ */
+
+function setSelectMode(on) {
+  state.selectMode = on;
+  state.selectedLessonIds = [];
+  document.getElementById("lesson-select-bar").classList.toggle("hidden", !on);
+  document.getElementById("btn-select-lessons").classList.toggle("active", on);
+  document.getElementById("select-all-lessons").checked = false;
+  renderLessons();
+  updateSelectBar();
+}
+
+function toggleLessonSelection(lessonId) {
+  var idx = state.selectedLessonIds.indexOf(lessonId);
+  if (idx === -1) state.selectedLessonIds.push(lessonId);
+  else state.selectedLessonIds.splice(idx, 1);
+  renderLessons();
+  updateSelectBar();
+}
+
+function updateSelectBar() {
+  var n = state.selectedLessonIds.length;
+  document.getElementById("select-count").textContent = n + " selected";
+  document.getElementById("btn-study-selected").disabled = n === 0;
+  var total = (state.currentClassLessons || []).length;
+  document.getElementById("select-all-lessons").checked = total > 0 && n === total;
+}
+
+document.getElementById("btn-select-lessons").addEventListener("click", function() {
+  setSelectMode(!state.selectMode);
+});
+
+document.getElementById("btn-select-cancel").addEventListener("click", function() {
+  setSelectMode(false);
+});
+
+document.getElementById("select-all-lessons").addEventListener("change", function() {
+  if (this.checked) {
+    state.selectedLessonIds = (state.currentClassLessons || []).map(function(l) { return l.id; });
+  } else {
+    state.selectedLessonIds = [];
+  }
+  renderLessons();
+  updateSelectBar();
+});
+
+document.getElementById("btn-study-selected").addEventListener("click", function() {
+  var ids = state.selectedLessonIds.slice();
+  if (ids.length === 0) return;
+  var lessons = (state.currentClassLessons || []).filter(function(l) {
+    return ids.indexOf(l.id) !== -1;
+  });
+  openSetup({
+    lessonIds: ids,
+    lessons: lessons,
+    returnScreen: "class",
+    title: lessons.length + " lessons selected"
+  });
+});
 
 /* ============================
    LESSON FORM MODAL
@@ -1231,16 +1309,33 @@ document.getElementById("btn-confirm-delete").addEventListener("click", function
    STUDY SETUP
    ============================ */
 
-function openSetup() {
+function openSetup(scope) {
+  // Build a study scope. Default = the single currently-open lesson.
+  state.studyScope = scope || {
+    lessonIds: [state.currentLesson.id],
+    lessons: [state.currentLesson],
+    returnScreen: "lesson",
+    title: state.currentLesson.title
+  };
+
   // Reset pills to defaults
   setPillGroup("setup-count", "all");
   setPillGroup("setup-filter", "all");
   setPillGroup("setup-direction", "term-def");
   setPillGroup("setup-mode", "flashcard");
 
-  // Hide direction for MCQ
-  var dirSection = document.getElementById("setup-direction-section");
-  dirSection.style.display = state.currentLesson && state.currentLesson.format === "mcq" ? "none" : "";
+  // Show scope label when studying more than one lesson
+  var scopeLabel = document.getElementById("setup-scope-label");
+  if (state.studyScope.lessons.length > 1) {
+    scopeLabel.textContent = "Studying " + state.studyScope.lessons.length + " lessons together";
+    scopeLabel.classList.remove("hidden");
+  } else {
+    scopeLabel.classList.add("hidden");
+  }
+
+  // Hide direction unless at least one lesson in scope is term↔def
+  var hasTermDef = state.studyScope.lessons.some(function(l) { return l.format !== "mcq"; });
+  document.getElementById("setup-direction-section").style.display = hasTermDef ? "" : "none";
 
   showScreen("setup");
 }
@@ -1262,8 +1357,13 @@ function setPillGroup(groupId, value) {
   });
 });
 
+// Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
+function returnFromStudy() {
+  showScreen(state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson");
+}
+
 document.getElementById("btn-setup-back").addEventListener("click", function() {
-  showScreen("lesson");
+  returnFromStudy();
 });
 
 document.getElementById("btn-start-study").addEventListener("click", function() {
@@ -1278,8 +1378,14 @@ document.getElementById("btn-start-study").addEventListener("click", function() 
 });
 
 function startStudy(count, filter, direction, mode) {
-  store.getCards(state.currentLesson.id).then(function(cards) {
-    store.getKnownMap(state.currentLesson.id).then(function(knownMap) {
+  var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
+  Promise.all(ids.map(function(id) { return store.getCards(id); })).then(function(cardArrays) {
+    var cards = cardArrays.reduce(function(acc, arr) { return acc.concat(arr); }, []);
+    Promise.all(ids.map(function(id) { return store.getKnownMap(id); })).then(function(maps) {
+      var knownMap = {};
+      maps.forEach(function(m) {
+        Object.keys(m).forEach(function(k) { knownMap[k] = m[k]; });
+      });
       state.studyKnownMap = knownMap;
 
       var filtered = cards;
@@ -1418,7 +1524,7 @@ document.getElementById("btn-fc-next").addEventListener("click", function() {
     renderFlashcard();
   } else {
     // Finished
-    showScreen("lesson");
+    returnFromStudy();
   }
 });
 
@@ -1466,7 +1572,7 @@ document.getElementById("btn-fc-learning").addEventListener("click", function() 
 document.getElementById("btn-fc-known").addEventListener("click", function()    { markCard(true);  });
 
 document.getElementById("btn-fc-back").addEventListener("click", function() {
-  showScreen("lesson");
+  returnFromStudy();
 });
 
 // Keyboard shortcuts for flashcards
@@ -1599,7 +1705,7 @@ document.addEventListener("keydown", function(e) {
 });
 
 document.getElementById("btn-quiz-back").addEventListener("click", function() {
-  showScreen("lesson");
+  returnFromStudy();
 });
 
 /* ============================
@@ -1635,7 +1741,7 @@ function showQuizResults() {
 
 document.getElementById("btn-results-retry").addEventListener("click", function() {
   var snap = state.setupSnapshot;
-  if (!snap) { showScreen("lesson"); return; }
+  if (!snap) { returnFromStudy(); return; }
   // Re-run with same cards (re-shuffle)
   state.quizCards  = shuffle(state.studyCards.length > 0 ? state.studyCards : state.quizCards);
   state.quizIndex  = 0;
@@ -1645,11 +1751,11 @@ document.getElementById("btn-results-retry").addEventListener("click", function(
 });
 
 document.getElementById("btn-results-change").addEventListener("click", function() {
-  openSetup();
+  openSetup(state.studyScope);
 });
 
 document.getElementById("btn-results-back").addEventListener("click", function() {
-  showScreen("lesson");
+  returnFromStudy();
 });
 
 /* ============================

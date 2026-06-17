@@ -73,10 +73,19 @@
       <button class="btn btn-ghost" id="btn-edit-class">Edit</button>
       <button class="btn btn-ghost btn-icon" id="btn-prompt-guide" title="AI Prompt Guide">💡</button>
       <button class="btn btn-ghost" id="btn-share-class">🔗 Share</button>
+      <button class="btn btn-ghost" id="btn-select-lessons">☑ Select</button>
       <button class="btn btn-outline" id="btn-bulk-import">⬇ Bulk Import</button>
       <button class="btn btn-primary" id="btn-new-lesson">+ Lesson</button>
     </div>
   </header>
+  <div id="lesson-select-bar" class="select-bar hidden">
+    <label class="select-all-label">
+      <input type="checkbox" id="select-all-lessons"> Select all
+    </label>
+    <span id="select-count" class="select-count">0 selected</span>
+    <button class="btn btn-sm btn-ghost" id="btn-select-cancel">Cancel</button>
+    <button class="btn btn-sm btn-primary" id="btn-study-selected" disabled>Study selected</button>
+  </div>
   <div id="lesson-list" class="lesson-list"></div>
   <div id="empty-class" class="empty-state hidden">
     <div class="empty-icon">📝</div>
@@ -113,6 +122,7 @@
     <h2 class="screen-title">Study Setup</h2>
   </header>
   <div class="setup-container">
+    <p id="setup-scope-label" class="setup-scope hidden"></p>
     <div class="setup-section">
       <label class="setup-label">Card Count</label>
       <div class="pill-group" id="setup-count">
