@@ -1,4 +1,6 @@
-# Universal Flashcard Learning App — Implementation Plan v2
+# Universal Flashcard Learning App — Implementation Plan v3
+
+> Last updated: 2026-06-18. See §11 for current build status and priority queue.
 
 ## 1. Project Overview
 
@@ -764,3 +766,69 @@ POST /api/import  { classes, lessons, cards, history, known }
 - [ ] Export/import preserves LaTeX delimiters and backslashes correctly
 - [ ] Stats screen: cards with LaTeX render correctly in hardest/all-attempted lists
 - [ ] Long equations don't overflow flashcard boundaries (horizontal scroll)
+
+---
+
+## 11. Current Build Status (as of 2026-06-18)
+
+### 11.1 Completed Features
+
+All Phase 1 and Phase 2 core features are shipped. The following are confirmed built and deployed:
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Auth (email/password, Google OAuth) | Done | |
+| Forgot/reset password with SMTP | Done | Dev token suppressed in production |
+| Classes & Lessons CRUD | Done | |
+| Card CRUD (one-by-one + bulk paste) | Done | Both term-def and MCQ formats |
+| LaTeX rendering (KaTeX) | Done | Inline and display math |
+| AI prompt guide with copy button | Done | |
+| Flashcard study mode | Done | 3D flip, keyboard nav, marking |
+| Quiz mode (MCQ) | Done | Auto-generated distractors, keyboard 1-4 |
+| Study setup (count, filter, direction, mode) | Done | |
+| Multi-lesson selection | Done | |
+| Progressive difficulty (weighted shuffle) | Done | Hard 3×, medium 2× |
+| Spaced repetition (score-based intervals) | Done | 7d / 3d / 1d / 4h |
+| Due badges and review hints | Done | |
+| Share (public link + invite by username) | Done | Clone into own account |
+| Per-card stats and difficulty badges | Done | Easy/Medium/Hard/New |
+| Stats screen (overview, hardest cards) | Done | |
+| Dashboard screen | Done | Server mode only; streak, accuracy, due/struggling lessons |
+| Interleaved vs Blocked card order | Done | Pill on setup screen, 2+ lessons only |
+| SQLite via WASM (Railway compatible) | Done | Lock file cleared on startup |
+| Session auth (express-session) | Done | MemoryStore, single-instance |
+| Docker + Railway deploy | Done | |
+
+### 11.2 Pending Features — Priority Order
+
+**Priority 1 — Dashboard polish** (done, but watch for edge cases)
+- Struggling lessons threshold is >40% hard-rated; revisit based on user feedback.
+
+**Priority 2 — MCQ Explanation Field**
+- Add `explanation` to card JSON data for both formats.
+- Update AI prompt guide template to emit the field.
+- Add explanation textarea to card editor.
+- Show collapsed explanation panel in quiz results per card (expands on tap).
+- Implements "delayed feedback" pattern from learning science research (see `docs/research.md`).
+
+**Priority 3 — Recall Mode**
+- New study mode: user types free-text answer, taps Reveal, self-grades.
+- Requires new setup mode option and a new study screen (or branched quiz screen).
+- Self-grade options: Easy / Hard (two-button) or thumbs up/down.
+- Evidence: free recall produces ~80% long-term retention vs ~34% for passive re-reading.
+
+**Priority 4 — FSRS Spaced Repetition** (deferred, revisit later)
+- Replace or complement fixed-interval scheduler with FSRS algorithm.
+- Open-source JS library available; only the interval-calculation step changes.
+- See `docs/decisions.md` for rationale on deferral.
+
+**Priority 5 — Confidence-Based Repetition** (deferred)
+- Post-answer 1–5 rating. Deferred due to flow interruption concern.
+
+### 11.3 Known Bugs Fixed
+
+| Bug | Fix |
+|-----|-----|
+| Modal blank-screen on close | `closeAllModals()` scoped to `#modal-overlay .modal`; defensive `.remove("hidden")` added in share/prompt-guide openers |
+| Dev reset token exposed in production | Suppressed when `NODE_ENV === "production"` |
+| SQLite lock file on container restart | Lock file `flashcards.db.lock` removed on server startup |
