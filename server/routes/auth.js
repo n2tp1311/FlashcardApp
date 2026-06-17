@@ -4,7 +4,7 @@ const express  = require("express");
 const bcrypt   = require("bcryptjs");
 const crypto   = require("crypto");
 const db       = require("../db");
-const { sendPasswordReset } = require("../mailer");
+const { sendPasswordReset } = require("../services/mailer");
 const router   = express.Router();
 
 function genId() {
