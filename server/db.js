@@ -116,6 +116,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_invites_class  ON class_invites(class_id);
 `);
 
+// Migration: add last_seen_at to card_states for per-card visit tracking
+try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catch (_) {}
+
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
 const _prepare = db.prepare.bind(db);

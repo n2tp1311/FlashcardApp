@@ -28,11 +28,28 @@ function ownCard(cardId, userId) {
 router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   if (!ownLesson(req.params.lessonId, req.session.userId))
     return res.status(404).json({ error: "Not found" });
+
+  const userId = req.session.userId;
+  const lessonId = req.params.lessonId;
+
+  // next_review_at is lesson-level — find most recent quiz session for this lesson
+  const sessionRow = db.prepare(
+    "SELECT next_review_at FROM quiz_sessions " +
+    "WHERE user_id = ? AND lesson_ids LIKE ? " +
+    "ORDER BY taken_at DESC LIMIT 1"
+  ).get(userId, '%"' + lessonId + '"%');
+  const next_review_at = sessionRow ? sessionRow.next_review_at : null;
+
   const rows = db.prepare(
-    "SELECT * FROM cards WHERE lesson_id = ? ORDER BY sort_order, created_at"
-  ).all(req.params.lessonId);
-  // Parse data JSON
-  res.json(rows.map(r => ({ ...r, data: JSON.parse(r.data) })));
+    "SELECT cards.*, cs.last_seen_at, " +
+    "(SELECT MAX(created_at) FROM attempts WHERE card_id = cards.id AND user_id = ?) AS last_studied_at " +
+    "FROM cards " +
+    "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
+    "WHERE cards.lesson_id = ? " +
+    "ORDER BY cards.sort_order, cards.created_at"
+  ).all(userId, userId, lessonId);
+
+  res.json(rows.map(r => ({ ...r, data: JSON.parse(r.data), next_review_at })));
 });
 
 // POST /api/lessons/:lessonId/cards
@@ -102,6 +119,39 @@ router.delete("/cards/:id", requireAuth, (req, res) => {
     return res.status(404).json({ error: "Not found" });
   db.prepare("DELETE FROM cards WHERE id = ?").run(req.params.id);
   res.status(204).end();
+});
+
+// POST /api/cards/seen  { cardIds: [...] }
+router.post("/cards/seen", requireAuth, (req, res) => {
+  const { cardIds } = req.body;
+  if (!Array.isArray(cardIds) || cardIds.length === 0)
+    return res.json({ ok: true });
+
+  const userId = req.session.userId;
+
+  // Verify ownership — all cards must belong to this user
+  const placeholders = cardIds.map(() => "?").join(",");
+  const owned = db.prepare(
+    "SELECT cards.id FROM cards " +
+    "JOIN lessons ON cards.lesson_id = lessons.id " +
+    "JOIN classes ON lessons.class_id = classes.id " +
+    `WHERE cards.id IN (${placeholders}) AND classes.user_id = ?`
+  ).all(...cardIds, userId);
+
+  if (owned.length !== cardIds.length)
+    return res.status(403).json({ error: "Forbidden" });
+
+  // Batch upsert last_seen_at — does NOT touch known or updated_at
+  const upsert = db.prepare(
+    "INSERT INTO card_states (card_id, user_id, last_seen_at) VALUES (?, ?, unixepoch()) " +
+    "ON CONFLICT(card_id, user_id) DO UPDATE SET last_seen_at = unixepoch()"
+  );
+  const batchUpsert = db.transaction((ids) => {
+    ids.forEach(id => upsert.run(id, userId));
+  });
+  batchUpsert(cardIds);
+
+  res.json({ ok: true });
 });
 
 // PUT /api/cards/states/:cardId

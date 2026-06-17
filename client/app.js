@@ -489,6 +489,7 @@ var LocalStorageAdapter = (function() {
       if (json.states)   save(KEY_STATES, json.states);
       return Promise.resolve();
     },
+    markCardsSeen: function() { return Promise.resolve(); },
     clearAll: function() {
       var all = load(KEY_LESSONS) || [];
       all.forEach(function(l) { localStorage.removeItem(CARDS_PREFIX + l.id); });
@@ -1118,6 +1119,23 @@ function renderCards() {
       contentEl.appendChild(termEl);
       contentEl.appendChild(defEl);
 
+      if (IS_SERVER) {
+        var tsDiv = document.createElement("div");
+        tsDiv.className = "card-timestamps";
+        var tsItems = [
+          { label: "Last seen", value: relativeTime(card.last_seen_at) },
+          { label: "Last studied", value: relativeTime(card.last_studied_at) },
+          { label: "Next review", value: futureRelativeTime(card.next_review_at) }
+        ];
+        tsItems.forEach(function(ts) {
+          var span = document.createElement("span");
+          span.className = "card-ts-item";
+          span.textContent = ts.label + ": " + ts.value;
+          tsDiv.appendChild(span);
+        });
+        contentEl.appendChild(tsDiv);
+      }
+
       item.querySelector("[data-card-edit]").addEventListener("click", function() {
         openEditCard(card.id);
       });
@@ -1511,6 +1529,9 @@ function startStudy(count, filter, direction, mode, order) {
 
         state.studyDirection = direction;
         state.studyMode = mode;
+
+        // Record last_seen_at for all cards in this session (fire-and-forget)
+        store.markCardsSeen(filtered.map(function(c) { return c.id; }));
 
         if (mode === "flashcard") {
           state.studyCards = filtered;
@@ -2398,6 +2419,25 @@ function escHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+function relativeTime(unixSec) {
+  if (!unixSec) return "never";
+  var diff = Math.floor(Date.now() / 1000) - unixSec;
+  if (diff < 60)           return "just now";
+  if (diff < 3600)         return Math.floor(diff / 60) + "m ago";
+  if (diff < 86400)        return Math.floor(diff / 3600) + "h ago";
+  if (diff < 7 * 86400)   return Math.floor(diff / 86400) + "d ago";
+  return Math.floor(diff / (7 * 86400)) + "w ago";
+}
+
+function futureRelativeTime(unixSec) {
+  if (!unixSec) return "not scheduled";
+  var diff = unixSec - Math.floor(Date.now() / 1000);
+  if (diff <= 0)           return "now";
+  if (diff < 3600)         return "in " + Math.floor(diff / 60) + "m";
+  if (diff < 86400)        return "in " + Math.floor(diff / 3600) + "h";
+  return "in " + Math.floor(diff / 86400) + "d";
+}
+
 /* ============================
    SERVER ADAPTER (Phase 2)
    ============================ */
@@ -2481,6 +2521,11 @@ var SQLiteAdapter = (function() {
 
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
     getDashboard: function() { return req("GET", "/stats/dashboard"); },
+
+    markCardsSeen: function(cardIds) {
+      if (!cardIds || !cardIds.length) return Promise.resolve();
+      return req("POST", "/cards/seen", { cardIds: cardIds });
+    },
 
     exportAll: function() { return req("GET", "/export"); },
     importAll: function(json) { return req("POST", "/import", json); },

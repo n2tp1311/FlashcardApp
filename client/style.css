@@ -1733,3 +1733,19 @@ code {
   .dash-summary-grid { grid-template-columns: repeat(3, 1fr); }
   .dash-streak-num { font-size: 28px; }
 }
+
+/* ============================
+   CARD TIMESTAMPS
+   ============================ */
+.card-timestamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 6px;
+}
+
+.card-ts-item {
+  font-size: 11px;
+  color: var(--text3);
+  white-space: nowrap;
+}
