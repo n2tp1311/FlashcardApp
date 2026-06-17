@@ -20,8 +20,17 @@ db.exec(`
     id            TEXT PRIMARY KEY,
     email         TEXT UNIQUE NOT NULL,
     name          TEXT NOT NULL,
-    password_hash TEXT NOT NULL,
+    password_hash TEXT,
+    google_id     TEXT UNIQUE,
+    avatar_url    TEXT,
     created_at    INTEGER NOT NULL DEFAULT (unixepoch())
+  );
+
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token      TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL,
+    used       INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS classes (

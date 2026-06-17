@@ -2372,18 +2372,59 @@ var SQLiteAdapter = (function() {
 var IS_SERVER = typeof window.APP_CONFIG !== "undefined" && window.APP_CONFIG.mode === "server";
 var currentUser = IS_SERVER && window.APP_CONFIG.user ? window.APP_CONFIG.user : null;
 
+/* ============================
+   DROPDOWN MENUS
+   ============================ */
+
+function registerDropdown(btnId, menuId) {
+  var btn  = document.getElementById(btnId);
+  var menu = document.getElementById(menuId);
+  if (!btn || !menu) return;
+  btn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    var open = !menu.classList.contains("hidden");
+    closeAllDropdowns();
+    if (!open) menu.classList.remove("hidden");
+  });
+}
+
+function closeAllDropdowns() {
+  document.querySelectorAll(".dropdown-menu").forEach(function(m) { m.classList.add("hidden"); });
+}
+
+document.addEventListener("click", closeAllDropdowns);
+
+registerDropdown("btn-class-menu",  "class-dropdown-menu");
+registerDropdown("btn-lesson-menu", "lesson-dropdown-menu");
+registerDropdown("btn-user-menu",   "user-dropdown-menu");
+
+/* ============================
+   AUTH UI
+   ============================ */
+
+function showAuthPanel(which) {
+  ["form-login","form-register","form-forgot","form-reset"].forEach(function(id) {
+    document.getElementById(id).classList.add("hidden");
+  });
+  document.getElementById("auth-tabs").classList.toggle("hidden", which === "forgot" || which === "reset");
+  document.querySelectorAll(".auth-tab").forEach(function(t) {
+    t.classList.toggle("active", t.dataset.auth === which);
+  });
+  if (which === "login" || which === "register") {
+    document.getElementById("form-" + which).classList.remove("hidden");
+  } else {
+    document.getElementById("form-" + which).classList.remove("hidden");
+  }
+}
+
 function showAuthScreen() {
   currentUser = null;
-  // Always reset to login tab
-  document.querySelectorAll(".auth-tab").forEach(function(t) {
-    t.classList.toggle("active", t.dataset.auth === "login");
-  });
-  document.getElementById("form-login").classList.remove("hidden");
-  document.getElementById("form-register").classList.add("hidden");
+  showAuthPanel("login");
   document.getElementById("login-email").value = "";
   document.getElementById("login-password").value = "";
   clearAuthError("login");
   clearAuthError("register");
+  clearAuthError("forgot");
   showScreen("auth");
 }
 
@@ -2392,27 +2433,33 @@ function initUserNav() {
   if (!IS_SERVER || !currentUser) { nav.classList.add("hidden"); return; }
   nav.classList.remove("hidden");
   document.getElementById("user-name-display").textContent = currentUser.name;
+  document.getElementById("user-dropdown-email").textContent = currentUser.email || "";
+  // Show/hide Google link option based on server config
+  var linkBtn = document.getElementById("btn-link-google");
+  if (linkBtn && window.APP_CONFIG && window.APP_CONFIG.googleEnabled) {
+    linkBtn.classList.remove("hidden");
+  } else if (linkBtn) {
+    linkBtn.classList.add("hidden");
+  }
 }
 
 // Auth tab switching
 document.querySelectorAll(".auth-tab").forEach(function(tab) {
   tab.addEventListener("click", function() {
-    document.querySelectorAll(".auth-tab").forEach(function(t) { t.classList.remove("active"); });
-    this.classList.add("active");
-    var which = this.dataset.auth;
-    document.getElementById("form-login").classList.toggle("hidden", which !== "login");
-    document.getElementById("form-register").classList.toggle("hidden", which !== "register");
+    showAuthPanel(this.dataset.auth);
   });
 });
 
 function showAuthError(formId, msg) {
   var el = document.getElementById(formId + "-error");
+  if (!el) return;
   el.textContent = msg;
   el.classList.remove("hidden");
 }
 
 function clearAuthError(formId) {
   var el = document.getElementById(formId + "-error");
+  if (!el) return;
   el.textContent = "";
   el.classList.add("hidden");
 }
@@ -2460,7 +2507,93 @@ document.getElementById("form-register").addEventListener("submit", function(e) 
   }).catch(function() { showAuthError("register", "Network error"); });
 });
 
+// Forgot password
+document.getElementById("btn-forgot-password").addEventListener("click", function() {
+  showAuthPanel("forgot");
+  document.getElementById("forgot-email").value = document.getElementById("login-email").value;
+});
+document.getElementById("btn-back-to-login").addEventListener("click", function() {
+  showAuthPanel("login");
+});
+document.getElementById("btn-send-reset").addEventListener("click", function() {
+  clearAuthError("forgot");
+  document.getElementById("forgot-success").classList.add("hidden");
+  var email = document.getElementById("forgot-email").value.trim();
+  if (!email) { showAuthError("forgot", "Please enter your email"); return; }
+  fetch("/api/auth/forgot-password", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: email })
+  }).then(function(r) { return r.json(); })
+  .then(function(d) {
+    var successEl = document.getElementById("forgot-success");
+    successEl.classList.remove("hidden");
+    if (d._devResetUrl) {
+      successEl.textContent = "Dev mode — reset link: " + d._devResetUrl;
+    } else {
+      successEl.textContent = "If that email exists, a reset link has been sent. Check your inbox.";
+    }
+  }).catch(function() { showAuthError("forgot", "Network error"); });
+});
+
+// Reset password (shown when page loaded with ?token=)
+(function() {
+  var resetToken = IS_SERVER && window.APP_CONFIG && window.APP_CONFIG.resetToken;
+  if (!resetToken) return;
+  showAuthPanel("reset");
+  document.getElementById("btn-do-reset").addEventListener("click", function() {
+    clearAuthError("reset");
+    var pw  = document.getElementById("reset-password").value;
+    var pw2 = document.getElementById("reset-password2").value;
+    if (pw.length < 6) { showAuthError("reset", "Password must be at least 6 characters"); return; }
+    if (pw !== pw2)    { showAuthError("reset", "Passwords do not match"); return; }
+    fetch("/api/auth/reset-password", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: resetToken, password: pw })
+    }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+    .then(function(res) {
+      if (!res.ok) { showAuthError("reset", res.d.error || "Reset failed"); return; }
+      currentUser = res.d;
+      initUserNav();
+      renderHome();
+      renderSharedWithMe();
+      history.replaceState({}, "", "/");
+      showScreen("home");
+    }).catch(function() { showAuthError("reset", "Network error"); });
+  });
+})();
+
+// Check URL params for Google auth errors/success
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get("auth_error")) {
+    var msgs = {
+      google_cancelled: "Google sign-in was cancelled.",
+      google_failed: "Google sign-in failed. Please try again.",
+      google_already_linked: "This Google account is already linked to another user."
+    };
+    var msg = msgs[params.get("auth_error")] || "Authentication error.";
+    showAuthError("login", msg);
+    showAuthPanel("login");
+    history.replaceState({}, "", "/");
+  }
+  if (params.get("google_linked") === "1") {
+    history.replaceState({}, "", "/");
+  }
+})();
+
+// Google sign-in section visibility
+(function() {
+  if (IS_SERVER && window.APP_CONFIG && window.APP_CONFIG.googleEnabled) {
+    document.getElementById("google-auth-section").classList.remove("hidden");
+  }
+})();
+
 document.getElementById("btn-logout").addEventListener("click", function() {
+  closeAllDropdowns();
   fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" })
     .then(function() { showAuthScreen(); });
 });

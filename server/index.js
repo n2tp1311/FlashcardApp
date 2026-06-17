@@ -47,6 +47,7 @@ app.get("/", (req, res) => {
   const html   = fs.readFileSync(indexHtml, "utf8");
   const config = {
     mode: "server",
+    googleEnabled: !!process.env.GOOGLE_CLIENT_ID,
     user: req.session.userId
       ? { id: req.session.userId, name: req.session.userName, email: req.session.userEmail }
       : null
@@ -68,6 +69,17 @@ app.get("/share/:token", (req, res) => {
       ? { id: req.session.userId, name: req.session.userName, email: req.session.userEmail }
       : null
   };
+  const injected = html.replace(
+    "</head>",
+    `<script>window.APP_CONFIG = ${JSON.stringify(config)};</script>\n</head>`
+  );
+  res.send(injected);
+});
+
+// Reset-password page (serves app with reset token in config)
+app.get("/reset-password", (req, res) => {
+  const html   = fs.readFileSync(indexHtml, "utf8");
+  const config = { mode: "server", resetToken: req.query.token || null, user: null };
   const injected = html.replace(
     "</head>",
     `<script>window.APP_CONFIG = ${JSON.stringify(config)};</script>\n</head>`
