@@ -87,8 +87,11 @@ router.post("/forgot-password", async (req, res) => {
   try {
     const result = await sendPasswordReset(user.email, user.name, resetUrl);
     if (!result.ok && result.reason === "no_smtp") {
-      // Dev fallback: return token directly so it can be tested
-      return res.json({ ok: true, _devResetUrl: resetUrl });
+      if (process.env.NODE_ENV !== "production") {
+        // Dev-only fallback: return token in response for local testing
+        return res.json({ ok: true, _devResetUrl: resetUrl });
+      }
+      // In production with no SMTP, silently succeed — don't expose token
     }
   } catch (e) {
     console.error("[forgot-password]", e.message);
