@@ -161,4 +161,115 @@ router.post("/difficulty-map", requireAuth, (req, res) => {
   res.json(map);
 });
 
+// GET /api/stats/dashboard
+router.get("/dashboard", requireAuth, (req, res) => {
+  const uid = req.session.userId;
+
+  // Summary counts
+  const totalClasses  = db.prepare("SELECT COUNT(*) AS n FROM classes WHERE user_id = ?").get(uid).n;
+  const totalLessons  = db.prepare(
+    "SELECT COUNT(*) AS n FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+  ).get(uid).n;
+  const totalCards    = db.prepare(
+    "SELECT COUNT(*) AS n FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+  ).get(uid).n;
+  const totalSessions = db.prepare("SELECT COUNT(*) AS n FROM quiz_sessions WHERE user_id = ?").get(uid).n;
+  const attRow        = db.prepare("SELECT COUNT(*) AS total, SUM(correct) AS correct_count FROM attempts WHERE user_id = ?").get(uid);
+
+  // Difficulty breakdown — compute via existing helper on all user cards
+  const allCardIds = db.prepare(
+    "SELECT ca.id FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+  ).all(uid).map(r => r.id);
+
+  const withStats = getCardsWithStats(allCardIds, uid);
+  const diffBreakdown = { new: 0, easy: 0, medium: 0, hard: 0 };
+  withStats.forEach(({ stats }) => { diffBreakdown[stats.level] = (diffBreakdown[stats.level] || 0) + 1; });
+
+  // Due for review — build latest next_review_at per lesson from sessions
+  const allLessons = db.prepare(
+    "SELECT l.id, l.title, c.name AS class_name FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+  ).all(uid);
+  const sessions = db.prepare(
+    "SELECT lesson_ids, next_review_at FROM quiz_sessions WHERE user_id = ? ORDER BY taken_at DESC"
+  ).all(uid);
+
+  const latestReview = {};
+  sessions.forEach(s => {
+    let ids;
+    try { ids = JSON.parse(s.lesson_ids); } catch { return; }
+    ids.forEach(lid => {
+      if (!(lid in latestReview) || s.next_review_at > latestReview[lid])
+        latestReview[lid] = s.next_review_at;
+    });
+  });
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const dueForReview = allLessons.filter(l => (latestReview[l.id] || 0) <= nowSec && latestReview[l.id]);
+
+  // Struggling lessons — lessons with >40% of attempted cards rated "hard"
+  const attemptRows = db.prepare(
+    "SELECT a.card_id, a.correct, l.id AS lesson_id, l.title, c.name AS class_name " +
+    "FROM attempts a " +
+    "JOIN cards ca ON a.card_id = ca.id " +
+    "JOIN lessons l ON ca.lesson_id = l.id " +
+    "JOIN classes c ON l.class_id = c.id " +
+    "WHERE c.user_id = ? AND a.user_id = ? " +
+    "ORDER BY l.id, ca.id, a.created_at"
+  ).all(uid, uid);
+
+  const lessonCardAttempts = {};
+  const lessonMeta = {};
+  attemptRows.forEach(r => {
+    if (!lessonCardAttempts[r.lesson_id]) lessonCardAttempts[r.lesson_id] = {};
+    if (!lessonCardAttempts[r.lesson_id][r.card_id]) lessonCardAttempts[r.lesson_id][r.card_id] = [];
+    lessonCardAttempts[r.lesson_id][r.card_id].push({ correct: r.correct });
+    lessonMeta[r.lesson_id] = { id: r.lesson_id, title: r.title, class_name: r.class_name };
+  });
+
+  const strugglingLessons = [];
+  Object.keys(lessonCardAttempts).forEach(lid => {
+    const cards = Object.values(lessonCardAttempts[lid]);
+    const hardCount = cards.filter(atts => computeStats(atts).level === "hard").length;
+    const hardRatio = hardCount / cards.length;
+    if (hardRatio > 0.4) {
+      strugglingLessons.push({ ...lessonMeta[lid], hardRatio });
+    }
+  });
+  strugglingLessons.sort((a, b) => b.hardRatio - a.hardRatio);
+
+  // Study streak — consecutive days with at least one session
+  const days = db.prepare(
+    "SELECT DISTINCT date(taken_at, 'unixepoch') AS day FROM quiz_sessions WHERE user_id = ? ORDER BY day DESC"
+  ).all(uid).map(r => r.day);
+
+  let streak = 0;
+  if (days.length) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const msPerDay = 86400000;
+    // startDay=0 if studied today, 1 if last study was yesterday (still counts as active streak)
+    const startDay = (days[0] === todayStr) ? 0 : 1;
+    for (let i = 0; i < days.length; i++) {
+      const expectedDate = new Date(Date.now() - (i + startDay) * msPerDay)
+        .toISOString().slice(0, 10);
+      if (days[i] === expectedDate) streak++;
+      else break;
+    }
+  }
+
+  res.json({
+    summary: {
+      classes:      totalClasses,
+      lessons:      totalLessons,
+      cards:        totalCards,
+      quizSessions: totalSessions,
+      attempts:     attRow.total
+    },
+    accuracy:          { correct: attRow.correct_count || 0, total: attRow.total || 0 },
+    diffBreakdown,
+    dueForReview,
+    strugglingLessons,
+    streak
+  });
+});
+
 module.exports = router;

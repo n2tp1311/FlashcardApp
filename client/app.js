@@ -606,14 +606,14 @@ function openModal(id) {
 
 function closeModal(id) {
   document.getElementById("modal-" + id).classList.add("hidden");
-  var anyOpen = Array.from(document.querySelectorAll(".modal")).some(function(m) {
+  var anyOpen = Array.from(document.querySelectorAll("#modal-overlay .modal")).some(function(m) {
     return !m.classList.contains("hidden");
   });
   if (!anyOpen) document.getElementById("modal-overlay").classList.add("hidden");
 }
 
 function closeAllModals() {
-  document.querySelectorAll(".modal").forEach(function(m) { m.classList.add("hidden"); });
+  document.querySelectorAll("#modal-overlay .modal").forEach(function(m) { m.classList.add("hidden"); });
   document.getElementById("modal-overlay").classList.add("hidden");
 }
 
@@ -2075,6 +2075,111 @@ document.getElementById("btn-stats-back").addEventListener("click", function() {
 });
 
 /* ============================
+   DASHBOARD
+   ============================ */
+
+function renderDashboard() {
+  var loadEl  = document.getElementById("dash-loading");
+  var errEl   = document.getElementById("dash-error");
+  loadEl.classList.remove("hidden");
+  errEl.classList.add("hidden");
+  ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
+   "dash-due-list","dash-struggle-list","dash-streak-card"].forEach(function(id) {
+    document.getElementById(id).innerHTML = "";
+  });
+
+  store.getDashboard().then(function(d) {
+    loadEl.classList.add("hidden");
+
+    // Streak card (shown first)
+    document.getElementById("dash-streak-card").innerHTML =
+      '<div class="dash-streak-icon">🔥</div>' +
+      '<div class="dash-streak-num">' + d.streak + '</div>' +
+      '<div class="dash-streak-label">day' + (d.streak === 1 ? "" : "s") + ' streak</div>' +
+      (d.streak === 0 ? '<div class="dash-streak-hint">Study today to start your streak!</div>' : "");
+
+    // Summary stat cards
+    var summaryGrid = document.getElementById("dash-summary-grid");
+    [
+      [d.summary.classes,      "Classes"],
+      [d.summary.lessons,      "Lessons"],
+      [d.summary.cards,        "Cards"],
+      [d.summary.quizSessions, "Quiz Sessions"],
+      [d.summary.attempts,     "Attempts"]
+    ].forEach(function(item) {
+      summaryGrid.innerHTML += statCard(item[0], item[1]);
+    });
+
+    // Accuracy bar
+    var accPct = d.accuracy.total > 0
+      ? Math.round(d.accuracy.correct / d.accuracy.total * 100) : 0;
+    document.getElementById("dash-accuracy-wrap").innerHTML =
+      '<div class="dash-accuracy-label">' + accPct + '% — ' +
+        d.accuracy.correct + ' / ' + d.accuracy.total + ' correct</div>' +
+      '<div class="dash-accuracy-bar">' +
+        '<div class="dash-accuracy-fill" style="width:' + accPct + '%"></div>' +
+      '</div>';
+
+    // Difficulty breakdown
+    var db_ = d.diffBreakdown;
+    var totalCards = db_.new + db_.easy + db_.medium + db_.hard;
+    document.getElementById("dash-diff-breakdown").innerHTML =
+      diffBar("New",    db_.new,    totalCards, "#9ca3af") +
+      diffBar("Easy",   db_.easy,   totalCards, "#16a34a") +
+      diffBar("Medium", db_.medium, totalCards, "#d97706") +
+      diffBar("Hard",   db_.hard,   totalCards, "#dc2626");
+
+    // Due for review
+    var dueList = document.getElementById("dash-due-list");
+    var dueBadge = document.getElementById("dash-due-badge");
+    dueBadge.textContent = d.dueForReview.length || "";
+    if (!d.dueForReview.length) {
+      dueList.innerHTML = '<div class="dash-empty-note">All caught up — no lessons due.</div>';
+    } else {
+      dueList.innerHTML = d.dueForReview.map(function(l) {
+        return dashLessonRow(l, "due");
+      }).join("");
+    }
+
+    // Struggling lessons
+    var strugList = document.getElementById("dash-struggle-list");
+    var strugBadge = document.getElementById("dash-struggle-badge");
+    strugBadge.textContent = d.strugglingLessons.length || "";
+    if (!d.strugglingLessons.length) {
+      strugList.innerHTML = '<div class="dash-empty-note">No struggling lessons — great work!</div>';
+    } else {
+      strugList.innerHTML = d.strugglingLessons.map(function(l) {
+        return dashLessonRow(l, "struggle");
+      }).join("");
+    }
+
+  }).catch(function() {
+    loadEl.classList.add("hidden");
+    errEl.classList.remove("hidden");
+  });
+}
+
+function dashLessonRow(lesson, type) {
+  var badge = type === "struggle"
+    ? '<span class="diff-pill hard">' + Math.round(lesson.hardRatio * 100) + '% hard</span>'
+    : '<span class="due-badge">Due</span>';
+  return '<div class="dash-lesson-row">' +
+    '<div class="dash-lesson-info">' +
+      '<span class="dash-lesson-title">' + escHtml(lesson.title) + '</span>' +
+      '<span class="dash-lesson-class">' + escHtml(lesson.class_name) + '</span>' +
+    '</div>' + badge + '</div>';
+}
+
+document.getElementById("btn-dashboard").addEventListener("click", function() {
+  renderDashboard();
+  showScreen("dashboard");
+});
+
+document.getElementById("btn-dashboard-back").addEventListener("click", function() {
+  showScreen("home");
+});
+
+/* ============================
    BULK LESSON + CARD IMPORT
    ============================ */
 
@@ -2213,6 +2318,7 @@ Now extract flashcards from the following text:
 document.getElementById("prompt-guide-text").textContent = AI_EXTRACTION_PROMPT;
 
 document.getElementById("btn-prompt-guide").addEventListener("click", function() {
+  document.querySelector("#modal-prompt-guide .modal").classList.remove("hidden");
   document.getElementById("modal-prompt-guide").classList.remove("hidden");
 });
 
@@ -2358,6 +2464,7 @@ var SQLiteAdapter = (function() {
     },
 
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
+    getDashboard: function() { return req("GET", "/stats/dashboard"); },
 
     exportAll: function() { return req("GET", "/export"); },
     importAll: function(json) { return req("POST", "/import", json); },
@@ -2609,6 +2716,7 @@ if (IS_SERVER && !currentUser) {
   showScreen("auth");
 } else {
   initUserNav();
+  if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
   renderHome();
   renderSharedWithMe();
   showScreen("home");
@@ -2752,6 +2860,7 @@ document.getElementById("modal-share").addEventListener("click", function(e) {
 function openShareModal(classId) {
   document.getElementById("share-invite-input").value = "";
   document.getElementById("share-invite-error").classList.add("hidden");
+  document.querySelector("#modal-share .modal").classList.remove("hidden");
   document.getElementById("modal-share").classList.remove("hidden");
 
   // Load existing share link

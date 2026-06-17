@@ -94,6 +94,7 @@
         </div>
       </div>
     </div>
+    <button class="btn btn-ghost" id="btn-dashboard" style="display:none">📊 Dashboard</button>
     <button class="btn btn-primary" id="btn-new-class">+ New Class</button>
   </header>
   <div id="class-list" class="class-grid"></div>
@@ -105,6 +106,39 @@
     <h3 class="section-heading">Shared with me</h3>
     <div id="shared-class-list" class="class-grid"></div>
   </div>
+</div>
+
+<!-- ===== SCREEN: Dashboard ===== -->
+<div id="screen-dashboard" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-dashboard-back">← Back</button>
+    <h2 class="screen-title">My Dashboard</h2>
+  </header>
+  <div id="dash-loading" class="empty-state"><p>Loading…</p></div>
+  <div id="dash-error" class="empty-state hidden"><p>Failed to load dashboard.</p></div>
+
+  <div id="dash-streak-card" class="dash-streak-card"></div>
+
+  <h3 class="dash-section-label">Overview</h3>
+  <div class="dash-summary-grid" id="dash-summary-grid"></div>
+
+  <h3 class="dash-section-label">Overall Accuracy</h3>
+  <div id="dash-accuracy-wrap" class="dash-accuracy-wrap"></div>
+
+  <h3 class="dash-section-label">Card Difficulty Breakdown</h3>
+  <div id="dash-diff-breakdown"></div>
+
+  <h3 class="dash-section-label">
+    Due for Review
+    <span class="dash-badge" id="dash-due-badge"></span>
+  </h3>
+  <div id="dash-due-list" class="dash-lesson-list"></div>
+
+  <h3 class="dash-section-label">
+    Struggling Lessons
+    <span class="dash-badge dash-badge-warn" id="dash-struggle-badge"></span>
+  </h3>
+  <div id="dash-struggle-list" class="dash-lesson-list"></div>
 </div>
 
 <!-- ===== SCREEN: Class Detail (Lesson List) ===== -->
