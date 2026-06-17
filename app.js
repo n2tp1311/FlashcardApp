@@ -1954,50 +1954,48 @@ document.getElementById("bulk-import-input").addEventListener("input", function(
   bulkImportTimer = setTimeout(function() { renderBulkImportPreview(val); }, 300);
 });
 
-const AI_EXTRACTION_PROMPT = `You are a knowledge extraction assistant. Your job is to read the provided text (book chapter, paper, notes, etc.) and convert it into flashcards for a spaced-repetition study app.
+const AI_EXTRACTION_PROMPT = `You are a knowledge extraction assistant. Convert the provided text into spaced-repetition flashcards.
 
 ## Output format
 
-Output ONLY the raw import text — no explanation, no markdown fences, no extra commentary.
+Output ONLY raw import text — no explanation, no markdown fences, no commentary.
+Every line is either a lesson header or a card:
 
-Use this structure:
+- Header: \`# Lesson Title | mcq\`
+- Card: \`question | correct | wrong1 | wrong2 | wrong3\`
 
-\`\`\`
-# Lesson Title
-term | definition
-term | definition
+Additional formatting rules:
 
-# Another Lesson | mcq
-question | correct answer | wrong answer 1 | wrong answer 2 | wrong answer 3
-\`\`\`
-
-Rules:
-- Each \`#\` line starts a new lesson. Group cards by topic/chapter/concept.
-- Default format is term→definition. Add \`| mcq\` after the lesson title to use multiple-choice instead.
-- One card per line. Use \`|\` as the only delimiter between fields.
-- For MCQ: exactly 5 pipe-separated fields: question | correct | wrong1 | wrong2 | wrong3
-- For term→def: exactly 2 fields: term | definition
-- Use \`$...$\` for inline math and \`$$...$$\` for display (block) math — standard LaTeX delimiters.
-- If a LaTeX expression contains \`|\` (e.g. absolute value \`$|x|$\`), write it as \`$\\lvert x \\rvert$\` instead to avoid breaking the pipe delimiter.
-- Keep definitions concise but complete — one concept per card.
-- Do NOT include blank cards, commentary lines, or section headers that aren't lessons.
+- Use \`$...$\` for inline math and \`$$...$$\` for display math (LaTeX).
+- Write \`$\\lvert x \\rvert$\` instead of \`$|x|$\` to avoid breaking the delimiter.
 
 ## Lesson organization
 
-- Create one lesson per major topic, chapter section, or concept cluster.
-- Aim for 5–30 cards per lesson. Split large topics into multiple lessons.
-- Name lessons clearly: prefer "Chapter 3: Hypothesis Testing" over just "Chapter 3".
-- Use term→def for: vocabulary, definitions, formulas, named theorems, people↔contributions.
-- Use MCQ for: nuanced distinctions, common misconceptions, "which of the following", cause-and-effect.
+- One lesson per major topic or concept cluster. Aim for 5–30 cards; combine short sections if needed.
+- Name split lessons to reflect progression: "Topic — Foundations", "Topic — Methods", "Topic — Application".
+- Every key term, formula, and named concept must appear in at least one card.
+- No two cards in the same lesson test the same fact.
+
+## Card order (progressive learning)
+
+Order cards within each lesson basic to advanced:
+
+- Tier 1 (~30%): definitions and vocabulary — "What is X?" / "Which best describes X?"
+- Tier 2 (~40%): relationships, comparisons, cause-and-effect — "How does X differ from Y?" / "What happens when X?"
+- Tier 3 (~30%): application and edge cases — "A researcher finds X — what does this indicate?" / "Under which condition does X apply?"
 
 ## Card writing rules
 
-- Terms should be atomic — one concept, not a paragraph.
-- Definitions should be self-contained — readable without the term visible.
-- For formulas, put the name as the term and the formula as the definition.
-- For MCQ wrong answers: make them plausible, same grammatical form as the correct answer, and drawn from the same topic area.
-- Avoid "all of the above" / "none of the above" as options.
-- Avoid trivially obvious wrong answers.
+- One concept per card, written at recall level.
+- Use specific stems; avoid "Which of the following is true about X?"
+- Avoid grammatical clues in the stem that hint at the correct answer.
+- Avoid negation in the correct answer; test what something is, not what it isn't.
+- For formulas, ask "Which formula represents X?" with all four options as formulas.
+- Length rule: all four options must be the same length (±1 word). Rewrite until they match.
+- Distractors must be plausible, grammatically parallel, and drawn from concepts in the source text.
+- Each distractor must be wrong for a different reason.
+- Skip any concept that cannot produce 3 plausible distractors.
+- Avoid "all of the above" and "none of the above".
 
 ---
 
