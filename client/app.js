@@ -854,6 +854,7 @@ function renderLessons() {
         }
 
         item.className = "lesson-item" + (selected ? " selected" : "") + (isDue ? " lesson-due" : "");
+        item.dataset.lessonId = lesson.id;
         item.innerHTML =
           (state.selectMode
             ? '<input type="checkbox" class="lesson-check"' + (selected ? " checked" : "") + '>'
@@ -933,7 +934,14 @@ function toggleLessonSelection(lessonId) {
   var idx = state.selectedLessonIds.indexOf(lessonId);
   if (idx === -1) state.selectedLessonIds.push(lessonId);
   else state.selectedLessonIds.splice(idx, 1);
-  renderLessons();
+  // Update only the affected item — no full re-render needed
+  var item = document.querySelector('[data-lesson-id="' + lessonId + '"]');
+  if (item) {
+    var nowSelected = state.selectedLessonIds.indexOf(lessonId) !== -1;
+    item.classList.toggle("selected", nowSelected);
+    var check = item.querySelector(".lesson-check");
+    if (check) check.checked = nowSelected;
+  }
   updateSelectBar();
 }
 
