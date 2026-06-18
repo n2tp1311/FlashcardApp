@@ -718,6 +718,7 @@ function openClass(classId) {
     nameEl.textContent = cls.icon + " " + cls.name;
     setSelectMode(false);
     showScreen("class");
+    renderLessons();
   });
 }
 
