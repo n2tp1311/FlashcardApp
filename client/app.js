@@ -926,7 +926,21 @@ function setSelectMode(on) {
   document.getElementById("lesson-select-bar").classList.toggle("hidden", !on);
   document.getElementById("btn-select-lessons").classList.toggle("active", on);
   document.getElementById("select-all-lessons").checked = false;
-  renderLessons();
+
+  // Update existing items in-place — no full re-render needed
+  document.querySelectorAll("#lesson-list .lesson-item").forEach(function(item) {
+    item.classList.remove("selected");
+    var existing = item.querySelector(".lesson-check");
+    if (on && !existing) {
+      var check = document.createElement("input");
+      check.type = "checkbox";
+      check.className = "lesson-check";
+      item.insertBefore(check, item.firstChild);
+    } else if (!on && existing) {
+      existing.remove();
+    }
+  });
+
   updateSelectBar();
 }
 
@@ -967,7 +981,14 @@ document.getElementById("select-all-lessons").addEventListener("change", functio
   } else {
     state.selectedLessonIds = [];
   }
-  renderLessons();
+  // Update items in-place — no full re-render needed
+  document.querySelectorAll("#lesson-list .lesson-item").forEach(function(item) {
+    var lessonId = item.dataset.lessonId;
+    var sel = state.selectedLessonIds.indexOf(lessonId) !== -1;
+    item.classList.toggle("selected", sel);
+    var check = item.querySelector(".lesson-check");
+    if (check) check.checked = sel;
+  });
   updateSelectBar();
 });
 
