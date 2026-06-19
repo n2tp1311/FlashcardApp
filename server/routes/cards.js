@@ -32,16 +32,8 @@ router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   const userId = req.session.userId;
   const lessonId = req.params.lessonId;
 
-  // next_review_at is lesson-level — find most recent quiz session for this lesson
-  const sessionRow = db.prepare(
-    "SELECT next_review_at FROM quiz_sessions " +
-    "WHERE user_id = ? AND lesson_ids LIKE ? " +
-    "ORDER BY taken_at DESC LIMIT 1"
-  ).get(userId, '%"' + lessonId + '"%');
-  const next_review_at = sessionRow ? sessionRow.next_review_at : null;
-
   const rows = db.prepare(
-    "SELECT cards.*, cs.last_seen_at, " +
+    "SELECT cards.*, cs.last_seen_at, cs.srs_step, cs.srs_due_at, " +
     "(SELECT MAX(created_at) FROM attempts WHERE card_id = cards.id AND user_id = ?) AS last_studied_at " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
@@ -49,7 +41,7 @@ router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
     "ORDER BY cards.sort_order, cards.created_at"
   ).all(userId, userId, lessonId);
 
-  res.json(rows.map(r => ({ ...r, data: JSON.parse(r.data), next_review_at })));
+  res.json(rows.map(r => ({ ...r, data: JSON.parse(r.data) })));
 });
 
 // POST /api/lessons/:lessonId/cards

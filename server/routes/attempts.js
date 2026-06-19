@@ -5,6 +5,9 @@ const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const router  = express.Router();
 
+// 10min, 1h, 4h, 1d, 3d, 7d, 21d
+const SRS_INTERVALS = [600, 3600, 14400, 86400, 259200, 604800, 1814400];
+
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -15,20 +18,34 @@ router.post("/", requireAuth, (req, res) => {
   if (!cardId || correct === undefined || !source)
     return res.status(400).json({ error: "cardId, correct, source required" });
 
+  const userId = req.session.userId;
+
   // Verify the card belongs to this user
   const card = db.prepare(
     "SELECT cards.id FROM cards " +
     "JOIN lessons ON cards.lesson_id = lessons.id " +
     "JOIN classes ON lessons.class_id = classes.id " +
     "WHERE cards.id = ? AND classes.user_id = ?"
-  ).get(cardId, req.session.userId);
+  ).get(cardId, userId);
   if (!card) return res.status(404).json({ error: "Card not found" });
 
   db.prepare(
     "INSERT INTO attempts (id, card_id, user_id, correct, source) VALUES (?, ?, ?, ?, ?)"
-  ).run(genId(), cardId, req.session.userId, correct ? 1 : 0, source);
+  ).run(genId(), cardId, userId, correct ? 1 : 0, source);
 
-  res.status(201).json({ ok: true });
+  // Update per-card SRS: correct → advance step, wrong → reset to 0
+  const stateRow = db.prepare(
+    "SELECT srs_step FROM card_states WHERE card_id = ? AND user_id = ?"
+  ).get(cardId, userId);
+  const curStep = stateRow ? (stateRow.srs_step || 0) : 0;
+  const newStep = correct ? Math.min(curStep + 1, SRS_INTERVALS.length - 1) : 0;
+  const dueAt   = Math.floor(Date.now() / 1000) + SRS_INTERVALS[newStep];
+  db.prepare(
+    "INSERT INTO card_states (card_id, user_id, srs_step, srs_due_at) VALUES (?, ?, ?, ?) " +
+    "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_step = excluded.srs_step, srs_due_at = excluded.srs_due_at"
+  ).run(cardId, userId, newStep, dueAt);
+
+  res.status(201).json({ ok: true, srs_step: newStep, srs_due_at: dueAt });
 });
 
 module.exports = router;

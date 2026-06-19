@@ -1155,7 +1155,7 @@ function renderCards() {
         var tsItems = [
           { label: "Last seen", value: relativeTime(card.last_seen_at) },
           { label: "Last studied", value: relativeTime(card.last_studied_at) },
-          { label: "Next review", value: futureRelativeTime(card.next_review_at) }
+          { label: "Next review", value: futureRelativeTime(card.srs_due_at) }
         ];
         tsItems.forEach(function(ts) {
           var span = document.createElement("span");
@@ -1892,11 +1892,12 @@ function showQuizResults() {
     document.getElementById("results-ring-fill").style.strokeDashoffset = offset;
   }, 100);
 
-  // Compute days until next review and show it
-  var nextDays = pct >= 90 ? 7 : pct >= 70 ? 3 : pct >= 50 ? 1 : 0;
-  var reviewMsg = nextDays > 0
-    ? "Review reminder in " + nextDays + " day" + (nextDays !== 1 ? "s" : "")
-    : "Needs more practice — review again later today";
+  // SRS schedules each card individually based on correct/wrong answers
+  var reviewMsg = pct >= 80
+    ? "Great job! Cards scheduled for spaced repetition."
+    : pct >= 50
+    ? "Cards scheduled — focus on the ones you missed."
+    : "Keep practicing — missed cards are due again soon.";
   document.getElementById("results-review-hint").textContent = reviewMsg;
 
   // Save session so reminder badges update

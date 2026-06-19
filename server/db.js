@@ -119,6 +119,10 @@ db.exec(`
 // Migration: add last_seen_at to card_states for per-card visit tracking
 try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catch (_) {}
 
+// Migration: per-card SRS intervals
+try { db.exec("ALTER TABLE card_states ADD COLUMN srs_step INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+try { db.exec("ALTER TABLE card_states ADD COLUMN srs_due_at INTEGER"); } catch (_) {}
+
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
 const _prepare = db.prepare.bind(db);
