@@ -370,7 +370,7 @@ var LocalStorageAdapter = (function() {
         if (!last || last.nextReviewAt <= now) due.push(id);
         if (last) schedule[id] = Math.floor(last.nextReviewAt / 1000);
       });
-      return Promise.resolve({ due: due, schedule: schedule });
+      return Promise.resolve({ due: due, schedule: schedule, dueCounts: {} });
     },
     getLessonStats: function(lessonId) {
       var self = this;
@@ -845,13 +845,17 @@ function renderLessons() {
         var item = document.createElement("div");
         var selected = state.selectMode && state.selectedLessonIds.indexOf(lesson.id) !== -1;
         var isDue = dueInfo.due.indexOf(lesson.id) !== -1;
+        var dueCount = (dueInfo.dueCounts && dueInfo.dueCounts[lesson.id]) || 0;
         var nextReviewAt = dueInfo.schedule && dueInfo.schedule[lesson.id];
         var reviewLabel = "";
-        if (isDue && nextReviewAt) {
-          reviewLabel = "Due for review";
-        } else if (!isDue && nextReviewAt) {
-          var daysLeft = Math.ceil((nextReviewAt - now) / 86400);
-          reviewLabel = "Review in " + daysLeft + " day" + (daysLeft !== 1 ? "s" : "");
+        if (isDue) {
+          reviewLabel = dueCount + " card" + (dueCount !== 1 ? "s" : "") + " due for review";
+        } else if (nextReviewAt) {
+          var secsLeft = nextReviewAt - now;
+          var reviewLabel2 = secsLeft < 3600 ? Math.ceil(secsLeft / 60) + "m"
+            : secsLeft < 86400 ? Math.ceil(secsLeft / 3600) + "h"
+            : Math.ceil(secsLeft / 86400) + "d";
+          reviewLabel = "Next review in " + reviewLabel2;
         }
 
         item.className = "lesson-item" + (selected ? " selected" : "") + (isDue ? " lesson-due" : "");
@@ -869,7 +873,7 @@ function renderLessons() {
               '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +
             '</div>' +
           '</div>' +
-          (isDue ? '<span class="due-badge">Due</span>' : '') +
+          (isDue ? '<span class="due-badge">' + dueCount + ' due</span>' : '') +
           '<span class="format-badge ' + lesson.format + '">' +
             (lesson.format === "term-def" ? "Term↔Def" : "MCQ") +
           '</span>' +
@@ -1176,6 +1180,20 @@ function renderCards() {
       });
       list.appendChild(item);
     });
+
+    // Cache cards and update "Review X due" button
+    state.currentLessonCards = cards;
+    if (IS_SERVER) {
+      var nowSec = Math.floor(Date.now() / 1000);
+      var dueCount = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec; }).length;
+      var dueBtn = document.getElementById("btn-review-due");
+      if (dueCount > 0) {
+        dueBtn.textContent = "Review " + dueCount + " due";
+        dueBtn.classList.remove("hidden");
+      } else {
+        dueBtn.classList.add("hidden");
+      }
+    }
   });
 }
 
@@ -1194,6 +1212,29 @@ document.getElementById("btn-lesson-stats").addEventListener("click", function()
 
 document.getElementById("btn-study-lesson").addEventListener("click", function() {
   if (state.currentLesson) openSetup();
+});
+
+document.getElementById("btn-review-due").addEventListener("click", function() {
+  if (!state.currentLesson) return;
+  var nowSec = Math.floor(Date.now() / 1000);
+  var dueCards = (state.currentLessonCards || []).filter(function(c) {
+    return c.srs_due_at && c.srs_due_at <= nowSec;
+  });
+  if (!dueCards.length) { alert("No cards are due for review right now."); return; }
+  state.studyScope = {
+    lessonIds: [state.currentLesson.id],
+    lessons: [state.currentLesson],
+    returnScreen: "lesson",
+    title: state.currentLesson.title
+  };
+  state.studyDirection = "term-def";
+  state.studyMode = "quiz";
+  state.quizCards  = shuffle(dueCards);
+  state.quizIndex  = 0;
+  state.quizScore  = 0;
+  state.quizResults = [];
+  store.markCardsSeen(dueCards.map(function(c) { return c.id; }));
+  startQuiz();
 });
 
 /* ============================
@@ -1527,7 +1568,10 @@ function startStudy(count, filter, direction, mode, order) {
         state.studyStatsMap = statsMap;
 
         var filtered = cards;
-        if (filter === "learning") {
+        if (filter === "due") {
+          var nowSec2 = Math.floor(Date.now() / 1000);
+          filtered = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
+        } else if (filter === "learning") {
           filtered = cards.filter(function(c) { return knownMap[c.id] !== true; });
         } else if (filter === "hard") {
           var hard = cards.filter(function(c) {
@@ -2146,6 +2190,40 @@ document.getElementById("btn-stats-back").addEventListener("click", function() {
    DASHBOARD
    ============================ */
 
+function openDueReview(lessonId, classId) {
+  store.getClass(classId).then(function(cls) {
+    if (!cls) return;
+    state.currentClass = cls;
+    store.getLessons(classId).then(function(lessons) {
+      state.currentClassLessons = lessons;
+      var lesson = lessons.find(function(l) { return l.id === lessonId; });
+      if (!lesson) return;
+      state.currentLesson = lesson;
+      document.getElementById("lesson-detail-title").textContent = lesson.title;
+      store.getCards(lessonId).then(function(cards) {
+        state.currentLessonCards = cards;
+        var nowSec = Math.floor(Date.now() / 1000);
+        var dueCards = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec; });
+        if (!dueCards.length) { renderCards(); showScreen("lesson"); return; }
+        state.studyScope = {
+          lessonIds: [lessonId],
+          lessons: [lesson],
+          returnScreen: "lesson",
+          title: lesson.title
+        };
+        state.studyDirection = "term-def";
+        state.studyMode = "quiz";
+        state.quizCards  = shuffle(dueCards);
+        state.quizIndex  = 0;
+        state.quizScore  = 0;
+        state.quizResults = [];
+        store.markCardsSeen(dueCards.map(function(c) { return c.id; }));
+        startQuiz();
+      });
+    });
+  });
+}
+
 function renderDashboard() {
   var loadEl  = document.getElementById("dash-loading");
   var errEl   = document.getElementById("dash-error");
@@ -2201,12 +2279,22 @@ function renderDashboard() {
     var dueList = document.getElementById("dash-due-list");
     var dueBadge = document.getElementById("dash-due-badge");
     dueBadge.textContent = d.dueForReview.length || "";
+    dueList.innerHTML = "";
     if (!d.dueForReview.length) {
-      dueList.innerHTML = '<div class="dash-empty-note">All caught up — no lessons due.</div>';
+      dueList.innerHTML = '<div class="dash-empty-note">All caught up — no cards due.</div>';
     } else {
-      dueList.innerHTML = d.dueForReview.map(function(l) {
-        return dashLessonRow(l, "due");
-      }).join("");
+      d.dueForReview.forEach(function(l) {
+        var row = document.createElement("div");
+        row.className = "dash-lesson-row dash-lesson-clickable";
+        row.innerHTML =
+          '<div class="dash-lesson-info">' +
+            '<span class="dash-lesson-title">' + escHtml(l.title) + '</span>' +
+            '<span class="dash-lesson-class">' + escHtml(l.class_name) + '</span>' +
+          '</div>' +
+          '<span class="due-badge">' + l.dueCount + ' due</span>';
+        row.addEventListener("click", function() { openDueReview(l.id, l.class_id); });
+        dueList.appendChild(row);
+      });
     }
 
     // Struggling lessons

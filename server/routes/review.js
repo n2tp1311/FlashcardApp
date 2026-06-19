@@ -32,39 +32,41 @@ router.post("/sessions", requireAuth, (req, res) => {
   res.status(201).json({ ok: true });
 });
 
-// GET /api/review/due  — returns lesson ids that are due (or never studied)
+// GET /api/review/due  — returns lesson ids that have SRS-due cards
 // Query: ?lessonIds=id1,id2,...
 router.get("/due", requireAuth, (req, res) => {
   const ids = req.query.lessonIds ? req.query.lessonIds.split(",") : [];
-  if (!ids.length) return res.json({ due: [] });
+  if (!ids.length) return res.json({ due: [], schedule: {}, dueCounts: {} });
 
-  const now = Math.floor(Date.now() / 1000);
+  const userId = req.session.userId;
+  const now    = Math.floor(Date.now() / 1000);
+  const placeholders = ids.map(() => "?").join(",");
 
-  // For each lesson, get the most recent session that covers it
-  const due = ids.filter(lessonId => {
-    const rows = db.prepare(
-      "SELECT next_review_at FROM quiz_sessions WHERE user_id = ? ORDER BY taken_at DESC"
-    ).all(req.session.userId);
-    const lastSession = rows.find(r => {
-      try { return JSON.parse(r.lesson_ids).includes(lessonId); } catch { return false; }
-    });
-    // Due if never studied OR past next_review_at
-    return !lastSession || lastSession.next_review_at <= now;
+  const rows = db.prepare(
+    "SELECT ca.lesson_id, cs.srs_due_at " +
+    "FROM cards ca " +
+    "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
+    `WHERE ca.lesson_id IN (${placeholders})`
+  ).all(userId, ...ids);
+
+  const dueCounts = {};
+  const nextDue   = {};
+  ids.forEach(id => { dueCounts[id] = 0; });
+
+  rows.forEach(r => {
+    if (r.srs_due_at !== null && r.srs_due_at <= now) {
+      dueCounts[r.lesson_id] = (dueCounts[r.lesson_id] || 0) + 1;
+    } else if (r.srs_due_at && r.srs_due_at > now) {
+      if (!nextDue[r.lesson_id] || r.srs_due_at < nextDue[r.lesson_id])
+        nextDue[r.lesson_id] = r.srs_due_at;
+    }
   });
 
-  // Also return next_review_at for each non-due lesson so the UI can show "review in N days"
+  const due      = ids.filter(id => dueCounts[id] > 0);
   const schedule = {};
-  ids.forEach(lessonId => {
-    const rows = db.prepare(
-      "SELECT next_review_at FROM quiz_sessions WHERE user_id = ? ORDER BY taken_at DESC"
-    ).all(req.session.userId);
-    const lastSession = rows.find(r => {
-      try { return JSON.parse(r.lesson_ids).includes(lessonId); } catch { return false; }
-    });
-    if (lastSession) schedule[lessonId] = lastSession.next_review_at;
-  });
+  ids.forEach(id => { if (!dueCounts[id] && nextDue[id]) schedule[id] = nextDue[id]; });
 
-  res.json({ due, schedule });
+  res.json({ due, schedule, dueCounts });
 });
 
 module.exports = router;

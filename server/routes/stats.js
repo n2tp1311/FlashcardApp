@@ -185,26 +185,28 @@ router.get("/dashboard", requireAuth, (req, res) => {
   const diffBreakdown = { new: 0, easy: 0, medium: 0, hard: 0 };
   withStats.forEach(({ stats }) => { diffBreakdown[stats.level] = (diffBreakdown[stats.level] || 0) + 1; });
 
-  // Due for review — build latest next_review_at per lesson from sessions
+  // Due for review — lessons with at least 1 card whose srs_due_at has passed
   const allLessons = db.prepare(
-    "SELECT l.id, l.title, c.name AS class_name FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+    "SELECT l.id, l.title, l.class_id, c.name AS class_name FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
   ).all(uid);
-  const sessions = db.prepare(
-    "SELECT lesson_ids, next_review_at FROM quiz_sessions WHERE user_id = ? ORDER BY taken_at DESC"
-  ).all(uid);
-
-  const latestReview = {};
-  sessions.forEach(s => {
-    let ids;
-    try { ids = JSON.parse(s.lesson_ids); } catch { return; }
-    ids.forEach(lid => {
-      if (!(lid in latestReview) || s.next_review_at > latestReview[lid])
-        latestReview[lid] = s.next_review_at;
-    });
-  });
 
   const nowSec = Math.floor(Date.now() / 1000);
-  const dueForReview = allLessons.filter(l => (latestReview[l.id] || 0) <= nowSec && latestReview[l.id]);
+  const dueRows = db.prepare(
+    "SELECT ca.lesson_id, COUNT(*) AS due_count " +
+    "FROM cards ca " +
+    "JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
+    "JOIN lessons l ON ca.lesson_id = l.id " +
+    "JOIN classes c ON l.class_id = c.id " +
+    "WHERE c.user_id = ? AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
+    "GROUP BY ca.lesson_id"
+  ).all(uid, uid, nowSec);
+
+  const dueLessonIds = new Set(dueRows.map(r => r.lesson_id));
+  const dueCountMap  = {};
+  dueRows.forEach(r => { dueCountMap[r.lesson_id] = r.due_count; });
+  const dueForReview = allLessons
+    .filter(l => dueLessonIds.has(l.id))
+    .map(l => ({ ...l, dueCount: dueCountMap[l.id] || 0 }));
 
   // Struggling lessons — lessons with >40% of attempted cards rated "hard"
   const attemptRows = db.prepare(
