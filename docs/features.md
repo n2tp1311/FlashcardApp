@@ -10,22 +10,26 @@
 ## Classes & Lessons
 - Create/edit/delete classes (icon, color)
 - Create/edit/delete lessons (term↔def or MCQ format)
-- Bulk import via pipe-delimited text
-- AI prompt guide with copy button
+- Bulk import via pipe-delimited text (MCQ: `question | correct | wrong1 [| wrong2 | wrong3 | wrong4]`)
+- AI prompt guide with copy button; AI generates 2–4 distractors per card
+
+## Spaced Repetition
+- Per-card SRS intervals: 10min → 1h → 4h → 1d → 3d → 7d → 21d (step advances on correct, resets on wrong)
+- Due badges on lesson cards showing count of cards due for review
+- "Review N due" button on lesson screen launches quiz filtered to due cards only
+- Due counts on class cards (home screen) and dashboard grouped by class
+- Dashboard due lessons grouped by class with clickable rows to launch review
 
 ## Study
 - Flashcard mode (flip, mark known/learning)
-- Quiz mode (MCQ, auto-generated distractors for term-def)
+- Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def)
+- MCQ cards support 1–4 distractors (2–5 total choices); dynamic add/remove in card editor
 - Study setup: card count, filter, direction, mode
 - Multi-lesson selection → combined study session
 - Progressive difficulty: hard cards weighted 3×, medium 2×
 - "Hard First" filter for focused review
+- "Due Only" filter to quiz only SRS-due cards
 - Interleaved vs Blocked card order for multi-lesson sessions (pill on setup screen, hidden for single-lesson)
-
-## Spaced Repetition
-- Quiz sessions saved with next-review date
-- Due badges on lesson list (amber, "Review in N days")
-- Review hint on results screen showing next review interval
 
 ## Share
 - Public share link (anyone can study or clone)
