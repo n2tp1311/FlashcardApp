@@ -50,6 +50,11 @@ router.post("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   if (!lesson) return res.status(404).json({ error: "Not found" });
   const { format, data } = req.body;
   if (!format || !data) return res.status(400).json({ error: "format and data required" });
+  if (format === "mcq") {
+    if (!data.question || !data.correct || !Array.isArray(data.distractors) ||
+        data.distractors.length < 1 || data.distractors.length > 4)
+      return res.status(400).json({ error: "mcq requires question, correct, and 1–4 distractors" });
+  }
   const count = db.prepare("SELECT COUNT(*) as n FROM cards WHERE lesson_id = ?")
     .get(req.params.lessonId).n;
   const id = genId();
@@ -67,6 +72,15 @@ router.post("/lessons/:lessonId/cards/bulk", requireAuth, (req, res) => {
   const { cards } = req.body;
   if (!Array.isArray(cards) || cards.length === 0)
     return res.status(400).json({ error: "cards array required" });
+
+  for (let i = 0; i < cards.length; i++) {
+    const c = cards[i];
+    if (c.format === "mcq") {
+      if (!c.data || !c.data.question || !c.data.correct || !Array.isArray(c.data.distractors) ||
+          c.data.distractors.length < 1 || c.data.distractors.length > 4)
+        return res.status(400).json({ error: "mcq card " + i + ": requires question, correct, and 1–4 distractors" });
+    }
+  }
 
   const startOrder = db.prepare("SELECT COUNT(*) as n FROM cards WHERE lesson_id = ?")
     .get(req.params.lessonId).n;

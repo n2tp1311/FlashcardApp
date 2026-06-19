@@ -434,10 +434,9 @@
       <input type="text" id="card-correct-input" class="form-input" placeholder="e.g. Exponential loss">
       <div class="preview-label">Preview:</div>
       <div id="card-correct-preview" class="latex-preview"></div>
-      <label class="form-label">Wrong Answers (3)</label>
-      <input type="text" id="card-wrong1-input" class="form-input" placeholder="Wrong answer 1">
-      <input type="text" id="card-wrong2-input" class="form-input" style="margin-top:6px" placeholder="Wrong answer 2">
-      <input type="text" id="card-wrong3-input" class="form-input" style="margin-top:6px" placeholder="Wrong answer 3">
+      <label class="form-label">Wrong Answers <span id="mcq-distractor-count"></span></label>
+      <div id="mcq-distractor-list"></div>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-add-distractor" style="align-self:flex-start;margin-top:2px">+ Add choice</button>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="card-mcq">Cancel</button>

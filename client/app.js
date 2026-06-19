@@ -119,14 +119,13 @@ function parseBulkMCQ(raw) {
     if (!trimmed) return;
     var protected_ = protectLatexPipes(trimmed);
     var parts = protected_.split("|");
-    if (parts.length < 5) return;
-    var q       = restoreLatexPipes(parts[0].trim());
-    var correct = restoreLatexPipes(parts[1].trim());
-    var d1      = restoreLatexPipes(parts[2].trim());
-    var d2      = restoreLatexPipes(parts[3].trim());
-    var d3      = restoreLatexPipes(parts[4].trim());
-    if (q && correct && d1 && d2 && d3) {
-      cards.push({ format: "mcq", data: { question: q, correct: correct, distractors: [d1, d2, d3] } });
+    if (parts.length < 3) return;
+    var q           = restoreLatexPipes(parts[0].trim());
+    var correct     = restoreLatexPipes(parts[1].trim());
+    var distractors = parts.slice(2).map(function(p) { return restoreLatexPipes(p.trim()); }).filter(Boolean);
+    if (distractors.length > 4) distractors = distractors.slice(0, 4);
+    if (q && correct && distractors.length >= 1) {
+      cards.push({ format: "mcq", data: { question: q, correct: correct, distractors: distractors } });
     }
   });
   return cards;
@@ -1018,7 +1017,7 @@ document.getElementById("btn-study-selected").addEventListener("click", function
 
 var FORMAT_HINTS = {
   "term-def": "Best for vocabulary, concepts, formulas. Bulk: term | definition",
-  "mcq": "Best for exam prep. Bulk: question | correct | wrong1 | wrong2 | wrong3"
+  "mcq": "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]"
 };
 
 function initLessonFormatPicker(selectedFormat) {
@@ -1257,6 +1256,56 @@ makePreviewDebounce("card-def-input",     "card-def-preview");
 makePreviewDebounce("card-q-input",       "card-q-preview");
 makePreviewDebounce("card-correct-input", "card-correct-preview");
 
+function mcqDistractorRow(value) {
+  var row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:6px;align-items:center;margin-top:6px";
+  var input = document.createElement("input");
+  input.type = "text";
+  input.className = "form-input";
+  input.placeholder = "Wrong answer";
+  input.value = value || "";
+  var rm = document.createElement("button");
+  rm.type = "button";
+  rm.className = "icon-btn danger";
+  rm.textContent = "✕";
+  rm.addEventListener("click", function() {
+    row.parentNode.removeChild(row);
+    syncDistractorUI();
+  });
+  row.appendChild(input);
+  row.appendChild(rm);
+  return row;
+}
+
+function syncDistractorUI() {
+  var list = document.getElementById("mcq-distractor-list");
+  var rows = list.querySelectorAll("div");
+  var count = rows.length;
+  document.getElementById("mcq-distractor-count").textContent = "(" + count + ")";
+  document.getElementById("btn-add-distractor").disabled = count >= 4;
+  rows.forEach(function(row) {
+    var rm = row.querySelector("button");
+    rm.disabled = count <= 1;
+  });
+}
+
+function clearDistractorList(values) {
+  var list = document.getElementById("mcq-distractor-list");
+  list.innerHTML = "";
+  var raw = values && values.length ? values : [""];
+  var vals = raw.length > 4 ? raw.slice(0, 4) : raw;
+  vals.forEach(function(v) { list.appendChild(mcqDistractorRow(v)); });
+  syncDistractorUI();
+}
+
+document.getElementById("btn-add-distractor").addEventListener("click", function() {
+  var list = document.getElementById("mcq-distractor-list");
+  if (list.querySelectorAll("div").length >= 4) return;
+  list.appendChild(mcqDistractorRow(""));
+  syncDistractorUI();
+  list.lastElementChild.querySelector("input").focus();
+});
+
 function openAddCard() {
   if (!state.currentLesson) return;
   state.editingCardId = null;
@@ -1273,9 +1322,7 @@ function openAddCard() {
     document.getElementById("modal-card-mcq-title").textContent = "Add Card";
     document.getElementById("card-q-input").value = "";
     document.getElementById("card-correct-input").value = "";
-    document.getElementById("card-wrong1-input").value = "";
-    document.getElementById("card-wrong2-input").value = "";
-    document.getElementById("card-wrong3-input").value = "";
+    clearDistractorList();
     document.getElementById("card-q-preview").innerHTML = "";
     document.getElementById("card-correct-preview").innerHTML = "";
     openModal("card-mcq");
@@ -1299,9 +1346,7 @@ function openEditCard(cardId) {
       document.getElementById("modal-card-mcq-title").textContent = "Edit Card";
       document.getElementById("card-q-input").value      = card.data.question;
       document.getElementById("card-correct-input").value = card.data.correct;
-      document.getElementById("card-wrong1-input").value  = card.data.distractors[0] || "";
-      document.getElementById("card-wrong2-input").value  = card.data.distractors[1] || "";
-      document.getElementById("card-wrong3-input").value  = card.data.distractors[2] || "";
+      clearDistractorList(card.data.distractors);
       renderLatex(card.data.question, document.getElementById("card-q-preview"));
       renderLatex(card.data.correct,  document.getElementById("card-correct-preview"));
       openModal("card-mcq");
@@ -1324,13 +1369,16 @@ document.getElementById("btn-save-card-termdef").addEventListener("click", funct
 });
 
 document.getElementById("btn-save-card-mcq").addEventListener("click", function() {
-  var q  = document.getElementById("card-q-input").value.trim();
-  var c  = document.getElementById("card-correct-input").value.trim();
-  var w1 = document.getElementById("card-wrong1-input").value.trim();
-  var w2 = document.getElementById("card-wrong2-input").value.trim();
-  var w3 = document.getElementById("card-wrong3-input").value.trim();
-  if (!q || !c || !w1 || !w2 || !w3) { alert("Please fill in all fields."); return; }
-  var data = { question: q, correct: c, distractors: [w1, w2, w3] };
+  var q = document.getElementById("card-q-input").value.trim();
+  var c = document.getElementById("card-correct-input").value.trim();
+  var distractors = Array.from(
+    document.getElementById("mcq-distractor-list").querySelectorAll("input")
+  ).map(function(i) { return i.value.trim(); }).filter(Boolean);
+  if (!q || !c || distractors.length === 0 || distractors.length > 4) {
+    alert("Please fill in the question, correct answer, and 1–4 wrong answers.");
+    return;
+  }
+  var data = { question: q, correct: c, distractors: distractors };
   var p;
   if (state.editingCardId) {
     p = store.updateCard(state.editingCardId, state.currentLesson.id, { data: data });
@@ -1413,7 +1461,7 @@ function openBulkAdd() {
   document.getElementById("bulk-preview").innerHTML = "";
   var hint = format === "term-def"
     ? "One card per line: term | definition\nSupports LaTeX: $\\hat{\\beta}$ or $$\\sum_{i=1}^n x_i$$"
-    : "One card per line: question | correct | wrong1 | wrong2 | wrong3";
+    : "One card per line: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]";
   document.getElementById("bulk-hint").textContent = hint;
   openModal("bulk");
   document.getElementById("bulk-input").focus();
@@ -1902,7 +1950,7 @@ document.addEventListener("keydown", function(e) {
   if (!document.getElementById("screen-quiz").classList.contains("active")) return;
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
   var num = parseInt(e.key, 10);
-  if (num >= 1 && num <= 4) answerQuiz(num - 1);
+  if (num >= 1 && num <= 5 && num <= state.quizOptions.length) answerQuiz(num - 1);
 });
 
 document.getElementById("btn-quiz-back").addEventListener("click", function() {
@@ -2449,7 +2497,7 @@ Output ONLY raw import text — no explanation, no markdown fences, no commentar
 Every line is either a lesson header or a card:
 
 - Header: \`# Lesson Title | mcq\`
-- Card: \`question | correct | wrong1 | wrong2 | wrong3\`
+- Card: \`question | correct | wrong1 [| wrong2 | wrong3 | wrong4]\`
 
 Additional formatting rules:
 
@@ -2477,11 +2525,12 @@ Order cards within each lesson basic to advanced:
 - Use specific stems; avoid "Which of the following is true about X?"
 - Avoid grammatical clues in the stem that hint at the correct answer.
 - Avoid negation in the correct answer; test what something is, not what it isn't.
-- For formulas, ask "Which formula represents X?" with all four options as formulas.
-- Length rule: all four options must be the same length (±1 word). Rewrite until they match.
+- For formulas, ask "Which formula represents X?" with all options as formulas.
+- Length rule: all options must be the same length (±1 word). Rewrite until they match.
 - Distractors must be plausible, grammatically parallel, and drawn from concepts in the source text.
 - Each distractor must be wrong for a different reason.
-- Skip any concept that cannot produce 3 plausible distractors.
+- Include 2–4 distractors (3–5 total options). Use fewer only when fewer plausible ones exist.
+- Skip any concept that cannot produce at least 1 plausible distractor.
 - Avoid "all of the above" and "none of the above".
 
 ---

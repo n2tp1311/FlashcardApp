@@ -256,6 +256,7 @@ body {
 }
 .icon-btn:hover { background: var(--surface2); color: var(--text); }
 .icon-btn.danger:hover { background: var(--danger-light); color: var(--danger); }
+.icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ============================
    LESSON LIST
