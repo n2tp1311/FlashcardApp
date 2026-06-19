@@ -228,11 +228,11 @@ Extends ceiling from ~5K to ~20K total cards.
 
 | | Format A: Term ↔ Definition | Format B: MCQ |
 |---|---|---|
-| Schema | `{ term, def }` | `{ question, correct, distractors[3] }` |
+| Schema | `{ term, def }` | `{ question, correct, distractors[1–4] }` |
 | Flashcard front | Term (with LaTeX rendering) | Question (with LaTeX rendering) |
 | Flashcard back | Definition (with LaTeX rendering) | Correct answer (with LaTeX rendering) |
-| Quiz options | 1 correct def + 3 auto-generated from same lesson | 1 correct + 3 user-provided, shuffled |
-| Bulk input | `term \| definition` per line | `question \| correct \| wrong1 \| wrong2 \| wrong3` per line |
+| Quiz options | 1 correct def + 3 auto-generated from same lesson | 1 correct + 1–4 user-provided, shuffled (2–5 total) |
+| Bulk input | `term \| definition` per line | `question \| correct \| wrong1 [\| wrong2 \| wrong3 \| wrong4]` per line |
 | Best for | Vocabulary, concepts, formulas | Exam prep, nuanced distinctions |
 
 All text fields support **inline LaTeX** (`$...$`) and **display LaTeX** (`$$...$$`). See §5.7 for full specification.
@@ -256,7 +256,7 @@ User selects:
 
 ### 5.4 Quiz Mode
 
-- 4 numbered options (keyboard 1-4)
+- 2–5 options depending on card (keyboard 1–5, bounded by option count)
 - Correct → green, wrong → red, others dim
 - Space/Enter to advance after answering
 - Results: score ring, percentage, grade, retry/change/back
@@ -769,7 +769,7 @@ POST /api/import  { classes, lessons, cards, history, known }
 
 ---
 
-## 11. Current Build Status (as of 2026-06-18)
+## 11. Current Build Status (as of 2026-06-19)
 
 ### 11.1 Completed Features
 
@@ -780,7 +780,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Auth (email/password, Google OAuth) | Done | |
 | Forgot/reset password with SMTP | Done | Dev token suppressed in production |
 | Classes & Lessons CRUD | Done | |
-| Card CRUD (one-by-one + bulk paste) | Done | Both term-def and MCQ formats |
+| Card CRUD (one-by-one + bulk paste) | Done | Both formats; MCQ supports 1–4 distractors (2–5 choices) |
 | LaTeX rendering (KaTeX) | Done | Inline and display math |
 | AI prompt guide with copy button | Done | |
 | Flashcard study mode | Done | 3D flip, keyboard nav, marking |
@@ -788,8 +788,9 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Study setup (count, filter, direction, mode) | Done | |
 | Multi-lesson selection | Done | |
 | Progressive difficulty (weighted shuffle) | Done | Hard 3×, medium 2× |
-| Spaced repetition (score-based intervals) | Done | 7d / 3d / 1d / 4h |
-| Due badges and review hints | Done | |
+| Per-card SRS (step-based intervals) | Done | 10min → 1h → 4h → 1d → 3d → 7d → 21d; resets on wrong |
+| Due badges, "Review N due" button, due-only filter | Done | Per-lesson and per-class counts |
+| Dashboard due lessons grouped by class | Done | Clickable rows launch due-card quiz |
 | Share (public link + invite by username) | Done | Clone into own account |
 | Per-card stats and difficulty badges | Done | Easy/Medium/Hard/New |
 | Stats screen (overview, hardest cards) | Done | |
