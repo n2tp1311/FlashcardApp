@@ -66,7 +66,7 @@ db.exec(`
     card_id    TEXT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
     user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     correct    INTEGER NOT NULL CHECK (correct IN (0,1)),
-    source     TEXT NOT NULL CHECK (source IN ('quiz','flashcard')),
+    source     TEXT NOT NULL CHECK (source IN ('quiz','flashcard','recall')),
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
 
@@ -115,6 +115,27 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_invites_user   ON class_invites(user_id);
   CREATE INDEX IF NOT EXISTS idx_invites_class  ON class_invites(class_id);
 `);
+
+// Migration: allow 'recall' as a source value in attempts table
+try {
+  db.exec("PRAGMA foreign_keys = OFF");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS attempts_v2 (
+      id         TEXT PRIMARY KEY,
+      card_id    TEXT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      correct    INTEGER NOT NULL CHECK (correct IN (0,1)),
+      source     TEXT NOT NULL CHECK (source IN ('quiz','flashcard','recall')),
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    INSERT OR IGNORE INTO attempts_v2 SELECT * FROM attempts;
+    DROP TABLE attempts;
+    ALTER TABLE attempts_v2 RENAME TO attempts;
+  `);
+  db.exec("PRAGMA foreign_keys = ON");
+} catch (_) {
+  db.exec("PRAGMA foreign_keys = ON");
+}
 
 // Migration: add last_seen_at to card_states for per-card visit tracking
 try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catch (_) {}

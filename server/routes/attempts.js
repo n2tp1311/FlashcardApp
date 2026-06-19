@@ -14,7 +14,7 @@ function genId() {
 
 // POST /api/attempts
 router.post("/", requireAuth, (req, res) => {
-  const { cardId, correct, source } = req.body;
+  const { cardId, correct, source, grade } = req.body;
   if (!cardId || correct === undefined || !source)
     return res.status(400).json({ error: "cardId, correct, source required" });
 
@@ -38,7 +38,11 @@ router.post("/", requireAuth, (req, res) => {
     "SELECT srs_step FROM card_states WHERE card_id = ? AND user_id = ?"
   ).get(cardId, userId);
   const curStep = stateRow ? (stateRow.srs_step || 0) : 0;
-  const newStep = correct ? Math.min(curStep + 1, SRS_INTERVALS.length - 1) : 0;
+  let newStep;
+  if (grade === "easy")        newStep = Math.min(curStep + 2, SRS_INTERVALS.length - 1);
+  else if (grade === "medium") newStep = Math.min(curStep + 1, SRS_INTERVALS.length - 1);
+  else if (grade === "hard")   newStep = 0;
+  else                         newStep = correct ? Math.min(curStep + 1, SRS_INTERVALS.length - 1) : 0;
   const dueAt   = Math.floor(Date.now() / 1000) + SRS_INTERVALS[newStep];
   db.prepare(
     "INSERT INTO card_states (card_id, user_id, srs_step, srs_due_at) VALUES (?, ?, ?, ?) " +

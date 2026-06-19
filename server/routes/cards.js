@@ -54,6 +54,8 @@ router.post("/lessons/:lessonId/cards", requireAuth, (req, res) => {
     if (!data.question || !data.correct || !Array.isArray(data.distractors) ||
         data.distractors.length < 1 || data.distractors.length > 4)
       return res.status(400).json({ error: "mcq requires question, correct, and 1–4 distractors" });
+    if (data.explanation !== undefined && (typeof data.explanation !== "string" || !data.explanation.trim()))
+      return res.status(400).json({ error: "explanation must be a non-empty string if provided" });
   }
   const count = db.prepare("SELECT COUNT(*) as n FROM cards WHERE lesson_id = ?")
     .get(req.params.lessonId).n;
@@ -79,6 +81,8 @@ router.post("/lessons/:lessonId/cards/bulk", requireAuth, (req, res) => {
       if (!c.data || !c.data.question || !c.data.correct || !Array.isArray(c.data.distractors) ||
           c.data.distractors.length < 1 || c.data.distractors.length > 4)
         return res.status(400).json({ error: "mcq card " + i + ": requires question, correct, and 1–4 distractors" });
+      if (c.data.explanation !== undefined && (typeof c.data.explanation !== "string" || !c.data.explanation.trim()))
+        return res.status(400).json({ error: "mcq card " + i + ": explanation must be a non-empty string if provided" });
     }
   }
 

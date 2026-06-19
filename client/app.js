@@ -117,7 +117,11 @@ function parseBulkMCQ(raw) {
   lines.forEach(function(line) {
     var trimmed = line.trim();
     if (!trimmed) return;
-    var protected_ = protectLatexPipes(trimmed);
+    // Split off optional explanation after ";;"
+    var semiIdx     = trimmed.indexOf(";;");
+    var mcqPart     = semiIdx >= 0 ? trimmed.slice(0, semiIdx) : trimmed;
+    var explanation = semiIdx >= 0 ? trimmed.slice(semiIdx + 2).trim() : null;
+    var protected_ = protectLatexPipes(mcqPart);
     var parts = protected_.split("|");
     if (parts.length < 3) return;
     var q           = restoreLatexPipes(parts[0].trim());
@@ -125,7 +129,9 @@ function parseBulkMCQ(raw) {
     var distractors = parts.slice(2).map(function(p) { return restoreLatexPipes(p.trim()); }).filter(Boolean);
     if (distractors.length > 4) distractors = distractors.slice(0, 4);
     if (q && correct && distractors.length >= 1) {
-      cards.push({ format: "mcq", data: { question: q, correct: correct, distractors: distractors } });
+      var data = { question: q, correct: correct, distractors: distractors };
+      if (explanation) data.explanation = explanation;
+      cards.push({ format: "mcq", data: data });
     }
   });
   return cards;
@@ -570,6 +576,13 @@ var state = {
   quizResults: [],
   quizOptions: [],
   quizAnswered: false,
+
+  // Recall
+  recallCards: [],
+  recallIndex: 0,
+  recallCorrect: 0,
+  recallResults: [],
+  recallRevealed: false,
 
   // Setup snapshot (for retry)
   setupSnapshot: null,
@@ -1017,7 +1030,7 @@ document.getElementById("btn-study-selected").addEventListener("click", function
 
 var FORMAT_HINTS = {
   "term-def": "Best for vocabulary, concepts, formulas. Bulk: term | definition",
-  "mcq": "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]"
+  "mcq": "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2…] [;; explanation]"
 };
 
 function initLessonFormatPicker(selectedFormat) {
@@ -1325,6 +1338,8 @@ function openAddCard() {
     clearDistractorList();
     document.getElementById("card-q-preview").innerHTML = "";
     document.getElementById("card-correct-preview").innerHTML = "";
+    document.getElementById("card-explanation-input").value = "";
+    document.getElementById("mcq-explanation-details").removeAttribute("open");
     openModal("card-mcq");
     document.getElementById("card-q-input").focus();
   }
@@ -1349,6 +1364,9 @@ function openEditCard(cardId) {
       clearDistractorList(card.data.distractors);
       renderLatex(card.data.question, document.getElementById("card-q-preview"));
       renderLatex(card.data.correct,  document.getElementById("card-correct-preview"));
+      document.getElementById("card-explanation-input").value = card.data.explanation || "";
+      if (card.data.explanation) document.getElementById("mcq-explanation-details").setAttribute("open", "");
+      else document.getElementById("mcq-explanation-details").removeAttribute("open");
       openModal("card-mcq");
     }
   });
@@ -1378,7 +1396,9 @@ document.getElementById("btn-save-card-mcq").addEventListener("click", function(
     alert("Please fill in the question, correct answer, and 1–4 wrong answers.");
     return;
   }
+  var explanation = document.getElementById("card-explanation-input").value.trim();
   var data = { question: q, correct: c, distractors: distractors };
+  if (explanation) data.explanation = explanation;
   var p;
   if (state.editingCardId) {
     p = store.updateCard(state.editingCardId, state.currentLesson.id, { data: data });
@@ -1661,12 +1681,18 @@ function startStudy(count, filter, direction, mode, order) {
           state.studyIndex = 0;
           state.studyFlipped = false;
           startFlashcards();
-        } else {
+        } else if (mode === "quiz") {
           state.quizCards  = filtered;
           state.quizIndex  = 0;
           state.quizScore  = 0;
           state.quizResults = [];
           startQuiz();
+        } else {
+          state.recallCards   = filtered;
+          state.recallIndex   = 0;
+          state.recallCorrect = 0;
+          state.recallResults = [];
+          startRecall();
         }
       });
     });
@@ -1867,6 +1893,9 @@ function renderQuizCard() {
   var i     = state.quizIndex;
   var total = cards.length;
 
+  var prevExp = document.getElementById("quiz-explanation");
+  if (prevExp) prevExp.remove();
+
   if (i >= total) { showQuizResults(); return; }
 
   var card = cards[i];
@@ -1938,6 +1967,21 @@ function answerQuiz(selectedIdx) {
   document.getElementById("quiz-score-display").textContent =
     state.quizScore + " / " + (state.quizIndex + 1);
 
+  // Show explanation panel if MCQ card has one
+  if (card.format === "mcq" && card.data.explanation) {
+    var expEl  = document.createElement("details");
+    expEl.id   = "quiz-explanation";
+    expEl.className = "explanation-panel";
+    var sumEl  = document.createElement("summary");
+    sumEl.textContent = "Explanation";
+    var bodyEl = document.createElement("div");
+    bodyEl.className = "explanation-body";
+    renderLatex(card.data.explanation, bodyEl);
+    expEl.appendChild(sumEl);
+    expEl.appendChild(bodyEl);
+    document.getElementById("quiz-options").after(expEl);
+  }
+
   // Auto-advance after 1.2s
   setTimeout(function() {
     state.quizIndex++;
@@ -1955,6 +1999,147 @@ document.addEventListener("keydown", function(e) {
 
 document.getElementById("btn-quiz-back").addEventListener("click", function() {
   returnFromStudy();
+});
+
+/* ============================
+   RECALL MODE
+   ============================ */
+
+function startRecall() {
+  state.recallRevealed = false;
+  renderRecallCard();
+  showScreen("recall");
+}
+
+function renderRecallCard() {
+  var cards = state.recallCards;
+  var i     = state.recallIndex;
+  var total = cards.length;
+
+  if (i >= total) { showRecallResults(); return; }
+
+  var card = cards[i];
+  document.getElementById("recall-progress-text").textContent = (i + 1) + " / " + total;
+  document.getElementById("recall-progress-fill").style.width = ((i + 1) / total * 100) + "%";
+  document.getElementById("recall-score-display").textContent = state.recallCorrect + " / " + i;
+
+  var q;
+  if (card.format === "mcq") {
+    q = card.data.question;
+  } else {
+    q = state.studyDirection === "term-def" ? card.data.term : card.data.def;
+  }
+  renderLatex(q, document.getElementById("recall-question"));
+
+  document.getElementById("recall-answer-input").value = "";
+  document.getElementById("recall-answer-input").disabled = false;
+  document.getElementById("btn-recall-reveal").disabled = false;
+  document.getElementById("recall-reveal-area").classList.add("hidden");
+  document.getElementById("recall-correct-answer").innerHTML = "";
+  document.getElementById("recall-explanation-area").innerHTML = "";
+  state.recallRevealed = false;
+  document.getElementById("recall-answer-input").focus();
+}
+
+function revealRecall() {
+  if (state.recallRevealed) return;
+  state.recallRevealed = true;
+
+  var card = state.recallCards[state.recallIndex];
+  var answer;
+  if (card.format === "mcq") {
+    answer = card.data.correct;
+  } else {
+    answer = state.studyDirection === "term-def" ? card.data.def : card.data.term;
+  }
+
+  renderLatex(answer, document.getElementById("recall-correct-answer"));
+
+  if (card.format === "mcq" && card.data.explanation) {
+    var expEl  = document.createElement("details");
+    expEl.className = "explanation-panel";
+    var sumEl  = document.createElement("summary");
+    sumEl.textContent = "Explanation";
+    var bodyEl = document.createElement("div");
+    bodyEl.className = "explanation-body";
+    renderLatex(card.data.explanation, bodyEl);
+    expEl.appendChild(sumEl);
+    expEl.appendChild(bodyEl);
+    document.getElementById("recall-explanation-area").appendChild(expEl);
+  }
+
+  document.getElementById("recall-answer-input").disabled = true;
+  document.getElementById("btn-recall-reveal").disabled = true;
+  document.getElementById("recall-reveal-area").classList.remove("hidden");
+}
+
+function gradeRecall(grade) {
+  if (!state.recallRevealed) return;
+  var card = state.recallCards[state.recallIndex];
+  var isCorrect = grade !== "hard";
+  if (isCorrect) state.recallCorrect++;
+  state.recallResults.push({ card: card, grade: grade });
+  store.recordAttempt({ cardId: card.id, correct: isCorrect, source: "recall", grade: grade });
+  state.recallIndex++;
+  renderRecallCard();
+}
+
+function showRecallResults() {
+  var score = state.recallCorrect;
+  var total = state.recallCards.length;
+  var pct   = total > 0 ? Math.round(score / total * 100) : 0;
+
+  document.getElementById("results-pct").textContent = pct + "%";
+  document.getElementById("results-detail").textContent =
+    score + " recalled out of " + total + " cards";
+
+  var grade;
+  if (pct >= 90) grade = "A";
+  else if (pct >= 80) grade = "B";
+  else if (pct >= 70) grade = "C";
+  else if (pct >= 60) grade = "D";
+  else grade = "F";
+  document.getElementById("results-grade").textContent = grade;
+
+  var circumference = 314;
+  setTimeout(function() {
+    document.getElementById("results-ring-fill").style.strokeDashoffset =
+      circumference - (pct / 100) * circumference;
+  }, 100);
+
+  var reviewMsg = pct >= 80
+    ? "Great recall! Cards scheduled for spaced repetition."
+    : pct >= 50
+    ? "Good effort — missed cards are due again soon."
+    : "Keep practicing — retrieval gets easier each time.";
+  document.getElementById("results-review-hint").textContent = reviewMsg;
+
+  if (state.studyScope) {
+    store.saveQuizSession(state.studyScope.lessonIds, score, total);
+  }
+
+  showScreen("results");
+}
+
+document.getElementById("btn-recall-reveal").addEventListener("click", revealRecall);
+document.getElementById("btn-recall-hard").addEventListener("click",   function() { gradeRecall("hard"); });
+document.getElementById("btn-recall-medium").addEventListener("click", function() { gradeRecall("medium"); });
+document.getElementById("btn-recall-easy").addEventListener("click",   function() { gradeRecall("easy"); });
+document.getElementById("btn-recall-back").addEventListener("click",   returnFromStudy);
+
+// Keyboard: Enter to reveal (when in textarea), 1/2/3 to grade after reveal
+document.addEventListener("keydown", function(e) {
+  if (!document.getElementById("screen-recall").classList.contains("active")) return;
+  if (e.target.tagName === "TEXTAREA") {
+    if (e.key === "Enter" && !e.shiftKey && !state.recallRevealed) {
+      e.preventDefault();
+      revealRecall();
+    }
+    return;
+  }
+  if (e.key === "1") gradeRecall("hard");
+  else if (e.key === "2") gradeRecall("medium");
+  else if (e.key === "3") gradeRecall("easy");
 });
 
 /* ============================
@@ -2004,12 +2189,19 @@ function showQuizResults() {
 document.getElementById("btn-results-retry").addEventListener("click", function() {
   var snap = state.setupSnapshot;
   if (!snap) { returnFromStudy(); return; }
-  // Re-run with same cards (re-shuffle)
-  state.quizCards  = shuffle(state.studyCards.length > 0 ? state.studyCards : state.quizCards);
-  state.quizIndex  = 0;
-  state.quizScore  = 0;
-  state.quizResults = [];
-  startQuiz();
+  if (state.studyMode === "recall") {
+    state.recallCards   = shuffle(state.recallCards);
+    state.recallIndex   = 0;
+    state.recallCorrect = 0;
+    state.recallResults = [];
+    startRecall();
+  } else {
+    state.quizCards  = shuffle(state.studyCards.length > 0 ? state.studyCards : state.quizCards);
+    state.quizIndex  = 0;
+    state.quizScore  = 0;
+    state.quizResults = [];
+    startQuiz();
+  }
 });
 
 document.getElementById("btn-results-change").addEventListener("click", function() {
@@ -2497,7 +2689,7 @@ Output ONLY raw import text — no explanation, no markdown fences, no commentar
 Every line is either a lesson header or a card:
 
 - Header: \`# Lesson Title | mcq\`
-- Card: \`question | correct | wrong1 [| wrong2 | wrong3 | wrong4]\`
+- Card: \`question | correct | wrong1 [| wrong2 | wrong3 | wrong4] [;; explanation]\`
 
 Additional formatting rules:
 
@@ -2532,6 +2724,7 @@ Order cards within each lesson basic to advanced:
 - Include 2–4 distractors (3–5 total options). Use fewer only when fewer plausible ones exist.
 - Skip any concept that cannot produce at least 1 plausible distractor.
 - Avoid "all of the above" and "none of the above".
+- After all options, add \`;;\` followed by a 1–2 sentence explanation of why the correct answer is right and why key distractors are wrong. Keep explanations concise.
 
 ---
 
@@ -2680,7 +2873,9 @@ var SQLiteAdapter = (function() {
     deleteCard: function(id)               { return req("DELETE", "/cards/" + id); },
 
     recordAttempt: function(f) {
-      return req("POST", "/attempts", { cardId: f.cardId, correct: f.correct, source: f.source });
+      var body = { cardId: f.cardId, correct: f.correct, source: f.source };
+      if (f.grade) body.grade = f.grade;
+      return req("POST", "/attempts", body);
     },
     getCardStats: function() { return Promise.resolve({ total: 0, correct: 0, blended: 0, level: "new" }); },
     getDifficultyMap: function(cardIds) {

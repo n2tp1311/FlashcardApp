@@ -244,6 +244,7 @@
       <div class="pill-group" id="setup-mode">
         <button class="pill active" data-value="flashcard">Flashcards</button>
         <button class="pill" data-value="quiz">Quiz</button>
+        <button class="pill" data-value="recall">Recall</button>
       </div>
     </div>
     <div class="setup-section" id="setup-order-section" style="display:none">
@@ -309,6 +310,36 @@
       <div id="quiz-question" class="quiz-question"></div>
     </div>
     <div id="quiz-options" class="quiz-options"></div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Recall ===== -->
+<div id="screen-recall" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-recall-back">✕</button>
+    <div class="fc-progress-wrap">
+      <span id="recall-progress-text">1 / 10</span>
+      <div class="progress-bar"><div id="recall-progress-fill" class="progress-fill"></div></div>
+    </div>
+    <span id="recall-score-display" class="score-display">0 / 0</span>
+  </header>
+  <div class="recall-container">
+    <div class="recall-question-wrap">
+      <div id="recall-question" class="quiz-question"></div>
+    </div>
+    <textarea id="recall-answer-input" class="recall-textarea"
+      placeholder="Type your answer here…" rows="4"></textarea>
+    <button class="btn btn-primary btn-full" id="btn-recall-reveal">Reveal Answer</button>
+    <div id="recall-reveal-area" class="recall-reveal-area hidden">
+      <div class="recall-correct-label">Correct answer:</div>
+      <div id="recall-correct-answer" class="recall-correct-text"></div>
+      <div id="recall-explanation-area"></div>
+      <div class="recall-grade-btns">
+        <button class="btn btn-danger recall-grade-btn" id="btn-recall-hard">✗ Missed</button>
+        <button class="btn btn-warning recall-grade-btn" id="btn-recall-medium">~ Unsure</button>
+        <button class="btn btn-success recall-grade-btn" id="btn-recall-easy">✓ Got It</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -437,6 +468,12 @@
       <label class="form-label">Wrong Answers <span id="mcq-distractor-count"></span></label>
       <div id="mcq-distractor-list"></div>
       <button type="button" class="btn btn-ghost btn-sm" id="btn-add-distractor" style="align-self:flex-start;margin-top:2px">+ Add choice</button>
+      <details id="mcq-explanation-details" style="margin-top:12px">
+        <summary class="form-label" style="cursor:pointer;user-select:none;list-style:none">Explanation (optional)</summary>
+        <textarea id="card-explanation-input" class="form-textarea" rows="3"
+          placeholder="Why is this answer correct? Why are the distractors wrong?"
+          style="margin-top:6px"></textarea>
+      </details>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="card-mcq">Cancel</button>
@@ -472,7 +509,8 @@
         Use <strong>#</strong> to start a lesson. Optionally add <code>| mcq</code> after the title for MCQ format (default is term→def).<br>
         Then list cards below it, one per line.<br><br>
         <strong>Term→Def:</strong> <code>term | definition</code><br>
-        <strong>MCQ:</strong> <code>question | correct | wrong1 | wrong2 | wrong3</code>
+        <strong>MCQ:</strong> <code>question | correct | wrong1 | wrong2 | wrong3</code><br>
+        <strong>MCQ + explanation:</strong> <code>question | correct | wrong1 ;; Why the correct answer is right.</code>
       </p>
       <textarea id="bulk-import-input" class="form-textarea" rows="12" placeholder="# Week 1: Linear Regression
 OLS estimator | $(X^TX)^{-1}X^Ty$
