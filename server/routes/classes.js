@@ -11,9 +11,22 @@ function genId() {
 
 // GET /api/classes
 router.get("/", requireAuth, (req, res) => {
+  const uid    = req.session.userId;
+  const nowSec = Math.floor(Date.now() / 1000);
   const rows = db.prepare(
-    "SELECT * FROM classes WHERE user_id = ? ORDER BY sort_order, created_at"
-  ).all(req.session.userId);
+    "SELECT cl.*, COALESCE(dc.due_count, 0) AS due_count " +
+    "FROM classes cl " +
+    "LEFT JOIN (" +
+      "SELECT l.class_id, COUNT(*) AS due_count " +
+      "FROM cards ca " +
+      "JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
+      "JOIN lessons l ON ca.lesson_id = l.id " +
+      "WHERE cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
+      "GROUP BY l.class_id" +
+    ") dc ON dc.class_id = cl.id " +
+    "WHERE cl.user_id = ? " +
+    "ORDER BY cl.sort_order, cl.created_at"
+  ).all(uid, nowSec, uid);
   res.json(rows);
 });
 

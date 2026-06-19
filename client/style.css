@@ -226,6 +226,11 @@ body {
   color: var(--text2);
 }
 
+.class-due-badge {
+  display: inline-block;
+  margin-top: 6px;
+}
+
 .class-card-actions {
   display: flex;
   gap: 4px;
@@ -1684,6 +1689,32 @@ code {
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 .dash-lesson-clickable:hover { border-color: var(--warning); box-shadow: var(--shadow); }
+
+.dash-class-due-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.dash-class-due-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-lesson-sub {
+  margin-left: 12px;
+  border-left: 3px solid var(--border);
+  padding-left: 12px;
+}
 
 .dash-lesson-info {
   display: flex;

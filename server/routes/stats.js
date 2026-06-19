@@ -208,6 +208,12 @@ router.get("/dashboard", requireAuth, (req, res) => {
     .filter(l => dueLessonIds.has(l.id))
     .map(l => ({ ...l, dueCount: dueCountMap[l.id] || 0 }));
 
+  // Class-level due aggregation — derived from dueCountMap, no extra DB query
+  const dueByClass = {};
+  allLessons.forEach(l => {
+    if (dueCountMap[l.id]) dueByClass[l.class_id] = (dueByClass[l.class_id] || 0) + dueCountMap[l.id];
+  });
+
   // Struggling lessons — lessons with >40% of attempted cards rated "hard"
   const attemptRows = db.prepare(
     "SELECT a.card_id, a.correct, l.id AS lesson_id, l.title, c.name AS class_name " +
@@ -269,6 +275,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
     accuracy:          { correct: attRow.correct_count || 0, total: attRow.total || 0 },
     diffBreakdown,
     dueForReview,
+    dueByClass,
     strugglingLessons,
     streak
   });

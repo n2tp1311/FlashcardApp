@@ -666,6 +666,7 @@ function renderHome() {
         '<span class="class-icon">' + cls.icon + '</span>' +
         '<div class="class-name">' + escHtml(cls.name) + '</div>' +
         '<div class="class-meta" id="cls-meta-' + cls.id + '">Loading...</div>' +
+        (cls.due_count > 0 ? '<span class="due-badge class-due-badge">' + cls.due_count + ' due</span>' : '') +
         '<div class="progress-mini-wrap" id="cls-prog-wrap-' + cls.id + '" style="display:none">' +
           '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="width:0%;background:' + cls.color + '"></div></div>' +
           '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
@@ -2278,22 +2279,40 @@ function renderDashboard() {
     // Due for review
     var dueList = document.getElementById("dash-due-list");
     var dueBadge = document.getElementById("dash-due-badge");
-    dueBadge.textContent = d.dueForReview.length || "";
+    var totalDueCards = (d.dueForReview || []).reduce(function(acc, l) { return acc + (l.dueCount || 0); }, 0);
+    dueBadge.textContent = totalDueCards || "";
     dueList.innerHTML = "";
-    if (!d.dueForReview.length) {
+    if (!(d.dueForReview || []).length) {
       dueList.innerHTML = '<div class="dash-empty-note">All caught up — no cards due.</div>';
     } else {
+      // Group lessons by class
+      var byClass = {};
+      var classOrder = [];
       d.dueForReview.forEach(function(l) {
-        var row = document.createElement("div");
-        row.className = "dash-lesson-row dash-lesson-clickable";
-        row.innerHTML =
-          '<div class="dash-lesson-info">' +
+        if (!byClass[l.class_id]) {
+          byClass[l.class_id] = { class_name: l.class_name, lessons: [], total: 0 };
+          classOrder.push(l.class_id);
+        }
+        byClass[l.class_id].lessons.push(l);
+        byClass[l.class_id].total += (l.dueCount || 0);
+      });
+      classOrder.forEach(function(cid) {
+        var group = byClass[cid];
+        var header = document.createElement("div");
+        header.className = "dash-class-due-header";
+        header.innerHTML =
+          '<span class="dash-class-due-name">' + escHtml(group.class_name) + '</span>' +
+          '<span class="due-badge">' + group.total + ' due</span>';
+        dueList.appendChild(header);
+        group.lessons.forEach(function(l) {
+          var row = document.createElement("div");
+          row.className = "dash-lesson-row dash-lesson-clickable dash-lesson-sub";
+          row.innerHTML =
             '<span class="dash-lesson-title">' + escHtml(l.title) + '</span>' +
-            '<span class="dash-lesson-class">' + escHtml(l.class_name) + '</span>' +
-          '</div>' +
-          '<span class="due-badge">' + l.dueCount + ' due</span>';
-        row.addEventListener("click", function() { openDueReview(l.id, l.class_id); });
-        dueList.appendChild(row);
+            '<span class="due-badge">' + l.dueCount + ' due</span>';
+          row.addEventListener("click", function() { openDueReview(l.id, l.class_id); });
+          dueList.appendChild(row);
+        });
       });
     }
 
