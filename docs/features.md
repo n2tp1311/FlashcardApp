@@ -51,15 +51,21 @@
 - Due-for-review lessons (grouped by urgency)
 - Struggling lessons: lessons where >40% of attempted cards are rated Hard
 
-## Upcoming: MCQ Explanation Field (planned, not yet built)
-- Add `explanation` field to card JSON data (both formats)
-- Update AI prompt guide to include explanation in output
-- Update card editor to show explanation input
-- Show explanation in a collapsed panel during quiz (expands on tap)
-- Supports delayed-feedback pattern: student recalls first, then confirms reasoning
+## MCQ Explanation Field
+- Optional `explanation` field on MCQ cards; stored in card JSON data
+- Card editor: collapsible "Explanation (optional)" section below distractors; auto-opens when editing a card that has one
+- Bulk import: append `;; explanation text` after distractors on a MCQ line — uses first `;;` as delimiter so explanations may contain `;;`
+- AI prompt: instructs AI to append `;;` explanation after each MCQ card
+- Quiz mode: explanation shown in a collapsible `💡 Explanation` panel immediately after answering; auto-dismissed when moving to next card
+- Recall mode: explanation shown in the reveal area after "Reveal Answer"
+- Server validates: if provided, must be a non-empty string
 
-## Upcoming: Recall Mode (planned, not yet built)
-- Free-text answer input instead of MCQ selection
-- User types answer, taps "Reveal" to see correct answer
-- Self-grades with thumbs up/down or Easy/Medium/Hard
-- Research basis: free recall produces ~80% retention vs ~34% for re-reading or recognition-only MCQ
+## Recall Mode
+- New study mode selectable from the setup screen ("Recall" pill)
+- Shows the question (MCQ question or term/def depending on direction); user types their answer in a textarea
+- "Reveal Answer" button (or Enter key while in textarea) shows the correct answer and any MCQ explanation
+- Three self-grade buttons: ✗ Missed (SRS reset to step 0), ~ Unsure (SRS +1 step), ✓ Got It (SRS +2 steps)
+- Keyboard shortcuts after reveal: 1 = Missed, 2 = Unsure, 3 = Got It
+- Results screen reused from quiz; shows percentage and grade A–F
+- Works for both term-def and MCQ cards; source recorded as `"recall"` in attempt history
+- Research basis: free recall produces ~80% retention vs ~34% for recognition-only MCQ
