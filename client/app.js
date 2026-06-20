@@ -1579,8 +1579,8 @@ function setPillGroup(groupId, value) {
 function returnFromStudy() {
   var target = state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson";
   showScreen(target);
-  if (target === "lesson") renderLessons();
-  else renderHome();
+  if (target === "home") renderHome();
+  else renderLessons();
 }
 
 document.getElementById("btn-setup-back").addEventListener("click", function() {
