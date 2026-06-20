@@ -1577,7 +1577,10 @@ function setPillGroup(groupId, value) {
 
 // Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
 function returnFromStudy() {
-  showScreen(state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson");
+  var target = state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson";
+  showScreen(target);
+  if (target === "lesson") renderLessons();
+  else renderHome();
 }
 
 document.getElementById("btn-setup-back").addEventListener("click", function() {
