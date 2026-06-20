@@ -1990,8 +1990,12 @@ function answerQuiz(selectedIdx) {
   document.getElementById("quiz-score-display").textContent =
     state.quizScore + " / " + (state.quizIndex + 1);
 
+  var advanceTimer = setTimeout(function() {
+    state.quizIndex++;
+    renderQuizCard();
+  }, 1200);
+
   if (card.format === "mcq" && card.data.explanation) {
-    // Explanation present: show collapsed panel; clicking it reveals Next button
     var expEl  = document.createElement("details");
     expEl.id   = "quiz-explanation";
     expEl.className = "explanation-panel";
@@ -2006,6 +2010,7 @@ function answerQuiz(selectedIdx) {
 
     expEl.addEventListener("toggle", function() {
       if (!expEl.open) return;
+      clearTimeout(advanceTimer);
       if (document.getElementById("quiz-next-btn")) return;
       var nextBtn = document.createElement("button");
       nextBtn.id = "quiz-next-btn";
@@ -2018,13 +2023,6 @@ function answerQuiz(selectedIdx) {
       });
       expEl.after(nextBtn);
     });
-    // No auto-advance — user must click Next after reading explanation
-  } else {
-    // No explanation: auto-advance after 1.2s
-    setTimeout(function() {
-      state.quizIndex++;
-      renderQuizCard();
-    }, 1200);
   }
 }
 
