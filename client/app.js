@@ -1748,11 +1748,12 @@ function renderFlashcard() {
     var expEl = document.createElement("details");
     expEl.className = "explanation-panel";
     expEl.open = true;
+    expEl.addEventListener("click", function(e) { e.stopPropagation(); });
     var sum = document.createElement("summary");
-    sum.textContent = "💡 Explanation";
+    sum.textContent = "Explanation";
     var body = document.createElement("div");
     body.className = "explanation-body";
-    body.textContent = card.data.explanation;
+    renderLatex(card.data.explanation, body);
     expEl.appendChild(sum);
     expEl.appendChild(body);
     expContainer.appendChild(expEl);
