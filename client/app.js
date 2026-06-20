@@ -1895,6 +1895,8 @@ function renderQuizCard() {
 
   var prevExp = document.getElementById("quiz-explanation");
   if (prevExp) prevExp.remove();
+  var prevNext = document.getElementById("quiz-next-btn");
+  if (prevNext) prevNext.remove();
 
   if (i >= total) { showQuizResults(); return; }
 
@@ -1967,8 +1969,8 @@ function answerQuiz(selectedIdx) {
   document.getElementById("quiz-score-display").textContent =
     state.quizScore + " / " + (state.quizIndex + 1);
 
-  // Show explanation panel if MCQ card has one
   if (card.format === "mcq" && card.data.explanation) {
+    // Explanation present: show collapsed panel; clicking it reveals Next button
     var expEl  = document.createElement("details");
     expEl.id   = "quiz-explanation";
     expEl.className = "explanation-panel";
@@ -1980,13 +1982,29 @@ function answerQuiz(selectedIdx) {
     expEl.appendChild(sumEl);
     expEl.appendChild(bodyEl);
     document.getElementById("quiz-options").after(expEl);
-  }
 
-  // Auto-advance after 1.2s
-  setTimeout(function() {
-    state.quizIndex++;
-    renderQuizCard();
-  }, 1200);
+    expEl.addEventListener("toggle", function() {
+      if (!expEl.open) return;
+      if (document.getElementById("quiz-next-btn")) return;
+      var nextBtn = document.createElement("button");
+      nextBtn.id = "quiz-next-btn";
+      nextBtn.className = "btn btn-primary btn-full";
+      nextBtn.style.marginTop = "8px";
+      nextBtn.textContent = "Next →";
+      nextBtn.addEventListener("click", function() {
+        state.quizIndex++;
+        renderQuizCard();
+      });
+      expEl.after(nextBtn);
+    });
+    // No auto-advance — user must click Next after reading explanation
+  } else {
+    // No explanation: auto-advance after 1.2s
+    setTimeout(function() {
+      state.quizIndex++;
+      renderQuizCard();
+    }, 1200);
+  }
 }
 
 // Keyboard shortcuts for quiz
@@ -2057,6 +2075,7 @@ function revealRecall() {
 
   if (card.format === "mcq" && card.data.explanation) {
     var expEl  = document.createElement("details");
+    expEl.open = true;
     expEl.className = "explanation-panel";
     var sumEl  = document.createElement("summary");
     sumEl.textContent = "Explanation";
