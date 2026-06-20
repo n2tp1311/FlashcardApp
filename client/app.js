@@ -1741,6 +1741,23 @@ function renderFlashcard() {
   renderLatex(front, frontEl);
   renderLatex(back,  backEl);
 
+  // Explanation (MCQ only, shown on back)
+  var expContainer = document.getElementById("fc-explanation");
+  expContainer.innerHTML = "";
+  if (card.format === "mcq" && card.data.explanation) {
+    var expEl = document.createElement("details");
+    expEl.className = "explanation-panel";
+    expEl.open = true;
+    var sum = document.createElement("summary");
+    sum.textContent = "💡 Explanation";
+    var body = document.createElement("div");
+    body.className = "explanation-body";
+    body.textContent = card.data.explanation;
+    expEl.appendChild(sum);
+    expEl.appendChild(body);
+    expContainer.appendChild(expEl);
+  }
+
   // Difficulty badge
   var attempts = JSON.parse(localStorage.getItem("fc-attempts") || "[]")
     .filter(function(a) { return a.card_id === card.id; });
