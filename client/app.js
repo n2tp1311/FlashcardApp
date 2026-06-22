@@ -2719,7 +2719,15 @@ document.getElementById("bulk-import-input").addEventListener("input", function(
   bulkImportTimer = setTimeout(function() { renderBulkImportPreview(val); }, 300);
 });
 
-const AI_EXTRACTION_PROMPT = `You are a knowledge extraction assistant. Convert the provided text into spaced-repetition flashcards.
+const AI_EXTRACTION_PROMPT = `You are a comprehensive knowledge extraction assistant. Your job is to convert source material into a COMPLETE spaced-repetition flashcard set that covers every essential concept — not a highlights reel.
+
+## Two-pass process (do this internally before writing output)
+
+**Pass 1 — Inventory every concept:**
+Read the full text and list every named concept, term, mechanism, formula, person, date, condition, step, and comparison. Nothing that receives a sentence or more of explanation should be left off the list.
+
+**Pass 2 — Card per concept:**
+Write at least one card for every item on your list. If a concept needs two angles (definition + application), write two cards. Do not merge distinct concepts into one card.
 
 ## Output format
 
@@ -2734,12 +2742,19 @@ Additional formatting rules:
 - Use \`$...$\` for inline math and \`$$...$$\` for display math (LaTeX).
 - Write \`$\\lvert x \\rvert$\` instead of \`$|x|$\` to avoid breaking the delimiter.
 
+## Coverage rules (non-negotiable)
+
+- Every key term, formula, named concept, mechanism, and numbered/named step in the source must appear in at least one card.
+- Every section or subsection heading represents a concept cluster — all concepts within it need cards.
+- Do NOT decide that a concept is "too minor" or "already implied." If the source text explains it, card it.
+- If a concept cannot support a plausible distractor, reframe the question stem — do not skip it.
+- Target density: roughly 1 card per 50–80 words of source text. Dense technical material warrants more.
+
 ## Lesson organization
 
-- One lesson per major topic or concept cluster. Aim for 5–30 cards; combine short sections if needed.
+- One lesson per major topic or concept cluster; split when a cluster exceeds ~25 cards.
 - Name split lessons to reflect progression: "Topic — Foundations", "Topic — Methods", "Topic — Application".
-- Every key term, formula, and named concept must appear in at least one card.
-- No two cards in the same lesson test the same fact.
+- No two cards in the same lesson test the exact same fact from the same angle.
 
 ## Card order (progressive learning)
 
@@ -2760,13 +2775,16 @@ Order cards within each lesson basic to advanced:
 - Distractors must be plausible, grammatically parallel, and drawn from concepts in the source text.
 - Each distractor must be wrong for a different reason.
 - Include 2–4 distractors (3–5 total options). Use fewer only when fewer plausible ones exist.
-- Skip any concept that cannot produce at least 1 plausible distractor.
 - Avoid "all of the above" and "none of the above".
 - After all options, add \`;;\` followed by a 1–2 sentence explanation of why the correct answer is right and why key distractors are wrong. Keep explanations concise.
 
+## Final coverage audit (before writing output)
+
+Review your Pass 1 inventory. Confirm every item has a card. If anything is missing, add its card now. Only then write the output.
+
 ---
 
-Now extract flashcards from the following text:
+Now extract a comprehensive flashcard set from the following text:
 
 [PASTE YOUR TEXT HERE]`;
 
