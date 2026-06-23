@@ -12,6 +12,8 @@
 - Create/edit/delete lessons (term↔def or MCQ format)
 - Bulk import via pipe-delimited text (MCQ: `question | correct | wrong1 [| wrong2 | wrong3 | wrong4]`)
 - AI prompt guide with copy button; AI generates 2–4 distractors per card
+- Bulk delete lessons: "☑ Select" on class screen enters select mode with checkboxes, select-all, and "Delete selected" to remove multiple lessons and their cards at once
+- Bulk delete cards: "☑ Select" on lesson screen enters card select mode with checkboxes, select-all, and "Delete selected" to remove multiple cards at once
 
 ## Spaced Repetition
 - Per-card SRS intervals: 10min → 1h → 4h → 1d → 3d → 7d → 21d (step advances on correct, resets on wrong)

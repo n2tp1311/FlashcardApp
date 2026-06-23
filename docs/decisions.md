@@ -27,6 +27,9 @@ CBR (1–5 post-answer confidence rating modulates next review interval) was res
 ## 2026-06-18 — FSRS algorithm skipped for now
 FSRS (Free Spaced Repetition Scheduler) achieves 20–30% fewer reviews than SM-2 for the same 90% retention target. An open-source JS library is available. Decision: skipped for now. The existing fixed-interval scheduler (score-based: ≥90% → 7d, ≥70% → 3d, etc.) is good enough for the current user base. FSRS can be added as a future enhancement without changing the quiz flow — only the interval-calculation step changes.
 
+## 2026-06-23 — Card checkbox change event + item click guard for select mode
+In card select mode, a guard `if (e.target.tagName === "INPUT") return` on the item's click listener prevents double-toggling when the user clicks the checkbox (the click would bubble to the item, firing toggleCardSelection twice). However, this alone breaks direct checkbox clicks — the native checkbox state changes but `state.selectedCardIds` doesn't. Fixed by also attaching a `change` event on each card's checkbox that calls `toggleCardSelection`. Result: clicking the item body fires one toggle (via item click); clicking the checkbox fires one toggle (via change); the bubble from checkbox click is suppressed by the guard.
+
 ## 2026-06-18 — Modal architecture fix: scope closeAllModals to overlay container
 `closeAllModals()` was calling `document.querySelectorAll(".modal")`, which also matched inner divs inside `#modal-share` and `#modal-prompt-guide` (those overlays contain child elements that also carry the `.modal` class). This caused closing any modal to blank-screen those overlays. Fixed by scoping the selector to `"#modal-overlay .modal"` so only the primary overlay's modal content is targeted. Also added an explicit `.modal` classList `.remove("hidden")` guard inside `openShareModal()` and the prompt-guide opener as a defensive reset against stale state.
 
