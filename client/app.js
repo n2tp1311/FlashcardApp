@@ -594,6 +594,10 @@ var state = {
   selectMode: false,
   selectedLessonIds: [],
 
+  // Card selection mode
+  cardSelectMode: false,
+  selectedCardIds: [],
+
   // Cache for server-mode lookups
   currentClassLessons: []
 };
@@ -981,12 +985,96 @@ function updateSelectBar() {
   var n = state.selectedLessonIds.length;
   document.getElementById("select-count").textContent = n + " selected";
   document.getElementById("btn-study-selected").disabled = n === 0;
+  document.getElementById("btn-delete-selected-lessons").disabled = n === 0;
   var total = (state.currentClassLessons || []).length;
   document.getElementById("select-all-lessons").checked = total > 0 && n === total;
 }
 
 document.getElementById("btn-select-lessons").addEventListener("click", function() {
   setSelectMode(!state.selectMode);
+});
+
+function setCardSelectMode(on) {
+  state.cardSelectMode = on;
+  state.selectedCardIds = [];
+  document.getElementById("btn-select-cards").classList.toggle("active", on);
+  var toolbar = document.getElementById("lesson-toolbar");
+  if (on) {
+    toolbar.innerHTML =
+      '<div class="select-bar">' +
+        '<label class="select-all-label">' +
+          '<input type="checkbox" id="select-all-cards"> Select all' +
+        '</label>' +
+        '<span id="card-select-count" class="select-count">0 selected</span>' +
+        '<button class="btn btn-sm btn-ghost" id="btn-card-select-cancel">Cancel</button>' +
+        '<button class="btn btn-sm btn-danger" id="btn-delete-selected-cards" disabled>Delete selected</button>' +
+      '</div>';
+    toolbar.style.display = "";
+    document.getElementById("btn-card-select-cancel").addEventListener("click", function() {
+      setCardSelectMode(false);
+      renderCards();
+    });
+    document.getElementById("select-all-cards").addEventListener("change", function() {
+      if (this.checked) {
+        state.selectedCardIds = (state.currentLessonCards || []).map(function(c) { return c.id; });
+      } else {
+        state.selectedCardIds = [];
+      }
+      document.querySelectorAll("#card-list .card-item").forEach(function(item) {
+        var sel = state.selectedCardIds.indexOf(item.dataset.cardId) !== -1;
+        item.classList.toggle("selected", sel);
+        var check = item.querySelector(".lesson-check");
+        if (check) check.checked = sel;
+      });
+      updateCardSelectBar();
+    });
+    document.getElementById("btn-delete-selected-cards").addEventListener("click", function() {
+      var ids = state.selectedCardIds.slice();
+      if (ids.length === 0) return;
+      confirmDelete(
+        "Delete " + ids.length + " card" + (ids.length !== 1 ? "s" : "") + "?",
+        function() {
+          Promise.all(ids.map(function(id) {
+            return store.deleteCard(id, state.currentLesson.id);
+          })).then(function() { setCardSelectMode(false); renderCards(); })
+            .catch(function() { setCardSelectMode(false); renderCards(); });
+        }
+      );
+    });
+  } else {
+    toolbar.innerHTML = "";
+    toolbar.style.display = "none";
+  }
+}
+
+function toggleCardSelection(cardId) {
+  var idx = state.selectedCardIds.indexOf(cardId);
+  if (idx === -1) state.selectedCardIds.push(cardId);
+  else state.selectedCardIds.splice(idx, 1);
+  var item = document.querySelector('[data-card-id="' + cardId + '"]');
+  if (item) {
+    var sel = state.selectedCardIds.indexOf(cardId) !== -1;
+    item.classList.toggle("selected", sel);
+    var check = item.querySelector(".lesson-check");
+    if (check) check.checked = sel;
+  }
+  updateCardSelectBar();
+}
+
+function updateCardSelectBar() {
+  var n = state.selectedCardIds.length;
+  var countEl = document.getElementById("card-select-count");
+  var deleteBtn = document.getElementById("btn-delete-selected-cards");
+  var allCheck = document.getElementById("select-all-cards");
+  if (countEl) countEl.textContent = n + " selected";
+  if (deleteBtn) deleteBtn.disabled = n === 0;
+  var total = (state.currentLessonCards || []).length;
+  if (allCheck) allCheck.checked = total > 0 && n === total;
+}
+
+document.getElementById("btn-select-cards").addEventListener("click", function() {
+  setCardSelectMode(!state.cardSelectMode);
+  renderCards();
 });
 
 document.getElementById("btn-select-cancel").addEventListener("click", function() {
@@ -1022,6 +1110,19 @@ document.getElementById("btn-study-selected").addEventListener("click", function
     returnScreen: "class",
     title: lessons.length + " lessons selected"
   });
+});
+
+document.getElementById("btn-delete-selected-lessons").addEventListener("click", function() {
+  var ids = state.selectedLessonIds.slice();
+  if (ids.length === 0) return;
+  confirmDelete(
+    "Delete " + ids.length + " lesson" + (ids.length !== 1 ? "s" : "") + " and all their cards?",
+    function() {
+      Promise.all(ids.map(function(id) { return store.deleteLesson(id); }))
+        .then(function() { setSelectMode(false); renderLessons(); })
+        .catch(function() { setSelectMode(false); renderLessons(); });
+    }
+  );
 });
 
 /* ============================
@@ -1114,6 +1215,7 @@ function openLesson(lessonId) {
   if (!lesson) return;
   state.currentLesson = lesson;
   document.getElementById("lesson-detail-title").textContent = lesson.title;
+  setCardSelectMode(false); // resets state + toolbar; renderCards() below handles the re-render
   renderCards();
   showScreen("lesson");
 }
@@ -1134,7 +1236,8 @@ function renderCards() {
     var attemptsRaw = IS_SERVER ? [] : JSON.parse(localStorage.getItem("fc-attempts") || "[]");
     cards.forEach(function(card, i) {
       var item = document.createElement("div");
-      item.className = "card-item";
+      item.className = "card-item" + (state.selectedCardIds.indexOf(card.id) !== -1 ? " selected" : "");
+      item.dataset.cardId = card.id;
       var cardAttempts = attemptsRaw.filter(function(a) { return a.card_id === card.id; });
       var stats = computeStats(cardAttempts);
       var diffPill = '<span class="diff-pill ' + stats.level + '">' +
@@ -1154,13 +1257,17 @@ function renderCards() {
       }
 
       item.innerHTML =
+        (state.cardSelectMode
+          ? '<input type="checkbox" class="lesson-check"' + (state.selectedCardIds.indexOf(card.id) !== -1 ? " checked" : "") + '>'
+          : '') +
         '<span class="card-num">' + (i + 1) + '</span>' +
         '<div class="card-content"></div>' +
         diffPill +
-        '<div class="card-actions">' +
-          '<button class="icon-btn" title="Edit" data-card-edit="' + card.id + '">✏️</button>' +
-          '<button class="icon-btn danger" title="Delete" data-card-del="' + card.id + '">🗑️</button>' +
-        '</div>';
+        (state.cardSelectMode ? '' :
+          '<div class="card-actions">' +
+            '<button class="icon-btn" title="Edit" data-card-edit="' + card.id + '">✏️</button>' +
+            '<button class="icon-btn danger" title="Delete" data-card-del="' + card.id + '">🗑️</button>' +
+          '</div>');
 
       var contentEl = item.querySelector(".card-content");
       contentEl.appendChild(termEl);
@@ -1183,14 +1290,23 @@ function renderCards() {
         contentEl.appendChild(tsDiv);
       }
 
-      item.querySelector("[data-card-edit]").addEventListener("click", function() {
-        openEditCard(card.id);
-      });
-      item.querySelector("[data-card-del]").addEventListener("click", function() {
-        confirmDelete("Delete this card?", function() {
-          store.deleteCard(card.id, state.currentLesson.id).then(renderCards);
+      if (state.cardSelectMode) {
+        item.addEventListener("click", function(e) {
+          if (e.target.tagName === "INPUT") return;
+          toggleCardSelection(card.id);
         });
-      });
+        var cb = item.querySelector(".lesson-check");
+        if (cb) cb.addEventListener("change", function() { toggleCardSelection(card.id); });
+      } else {
+        item.querySelector("[data-card-edit]").addEventListener("click", function() {
+          openEditCard(card.id);
+        });
+        item.querySelector("[data-card-del]").addEventListener("click", function() {
+          confirmDelete("Delete this card?", function() {
+            store.deleteCard(card.id, state.currentLesson.id).then(renderCards);
+          });
+        });
+      }
       list.appendChild(item);
     });
 
@@ -1211,6 +1327,7 @@ function renderCards() {
 }
 
 document.getElementById("btn-lesson-back").addEventListener("click", function() {
+  setCardSelectMode(false);
   showScreen("class");
   renderLessons();
 });

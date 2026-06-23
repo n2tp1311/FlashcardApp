@@ -305,7 +305,8 @@ body {
 .lesson-item:hover .lesson-actions { opacity: 1; }
 
 /* Multi-lesson selection */
-.lesson-item.selected {
+.lesson-item.selected,
+.card-item.selected {
   border-color: var(--primary);
   background: var(--primary-light);
 }

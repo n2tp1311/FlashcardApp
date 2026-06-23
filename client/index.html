@@ -168,6 +168,7 @@
     </label>
     <span id="select-count" class="select-count">0 selected</span>
     <button class="btn btn-sm btn-ghost" id="btn-select-cancel">Cancel</button>
+    <button class="btn btn-sm btn-danger" id="btn-delete-selected-lessons" disabled>Delete selected</button>
     <button class="btn btn-sm btn-primary" id="btn-study-selected" disabled>Study selected</button>
   </div>
   <div id="lesson-list" class="lesson-list"></div>
@@ -183,6 +184,7 @@
     <button class="btn btn-ghost back-btn" id="btn-lesson-back">← Back</button>
     <h2 id="lesson-detail-title" class="screen-title"></h2>
     <div class="header-actions">
+      <button class="btn btn-ghost" id="btn-select-cards">☑ Select</button>
       <div class="dropdown-wrap">
         <button class="btn btn-ghost btn-icon" id="btn-lesson-menu" title="More options">⋮</button>
         <div class="dropdown-menu hidden" id="lesson-dropdown-menu">
