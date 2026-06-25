@@ -3,8 +3,14 @@
 ## 2026-06-18 — SQLite via node-sqlite3-wasm
 Use WASM-based SQLite (no native build) for Railway compatibility. Downside: async init. Lock file `flashcards.db.lock` removed on startup to survive container restarts.
 
-## 2026-06-18 — Sessions via express-session + MemoryStore
-Simple session approach for single-instance Railway deployment. If horizontal scaling is needed, switch to connect-sqlite3 or Redis-backed store.
+## 2026-06-23 — Sessions migrated from MemoryStore to SQLiteSessionStore
+MemoryStore is cleared on every Railway container restart, forcing re-login on mobile rotation (which triggers a reload). Replaced with a custom `SQLiteSessionStore` (server/sessionStore.js) that writes to the existing SQLite DB using a `sessions` table. The store implements only `get/set/destroy/touch` — the minimum express-session contract. A 24-hour `setInterval` sweeps expired rows. No external dependency needed since node-sqlite3-wasm is already bundled.
+
+## 2026-06-23 — Screen state persisted via localStorage key fc-last-screen
+The SPA had no URL routing — page refresh always landed on home. Added `saveScreenState()` called at navigation points (openClass, openLesson, back buttons) and `restoreLastScreen()` called on init/login/register. Only home/class/lesson are persisted; transient screens (study, quiz, flashcard) are not. Stale entries for deleted entities fall back to home via the `.catch()` path. The key is cleared on logout and on fresh registration to prevent cross-user state bleed.
+
+## 2026-06-18 — Sessions via express-session + MemoryStore (superseded 2026-06-23)
+Simple session approach for single-instance Railway deployment. Replaced by SQLiteSessionStore.
 
 ## 2026-06-18 — Google OAuth without passport
 Implemented raw OAuth2 code-exchange to avoid passport setup complexity. fetch() to Google token and userinfo endpoints directly.

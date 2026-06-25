@@ -6,6 +6,8 @@
 - Forgot password → email reset link (SMTP/Gmail via env vars)
 - Reset password page at /reset-password?token=...
 - Production security: dev reset token suppressed when NODE_ENV=production
+- Sessions persisted in SQLite (custom store replacing MemoryStore) — survives server restarts; expired rows cleaned up every 24 hours
+- Screen state persisted in localStorage — page refresh or re-login after session loss returns user to their last class or lesson screen
 
 ## Classes & Lessons
 - Create/edit/delete classes (icon, color)
