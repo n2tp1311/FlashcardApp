@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-06-25 — Audio pronunciation: pointer-events fix + Safari setTimeout workaround
+
+The 3D flip card uses `backface-visibility: hidden` to hide the back face visually, but browsers are not required to block pointer events on hidden backfaces. The back `🔊` button was therefore clickable even when the front was showing. Fixed by adding `.fc-back { pointer-events: none }` and re-enabling only after flip via `.fc-card.flipped .fc-back { pointer-events: auto }`. A separate Safari bug: calling `speechSynthesis.cancel()` then `speak()` synchronously can silently drop the utterance. Fixed by wrapping `speak()` in `setTimeout(fn, 50)`. The 50ms delay is imperceptible to users but gives the browser time to complete the cancel before starting the new utterance.
+
 ## 2026-06-25 — Keyboard shortcuts: unified handler + Escape-closes-any-modal
 
 Three scattered `keydown` listeners (flashcard, quiz, recall) were replaced with a single consolidated handler at the end of `app.js`. The unified handler dispatches by `getActiveScreen()` (reads the DOM `.screen.active` element — the DOM is the sole source of truth since `showScreen()` never stores the ID in `state`). `isInputFocused()` blocks shortcuts when focus is in INPUT/TEXTAREA/SELECT. `?` and `Escape` are handled before the input-focus guard so they work globally. Escape priority: keymap modal > overlay modal (via `closeAllModals()`) > share modal > prompt-guide modal > per-screen navigation. This ensures Escape always does "the most local" thing rather than accidentally navigating away while a modal is open.
