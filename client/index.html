@@ -95,6 +95,7 @@
       </div>
     </div>
     <button class="btn btn-ghost" id="btn-dashboard" style="display:none">📊 Dashboard</button>
+    <button class="btn btn-ghost" id="btn-analytics" style="display:none">📈 Analytics</button>
     <button class="btn btn-ghost" id="btn-show-keymap" title="Keyboard shortcuts (?)">⌨</button>
     <button class="btn btn-primary" id="btn-new-class">+ New Class</button>
   </header>
@@ -140,6 +141,27 @@
     <span class="dash-badge dash-badge-warn" id="dash-struggle-badge"></span>
   </h3>
   <div id="dash-struggle-list" class="dash-lesson-list"></div>
+</div>
+
+<!-- ===== SCREEN: Analytics ===== -->
+<div id="screen-analytics" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-analytics-back">← Back</button>
+    <h2 class="screen-title">Analytics</h2>
+    <button class="btn btn-ghost btn-sm" id="btn-analytics-export">⬇ Export CSV</button>
+  </header>
+  <div id="analytics-loading" class="empty-state hidden"><p>Loading…</p></div>
+  <div id="analytics-error" class="empty-state hidden"><p>Failed to load analytics.</p></div>
+  <h3 class="dash-section-label">90-Day Study Heatmap</h3>
+  <div class="stat-card" style="overflow-x:auto">
+    <div id="analytics-heatmap-wrap" class="heatmap-wrap"></div>
+  </div>
+  <h3 class="dash-section-label">Weekly Study Trend</h3>
+  <div class="stat-card">
+    <div id="analytics-trend-wrap"></div>
+  </div>
+  <h3 class="dash-section-label">Lesson Accuracy (worst first)</h3>
+  <div id="analytics-lesson-wrap" class="analytics-lesson-list"></div>
 </div>
 
 <!-- ===== SCREEN: Class Detail (Lesson List) ===== -->
@@ -641,6 +663,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <div class="keymap-section">
         <div class="keymap-section-title">Home</div>
         <div class="keymap-row"><kbd class="kbd">N</kbd><span>New class</span></div>
+        <div class="keymap-row"><kbd class="kbd">A</kbd><span>Analytics</span></div>
       </div>
       <div class="keymap-section">
         <div class="keymap-section-title">Class</div>
@@ -677,7 +700,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">1</kbd> <kbd class="kbd">2</kbd> <kbd class="kbd">3</kbd><span>Missed / Unsure / Got it</span></div>
       </div>
       <div class="keymap-section">
-        <div class="keymap-section-title">Results / Stats / Dashboard</div>
+        <div class="keymap-section-title">Results / Stats / Dashboard / Analytics</div>
         <div class="keymap-row"><kbd class="kbd">R</kbd><span>Retry (Results only)</span></div>
         <div class="keymap-row"><kbd class="kbd">Esc</kbd><span>Back</span></div>
       </div>

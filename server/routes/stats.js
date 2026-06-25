@@ -281,4 +281,71 @@ router.get("/dashboard", requireAuth, (req, res) => {
   });
 });
 
+router.get("/analytics", requireAuth, function(req, res) {
+  var uid = req.session.userId;
+
+  var heatmapRows = db.prepare(
+    "SELECT date(created_at,'unixepoch') AS day, COUNT(*) AS cnt " +
+    "FROM attempts " +
+    "WHERE user_id=? AND created_at >= strftime('%s','now','-90 days') " +
+    "GROUP BY day"
+  ).all(uid);
+
+  var weeklyRows = db.prepare(
+    "SELECT CAST((strftime('%s','now') - created_at) / 604800 AS INTEGER) AS weeks_ago, COUNT(*) AS cnt " +
+    "FROM attempts " +
+    "WHERE user_id=? AND created_at >= strftime('%s','now','-84 days') " +
+    "GROUP BY weeks_ago"
+  ).all(uid);
+
+  var lessonRows = db.prepare(
+    "SELECT l.id, l.title, cl.name AS class_name, " +
+    "COUNT(a.id) AS total_attempts, " +
+    "SUM(CASE WHEN a.correct=1 THEN 1 ELSE 0 END) AS correct_attempts " +
+    "FROM lessons l " +
+    "JOIN classes cl ON cl.id=l.class_id AND cl.user_id=? " +
+    "LEFT JOIN cards c ON c.lesson_id=l.id " +
+    "LEFT JOIN attempts a ON a.card_id=c.id AND a.user_id=? " +
+    "GROUP BY l.id " +
+    "HAVING total_attempts > 0 " +
+    "ORDER BY (correct_attempts * 1.0 / total_attempts) ASC"
+  ).all(uid, uid);
+
+  res.json({ heatmap: heatmapRows, weeklyTrend: weeklyRows, lessonBreakdown: lessonRows });
+});
+
+router.get("/analytics/export", requireAuth, function(req, res) {
+  var uid = req.session.userId;
+
+  var rows = db.prepare(
+    "SELECT date(a.created_at,'unixepoch') AS date, l.title AS lesson, " +
+    "c.data AS card_data, a.correct AS result " +
+    "FROM attempts a " +
+    "JOIN cards c ON a.card_id=c.id " +
+    "JOIN lessons l ON c.lesson_id=l.id " +
+    "JOIN classes cl ON l.class_id=cl.id " +
+    "WHERE a.user_id=? AND cl.user_id=? " +
+    "AND a.created_at >= strftime('%s','now','-90 days') " +
+    "ORDER BY a.created_at"
+  ).all(uid, uid);
+
+  function csvField(v) {
+    v = String(v).replace(/"/g, '""');
+    return /[,"\n]/.test(v) ? '"' + v + '"' : v;
+  }
+
+  var lines = ["date,lesson,card_front,result"];
+  rows.forEach(function(row) {
+    var data;
+    try { data = JSON.parse(row.card_data); } catch(_) { data = {}; }
+    var front = data.term || data.question || "";
+    lines.push([csvField(row.date), csvField(row.lesson), csvField(front),
+      row.result === 1 ? "correct" : "incorrect"].join(","));
+  });
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", 'attachment; filename="study-export.csv"');
+  res.send(lines.join("\n"));
+});
+
 module.exports = router;

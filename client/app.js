@@ -2803,6 +2803,169 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
 });
 
 /* ============================
+   ANALYTICS
+   ============================ */
+
+function renderAnalytics() {
+  showScreen("analytics");
+  var loadEl = document.getElementById("analytics-loading");
+  var errEl  = document.getElementById("analytics-error");
+  loadEl.classList.remove("hidden");
+  errEl.classList.add("hidden");
+  ["analytics-heatmap-wrap","analytics-trend-wrap","analytics-lesson-wrap"].forEach(function(id) {
+    document.getElementById(id).innerHTML = "";
+  });
+  store.getAnalytics().then(function(d) {
+    loadEl.classList.add("hidden");
+    renderHeatmap(d.heatmap);
+    renderWeeklyTrend(d.weeklyTrend);
+    renderLessonBreakdown(d.lessonBreakdown);
+  }).catch(function() {
+    loadEl.classList.add("hidden");
+    errEl.classList.remove("hidden");
+  });
+}
+
+function renderHeatmap(rows) {
+  var wrap = document.getElementById("analytics-heatmap-wrap");
+  var map = {};
+  rows.forEach(function(r) { map[r.day] = r.cnt; });
+
+  var today = new Date();
+  var cells = [];
+  for (var i = 89; i >= 0; i--) {
+    // Use UTC date arithmetic to match server's date(created_at,'unixepoch') which returns UTC dates
+    var d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
+    var key = d.toISOString().slice(0, 10);
+    cells.push({ key: key, cnt: map[key] || 0, month: d.getUTCMonth(), dayOfWeek: d.getUTCDay() });
+  }
+
+  function intensity(cnt) {
+    if (cnt === 0) return "heat-0";
+    if (cnt <= 5)  return "heat-1";
+    if (cnt <= 15) return "heat-2";
+    return "heat-3";
+  }
+
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var firstDay = cells[0].dayOfWeek;
+  var padded = [];
+  for (var p = 0; p < firstDay; p++) padded.push(null);
+  padded = padded.concat(cells);
+  while (padded.length % 7 !== 0) padded.push(null);
+
+  var numCols = padded.length / 7;
+  var labelRow = document.createElement("div");
+  labelRow.className = "heatmap-months";
+  var grid = document.createElement("div");
+  grid.className = "heatmap-grid";
+  var lastMonthLabel = null;
+
+  for (var col = 0; col < numCols; col++) {
+    var colEl = document.createElement("div");
+    colEl.className = "heatmap-col";
+    var firstRealCell = null;
+    for (var row = 0; row < 7; row++) {
+      var cell = padded[col * 7 + row];
+      var cellEl = document.createElement("div");
+      if (!cell) {
+        cellEl.className = "heatmap-cell heat-empty";
+      } else {
+        cellEl.className = "heatmap-cell " + intensity(cell.cnt);
+        cellEl.title = cell.key + ": " + cell.cnt + " attempt" + (cell.cnt !== 1 ? "s" : "");
+        if (!firstRealCell) firstRealCell = cell;
+      }
+      colEl.appendChild(cellEl);
+    }
+    grid.appendChild(colEl);
+
+    var monthLabel = document.createElement("span");
+    monthLabel.className = "heatmap-month-label";
+    if (firstRealCell && firstRealCell.month !== lastMonthLabel) {
+      monthLabel.textContent = MONTHS[firstRealCell.month];
+      lastMonthLabel = firstRealCell.month;
+    }
+    labelRow.appendChild(monthLabel);
+  }
+
+  wrap.appendChild(labelRow);
+  wrap.appendChild(grid);
+}
+
+function renderWeeklyTrend(rows) {
+  var wrap = document.getElementById("analytics-trend-wrap");
+  var map = {};
+  rows.forEach(function(r) { map[r.weeks_ago] = r.cnt; });
+
+  var max = 0;
+  var weeks = [];
+  for (var w = 11; w >= 0; w--) {
+    var cnt = map[w] || 0;
+    if (cnt > max) max = cnt;
+    weeks.push({ weeksAgo: w, cnt: cnt });
+  }
+
+  weeks.forEach(function(week) {
+    var pct = max > 0 ? Math.round(week.cnt / max * 100) : 0;
+    var label = week.weeksAgo === 0 ? "This week" :
+                week.weeksAgo === 1 ? "Last week" :
+                week.weeksAgo + "w ago";
+    var rowEl = document.createElement("div");
+    rowEl.className = "trend-row";
+    rowEl.innerHTML =
+      '<span class="trend-label">' + escHtml(label) + '</span>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="trend-count">' + week.cnt + '</span>';
+    wrap.appendChild(rowEl);
+  });
+}
+
+function renderLessonBreakdown(rows) {
+  var wrap = document.getElementById("analytics-lesson-wrap");
+  if (!rows || !rows.length) {
+    wrap.innerHTML = '<div class="dash-empty-note">No study data yet.</div>';
+    return;
+  }
+  rows.forEach(function(lesson) {
+    var accuracy = lesson.total_attempts > 0
+      ? Math.round(lesson.correct_attempts / lesson.total_attempts * 100)
+      : 0;
+    var accClass = accuracy >= 70 ? "acc-good" : accuracy >= 40 ? "acc-mid" : "acc-bad";
+    var barColor = accuracy >= 70 ? "#16a34a" : accuracy >= 40 ? "#d97706" : "#dc2626";
+    var rowEl = document.createElement("div");
+    rowEl.className = "analytics-lesson-row";
+    rowEl.innerHTML =
+      '<div class="analytics-lesson-info">' +
+        '<span class="analytics-lesson-title">' + escHtml(lesson.title) + '</span>' +
+        '<span class="analytics-lesson-class">' + escHtml(lesson.class_name) + '</span>' +
+      '</div>' +
+      '<div class="analytics-lesson-stats">' +
+        '<span class="analytics-lesson-accuracy ' + accClass + '">' + accuracy + '%</span>' +
+        '<div class="analytics-retention-bar">' +
+          '<div class="analytics-retention-fill" style="width:' + accuracy + '%;background:' + barColor + '"></div>' +
+        '</div>' +
+        '<span class="analytics-lesson-attempts">' + lesson.total_attempts + ' att.</span>' +
+      '</div>';
+    rowEl.addEventListener("click", function() {
+      openStats("lesson", lesson.id, lesson.title);
+    });
+    wrap.appendChild(rowEl);
+  });
+}
+
+document.getElementById("btn-analytics").addEventListener("click", function() {
+  renderAnalytics();
+});
+
+document.getElementById("btn-analytics-back").addEventListener("click", function() {
+  showScreen("home");
+});
+
+document.getElementById("btn-analytics-export").addEventListener("click", function() {
+  window.location.href = "/api/stats/analytics/export";
+});
+
+/* ============================
    BULK LESSON + CARD IMPORT
    ============================ */
 
@@ -3129,6 +3292,7 @@ var SQLiteAdapter = (function() {
 
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
     getDashboard: function() { return req("GET", "/stats/dashboard"); },
+    getAnalytics: function() { return req("GET", "/stats/analytics"); },
 
     markCardsSeen: function(cardIds) {
       if (!cardIds || !cardIds.length) return Promise.resolve();
@@ -3210,7 +3374,8 @@ function initUserNav() {
   nav.classList.remove("hidden");
   document.getElementById("user-name-display").textContent = currentUser.name;
   document.getElementById("user-dropdown-email").textContent = currentUser.email || "";
-  // Show/hide Google link option based on server config
+  document.getElementById("btn-dashboard").style.display = "";
+  document.getElementById("btn-analytics").style.display = "";
   var linkBtn = document.getElementById("btn-link-google");
   if (linkBtn && window.APP_CONFIG && window.APP_CONFIG.googleEnabled) {
     linkBtn.classList.remove("hidden");
@@ -3386,6 +3551,7 @@ if (IS_SERVER && !currentUser) {
 } else {
   initUserNav();
   if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
+  if (IS_SERVER) document.getElementById("btn-analytics").style.display = "";
   renderSharedWithMe();
   restoreLastScreen();
 }
@@ -3720,6 +3886,7 @@ document.addEventListener("keydown", function(e) {
 
   if (screen === "home") {
     if (e.key === "n" || e.key === "N") openNewClass();
+    else if ((e.key === "a" || e.key === "A") && IS_SERVER) renderAnalytics();
   }
 
   else if (screen === "class") {
@@ -3772,6 +3939,10 @@ document.addEventListener("keydown", function(e) {
   else if (screen === "dashboard") {
     if (e.key === "Escape") document.getElementById("btn-dashboard-back").click();
   }
+
+  else if (screen === "analytics") {
+    if (e.key === "Escape") document.getElementById("btn-analytics-back").click();
+  }
 });
 
 // Recall: Enter in textarea reveals answer
@@ -3799,6 +3970,7 @@ function injectKeyHints() {
     ["btn-results-back",   "[Esc]"],
     ["btn-stats-back",     "[Esc]"],
     ["btn-dashboard-back", "[Esc]"],
+    ["btn-analytics-back", "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
     ["btn-recall-back",    "[Esc]"],
     ["btn-recall-reveal",  "[Enter]"],
