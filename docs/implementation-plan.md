@@ -273,6 +273,68 @@ Easy < 0.3 | Medium 0.3–0.6 | Hard ≥ 0.6 | New = 0 attempts
 Three tabs: Overview (counts, accuracy, difficulty bar), Hardest Cards (top 30), All Attempted.
 Accessible per-lesson, per-class, or globally.
 
+### 5.8 Audio Pronunciation
+
+A speaker button on the flashcard front and back triggers Web Speech API `SpeechSynthesis` to read the card text aloud. No backend changes — purely client-side. Works in all modern browsers; silently omitted where `speechSynthesis` is unavailable.
+
+| Setting | Value |
+|---------|-------|
+| Trigger | Click 🔊 button or keyboard shortcut `P` |
+| Scope | Flashcard mode (front and back face); term-def and MCQ |
+| Language | Browser default; no override in v1 |
+
+### 5.9 Image Cards
+
+A third card format (`image-def`) where the front is an uploaded image and the back is a text definition. Images stored server-side in `data/uploads/`; served at `/uploads/:filename`. Max 5 MB per image; JPEG/PNG/GIF/WebP accepted.
+
+| | Format C: Image → Definition |
+|---|---|
+| Schema | `{ imageUrl: "/uploads/abc.jpg", def: "text" }` |
+| Flashcard front | Image rendered in card |
+| Flashcard back | Definition text (with LaTeX) |
+| Quiz | Image as question; definition = correct; other defs = distractors |
+| Bulk input | Not supported — one-by-one editor only |
+
+### 5.10 Keyboard-Only Mode
+
+Every user action reachable from the keyboard. Extends existing shortcuts to cover all screens:
+
+| Screen | Key | Action |
+|--------|-----|--------|
+| Home | `N` | New class |
+| Class | `N` | New lesson; `E` edit class; `Backspace` back |
+| Lesson | `N` | New card; `B` bulk paste; `S` start study; `Backspace` back |
+| Flashcard | `P` play pronunciation; `S` shuffle; `R` reset; `F` filter still-learning |
+| Quiz | `Esc` back to setup |
+| Global | `H` home; `?` show key map overlay |
+
+A `?` modal lists all shortcuts. Desktop buttons show `[key]` hints.
+
+### 5.11 FSRS Scheduling
+
+Upgrade per-card SRS from fixed step intervals to FSRS-4.5 — achieves 20–30% fewer reviews for the same retention target. Pure algorithm swap; quiz flow and UI unchanged.
+
+Schema additions to `card_states`:
+- `fsrs_stability REAL` — memory stability (days to 90% retention)
+- `fsrs_difficulty REAL` — intrinsic card difficulty 1–10
+- `fsrs_state TEXT` — `new / learning / review / relearning`
+- `fsrs_reps INTEGER`, `fsrs_lapses INTEGER`
+
+Rating map: ✗ Missed → Again(1), ~ Unsure → Hard(2), ✓ Got It → Good(3).
+
+### 5.12 Analytics Screen
+
+Dedicated `#screen-analytics` for study patterns and weak-spot discovery.
+
+| Section | Content |
+|---------|---------|
+| Daily heatmap | GitHub-style 90-day grid of study sessions |
+| Weak-spot report | Cards with >60% error rate in last 7 days |
+| Per-card retention | Accuracy bars for attempted cards |
+| Export | Download all attempt data as CSV |
+
+Data from existing `attempts` table — no schema changes.
+
 ### 5.7 LaTeX Rendering
 
 #### Why LaTeX Is Essential
@@ -769,7 +831,7 @@ POST /api/import  { classes, lessons, cards, history, known }
 
 ---
 
-## 11. Current Build Status (as of 2026-06-19)
+## 11. Current Build Status (as of 2026-06-25)
 
 ### 11.1 Completed Features
 
@@ -797,33 +859,37 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Dashboard screen | Done | Server mode only; streak, accuracy, due/struggling lessons |
 | Interleaved vs Blocked card order | Done | Pill on setup screen, 2+ lessons only |
 | SQLite via WASM (Railway compatible) | Done | Lock file cleared on startup |
-| Session auth (express-session) | Done | MemoryStore, single-instance |
+| Session auth (express-session) | Done | SQLiteSessionStore; sessions survive restarts |
 | Docker + Railway deploy | Done | |
+| MCQ Explanation field | Done | `;;` delimiter in bulk; collapsible panel in quiz + flashcard |
+| Recall mode | Done | Type answer, self-grade with 3 buttons; source=`recall` |
+| Session persistence (SQLiteSessionStore) | Done | Replaced MemoryStore; survives Railway restarts |
+| Screen state restoration on refresh | Done | `fc-last-screen` localStorage key; restores class/lesson |
+| Bulk delete lessons + cards | Done | Select mode with checkboxes, select-all, delete |
 
 ### 11.2 Pending Features — Priority Order
 
-**Priority 1 — Dashboard polish** (done, but watch for edge cases)
-- Struggling lessons threshold is >40% hard-rated; revisit based on user feedback.
+**Priority 1 — Keyboard-Only Mode** (§5.10)
+- Full key map covering home/class/lesson/flashcard/quiz/global screens.
+- `?` modal listing all shortcuts. Desktop button hints `[K]`.
 
-**Priority 2 — MCQ Explanation Field**
-- Add `explanation` to card JSON data for both formats.
-- Update AI prompt guide template to emit the field.
-- Add explanation textarea to card editor.
-- Show collapsed explanation panel in quiz results per card (expands on tap).
-- Implements "delayed feedback" pattern from learning science research (see `docs/research.md`).
+**Priority 2 — Audio Pronunciation** (§5.8)
+- 🔊 button on flashcard front and back; Web Speech API TTS.
+- Keyboard shortcut `P`; silent fallback when API unavailable.
 
-**Priority 3 — Recall Mode**
-- New study mode: user types free-text answer, taps Reveal, self-grades.
-- Requires new setup mode option and a new study screen (or branched quiz screen).
-- Self-grade options: Easy / Hard (two-button) or thumbs up/down.
-- Evidence: free recall produces ~80% long-term retention vs ~34% for passive re-reading.
+**Priority 3 — Analytics Screen** (§5.12)
+- 90-day study heatmap, weak-spot report, per-card retention bars, CSV export.
+- New `#screen-analytics`; data from existing `attempts` table.
 
-**Priority 4 — FSRS Spaced Repetition** (deferred, revisit later)
-- Replace or complement fixed-interval scheduler with FSRS algorithm.
-- Open-source JS library available; only the interval-calculation step changes.
-- See `docs/decisions.md` for rationale on deferral.
+**Priority 4 — Image Cards** (§5.9)
+- New `image-def` card format; upload to `data/uploads/`; served at `/uploads/:id`.
+- Card editor: file picker; flashcard front renders image.
 
-**Priority 5 — Confidence-Based Repetition** (deferred)
+**Priority 5 — FSRS Scheduling** (§5.11)
+- Upgrade step-based SRS to FSRS-4.5 algorithm.
+- Schema additions to `card_states`; rating map unchanged from user perspective.
+
+**Deferred — Confidence-Based Repetition**
 - Post-answer 1–5 rating. Deferred due to flow interruption concern.
 
 ### 11.3 Known Bugs Fixed

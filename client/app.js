@@ -2042,16 +2042,6 @@ document.getElementById("btn-fc-back").addEventListener("click", function() {
   returnFromStudy();
 });
 
-// Keyboard shortcuts for flashcards
-document.addEventListener("keydown", function(e) {
-  if (!document.getElementById("screen-flashcard").classList.contains("active")) return;
-  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-  if (e.key === "ArrowLeft")  document.getElementById("btn-fc-prev").click();
-  if (e.key === "ArrowRight") document.getElementById("btn-fc-next").click();
-  if (e.key === " " || e.key === "Enter") { e.preventDefault(); document.getElementById("fc-scene").click(); }
-  if (e.key === "1") document.getElementById("btn-fc-learning").click();
-  if (e.key === "2") document.getElementById("btn-fc-known").click();
-});
 
 /* ============================
    QUIZ
@@ -2197,13 +2187,6 @@ function answerQuiz(selectedIdx) {
   }
 }
 
-// Keyboard shortcuts for quiz
-document.addEventListener("keydown", function(e) {
-  if (!document.getElementById("screen-quiz").classList.contains("active")) return;
-  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-  var num = parseInt(e.key, 10);
-  if (num >= 1 && num <= 5 && num <= state.quizOptions.length) answerQuiz(num - 1);
-});
 
 document.getElementById("btn-quiz-back").addEventListener("click", function() {
   returnFromStudy();
@@ -2336,20 +2319,6 @@ document.getElementById("btn-recall-medium").addEventListener("click", function(
 document.getElementById("btn-recall-easy").addEventListener("click",   function() { gradeRecall("easy"); });
 document.getElementById("btn-recall-back").addEventListener("click",   returnFromStudy);
 
-// Keyboard: Enter to reveal (when in textarea), 1/2/3 to grade after reveal
-document.addEventListener("keydown", function(e) {
-  if (!document.getElementById("screen-recall").classList.contains("active")) return;
-  if (e.target.tagName === "TEXTAREA") {
-    if (e.key === "Enter" && !e.shiftKey && !state.recallRevealed) {
-      e.preventDefault();
-      revealRecall();
-    }
-    return;
-  }
-  if (e.key === "1") gradeRecall("hard");
-  else if (e.key === "2") gradeRecall("medium");
-  else if (e.key === "3") gradeRecall("easy");
-});
 
 /* ============================
    QUIZ RESULTS
@@ -3645,3 +3614,177 @@ document.getElementById("btn-send-invite").addEventListener("click", function() 
     loadInviteList(shareModalClassId);
   });
 });
+
+/* ============================
+   KEYBOARD SHORTCUTS
+   ============================ */
+
+function getActiveScreen() {
+  var el = document.querySelector(".screen.active");
+  return el ? el.id.replace("screen-", "") : null;
+}
+
+function isInputFocused() {
+  var tag = document.activeElement && document.activeElement.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
+function toggleKeymapModal() {
+  var km = document.getElementById("modal-keymap");
+  km.classList.toggle("hidden");
+}
+
+document.getElementById("btn-keymap-close").addEventListener("click", function() {
+  document.getElementById("modal-keymap").classList.add("hidden");
+});
+document.getElementById("modal-keymap").addEventListener("click", function(e) {
+  if (e.target === this) this.classList.add("hidden");
+});
+document.getElementById("btn-show-keymap").addEventListener("click", toggleKeymapModal);
+
+document.addEventListener("keydown", function(e) {
+  var screen = getActiveScreen();
+  if (!screen) return;
+
+  // Escape closes any open modal (keymap first, then overlay, then share/prompt-guide)
+  if (e.key === "Escape") {
+    if (!document.getElementById("modal-keymap").classList.contains("hidden")) {
+      document.getElementById("modal-keymap").classList.add("hidden");
+      return;
+    }
+    if (!document.getElementById("modal-overlay").classList.contains("hidden")) {
+      closeAllModals();
+      return;
+    }
+    if (!document.getElementById("modal-share").classList.contains("hidden")) {
+      closeShareModal();
+      return;
+    }
+    if (!document.getElementById("modal-prompt-guide").classList.contains("hidden")) {
+      document.getElementById("modal-prompt-guide").classList.add("hidden");
+      return;
+    }
+  }
+
+  // Block all other shortcuts when any overlay modal is open or focus is in a text field
+  var anyModalOpen = !document.getElementById("modal-overlay").classList.contains("hidden") ||
+    !document.getElementById("modal-share").classList.contains("hidden") ||
+    !document.getElementById("modal-prompt-guide").classList.contains("hidden");
+  if (anyModalOpen) return;
+  if (isInputFocused()) return;
+
+  // ? toggles keymap modal (only when not typing in a field)
+  if (e.key === "?") {
+    e.preventDefault();
+    toggleKeymapModal();
+    return;
+  }
+
+  // Global: H = home (any screen)
+  if (e.key === "h" || e.key === "H") {
+    renderHome();
+    showScreen("home");
+    saveScreenState("home");
+    return;
+  }
+
+  if (screen === "home") {
+    if (e.key === "n" || e.key === "N") openNewClass();
+  }
+
+  else if (screen === "class") {
+    if (e.key === "n" || e.key === "N") openNewLesson();
+    else if (e.key === "e" || e.key === "E") { if (state.currentClass) openEditClass(state.currentClass.id); }
+    else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-class-back").click(); }
+  }
+
+  else if (screen === "lesson") {
+    if (e.key === "n" || e.key === "N") openAddCard();
+    else if (e.key === "b" || e.key === "B") openBulkAdd();
+    else if (e.key === "s" || e.key === "S") { if (state.currentLesson) openSetup(); }
+    else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-lesson-back").click(); }
+  }
+
+  else if (screen === "flashcard") {
+    if (e.key === "ArrowLeft")  document.getElementById("btn-fc-prev").click();
+    else if (e.key === "ArrowRight") document.getElementById("btn-fc-next").click();
+    else if (e.key === " " || e.key === "Enter") { e.preventDefault(); document.getElementById("fc-scene").click(); }
+    else if (e.key === "1") document.getElementById("btn-fc-learning").click();
+    else if (e.key === "2") document.getElementById("btn-fc-known").click();
+    else if (e.key === "s" || e.key === "S") document.getElementById("btn-fc-shuffle").click();
+    else if (e.key === "r" || e.key === "R") document.getElementById("btn-fc-reset").click();
+    else if (e.key === "f" || e.key === "F") document.getElementById("btn-fc-study-hard").click();
+  }
+
+  else if (screen === "quiz") {
+    var num = parseInt(e.key, 10);
+    if (num >= 1 && num <= 5 && num <= state.quizOptions.length) answerQuiz(num - 1);
+    else if (e.key === "Escape") returnFromStudy();
+  }
+
+  else if (screen === "recall") {
+    if (e.key === "1") gradeRecall("hard");
+    else if (e.key === "2") gradeRecall("medium");
+    else if (e.key === "3") gradeRecall("easy");
+    else if (e.key === "Escape") returnFromStudy();
+  }
+
+  else if (screen === "results") {
+    if (e.key === "r" || e.key === "R") document.getElementById("btn-results-retry").click();
+    else if (e.key === "Escape") returnFromStudy();
+  }
+
+  else if (screen === "stats") {
+    if (e.key === "Escape") document.getElementById("btn-stats-back").click();
+  }
+
+  else if (screen === "dashboard") {
+    if (e.key === "Escape") document.getElementById("btn-dashboard-back").click();
+  }
+});
+
+// Recall: Enter in textarea reveals answer
+document.getElementById("recall-answer-input").addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey && !state.recallRevealed) {
+    e.preventDefault();
+    revealRecall();
+  }
+});
+
+function injectKeyHints() {
+  var hints = [
+    ["btn-new-class",      "[N]"],
+    ["btn-new-lesson",     "[N]"],
+    ["btn-edit-class",     "[E]"],
+    ["btn-class-back",     "[⌫]"],
+    ["btn-lesson-back",    "[⌫]"],
+    ["btn-add-card",       "[N]"],
+    ["btn-bulk-add",       "[B]"],
+    ["btn-study-lesson",   "[S]"],
+    ["btn-fc-shuffle",     "[S]"],
+    ["btn-fc-reset",       "[R]"],
+    ["btn-fc-study-hard",  "[F]"],
+    ["btn-results-retry",  "[R]"],
+    ["btn-results-back",   "[Esc]"],
+    ["btn-stats-back",     "[Esc]"],
+    ["btn-dashboard-back", "[Esc]"],
+    ["btn-quiz-back",      "[Esc]"],
+    ["btn-recall-back",    "[Esc]"],
+    ["btn-recall-reveal",  "[Enter]"],
+    ["btn-recall-hard",    "[1]"],
+    ["btn-recall-medium",  "[2]"],
+    ["btn-recall-easy",    "[3]"],
+    ["btn-fc-learning",    "[1]"],
+    ["btn-fc-known",       "[2]"]
+  ];
+  hints.forEach(function(pair) {
+    var btn = document.getElementById(pair[0]);
+    if (!btn) return;
+    var span = document.createElement("span");
+    span.className = "btn-key-hint";
+    span.textContent = " " + pair[1];
+    btn.appendChild(span);
+  });
+}
+
+injectKeyHints();

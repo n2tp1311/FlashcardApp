@@ -95,6 +95,7 @@
       </div>
     </div>
     <button class="btn btn-ghost" id="btn-dashboard" style="display:none">📊 Dashboard</button>
+    <button class="btn btn-ghost" id="btn-show-keymap" title="Keyboard shortcuts (?)">⌨</button>
     <button class="btn btn-primary" id="btn-new-class">+ New Class</button>
   </header>
   <div id="class-list" class="class-grid"></div>
@@ -617,6 +618,66 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary" id="btn-copy-prompt">📋 Copy Prompt</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Keyboard Shortcuts ===== -->
+<div id="modal-keymap" class="modal-overlay hidden">
+  <div class="modal keymap-modal">
+    <div class="modal-header">
+      <h3>Keyboard Shortcuts</h3>
+      <button class="modal-close" id="btn-keymap-close">✕</button>
+    </div>
+    <div class="modal-body keymap-body">
+      <div class="keymap-section">
+        <div class="keymap-section-title">Global</div>
+        <div class="keymap-row"><kbd class="kbd">?</kbd><span>Toggle this help</span></div>
+        <div class="keymap-row"><kbd class="kbd">H</kbd><span>Go to Home</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span>Close / Go back</span></div>
+      </div>
+      <div class="keymap-section">
+        <div class="keymap-section-title">Home</div>
+        <div class="keymap-row"><kbd class="kbd">N</kbd><span>New class</span></div>
+      </div>
+      <div class="keymap-section">
+        <div class="keymap-section-title">Class</div>
+        <div class="keymap-row"><kbd class="kbd">N</kbd><span>New lesson</span></div>
+        <div class="keymap-row"><kbd class="kbd">E</kbd><span>Edit class</span></div>
+        <div class="keymap-row"><kbd class="kbd">⌫</kbd><span>Back</span></div>
+      </div>
+      <div class="keymap-section">
+        <div class="keymap-section-title">Lesson</div>
+        <div class="keymap-row"><kbd class="kbd">N</kbd><span>New card</span></div>
+        <div class="keymap-row"><kbd class="kbd">B</kbd><span>Bulk paste</span></div>
+        <div class="keymap-row"><kbd class="kbd">S</kbd><span>Start study</span></div>
+        <div class="keymap-row"><kbd class="kbd">⌫</kbd><span>Back</span></div>
+      </div>
+      <div class="keymap-section">
+        <div class="keymap-section-title">Flashcards</div>
+        <div class="keymap-row"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd><span>Prev / Next</span></div>
+        <div class="keymap-row"><kbd class="kbd">Space</kbd><span>Flip card</span></div>
+        <div class="keymap-row"><kbd class="kbd">1</kbd><span>Still Learning</span></div>
+        <div class="keymap-row"><kbd class="kbd">2</kbd><span>Know It</span></div>
+        <div class="keymap-row"><kbd class="kbd">S</kbd><span>Shuffle</span></div>
+        <div class="keymap-row"><kbd class="kbd">R</kbd><span>Reset to start</span></div>
+        <div class="keymap-row"><kbd class="kbd">F</kbd><span>Filter hard/new</span></div>
+      </div>
+      <div class="keymap-section">
+        <div class="keymap-section-title">Quiz</div>
+        <div class="keymap-row"><kbd class="kbd">1</kbd>–<kbd class="kbd">5</kbd><span>Select option</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span>Back to setup</span></div>
+      </div>
+      <div class="keymap-section">
+        <div class="keymap-section-title">Recall</div>
+        <div class="keymap-row"><kbd class="kbd">Enter</kbd><span>Reveal answer</span></div>
+        <div class="keymap-row"><kbd class="kbd">1</kbd> <kbd class="kbd">2</kbd> <kbd class="kbd">3</kbd><span>Missed / Unsure / Got it</span></div>
+      </div>
+      <div class="keymap-section">
+        <div class="keymap-section-title">Results / Stats / Dashboard</div>
+        <div class="keymap-row"><kbd class="kbd">R</kbd><span>Retry (Results only)</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span>Back</span></div>
+      </div>
     </div>
   </div>
 </div>
