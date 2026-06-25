@@ -80,6 +80,22 @@ function splitLatex(text) {
 })();
 
 /* ============================
+   TEXT-TO-SPEECH
+   ============================ */
+
+function speakText(text) {
+  if (!window.speechSynthesis || !text) return;
+  var clean = text
+    .replace(/\$\$[\s\S]+?\$\$/g, "")
+    .replace(/\$(?!\$)[\s\S]+?(?<!\$)\$/g, "")
+    .trim();
+  if (!clean) return;
+  window.speechSynthesis.cancel();
+  // setTimeout avoids a Safari bug where speak() called synchronously after cancel() is silently dropped
+  setTimeout(function() { window.speechSynthesis.speak(new SpeechSynthesisUtterance(clean)); }, 50);
+}
+
+/* ============================
    BULK PARSE (pipe protection)
    ============================ */
 
@@ -568,6 +584,8 @@ var state = {
   studyDirection: "term-def",
   studyFlipped: false,
   studyKnownMap: {},
+  studyFrontText: "",
+  studyBackText: "",
 
   // Quiz
   quizCards: [],
@@ -1907,6 +1925,8 @@ function renderFlashcard() {
     back  = card.data.correct;
   }
 
+  state.studyFrontText = front || "";
+  state.studyBackText  = back  || "";
   renderLatex(front, frontEl);
   renderLatex(back,  backEl);
 
@@ -1979,6 +1999,16 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   document.getElementById("fc-card").classList.toggle("flipped", state.studyFlipped);
   var expContainer = document.getElementById("fc-explanation");
   expContainer.classList.toggle("hidden", !state.studyFlipped || expContainer.innerHTML === "");
+});
+
+document.getElementById("btn-fc-audio-front").addEventListener("click", function(e) {
+  e.stopPropagation();
+  speakText(state.studyFrontText);
+});
+
+document.getElementById("btn-fc-audio-back").addEventListener("click", function(e) {
+  e.stopPropagation();
+  speakText(state.studyBackText);
 });
 
 document.getElementById("btn-fc-prev").addEventListener("click", function() {
@@ -3714,6 +3744,7 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "s" || e.key === "S") document.getElementById("btn-fc-shuffle").click();
     else if (e.key === "r" || e.key === "R") document.getElementById("btn-fc-reset").click();
     else if (e.key === "f" || e.key === "F") document.getElementById("btn-fc-study-hard").click();
+    else if (e.key === "p" || e.key === "P") speakText(state.studyFlipped ? state.studyBackText : state.studyFrontText);
   }
 
   else if (screen === "quiz") {
@@ -3775,7 +3806,9 @@ function injectKeyHints() {
     ["btn-recall-medium",  "[2]"],
     ["btn-recall-easy",    "[3]"],
     ["btn-fc-learning",    "[1]"],
-    ["btn-fc-known",       "[2]"]
+    ["btn-fc-known",       "[2]"],
+    ["btn-fc-audio-front", "[P]"],
+    ["btn-fc-audio-back",  "[P]"]
   ];
   hints.forEach(function(pair) {
     var btn = document.getElementById(pair[0]);

@@ -781,6 +781,43 @@ code {
 .badge-medium { background: var(--warning-light); color: var(--warning); }
 .badge-hard { background: var(--danger-light); color: var(--danger); }
 
+.btn-audio {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--text3);
+  transition: background var(--transition), color var(--transition);
+  z-index: 1;
+  padding: 0;
+}
+.btn-audio:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+.fc-back {
+  pointer-events: none;
+}
+.fc-card.flipped .fc-back {
+  pointer-events: auto;
+}
+.fc-back .btn-audio {
+  color: rgba(232, 230, 225, 0.5);
+}
+.fc-back .btn-audio:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e8e6e1;
+}
+
 .fc-dots {
   display: flex;
   gap: 5px;
