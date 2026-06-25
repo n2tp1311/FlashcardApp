@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-06-25 — Analytics heatmap: UTC date keys on client match server's SQLite date('unixepoch')
+
+The heatmap generates 90 day-cells on the client and matches them against server-supplied dates from `date(created_at,'unixepoch')` (UTC). Using local-midnight `new Date(y,m,d).toISOString().slice(0,10)` produces the wrong (previous) UTC date for users in UTC+ timezones because `toISOString()` converts local midnight to UTC before formatting. Fixed by using UTC date arithmetic: `new Date(Date.UTC(y,m,d-i))` then `.toISOString().slice(0,10)`, which correctly generates the UTC date the server would return for any given day. Similarly, `getUTCMonth()` and `getUTCDay()` are used for month label and weekday alignment rather than their local-time counterparts.
+
+## 2026-06-25 — Analytics weekly trend uses rolling 7-day buckets, not calendar weeks
+
+The weekly trend chart groups attempts by `(now - created_at) / 604800` integer division — this is a rolling 7-day window anchored to the current second, not Monday–Sunday calendar weeks. The label "This week" therefore means "the past 7 days" rather than the current Mon–Sun week. This was chosen because the server already has Unix timestamps and the formula is simple; calendar-week alignment would require knowing the user's day-of-week locale and aligning to week start. A future improvement could align to ISO weeks, but rolling windows are good enough for a trend chart.
+
 ## 2026-06-25 — Audio pronunciation: pointer-events fix + Safari setTimeout workaround
 
 The 3D flip card uses `backface-visibility: hidden` to hide the back face visually, but browsers are not required to block pointer events on hidden backfaces. The back `🔊` button was therefore clickable even when the front was showing. Fixed by adding `.fc-back { pointer-events: none }` and re-enabling only after flip via `.fc-card.flipped .fc-back { pointer-events: auto }`. A separate Safari bug: calling `speechSynthesis.cancel()` then `speak()` synchronously can silently drop the utterance. Fixed by wrapping `speak()` in `setTimeout(fn, 50)`. The 50ms delay is imperceptible to users but gives the browser time to complete the cancel before starting the new utterance.

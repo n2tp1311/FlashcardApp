@@ -64,6 +64,15 @@
 - Progress bars (known/total) on class and lesson lists
 - Stats screen with hardest cards
 
+## Analytics (server mode only)
+
+- `📈 Analytics` button on home header; `A` key on home screen; `Esc` to go back
+- `GET /api/stats/analytics` endpoint returns heatmap, weekly trend, and lesson breakdown
+- **90-day study heatmap** — GitHub-style calendar; cells colored by daily attempt count (0 / 1–5 / 6–15 / 16+); month labels; UTC date keys match server's SQLite `date('unixepoch')` dates
+- **12-week rolling trend** — CSS-only bar chart showing attempts per 7-day rolling window; "This week" / "Last week" / "Xw ago" labels
+- **Lesson accuracy breakdown** — all lessons with study data, sorted worst-first (lowest accuracy), with accuracy %, retention bar, attempt count; clicking a row navigates to the lesson's Stats screen
+- **CSV export** — "⬇ Export CSV" button downloads last 90 days of attempt history as `study-export.csv` (`date,lesson,card_front,result`)
+
 ## Dashboard (server mode only)
 - Accessible from home screen header button
 - `GET /api/stats/dashboard` endpoint, renders `#screen-dashboard`
