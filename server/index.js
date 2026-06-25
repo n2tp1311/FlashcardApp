@@ -1,9 +1,9 @@
 "use strict";
 
-const express      = require("express");
-const session      = require("express-session");
-const MemoryStore  = require("memorystore")(session);
-const path         = require("path");
+const express              = require("express");
+const session              = require("express-session");
+const SQLiteSessionStore   = require("./sessionStore");
+const path                 = require("path");
 const fs           = require("fs");
 
 const app    = express();
@@ -18,7 +18,7 @@ if (!fs.existsSync(DATA)) fs.mkdirSync(DATA, { recursive: true });
 app.use(express.json({ limit: "10mb" }));
 
 app.use(session({
-  store: new MemoryStore({ checkPeriod: 86400000 }),
+  store: new SQLiteSessionStore(),
   secret: process.env.SESSION_SECRET || "fc-dev-secret-change-in-prod",
   resave: false,
   saveUninitialized: false,
@@ -81,3 +81,8 @@ app.use(express.static(CLIENT, { index: false }));
 app.listen(PORT, () => {
   console.log(`Flashcard server running at http://localhost:${PORT}`);
 });
+
+const db = require("./db");
+setInterval(function() {
+  db.prepare("DELETE FROM sessions WHERE expired <= ?").run(Math.floor(Date.now() / 1000));
+}, 24 * 60 * 60 * 1000);

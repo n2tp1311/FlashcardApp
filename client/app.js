@@ -612,6 +612,55 @@ function showScreen(id) {
   if (el) { el.classList.add("active"); window.scrollTo(0, 0); }
 }
 
+function saveScreenState(screen, classId, lessonId) {
+  if (!IS_SERVER) return;
+  try {
+    localStorage.setItem("fc-last-screen", JSON.stringify({
+      screen: screen,
+      classId: classId || null,
+      lessonId: lessonId || null
+    }));
+  } catch (_) {}
+}
+
+function restoreLastScreen() {
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem("fc-last-screen") || "null"); } catch (_) {}
+
+  if (!saved || !IS_SERVER) { renderHome(); showScreen("home"); return; }
+
+  if (saved.screen === "class" && saved.classId) {
+    store.getClass(saved.classId).then(function(cls) {
+      state.currentClass = cls;
+      document.getElementById("class-detail-name").textContent = cls.icon + " " + cls.name;
+      setSelectMode(false);
+      renderLessons();
+      showScreen("class");
+    }).catch(function() { renderHome(); showScreen("home"); });
+    return;
+  }
+
+  if (saved.screen === "lesson" && saved.classId && saved.lessonId) {
+    store.getClass(saved.classId).then(function(cls) {
+      state.currentClass = cls;
+      return store.getLessons(saved.classId).then(function(lessons) {
+        state.currentClassLessons = lessons;
+        var lesson = lessons.find(function(l) { return l.id === saved.lessonId; });
+        if (!lesson) { renderHome(); showScreen("home"); return; }
+        state.currentLesson = lesson;
+        document.getElementById("lesson-detail-title").textContent = lesson.title;
+        setCardSelectMode(false);
+        renderCards();
+        showScreen("lesson");
+      });
+    }).catch(function() { renderHome(); showScreen("home"); });
+    return;
+  }
+
+  renderHome();
+  showScreen("home");
+}
+
 /* ============================
    MODAL HELPERS
    ============================ */
@@ -735,6 +784,7 @@ function openClass(classId) {
     nameEl.textContent = cls.icon + " " + cls.name;
     setSelectMode(false);
     showScreen("class");
+    saveScreenState("class", classId);
     renderLessons();
   });
 }
@@ -826,7 +876,7 @@ document.getElementById("btn-save-class").addEventListener("click", function() {
 });
 
 document.getElementById("btn-new-class").addEventListener("click", openNewClass);
-document.getElementById("btn-class-back").addEventListener("click", function() { renderHome(); showScreen("home"); });
+document.getElementById("btn-class-back").addEventListener("click", function() { renderHome(); showScreen("home"); saveScreenState("home"); });
 document.getElementById("btn-edit-class").addEventListener("click", function() {
   if (state.currentClass) openEditClass(state.currentClass.id);
 });
@@ -1218,6 +1268,7 @@ function openLesson(lessonId) {
   setCardSelectMode(false); // resets state + toolbar; renderCards() below handles the re-render
   renderCards();
   showScreen("lesson");
+  saveScreenState("lesson", state.currentClass && state.currentClass.id, lessonId);
 }
 
 function renderCards() {
@@ -1329,6 +1380,7 @@ function renderCards() {
 document.getElementById("btn-lesson-back").addEventListener("click", function() {
   setCardSelectMode(false);
   showScreen("class");
+  saveScreenState("class", state.currentClass && state.currentClass.id);
   renderLessons();
 });
 
@@ -3204,9 +3256,8 @@ document.getElementById("form-login").addEventListener("submit", function(e) {
     if (!res.ok) { showAuthError("login", res.d.error || "Login failed"); return; }
     currentUser = res.d;
     initUserNav();
-    renderHome();
     renderSharedWithMe();
-    showScreen("home");
+    restoreLastScreen();
   }).catch(function() { showAuthError("login", "Network error"); });
 });
 
@@ -3226,9 +3277,9 @@ document.getElementById("form-register").addEventListener("submit", function(e) 
     if (!res.ok) { showAuthError("register", res.d.error || "Registration failed"); return; }
     currentUser = res.d;
     initUserNav();
-    renderHome();
+    try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
     renderSharedWithMe();
-    showScreen("home");
+    restoreLastScreen();
   }).catch(function() { showAuthError("register", "Network error"); });
 });
 
@@ -3283,10 +3334,10 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
       if (!res.ok) { showAuthError("reset", res.d.error || "Reset failed"); return; }
       currentUser = res.d;
       initUserNav();
-      renderHome();
+      try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
       renderSharedWithMe();
       history.replaceState({}, "", "/");
-      showScreen("home");
+      restoreLastScreen();
     }).catch(function() { showAuthError("reset", "Network error"); });
   });
 })();
@@ -3319,6 +3370,7 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
 
 document.getElementById("btn-logout").addEventListener("click", function() {
   closeAllDropdowns();
+  try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
   fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" })
     .then(function() { showAuthScreen(); });
 });
@@ -3335,9 +3387,8 @@ if (IS_SERVER && !currentUser) {
 } else {
   initUserNav();
   if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
-  renderHome();
   renderSharedWithMe();
-  showScreen("home");
+  restoreLastScreen();
 }
 
 /* ============================

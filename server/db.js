@@ -103,6 +103,14 @@ db.exec(`
     next_review_at INTEGER NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS sessions (
+    sid     TEXT PRIMARY KEY,
+    sess    TEXT NOT NULL,
+    expired INTEGER NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_sessions_expired ON sessions(expired);
+
   CREATE INDEX IF NOT EXISTS idx_quiz_sessions_user ON quiz_sessions(user_id);
 
   CREATE INDEX IF NOT EXISTS idx_classes_user   ON classes(user_id);
