@@ -751,14 +751,13 @@ code {
 
 .fc-back .fc-content { color: #e8e6e1; }
 
-.fc-back #fc-explanation { width: 100%; margin-top: 12px; }
-.fc-back .explanation-panel {
-  background: rgba(255,255,255,0.07);
-  border-color: #475569;
+#fc-explanation {
+  width: 100%;
+  max-width: 600px;
+  margin: 12px auto 0;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
-.fc-back .explanation-panel summary { color: #93c5fd; }
-.fc-back .explanation-panel[open] summary { border-bottom-color: #475569; }
-.fc-back .explanation-body { color: #cbd5e1; }
 
 .fc-hint {
   position: absolute;

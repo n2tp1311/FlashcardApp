@@ -1858,14 +1858,14 @@ function renderFlashcard() {
   renderLatex(front, frontEl);
   renderLatex(back,  backEl);
 
-  // Explanation (MCQ only, shown on back)
+  // Explanation (MCQ only, shown below card when flipped)
   var expContainer = document.getElementById("fc-explanation");
   expContainer.innerHTML = "";
+  expContainer.classList.add("hidden");
   if (card.format === "mcq" && card.data.explanation) {
     var expEl = document.createElement("details");
     expEl.className = "explanation-panel";
     expEl.open = true;
-    expEl.addEventListener("click", function(e) { e.stopPropagation(); });
     var sum = document.createElement("summary");
     sum.textContent = "Explanation";
     var body = document.createElement("div");
@@ -1925,6 +1925,8 @@ function renderFcDots() {
 document.getElementById("fc-scene").addEventListener("click", function() {
   state.studyFlipped = !state.studyFlipped;
   document.getElementById("fc-card").classList.toggle("flipped", state.studyFlipped);
+  var expContainer = document.getElementById("fc-explanation");
+  expContainer.classList.toggle("hidden", !state.studyFlipped || expContainer.innerHTML === "");
 });
 
 document.getElementById("btn-fc-prev").addEventListener("click", function() {
