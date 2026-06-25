@@ -59,6 +59,7 @@
 - Bulk import: append `;; explanation text` after distractors on a MCQ line — uses first `;;` as delimiter so explanations may contain `;;`
 - AI prompt: instructs AI to append `;;` explanation after each MCQ card
 - Quiz mode: explanation shown in a collapsible `💡 Explanation` panel immediately after answering; auto-dismissed when moving to next card
+- Flashcard mode: explanation panel renders below the dark card (outside the flip container) so it is fully visible on mobile without scrolling inside the card; hidden on card front, shown on card back
 - Recall mode: explanation shown in the reveal area after "Reveal Answer"
 - Server validates: if provided, must be a non-empty string
 
