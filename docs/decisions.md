@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-06-25 — Keyboard shortcuts: unified handler + Escape-closes-any-modal
+
+Three scattered `keydown` listeners (flashcard, quiz, recall) were replaced with a single consolidated handler at the end of `app.js`. The unified handler dispatches by `getActiveScreen()` (reads the DOM `.screen.active` element — the DOM is the sole source of truth since `showScreen()` never stores the ID in `state`). `isInputFocused()` blocks shortcuts when focus is in INPUT/TEXTAREA/SELECT. `?` and `Escape` are handled before the input-focus guard so they work globally. Escape priority: keymap modal > overlay modal (via `closeAllModals()`) > share modal > prompt-guide modal > per-screen navigation. This ensures Escape always does "the most local" thing rather than accidentally navigating away while a modal is open.
+
 ## 2026-06-18 — SQLite via node-sqlite3-wasm
 Use WASM-based SQLite (no native build) for Railway compatibility. Downside: async init. Lock file `flashcards.db.lock` removed on startup to survive container restarts.
 

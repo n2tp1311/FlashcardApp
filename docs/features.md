@@ -35,6 +35,17 @@
 - "Due Only" filter to quiz only SRS-due cards
 - Interleaved vs Blocked card order for multi-lesson sessions (pill on setup screen, hidden for single-lesson)
 
+## Keyboard-Only Mode
+
+- Unified keydown handler covers all screens — no mouse required
+- Home: `N` new class; Class: `N` new lesson, `E` edit, `⌫` back; Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back
+- Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2` mark learning/known, `S` shuffle, `R` reset, `F` filter hard
+- Quiz: `1`–`5` select option, `Esc` back; Recall: `Enter` reveal, `1`/`2`/`3` grade, `Esc` back
+- Global: `H` go home, `?` toggle keymap modal, `Esc` close any open modal
+- `?` key shortcut modal lists all bindings; `⌨` header button also opens it
+- `[key]` hints injected next to button labels on desktop; hidden on mobile (`≤600px`)
+- Escape works for any modal (overlay forms, share, prompt guide, keymap)
+
 ## Share
 - Public share link (anyone can study or clone)
 - Invite by username/email (shows in "Shared with me")
