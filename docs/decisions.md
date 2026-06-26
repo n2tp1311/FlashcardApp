@@ -16,6 +16,18 @@ The 3D flip card uses `backface-visibility: hidden` to hide the back face visual
 
 Three scattered `keydown` listeners (flashcard, quiz, recall) were replaced with a single consolidated handler at the end of `app.js`. The unified handler dispatches by `getActiveScreen()` (reads the DOM `.screen.active` element — the DOM is the sole source of truth since `showScreen()` never stores the ID in `state`). `isInputFocused()` blocks shortcuts when focus is in INPUT/TEXTAREA/SELECT. `?` and `Escape` are handled before the input-focus guard so they work globally. Escape priority: keymap modal > overlay modal (via `closeAllModals()`) > share modal > prompt-guide modal > per-screen navigation. This ensures Escape always does "the most local" thing rather than accidentally navigating away while a modal is open.
 
+## 2026-06-26 — Image upload: two-step save (upload-then-create)
+
+Image cards use a two-step flow: upload the image first (`POST /api/upload` → returns `{url}`), then save the card with the URL in `data.imageUrl`. The alternative — multipart form submission combining image + JSON in one request — was rejected because it would require parsing `data` fields out of a multipart body alongside the file, mixing form-data encoding with JSON. The two-step approach keeps card creation as a clean JSON POST that matches all other card formats, and the upload endpoint remains a focused single-purpose route. Trade-off: an upload can succeed but the subsequent card creation can fail, leaving an orphaned file. Accepted as low-risk for a single-user or small-team context.
+
+## 2026-06-26 — Upload race condition fix: sequence counter
+
+`handleImageFile()` sets a module-level `uploadSeq` counter and captures `mySeq = ++uploadSeq` at call time. The fetch `.then()` callback only writes to `stagedImageUrl` if `uploadSeq === mySeq` (i.e., no newer upload started). This is simpler than `AbortController` (which would require cancelling in-flight requests) and sufficient because only the last-picked image should be staged — stale completions are simply ignored.
+
+## 2026-06-26 — Schema migrations: `schema_migrations` table for idempotency
+
+The previous table-copy migration pattern (`CREATE TABLE IF NOT EXISTS _v2 → INSERT OR IGNORE → DROP old → RENAME`) re-ran every server startup because the `_v2` table was renamed away each time. Added a `schema_migrations` table with `name TEXT PRIMARY KEY`; each migration inserts its name before the destructive DROP so subsequent startups skip it. The insert happens before DROP so a crash between insert and DROP leaves the migration marked as done but the old table intact — safe because the old table still has the correct data and the migration's purpose (removing a CHECK constraint) is a no-op if the constraint is already gone in practice.
+
 ## 2026-06-18 — SQLite via node-sqlite3-wasm
 Use WASM-based SQLite (no native build) for Railway compatibility. Downside: async init. Lock file `flashcards.db.lock` removed on startup to survive container restarts.
 

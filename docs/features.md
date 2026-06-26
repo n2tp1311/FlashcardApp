@@ -64,6 +64,21 @@
 - Progress bars (known/total) on class and lesson lists
 - Stats screen with hardest cards
 
+## Image Cards (server mode only)
+
+- New lesson format "Image → Definition" (`image-def`): image displayed on card front, text definition on back
+- File upload endpoint `POST /api/upload` — multer, 5 MB limit, accepts JPEG/PNG/GIF/WebP; returns `/uploads/<uuid>.ext`
+- Image drop zone in card creation modal: click or drag-and-drop; instant preview via FileReader
+- `stagedImageUrl` tracks the uploaded URL before card is saved; sequence counter prevents race condition when user picks files rapidly
+- All study modes support image-def: flashcard front shows `<img>`, quiz question shows `<img>`, recall question shows `<img>`; answer/back always shows text definition
+- Front audio button hidden for image-def cards (no text to speak on front); direction picker hidden in setup for image-def-only sessions
+- Format badge shows "Image↔Def" in orange on lesson list; bulk-add button hidden for image-def lessons
+- Server validation: `imageUrl` must start with `/uploads/` (applied to POST, PUT, and bulk insert); `def` must be non-empty
+- Image file cleanup: old file deleted on card image update; file deleted when card is deleted
+- `schema_migrations` table added so table-copy migrations run exactly once (previously re-ran every startup)
+- CSV analytics export uses `[image]` in the `card_front` column for image-def cards
+- Image-def format pill hidden in local/localStorage mode (upload requires server)
+
 ## Analytics (server mode only)
 
 - `📈 Analytics` button on home header; `A` key on home screen; `Esc` to go back
