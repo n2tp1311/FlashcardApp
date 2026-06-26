@@ -13,6 +13,8 @@ const CLIENT = path.join(ROOT, "client");
 const DATA   = path.join(ROOT, "data");
 
 if (!fs.existsSync(DATA)) fs.mkdirSync(DATA, { recursive: true });
+const UPLOADS = require("path").join(DATA, "uploads");
+if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
 
 // ── Middleware ────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
@@ -40,6 +42,8 @@ app.use("/api/export",  require("./routes/exportImport"));
 app.use("/api/import",  require("./routes/exportImport"));
 app.use("/api/share",   require("./routes/share"));
 app.use("/api/review",  require("./routes/review"));
+app.use("/api/upload",  require("./routes/upload"));
+app.use("/uploads",     require("express").static(UPLOADS, { index: false }));
 
 // ── Helper: inject APP_CONFIG and serve index.html ───────
 const indexHtml = path.join(CLIENT, "index.html");

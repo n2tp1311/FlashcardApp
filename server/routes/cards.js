@@ -1,9 +1,28 @@
 "use strict";
 
 const express = require("express");
+const path    = require("path");
+const fs      = require("fs");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const router  = express.Router();
+
+const UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads");
+
+function unlinkUpload(imageUrl) {
+  if (!imageUrl || typeof imageUrl !== "string" || !imageUrl.startsWith("/uploads/")) return;
+  try { fs.unlinkSync(path.join(UPLOADS_DIR, path.basename(imageUrl))); } catch (_) {}
+}
+
+function validateCardData(format, data) {
+  if (format === "image-def") {
+    if (!data.imageUrl || typeof data.imageUrl !== "string" || !data.imageUrl.startsWith("/uploads/"))
+      return "image-def requires imageUrl starting with /uploads/";
+    if (!data.def || typeof data.def !== "string" || !data.def.trim())
+      return "image-def requires def (text definition)";
+  }
+  return null;
+}
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -57,6 +76,8 @@ router.post("/lessons/:lessonId/cards", requireAuth, (req, res) => {
     if (data.explanation !== undefined && (typeof data.explanation !== "string" || !data.explanation.trim()))
       return res.status(400).json({ error: "explanation must be a non-empty string if provided" });
   }
+  const validErr = validateCardData(format, data);
+  if (validErr) return res.status(400).json({ error: validErr });
   const count = db.prepare("SELECT COUNT(*) as n FROM cards WHERE lesson_id = ?")
     .get(req.params.lessonId).n;
   const id = genId();
@@ -84,6 +105,8 @@ router.post("/lessons/:lessonId/cards/bulk", requireAuth, (req, res) => {
       if (c.data.explanation !== undefined && (typeof c.data.explanation !== "string" || !c.data.explanation.trim()))
         return res.status(400).json({ error: "mcq card " + i + ": explanation must be a non-empty string if provided" });
     }
+    const bulkErr = validateCardData(c.format, c.data || {});
+    if (bulkErr) return res.status(400).json({ error: "card " + i + ": " + bulkErr });
   }
 
   const startOrder = db.prepare("SELECT COUNT(*) as n FROM cards WHERE lesson_id = ?")
@@ -112,7 +135,14 @@ router.put("/cards/:id", requireAuth, (req, res) => {
   const card = ownCard(req.params.id, req.session.userId);
   if (!card) return res.status(404).json({ error: "Not found" });
   const existing = db.prepare("SELECT * FROM cards WHERE id = ?").get(req.params.id);
+  const existingData = JSON.parse(existing.data);
   const { data, sort_order } = req.body;
+  if (data) {
+    const validErr = validateCardData(existing.format, data);
+    if (validErr) return res.status(400).json({ error: validErr });
+    if (existing.format === "image-def" && existingData.imageUrl && data.imageUrl !== existingData.imageUrl)
+      unlinkUpload(existingData.imageUrl);
+  }
   db.prepare("UPDATE cards SET data = ?, sort_order = ? WHERE id = ?")
     .run(
       data       ? JSON.stringify(data) : existing.data,
@@ -127,6 +157,10 @@ router.put("/cards/:id", requireAuth, (req, res) => {
 router.delete("/cards/:id", requireAuth, (req, res) => {
   if (!ownCard(req.params.id, req.session.userId))
     return res.status(404).json({ error: "Not found" });
+  const toDelete = db.prepare("SELECT format, data FROM cards WHERE id = ?").get(req.params.id);
+  if (toDelete && toDelete.format === "image-def") {
+    try { unlinkUpload(JSON.parse(toDelete.data).imageUrl); } catch (_) {}
+  }
   db.prepare("DELETE FROM cards WHERE id = ?").run(req.params.id);
   res.status(204).end();
 });

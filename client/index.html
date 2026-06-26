@@ -447,6 +447,7 @@
       <div class="pill-group" id="lesson-format-picker">
         <button class="pill active" data-value="term-def">Term → Definition</button>
         <button class="pill" data-value="mcq">Multiple Choice</button>
+        <button class="pill" data-value="image-def">Image → Definition</button>
       </div>
       <p class="form-hint" id="format-hint">Best for vocabulary, concepts, formulas. Bulk: term | definition</p>
     </div>
@@ -506,6 +507,29 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="card-mcq">Cancel</button>
       <button class="btn btn-primary" id="btn-save-card-mcq">Save</button>
+    </div>
+  </div>
+
+  <!-- Card Form Modal (Image-Def) -->
+  <div id="modal-card-imagedef" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="modal-card-imagedef-title">Add Card</h3>
+      <button class="modal-close" data-modal="card-imagedef">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Image (front)</label>
+      <input type="file" id="card-image-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
+      <div id="card-image-drop" class="image-drop-zone">
+        <span id="card-image-drop-label">Click or drag image here (JPEG, PNG, GIF, WebP · max 5 MB)</span>
+        <img id="card-image-preview" class="image-preview hidden" src="" alt="Preview">
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-pick-image" style="align-self:flex-start;margin-top:4px">Choose Image</button>
+      <label class="form-label" style="margin-top:12px">Definition (back)</label>
+      <textarea id="card-imagedef-input" class="form-textarea" rows="3" placeholder="e.g. The Eiffel Tower, built 1889, Paris."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="card-imagedef">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-imagedef">Save</button>
     </div>
   </div>
 

@@ -124,8 +124,21 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_invites_class  ON class_invites(class_id);
 `);
 
+// Schema migration tracking — each migration runs exactly once
+try { db.exec("CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY)"); } catch (_) {}
+
+function runMigration(name, fn) {
+  try {
+    if (db.prepare("SELECT 1 FROM schema_migrations WHERE name = ?").get(name)) return;
+    fn();
+    db.prepare("INSERT OR IGNORE INTO schema_migrations (name) VALUES (?)").run(name);
+  } catch (_) {
+    try { db.exec("PRAGMA foreign_keys = ON"); } catch (__) {}
+  }
+}
+
 // Migration: allow 'recall' as a source value in attempts table
-try {
+runMigration("attempts_recall_source", function() {
   db.exec("PRAGMA foreign_keys = OFF");
   db.exec(`
     CREATE TABLE IF NOT EXISTS attempts_v2 (
@@ -141,9 +154,48 @@ try {
     ALTER TABLE attempts_v2 RENAME TO attempts;
   `);
   db.exec("PRAGMA foreign_keys = ON");
-} catch (_) {
+});
+
+// Migration: remove CHECK constraint on lessons.format to support image-def
+runMigration("lessons_remove_format_check", function() {
+  db.exec("PRAGMA foreign_keys = OFF");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS lessons_v2 (
+      id         TEXT PRIMARY KEY,
+      class_id   TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+      title      TEXT NOT NULL,
+      format     TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    INSERT OR IGNORE INTO lessons_v2 SELECT * FROM lessons;
+    DROP TABLE lessons;
+    ALTER TABLE lessons_v2 RENAME TO lessons;
+  `);
   db.exec("PRAGMA foreign_keys = ON");
-}
+});
+
+// Migration: remove CHECK constraint on cards.format to support image-def
+runMigration("cards_remove_format_check", function() {
+  db.exec("PRAGMA foreign_keys = OFF");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS cards_v2 (
+      id         TEXT PRIMARY KEY,
+      lesson_id  TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+      format     TEXT NOT NULL,
+      data       TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    INSERT OR IGNORE INTO cards_v2 SELECT * FROM cards;
+    DROP TABLE cards;
+    ALTER TABLE cards_v2 RENAME TO cards;
+  `);
+  db.exec("PRAGMA foreign_keys = ON");
+});
+
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_lessons_class ON lessons(class_id)"); } catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_lesson ON cards(lesson_id)"); } catch (_) {}
 
 // Migration: add last_seen_at to card_states for per-card visit tracking
 try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catch (_) {}

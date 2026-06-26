@@ -12,12 +12,14 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "memorystore": "^1.6.8",
+    "multer": "^2.2.0",
     "node-sqlite3-wasm": "^0.8.0",
     "nodemailer": "^9.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.0",
+    "playwright": "^1.61.1"
   }
 }

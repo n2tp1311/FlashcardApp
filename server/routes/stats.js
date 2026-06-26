@@ -319,7 +319,7 @@ router.get("/analytics/export", requireAuth, function(req, res) {
 
   var rows = db.prepare(
     "SELECT date(a.created_at,'unixepoch') AS date, l.title AS lesson, " +
-    "c.data AS card_data, a.correct AS result " +
+    "c.data AS card_data, c.format AS card_format, a.correct AS result " +
     "FROM attempts a " +
     "JOIN cards c ON a.card_id=c.id " +
     "JOIN lessons l ON c.lesson_id=l.id " +
@@ -338,7 +338,7 @@ router.get("/analytics/export", requireAuth, function(req, res) {
   rows.forEach(function(row) {
     var data;
     try { data = JSON.parse(row.card_data); } catch(_) { data = {}; }
-    var front = data.term || data.question || "";
+    var front = row.card_format === "image-def" ? "[image]" : (data.term || data.question || "");
     lines.push([csvField(row.date), csvField(row.lesson), csvField(front),
       row.result === 1 ? "correct" : "incorrect"].join(","));
   });

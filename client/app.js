@@ -960,7 +960,7 @@ function renderLessons() {
           '</div>' +
           (isDue ? '<span class="due-badge">' + dueCount + ' due</span>' : '') +
           '<span class="format-badge ' + lesson.format + '">' +
-            (lesson.format === "term-def" ? "Term↔Def" : "MCQ") +
+            (lesson.format === "term-def" ? "Term↔Def" : lesson.format === "mcq" ? "MCQ" : "Image↔Def") +
           '</span>' +
           (state.selectMode
             ? ''
@@ -1198,16 +1198,18 @@ document.getElementById("btn-delete-selected-lessons").addEventListener("click",
    ============================ */
 
 var FORMAT_HINTS = {
-  "term-def": "Best for vocabulary, concepts, formulas. Bulk: term | definition",
-  "mcq": "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2…] [;; explanation]"
+  "term-def":  "Best for vocabulary, concepts, formulas. Bulk: term | definition",
+  "mcq":       "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2…] [;; explanation]",
+  "image-def": "Image on front, text definition on back. Cards added one at a time (no bulk import)."
 };
 
 function initLessonFormatPicker(selectedFormat) {
   var picker = document.getElementById("lesson-format-picker");
   picker.querySelectorAll(".pill").forEach(function(p) {
     p.classList.toggle("active", p.dataset.value === selectedFormat);
+    if (p.dataset.value === "image-def") p.style.display = IS_SERVER ? "" : "none";
   });
-  document.getElementById("format-hint").textContent = FORMAT_HINTS[selectedFormat];
+  document.getElementById("format-hint").textContent = FORMAT_HINTS[selectedFormat] || "";
 }
 
 document.getElementById("lesson-format-picker").addEventListener("click", function(e) {
@@ -1283,6 +1285,7 @@ function openLesson(lessonId) {
   if (!lesson) return;
   state.currentLesson = lesson;
   document.getElementById("lesson-detail-title").textContent = lesson.title;
+  document.getElementById("btn-bulk-add").style.display = lesson.format === "image-def" ? "none" : "";
   setCardSelectMode(false); // resets state + toolbar; renderCards() below handles the re-render
   renderCards();
   showScreen("lesson");
@@ -1319,6 +1322,16 @@ function renderCards() {
 
       if (card.format === "term-def") {
         renderLatex(card.data.term, termEl);
+        renderLatex(card.data.def, defEl);
+      } else if (card.format === "image-def") {
+        var cImg = document.createElement("img");
+        cImg.src = card.data.imageUrl;
+        cImg.alt = "Card image";
+        cImg.style.maxHeight = "60px";
+        cImg.style.maxWidth  = "120px";
+        cImg.style.objectFit = "contain";
+        cImg.style.borderRadius = "4px";
+        termEl.appendChild(cImg);
         renderLatex(card.data.def, defEl);
       } else {
         renderLatex(card.data.question, termEl);
@@ -1518,6 +1531,16 @@ function openAddCard() {
     document.getElementById("card-def-preview").innerHTML = "";
     openModal("card-termdef");
     document.getElementById("card-term-input").focus();
+  } else if (format === "image-def") {
+    document.getElementById("modal-card-imagedef-title").textContent = "Add Card";
+    document.getElementById("card-image-input").value = "";
+    document.getElementById("card-imagedef-input").value = "";
+    document.getElementById("card-image-preview").src = "";
+    document.getElementById("card-image-preview").classList.add("hidden");
+    document.getElementById("card-image-drop-label").classList.remove("hidden");
+    stagedImageUrl = null;
+    openModal("card-imagedef");
+    document.getElementById("card-imagedef-input").focus();
   } else {
     document.getElementById("modal-card-mcq-title").textContent = "Add Card";
     document.getElementById("card-q-input").value = "";
@@ -1544,6 +1567,15 @@ function openEditCard(cardId) {
       renderLatex(card.data.term, document.getElementById("card-term-preview"));
       renderLatex(card.data.def,  document.getElementById("card-def-preview"));
       openModal("card-termdef");
+    } else if (card.format === "image-def") {
+      document.getElementById("modal-card-imagedef-title").textContent = "Edit Card";
+      stagedImageUrl = card.data.imageUrl;
+      var prevImg = document.getElementById("card-image-preview");
+      prevImg.src = card.data.imageUrl;
+      prevImg.classList.remove("hidden");
+      document.getElementById("card-image-drop-label").classList.add("hidden");
+      document.getElementById("card-imagedef-input").value = card.data.def;
+      openModal("card-imagedef");
     } else {
       document.getElementById("modal-card-mcq-title").textContent = "Edit Card";
       document.getElementById("card-q-input").value      = card.data.question;
@@ -1596,6 +1628,77 @@ document.getElementById("btn-save-card-mcq").addEventListener("click", function(
 });
 
 document.getElementById("btn-add-card").addEventListener("click", openAddCard);
+
+/* ============================
+   IMAGE-DEF CARD MODAL
+   ============================ */
+
+var stagedImageUrl = null;
+var uploadSeq = 0;
+
+document.getElementById("btn-pick-image").addEventListener("click", function() {
+  document.getElementById("card-image-input").click();
+});
+
+document.getElementById("card-image-drop").addEventListener("click", function(e) {
+  if (e.target.tagName === "IMG") return;
+  document.getElementById("card-image-input").click();
+});
+
+function handleImageFile(file) {
+  if (!file) return;
+  if (!IS_SERVER) { alert("Image upload requires server mode."); return; }
+  var ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  if (ALLOWED.indexOf(file.type) === -1) {
+    alert("Unsupported file type. Please use JPEG, PNG, GIF, or WebP.");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    alert("File exceeds 5 MB limit.");
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var prev = document.getElementById("card-image-preview");
+    prev.src = ev.target.result;
+    prev.classList.remove("hidden");
+    document.getElementById("card-image-drop-label").classList.add("hidden");
+  };
+  reader.readAsDataURL(file);
+  var mySeq = ++uploadSeq;
+  var previousUrl = stagedImageUrl;
+  stagedImageUrl = null;
+  var formData = new FormData();
+  formData.append("image", file);
+  fetch("/api/upload", { method: "POST", credentials: "same-origin", body: formData })
+    .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error || "Upload failed"); return d; }); })
+    .then(function(d) { if (uploadSeq === mySeq) stagedImageUrl = d.url; })
+    .catch(function(err) { if (uploadSeq === mySeq) { alert("Upload failed: " + err.message); stagedImageUrl = previousUrl; } });
+}
+
+document.getElementById("card-image-input").addEventListener("change", function() {
+  handleImageFile(this.files[0]);
+});
+
+var dropZone = document.getElementById("card-image-drop");
+dropZone.addEventListener("dragover", function(e) { e.preventDefault(); this.classList.add("drag-over"); });
+dropZone.addEventListener("dragleave", function() { this.classList.remove("drag-over"); });
+dropZone.addEventListener("drop", function(e) {
+  e.preventDefault();
+  this.classList.remove("drag-over");
+  handleImageFile(e.dataTransfer.files[0]);
+});
+
+document.getElementById("btn-save-card-imagedef").addEventListener("click", function() {
+  if (!stagedImageUrl) { alert("Please choose an image first."); return; }
+  var def = document.getElementById("card-imagedef-input").value.trim();
+  if (!def) { alert("Please enter a definition."); return; }
+  var data = { imageUrl: stagedImageUrl, def: def };
+  var p = state.editingCardId
+    ? store.updateCard(state.editingCardId, state.currentLesson.id, { data: data })
+    : store.createCard({ lessonId: state.currentLesson.id, format: "image-def", data: data });
+  p.then(function() { closeModal("card-imagedef"); renderCards(); });
+});
 
 /* ============================
    BULK ADD MODAL
@@ -1734,7 +1837,7 @@ function openSetup(scope) {
   }
 
   // Hide direction unless at least one lesson in scope is term↔def
-  var hasTermDef = state.studyScope.lessons.some(function(l) { return l.format !== "mcq"; });
+  var hasTermDef = state.studyScope.lessons.some(function(l) { return l.format === "term-def"; });
   document.getElementById("setup-direction-section").style.display = hasTermDef ? "" : "none";
 
   // Show order picker only when studying multiple lessons
@@ -1917,18 +2020,39 @@ function renderFlashcard() {
   var backEl  = document.getElementById("fc-back-content");
   var front, back;
 
+  var frontAudioBtn = document.getElementById("btn-fc-audio-front");
   if (card.format === "term-def") {
     front = state.studyDirection === "term-def" ? card.data.term : card.data.def;
     back  = state.studyDirection === "term-def" ? card.data.def  : card.data.term;
+    state.studyFrontText = front || "";
+    state.studyBackText  = back  || "";
+    frontEl.innerHTML = "";
+    renderLatex(front, frontEl);
+    renderLatex(back,  backEl);
+    frontAudioBtn.style.visibility = "";
+  } else if (card.format === "image-def") {
+    state.studyFrontText = "";
+    state.studyBackText  = card.data.def || "";
+    frontEl.innerHTML = "";
+    var fcImg = document.createElement("img");
+    fcImg.src = card.data.imageUrl;
+    fcImg.alt = "Card image";
+    fcImg.style.maxWidth  = "100%";
+    fcImg.style.maxHeight = "240px";
+    fcImg.style.objectFit = "contain";
+    frontEl.appendChild(fcImg);
+    renderLatex(card.data.def, backEl);
+    frontAudioBtn.style.visibility = "hidden";
   } else {
     front = card.data.question;
     back  = card.data.correct;
+    state.studyFrontText = front || "";
+    state.studyBackText  = back  || "";
+    frontEl.innerHTML = "";
+    renderLatex(front, frontEl);
+    renderLatex(back,  backEl);
+    frontAudioBtn.style.visibility = "";
   }
-
-  state.studyFrontText = front || "";
-  state.studyBackText  = back  || "";
-  renderLatex(front, frontEl);
-  renderLatex(back,  backEl);
 
   // Explanation (MCQ only, shown below card when flipped)
   var expContainer = document.getElementById("fc-explanation");
@@ -2089,13 +2213,21 @@ function buildQuizOptions(card) {
   if (card.format === "mcq") {
     return shuffle([card.data.correct].concat(card.data.distractors));
   }
-  // term-def: auto-generate distractors from other cards in session
+  if (card.format === "image-def") {
+    var correct = card.data.def;
+    var pool = state.quizCards
+      .filter(function(c) { return c.id !== card.id && c.format === "image-def"; })
+      .map(function(c) { return c.data.def; });
+    var distractors = shuffle(pool).slice(0, 3);
+    while (distractors.length < 3) distractors.push("—");
+    return shuffle([correct].concat(distractors));
+  }
+  // term-def: auto-generate distractors from other term-def cards in session
   var correct = state.studyDirection === "term-def" ? card.data.def : card.data.term;
   var pool = state.quizCards
-    .filter(function(c) { return c.id !== card.id; })
+    .filter(function(c) { return c.id !== card.id && c.format === "term-def"; })
     .map(function(c) { return state.studyDirection === "term-def" ? c.data.def : c.data.term; });
   var distractors = shuffle(pool).slice(0, 3);
-  // Pad if not enough
   while (distractors.length < 3) distractors.push("—");
   return shuffle([correct].concat(distractors));
 }
@@ -2119,13 +2251,20 @@ function renderQuizCard() {
 
   // Question
   var qEl = document.getElementById("quiz-question");
-  var q;
+  qEl.innerHTML = "";
   if (card.format === "mcq") {
-    q = card.data.question;
+    renderLatex(card.data.question, qEl);
+  } else if (card.format === "image-def") {
+    var qImg = document.createElement("img");
+    qImg.src = card.data.imageUrl;
+    qImg.alt = "Card image";
+    qImg.style.maxWidth  = "100%";
+    qImg.style.maxHeight = "200px";
+    qImg.style.objectFit = "contain";
+    qEl.appendChild(qImg);
   } else {
-    q = state.studyDirection === "term-def" ? card.data.term : card.data.def;
+    renderLatex(state.studyDirection === "term-def" ? card.data.term : card.data.def, qEl);
   }
-  renderLatex(q, qEl);
 
   // Options
   var opts = buildQuizOptions(card);
@@ -2152,6 +2291,7 @@ function answerQuiz(selectedIdx) {
   var card    = state.quizCards[state.quizIndex];
   var opts    = state.quizOptions;
   var correct = card.format === "mcq" ? card.data.correct :
+    card.format === "image-def" ? card.data.def :
     (state.studyDirection === "term-def" ? card.data.def : card.data.term);
   var selectedVal = opts[selectedIdx];
   var isCorrect   = selectedVal === correct;
@@ -2244,13 +2384,21 @@ function renderRecallCard() {
   document.getElementById("recall-progress-fill").style.width = ((i + 1) / total * 100) + "%";
   document.getElementById("recall-score-display").textContent = state.recallCorrect + " / " + i;
 
-  var q;
+  var recallQEl = document.getElementById("recall-question");
+  recallQEl.innerHTML = "";
   if (card.format === "mcq") {
-    q = card.data.question;
+    renderLatex(card.data.question, recallQEl);
+  } else if (card.format === "image-def") {
+    var rImg = document.createElement("img");
+    rImg.src = card.data.imageUrl;
+    rImg.alt = "Card image";
+    rImg.style.maxWidth  = "100%";
+    rImg.style.maxHeight = "200px";
+    rImg.style.objectFit = "contain";
+    recallQEl.appendChild(rImg);
   } else {
-    q = state.studyDirection === "term-def" ? card.data.term : card.data.def;
+    renderLatex(state.studyDirection === "term-def" ? card.data.term : card.data.def, recallQEl);
   }
-  renderLatex(q, document.getElementById("recall-question"));
 
   document.getElementById("recall-answer-input").value = "";
   document.getElementById("recall-answer-input").disabled = false;
@@ -2270,6 +2418,8 @@ function revealRecall() {
   var answer;
   if (card.format === "mcq") {
     answer = card.data.correct;
+  } else if (card.format === "image-def") {
+    answer = card.data.def;
   } else {
     answer = state.studyDirection === "term-def" ? card.data.def : card.data.term;
   }
@@ -2592,6 +2742,9 @@ function buildStatsCardEl(card, stats) {
   if (card.format === "term-def") {
     renderLatex(card.data.term, qEl);
     renderLatex(card.data.def,  aEl);
+  } else if (card.format === "image-def") {
+    qEl.textContent = "[image]";
+    renderLatex(card.data.def, aEl);
   } else {
     renderLatex(card.data.question, qEl);
     renderLatex(card.data.correct,  aEl);
