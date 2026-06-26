@@ -2993,10 +2993,11 @@ function renderHeatmap(rows) {
     cells.push({ key: key, cnt: map[key] || 0, month: d.getUTCMonth(), dayOfWeek: d.getUTCDay() });
   }
 
+  var maxCnt = rows.reduce(function(m, r) { return Math.max(m, r.cnt); }, 1);
   function intensity(cnt) {
     if (cnt === 0) return "heat-0";
-    if (cnt <= 5)  return "heat-1";
-    if (cnt <= 15) return "heat-2";
+    if (cnt <= maxCnt * 0.25) return "heat-1";
+    if (cnt <= maxCnt * 0.60) return "heat-2";
     return "heat-3";
   }
 
