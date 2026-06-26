@@ -199,11 +199,14 @@ body {
   position: relative;
 }
 
-.class-card:hover {
+.class-card:hover,
+.class-card:focus-visible {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
   border-color: var(--primary);
 }
+
+.class-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .class-card-accent {
   position: absolute;
@@ -275,7 +278,10 @@ body {
   transition: box-shadow var(--transition), border-color var(--transition);
 }
 
-.lesson-item:hover { box-shadow: var(--shadow); border-color: var(--primary); }
+.lesson-item:hover,
+.lesson-item:focus-visible { box-shadow: var(--shadow); border-color: var(--primary); }
+
+.lesson-item:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .lesson-info { flex: 1; min-width: 0; }
 

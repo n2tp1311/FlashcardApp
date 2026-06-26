@@ -744,6 +744,8 @@ function renderHome() {
     classes.forEach(function(cls) {
       var card = document.createElement("div");
       card.className = "class-card";
+      card.tabIndex = -1;
+      card.dataset.classId = cls.id;
       card.innerHTML =
         '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
         '<span class="class-icon">' + cls.icon + '</span>' +
@@ -945,6 +947,7 @@ function renderLessons() {
 
         item.className = "lesson-item" + (selected ? " selected" : "") + (isDue ? " lesson-due" : "");
         item.dataset.lessonId = lesson.id;
+        item.tabIndex = -1;
         item.innerHTML =
           (state.selectMode
             ? '<input type="checkbox" class="lesson-check"' + (selected ? " checked" : "") + '>'
@@ -3992,6 +3995,16 @@ document.getElementById("modal-keymap").addEventListener("click", function(e) {
 });
 document.getElementById("btn-show-keymap").addEventListener("click", toggleKeymapModal);
 
+function moveFocus(selector, dir) {
+  var items = Array.from(document.querySelectorAll(selector));
+  if (!items.length) return;
+  var focused = document.activeElement;
+  var idx = items.indexOf(focused);
+  if (idx === -1) idx = dir > 0 ? -1 : items.length;
+  var next = items[Math.max(0, Math.min(items.length - 1, idx + dir))];
+  next.focus();
+}
+
 document.addEventListener("keydown", function(e) {
   var screen = getActiveScreen();
   if (!screen) return;
@@ -4041,10 +4054,40 @@ document.addEventListener("keydown", function(e) {
   if (screen === "home") {
     if (e.key === "n" || e.key === "N") openNewClass();
     else if ((e.key === "a" || e.key === "A") && IS_SERVER) renderAnalytics();
+    else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list .class-card", 1); }
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); moveFocus("#class-list .class-card", -1); }
+    else if (e.key === "Enter") {
+      var f = document.activeElement;
+      if (f && f.dataset.classId) openClass(f.dataset.classId);
+    }
   }
 
   else if (screen === "class") {
-    if (e.key === "n" || e.key === "N") openNewLesson();
+    if (e.key === "ArrowDown") { e.preventDefault(); moveFocus("#lesson-list .lesson-item", 1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); moveFocus("#lesson-list .lesson-item", -1); }
+    else if (e.key === "Enter") {
+      var f = document.activeElement;
+      if (f && f.dataset.lessonId) {
+        if (state.selectMode) toggleLessonSelection(f.dataset.lessonId);
+        else openLesson(f.dataset.lessonId);
+      } else if (state.selectMode && state.selectedLessonIds.length > 0) {
+        document.getElementById("btn-study-selected").click();
+      }
+    }
+    else if (e.key === " " && state.selectMode) {
+      e.preventDefault();
+      var f = document.activeElement;
+      if (f && f.dataset.lessonId) toggleLessonSelection(f.dataset.lessonId);
+    }
+    else if (e.key === "x" || e.key === "X") setSelectMode(!state.selectMode);
+    else if ((e.key === "a" || e.key === "A") && state.selectMode) {
+      var allCheck = document.getElementById("select-all-lessons");
+      allCheck.checked = !allCheck.checked;
+      allCheck.dispatchEvent(new Event("change"));
+    }
+    else if ((e.key === "s" || e.key === "S") && state.selectMode) document.getElementById("btn-study-selected").click();
+    else if (e.key === "Escape" && state.selectMode) setSelectMode(false);
+    else if (e.key === "n" || e.key === "N") openNewLesson();
     else if (e.key === "e" || e.key === "E") { if (state.currentClass) openEditClass(state.currentClass.id); }
     else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-class-back").click(); }
   }
