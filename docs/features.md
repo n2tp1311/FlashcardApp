@@ -46,13 +46,16 @@
 ## Keyboard-Only Mode
 
 - Unified keydown handler covers all screens — no mouse required
-- Home: `N` new class; Class: `N` new lesson, `E` edit, `⌫` back; Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back
+- Home: `↑`/`↓` navigate class cards; `Enter` open focused class; `N` new class
+- Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
+- Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back
 - Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2` mark learning/known, `S` shuffle, `R` reset, `F` filter hard, `P` pronounce
 - Quiz: `1`–`5` select option, `Esc` back; Recall: `Enter` reveal, `1`/`2`/`3` grade, `Esc` back
 - Global: `H` go home, `?` toggle keymap modal, `Esc` close any open modal
 - `?` key shortcut modal lists all bindings; `⌨` header button also opens it
 - `[key]` hints injected next to button labels on desktop; hidden on mobile (`≤600px`)
 - Escape works for any modal (overlay forms, share, prompt guide, keymap)
+- `class-card` and `lesson-item` elements have `tabIndex=-1` + `focus-visible` outline so keyboard focus is always visible
 
 ## Share
 - Public share link (anyone can study or clone)
