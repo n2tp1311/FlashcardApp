@@ -690,6 +690,10 @@ code {
 
 .setup-section { display: flex; flex-direction: column; gap: 8px; }
 .setup-label { font-size: 14px; font-weight: 600; color: var(--text); }
+.tf-pct-row { display: flex; align-items: center; gap: 12px; }
+.tf-pct-slider { flex: 1; accent-color: var(--primary); cursor: pointer; }
+.tf-pct-label { font-size: 14px; font-weight: 600; color: var(--primary); min-width: 38px; text-align: right; }
+.setup-hint { font-size: 12px; color: var(--text-muted); margin: 0; }
 
 /* ============================
    FLASHCARD STUDY

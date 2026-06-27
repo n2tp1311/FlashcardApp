@@ -2063,6 +2063,12 @@ function openSetup(scope) {
   document.getElementById("setup-order-section").style.display = multiLesson ? "" : "none";
   if (multiLesson) setPillGroup("setup-order", "interleaved");
 
+  var hasMcq = state.studyScope.lessons.some(function(l) { return l.format === "mcq"; });
+  document.getElementById("setup-tf-pct-section").style.display = hasMcq ? "" : "none";
+  var defaultTfPct = 20;
+  document.getElementById("tf-expansion-pct").value = defaultTfPct;
+  document.getElementById("tf-expansion-pct-label").textContent = defaultTfPct + "%";
+
   showScreen("setup");
 }
 
@@ -2081,6 +2087,10 @@ function setPillGroup(groupId, value) {
     this.querySelectorAll(".pill").forEach(function(p) { p.classList.remove("active"); });
     pill.classList.add("active");
   });
+});
+
+document.getElementById("tf-expansion-pct").addEventListener("input", function() {
+  document.getElementById("tf-expansion-pct-label").textContent = this.value + "%";
 });
 
 // Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
@@ -2103,9 +2113,10 @@ document.getElementById("btn-start-study").addEventListener("click", function() 
   var mode      = document.querySelector("#setup-mode .pill.active").dataset.value;
   var orderEl   = document.querySelector("#setup-order .pill.active");
   var order     = orderEl ? orderEl.dataset.value : "interleaved";
+  var tfPct     = parseInt(document.getElementById("tf-expansion-pct").value, 10) || 0;
 
-  state.setupSnapshot = { count: count, filter: filter, direction: direction, mode: mode, order: order };
-  startStudy(count, filter, direction, mode, order);
+  state.setupSnapshot = { count: count, filter: filter, direction: direction, mode: mode, order: order, tfPct: tfPct };
+  startStudy(count, filter, direction, mode, order, tfPct);
 });
 
 function getDifficultyWeight(stats) {
@@ -2131,7 +2142,7 @@ function weightedShuffle(cards, statsMap) {
   return result;
 }
 
-function startStudy(count, filter, direction, mode, order) {
+function startStudy(count, filter, direction, mode, order, tfPct) {
   var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
   Promise.all(ids.map(function(id) { return store.getCards(id); })).then(function(cardArrays) {
     // cardArrays[i] corresponds to ids[i] — preserve lesson grouping for blocked mode
@@ -2193,7 +2204,7 @@ function startStudy(count, filter, direction, mode, order) {
           state.studyFlipped = false;
           startFlashcards();
         } else if (mode === "quiz") {
-          state.quizCards  = filtered;
+          state.quizCards  = (tfPct > 0) ? expandMCQToTF(filtered, tfPct) : filtered;
           state.quizIndex  = 0;
           state.quizScore  = 0;
           state.quizResults = [];
@@ -2465,6 +2476,36 @@ function buildQuizOptions(card) {
   return shuffle([correct].concat(distractors));
 }
 
+function expandMCQToTF(cards, pct) {
+  var mcqCards = cards.filter(function(c) { return c.format === "mcq"; });
+  var n = Math.max(0, Math.round(mcqCards.length * pct / 100));
+  if (n === 0) return cards;
+  var toExpand = shuffle(mcqCards.slice()).slice(0, n);
+  var toExpandSet = {};
+  toExpand.forEach(function(c) { toExpandSet[c.id] = true; });
+  var result = [];
+  cards.forEach(function(card) {
+    if (card.format !== "mcq" || !toExpandSet[card.id]) {
+      result.push(card);
+      return;
+    }
+    shuffle([card.data.correct].concat(card.data.distractors)).forEach(function(opt, idx) {
+      result.push({
+        id: card.id + "_tf_" + idx,
+        format: "true-false",
+        lesson_id: card.lesson_id,
+        data: {
+          statement: 'Is "' + opt + '" the correct answer to: "' + card.data.question + '"?',
+          correct: opt === card.data.correct ? "true" : "false"
+        },
+        _expandedFromMcq: true,
+        _sourceCardId: card.id
+      });
+    });
+  });
+  return result;
+}
+
 function renderQuizCard() {
   var cards = state.quizCards;
   var i     = state.quizIndex;
@@ -2538,8 +2579,7 @@ function answerQuiz(selectedIdx) {
 
   if (isCorrect) state.quizScore++;
 
-  // Record attempt
-  store.recordAttempt({ cardId: card.id, correct: isCorrect, source: "quiz" });
+  store.recordAttempt({ cardId: card._expandedFromMcq ? card._sourceCardId : card.id, correct: isCorrect, source: "quiz" });
 
   // Save result
   state.quizResults.push({ card: card, correct: isCorrect, selected: selectedVal });
