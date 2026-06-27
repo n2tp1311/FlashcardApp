@@ -1172,6 +1172,10 @@ document.getElementById("btn-select-classes").addEventListener("click", function
   setHomeSelectMode(!state.homeSelectMode);
 });
 
+document.getElementById("btn-home-select").addEventListener("click", function() {
+  setHomeSelectMode(!state.homeSelectMode);
+});
+
 document.getElementById("btn-select-classes-cancel").addEventListener("click", function() {
   setHomeSelectMode(false);
 });
@@ -3651,6 +3655,7 @@ document.addEventListener("click", closeAllDropdowns);
 registerDropdown("btn-class-menu",  "class-dropdown-menu");
 registerDropdown("btn-lesson-menu", "lesson-dropdown-menu");
 registerDropdown("btn-user-menu",   "user-dropdown-menu");
+registerDropdown("btn-home-menu",   "home-dropdown-menu");
 
 /* ============================
    AUTH UI
@@ -3688,8 +3693,9 @@ function initUserNav() {
   nav.classList.remove("hidden");
   document.getElementById("user-name-display").textContent = currentUser.name;
   document.getElementById("user-dropdown-email").textContent = currentUser.email || "";
-  document.getElementById("btn-dashboard").style.display = "";
-  document.getElementById("btn-analytics").style.display = "";
+  document.getElementById("btn-dashboard").classList.remove("hidden");
+  document.getElementById("btn-analytics").classList.remove("hidden");
+  document.getElementById("home-menu-divider").classList.remove("hidden");
   var linkBtn = document.getElementById("btn-link-google");
   if (linkBtn && window.APP_CONFIG && window.APP_CONFIG.googleEnabled) {
     linkBtn.classList.remove("hidden");

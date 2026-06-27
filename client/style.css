@@ -1572,7 +1572,7 @@ code {
    ============================ */
 @media (max-width: 600px) {
   .screen { padding: 0 12px 60px; }
-  .app-header { padding: 12px 0; }
+  .app-header { padding: 12px 0; gap: 8px; }
   .app-title { font-size: 18px; }
   .fc-scene { height: 220px; }
   .fc-content { font-size: 15px; }
@@ -1582,7 +1582,15 @@ code {
   .btn-mark { padding: 8px 12px; font-size: 13px; }
   .btn-lg { padding: 10px 16px; font-size: 14px; }
   .class-grid { grid-template-columns: 1fr 1fr; }
+  /* Compact user-nav so it doesn't fight for flex space with the title */
+  .user-nav { flex: 0 0 auto; }
+  /* Hide ☑ Select from header — available in ⋮ menu instead */
+  #btn-select-classes { display: none; }
+  /* Show the ☑ Select item inside the ⋮ dropdown */
+  .home-select-mobile { display: flex !important; }
 }
+/* On desktop, hide the ☑ Select item from the ⋮ dropdown (it lives in the header) */
+.home-select-mobile { display: none; }
 
 /* ============================
    PROMPT GUIDE MODAL

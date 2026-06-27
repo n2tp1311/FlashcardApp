@@ -94,13 +94,20 @@
         </div>
       </div>
     </div>
-    <button class="btn btn-ghost" id="btn-dashboard" style="display:none">📊 Dashboard</button>
-    <button class="btn btn-ghost" id="btn-analytics" style="display:none">📈 Analytics</button>
-    <button class="btn btn-ghost" id="btn-show-keymap" title="Keyboard shortcuts (?)">⌨</button>
+    <div class="dropdown-wrap">
+      <button class="btn btn-ghost btn-icon" id="btn-home-menu" title="More options">⋮</button>
+      <div class="dropdown-menu dropdown-menu-right hidden" id="home-dropdown-menu">
+        <button class="dropdown-item home-select-mobile" id="btn-home-select">☑ Select Classes</button>
+        <div class="dropdown-divider home-select-mobile"></div>
+        <button class="dropdown-item hidden" id="btn-dashboard">📊 Dashboard</button>
+        <button class="dropdown-item hidden" id="btn-analytics">📈 Analytics</button>
+        <div class="dropdown-divider hidden" id="home-menu-divider"></div>
+        <button class="dropdown-item" id="btn-show-keymap">⌨ Keyboard shortcuts</button>
+      </div>
+    </div>
     <button class="btn btn-ghost" id="btn-select-classes">☑ Select</button>
     <button class="btn btn-primary" id="btn-new-class">+ New Class</button>
   </header>
-  <div id="class-list" class="class-grid"></div>
   <div id="home-select-bar" class="select-bar hidden">
     <label class="select-all-label">
       <input type="checkbox" id="select-all-classes"> Select all
@@ -109,6 +116,7 @@
     <button class="btn btn-sm btn-ghost" id="btn-select-classes-cancel">Cancel</button>
     <button class="btn btn-sm btn-primary" id="btn-study-classes" disabled>Study</button>
   </div>
+  <div id="class-list" class="class-grid"></div>
   <div id="empty-home" class="empty-state hidden">
     <div class="empty-icon">📚</div>
     <p>No classes yet. Create your first class to get started.</p>
