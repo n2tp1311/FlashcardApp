@@ -29,7 +29,7 @@
 - Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def)
 - MCQ cards support 1–4 distractors (2–5 total choices); dynamic add/remove in card editor
 - Study setup: card count, filter, direction, mode
-- Multi-lesson selection → combined study session
+- Multi-lesson selection → combined study session; lesson name badge shown above each question/card so the subject is always visible
 - Progressive difficulty: hard cards weighted 3×, medium 2×
 - "Hard First" filter for focused review
 - "Due Only" filter to quiz only SRS-due cards
@@ -42,6 +42,8 @@
 - LaTeX (`$...$` and `$$...$$`) stripped before speaking so math notation is skipped
 - `.fc-back` buttons are `pointer-events: none` until the card is flipped — prevents accidental clicks on the hidden face
 - 50ms `setTimeout` around `speak()` avoids a Safari bug where synchronous `cancel()+speak()` silently drops the utterance
+- Voice selection: prefers Google en-US voices (Chrome), then Enhanced/Premium/Neural en-US (Apple), then any en-US, then any English; cached after first pick via `voiceschanged` event (with synchronous init for Safari which never fires the event)
+- `rate = 0.9` for more natural cadence
 
 ## Keyboard-Only Mode
 

@@ -12,6 +12,14 @@ The weekly trend chart groups attempts by `(now - created_at) / 604800` integer 
 
 The 3D flip card uses `backface-visibility: hidden` to hide the back face visually, but browsers are not required to block pointer events on hidden backfaces. The back `🔊` button was therefore clickable even when the front was showing. Fixed by adding `.fc-back { pointer-events: none }` and re-enabling only after flip via `.fc-card.flipped .fc-back { pointer-events: auto }`. A separate Safari bug: calling `speechSynthesis.cancel()` then `speak()` synchronously can silently drop the utterance. Fixed by wrapping `speak()` in `setTimeout(fn, 50)`. The 50ms delay is imperceptible to users but gives the browser time to complete the cancel before starting the new utterance.
 
+## 2026-06-27 — TTS voice selection: prefer Google/Enhanced voices, synchronous Safari init
+
+`_pickVoice()` ranks voices: Google en-US → Enhanced/Premium/Neural en-US → any en-US → any English. Safari never fires `voiceschanged`, so the voice is also picked synchronously at script load (when `getVoices()` returns immediately on Safari). The `voiceschanged` listener is guarded with `typeof addEventListener === "function"` to avoid crashing on old Android WebViews that expose `speechSynthesis` without the full `EventTarget` interface. `rate = 0.9` gives slightly more natural cadence than the default 1.0 without noticeably slowing speech.
+
+## 2026-06-27 — Flashcard mobile: -webkit-backface-visibility for Safari face bleed-through
+
+On Safari/iOS, `backface-visibility: hidden` alone sometimes fails to hide the non-facing side of a 3D-transformed card, causing both front and back audio buttons to appear when flipped. Adding `-webkit-backface-visibility: hidden` alongside the unprefixed property forces Safari to apply the correct backface culling.
+
 ## 2026-06-26 — Keyboard list navigation: DOM focus (tabIndex=-1) over state index
 
 Arrow-key navigation for class cards and lesson items uses `tabIndex=-1` + `element.focus()` (DOM-native focus management) rather than tracking a `state.focusedIndex` integer. The DOM-native approach is simpler: `moveFocus()` reads `document.activeElement`, computes the next index with `Array.indexOf`, and calls `.focus()`. No state to sync, no stale-index bugs after re-renders. Trade-off: if `renderLessons()` is called while the user is mid-navigation (e.g., after toggling select mode via `setSelectMode`), focus resets to `<body>` because `innerHTML` is wiped. Acceptable for the current UX: `setSelectMode` in-place patches the DOM without a full re-render, so the common keyboard flow (navigate → select → study) doesn't lose focus.
