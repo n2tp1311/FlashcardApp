@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-06-28 — True/False: correct stored as lowercase string "true"/"false", displayed as title-case
+
+The T/F answer is stored in the DB as `"true"` or `"false"` (lowercase string) to match the bulk import format (user types `| true`) and the HTML `data-value` attributes. The display layer (`answerQuiz`, `revealRecall`, `renderFlashcard`, `buildQuizOptions`) converts to title-case "True"/"False" at render time. Alternative: store as boolean — rejected because SQLite JSON stores booleans as 0/1, requiring casts in every reader, and the rest of the codebase stores card data as typed strings (MCQ `correct` is a plain string). The conversion is in one place per study mode so maintaining consistency is straightforward.
+
 ## 2026-06-27 — Multi-class quiz: home-screen select mode rather than a new screen
 
 The multi-class study flow reuses the same select-mode pattern already used on the class screen (☑ Select button → checkboxes injected in-place → select bar with count and Study button). No intermediate lesson-picker screen was added: selecting classes goes straight to the existing `openSetup()` with all lessons from those classes combined. The existing `setStudyLessonLabel()` pill already labels each card by lesson when `studyScope.lessons.length > 1`, so cross-class sessions are already disambiguated. `returnScreen: "home"` sends the user back to the home screen after the session, which was already handled in the existing return-from-study flow. The `A` key conflict (Analytics vs Select All) is resolved by checking `state.homeSelectMode` first so Select All takes priority in select mode.

@@ -11,8 +11,8 @@
 
 ## Classes & Lessons
 - Create/edit/delete classes (icon, color)
-- Create/edit/delete lessons (term↔def or MCQ format)
-- Bulk import via pipe-delimited text (MCQ: `question | correct | wrong1 [| wrong2 | wrong3 | wrong4]`)
+- Create/edit/delete lessons (term↔def, MCQ, True/False, or Image↔Def format)
+- Bulk import via pipe-delimited text (MCQ: `question | correct | wrong1 [| wrong2 | wrong3 | wrong4]`; T/F: `statement | true` or `statement | false [;; explanation]`)
 - AI prompt guide with copy button; AI generates 2–4 distractors per card
 - Bulk delete lessons: "☑ Select" on class screen enters select mode with checkboxes, select-all, and "Delete selected" to remove multiple lessons and their cards at once
 - Bulk delete cards: "☑ Select" on lesson screen enters card select mode with checkboxes, select-all, and "Delete selected" to remove multiple cards at once
@@ -26,7 +26,8 @@
 
 ## Study
 - Flashcard mode (flip, mark known/learning)
-- Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def)
+- Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def; True/False shows two large True/False buttons)
+- True/False lesson format: statement card with True or False answer; optional explanation shown after answering; bulk import `statement | true/false [;; explanation]`; works in all study modes (flashcard, quiz, recall)
 - MCQ cards support 1–4 distractors (2–5 total choices); dynamic add/remove in card editor
 - Study setup: card count, filter, direction, mode
 - Multi-lesson selection → combined study session; lesson name badge shown above each question/card so the subject is always visible
