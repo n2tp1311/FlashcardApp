@@ -338,7 +338,7 @@ router.get("/analytics/export", requireAuth, function(req, res) {
   rows.forEach(function(row) {
     var data;
     try { data = JSON.parse(row.card_data); } catch(_) { data = {}; }
-    var front = row.card_format === "image-def" ? "[image]" : (data.term || data.question || "");
+    var front = row.card_format === "image-def" ? "[image]" : (data.term || data.question || data.statement || "");
     lines.push([csvField(row.date), csvField(row.lesson), csvField(front),
       row.result === 1 ? "correct" : "incorrect"].join(","));
   });

@@ -306,6 +306,7 @@ body {
 
 .format-badge.term-def { background: var(--primary-light); color: var(--primary); }
 .format-badge.mcq { background: #f3e8ff; color: #7c3aed; }
+.format-badge.true-false { background: #dcfce7; color: #15803d; }
 .format-badge.image-def { background: #fff7ed; color: #c2410c; }
 
 .lesson-actions { display: flex; gap: 4px; opacity: 0; transition: opacity var(--transition); }
@@ -992,6 +993,18 @@ code {
 .quiz-opt.dimmed { opacity: 0.4; }
 
 .quiz-opt:disabled { cursor: default; }
+
+/* True/False quiz layout */
+.quiz-options.tf-mode { flex-direction: row; gap: 12px; }
+.quiz-options.tf-mode .quiz-opt { flex: 1; justify-content: center; text-align: center; font-size: 18px; font-weight: 600; padding: 24px 16px; }
+.quiz-options.tf-mode .opt-num { display: none; }
+
+/* True/False answer picker in card modal */
+.tf-answer-picker { display: flex; gap: 10px; margin-top: 4px; }
+.tf-answer-btn { flex: 1; padding: 16px; font-size: 16px; font-weight: 600; border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-family: inherit; transition: background var(--transition), border-color var(--transition), color var(--transition); }
+.tf-answer-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+.tf-answer-btn.selected[data-value="true"] { border-color: var(--success); background: var(--success-light); color: #166534; }
+.tf-answer-btn.selected[data-value="false"] { border-color: var(--danger); background: var(--danger-light); color: #991b1b; }
 
 /* Explanation panel (quiz + recall) */
 .explanation-panel {

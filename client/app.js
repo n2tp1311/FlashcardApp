@@ -193,6 +193,28 @@ function parseBulkMCQ(raw) {
   return cards;
 }
 
+function parseBulkTF(raw) {
+  var lines = raw.split("\n");
+  var cards = [];
+  lines.forEach(function(line) {
+    var trimmed = line.trim();
+    if (!trimmed) return;
+    var semiIdx = trimmed.indexOf(";;");
+    var tfPart = semiIdx >= 0 ? trimmed.slice(0, semiIdx) : trimmed;
+    var explanation = semiIdx >= 0 ? trimmed.slice(semiIdx + 2).trim() : null;
+    var protected_ = protectLatexPipes(tfPart);
+    var parts = protected_.split("|");
+    if (parts.length < 2) return;
+    var statement = restoreLatexPipes(parts[0].trim());
+    var answer = restoreLatexPipes(parts[1].trim()).toLowerCase();
+    if (!statement || (answer !== "true" && answer !== "false")) return;
+    var data = { statement: statement, correct: answer };
+    if (explanation) data.explanation = explanation;
+    cards.push({ format: "true-false", data: data });
+  });
+  return cards;
+}
+
 /* ============================
    ID GENERATOR
    ============================ */
@@ -615,6 +637,7 @@ var state = {
   editingClassId: null,
   editingLessonId: null,
   editingCardId: null,
+  tfAnswer: null,
   deleteCallback: null,
 
   // Study
@@ -1011,7 +1034,7 @@ function renderLessons() {
           '</div>' +
           (isDue ? '<span class="due-badge">' + dueCount + ' due</span>' : '') +
           '<span class="format-badge ' + lesson.format + '">' +
-            (lesson.format === "term-def" ? "Term↔Def" : lesson.format === "mcq" ? "MCQ" : "Image↔Def") +
+            (lesson.format === "term-def" ? "Term↔Def" : lesson.format === "mcq" ? "MCQ" : lesson.format === "true-false" ? "True/False" : "Image↔Def") +
           '</span>' +
           (state.selectMode
             ? ''
@@ -1353,9 +1376,10 @@ document.getElementById("btn-delete-selected-lessons").addEventListener("click",
    ============================ */
 
 var FORMAT_HINTS = {
-  "term-def":  "Best for vocabulary, concepts, formulas. Bulk: term | definition",
-  "mcq":       "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2…] [;; explanation]",
-  "image-def": "Image on front, text definition on back. Cards added one at a time (no bulk import)."
+  "term-def":   "Best for vocabulary, concepts, formulas. Bulk: term | definition",
+  "mcq":        "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2…] [;; explanation]",
+  "true-false": "Best for T/F statements. Bulk: statement | true  or  statement | false [;; explanation]",
+  "image-def":  "Image on front, text definition on back. Cards added one at a time (no bulk import)."
 };
 
 function initLessonFormatPicker(selectedFormat) {
@@ -1488,6 +1512,9 @@ function renderCards() {
         cImg.style.borderRadius = "4px";
         termEl.appendChild(cImg);
         renderLatex(card.data.def, defEl);
+      } else if (card.format === "true-false") {
+        renderLatex(card.data.statement, termEl);
+        defEl.textContent = card.data.correct === "true" ? "✓ True" : "✓ False";
       } else {
         renderLatex(card.data.question, termEl);
         renderLatex("✓ " + card.data.correct, defEl);
@@ -1686,6 +1713,16 @@ function openAddCard() {
     document.getElementById("card-def-preview").innerHTML = "";
     openModal("card-termdef");
     document.getElementById("card-term-input").focus();
+  } else if (format === "true-false") {
+    document.getElementById("modal-card-tf-title").textContent = "Add Card";
+    document.getElementById("card-tf-statement-input").value = "";
+    document.getElementById("card-tf-statement-preview").innerHTML = "";
+    document.getElementById("card-tf-explanation-input").value = "";
+    document.getElementById("tf-explanation-details").removeAttribute("open");
+    document.querySelectorAll(".tf-answer-btn").forEach(function(b) { b.classList.remove("selected"); });
+    state.tfAnswer = null;
+    openModal("card-tf");
+    document.getElementById("card-tf-statement-input").focus();
   } else if (format === "image-def") {
     document.getElementById("modal-card-imagedef-title").textContent = "Add Card";
     document.getElementById("card-image-input").value = "";
@@ -1722,6 +1759,18 @@ function openEditCard(cardId) {
       renderLatex(card.data.term, document.getElementById("card-term-preview"));
       renderLatex(card.data.def,  document.getElementById("card-def-preview"));
       openModal("card-termdef");
+    } else if (card.format === "true-false") {
+      document.getElementById("modal-card-tf-title").textContent = "Edit Card";
+      document.getElementById("card-tf-statement-input").value = card.data.statement;
+      renderLatex(card.data.statement, document.getElementById("card-tf-statement-preview"));
+      state.tfAnswer = card.data.correct;
+      document.querySelectorAll(".tf-answer-btn").forEach(function(b) {
+        b.classList.toggle("selected", b.dataset.value === card.data.correct);
+      });
+      document.getElementById("card-tf-explanation-input").value = card.data.explanation || "";
+      if (card.data.explanation) document.getElementById("tf-explanation-details").setAttribute("open", "");
+      else document.getElementById("tf-explanation-details").removeAttribute("open");
+      openModal("card-tf");
     } else if (card.format === "image-def") {
       document.getElementById("modal-card-imagedef-title").textContent = "Edit Card";
       stagedImageUrl = card.data.imageUrl;
@@ -1783,6 +1832,35 @@ document.getElementById("btn-save-card-mcq").addEventListener("click", function(
 });
 
 document.getElementById("btn-add-card").addEventListener("click", openAddCard);
+
+/* ============================
+   TRUE/FALSE CARD MODAL
+   ============================ */
+
+document.getElementById("tf-answer-picker").addEventListener("click", function(e) {
+  var btn = e.target.closest(".tf-answer-btn");
+  if (!btn) return;
+  document.querySelectorAll(".tf-answer-btn").forEach(function(b) { b.classList.remove("selected"); });
+  btn.classList.add("selected");
+  state.tfAnswer = btn.dataset.value;
+});
+
+document.getElementById("card-tf-statement-input").addEventListener("input", function() {
+  renderLatex(this.value, document.getElementById("card-tf-statement-preview"));
+});
+
+document.getElementById("btn-save-card-tf").addEventListener("click", function() {
+  var statement = document.getElementById("card-tf-statement-input").value.trim();
+  if (!statement) { alert("Please enter a statement."); return; }
+  if (!state.tfAnswer) { alert("Please select True or False."); return; }
+  var explanation = document.getElementById("card-tf-explanation-input").value.trim();
+  var data = { statement: statement, correct: state.tfAnswer };
+  if (explanation) data.explanation = explanation;
+  var p = state.editingCardId
+    ? store.updateCard(state.editingCardId, state.currentLesson.id, { data: data })
+    : store.createCard({ lessonId: state.currentLesson.id, format: "true-false", data: data });
+  p.then(function() { closeModal("card-tf"); renderCards(); });
+});
 
 /* ============================
    IMAGE-DEF CARD MODAL
@@ -1869,28 +1947,8 @@ document.getElementById("bulk-input").addEventListener("input", function() {
 
 function renderBulkPreview(raw, format) {
   var preview = document.getElementById("bulk-preview");
-  var cards = format === "term-def" ? parseBulkTermDef(raw) : parseBulkMCQ(raw);
+  var cards = format === "term-def" ? parseBulkTermDef(raw) : format === "true-false" ? parseBulkTF(raw) : parseBulkMCQ(raw);
   if (cards.length === 0) { preview.innerHTML = ""; return; }
-  var html = '<div class="bulk-preview-count">' + cards.length + ' card' + (cards.length !== 1 ? 's' : '') + ' detected</div>';
-  cards.slice(0, 5).forEach(function(card) {
-    var termEl = document.createElement("div");
-    var defEl  = document.createElement("div");
-    termEl.className = "bp-term";
-    defEl.className  = "bp-def";
-    if (format === "term-def") {
-      renderLatex(card.data.term, termEl);
-      renderLatex(card.data.def, defEl);
-    } else {
-      renderLatex(card.data.question, termEl);
-      renderLatex("✓ " + card.data.correct, defEl);
-    }
-    var item = document.createElement("div");
-    item.className = "bulk-preview-item";
-    item.appendChild(termEl);
-    item.appendChild(defEl);
-    html += item.outerHTML; // fallback: use innerHTML
-  });
-  // Use DOM approach for preview items with LaTeX
   preview.innerHTML = '<div class="bulk-preview-count">' + cards.length + ' card' + (cards.length !== 1 ? 's' : '') + ' detected</div>';
   cards.slice(0, 5).forEach(function(card) {
     var item = document.createElement("div");
@@ -1902,6 +1960,9 @@ function renderBulkPreview(raw, format) {
     if (format === "term-def") {
       renderLatex(card.data.term, termEl);
       renderLatex(card.data.def, defEl);
+    } else if (format === "true-false") {
+      renderLatex(card.data.statement, termEl);
+      defEl.textContent = card.data.correct === "true" ? "✓ True" : "✓ False";
     } else {
       renderLatex(card.data.question, termEl);
       renderLatex("✓ " + card.data.correct, defEl);
@@ -1926,6 +1987,8 @@ function openBulkAdd() {
   document.getElementById("bulk-preview").innerHTML = "";
   var hint = format === "term-def"
     ? "One card per line: term | definition\nSupports LaTeX: $\\hat{\\beta}$ or $$\\sum_{i=1}^n x_i$$"
+    : format === "true-false"
+    ? "One card per line: statement | true  or  statement | false [;; explanation]"
     : "One card per line: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]";
   document.getElementById("bulk-hint").textContent = hint;
   openModal("bulk");
@@ -1937,7 +2000,7 @@ document.getElementById("btn-bulk-add").addEventListener("click", openBulkAdd);
 document.getElementById("btn-save-bulk").addEventListener("click", function() {
   var raw    = document.getElementById("bulk-input").value;
   var format = state.currentLesson ? state.currentLesson.format : "term-def";
-  var cards  = format === "term-def" ? parseBulkTermDef(raw) : parseBulkMCQ(raw);
+  var cards  = format === "term-def" ? parseBulkTermDef(raw) : format === "true-false" ? parseBulkTF(raw) : parseBulkMCQ(raw);
   if (cards.length === 0) { alert("No valid cards found. Check the format."); return; }
   var withLesson = cards.map(function(c) {
     return { lessonId: state.currentLesson.id, format: c.format, data: c.data };
@@ -2188,6 +2251,16 @@ function renderFlashcard() {
     renderLatex(front, frontEl);
     renderLatex(back,  backEl);
     frontAudioBtn.style.visibility = "";
+  } else if (card.format === "true-false") {
+    front = card.data.statement;
+    back  = card.data.correct === "true" ? "True" : "False";
+    state.studyFrontText = front || "";
+    state.studyBackText  = back  || "";
+    frontEl.innerHTML = "";
+    renderLatex(front, frontEl);
+    backEl.innerHTML = "";
+    backEl.textContent = back;
+    frontAudioBtn.style.visibility = "";
   } else if (card.format === "image-def") {
     state.studyFrontText = "";
     state.studyBackText  = card.data.def || "";
@@ -2212,11 +2285,10 @@ function renderFlashcard() {
     frontAudioBtn.style.visibility = "";
   }
 
-  // Explanation (MCQ only, shown below card when flipped)
   var expContainer = document.getElementById("fc-explanation");
   expContainer.innerHTML = "";
   expContainer.classList.add("hidden");
-  if (card.format === "mcq" && card.data.explanation) {
+  if ((card.format === "mcq" || card.format === "true-false") && card.data.explanation) {
     var expEl = document.createElement("details");
     expEl.className = "explanation-panel";
     expEl.open = true;
@@ -2368,6 +2440,9 @@ function startQuiz() {
 }
 
 function buildQuizOptions(card) {
+  if (card.format === "true-false") {
+    return ["True", "False"];
+  }
   if (card.format === "mcq") {
     return shuffle([card.data.correct].concat(card.data.distractors));
   }
@@ -2415,6 +2490,8 @@ function renderQuizCard() {
   qEl.innerHTML = "";
   if (card.format === "mcq") {
     renderLatex(card.data.question, qEl);
+  } else if (card.format === "true-false") {
+    renderLatex(card.data.statement, qEl);
   } else if (card.format === "image-def") {
     var qImg = document.createElement("img");
     qImg.src = card.data.imageUrl;
@@ -2434,6 +2511,7 @@ function renderQuizCard() {
 
   var optsEl = document.getElementById("quiz-options");
   optsEl.innerHTML = "";
+  optsEl.classList.toggle("tf-mode", card.format === "true-false");
   opts.forEach(function(opt, idx) {
     var btn = document.createElement("button");
     btn.className = "quiz-opt";
@@ -2452,6 +2530,7 @@ function answerQuiz(selectedIdx) {
   var card    = state.quizCards[state.quizIndex];
   var opts    = state.quizOptions;
   var correct = card.format === "mcq" ? card.data.correct :
+    card.format === "true-false" ? (card.data.correct === "true" ? "True" : "False") :
     card.format === "image-def" ? card.data.def :
     (state.studyDirection === "term-def" ? card.data.def : card.data.term);
   var selectedVal = opts[selectedIdx];
@@ -2487,7 +2566,7 @@ function answerQuiz(selectedIdx) {
     renderQuizCard();
   }, 1200);
 
-  if (card.format === "mcq" && card.data.explanation) {
+  if ((card.format === "mcq" || card.format === "true-false") && card.data.explanation) {
     var expEl  = document.createElement("details");
     expEl.id   = "quiz-explanation";
     expEl.className = "explanation-panel";
@@ -2552,6 +2631,8 @@ function renderRecallCard() {
   recallQEl.innerHTML = "";
   if (card.format === "mcq") {
     renderLatex(card.data.question, recallQEl);
+  } else if (card.format === "true-false") {
+    renderLatex(card.data.statement, recallQEl);
   } else if (card.format === "image-def") {
     var rImg = document.createElement("img");
     rImg.src = card.data.imageUrl;
@@ -2582,6 +2663,8 @@ function revealRecall() {
   var answer;
   if (card.format === "mcq") {
     answer = card.data.correct;
+  } else if (card.format === "true-false") {
+    answer = card.data.correct === "true" ? "True" : "False";
   } else if (card.format === "image-def") {
     answer = card.data.def;
   } else {
@@ -2590,7 +2673,7 @@ function revealRecall() {
 
   renderLatex(answer, document.getElementById("recall-correct-answer"));
 
-  if (card.format === "mcq" && card.data.explanation) {
+  if ((card.format === "mcq" || card.format === "true-false") && card.data.explanation) {
     var expEl  = document.createElement("details");
     expEl.open = true;
     expEl.className = "explanation-panel";
@@ -2906,6 +2989,9 @@ function buildStatsCardEl(card, stats) {
   if (card.format === "term-def") {
     renderLatex(card.data.term, qEl);
     renderLatex(card.data.def,  aEl);
+  } else if (card.format === "true-false") {
+    renderLatex(card.data.statement, qEl);
+    aEl.textContent = card.data.correct === "true" ? "True" : "False";
   } else if (card.format === "image-def") {
     qEl.textContent = "[image]";
     renderLatex(card.data.def, aEl);
@@ -3298,7 +3384,7 @@ function parseBulkImport(raw) {
       var parts = header.split("|");
       var title  = parts[0].trim();
       var format = (parts[1] || "").trim().toLowerCase();
-      if (format !== "mcq") format = "term-def";
+      if (format !== "mcq" && format !== "true-false") format = "term-def";
       current = { title: title, format: format, lines: [] };
       sections.push(current);
     } else if (current) {
@@ -3308,6 +3394,8 @@ function parseBulkImport(raw) {
   return sections.map(function(s) {
     var cards = s.format === "term-def"
       ? parseBulkTermDef(s.lines.join("\n"))
+      : s.format === "true-false"
+      ? parseBulkTF(s.lines.join("\n"))
       : parseBulkMCQ(s.lines.join("\n"));
     return { title: s.title, format: s.format, cards: cards };
   }).filter(function(s) { return s.title; });
@@ -3326,7 +3414,7 @@ function renderBulkImportPreview(raw) {
     var header = document.createElement("div");
     header.className = "bi-lesson-header";
     var badge = '<span class="format-badge ' + section.format + '" style="margin-left:6px">' +
-      (section.format === "term-def" ? "Term↔Def" : "MCQ") + '</span>';
+      (section.format === "term-def" ? "Term↔Def" : section.format === "true-false" ? "True/False" : "MCQ") + '</span>';
     header.innerHTML = escHtml(section.title) + badge +
       '<span class="bi-lesson-count">' + section.cards.length + ' card' +
       (section.cards.length !== 1 ? 's' : '') + '</span>';
@@ -3340,6 +3428,8 @@ function renderBulkImportPreview(raw) {
       termEl.className = "bi-card-term";
       if (card.format === "term-def") {
         renderLatex(card.data.term, termEl);
+      } else if (card.format === "true-false") {
+        renderLatex(card.data.statement, termEl);
       } else {
         renderLatex(card.data.question, termEl);
       }

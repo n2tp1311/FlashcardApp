@@ -35,8 +35,8 @@ router.post("/classes/:classId/lessons", requireAuth, (req, res) => {
     return res.status(404).json({ error: "Not found" });
   const { title, format } = req.body;
   if (!title || !format) return res.status(400).json({ error: "title and format required" });
-  if (!["term-def", "mcq", "image-def"].includes(format))
-    return res.status(400).json({ error: "format must be term-def, mcq, or image-def" });
+  if (!["term-def", "mcq", "true-false", "image-def"].includes(format))
+    return res.status(400).json({ error: "format must be term-def, mcq, true-false, or image-def" });
   const count = db.prepare("SELECT COUNT(*) as n FROM lessons WHERE class_id = ?")
     .get(req.params.classId).n;
   const id = genId();

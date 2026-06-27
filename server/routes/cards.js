@@ -21,6 +21,14 @@ function validateCardData(format, data) {
     if (!data.def || typeof data.def !== "string" || !data.def.trim())
       return "image-def requires def (text definition)";
   }
+  if (format === "true-false") {
+    if (!data.statement || typeof data.statement !== "string" || !data.statement.trim())
+      return "true-false requires statement";
+    if (data.correct !== "true" && data.correct !== "false")
+      return 'true-false requires correct to be "true" or "false"';
+    if (data.explanation !== undefined && (typeof data.explanation !== "string" || !data.explanation.trim()))
+      return "true-false explanation must be a non-empty string if provided";
+  }
   return null;
 }
 

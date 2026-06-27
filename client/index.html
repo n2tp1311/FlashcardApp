@@ -467,6 +467,7 @@
       <div class="pill-group" id="lesson-format-picker">
         <button class="pill active" data-value="term-def">Term → Definition</button>
         <button class="pill" data-value="mcq">Multiple Choice</button>
+        <button class="pill" data-value="true-false">True / False</button>
         <button class="pill" data-value="image-def">Image → Definition</button>
       </div>
       <p class="form-hint" id="format-hint">Best for vocabulary, concepts, formulas. Bulk: term | definition</p>
@@ -527,6 +528,35 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="card-mcq">Cancel</button>
       <button class="btn btn-primary" id="btn-save-card-mcq">Save</button>
+    </div>
+  </div>
+
+  <!-- Card Form Modal (True/False) -->
+  <div id="modal-card-tf" class="modal hidden">
+    <div class="modal-header">
+      <h3 id="modal-card-tf-title">Add Card</h3>
+      <button class="modal-close" data-modal="card-tf">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Statement</label>
+      <textarea id="card-tf-statement-input" class="form-textarea" rows="3" placeholder="e.g. The Earth revolves around the Sun."></textarea>
+      <div class="preview-label">Preview:</div>
+      <div id="card-tf-statement-preview" class="latex-preview"></div>
+      <label class="form-label">Answer</label>
+      <div class="tf-answer-picker" id="tf-answer-picker">
+        <button type="button" class="tf-answer-btn" data-value="true">True</button>
+        <button type="button" class="tf-answer-btn" data-value="false">False</button>
+      </div>
+      <details id="tf-explanation-details" style="margin-top:12px">
+        <summary class="form-label" style="cursor:pointer;user-select:none;list-style:none">Explanation (optional)</summary>
+        <textarea id="card-tf-explanation-input" class="form-textarea" rows="3"
+          placeholder="Why is this true or false?"
+          style="margin-top:6px"></textarea>
+      </details>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="card-tf">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-tf">Save</button>
     </div>
   </div>
 
