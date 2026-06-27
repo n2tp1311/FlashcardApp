@@ -30,6 +30,7 @@
 - MCQ cards support 1–4 distractors (2–5 total choices); dynamic add/remove in card editor
 - Study setup: card count, filter, direction, mode
 - Multi-lesson selection → combined study session; lesson name badge shown above each question/card so the subject is always visible
+- Multi-class quiz: "☑ Select" button (or `X` key) on home screen enters class select mode; check multiple classes and click "Study" to fetch all their lessons and launch a cross-class interleaved session
 - Progressive difficulty: hard cards weighted 3×, medium 2×
 - "Hard First" filter for focused review
 - "Due Only" filter to quiz only SRS-due cards
@@ -48,7 +49,7 @@
 ## Keyboard-Only Mode
 
 - Unified keydown handler covers all screens — no mouse required
-- Home: `↑`/`↓` navigate class cards; `Enter` open focused class; `N` new class
+- Home: `↑`/`↓` navigate class cards; `Enter` open class / toggle selection; `X` toggle select mode; `Space` toggle selection; `A` select all; `S` study selected; `Esc` exit select mode; `N` new class
 - Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
 - Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back
 - Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2` mark learning/known, `S` shuffle, `R` reset, `F` filter hard, `P` pronounce

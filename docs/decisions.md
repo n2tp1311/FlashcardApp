@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-06-27 — Multi-class quiz: home-screen select mode rather than a new screen
+
+The multi-class study flow reuses the same select-mode pattern already used on the class screen (☑ Select button → checkboxes injected in-place → select bar with count and Study button). No intermediate lesson-picker screen was added: selecting classes goes straight to the existing `openSetup()` with all lessons from those classes combined. The existing `setStudyLessonLabel()` pill already labels each card by lesson when `studyScope.lessons.length > 1`, so cross-class sessions are already disambiguated. `returnScreen: "home"` sends the user back to the home screen after the session, which was already handled in the existing return-from-study flow. The `A` key conflict (Analytics vs Select All) is resolved by checking `state.homeSelectMode` first so Select All takes priority in select mode.
+
 ## 2026-06-25 — Analytics heatmap: UTC date keys on client match server's SQLite date('unixepoch')
 
 The heatmap generates 90 day-cells on the client and matches them against server-supplied dates from `date(created_at,'unixepoch')` (UTC). Using local-midnight `new Date(y,m,d).toISOString().slice(0,10)` produces the wrong (previous) UTC date for users in UTC+ timezones because `toISOString()` converts local midnight to UTC before formatting. Fixed by using UTC date arithmetic: `new Date(Date.UTC(y,m,d-i))` then `.toISOString().slice(0,10)`, which correctly generates the UTC date the server would return for any given day. Similarly, `getUTCMonth()` and `getUTCDay()` are used for month label and weekday alignment rather than their local-time counterparts.
