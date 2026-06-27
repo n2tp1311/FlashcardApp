@@ -656,6 +656,11 @@ var state = {
   cardSelectMode: false,
   selectedCardIds: [],
 
+  // Home multi-class selection mode
+  homeSelectMode: false,
+  selectedClassIds: [],
+  homeClasses: [],
+
   // Cache for server-mode lookups
   currentClassLessons: []
 };
@@ -770,7 +775,9 @@ var CLASS_ICONS = ["📚","🧮","🔬","⚗️","🧬","🎯","💡","🖥️",
    ============================ */
 
 function renderHome() {
+  setHomeSelectMode(false);
   store.getClasses().then(function(classes) {
+    state.homeClasses = classes;
     var grid = document.getElementById("class-list");
     var empty = document.getElementById("empty-home");
     grid.innerHTML = "";
@@ -802,6 +809,7 @@ function renderHome() {
         '</div>';
       card.addEventListener("click", function(e) {
         if (e.target.closest("[data-cls-edit],[data-cls-del]")) return;
+        if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
         openClass(cls.id);
       });
       card.querySelector("[data-cls-edit]").addEventListener("click", function(e) {
@@ -1103,6 +1111,106 @@ function updateSelectBar() {
 
 document.getElementById("btn-select-lessons").addEventListener("click", function() {
   setSelectMode(!state.selectMode);
+});
+
+/* ============================
+   HOME MULTI-CLASS SELECTION
+   ============================ */
+
+function setHomeSelectMode(on) {
+  state.homeSelectMode = on;
+  state.selectedClassIds = [];
+  var bar = document.getElementById("home-select-bar");
+  if (bar) bar.classList.toggle("hidden", !on);
+  var btn = document.getElementById("btn-select-classes");
+  if (btn) btn.classList.toggle("active", on);
+  var allCheck = document.getElementById("select-all-classes");
+  if (allCheck) allCheck.checked = false;
+
+  document.querySelectorAll("#class-list .class-card").forEach(function(card) {
+    card.classList.remove("selected");
+    var existing = card.querySelector(".lesson-check");
+    if (on && !existing) {
+      var check = document.createElement("input");
+      check.type = "checkbox";
+      check.className = "lesson-check";
+      card.insertBefore(check, card.firstChild);
+    } else if (!on && existing) {
+      existing.remove();
+    }
+  });
+
+  updateHomeSelectBar();
+}
+
+function toggleClassSelection(classId) {
+  var idx = state.selectedClassIds.indexOf(classId);
+  if (idx === -1) state.selectedClassIds.push(classId);
+  else state.selectedClassIds.splice(idx, 1);
+  var card = document.querySelector('[data-class-id="' + classId + '"]');
+  if (card) {
+    var nowSelected = state.selectedClassIds.indexOf(classId) !== -1;
+    card.classList.toggle("selected", nowSelected);
+    var check = card.querySelector(".lesson-check");
+    if (check) check.checked = nowSelected;
+  }
+  updateHomeSelectBar();
+}
+
+function updateHomeSelectBar() {
+  var n = state.selectedClassIds.length;
+  var countEl = document.getElementById("home-select-count");
+  if (countEl) countEl.textContent = n + " class" + (n !== 1 ? "es" : "") + " selected";
+  var studyBtn = document.getElementById("btn-study-classes");
+  if (studyBtn) studyBtn.disabled = n === 0;
+  var total = (state.homeClasses || []).length;
+  var allCheck = document.getElementById("select-all-classes");
+  if (allCheck) allCheck.checked = total > 0 && n === total;
+}
+
+document.getElementById("btn-select-classes").addEventListener("click", function() {
+  setHomeSelectMode(!state.homeSelectMode);
+});
+
+document.getElementById("btn-select-classes-cancel").addEventListener("click", function() {
+  setHomeSelectMode(false);
+});
+
+document.getElementById("select-all-classes").addEventListener("change", function() {
+  if (this.checked) {
+    state.selectedClassIds = (state.homeClasses || []).map(function(c) { return c.id; });
+  } else {
+    state.selectedClassIds = [];
+  }
+  document.querySelectorAll("#class-list .class-card").forEach(function(card) {
+    var sel = state.selectedClassIds.indexOf(card.dataset.classId) !== -1;
+    card.classList.toggle("selected", sel);
+    var check = card.querySelector(".lesson-check");
+    if (check) check.checked = sel;
+  });
+  updateHomeSelectBar();
+});
+
+document.getElementById("btn-study-classes").addEventListener("click", function() {
+  var ids = state.selectedClassIds.slice();
+  if (ids.length === 0) return;
+  Promise.all(ids.map(function(id) { return store.getLessons(id); }))
+    .then(function(lessonArrays) {
+      var allLessons = lessonArrays.reduce(function(acc, arr) { return acc.concat(arr); }, []);
+      if (allLessons.length === 0) {
+        alert("The selected classes have no lessons.");
+        return;
+      }
+      var lessonIds = allLessons.map(function(l) { return l.id; });
+      var n = ids.length;
+      setHomeSelectMode(false);
+      openSetup({
+        lessonIds: lessonIds,
+        lessons: allLessons,
+        returnScreen: "home",
+        title: n + " class" + (n !== 1 ? "es" : "") + " selected"
+      });
+    });
 });
 
 function setCardSelectMode(on) {
@@ -4101,13 +4209,31 @@ document.addEventListener("keydown", function(e) {
   }
 
   if (screen === "home") {
-    if (e.key === "n" || e.key === "N") openNewClass();
+    if (e.key === "Escape" && state.homeSelectMode) { setHomeSelectMode(false); return; }
+    else if (e.key === "x" || e.key === "X") setHomeSelectMode(!state.homeSelectMode);
+    else if (e.key === " " && state.homeSelectMode) {
+      e.preventDefault();
+      var f = document.activeElement;
+      if (f && f.dataset.classId) toggleClassSelection(f.dataset.classId);
+    }
+    else if ((e.key === "a" || e.key === "A") && state.homeSelectMode) {
+      var allCheck = document.getElementById("select-all-classes");
+      allCheck.checked = !allCheck.checked;
+      allCheck.dispatchEvent(new Event("change"));
+    }
+    else if ((e.key === "s" || e.key === "S") && state.homeSelectMode) document.getElementById("btn-study-classes").click();
+    else if (e.key === "n" || e.key === "N") openNewClass();
     else if ((e.key === "a" || e.key === "A") && IS_SERVER) renderAnalytics();
     else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list .class-card", 1); }
     else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); moveFocus("#class-list .class-card", -1); }
     else if (e.key === "Enter") {
       var f = document.activeElement;
-      if (f && f.dataset.classId) openClass(f.dataset.classId);
+      if (f && f.dataset.classId) {
+        if (state.homeSelectMode) toggleClassSelection(f.dataset.classId);
+        else openClass(f.dataset.classId);
+      } else if (state.homeSelectMode && state.selectedClassIds.length > 0) {
+        document.getElementById("btn-study-classes").click();
+      }
     }
   }
 
@@ -4201,6 +4327,8 @@ document.getElementById("recall-answer-input").addEventListener("keydown", funct
 
 function injectKeyHints() {
   var hints = [
+    ["btn-select-classes", "[X]"],
+    ["btn-study-classes",  "[S]"],
     ["btn-new-class",      "[N]"],
     ["btn-new-lesson",     "[N]"],
     ["btn-edit-class",     "[E]"],

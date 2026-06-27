@@ -97,9 +97,18 @@
     <button class="btn btn-ghost" id="btn-dashboard" style="display:none">📊 Dashboard</button>
     <button class="btn btn-ghost" id="btn-analytics" style="display:none">📈 Analytics</button>
     <button class="btn btn-ghost" id="btn-show-keymap" title="Keyboard shortcuts (?)">⌨</button>
+    <button class="btn btn-ghost" id="btn-select-classes">☑ Select</button>
     <button class="btn btn-primary" id="btn-new-class">+ New Class</button>
   </header>
   <div id="class-list" class="class-grid"></div>
+  <div id="home-select-bar" class="select-bar hidden">
+    <label class="select-all-label">
+      <input type="checkbox" id="select-all-classes"> Select all
+    </label>
+    <span id="home-select-count" class="select-count">0 classes selected</span>
+    <button class="btn btn-sm btn-ghost" id="btn-select-classes-cancel">Cancel</button>
+    <button class="btn btn-sm btn-primary" id="btn-study-classes" disabled>Study</button>
+  </div>
   <div id="empty-home" class="empty-state hidden">
     <div class="empty-icon">📚</div>
     <p>No classes yet. Create your first class to get started.</p>
@@ -690,7 +699,11 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <div class="keymap-section">
         <div class="keymap-section-title">Home</div>
         <div class="keymap-row"><kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd><span>Navigate classes</span></div>
-        <div class="keymap-row"><kbd class="kbd">Enter</kbd><span>Open focused class</span></div>
+        <div class="keymap-row"><kbd class="kbd">Enter</kbd><span>Open class / toggle selection</span></div>
+        <div class="keymap-row"><kbd class="kbd">X</kbd><span>Toggle select mode</span></div>
+        <div class="keymap-row"><kbd class="kbd">Space</kbd><span>Toggle selection (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">A</kbd><span>Select all (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">S</kbd><span>Study selected (select mode)</span></div>
         <div class="keymap-row"><kbd class="kbd">N</kbd><span>New class</span></div>
         <div class="keymap-row"><kbd class="kbd">A</kbd><span>Analytics</span></div>
       </div>

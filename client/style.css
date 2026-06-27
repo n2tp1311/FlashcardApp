@@ -313,7 +313,8 @@ body {
 
 /* Multi-lesson selection */
 .lesson-item.selected,
-.card-item.selected {
+.card-item.selected,
+.class-card.selected {
   border-color: var(--primary);
   background: var(--primary-light);
 }
