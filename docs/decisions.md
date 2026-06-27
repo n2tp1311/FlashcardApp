@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-06-28 — MCQ → T/F expansion: virtual cards record SRS against source card ID
+
+When a MCQ card is expanded to T/F sub-questions, the original MCQ card is removed from the deck. To prevent MCQ cards from being permanently frozen at SRS step 0 for users who always study with T/F expansion, each virtual T/F card stores `_sourceCardId` (the original MCQ card's DB id). `answerQuiz` records the attempt using `card._sourceCardId` instead of `card.id`, so the real card's `srs_due_at` and difficulty level continue to advance. Multiple attempts are recorded per expansion (one per T/F sub-question), which is acceptable — the SRS step only advances on the last attempt in the batch. Alternative considered: record one aggregate attempt after all sub-questions for the same source are answered — rejected for complexity.
+
 ## 2026-06-28 — True/False: correct stored as lowercase string "true"/"false", displayed as title-case
 
 The T/F answer is stored in the DB as `"true"` or `"false"` (lowercase string) to match the bulk import format (user types `| true`) and the HTML `data-value` attributes. The display layer (`answerQuiz`, `revealRecall`, `renderFlashcard`, `buildQuizOptions`) converts to title-case "True"/"False" at render time. Alternative: store as boolean — rejected because SQLite JSON stores booleans as 0/1, requiring casts in every reader, and the rest of the codebase stores card data as typed strings (MCQ `correct` is a plain string). The conversion is in one place per study mode so maintaining consistency is straightforward.

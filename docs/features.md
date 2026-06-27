@@ -36,6 +36,7 @@
 - "Hard First" filter for focused review
 - "Due Only" filter to quiz only SRS-due cards
 - Interleaved vs Blocked card order for multi-lesson sessions (pill on setup screen, hidden for single-lesson)
+- MCQ → T/F expansion in quiz mode: setup screen shows a 0–100% slider (default 20%, hidden for non-MCQ lessons); selected fraction of MCQ cards are replaced by True/False sub-questions at quiz time ("Is X the correct answer to Q?"); each expanded card records SRS attempts against the source MCQ card so difficulty and due-date update normally
 
 ## Audio Pronunciation
 
