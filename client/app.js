@@ -83,6 +83,24 @@ function splitLatex(text) {
    TEXT-TO-SPEECH
    ============================ */
 
+var _ttsVoice = null;
+function _pickVoice() {
+  var voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  var en = voices.filter(function(v) { return /^en(-|$)/i.test(v.lang); });
+  if (!en.length) return voices[0];
+  return en.find(function(v) { return /google/i.test(v.name) && v.lang === "en-US"; }) ||
+    en.find(function(v) { return /enhanced|premium|neural/i.test(v.name) && v.lang === "en-US"; }) ||
+    en.find(function(v) { return v.lang === "en-US"; }) ||
+    en[0];
+}
+if (window.speechSynthesis) {
+  _ttsVoice = _pickVoice();
+  if (typeof window.speechSynthesis.addEventListener === "function") {
+    window.speechSynthesis.addEventListener("voiceschanged", function() { _ttsVoice = _pickVoice(); });
+  }
+}
+
 function speakText(text) {
   if (!window.speechSynthesis || !text) return;
   var clean = text
@@ -91,8 +109,30 @@ function speakText(text) {
     .trim();
   if (!clean) return;
   window.speechSynthesis.cancel();
-  // setTimeout avoids a Safari bug where speak() called synchronously after cancel() is silently dropped
-  setTimeout(function() { window.speechSynthesis.speak(new SpeechSynthesisUtterance(clean)); }, 50);
+  setTimeout(function() {
+    var u = new SpeechSynthesisUtterance(clean);
+    var voice = _ttsVoice || _pickVoice();
+    if (voice) u.voice = voice;
+    u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  }, 50);
+}
+
+function setStudyLessonLabel(elId, card) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  var lessons = state.studyScope && state.studyScope.lessons;
+  if (!lessons || lessons.length <= 1 || !card.lesson_id) {
+    el.classList.add("hidden");
+    return;
+  }
+  var lesson = lessons.find(function(l) { return l.id === card.lesson_id; });
+  if (lesson) {
+    el.textContent = lesson.title;
+    el.classList.remove("hidden");
+  } else {
+    el.classList.add("hidden");
+  }
 }
 
 /* ============================
@@ -2014,6 +2054,9 @@ function renderFlashcard() {
   document.getElementById("fc-progress-text").textContent = (i + 1) + " / " + cards.length;
   document.getElementById("fc-progress-fill").style.width = ((i + 1) / cards.length * 100) + "%";
 
+  // Lesson label (multi-lesson sessions)
+  setStudyLessonLabel("fc-lesson-label", card);
+
   // Flip state
   state.studyFlipped = false;
   document.getElementById("fc-card").classList.remove("flipped");
@@ -2252,6 +2295,9 @@ function renderQuizCard() {
   document.getElementById("quiz-progress-fill").style.width = ((i + 1) / total * 100) + "%";
   document.getElementById("quiz-score-display").textContent = state.quizScore + " / " + i;
 
+  // Lesson label (multi-lesson sessions)
+  setStudyLessonLabel("quiz-lesson-label", card);
+
   // Question
   var qEl = document.getElementById("quiz-question");
   qEl.innerHTML = "";
@@ -2386,6 +2432,9 @@ function renderRecallCard() {
   document.getElementById("recall-progress-text").textContent = (i + 1) + " / " + total;
   document.getElementById("recall-progress-fill").style.width = ((i + 1) / total * 100) + "%";
   document.getElementById("recall-score-display").textContent = state.recallCorrect + " / " + i;
+
+  // Lesson label (multi-lesson sessions)
+  setStudyLessonLabel("recall-lesson-label", card);
 
   var recallQEl = document.getElementById("recall-question");
   recallQEl.innerHTML = "";
