@@ -2058,10 +2058,10 @@ function openSetup(scope) {
   var hasTermDef = state.studyScope.lessons.some(function(l) { return l.format === "term-def"; });
   document.getElementById("setup-direction-section").style.display = hasTermDef ? "" : "none";
 
-  // Show order picker only when studying multiple lessons
+  // Show Interleaved pill only for multi-lesson sessions; always default to in-order
   var multiLesson = state.studyScope.lessons.length > 1;
-  document.getElementById("setup-order-section").style.display = multiLesson ? "" : "none";
-  if (multiLesson) setPillGroup("setup-order", "interleaved");
+  document.getElementById("pill-order-interleaved").style.display = multiLesson ? "" : "none";
+  setPillGroup("setup-order", "in-order");
 
   var hasMcq = state.studyScope.lessons.some(function(l) { return l.format === "mcq"; });
   document.getElementById("setup-tf-pct-section").style.display = hasMcq ? "" : "none";
@@ -2112,7 +2112,7 @@ document.getElementById("btn-start-study").addEventListener("click", function() 
                   document.querySelector("#setup-direction .pill.active").dataset.value : "term-def";
   var mode      = document.querySelector("#setup-mode .pill.active").dataset.value;
   var orderEl   = document.querySelector("#setup-order .pill.active");
-  var order     = orderEl ? orderEl.dataset.value : "interleaved";
+  var order     = orderEl ? orderEl.dataset.value : "in-order";
   var tfPct     = parseInt(document.getElementById("tf-expansion-pct").value, 10) || 0;
 
   state.setupSnapshot = { count: count, filter: filter, direction: direction, mode: mode, order: order, tfPct: tfPct };
@@ -2172,19 +2172,23 @@ function startStudy(count, filter, direction, mode, order, tfPct) {
           filtered = hard.length ? hard : cards;
         }
 
-        if (order === "blocked" && ids.length > 1) {
-          // Blocked: shuffle within each lesson group, then concatenate
+        if (order === "blocked") {
+          // Shuffle within each lesson group, then concatenate
           var grouped = cardArrays.map(function(arr) {
             var g = arr.filter(function(c) { return filtered.some(function(f) { return f.id === c.id; }); });
             return weightedShuffle(g, statsMap);
           });
           filtered = grouped.reduce(function(acc, g) { return acc.concat(g); }, []);
           if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
-        } else if (count !== "all") {
-          var n = parseInt(count, 10);
-          filtered = weightedShuffle(filtered, statsMap).slice(0, n);
+        } else if (order === "shuffle" || order === "interleaved") {
+          if (count !== "all") {
+            filtered = weightedShuffle(filtered, statsMap).slice(0, parseInt(count, 10));
+          } else {
+            filtered = weightedShuffle(filtered, statsMap);
+          }
         } else {
-          filtered = weightedShuffle(filtered, statsMap);
+          // "in-order": keep original DB order
+          if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
         }
 
         if (filtered.length === 0) {
