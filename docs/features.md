@@ -39,6 +39,8 @@
 - MCQ → T/F expansion in quiz mode: setup screen shows a 0–100% slider (default from account preferences, initially 20%, hidden for non-MCQ lessons); selected fraction of MCQ cards are replaced by True/False sub-questions at quiz time ("Is X the correct answer to Q?"); each expanded card records SRS attempts against the source MCQ card so difficulty and due-date update normally
 - Account preferences: "⚙ Preferences" in the user dropdown; saves MCQ→T/F default expansion % to the server and caches in localStorage so the setup screen always reflects the saved value immediately after login
 - Lesson sort: "Sort by" dropdown on the class screen; options are Date added (newest first), Last studied, Last card added, Due count; choice persisted in localStorage per browser
+- Class sort: "Sort by" dropdown on the home screen; options are Level, Name (A–Z), Due count, Date added; choice persisted in localStorage; classes with no level set sort last (after all leveled classes), tie-broken by date added
+- Class level field: optional integer on each class ("Level" input in class editor, 1–999); used to sequence courses; can be cleared; persists to server; round-trips through export/import and class share
 
 ## Audio Pronunciation
 

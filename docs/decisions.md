@@ -1,5 +1,17 @@
 # Decision Log
 
+## 2026-07-03 — Class sort: normalizeLevel helper extracted to prevent POST/PUT divergence
+
+Both POST and PUT `/api/classes` need to coerce the level field (undefined → fallback, null → null, number → Number(val), NaN-string → fallback). The expression was extracted into `normalizeLevel(val, fallback)` in `classes.js` so that future validation changes (e.g., range clamp 1–999, isNaN rejection) are applied in one place. Alternative: inline the expression twice with comments — rejected because it would silently diverge if one site were updated and the other missed.
+
+## 2026-07-03 — Class level: null sorts last (Infinity), not first
+
+Classes with `level=null` are assigned `Infinity` in `sortClasses()` when sorting by level, causing them to sort after all leveled classes, with ties broken by `created_at`. Alternative: sort unlevel'd classes first — rejected because users set levels to promote courses to the top of their list; unlevel'd classes are implicitly "not yet sequenced."
+
+## 2026-07-03 — Preferences localStorage cache updated on save (not just on fetch)
+
+The `btn-save-preferences` handler now writes the new value back to `localStorage` immediately after updating state, before the PUT fetch completes. This ensures that if the user logs out and back in quickly, `loadUserPreferences()` reads the correct cached value synchronously rather than the stale pre-save value. Without this, the stale cache would be applied on the next login until the async fetch resolved.
+
 ## 2026-07-02 — Account preferences: localStorage cache to close post-login timing race
 
 `loadUserPreferences()` fires an async fetch on every login/init. `openSetup()` reads `state.tfExpansionPctDefault` synchronously. If the user navigates to the study setup before the fetch resolves (one RTT after login), they see the hardcoded default (20%) instead of their saved value. Fixed by caching the server response in `localStorage` under `fc-preferences` and applying it synchronously at page load before `restoreLastScreen()` runs. The cache is cleared on logout to prevent cross-user bleed. Alternative: make `openSetup` async and await a preferences promise — rejected because it would require refactoring the entire navigation stack.
