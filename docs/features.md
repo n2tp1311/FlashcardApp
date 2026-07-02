@@ -27,7 +27,7 @@
 ## Study
 - Flashcard mode (flip, mark known/learning)
 - Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def; True/False shows two large True/False buttons)
-- True/False lesson format: statement card with True or False answer; optional explanation shown after answering; bulk import `statement | true/false [;; explanation]`; works in all study modes (flashcard, quiz, recall)
+- True/False lesson format: statement card with True or False answer; optional explanation shown after answering; bulk import `statement | true/false [;; explanation]`; works in flashcard and quiz modes
 - MCQ cards support 1–4 distractors (2–5 total choices); dynamic add/remove in card editor
 - Study setup: card count, filter, direction, mode
 - Multi-lesson selection → combined study session; lesson name badge shown above each question/card so the subject is always visible
@@ -36,7 +36,9 @@
 - "Hard First" filter for focused review
 - "Due Only" filter to quiz only SRS-due cards
 - Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons
-- MCQ → T/F expansion in quiz mode: setup screen shows a 0–100% slider (default 20%, hidden for non-MCQ lessons); selected fraction of MCQ cards are replaced by True/False sub-questions at quiz time ("Is X the correct answer to Q?"); each expanded card records SRS attempts against the source MCQ card so difficulty and due-date update normally
+- MCQ → T/F expansion in quiz mode: setup screen shows a 0–100% slider (default from account preferences, initially 20%, hidden for non-MCQ lessons); selected fraction of MCQ cards are replaced by True/False sub-questions at quiz time ("Is X the correct answer to Q?"); each expanded card records SRS attempts against the source MCQ card so difficulty and due-date update normally
+- Account preferences: "⚙ Preferences" in the user dropdown; saves MCQ→T/F default expansion % to the server and caches in localStorage so the setup screen always reflects the saved value immediately after login
+- Lesson sort: "Sort by" dropdown on the class screen; options are Date added (newest first), Last studied, Last card added, Due count; choice persisted in localStorage per browser
 
 ## Audio Pronunciation
 
@@ -117,12 +119,5 @@
 - Recall mode: explanation shown in the reveal area after "Reveal Answer"
 - Server validates: if provided, must be a non-empty string
 
-## Recall Mode
-- New study mode selectable from the setup screen ("Recall" pill)
-- Shows the question (MCQ question or term/def depending on direction); user types their answer in a textarea
-- "Reveal Answer" button (or Enter key while in textarea) shows the correct answer and any MCQ explanation
-- Three self-grade buttons: ✗ Missed (SRS reset to step 0), ~ Unsure (SRS +1 step), ✓ Got It (SRS +2 steps)
-- Keyboard shortcuts after reveal: 1 = Missed, 2 = Unsure, 3 = Got It
-- Results screen reused from quiz; shows percentage and grade A–F
-- Works for both term-def and MCQ cards; source recorded as `"recall"` in attempt history
-- Research basis: free recall produces ~80% retention vs ~34% for recognition-only MCQ
+## Recall Mode (removed)
+- Recall mode was removed; historical attempt records with `source='recall'` are preserved in the DB
