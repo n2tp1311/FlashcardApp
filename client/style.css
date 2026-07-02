@@ -280,6 +280,17 @@ body {
   color: var(--text);
   cursor: pointer;
 }
+.sort-dir-btn {
+  font-size: 14px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  line-height: 1;
+}
+.sort-dir-btn:hover { background: var(--surface2); color: var(--text); }
 .lesson-list { display: flex; flex-direction: column; gap: 10px; }
 
 .lesson-item {

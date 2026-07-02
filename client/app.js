@@ -691,6 +691,12 @@ var state = {
   // Class sort preference (persisted in localStorage)
   currentClassSort: (function() {
     try { return localStorage.getItem("fc-class-sort") || "level"; } catch (_) { return "level"; }
+  }()),
+  currentClassSortDir: (function() {
+    try { return localStorage.getItem("fc-class-sort-dir") || "asc"; } catch (_) { return "asc"; }
+  }()),
+  currentLessonSortDir: (function() {
+    try { return localStorage.getItem("fc-lesson-sort-dir") || "desc"; } catch (_) { return "desc"; }
   }())
 };
 
@@ -803,22 +809,28 @@ var CLASS_ICONS = ["📚","🧮","🔬","⚗️","🧬","🎯","💡","🖥️",
    HOME SCREEN — Class List
    ============================ */
 
-function sortClasses(classes, key) {
+function sortClasses(classes, key, dir) {
+  var d = dir === "desc" ? -1 : 1;
   var copy = classes.slice();
   copy.sort(function(a, b) {
+    var r;
     if (key === "level") {
-      var al = a.level != null ? a.level : Infinity;
-      var bl = b.level != null ? b.level : Infinity;
-      if (al !== bl) return al - bl;
-      return (a.created_at || 0) - (b.created_at || 0);
+      var aNull = a.level == null, bNull = b.level == null;
+      if (aNull && bNull) return d * ((a.created_at || 0) - (b.created_at || 0));
+      if (aNull) return 1;
+      if (bNull) return -1;
+      if (a.level !== b.level) return d * (a.level - b.level);
+      return d * ((a.created_at || 0) - (b.created_at || 0));
     } else if (key === "name") {
-      return a.name.localeCompare(b.name);
+      r = a.name.localeCompare(b.name);
     } else if (key === "due_count") {
-      return (b.due_count || 0) - (a.due_count || 0);
+      r = (a.due_count || 0) - (b.due_count || 0);
     } else if (key === "date_added") {
-      return (b.created_at || 0) - (a.created_at || 0);
+      r = (a.created_at || 0) - (b.created_at || 0);
+    } else {
+      return 0;
     }
-    return 0;
+    return d * r;
   });
   return copy;
 }
@@ -827,8 +839,9 @@ function renderHome() {
   setHomeSelectMode(false);
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
-    classes = sortClasses(classes, state.currentClassSort);
+    classes = sortClasses(classes, state.currentClassSort, state.currentClassSortDir);
     document.getElementById("class-sort-select").value = state.currentClassSort;
+    document.getElementById("class-sort-dir").textContent = state.currentClassSortDir === "desc" ? "↓" : "↑";
     var grid = document.getElementById("class-list");
     var empty = document.getElementById("empty-home");
     grid.innerHTML = "";
@@ -901,6 +914,12 @@ document.getElementById("class-sort-select").addEventListener("change", function
   renderHome();
 });
 
+document.getElementById("class-sort-dir").addEventListener("click", function() {
+  state.currentClassSortDir = state.currentClassSortDir === "asc" ? "desc" : "asc";
+  try { localStorage.setItem("fc-class-sort-dir", state.currentClassSortDir); } catch (_) {}
+  renderHome();
+});
+
 function openClass(classId) {
   store.getClass(classId).then(function(cls) {
     if (!cls) return;
@@ -909,6 +928,7 @@ function openClass(classId) {
     nameEl.textContent = cls.icon + " " + cls.name;
     setSelectMode(false);
     document.getElementById("lesson-sort-select").value = state.currentLessonSort;
+    document.getElementById("lesson-sort-dir").textContent = state.currentLessonSortDir === "desc" ? "↓" : "↑";
     showScreen("class");
     saveScreenState("class", classId);
     renderLessons();
@@ -918,6 +938,13 @@ function openClass(classId) {
 document.getElementById("lesson-sort-select").addEventListener("change", function() {
   state.currentLessonSort = this.value;
   try { localStorage.setItem("fc-lesson-sort", this.value); } catch (_) {}
+  renderLessons();
+});
+
+document.getElementById("lesson-sort-dir").addEventListener("click", function() {
+  state.currentLessonSortDir = state.currentLessonSortDir === "asc" ? "desc" : "asc";
+  try { localStorage.setItem("fc-lesson-sort-dir", state.currentLessonSortDir); } catch (_) {}
+  document.getElementById("lesson-sort-dir").textContent = state.currentLessonSortDir === "desc" ? "↓" : "↑";
   renderLessons();
 });
 
@@ -1025,21 +1052,25 @@ document.getElementById("btn-class-stats").addEventListener("click", function() 
    LESSON LIST
    ============================ */
 
-function sortLessons(lessons, dueInfo, key) {
+function sortLessons(lessons, dueInfo, key, dir) {
+  var d = dir === "desc" ? -1 : 1;
   var copy = lessons.slice();
   copy.sort(function(a, b) {
+    var r;
     if (key === "date_added") {
-      return (b.created_at || 0) - (a.created_at || 0);
+      r = (a.created_at || 0) - (b.created_at || 0);
     } else if (key === "date_interacted") {
-      return (b.last_interacted_at || 0) - (a.last_interacted_at || 0);
+      r = (a.last_interacted_at || 0) - (b.last_interacted_at || 0);
     } else if (key === "date_modified") {
-      return (b.last_modified_at || b.created_at || 0) - (a.last_modified_at || a.created_at || 0);
+      r = (a.last_modified_at || a.created_at || 0) - (b.last_modified_at || b.created_at || 0);
     } else if (key === "due_count") {
       var aCount = (dueInfo && dueInfo.dueCounts && dueInfo.dueCounts[a.id]) || 0;
       var bCount = (dueInfo && dueInfo.dueCounts && dueInfo.dueCounts[b.id]) || 0;
-      return bCount - aCount;
+      r = aCount - bCount;
+    } else {
+      return 0;
     }
-    return 0;
+    return d * r;
   });
   return copy;
 }
@@ -1063,7 +1094,7 @@ function renderLessons() {
     // Load due info for all lessons in one call, then render badges
     store.getDueLessons(lessonIds).then(function(dueInfo) {
       var sortKey = state.currentLessonSort || "date_added";
-      lessons = sortLessons(lessons, dueInfo, sortKey);
+      lessons = sortLessons(lessons, dueInfo, sortKey, state.currentLessonSortDir);
       var now = Math.floor(Date.now() / 1000);
 
       lessons.forEach(function(lesson) {
