@@ -9,6 +9,13 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+function normalizeLevel(val, fallback) {
+  if (val === undefined) return fallback;
+  if (val === null) return null;
+  const n = Number(val);
+  return isNaN(n) ? fallback : n;
+}
+
 // GET /api/classes
 router.get("/", requireAuth, (req, res) => {
   const uid    = req.session.userId;
@@ -41,14 +48,14 @@ router.get("/:id", requireAuth, (req, res) => {
 
 // POST /api/classes
 router.post("/", requireAuth, (req, res) => {
-  const { name, color, icon } = req.body;
+  const { name, color, icon, level } = req.body;
   if (!name) return res.status(400).json({ error: "name is required" });
   const count = db.prepare("SELECT COUNT(*) as n FROM classes WHERE user_id = ?")
     .get(req.session.userId).n;
   const id = genId();
   db.prepare(
-    "INSERT INTO classes (id, user_id, name, color, icon, sort_order) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(id, req.session.userId, name, color || "#2563eb", icon || "📚", count);
+    "INSERT INTO classes (id, user_id, name, color, icon, sort_order, level) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).run(id, req.session.userId, name, color || "#2563eb", icon || "📚", count, normalizeLevel(level, null));
   res.status(201).json(db.prepare("SELECT * FROM classes WHERE id = ?").get(id));
 });
 
@@ -57,14 +64,15 @@ router.put("/:id", requireAuth, (req, res) => {
   const cls = db.prepare("SELECT * FROM classes WHERE id = ? AND user_id = ?")
     .get(req.params.id, req.session.userId);
   if (!cls) return res.status(404).json({ error: "Not found" });
-  const { name, color, icon, sort_order } = req.body;
+  const { name, color, icon, sort_order, level } = req.body;
   db.prepare(
-    "UPDATE classes SET name = ?, color = ?, icon = ?, sort_order = ? WHERE id = ?"
+    "UPDATE classes SET name = ?, color = ?, icon = ?, sort_order = ?, level = ? WHERE id = ?"
   ).run(
     name        ?? cls.name,
     color       ?? cls.color,
     icon        ?? cls.icon,
     sort_order  ?? cls.sort_order,
+    normalizeLevel(level, cls.level),
     req.params.id
   );
   res.json(db.prepare("SELECT * FROM classes WHERE id = ?").get(req.params.id));

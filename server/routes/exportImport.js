@@ -40,8 +40,8 @@ router.post("/", requireAuth, (req, res) => {
       const newId = genId();
       idMap[cls.id] = newId;
       db.prepare(
-        "INSERT OR IGNORE INTO classes (id, user_id, name, color, icon, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
-      ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "📚", cls.sort_order || 0, cls.created_at || Math.floor(Date.now()/1000));
+        "INSERT OR IGNORE INTO classes (id, user_id, name, color, icon, sort_order, level, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "📚", cls.sort_order || 0, cls.level ?? null, cls.created_at || Math.floor(Date.now()/1000));
     });
 
     lessons.forEach(les => {

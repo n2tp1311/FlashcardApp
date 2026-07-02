@@ -686,6 +686,11 @@ var state = {
   // Lesson sort preference (persisted in localStorage)
   currentLessonSort: (function() {
     try { return localStorage.getItem("fc-lesson-sort") || "date_added"; } catch (_) { return "date_added"; }
+  }()),
+
+  // Class sort preference (persisted in localStorage)
+  currentClassSort: (function() {
+    try { return localStorage.getItem("fc-class-sort") || "level"; } catch (_) { return "level"; }
   }())
 };
 
@@ -798,10 +803,32 @@ var CLASS_ICONS = ["📚","🧮","🔬","⚗️","🧬","🎯","💡","🖥️",
    HOME SCREEN — Class List
    ============================ */
 
+function sortClasses(classes, key) {
+  var copy = classes.slice();
+  copy.sort(function(a, b) {
+    if (key === "level") {
+      var al = a.level != null ? a.level : Infinity;
+      var bl = b.level != null ? b.level : Infinity;
+      if (al !== bl) return al - bl;
+      return (a.created_at || 0) - (b.created_at || 0);
+    } else if (key === "name") {
+      return a.name.localeCompare(b.name);
+    } else if (key === "due_count") {
+      return (b.due_count || 0) - (a.due_count || 0);
+    } else if (key === "date_added") {
+      return (b.created_at || 0) - (a.created_at || 0);
+    }
+    return 0;
+  });
+  return copy;
+}
+
 function renderHome() {
   setHomeSelectMode(false);
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
+    classes = sortClasses(classes, state.currentClassSort);
+    document.getElementById("class-sort-select").value = state.currentClassSort;
     var grid = document.getElementById("class-list");
     var empty = document.getElementById("empty-home");
     grid.innerHTML = "";
@@ -868,6 +895,12 @@ function renderHome() {
   });
 }
 
+document.getElementById("class-sort-select").addEventListener("change", function() {
+  state.currentClassSort = this.value;
+  try { localStorage.setItem("fc-class-sort", this.value); } catch (_) {}
+  renderHome();
+});
+
 function openClass(classId) {
   store.getClass(classId).then(function(cls) {
     if (!cls) return;
@@ -928,6 +961,7 @@ function openNewClass() {
   state.editingClassId = null;
   document.getElementById("modal-class-title").textContent = "New Class";
   document.getElementById("class-name-input").value = "";
+  document.getElementById("class-level-input").value = "";
   initColorPicker();
   initIconPicker();
   // Default selections
@@ -943,6 +977,7 @@ function openEditClass(classId) {
     state.editingClassId = classId;
     document.getElementById("modal-class-title").textContent = "Edit Class";
     document.getElementById("class-name-input").value = cls.name;
+    document.getElementById("class-level-input").value = cls.level != null ? cls.level : "";
     initColorPicker();
     initIconPicker();
     var colorSwatch = document.querySelector('[data-color="' + cls.color + '"]');
@@ -962,11 +997,14 @@ document.getElementById("btn-save-class").addEventListener("click", function() {
   if (!name) { alert("Please enter a class name."); return; }
   var color = active_color ? active_color.dataset.color : CLASS_COLORS[0];
   var icon  = active_icon  ? active_icon.dataset.icon   : CLASS_ICONS[0];
+  var levelVal = document.getElementById("class-level-input").value.trim();
+  var level = levelVal !== "" ? parseInt(levelVal, 10) : null;
+  if (level !== null && isNaN(level)) { alert("Level must be a number."); return; }
   var p;
   if (state.editingClassId) {
-    p = store.updateClass(state.editingClassId, { name: name, color: color, icon: icon });
+    p = store.updateClass(state.editingClassId, { name: name, color: color, icon: icon, level: level });
   } else {
-    p = store.createClass({ name: name, color: color, icon: icon });
+    p = store.createClass({ name: name, color: color, icon: icon, level: level });
   }
   p.then(function() {
     closeModal("class");
@@ -3901,6 +3939,7 @@ document.getElementById("pref-tf-pct").addEventListener("input", function() {
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
   var pct = parseInt(document.getElementById("pref-tf-pct").value, 10);
   state.tfExpansionPctDefault = pct;
+  try { localStorage.setItem("fc-preferences", JSON.stringify({ tfExpansionPctDefault: pct })); } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",
     credentials: "same-origin",

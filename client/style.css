@@ -534,6 +534,7 @@ body {
   margin-bottom: 4px;
   display: block;
 }
+.form-label-hint { font-weight: 400; color: var(--text2); }
 
 .form-input {
   width: 100%;

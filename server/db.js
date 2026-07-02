@@ -200,6 +200,9 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_lesson ON cards(lesson_id)")
 // Migration: add preferences JSON column to users
 try { db.exec("ALTER TABLE users ADD COLUMN preferences TEXT"); } catch (_) {}
 
+// Migration: add level column to classes for manual course ordering
+try { db.exec("ALTER TABLE classes ADD COLUMN level INTEGER"); } catch (_) {}
+
 // Migration: add last_seen_at to card_states for per-card visit tracking
 try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catch (_) {}
 

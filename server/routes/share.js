@@ -33,8 +33,8 @@ function cloneClass(classId, toUserId) {
     const newClassId = genId();
     const count = db.prepare("SELECT COUNT(*) as n FROM classes WHERE user_id = ?").get(toUserId).n;
     db.prepare(
-      "INSERT INTO classes (id, user_id, name, color, icon, sort_order) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run(newClassId, toUserId, cls.name, cls.color, cls.icon, count);
+      "INSERT INTO classes (id, user_id, name, color, icon, sort_order, level) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).run(newClassId, toUserId, cls.name, cls.color, cls.icon, count, cls.level ?? null);
     idMap[classId] = newClassId;
 
     lessons.forEach(l => {
