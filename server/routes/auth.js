@@ -5,6 +5,7 @@ const bcrypt   = require("bcryptjs");
 const crypto   = require("crypto");
 const db       = require("../db");
 const { sendPasswordReset } = require("../services/mailer");
+const { requireAuth } = require("../middleware/auth");
 const router   = express.Router();
 
 function genId() {
@@ -203,6 +204,33 @@ router.get("/google/callback", async (req, res) => {
     console.error("[google-oauth]", e.message);
     res.redirect("/?auth_error=google_failed");
   }
+});
+
+// GET /api/auth/preferences
+router.get("/preferences", requireAuth, (req, res) => {
+  const user = db.prepare("SELECT preferences FROM users WHERE id = ?").get(req.session.userId);
+  let prefs = {};
+  if (user && user.preferences) {
+    try { prefs = JSON.parse(user.preferences); } catch (_) {}
+  }
+  res.json(prefs);
+});
+
+// PUT /api/auth/preferences
+router.put("/preferences", requireAuth, (req, res) => {
+  const body = req.body;
+  if (typeof body !== "object" || body === null || Array.isArray(body))
+    return res.status(400).json({ error: "preferences must be a JSON object" });
+  // Read-modify-write so unknown keys added by future code are preserved
+  const user = db.prepare("SELECT preferences FROM users WHERE id = ?").get(req.session.userId);
+  let current = {};
+  if (user && user.preferences) {
+    try { current = JSON.parse(user.preferences); } catch (_) {}
+  }
+  const merged = Object.assign({}, current, body);
+  db.prepare("UPDATE users SET preferences = ? WHERE id = ?")
+    .run(JSON.stringify(merged), req.session.userId);
+  res.json({ ok: true });
 });
 
 module.exports = router;

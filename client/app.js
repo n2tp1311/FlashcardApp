@@ -658,13 +658,6 @@ var state = {
   quizOptions: [],
   quizAnswered: false,
 
-  // Recall
-  recallCards: [],
-  recallIndex: 0,
-  recallCorrect: 0,
-  recallResults: [],
-  recallRevealed: false,
-
   // Setup snapshot (for retry)
   setupSnapshot: null,
 
@@ -685,7 +678,15 @@ var state = {
   homeClasses: [],
 
   // Cache for server-mode lookups
-  currentClassLessons: []
+  currentClassLessons: [],
+
+  // User preferences (loaded from server after login)
+  tfExpansionPctDefault: 20,
+
+  // Lesson sort preference (persisted in localStorage)
+  currentLessonSort: (function() {
+    try { return localStorage.getItem("fc-lesson-sort") || "date_added"; } catch (_) { return "date_added"; }
+  }())
 };
 
 /* ============================
@@ -874,11 +875,18 @@ function openClass(classId) {
     var nameEl = document.getElementById("class-detail-name");
     nameEl.textContent = cls.icon + " " + cls.name;
     setSelectMode(false);
+    document.getElementById("lesson-sort-select").value = state.currentLessonSort;
     showScreen("class");
     saveScreenState("class", classId);
     renderLessons();
   });
 }
+
+document.getElementById("lesson-sort-select").addEventListener("change", function() {
+  state.currentLessonSort = this.value;
+  try { localStorage.setItem("fc-lesson-sort", this.value); } catch (_) {}
+  renderLessons();
+});
 
 /* ============================
    CLASS FORM MODAL
@@ -979,6 +987,25 @@ document.getElementById("btn-class-stats").addEventListener("click", function() 
    LESSON LIST
    ============================ */
 
+function sortLessons(lessons, dueInfo, key) {
+  var copy = lessons.slice();
+  copy.sort(function(a, b) {
+    if (key === "date_added") {
+      return (b.created_at || 0) - (a.created_at || 0);
+    } else if (key === "date_interacted") {
+      return (b.last_interacted_at || 0) - (a.last_interacted_at || 0);
+    } else if (key === "date_modified") {
+      return (b.last_modified_at || b.created_at || 0) - (a.last_modified_at || a.created_at || 0);
+    } else if (key === "due_count") {
+      var aCount = (dueInfo && dueInfo.dueCounts && dueInfo.dueCounts[a.id]) || 0;
+      var bCount = (dueInfo && dueInfo.dueCounts && dueInfo.dueCounts[b.id]) || 0;
+      return bCount - aCount;
+    }
+    return 0;
+  });
+  return copy;
+}
+
 function renderLessons() {
   if (!state.currentClass) return;
   store.getLessons(state.currentClass.id).then(function(lessons) {
@@ -997,6 +1024,8 @@ function renderLessons() {
 
     // Load due info for all lessons in one call, then render badges
     store.getDueLessons(lessonIds).then(function(dueInfo) {
+      var sortKey = state.currentLessonSort || "date_added";
+      lessons = sortLessons(lessons, dueInfo, sortKey);
       var now = Math.floor(Date.now() / 1000);
 
       lessons.forEach(function(lesson) {
@@ -2065,7 +2094,7 @@ function openSetup(scope) {
 
   var hasMcq = state.studyScope.lessons.some(function(l) { return l.format === "mcq"; });
   document.getElementById("setup-tf-pct-section").style.display = hasMcq ? "" : "none";
-  var defaultTfPct = 20;
+  var defaultTfPct = state.tfExpansionPctDefault;
   document.getElementById("tf-expansion-pct").value = defaultTfPct;
   document.getElementById("tf-expansion-pct-label").textContent = defaultTfPct + "%";
 
@@ -2213,12 +2242,6 @@ function startStudy(count, filter, direction, mode, order, tfPct) {
           state.quizScore  = 0;
           state.quizResults = [];
           startQuiz();
-        } else {
-          state.recallCards   = filtered;
-          state.recallIndex   = 0;
-          state.recallCorrect = 0;
-          state.recallResults = [];
-          startRecall();
         }
       });
     });
@@ -2647,151 +2670,6 @@ document.getElementById("btn-quiz-back").addEventListener("click", function() {
 });
 
 /* ============================
-   RECALL MODE
-   ============================ */
-
-function startRecall() {
-  state.recallRevealed = false;
-  renderRecallCard();
-  showScreen("recall");
-}
-
-function renderRecallCard() {
-  var cards = state.recallCards;
-  var i     = state.recallIndex;
-  var total = cards.length;
-
-  if (i >= total) { showRecallResults(); return; }
-
-  var card = cards[i];
-  document.getElementById("recall-progress-text").textContent = (i + 1) + " / " + total;
-  document.getElementById("recall-progress-fill").style.width = ((i + 1) / total * 100) + "%";
-  document.getElementById("recall-score-display").textContent = state.recallCorrect + " / " + i;
-
-  // Lesson label (multi-lesson sessions)
-  setStudyLessonLabel("recall-lesson-label", card);
-
-  var recallQEl = document.getElementById("recall-question");
-  recallQEl.innerHTML = "";
-  if (card.format === "mcq") {
-    renderLatex(card.data.question, recallQEl);
-  } else if (card.format === "true-false") {
-    renderLatex(card.data.statement, recallQEl);
-  } else if (card.format === "image-def") {
-    var rImg = document.createElement("img");
-    rImg.src = card.data.imageUrl;
-    rImg.alt = "Card image";
-    rImg.style.maxWidth  = "100%";
-    rImg.style.maxHeight = "200px";
-    rImg.style.objectFit = "contain";
-    recallQEl.appendChild(rImg);
-  } else {
-    renderLatex(state.studyDirection === "term-def" ? card.data.term : card.data.def, recallQEl);
-  }
-
-  document.getElementById("recall-answer-input").value = "";
-  document.getElementById("recall-answer-input").disabled = false;
-  document.getElementById("btn-recall-reveal").disabled = false;
-  document.getElementById("recall-reveal-area").classList.add("hidden");
-  document.getElementById("recall-correct-answer").innerHTML = "";
-  document.getElementById("recall-explanation-area").innerHTML = "";
-  state.recallRevealed = false;
-  document.getElementById("recall-answer-input").focus();
-}
-
-function revealRecall() {
-  if (state.recallRevealed) return;
-  state.recallRevealed = true;
-
-  var card = state.recallCards[state.recallIndex];
-  var answer;
-  if (card.format === "mcq") {
-    answer = card.data.correct;
-  } else if (card.format === "true-false") {
-    answer = card.data.correct === "true" ? "True" : "False";
-  } else if (card.format === "image-def") {
-    answer = card.data.def;
-  } else {
-    answer = state.studyDirection === "term-def" ? card.data.def : card.data.term;
-  }
-
-  renderLatex(answer, document.getElementById("recall-correct-answer"));
-
-  if ((card.format === "mcq" || card.format === "true-false") && card.data.explanation) {
-    var expEl  = document.createElement("details");
-    expEl.open = true;
-    expEl.className = "explanation-panel";
-    var sumEl  = document.createElement("summary");
-    sumEl.textContent = "Explanation";
-    var bodyEl = document.createElement("div");
-    bodyEl.className = "explanation-body";
-    renderLatex(card.data.explanation, bodyEl);
-    expEl.appendChild(sumEl);
-    expEl.appendChild(bodyEl);
-    document.getElementById("recall-explanation-area").appendChild(expEl);
-  }
-
-  document.getElementById("recall-answer-input").disabled = true;
-  document.getElementById("btn-recall-reveal").disabled = true;
-  document.getElementById("recall-reveal-area").classList.remove("hidden");
-}
-
-function gradeRecall(grade) {
-  if (!state.recallRevealed) return;
-  var card = state.recallCards[state.recallIndex];
-  var isCorrect = grade !== "hard";
-  if (isCorrect) state.recallCorrect++;
-  state.recallResults.push({ card: card, grade: grade });
-  store.recordAttempt({ cardId: card.id, correct: isCorrect, source: "recall", grade: grade });
-  state.recallIndex++;
-  renderRecallCard();
-}
-
-function showRecallResults() {
-  var score = state.recallCorrect;
-  var total = state.recallCards.length;
-  var pct   = total > 0 ? Math.round(score / total * 100) : 0;
-
-  document.getElementById("results-pct").textContent = pct + "%";
-  document.getElementById("results-detail").textContent =
-    score + " recalled out of " + total + " cards";
-
-  var grade;
-  if (pct >= 90) grade = "A";
-  else if (pct >= 80) grade = "B";
-  else if (pct >= 70) grade = "C";
-  else if (pct >= 60) grade = "D";
-  else grade = "F";
-  document.getElementById("results-grade").textContent = grade;
-
-  var circumference = 314;
-  setTimeout(function() {
-    document.getElementById("results-ring-fill").style.strokeDashoffset =
-      circumference - (pct / 100) * circumference;
-  }, 100);
-
-  var reviewMsg = pct >= 80
-    ? "Great recall! Cards scheduled for spaced repetition."
-    : pct >= 50
-    ? "Good effort — missed cards are due again soon."
-    : "Keep practicing — retrieval gets easier each time.";
-  document.getElementById("results-review-hint").textContent = reviewMsg;
-
-  if (state.studyScope) {
-    store.saveQuizSession(state.studyScope.lessonIds, score, total);
-  }
-
-  showScreen("results");
-}
-
-document.getElementById("btn-recall-reveal").addEventListener("click", revealRecall);
-document.getElementById("btn-recall-hard").addEventListener("click",   function() { gradeRecall("hard"); });
-document.getElementById("btn-recall-medium").addEventListener("click", function() { gradeRecall("medium"); });
-document.getElementById("btn-recall-easy").addEventListener("click",   function() { gradeRecall("easy"); });
-document.getElementById("btn-recall-back").addEventListener("click",   returnFromStudy);
-
-
-/* ============================
    QUIZ RESULTS
    ============================ */
 
@@ -2838,19 +2716,11 @@ function showQuizResults() {
 document.getElementById("btn-results-retry").addEventListener("click", function() {
   var snap = state.setupSnapshot;
   if (!snap) { returnFromStudy(); return; }
-  if (state.studyMode === "recall") {
-    state.recallCards   = shuffle(state.recallCards);
-    state.recallIndex   = 0;
-    state.recallCorrect = 0;
-    state.recallResults = [];
-    startRecall();
-  } else {
-    state.quizCards  = shuffle(state.studyCards.length > 0 ? state.studyCards : state.quizCards);
-    state.quizIndex  = 0;
-    state.quizScore  = 0;
-    state.quizResults = [];
-    startQuiz();
-  }
+  state.quizCards  = shuffle(state.studyCards.length > 0 ? state.studyCards : state.quizCards);
+  state.quizIndex  = 0;
+  state.quizScore  = 0;
+  state.quizResults = [];
+  startQuiz();
 });
 
 document.getElementById("btn-results-change").addEventListener("click", function() {
@@ -3821,6 +3691,28 @@ function showAuthScreen() {
   showScreen("auth");
 }
 
+function applyPrefs(prefs) {
+  if (typeof prefs.tfExpansionPctDefault === "number") {
+    state.tfExpansionPctDefault = prefs.tfExpansionPctDefault;
+  }
+}
+
+function loadUserPreferences() {
+  if (!IS_SERVER) return;
+  // Apply cached prefs immediately so openSetup() sees the right value even before the fetch resolves
+  try {
+    var cached = localStorage.getItem("fc-preferences");
+    if (cached) applyPrefs(JSON.parse(cached));
+  } catch (_) {}
+  fetch("/api/auth/preferences", { credentials: "same-origin" })
+    .then(function(r) { return r.ok ? r.json() : {}; })
+    .then(function(prefs) {
+      applyPrefs(prefs);
+      try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
+    })
+    .catch(function() {});
+}
+
 function initUserNav() {
   var nav = document.getElementById("user-nav");
   if (!IS_SERVER || !currentUser) { nav.classList.add("hidden"); return; }
@@ -3836,6 +3728,7 @@ function initUserNav() {
   } else if (linkBtn) {
     linkBtn.classList.add("hidden");
   }
+  loadUserPreferences();
 }
 
 // Auth tab switching
@@ -3989,8 +3882,32 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
 document.getElementById("btn-logout").addEventListener("click", function() {
   closeAllDropdowns();
   try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
+  try { localStorage.removeItem("fc-preferences"); } catch (_) {}
   fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" })
     .then(function() { showAuthScreen(); });
+});
+
+document.getElementById("btn-open-preferences").addEventListener("click", function() {
+  closeAllDropdowns();
+  document.getElementById("pref-tf-pct").value = state.tfExpansionPctDefault;
+  document.getElementById("pref-tf-pct-label").textContent = state.tfExpansionPctDefault + "%";
+  openModal("preferences");
+});
+
+document.getElementById("pref-tf-pct").addEventListener("input", function() {
+  document.getElementById("pref-tf-pct-label").textContent = this.value + "%";
+});
+
+document.getElementById("btn-save-preferences").addEventListener("click", function() {
+  var pct = parseInt(document.getElementById("pref-tf-pct").value, 10);
+  state.tfExpansionPctDefault = pct;
+  fetch("/api/auth/preferences", {
+    method: "PUT",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tfExpansionPctDefault: pct })
+  }).catch(function() {});
+  closeModal("preferences");
 });
 
 /* ============================
@@ -4432,13 +4349,6 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "Escape") returnFromStudy();
   }
 
-  else if (screen === "recall") {
-    if (e.key === "1") gradeRecall("hard");
-    else if (e.key === "2") gradeRecall("medium");
-    else if (e.key === "3") gradeRecall("easy");
-    else if (e.key === "Escape") returnFromStudy();
-  }
-
   else if (screen === "results") {
     if (e.key === "r" || e.key === "R") document.getElementById("btn-results-retry").click();
     else if (e.key === "Escape") returnFromStudy();
@@ -4454,14 +4364,6 @@ document.addEventListener("keydown", function(e) {
 
   else if (screen === "analytics") {
     if (e.key === "Escape") document.getElementById("btn-analytics-back").click();
-  }
-});
-
-// Recall: Enter in textarea reveals answer
-document.getElementById("recall-answer-input").addEventListener("keydown", function(e) {
-  if (e.key === "Enter" && !e.shiftKey && !state.recallRevealed) {
-    e.preventDefault();
-    revealRecall();
   }
 });
 
@@ -4486,11 +4388,6 @@ function injectKeyHints() {
     ["btn-dashboard-back", "[Esc]"],
     ["btn-analytics-back", "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
-    ["btn-recall-back",    "[Esc]"],
-    ["btn-recall-reveal",  "[Enter]"],
-    ["btn-recall-hard",    "[1]"],
-    ["btn-recall-medium",  "[2]"],
-    ["btn-recall-easy",    "[3]"],
     ["btn-fc-learning",    "[1]"],
     ["btn-fc-known",       "[2]"],
     ["btn-fc-audio-front", "[P]"],

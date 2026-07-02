@@ -197,6 +197,9 @@ runMigration("cards_remove_format_check", function() {
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_lessons_class ON lessons(class_id)"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_lesson ON cards(lesson_id)"); } catch (_) {}
 
+// Migration: add preferences JSON column to users
+try { db.exec("ALTER TABLE users ADD COLUMN preferences TEXT"); } catch (_) {}
+
 // Migration: add last_seen_at to card_states for per-card visit tracking
 try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catch (_) {}
 

@@ -23,9 +23,17 @@ function ownLesson(lessonId, userId) {
 router.get("/classes/:classId/lessons", requireAuth, (req, res) => {
   if (!ownClass(req.params.classId, req.session.userId))
     return res.status(404).json({ error: "Not found" });
-  const rows = db.prepare(
-    "SELECT * FROM lessons WHERE class_id = ? ORDER BY sort_order, created_at"
-  ).all(req.params.classId);
+  const rows = db.prepare(`
+    SELECT l.*,
+      MAX(c.created_at) AS last_modified_at,
+      MAX(a.created_at) AS last_interacted_at
+    FROM lessons l
+    LEFT JOIN cards c ON c.lesson_id = l.id
+    LEFT JOIN attempts a ON a.card_id = c.id AND a.user_id = ?
+    WHERE l.class_id = ?
+    GROUP BY l.id
+    ORDER BY l.sort_order, l.created_at
+  `).all(req.session.userId, req.params.classId);
   res.json(rows);
 });
 

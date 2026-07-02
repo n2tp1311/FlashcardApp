@@ -264,6 +264,22 @@ body {
 /* ============================
    LESSON LIST
    ============================ */
+.lesson-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 8px 0;
+}
+.sort-label { font-size: 13px; color: var(--text2); white-space: nowrap; }
+.sort-select {
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
 .lesson-list { display: flex; flex-direction: column; gap: 10px; }
 
 .lesson-item {
@@ -1010,7 +1026,7 @@ code {
 .tf-answer-btn.selected[data-value="true"] { border-color: var(--success); background: var(--success-light); color: #166534; }
 .tf-answer-btn.selected[data-value="false"] { border-color: var(--danger); background: var(--danger-light); color: #991b1b; }
 
-/* Explanation panel (quiz + recall) */
+/* Explanation panel (quiz) */
 .explanation-panel {
   background: var(--primary-light);
   border: 1px solid var(--primary);
@@ -1034,81 +1050,6 @@ code {
   padding: 12px 16px;
   color: var(--text);
   line-height: 1.6;
-}
-
-/* ============================
-   RECALL SCREEN
-   ============================ */
-.recall-container {
-  max-width: 600px;
-  margin: 0 auto;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding-top: 8px;
-}
-.recall-question-wrap {
-  background: var(--surface);
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px 24px;
-  min-height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.recall-textarea {
-  width: 100%;
-  padding: 14px 16px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 15px;
-  font-family: inherit;
-  resize: vertical;
-  background: var(--surface);
-  color: var(--text);
-  transition: border-color var(--transition);
-  line-height: 1.5;
-  box-sizing: border-box;
-}
-.recall-textarea:focus { outline: none; border-color: var(--primary); }
-.recall-textarea:disabled { background: var(--surface2); color: var(--text2); }
-.recall-reveal-area {
-  background: var(--surface);
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.recall-reveal-area.hidden { display: none; }
-.recall-correct-label {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text2);
-}
-.recall-correct-text {
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1.6;
-}
-.recall-grade-btns {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-.recall-grade-btn { flex: 1; min-width: 90px; max-width: 160px; }
-
-@media (max-width: 600px) {
-  .recall-grade-btns { gap: 8px; }
-  .recall-grade-btn { min-width: 70px; font-size: 13px; }
 }
 
 /* ============================

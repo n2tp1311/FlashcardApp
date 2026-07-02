@@ -88,6 +88,7 @@
         <div class="dropdown-menu dropdown-menu-right hidden" id="user-dropdown-menu">
           <div class="dropdown-header" id="user-dropdown-email"></div>
           <div class="dropdown-divider"></div>
+          <button class="dropdown-item" id="btn-open-preferences">⚙ Preferences</button>
           <a href="/api/auth/google?link=1" class="dropdown-item" id="btn-link-google">🔗 Link Google Account</a>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item danger" id="btn-logout">Sign Out</button>
@@ -211,6 +212,15 @@
     <button class="btn btn-sm btn-danger" id="btn-delete-selected-lessons" disabled>Delete selected</button>
     <button class="btn btn-sm btn-primary" id="btn-study-selected" disabled>Study selected</button>
   </div>
+  <div class="lesson-sort-bar">
+    <label class="sort-label" for="lesson-sort-select">Sort by</label>
+    <select id="lesson-sort-select" class="sort-select">
+      <option value="date_added">Date added</option>
+      <option value="date_interacted">Last studied</option>
+      <option value="date_modified">Last card added</option>
+      <option value="due_count">Due count</option>
+    </select>
+  </div>
   <div id="lesson-list" class="lesson-list"></div>
   <div id="empty-class" class="empty-state hidden">
     <div class="empty-icon">📝</div>
@@ -286,7 +296,6 @@
       <div class="pill-group" id="setup-mode">
         <button class="pill active" data-value="flashcard">Flashcards</button>
         <button class="pill" data-value="quiz">Quiz</button>
-        <button class="pill" data-value="recall">Recall</button>
       </div>
     </div>
     <div class="setup-section" id="setup-order-section">
@@ -369,37 +378,6 @@
   </div>
 </div>
 
-<!-- ===== SCREEN: Recall ===== -->
-<div id="screen-recall" class="screen">
-  <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-recall-back">✕</button>
-    <div class="fc-progress-wrap">
-      <span id="recall-progress-text">1 / 10</span>
-      <div class="progress-bar"><div id="recall-progress-fill" class="progress-fill"></div></div>
-    </div>
-    <span id="recall-score-display" class="score-display">0 / 0</span>
-  </header>
-  <div class="recall-container">
-    <div id="recall-lesson-label" class="study-lesson-label hidden"></div>
-    <div class="recall-question-wrap">
-      <div id="recall-question" class="quiz-question"></div>
-    </div>
-    <textarea id="recall-answer-input" class="recall-textarea"
-      placeholder="Type your answer here…" rows="4"></textarea>
-    <button class="btn btn-primary btn-full" id="btn-recall-reveal">Reveal Answer</button>
-    <div id="recall-reveal-area" class="recall-reveal-area hidden">
-      <div class="recall-correct-label">Correct answer:</div>
-      <div id="recall-correct-answer" class="recall-correct-text"></div>
-      <div id="recall-explanation-area"></div>
-      <div class="recall-grade-btns">
-        <button class="btn btn-danger recall-grade-btn" id="btn-recall-hard">✗ Missed</button>
-        <button class="btn btn-warning recall-grade-btn" id="btn-recall-medium">~ Unsure</button>
-        <button class="btn btn-success recall-grade-btn" id="btn-recall-easy">✓ Got It</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ===== SCREEN: Quiz Results ===== -->
 <div id="screen-results" class="screen">
   <header class="app-header">
@@ -442,6 +420,26 @@
 
 <!-- ===== MODALS ===== -->
 <div id="modal-overlay" class="modal-overlay hidden">
+
+  <!-- Preferences Modal -->
+  <div id="modal-preferences" class="modal hidden">
+    <div class="modal-header">
+      <h3>Preferences</h3>
+      <button class="modal-close" data-modal="preferences">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">MCQ → T/F expansion default</label>
+      <div class="tf-pct-row">
+        <input type="range" id="pref-tf-pct" class="tf-pct-slider" min="0" max="100" step="5" value="20">
+        <span id="pref-tf-pct-label" class="tf-pct-label">20%</span>
+      </div>
+      <p class="setup-hint">Percentage of MCQ cards replaced by True/False sub-questions when starting a quiz.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="preferences">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-preferences">Save</button>
+    </div>
+  </div>
 
   <!-- Class Form Modal -->
   <div id="modal-class" class="modal hidden">
@@ -788,11 +786,6 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-section-title">Quiz</div>
         <div class="keymap-row"><kbd class="kbd">1</kbd>–<kbd class="kbd">5</kbd><span>Select option</span></div>
         <div class="keymap-row"><kbd class="kbd">Esc</kbd><span>Back to setup</span></div>
-      </div>
-      <div class="keymap-section">
-        <div class="keymap-section-title">Recall</div>
-        <div class="keymap-row"><kbd class="kbd">Enter</kbd><span>Reveal answer</span></div>
-        <div class="keymap-row"><kbd class="kbd">1</kbd> <kbd class="kbd">2</kbd> <kbd class="kbd">3</kbd><span>Missed / Unsure / Got it</span></div>
       </div>
       <div class="keymap-section">
         <div class="keymap-section-title">Results / Stats / Dashboard / Analytics</div>
