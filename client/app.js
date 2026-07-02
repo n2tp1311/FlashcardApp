@@ -3443,15 +3443,31 @@ document.getElementById("bulk-import-input").addEventListener("input", function(
   bulkImportTimer = setTimeout(function() { renderBulkImportPreview(val); }, 300);
 });
 
-const AI_EXTRACTION_PROMPT = `You are a comprehensive knowledge extraction assistant. Your job is to convert source material into a COMPLETE spaced-repetition flashcard set that covers every essential concept — not a highlights reel.
+const AI_EXTRACTION_PROMPT = `You are a knowledge extraction assistant. Your job is to convert source material into a spaced-repetition flashcard set that covers every essential concept — not a highlights reel.
+
+## Generalizability rule (apply to every card)
+
+Every card must test a concept that transfers beyond this specific text. Before writing each card, ask: "Would this be a useful card if the student never saw the source text again?" If the answer is no, reframe or skip it.
+
+**Do not card:**
+- Specific examples, illustrations, or analogies used to explain a concept (card the concept itself)
+- Names, numbers, or details whose only role in the source is to exemplify something
+- One-off sentences that are examples of a rule already being carded
+- Trivia that only makes sense in context (e.g., "In the passage, what did the author call X?")
+
+**Do card:**
+- Definitions, mechanisms, formulas, and principles that apply generally
+- Distinctions and comparisons between concepts
+- Conditions under which a concept applies or fails
+- Step-by-step processes and their purpose
 
 ## Two-pass process (do this internally before writing output)
 
 **Pass 1 — Inventory every concept:**
-Read the full text and list every named concept, term, mechanism, formula, person, date, condition, step, and comparison. Nothing that receives a sentence or more of explanation should be left off the list.
+Read the full text and list every named concept, term, mechanism, formula, condition, step, and comparison. For each item, ask whether it is a general principle or a text-specific example. Mark examples — they may inform the card but should not be the card.
 
 **Pass 2 — Card per concept:**
-Write at least one card for every item on your list. If a concept needs two angles (definition + application), write two cards. Do not merge distinct concepts into one card.
+Write at least one card for every general concept on your list. If a concept needs two angles (definition + application), write two cards. Do not merge distinct concepts into one card. Do not write cards that test text-specific examples.
 
 ## Output format
 
@@ -3466,11 +3482,10 @@ Additional formatting rules:
 - Use \`$...$\` for inline math and \`$$...$$\` for display math (LaTeX).
 - Write \`$\\lvert x \\rvert$\` instead of \`$|x|$\` to avoid breaking the delimiter.
 
-## Coverage rules (non-negotiable)
+## Coverage rules
 
-- Every key term, formula, named concept, mechanism, and numbered/named step in the source must appear in at least one card.
+- Every key term, formula, named concept, mechanism, and numbered/named step in the source must appear in at least one card — as a general principle, not as a text example.
 - Every section or subsection heading represents a concept cluster — all concepts within it need cards.
-- Do NOT decide that a concept is "too minor" or "already implied." If the source text explains it, card it.
 - If a concept cannot support a plausible distractor, reframe the question stem — do not skip it.
 - Target density: roughly 1 card per 50–80 words of source text. Dense technical material warrants more.
 
@@ -3486,7 +3501,7 @@ Order cards within each lesson basic to advanced:
 
 - Tier 1 (~30%): definitions and vocabulary — "What is X?" / "Which best describes X?"
 - Tier 2 (~40%): relationships, comparisons, cause-and-effect — "How does X differ from Y?" / "What happens when X?"
-- Tier 3 (~30%): application and edge cases — "A researcher finds X — what does this indicate?" / "Under which condition does X apply?"
+- Tier 3 (~30%): application and edge cases — "Under which condition does X apply?" / "What does X indicate?"
 
 ## Card writing rules
 
@@ -3502,9 +3517,9 @@ Order cards within each lesson basic to advanced:
 - Avoid "all of the above" and "none of the above".
 - After all options, add \`;;\` followed by a 1–2 sentence explanation of why the correct answer is right and why key distractors are wrong. Keep explanations concise.
 
-## Final coverage audit (before writing output)
+## Final audit (before writing output)
 
-Review your Pass 1 inventory. Confirm every item has a card. If anything is missing, add its card now. Only then write the output.
+Review your Pass 1 inventory. For each card you've written, confirm it tests a transferable concept rather than a text-specific detail. Replace any example-specific card with a card on the underlying principle. Only then write the output.
 
 ---
 
