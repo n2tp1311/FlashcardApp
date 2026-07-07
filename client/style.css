@@ -1637,6 +1637,7 @@ code {
 @media (min-width: 680px) {
   .nav-inline-btn { display: inline-flex; }
   .dash-analytics-dropdown { display: none !important; }
+  #btn-home-menu { display: none; }
 }
 
 /* ============================

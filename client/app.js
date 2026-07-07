@@ -3912,7 +3912,6 @@ function initUserNav() {
   document.getElementById("user-dropdown-email").textContent = currentUser.email || "";
   document.getElementById("btn-dashboard").classList.remove("hidden");
   document.getElementById("btn-analytics").classList.remove("hidden");
-  document.getElementById("home-menu-divider").classList.remove("hidden");
   document.getElementById("btn-dashboard-inline").classList.remove("hidden");
   document.getElementById("btn-analytics-inline").classList.remove("hidden");
   var linkBtn = document.getElementById("btn-link-google");
