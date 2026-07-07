@@ -838,11 +838,29 @@ function sortClasses(classes, key, dir) {
 function renderHomeCharts() {
   if (!IS_SERVER) return;
   var section = document.getElementById("home-charts-section");
-  ["home-heatmap-wrap","home-trend-wrap","home-srs-wrap"].forEach(function(id) {
+  ["home-heatmap-wrap","home-trend-wrap","home-srs-wrap","home-streak-card","home-summary-grid"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
-  Promise.all([store.getAnalytics(), store.getSrsDistribution()]).then(function(results) {
-    var d = results[0], srs = results[1];
+  Promise.all([store.getAnalytics(), store.getSrsDistribution(), store.getDashboard()]).then(function(results) {
+    var d = results[0], srs = results[1], dash = results[2];
+
+    // Streak
+    document.getElementById("home-streak-card").innerHTML =
+      '<div class="dash-streak-icon">🔥</div>' +
+      '<div class="dash-streak-num">' + dash.streak + '</div>' +
+      '<div class="dash-streak-label">day' + (dash.streak === 1 ? "" : "s") + ' streak</div>' +
+      (dash.streak === 0 ? '<div class="dash-streak-hint">Study today to start your streak!</div>' : "");
+
+    // Overview summary
+    var grid = document.getElementById("home-summary-grid");
+    [
+      [dash.summary.classes,      "Classes"],
+      [dash.summary.lessons,      "Lessons"],
+      [dash.summary.cards,        "Cards"],
+      [dash.summary.quizSessions, "Quiz Sessions"],
+      [dash.summary.attempts,     "Attempts"]
+    ].forEach(function(item) { grid.innerHTML += statCard(item[0], item[1]); });
+
     renderHeatmap(d.heatmap, document.getElementById("home-heatmap-wrap"));
     renderWeeklyTrend(d.weeklyTrend, document.getElementById("home-trend-wrap"), 5);
     renderSrsDistribution(srs, document.getElementById("home-srs-wrap"));
