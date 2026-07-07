@@ -1632,6 +1632,13 @@ code {
 /* On desktop, hide the ☑ Select item from the ⋮ dropdown (it lives in the header) */
 .home-select-mobile { display: none; }
 
+/* Dashboard / Analytics: inline in header when there's room, in dropdown when not */
+.nav-inline-btn { display: none; }
+@media (min-width: 680px) {
+  .nav-inline-btn { display: inline-flex; }
+  .dash-analytics-dropdown { display: none !important; }
+}
+
 /* ============================
    PROMPT GUIDE MODAL
    ============================ */

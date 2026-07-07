@@ -3234,6 +3234,10 @@ document.getElementById("btn-dashboard").addEventListener("click", function() {
   renderDashboard();
   showScreen("dashboard");
 });
+document.getElementById("btn-dashboard-inline").addEventListener("click", function() {
+  renderDashboard();
+  showScreen("dashboard");
+});
 
 document.getElementById("btn-dashboard-back").addEventListener("click", function() {
   showScreen("home");
@@ -3421,6 +3425,9 @@ function renderLessonBreakdown(rows) {
 }
 
 document.getElementById("btn-analytics").addEventListener("click", function() {
+  renderAnalytics();
+});
+document.getElementById("btn-analytics-inline").addEventListener("click", function() {
   renderAnalytics();
 });
 
@@ -3906,6 +3913,8 @@ function initUserNav() {
   document.getElementById("btn-dashboard").classList.remove("hidden");
   document.getElementById("btn-analytics").classList.remove("hidden");
   document.getElementById("home-menu-divider").classList.remove("hidden");
+  document.getElementById("btn-dashboard-inline").classList.remove("hidden");
+  document.getElementById("btn-analytics-inline").classList.remove("hidden");
   var linkBtn = document.getElementById("btn-link-google");
   if (linkBtn && window.APP_CONFIG && window.APP_CONFIG.googleEnabled) {
     linkBtn.classList.remove("hidden");
@@ -4126,6 +4135,8 @@ if (IS_SERVER && !currentUser) {
   initUserNav();
   if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
   if (IS_SERVER) document.getElementById("btn-analytics").style.display = "";
+  if (IS_SERVER) document.getElementById("btn-dashboard-inline").style.display = "";
+  if (IS_SERVER) document.getElementById("btn-analytics-inline").style.display = "";
   renderSharedWithMe();
   restoreLastScreen();
 }
