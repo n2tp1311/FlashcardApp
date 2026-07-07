@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-07-07 — Inline nav buttons use CSS media query + `.hidden` class layering
+
+Dashboard and Analytics in the home header use two overlapping hide mechanisms: the `hidden` class (removed after login via `initUserNav()`) and a `@media (min-width:680px)` CSS rule that switches `.nav-inline-btn` from `display:none` to `display:inline-flex`. This means the buttons start hidden (no flash of content before login), and the responsive behavior is pure CSS with no JS resize listener. On narrow screens the same buttons in the ⋮ dropdown (`.dash-analytics-dropdown`) are suppressed by `display:none !important` from the same media query, so the items move between inline and dropdown without JS. Alternative: toggle classes in a JS `resize` handler — rejected because CSS media queries are simpler, instant, and avoid layout-query overhead.
+
 ## 2026-07-07 — Bulk cards: knownMap derived from returned cards instead of separate getKnownMap calls
 
 `getKnownMap(lessonId)` hit `GET /api/lessons/:lessonId/states` which returns only `{card_id: known}` — the new `POST /api/cards/by-lessons` endpoint joins `card_states` and includes `known` in each card row directly. The client derives `knownMap` by iterating the returned cards (`c.known === 1`). This eliminates all N `getKnownMap` calls with no additional server-side cost. Alternative: keep a separate bulk-states endpoint and call it in parallel with bulk-cards — rejected because it added a second request with no benefit since both queries hit the same `card_states` table and the JOIN is the same cost.

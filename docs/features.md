@@ -62,6 +62,7 @@
 - Unified keydown handler covers all screens — no mouse required
 - Home: `↑`/`↓` navigate class cards; `Enter` open class / toggle selection; `X` toggle select mode; `Space` toggle selection; `A` select all; `S` study selected; `Esc` exit select mode; `N` new class
 - Mobile home header: ⋮ dropdown consolidates Dashboard, Analytics, ☑ Select Classes, and Keyboard shortcuts — header stays single-row on 390px viewports; ☑ Select remains visible in header on desktop (≥601px)
+- Responsive inline nav: at ≥680px viewport width, Dashboard and Analytics appear as inline header buttons (`.nav-inline-btn`); on narrow screens they fall back to the ⋮ dropdown (`.dash-analytics-dropdown`)
 - Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
 - Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back
 - Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2` mark learning/known, `S` shuffle, `R` reset, `F` filter hard, `P` pronounce
