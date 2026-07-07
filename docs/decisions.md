@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-07-07 — Bulk cards: knownMap derived from returned cards instead of separate getKnownMap calls
+
+`getKnownMap(lessonId)` hit `GET /api/lessons/:lessonId/states` which returns only `{card_id: known}` — the new `POST /api/cards/by-lessons` endpoint joins `card_states` and includes `known` in each card row directly. The client derives `knownMap` by iterating the returned cards (`c.known === 1`). This eliminates all N `getKnownMap` calls with no additional server-side cost. Alternative: keep a separate bulk-states endpoint and call it in parallel with bulk-cards — rejected because it added a second request with no benefit since both queries hit the same `card_states` table and the JOIN is the same cost.
+
+## 2026-07-07 — Correlated subquery for last_studied_at replaced with GROUP BY aggregate JOIN
+
+The original `GET /api/lessons/:lessonId/cards` used `(SELECT MAX(created_at) FROM attempts WHERE card_id = cards.id AND user_id = ?) AS last_studied_at` — a correlated subquery that runs once per card. With 100 cards and 3000 attempts, this triggered 100 separate scans of the attempts table. Replaced with `LEFT JOIN (SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE user_id = ? GROUP BY card_id) la ON la.card_id = cards.id` — a single aggregate pass over attempts, with the result hash-joined once to all cards. The `idx_attempts_cu_created` composite index makes this aggregate nearly free. Applied to both the single-lesson endpoint and the new bulk endpoint.
+
+
+
 ## 2026-07-03 — Class sort: normalizeLevel helper extracted to prevent POST/PUT divergence
 
 Both POST and PUT `/api/classes` need to coerce the level field (undefined → fallback, null → null, number → Number(val), NaN-string → fallback). The expression was extracted into `normalizeLevel(val, fallback)` in `classes.js` so that future validation changes (e.g., range clamp 1–999, isNaN rejection) are applied in one place. Alternative: inline the expression twice with comments — rejected because it would silently diverge if one site were updated and the other missed.

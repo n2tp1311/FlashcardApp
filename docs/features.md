@@ -24,6 +24,11 @@
 - Due counts on class cards (home screen) and dashboard grouped by class
 - Dashboard due lessons grouped by class with clickable rows to launch review
 
+## Performance
+- Bulk cards endpoint (`POST /api/cards/by-lessons`): multi-lesson quiz startup reduced from 2N+1 HTTP requests (N `getCards` + N `getKnownMap` per lesson) to 2 requests total regardless of lesson count; 10-lesson quiz goes from 21 requests to 2 (90% reduction)
+- Per-card correlated subquery for `last_studied_at` replaced with a single `GROUP BY` aggregate JOIN on the attempts table
+- Added `idx_states_user_due ON card_states(user_id, srs_due_at)` and `idx_attempts_cu_created ON attempts(card_id, user_id, created_at)` indexes for faster SRS queries
+
 ## Study
 - Flashcard mode (flip, mark known/learning)
 - Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def; True/False shows two large True/False buttons)
