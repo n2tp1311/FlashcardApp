@@ -106,8 +106,6 @@ body {
   display: none;
   min-height: 100vh;
   flex-direction: column;
-  max-width: 900px;
-  margin: 0 auto;
   padding: 0 16px 80px;
 }
 
