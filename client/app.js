@@ -514,6 +514,17 @@ var LocalStorageAdapter = (function() {
       save(KEY_STATES, states);
       return Promise.resolve();
     },
+    getBulkCards: function(lessonIds) {
+      var self = this;
+      var states = load(KEY_STATES) || {};
+      return Promise.all(lessonIds.map(function(id) { return self.getCards(id); })).then(function(arrays) {
+        var cards = arrays.reduce(function(acc, arr) { return acc.concat(arr); }, []);
+        return cards.map(function(c) {
+          var s = states[c.id];
+          return Object.assign({}, c, { known: s !== undefined ? (s.known ? 1 : 0) : null });
+        });
+      });
+    },
     getKnownMap: function(lessonId) {
       var self = this;
       return self.getCards(lessonId).then(function(cards) {
@@ -2278,18 +2289,23 @@ function weightedShuffle(cards, statsMap) {
 
 function startStudy(count, filter, direction, mode, order, tfPct) {
   var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
-  Promise.all(ids.map(function(id) { return store.getCards(id); })).then(function(cardArrays) {
-    // cardArrays[i] corresponds to ids[i] — preserve lesson grouping for blocked mode
-    var cards = cardArrays.reduce(function(acc, arr) { return acc.concat(arr); }, []);
-    Promise.all(ids.map(function(id) { return store.getKnownMap(id); })).then(function(maps) {
-      var knownMap = {};
-      maps.forEach(function(m) {
-        Object.keys(m).forEach(function(k) { knownMap[k] = m[k]; });
-      });
-      state.studyKnownMap = knownMap;
+  store.getBulkCards(ids).then(function(cards) {
+    // Rebuild per-lesson grouping for blocked mode
+    var byLesson = {};
+    cards.forEach(function(c) {
+      if (!byLesson[c.lesson_id]) byLesson[c.lesson_id] = [];
+      byLesson[c.lesson_id].push(c);
+    });
+    var cardArrays = ids.map(function(id) { return byLesson[id] || []; });
 
-      // Build stats map for difficulty weighting
-      store.getDifficultyMap(cards.map(function(c) { return c.id; })).then(function(statsMap) {
+    var knownMap = {};
+    cards.forEach(function(c) {
+      if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
+    });
+    state.studyKnownMap = knownMap;
+
+    // Build stats map for difficulty weighting
+    store.getDifficultyMap(cards.map(function(c) { return c.id; })).then(function(statsMap) {
         state.studyStatsMap = statsMap;
 
         var filtered = cards;
@@ -2349,7 +2365,6 @@ function startStudy(count, filter, direction, mode, order, tfPct) {
           startQuiz();
         }
       });
-    });
   });
 }
 
@@ -3713,7 +3728,8 @@ var SQLiteAdapter = (function() {
     updateLesson: function(id, f)   { return req("PUT",    "/lessons/" + id, f); },
     deleteLesson: function(id)      { return req("DELETE", "/lessons/" + id); },
 
-    getCards:   function(lessonId) { return req("GET",    "/lessons/" + lessonId + "/cards"); },
+    getCards:      function(lessonId)   { return req("GET",  "/lessons/" + lessonId + "/cards"); },
+    getBulkCards:  function(lessonIds)  { return req("POST", "/cards/by-lessons", { lessonIds: lessonIds }); },
     createCard: function(f)        { return req("POST",   "/lessons/" + f.lessonId + "/cards", { format: f.format, data: f.data }); },
     createCards: function(list) {
       // Group by lessonId, one bulk call per lesson

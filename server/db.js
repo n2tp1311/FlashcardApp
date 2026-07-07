@@ -196,6 +196,8 @@ runMigration("cards_remove_format_check", function() {
 
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_lessons_class ON lessons(class_id)"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_lesson ON cards(lesson_id)"); } catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_states_user_due ON card_states(user_id, srs_due_at)"); } catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_attempts_cu_created ON attempts(card_id, user_id, created_at)"); } catch (_) {}
 
 // Migration: add preferences JSON column to users
 try { db.exec("ALTER TABLE users ADD COLUMN preferences TEXT"); } catch (_) {}
