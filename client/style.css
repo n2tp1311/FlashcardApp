@@ -2071,11 +2071,19 @@ code {
 .analytics-charts-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  align-items: start;
   gap: 16px;
-  margin-bottom: 4px;
+  margin-bottom: 16px;
 }
-.analytics-chart-col { display: flex; flex-direction: column; }
-.analytics-chart-fill { flex: 1; text-align: left; }
+.analytics-chart-card { text-align: left; }
+.analytics-chart-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text2);
+  margin: 0 0 12px;
+}
 @media (max-width: 900px) {
   .analytics-charts-grid { grid-template-columns: 1fr; }
 }

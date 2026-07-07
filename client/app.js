@@ -835,8 +835,24 @@ function sortClasses(classes, key, dir) {
   return copy;
 }
 
+function renderHomeCharts() {
+  if (!IS_SERVER) return;
+  var section = document.getElementById("home-charts-section");
+  ["home-heatmap-wrap","home-trend-wrap","home-srs-wrap"].forEach(function(id) {
+    document.getElementById(id).innerHTML = "";
+  });
+  Promise.all([store.getAnalytics(), store.getSrsDistribution()]).then(function(results) {
+    var d = results[0], srs = results[1];
+    renderHeatmap(d.heatmap, document.getElementById("home-heatmap-wrap"));
+    renderWeeklyTrend(d.weeklyTrend, document.getElementById("home-trend-wrap"), 5);
+    renderSrsDistribution(srs, document.getElementById("home-srs-wrap"));
+    section.classList.remove("hidden");
+  }).catch(function() { section.classList.add("hidden"); });
+}
+
 function renderHome() {
   setHomeSelectMode(false);
+  renderHomeCharts();
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
     classes = sortClasses(classes, state.currentClassSort, state.currentClassSortDir);
@@ -3204,9 +3220,9 @@ function renderAnalytics() {
   Promise.all([store.getAnalytics(), store.getSrsDistribution()]).then(function(results) {
     var d = results[0], srs = results[1];
     loadEl.classList.add("hidden");
-    renderHeatmap(d.heatmap);
-    renderWeeklyTrend(d.weeklyTrend);
-    renderSrsDistribution(srs);
+    renderHeatmap(d.heatmap, document.getElementById("analytics-heatmap-wrap"));
+    renderWeeklyTrend(d.weeklyTrend, document.getElementById("analytics-trend-wrap"));
+    renderSrsDistribution(srs, document.getElementById("analytics-srs-wrap"));
     renderLessonBreakdown(d.lessonBreakdown);
   }).catch(function() {
     loadEl.classList.add("hidden");
@@ -3214,8 +3230,7 @@ function renderAnalytics() {
   });
 }
 
-function renderHeatmap(rows) {
-  var wrap = document.getElementById("analytics-heatmap-wrap");
+function renderHeatmap(rows, wrap) {
   var map = {};
   rows.forEach(function(r) { map[r.day] = r.cnt; });
 
@@ -3281,14 +3296,14 @@ function renderHeatmap(rows) {
   wrap.appendChild(grid);
 }
 
-function renderWeeklyTrend(rows) {
-  var wrap = document.getElementById("analytics-trend-wrap");
+function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
+  if (maxWeeksAgo === undefined) maxWeeksAgo = 11;
   var map = {};
   rows.forEach(function(r) { map[r.weeks_ago] = r.cnt; });
 
   var max = 0;
   var weeks = [];
-  for (var w = 11; w >= 0; w--) {
+  for (var w = maxWeeksAgo; w >= 0; w--) {
     var cnt = map[w] || 0;
     if (cnt > max) max = cnt;
     weeks.push({ weeksAgo: w, cnt: cnt });
@@ -3314,8 +3329,7 @@ function stepLabel(step) {
   return SRS_STEP_LABELS[Math.min(step, SRS_STEP_LABELS.length - 1)];
 }
 
-function renderSrsDistribution(rows) {
-  var wrap = document.getElementById("analytics-srs-wrap");
+function renderSrsDistribution(rows, wrap) {
   if (!rows || !rows.length) {
     wrap.innerHTML = '<div class="dash-empty-note">No cards in SRS yet.</div>';
     return;

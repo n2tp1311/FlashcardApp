@@ -117,6 +117,22 @@
     <button class="btn btn-sm btn-ghost" id="btn-select-classes-cancel">Cancel</button>
     <button class="btn btn-sm btn-primary" id="btn-study-classes" disabled>Study</button>
   </div>
+  <div id="home-charts-section" class="hidden">
+    <div class="analytics-charts-grid">
+      <div class="stat-card analytics-chart-card" style="overflow-x:auto">
+        <h3 class="analytics-chart-title">90-Day Study Heatmap</h3>
+        <div id="home-heatmap-wrap" class="heatmap-wrap"></div>
+      </div>
+      <div class="stat-card analytics-chart-card">
+        <h3 class="analytics-chart-title">Weekly Study Trend</h3>
+        <div id="home-trend-wrap"></div>
+      </div>
+      <div class="stat-card analytics-chart-card">
+        <h3 class="analytics-chart-title">SRS Interval Distribution</h3>
+        <div id="home-srs-wrap"></div>
+      </div>
+    </div>
+  </div>
   <div class="lesson-sort-bar">
     <label class="sort-label" for="class-sort-select">Sort by</label>
     <select id="class-sort-select" class="sort-select">
@@ -181,23 +197,17 @@
   <div id="analytics-loading" class="empty-state hidden"><p>Loading…</p></div>
   <div id="analytics-error" class="empty-state hidden"><p>Failed to load analytics.</p></div>
   <div class="analytics-charts-grid">
-    <div class="analytics-chart-col">
-      <h3 class="dash-section-label">90-Day Study Heatmap</h3>
-      <div class="stat-card" style="overflow-x:auto">
-        <div id="analytics-heatmap-wrap" class="heatmap-wrap"></div>
-      </div>
+    <div class="stat-card analytics-chart-card" style="overflow-x:auto">
+      <h3 class="analytics-chart-title">90-Day Study Heatmap</h3>
+      <div id="analytics-heatmap-wrap" class="heatmap-wrap"></div>
     </div>
-    <div class="analytics-chart-col">
-      <h3 class="dash-section-label">Weekly Study Trend</h3>
-      <div class="stat-card analytics-chart-fill">
-        <div id="analytics-trend-wrap"></div>
-      </div>
+    <div class="stat-card analytics-chart-card">
+      <h3 class="analytics-chart-title">Weekly Study Trend</h3>
+      <div id="analytics-trend-wrap"></div>
     </div>
-    <div class="analytics-chart-col">
-      <h3 class="dash-section-label">SRS Interval Distribution</h3>
-      <div class="stat-card analytics-chart-fill">
-        <div id="analytics-srs-wrap"></div>
-      </div>
+    <div class="stat-card analytics-chart-card">
+      <h3 class="analytics-chart-title">SRS Interval Distribution</h3>
+      <div id="analytics-srs-wrap"></div>
     </div>
   </div>
   <h3 class="dash-section-label">Lesson Accuracy (worst first)</h3>
