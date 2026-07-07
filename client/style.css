@@ -28,26 +28,60 @@
   --transition: 0.15s ease;
 }
 
+/* ==============================
+   DARK THEME — GitHub Dark palette
+   Principle: each surface layer is ~5 steps lighter than the one below,
+   text at 87 % / 60 % / 40 % opacity equivalents, primary shifted +2 stops
+   for WCAG AA contrast on dark surfaces.
+   ============================== */
 [data-theme="dark"] {
-  --bg: #111827;
-  --surface: #1f2937;
-  --surface2: #374151;
-  --border: #4b5563;
-  --text: #f9fafb;
-  --text2: #9ca3af;
-  --text3: #6b7280;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-light: #1e3a5f;
-  --success-light: #052e16;
-  --danger-light: #450a0a;
-  --warning-light: #431407;
-  --shadow: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.5), 0 2px 4px -1px rgba(0,0,0,.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.5), 0 4px 6px -2px rgba(0,0,0,.4);
+  color-scheme: dark;
+  --bg:           #0d1117;
+  --surface:      #161b22;
+  --surface2:     #21262d;
+  --border:       #30363d;
+  --text:         #e6edf3;
+  --text2:        #8b949e;
+  --text3:        #6e7681;
+  --primary:      #58a6ff;
+  --primary-hover:#79b8ff;
+  --primary-light:#1c2a3e;
+  --success:      #3fb950;
+  --success-light:#122619;
+  --danger:       #f85149;
+  --danger-light: #2c1214;
+  --warning:      #e3b341;
+  --warning-light:#2b1d06;
+  --shadow:       0 1px 3px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);
+  --shadow-md:    0 4px 6px -1px rgba(0,0,0,.7), 0 2px 4px -1px rgba(0,0,0,.6);
+  --shadow-lg:    0 10px 15px -3px rgba(0,0,0,.7), 0 4px 6px -2px rgba(0,0,0,.6);
 }
-[data-theme="dark"] .heat-1 { background: #14532d; }
-[data-theme="dark"] .heat-2 { background: #166534; }
+
+/* Heatmap — GitHub's exact contribution graph greens */
+[data-theme="dark"] .heat-1 { background: #0e4429; }
+[data-theme="dark"] .heat-2 { background: #006d32; }
+[data-theme="dark"] .heat-3 { background: #26a641; }
+
+/* Badge pastels → dark equivalents */
+[data-theme="dark"] .format-badge.mcq        { background: #2d1f47; color: #c084fc; }
+[data-theme="dark"] .format-badge.true-false  { background: #0d2615; color: #4ade80; }
+[data-theme="dark"] .format-badge.image-def   { background: #2b1507; color: #fb923c; }
+
+/* Due/lesson labels */
+[data-theme="dark"] .lesson-due-label.is-due  { color: #fbbf24; }
+[data-theme="dark"] .lesson-item.lesson-due   { border-color: #e3b341; }
+
+/* TF selected states — swap dark text for light */
+[data-theme="dark"] .tf-answer-btn.selected[data-value="true"]  { color: #4ade80; }
+[data-theme="dark"] .tf-answer-btn.selected[data-value="false"] { color: #f87171; }
+
+/* Analytics accuracy colours */
+[data-theme="dark"] .acc-good { color: #4ade80; }
+[data-theme="dark"] .acc-mid  { color: #fbbf24; }
+[data-theme="dark"] .acc-bad  { color: #f87171; }
+
+/* Auth success banner */
+[data-theme="dark"] .auth-success { background: #122619; color: #4ade80; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
