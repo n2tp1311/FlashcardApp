@@ -3198,13 +3198,15 @@ function renderAnalytics() {
   var errEl  = document.getElementById("analytics-error");
   loadEl.classList.remove("hidden");
   errEl.classList.add("hidden");
-  ["analytics-heatmap-wrap","analytics-trend-wrap","analytics-lesson-wrap"].forEach(function(id) {
+  ["analytics-heatmap-wrap","analytics-trend-wrap","analytics-srs-wrap","analytics-lesson-wrap"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
-  store.getAnalytics().then(function(d) {
+  Promise.all([store.getAnalytics(), store.getSrsDistribution()]).then(function(results) {
+    var d = results[0], srs = results[1];
     loadEl.classList.add("hidden");
     renderHeatmap(d.heatmap);
     renderWeeklyTrend(d.weeklyTrend);
+    renderSrsDistribution(srs);
     renderLessonBreakdown(d.lessonBreakdown);
   }).catch(function() {
     loadEl.classList.add("hidden");
@@ -3305,6 +3307,35 @@ function renderWeeklyTrend(rows) {
       '<span class="trend-count">' + week.cnt + '</span>';
     wrap.appendChild(rowEl);
   });
+}
+
+var SRS_STEP_LABELS = ["10m","1h","4h","1d","3d","7d","21d","42d","84d","168d","336d","1yr"];
+function stepLabel(step) {
+  return SRS_STEP_LABELS[Math.min(step, SRS_STEP_LABELS.length - 1)];
+}
+
+function renderSrsDistribution(rows) {
+  var wrap = document.getElementById("analytics-srs-wrap");
+  if (!rows || !rows.length) {
+    wrap.innerHTML = '<div class="dash-empty-note">No cards in SRS yet.</div>';
+    return;
+  }
+  var max = rows.reduce(function(m, r) { return Math.max(m, r.cnt); }, 1);
+  var total = rows.reduce(function(s, r) { return s + r.cnt; }, 0);
+  rows.forEach(function(r) {
+    var pct = Math.round(r.cnt / max * 100);
+    var rowEl = document.createElement("div");
+    rowEl.className = "trend-row";
+    rowEl.innerHTML =
+      '<span class="trend-label">' + escHtml(stepLabel(r.srs_step)) + '</span>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill srs-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="trend-count">' + r.cnt + '</span>';
+    wrap.appendChild(rowEl);
+  });
+  var note = document.createElement("div");
+  note.className = "srs-total-note";
+  note.textContent = total + ' card' + (total !== 1 ? 's' : '') + ' in SRS';
+  wrap.appendChild(note);
 }
 
 function renderLessonBreakdown(rows) {
@@ -3699,6 +3730,7 @@ var SQLiteAdapter = (function() {
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
     getDashboard: function() { return req("GET", "/stats/dashboard"); },
     getAnalytics: function() { return req("GET", "/stats/analytics"); },
+    getSrsDistribution: function() { return req("GET", "/stats/srs-distribution"); },
 
     markCardsSeen: function(cardIds) {
       if (!cardIds || !cardIds.length) return Promise.resolve();

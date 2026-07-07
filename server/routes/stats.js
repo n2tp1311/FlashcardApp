@@ -348,4 +348,12 @@ router.get("/analytics/export", requireAuth, function(req, res) {
   res.send(lines.join("\n"));
 });
 
+// GET /api/stats/srs-distribution
+router.get("/srs-distribution", requireAuth, (req, res) => {
+  const rows = db.prepare(
+    "SELECT srs_step, COUNT(*) AS cnt FROM card_states WHERE user_id = ? AND srs_due_at IS NOT NULL GROUP BY srs_step ORDER BY srs_step"
+  ).all(req.session.userId);
+  res.json(rows);
+});
+
 module.exports = router;
