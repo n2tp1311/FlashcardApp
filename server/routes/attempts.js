@@ -5,8 +5,15 @@ const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const router  = express.Router();
 
-// 10min, 1h, 4h, 1d, 3d, 7d, 21d
+// 10min, 1h, 4h, 1d, 3d, 7d, 21d — then doubles each step, capped at 1 year
 const SRS_INTERVALS = [600, 3600, 14400, 86400, 259200, 604800, 1814400];
+const SRS_MAX_INTERVAL = 365 * 86400;
+
+function getInterval(step) {
+  if (step < SRS_INTERVALS.length) return SRS_INTERVALS[step];
+  const extra = step - (SRS_INTERVALS.length - 1);
+  return Math.min(SRS_INTERVALS[SRS_INTERVALS.length - 1] * Math.pow(2, extra), SRS_MAX_INTERVAL);
+}
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -39,11 +46,11 @@ router.post("/", requireAuth, (req, res) => {
   ).get(cardId, userId);
   const curStep = stateRow ? (stateRow.srs_step || 0) : 0;
   let newStep;
-  if (grade === "easy")        newStep = Math.min(curStep + 2, SRS_INTERVALS.length - 1);
-  else if (grade === "medium") newStep = Math.min(curStep + 1, SRS_INTERVALS.length - 1);
+  if (grade === "easy")        newStep = curStep + 2;
+  else if (grade === "medium") newStep = curStep + 1;
   else if (grade === "hard")   newStep = 0;
-  else                         newStep = correct ? Math.min(curStep + 1, SRS_INTERVALS.length - 1) : 0;
-  const dueAt   = Math.floor(Date.now() / 1000) + SRS_INTERVALS[newStep];
+  else                         newStep = correct ? curStep + 1 : 0;
+  const dueAt   = Math.floor(Date.now() / 1000) + getInterval(newStep);
   db.prepare(
     "INSERT INTO card_states (card_id, user_id, srs_step, srs_due_at) VALUES (?, ?, ?, ?) " +
     "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_step = excluded.srs_step, srs_due_at = excluded.srs_due_at"
