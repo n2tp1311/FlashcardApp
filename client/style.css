@@ -28,6 +28,27 @@
   --transition: 0.15s ease;
 }
 
+[data-theme="dark"] {
+  --bg: #111827;
+  --surface: #1f2937;
+  --surface2: #374151;
+  --border: #4b5563;
+  --text: #f9fafb;
+  --text2: #9ca3af;
+  --text3: #6b7280;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: #1e3a5f;
+  --success-light: #052e16;
+  --danger-light: #450a0a;
+  --warning-light: #431407;
+  --shadow: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.5), 0 2px 4px -1px rgba(0,0,0,.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.5), 0 4px 6px -2px rgba(0,0,0,.4);
+}
+[data-theme="dark"] .heat-1 { background: #14532d; }
+[data-theme="dark"] .heat-2 { background: #166534; }
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg);
@@ -718,6 +739,15 @@ code {
 
 .setup-section { display: flex; flex-direction: column; gap: 8px; }
 .setup-label { font-size: 14px; font-weight: 600; color: var(--text); }
+.pref-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.pref-row .form-label { margin-bottom: 0; }
+.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 12px; transition: background 0.2s; }
+.toggle-track::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.toggle-switch input:checked + .toggle-track { background: var(--primary); }
+.toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
+
 .tf-pct-row { display: flex; align-items: center; gap: 12px; }
 .tf-pct-slider { flex: 1; accent-color: var(--primary); cursor: pointer; }
 .tf-pct-label { font-size: 14px; font-weight: 600; color: var(--primary); min-width: 38px; text-align: right; }

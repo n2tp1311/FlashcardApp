@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
   <link rel="stylesheet" href="style.css">
+  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");if(_p.darkMode)document.documentElement.setAttribute("data-theme","dark");}catch(_){}</script>
 </head>
 <body>
 
@@ -464,6 +465,13 @@
       <button class="modal-close" data-modal="preferences">✕</button>
     </div>
     <div class="modal-body">
+      <div class="pref-row">
+        <label class="form-label" for="pref-dark-mode">Dark mode</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pref-dark-mode">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
       <label class="form-label">MCQ → T/F expansion default</label>
       <div class="tf-pct-row">
         <input type="range" id="pref-tf-pct" class="tf-pct-slider" min="0" max="100" step="5" value="20">

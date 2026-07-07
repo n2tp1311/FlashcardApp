@@ -682,6 +682,7 @@ var state = {
 
   // User preferences (loaded from server after login)
   tfExpansionPctDefault: 20,
+  darkMode: false,
 
   // Lesson sort preference (persisted in localStorage)
   currentLessonSort: (function() {
@@ -3839,9 +3840,17 @@ function showAuthScreen() {
   showScreen("auth");
 }
 
+function applyDarkMode(enabled) {
+  state.darkMode = !!enabled;
+  document.documentElement.setAttribute("data-theme", state.darkMode ? "dark" : "light");
+}
+
 function applyPrefs(prefs) {
   if (typeof prefs.tfExpansionPctDefault === "number") {
     state.tfExpansionPctDefault = prefs.tfExpansionPctDefault;
+  }
+  if (typeof prefs.darkMode === "boolean") {
+    applyDarkMode(prefs.darkMode);
   }
 }
 
@@ -4039,6 +4048,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   closeAllDropdowns();
   document.getElementById("pref-tf-pct").value = state.tfExpansionPctDefault;
   document.getElementById("pref-tf-pct-label").textContent = state.tfExpansionPctDefault + "%";
+  document.getElementById("pref-dark-mode").checked = state.darkMode;
   openModal("preferences");
 });
 
@@ -4048,13 +4058,15 @@ document.getElementById("pref-tf-pct").addEventListener("input", function() {
 
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
   var pct = parseInt(document.getElementById("pref-tf-pct").value, 10);
+  var dark = document.getElementById("pref-dark-mode").checked;
   state.tfExpansionPctDefault = pct;
-  try { localStorage.setItem("fc-preferences", JSON.stringify({ tfExpansionPctDefault: pct })); } catch (_) {}
+  applyDarkMode(dark);
+  try { localStorage.setItem("fc-preferences", JSON.stringify({ tfExpansionPctDefault: pct, darkMode: dark })); } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tfExpansionPctDefault: pct })
+    body: JSON.stringify({ tfExpansionPctDefault: pct, darkMode: dark })
   }).catch(function() {});
   closeModal("preferences");
 });
