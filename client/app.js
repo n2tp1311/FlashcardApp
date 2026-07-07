@@ -4565,3 +4565,60 @@ function injectKeyHints() {
 }
 
 injectKeyHints();
+
+/* ============================
+   PULL-TO-REFRESH (mobile)
+   ============================ */
+(function() {
+  var ind    = document.getElementById("ptr-indicator");
+  var circle = ind.querySelector(".ptr-circle");
+  var label  = ind.querySelector(".ptr-label");
+  var THRESHOLD = 72;
+  var startY = 0, lastDy = 0, pulling = false, busy = false;
+
+  function setHeight(px) { ind.style.height = px + "px"; }
+
+  document.addEventListener("touchstart", function(e) {
+    if (busy || getActiveScreen() !== "home" || window.scrollY > 4) return;
+    startY = e.touches[0].clientY;
+    lastDy = 0;
+    pulling = false;
+    ind.style.transition = "none";
+  }, { passive: true });
+
+  document.addEventListener("touchmove", function(e) {
+    if (busy || getActiveScreen() !== "home") return;
+    if (window.scrollY > 4) { if (pulling) { setHeight(0); pulling = false; } return; }
+    var dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { if (pulling) { setHeight(0); pulling = false; } return; }
+    lastDy = dy;
+    pulling = true;
+    // Rubber-band: full speed until threshold, slow beyond
+    var h = dy < THRESHOLD ? dy * 0.6 : THRESHOLD * 0.6 + (dy - THRESHOLD) * 0.15;
+    setHeight(Math.min(Math.round(h), 64));
+    var ready = dy >= THRESHOLD;
+    circle.style.transform = "rotate(" + Math.min(dy / THRESHOLD, 1) * 320 + "deg)";
+    label.textContent = ready ? "Release to refresh" : "Pull to refresh";
+  }, { passive: true });
+
+  document.addEventListener("touchend", function() {
+    if (!pulling || busy) { pulling = false; return; }
+    pulling = false;
+    ind.style.transition = "";
+    if (lastDy >= THRESHOLD) {
+      busy = true;
+      setHeight(56);
+      circle.style.transform = "";
+      ind.classList.add("ptr-spinning");
+      label.textContent = "Refreshing…";
+      renderHome();
+      setTimeout(function() {
+        setHeight(0);
+        ind.classList.remove("ptr-spinning");
+        busy = false;
+      }, 1200);
+    } else {
+      setHeight(0);
+    }
+  }, { passive: true });
+}());

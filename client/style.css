@@ -2132,6 +2132,34 @@ code {
 .srs-bar-fill { background: #10b981; }
 .srs-total-note { font-size: 12px; color: var(--text2); margin-top: 8px; text-align: right; }
 
+/* Pull-to-refresh indicator */
+.ptr-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 0;
+  overflow: hidden;
+  color: var(--text2);
+  font-size: 13px;
+  margin: 0 -16px;
+  transition: height 0.25s ease;
+}
+.ptr-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.ptr-indicator.ptr-spinning .ptr-circle {
+  animation: ptr-spin 0.75s linear infinite;
+  transition: none;
+}
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
+
 .analytics-charts-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
