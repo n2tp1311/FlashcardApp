@@ -287,7 +287,7 @@ router.get("/analytics", requireAuth, function(req, res) {
   var heatmapRows = db.prepare(
     "SELECT date(created_at,'unixepoch') AS day, COUNT(*) AS cnt " +
     "FROM attempts " +
-    "WHERE user_id=? AND created_at >= strftime('%s','now','-90 days') " +
+    "WHERE user_id=? AND created_at >= strftime('%s','now','-60 days') " +
     "GROUP BY day"
   ).all(uid);
 

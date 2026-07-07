@@ -3236,7 +3236,7 @@ function renderHeatmap(rows, wrap) {
 
   var today = new Date();
   var cells = [];
-  for (var i = 89; i >= 0; i--) {
+  for (var i = 59; i >= 0; i--) {
     // Use UTC date arithmetic to match server's date(created_at,'unixepoch') which returns UTC dates
     var d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
     var key = d.toISOString().slice(0, 10);
