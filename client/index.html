@@ -180,17 +180,25 @@
   </header>
   <div id="analytics-loading" class="empty-state hidden"><p>Loading…</p></div>
   <div id="analytics-error" class="empty-state hidden"><p>Failed to load analytics.</p></div>
-  <h3 class="dash-section-label">90-Day Study Heatmap</h3>
-  <div class="stat-card" style="overflow-x:auto">
-    <div id="analytics-heatmap-wrap" class="heatmap-wrap"></div>
-  </div>
-  <h3 class="dash-section-label">Weekly Study Trend</h3>
-  <div class="stat-card">
-    <div id="analytics-trend-wrap"></div>
-  </div>
-  <h3 class="dash-section-label">SRS Interval Distribution</h3>
-  <div class="stat-card">
-    <div id="analytics-srs-wrap"></div>
+  <div class="analytics-charts-grid">
+    <div class="analytics-chart-col">
+      <h3 class="dash-section-label">90-Day Study Heatmap</h3>
+      <div class="stat-card" style="overflow-x:auto">
+        <div id="analytics-heatmap-wrap" class="heatmap-wrap"></div>
+      </div>
+    </div>
+    <div class="analytics-chart-col">
+      <h3 class="dash-section-label">Weekly Study Trend</h3>
+      <div class="stat-card analytics-chart-fill">
+        <div id="analytics-trend-wrap"></div>
+      </div>
+    </div>
+    <div class="analytics-chart-col">
+      <h3 class="dash-section-label">SRS Interval Distribution</h3>
+      <div class="stat-card analytics-chart-fill">
+        <div id="analytics-srs-wrap"></div>
+      </div>
+    </div>
   </div>
   <h3 class="dash-section-label">Lesson Accuracy (worst first)</h3>
   <div id="analytics-lesson-wrap" class="analytics-lesson-list"></div>
