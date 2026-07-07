@@ -7,7 +7,7 @@
    font-size: 100% means "use the browser/OS default" (typically 16px,
    but larger when user raises accessibility text size). All rem values
    in this file scale proportionally. */
-html { font-size: 100%; }
+html { font-size: calc(100% * var(--font-scale, 1)); }
 
 :root {
   --bg: #f7f8fa;
@@ -779,8 +779,10 @@ code {
 
 .setup-section { display: flex; flex-direction: column; gap: 8px; }
 .setup-label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
-.pref-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.pref-row .form-label { margin-bottom: 0; }
+.pref-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.pref-row .form-label { margin-bottom: 0; flex-shrink: 0; }
+.font-scale-row { display: flex; align-items: center; gap: 8px; }
+.font-scale-row .tf-pct-label { min-width: 44px; text-align: center; }
 .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
 .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 12px; transition: background 0.2s; }

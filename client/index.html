@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
   <link rel="stylesheet" href="style.css">
-  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");if(_p.darkMode)document.documentElement.setAttribute("data-theme","dark");}catch(_){}</script>
+  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");if(_p.darkMode)document.documentElement.setAttribute("data-theme","dark");if(_p.fontScale)document.documentElement.style.setProperty("--font-scale",_p.fontScale);}catch(_){}</script>
 </head>
 <body>
 
@@ -469,6 +469,14 @@
       <button class="modal-close" data-modal="preferences">✕</button>
     </div>
     <div class="modal-body">
+      <div class="pref-row">
+        <label class="form-label">Text size</label>
+        <div class="font-scale-row">
+          <button type="button" class="btn btn-sm btn-ghost" id="pref-font-decrease">A−</button>
+          <span id="pref-font-label" class="tf-pct-label">100%</span>
+          <button type="button" class="btn btn-sm btn-ghost" id="pref-font-increase">A+</button>
+        </div>
+      </div>
       <div class="pref-row">
         <label class="form-label" for="pref-dark-mode">Dark mode</label>
         <label class="toggle-switch">

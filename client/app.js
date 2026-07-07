@@ -683,6 +683,7 @@ var state = {
   // User preferences (loaded from server after login)
   tfExpansionPctDefault: 20,
   darkMode: false,
+  fontScale: 1,
 
   // Lesson sort preference (persisted in localStorage)
   currentLessonSort: (function() {
@@ -3845,12 +3846,22 @@ function applyDarkMode(enabled) {
   document.documentElement.setAttribute("data-theme", state.darkMode ? "dark" : "light");
 }
 
+var FONT_SCALE_MIN = 0.7, FONT_SCALE_MAX = 1.5, FONT_SCALE_STEP = 0.1;
+function applyFontScale(scale) {
+  scale = Math.round(Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, scale)) * 10) / 10;
+  state.fontScale = scale;
+  document.documentElement.style.setProperty("--font-scale", scale);
+}
+
 function applyPrefs(prefs) {
   if (typeof prefs.tfExpansionPctDefault === "number") {
     state.tfExpansionPctDefault = prefs.tfExpansionPctDefault;
   }
   if (typeof prefs.darkMode === "boolean") {
     applyDarkMode(prefs.darkMode);
+  }
+  if (typeof prefs.fontScale === "number") {
+    applyFontScale(prefs.fontScale);
   }
 }
 
@@ -4044,12 +4055,26 @@ document.getElementById("btn-logout").addEventListener("click", function() {
     .then(function() { showAuthScreen(); });
 });
 
+function prefFontLabel() {
+  document.getElementById("pref-font-label").textContent = Math.round(state.fontScale * 100) + "%";
+}
+
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
   document.getElementById("pref-tf-pct").value = state.tfExpansionPctDefault;
   document.getElementById("pref-tf-pct-label").textContent = state.tfExpansionPctDefault + "%";
   document.getElementById("pref-dark-mode").checked = state.darkMode;
+  prefFontLabel();
   openModal("preferences");
+});
+
+document.getElementById("pref-font-decrease").addEventListener("click", function() {
+  applyFontScale(state.fontScale - FONT_SCALE_STEP);
+  prefFontLabel();
+});
+document.getElementById("pref-font-increase").addEventListener("click", function() {
+  applyFontScale(state.fontScale + FONT_SCALE_STEP);
+  prefFontLabel();
 });
 
 document.getElementById("pref-tf-pct").addEventListener("input", function() {
@@ -4061,12 +4086,13 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   var dark = document.getElementById("pref-dark-mode").checked;
   state.tfExpansionPctDefault = pct;
   applyDarkMode(dark);
-  try { localStorage.setItem("fc-preferences", JSON.stringify({ tfExpansionPctDefault: pct, darkMode: dark })); } catch (_) {}
+  var prefs = { tfExpansionPctDefault: pct, darkMode: dark, fontScale: state.fontScale };
+  try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tfExpansionPctDefault: pct, darkMode: dark })
+    body: JSON.stringify(prefs)
   }).catch(function() {});
   closeModal("preferences");
 });
