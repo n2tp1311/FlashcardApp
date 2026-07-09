@@ -3530,7 +3530,26 @@ document.getElementById("bulk-import-input").addEventListener("input", function(
   bulkImportTimer = setTimeout(function() { renderBulkImportPreview(val); }, 300);
 });
 
-const AI_EXTRACTION_PROMPT = `You are a knowledge extraction assistant. Your job is to convert source material into a spaced-repetition flashcard set that covers every essential concept — not a highlights reel.
+const AI_EXTRACTION_PROMPT = `You are a knowledge extraction assistant. Your job is to convert source material into a spaced-repetition flashcard set — not a highlights reel.
+
+## Step 0 — Classify the content type (do this before anything else)
+
+Read the text and decide which type it is:
+
+**Type A — Expository** (textbook, non-fiction, science, business framework, how-to, essay)
+Content is declarative: facts, definitions, mechanisms, frameworks, processes.
+→ Apply all rules below as written.
+
+**Type B — Narrative / Memoir** (autobiography, memoir, biography, narrative non-fiction, personal essay)
+Content is story-driven: events, decisions, turning points, personal lessons, quotes.
+→ Apply modified rules:
+- **Do card:** lessons/principles a story illustrates; key decisions and the reasoning behind them; quotes that encode a transferable idea; turning points that reveal strategy or character
+- **Do not card:** dates, names, places, or plot details that carry no transferable lesson
+- Stem format: "What principle does [brief story context] illustrate?" / "What did [author] learn from [event]?" / "When should you [action], according to [author]'s experience?"
+- Target roughly 1 card per major story or lesson — not per 50–80 words
+- All other rules (generalizability, output format, card writing, final audit) still apply
+
+---
 
 ## Generalizability rule (apply to every card)
 
