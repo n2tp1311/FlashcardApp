@@ -42,15 +42,22 @@ router.post("/", requireAuth, (req, res) => {
 
   // Update per-card SRS: correct → advance step, wrong → reset to 0
   const stateRow = db.prepare(
-    "SELECT srs_step FROM card_states WHERE card_id = ? AND user_id = ?"
+    "SELECT srs_step, srs_due_at FROM card_states WHERE card_id = ? AND user_id = ?"
   ).get(cardId, userId);
   const curStep = stateRow ? (stateRow.srs_step || 0) : 0;
+  const now = Math.floor(Date.now() / 1000);
+
+  // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
+  if (stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now) {
+    return res.status(201).json({ ok: true, srs_step: curStep, srs_due_at: stateRow.srs_due_at });
+  }
+
   let newStep;
   if (grade === "easy")        newStep = curStep + 2;
   else if (grade === "medium") newStep = curStep + 1;
   else if (grade === "hard")   newStep = 0;
   else                         newStep = correct ? curStep + 1 : 0;
-  const dueAt   = Math.floor(Date.now() / 1000) + getInterval(newStep);
+  const dueAt = now + getInterval(newStep);
   db.prepare(
     "INSERT INTO card_states (card_id, user_id, srs_step, srs_due_at) VALUES (?, ?, ?, ?) " +
     "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_step = excluded.srs_step, srs_due_at = excluded.srs_due_at"
