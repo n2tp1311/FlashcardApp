@@ -43,6 +43,7 @@ app.use("/api/import",  require("./routes/exportImport"));
 app.use("/api/share",   require("./routes/share"));
 app.use("/api/review",  require("./routes/review"));
 app.use("/api/upload",  require("./routes/upload"));
+app.use("/api/search",  require("./routes/search"));
 app.use("/uploads",     require("express").static(UPLOADS, { index: false }));
 
 // ── Helper: inject APP_CONFIG and serve index.html ───────

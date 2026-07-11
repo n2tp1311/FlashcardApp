@@ -592,6 +592,48 @@ var LocalStorageAdapter = (function() {
       localStorage.removeItem(KEY_ATTEMPTS);
       localStorage.removeItem(KEY_STATES);
       return Promise.resolve();
+    },
+
+    search: function(q) {
+      var ql = q.toLowerCase();
+      var classMap = {};
+      (load(KEY_CLASSES) || []).forEach(function(c) { classMap[c.id] = c; });
+
+      var classes = (load(KEY_CLASSES) || [])
+        .filter(function(c) { return c.name.toLowerCase().indexOf(ql) !== -1; })
+        .slice(0, 5)
+        .map(function(c) { return { id: c.id, name: c.name, icon: c.icon, color: c.color }; });
+
+      var allLessons = load(KEY_LESSONS) || [];
+      var lessons = allLessons
+        .filter(function(l) { return l.title.toLowerCase().indexOf(ql) !== -1; })
+        .slice(0, 5)
+        .map(function(l) {
+          var cls = classMap[l.class_id] || {};
+          return { id: l.id, class_id: l.class_id, title: l.title, format: l.format,
+                   class_name: cls.name || "", class_icon: cls.icon || "" };
+        });
+
+      var cards = [];
+      for (var i = 0; i < allLessons.length && cards.length < 5; i++) {
+        var lesson = allLessons[i];
+        var cls = classMap[lesson.class_id] || {};
+        var lessonCards = load(CARDS_PREFIX + lesson.id) || [];
+        for (var j = 0; j < lessonCards.length && cards.length < 5; j++) {
+          var ca = lessonCards[j];
+          var d  = ca.data;
+          var displayText = null;
+          if      (ca.format === "term-def")   displayText = d && d.term      ? d.term      : null;
+          else if (ca.format === "mcq")        displayText = d && d.question  ? d.question  : null;
+          else if (ca.format === "true-false") displayText = d && d.statement ? d.statement : null;
+          else if (ca.format === "image-def")  displayText = d && d.def       ? d.def       : null;
+          if (!displayText || displayText.toLowerCase().indexOf(ql) === -1) continue;
+          cards.push({ id: ca.id, lesson_id: lesson.id, format: ca.format,
+                       display_text: displayText, lesson_title: lesson.title,
+                       class_id: lesson.class_id, class_name: cls.name || "", class_icon: cls.icon || "" });
+        }
+      }
+      return Promise.resolve({ classes: classes, lessons: lessons, cards: cards });
     }
   };
 })();
@@ -3804,7 +3846,8 @@ var SQLiteAdapter = (function() {
 
     exportAll: function() { return req("GET", "/export"); },
     importAll: function(json) { return req("POST", "/import", json); },
-    clearAll:  function() { return Promise.resolve(); }
+    clearAll:  function() { return Promise.resolve(); },
+    search:    function(q) { return req("GET", "/search?q=" + encodeURIComponent(q)); }
   };
 })();
 
@@ -4417,6 +4460,190 @@ function isInputFocused() {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
+/* ============================
+   GLOBAL SEARCH
+   ============================ */
+
+var _searchDebounceTimer = null;
+var _searchActiveIdx     = -1;
+var _searchResultItems   = [];
+
+function openSearchModal() {
+  var modalEl = document.getElementById("modal-search");
+  var inputEl = document.getElementById("search-input");
+  modalEl.classList.remove("hidden");
+  inputEl.value = "";
+  _searchActiveIdx   = -1;
+  _searchResultItems = [];
+  document.getElementById("search-results").innerHTML = "";
+  document.getElementById("search-empty").classList.add("hidden");
+  setTimeout(function() { inputEl.focus(); }, 30);
+}
+
+function closeSearchModal() {
+  document.getElementById("modal-search").classList.add("hidden");
+  if (_searchDebounceTimer) { clearTimeout(_searchDebounceTimer); _searchDebounceTimer = null; }
+}
+
+function highlightMatch(text, q) {
+  if (!text || !q) return escHtml(text || "");
+  var ql  = q.toLowerCase();
+  var tl  = text.toLowerCase();
+  var idx = tl.indexOf(ql);
+  if (idx === -1) return escHtml(text);
+  return escHtml(text.slice(0, idx)) +
+    '<mark class="search-highlight">' + escHtml(text.slice(idx, idx + q.length)) + '</mark>' +
+    escHtml(text.slice(idx + q.length));
+}
+
+function renderSearchResults(results, q) {
+  var container = document.getElementById("search-results");
+  var emptyEl   = document.getElementById("search-empty");
+  container.innerHTML = "";
+  _searchActiveIdx   = -1;
+  _searchResultItems = [];
+
+  var total = results.classes.length + results.lessons.length + results.cards.length;
+  if (total === 0) { emptyEl.classList.remove("hidden"); return; }
+  emptyEl.classList.add("hidden");
+
+  function makeSection(label, items, type, buildRow) {
+    if (!items.length) return;
+    var section = document.createElement("div");
+    section.className = "search-section";
+    var heading = document.createElement("div");
+    heading.className = "search-section-title";
+    heading.textContent = label;
+    section.appendChild(heading);
+    items.forEach(function(item) {
+      var row = buildRow(item);
+      row.setAttribute("role", "option");
+      row.setAttribute("tabindex", "-1");
+      row.dataset.searchIdx = String(_searchResultItems.length);
+      var captured = { type: type, data: item };
+      _searchResultItems.push(Object.assign(captured, { el: row }));
+      row.addEventListener("click", function() { selectSearchResult(type, item); });
+      section.appendChild(row);
+    });
+    container.appendChild(section);
+  }
+
+  makeSection("Classes", results.classes, "class", function(cls) {
+    var el = document.createElement("div");
+    el.className = "search-result-item";
+    el.innerHTML =
+      '<span class="search-result-icon">' + escHtml(cls.icon || "📚") + '</span>' +
+      '<div class="search-result-main">' +
+        '<div class="search-result-title">' + highlightMatch(cls.name, q) + '</div>' +
+      '</div>' +
+      '<span class="search-result-type">Class</span>';
+    return el;
+  });
+
+  makeSection("Lessons", results.lessons, "lesson", function(lesson) {
+    var el = document.createElement("div");
+    el.className = "search-result-item";
+    el.innerHTML =
+      '<span class="search-result-icon">' + escHtml(lesson.class_icon || "📚") + '</span>' +
+      '<div class="search-result-main">' +
+        '<div class="search-result-title">' + highlightMatch(lesson.title, q) + '</div>' +
+        '<div class="search-result-breadcrumb">' + escHtml(lesson.class_name) + '</div>' +
+      '</div>' +
+      '<span class="search-result-type">Lesson</span>';
+    return el;
+  });
+
+  makeSection("Cards", results.cards, "card", function(card) {
+    var el = document.createElement("div");
+    el.className = "search-result-item";
+    el.innerHTML =
+      '<span class="search-result-icon">' + escHtml(card.class_icon || "📚") + '</span>' +
+      '<div class="search-result-main">' +
+        '<div class="search-result-title">' + highlightMatch(card.display_text || "", q) + '</div>' +
+        '<div class="search-result-breadcrumb">' +
+          escHtml(card.class_name) + ' › ' + escHtml(card.lesson_title) +
+        '</div>' +
+      '</div>' +
+      '<span class="search-result-type">Card</span>';
+    return el;
+  });
+}
+
+function setSearchActiveIdx(idx) {
+  _searchResultItems.forEach(function(item, i) {
+    item.el.classList.toggle("search-result-active", i === idx);
+    if (i === idx) item.el.scrollIntoView({ block: "nearest" });
+  });
+  _searchActiveIdx = idx;
+}
+
+function selectSearchResult(type, data) {
+  closeSearchModal();
+  if (type === "class") {
+    openClass(data.id);
+    return;
+  }
+  var targetClassId  = data.class_id;
+  var targetLessonId = type === "lesson" ? data.id : data.lesson_id;
+  store.getClass(targetClassId).then(function(cls) {
+    if (!cls) return;
+    state.currentClass = cls;
+    store.getLessons(targetClassId).then(function(lessons) {
+      state.currentClassLessons = lessons;
+      openLesson(targetLessonId);
+    });
+  });
+}
+
+(function initSearch() {
+  var modalEl = document.getElementById("modal-search");
+  var inputEl = document.getElementById("search-input");
+
+  document.getElementById("btn-search").addEventListener("click", openSearchModal);
+
+  modalEl.addEventListener("click", function(e) {
+    if (e.target === modalEl) closeSearchModal();
+  });
+
+  inputEl.addEventListener("input", function() {
+    var q = this.value.trim();
+    if (_searchDebounceTimer) { clearTimeout(_searchDebounceTimer); _searchDebounceTimer = null; }
+    if (q.length < 2) {
+      document.getElementById("search-results").innerHTML = "";
+      document.getElementById("search-empty").classList.add("hidden");
+      _searchResultItems = [];
+      _searchActiveIdx   = -1;
+      return;
+    }
+    _searchDebounceTimer = setTimeout(function() {
+      store.search(q).then(function(results) { renderSearchResults(results, q); }).catch(function() {});
+    }, 200);
+  });
+
+  inputEl.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      closeSearchModal();
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSearchActiveIdx(Math.min(_searchActiveIdx + 1, _searchResultItems.length - 1));
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSearchActiveIdx(Math.max(_searchActiveIdx - 1, -1));
+      return;
+    }
+    if (e.key === "Enter" && _searchActiveIdx >= 0 && _searchActiveIdx < _searchResultItems.length) {
+      e.preventDefault();
+      var hit = _searchResultItems[_searchActiveIdx];
+      selectSearchResult(hit.type, hit.data);
+    }
+  });
+}());
+
 function toggleKeymapModal() {
   var km = document.getElementById("modal-keymap");
   km.classList.toggle("hidden");
@@ -4444,8 +4671,19 @@ document.addEventListener("keydown", function(e) {
   var screen = getActiveScreen();
   if (!screen) return;
 
-  // Escape closes any open modal (keymap first, then overlay, then share/prompt-guide)
+  // Ctrl/Cmd+K → open search
+  if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+    e.preventDefault();
+    openSearchModal();
+    return;
+  }
+
+  // Escape closes any open modal (search first, then keymap, then overlay, then share/prompt-guide)
   if (e.key === "Escape") {
+    if (!document.getElementById("modal-search").classList.contains("hidden")) {
+      closeSearchModal();
+      return;
+    }
     if (!document.getElementById("modal-keymap").classList.contains("hidden")) {
       document.getElementById("modal-keymap").classList.add("hidden");
       return;
@@ -4467,7 +4705,8 @@ document.addEventListener("keydown", function(e) {
   // Block all other shortcuts when any overlay modal is open or focus is in a text field
   var anyModalOpen = !document.getElementById("modal-overlay").classList.contains("hidden") ||
     !document.getElementById("modal-share").classList.contains("hidden") ||
-    !document.getElementById("modal-prompt-guide").classList.contains("hidden");
+    !document.getElementById("modal-prompt-guide").classList.contains("hidden") ||
+    !document.getElementById("modal-search").classList.contains("hidden");
   if (anyModalOpen) return;
   if (isInputFocused()) return;
 
