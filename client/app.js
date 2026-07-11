@@ -4014,6 +4014,7 @@ function closeSidebar() {
     if (sidebar.classList.contains("sidebar-open")) { closeSidebar(); } else { openSidebar(); }
   });
   document.getElementById("sidebar-overlay").addEventListener("click", closeSidebar);
+  document.getElementById("btn-sidebar-close").addEventListener("click", closeSidebar);
   document.getElementById("sidebar-home-link").addEventListener("click", function() {
     closeSidebar();
     renderHome();

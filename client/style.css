@@ -149,6 +149,20 @@ body {
   margin-bottom: 12px;
 }
 .sidebar-brand-icon { font-size: 1.5rem; }
+.sidebar-close-btn {
+  display: none;
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--text2);
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.sidebar-close-btn:hover { background: var(--bg2); color: var(--text); }
+@media (max-width: 767px) { .sidebar-close-btn { display: flex; align-items: center; } }
 
 .sidebar-nav-list {
   list-style: none;
