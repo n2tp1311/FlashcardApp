@@ -655,7 +655,6 @@ var state = {
   studyCards: [],
   studyIndex: 0,
   studyMode: "flashcard",
-  studyDirection: "term-def",
   studyFlipped: false,
   studyKnownMap: {},
   studyFrontText: "",
@@ -1767,7 +1766,6 @@ document.getElementById("btn-review-due").addEventListener("click", function() {
     returnScreen: "lesson",
     title: state.currentLesson.title
   };
-  state.studyDirection = "term-def";
   state.studyMode = "quiz";
   state.quizCards  = shuffle(dueCards);
   state.quizIndex  = 0;
@@ -2187,7 +2185,6 @@ function openSetup(scope) {
   // Reset pills to defaults
   setPillGroup("setup-count", "all");
   setPillGroup("setup-filter", "all");
-  setPillGroup("setup-direction", "term-def");
   setPillGroup("setup-mode", "flashcard");
 
   // Show scope label when studying more than one lesson
@@ -2198,10 +2195,6 @@ function openSetup(scope) {
   } else {
     scopeLabel.classList.add("hidden");
   }
-
-  // Hide direction unless at least one lesson in scope is term↔def
-  var hasTermDef = state.studyScope.lessons.some(function(l) { return l.format === "term-def"; });
-  document.getElementById("setup-direction-section").style.display = hasTermDef ? "" : "none";
 
   // Show Interleaved pill only for multi-lesson sessions; always default to in-order
   var multiLesson = state.studyScope.lessons.length > 1;
@@ -2225,7 +2218,7 @@ function setPillGroup(groupId, value) {
 }
 
 // Pill group click handlers
-["setup-count","setup-filter","setup-direction","setup-mode","setup-order"].forEach(function(groupId) {
+["setup-count","setup-filter","setup-mode","setup-order"].forEach(function(groupId) {
   document.getElementById(groupId).addEventListener("click", function(e) {
     var pill = e.target.closest(".pill");
     if (!pill) return;
@@ -2251,17 +2244,15 @@ document.getElementById("btn-setup-back").addEventListener("click", function() {
 });
 
 document.getElementById("btn-start-study").addEventListener("click", function() {
-  var count     = document.querySelector("#setup-count .pill.active").dataset.value;
-  var filter    = document.querySelector("#setup-filter .pill.active").dataset.value;
-  var direction = document.querySelector("#setup-direction .pill.active") ?
-                  document.querySelector("#setup-direction .pill.active").dataset.value : "term-def";
-  var mode      = document.querySelector("#setup-mode .pill.active").dataset.value;
-  var orderEl   = document.querySelector("#setup-order .pill.active");
-  var order     = orderEl ? orderEl.dataset.value : "in-order";
-  var tfPct     = parseInt(document.getElementById("tf-expansion-pct").value, 10) || 0;
+  var count   = document.querySelector("#setup-count .pill.active").dataset.value;
+  var filter  = document.querySelector("#setup-filter .pill.active").dataset.value;
+  var mode    = document.querySelector("#setup-mode .pill.active").dataset.value;
+  var orderEl = document.querySelector("#setup-order .pill.active");
+  var order   = orderEl ? orderEl.dataset.value : "in-order";
+  var tfPct   = parseInt(document.getElementById("tf-expansion-pct").value, 10) || 0;
 
-  state.setupSnapshot = { count: count, filter: filter, direction: direction, mode: mode, order: order, tfPct: tfPct };
-  startStudy(count, filter, direction, mode, order, tfPct);
+  state.setupSnapshot = { count: count, filter: filter, mode: mode, order: order, tfPct: tfPct };
+  startStudy(count, filter, mode, order, tfPct);
 });
 
 function getDifficultyWeight(stats) {
@@ -2287,7 +2278,7 @@ function weightedShuffle(cards, statsMap) {
   return result;
 }
 
-function startStudy(count, filter, direction, mode, order, tfPct) {
+function startStudy(count, filter, mode, order, tfPct) {
   var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
   store.getBulkCards(ids).then(function(cards) {
     // Rebuild per-lesson grouping for blocked mode
@@ -2346,7 +2337,6 @@ function startStudy(count, filter, direction, mode, order, tfPct) {
           return;
         }
 
-        state.studyDirection = direction;
         state.studyMode = mode;
 
         // Record last_seen_at for all cards in this session (fire-and-forget)
@@ -2401,8 +2391,8 @@ function renderFlashcard() {
 
   var frontAudioBtn = document.getElementById("btn-fc-audio-front");
   if (card.format === "term-def") {
-    front = state.studyDirection === "term-def" ? card.data.term : card.data.def;
-    back  = state.studyDirection === "term-def" ? card.data.def  : card.data.term;
+    front = card.data.term;
+    back  = card.data.def;
     state.studyFrontText = front || "";
     state.studyBackText  = back  || "";
     frontEl.innerHTML = "";
@@ -2614,10 +2604,10 @@ function buildQuizOptions(card) {
     return shuffle([correct].concat(distractors));
   }
   // term-def: auto-generate distractors from other term-def cards in session
-  var correct = state.studyDirection === "term-def" ? card.data.def : card.data.term;
+  var correct = card.data.def;
   var pool = state.quizCards
     .filter(function(c) { return c.id !== card.id && c.format === "term-def"; })
-    .map(function(c) { return state.studyDirection === "term-def" ? c.data.def : c.data.term; });
+    .map(function(c) { return c.data.def; });
   var distractors = shuffle(pool).slice(0, 3);
   while (distractors.length < 3) distractors.push("—");
   return shuffle([correct].concat(distractors));
@@ -2689,7 +2679,7 @@ function renderQuizCard() {
     qImg.style.objectFit = "contain";
     qEl.appendChild(qImg);
   } else {
-    renderLatex(state.studyDirection === "term-def" ? card.data.term : card.data.def, qEl);
+    renderLatex(card.data.term, qEl);
   }
 
   // Options
@@ -2720,7 +2710,7 @@ function answerQuiz(selectedIdx) {
   var correct = card.format === "mcq" ? card.data.correct :
     card.format === "true-false" ? (card.data.correct === "true" ? "True" : "False") :
     card.format === "image-def" ? card.data.def :
-    (state.studyDirection === "term-def" ? card.data.def : card.data.term);
+    card.data.def;
   var selectedVal = opts[selectedIdx];
   var isCorrect   = selectedVal === correct;
 
@@ -3097,7 +3087,6 @@ function openDueReview(lessonId, classId) {
           returnScreen: "lesson",
           title: lesson.title
         };
-        state.studyDirection = "term-def";
         state.studyMode = "quiz";
         state.quizCards  = shuffle(dueCards);
         state.quizIndex  = 0;
