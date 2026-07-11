@@ -93,10 +93,6 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         Dashboard
       </li>
-      <li class="sidebar-nav-item hidden" id="sidebar-analytics-link">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Analytics
-      </li>
     </ul>
     <div class="sidebar-section-label hidden" id="sidebar-classes-label">Lớp của bạn</div>
     <ul id="sidebar-class-list" class="sidebar-class-list"></ul>
@@ -153,12 +149,15 @@
         <button class="dropdown-item home-select-mobile" id="btn-home-select">☑ Select Classes</button>
         <div class="dropdown-divider home-select-mobile"></div>
         <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-dashboard">📊 Dashboard</button>
-        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-analytics">📈 Analytics</button>
+        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-analytics" style="display:none">📈 Analytics</button>
       </div>
     </div>
   </header>
 
   <!-- ===== HOME CONTENT ===== -->
+  <div id="home-charts-section" class="hidden">
+    <div class="dash-summary-grid" id="home-summary-grid"></div>
+  </div>
   <div id="home-select-bar" class="select-bar hidden">
     <label class="select-all-label">
       <input type="checkbox" id="select-all-classes"> Select all
@@ -185,25 +184,6 @@
     <div class="empty-icon">📚</div>
     <p>No classes yet. Create your first class to get started.</p>
   </div>
-  <div id="home-charts-section" class="hidden">
-    <div id="home-streak-card" class="dash-streak-card"></div>
-    <h3 class="dash-section-label">Overview</h3>
-    <div class="dash-summary-grid" id="home-summary-grid"></div>
-    <div class="analytics-charts-grid" style="margin-top:16px">
-      <div class="stat-card analytics-chart-card" style="overflow-x:auto">
-        <h3 class="analytics-chart-title">60-Day Study Heatmap</h3>
-        <div id="home-heatmap-wrap" class="heatmap-wrap"></div>
-      </div>
-      <div class="stat-card analytics-chart-card">
-        <h3 class="analytics-chart-title">Weekly Study Trend</h3>
-        <div id="home-trend-wrap"></div>
-      </div>
-      <div class="stat-card analytics-chart-card">
-        <h3 class="analytics-chart-title">SRS Interval Distribution</h3>
-        <div id="home-srs-wrap"></div>
-      </div>
-    </div>
-  </div>
   <div id="shared-with-me-section" class="hidden">
     <h3 class="section-heading">Shared with me</h3>
     <div id="shared-class-list" class="class-grid"></div>
@@ -215,14 +195,12 @@
 <div id="screen-dashboard" class="screen">
   <header class="app-header">
     <button class="btn btn-ghost back-btn" id="btn-dashboard-back">← Back</button>
-    <h2 class="screen-title">My Dashboard</h2>
+    <h2 class="screen-title">Dashboard</h2>
+    <button class="btn btn-ghost btn-sm" id="btn-dashboard-export">⬇ Export CSV</button>
   </header>
   <div id="dash-loading" class="empty-state"><p>Loading…</p></div>
   <div id="dash-error" class="empty-state hidden"><p>Failed to load dashboard.</p></div>
 
-  <div id="dash-streak-card" class="dash-streak-card"></div>
-
-  <h3 class="dash-section-label">Overview</h3>
   <div class="dash-summary-grid" id="dash-summary-grid"></div>
 
   <h3 class="dash-section-label">Overall Accuracy</h3>
@@ -230,6 +208,25 @@
 
   <h3 class="dash-section-label">Card Difficulty Breakdown</h3>
   <div id="dash-diff-breakdown"></div>
+
+  <h3 class="dash-section-label">Study Charts</h3>
+  <div class="analytics-charts-grid">
+    <div class="stat-card analytics-chart-card" style="overflow-x:auto">
+      <h3 class="analytics-chart-title">60-Day Study Heatmap</h3>
+      <div id="dash-heatmap-wrap" class="heatmap-wrap"></div>
+    </div>
+    <div class="stat-card analytics-chart-card">
+      <h3 class="analytics-chart-title">Weekly Study Trend</h3>
+      <div id="dash-trend-wrap"></div>
+    </div>
+    <div class="stat-card analytics-chart-card">
+      <h3 class="analytics-chart-title">SRS Interval Distribution</h3>
+      <div id="dash-srs-wrap"></div>
+    </div>
+  </div>
+
+  <h3 class="dash-section-label">Lesson Accuracy</h3>
+  <div id="dash-lesson-wrap" class="analytics-lesson-list"></div>
 
   <h3 class="dash-section-label">
     Due for Review
@@ -242,33 +239,6 @@
     <span class="dash-badge dash-badge-warn" id="dash-struggle-badge"></span>
   </h3>
   <div id="dash-struggle-list" class="dash-lesson-list"></div>
-</div>
-
-<!-- ===== SCREEN: Analytics ===== -->
-<div id="screen-analytics" class="screen">
-  <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-analytics-back">← Back</button>
-    <h2 class="screen-title">Analytics</h2>
-    <button class="btn btn-ghost btn-sm" id="btn-analytics-export">⬇ Export CSV</button>
-  </header>
-  <div id="analytics-loading" class="empty-state hidden"><p>Loading…</p></div>
-  <div id="analytics-error" class="empty-state hidden"><p>Failed to load analytics.</p></div>
-  <div class="analytics-charts-grid">
-    <div class="stat-card analytics-chart-card" style="overflow-x:auto">
-      <h3 class="analytics-chart-title">60-Day Study Heatmap</h3>
-      <div id="analytics-heatmap-wrap" class="heatmap-wrap"></div>
-    </div>
-    <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title">Weekly Study Trend</h3>
-      <div id="analytics-trend-wrap"></div>
-    </div>
-    <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title">SRS Interval Distribution</h3>
-      <div id="analytics-srs-wrap"></div>
-    </div>
-  </div>
-  <h3 class="dash-section-label">Lesson Accuracy</h3>
-  <div id="analytics-lesson-wrap" class="analytics-lesson-list"></div>
 </div>
 
 <!-- ===== SCREEN: Class Detail (Lesson List) ===== -->

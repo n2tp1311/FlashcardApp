@@ -892,32 +892,17 @@ function sortClasses(classes, key, dir) {
 function renderHomeCharts() {
   if (!IS_SERVER) return;
   var section = document.getElementById("home-charts-section");
-  ["home-heatmap-wrap","home-trend-wrap","home-srs-wrap","home-streak-card","home-summary-grid"].forEach(function(id) {
-    document.getElementById(id).innerHTML = "";
-  });
-  Promise.all([store.getAnalytics(), store.getSrsDistribution(), store.getDashboard()]).then(function(results) {
-    var d = results[0], srs = results[1], dash = results[2];
-
-    // Streak
-    document.getElementById("home-streak-card").innerHTML =
-      '<div class="dash-streak-icon">🔥</div>' +
-      '<div class="dash-streak-num">' + dash.streak + '</div>' +
-      '<div class="dash-streak-label">day' + (dash.streak === 1 ? "" : "s") + ' streak</div>' +
-      (dash.streak === 0 ? '<div class="dash-streak-hint">Study today to start your streak!</div>' : "");
-
-    // Overview summary
+  document.getElementById("home-summary-grid").innerHTML = "";
+  store.getDashboard().then(function(dash) {
     var grid = document.getElementById("home-summary-grid");
+    grid.innerHTML = statCard("🔥 " + dash.streak, dash.streak === 1 ? "Day Streak" : "Days Streak");
     [
       [dash.summary.classes,      "Classes"],
       [dash.summary.lessons,      "Lessons"],
       [dash.summary.cards,        "Cards"],
-      [dash.summary.quizSessions, "Quiz Sessions"],
+      [dash.summary.quizSessions, "Sessions"],
       [dash.summary.attempts,     "Attempts"]
     ].forEach(function(item) { grid.innerHTML += statCard(item[0], item[1]); });
-
-    renderHeatmap(d.heatmap, document.getElementById("home-heatmap-wrap"));
-    renderWeeklyTrend(d.weeklyTrend, document.getElementById("home-trend-wrap"), 5);
-    renderSrsDistribution(srs, document.getElementById("home-srs-wrap"));
     section.classList.remove("hidden");
   }).catch(function() { section.classList.add("hidden"); });
 }
@@ -3171,32 +3156,28 @@ function renderDashboard() {
   var errEl   = document.getElementById("dash-error");
   loadEl.classList.remove("hidden");
   errEl.classList.add("hidden");
+  var exportBtn = document.getElementById("btn-dashboard-export");
+  if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
-   "dash-due-list","dash-struggle-list","dash-streak-card"].forEach(function(id) {
+   "dash-heatmap-wrap","dash-trend-wrap","dash-srs-wrap","dash-lesson-wrap",
+   "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
 
-  store.getDashboard().then(function(d) {
+  Promise.all([store.getDashboard(), store.getAnalytics(), store.getSrsDistribution()]).then(function(results) {
+    var d = results[0], analytics = results[1], srs = results[2];
     loadEl.classList.add("hidden");
 
-    // Streak card (shown first)
-    document.getElementById("dash-streak-card").innerHTML =
-      '<div class="dash-streak-icon">🔥</div>' +
-      '<div class="dash-streak-num">' + d.streak + '</div>' +
-      '<div class="dash-streak-label">day' + (d.streak === 1 ? "" : "s") + ' streak</div>' +
-      (d.streak === 0 ? '<div class="dash-streak-hint">Study today to start your streak!</div>' : "");
-
-    // Summary stat cards
+    // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
+    summaryGrid.innerHTML = statCard("🔥 " + d.streak, d.streak === 1 ? "Day Streak" : "Days Streak");
     [
       [d.summary.classes,      "Classes"],
       [d.summary.lessons,      "Lessons"],
       [d.summary.cards,        "Cards"],
-      [d.summary.quizSessions, "Quiz Sessions"],
+      [d.summary.quizSessions, "Sessions"],
       [d.summary.attempts,     "Attempts"]
-    ].forEach(function(item) {
-      summaryGrid.innerHTML += statCard(item[0], item[1]);
-    });
+    ].forEach(function(item) { summaryGrid.innerHTML += statCard(item[0], item[1]); });
 
     // Accuracy bar
     var accPct = d.accuracy.total > 0
@@ -3217,6 +3198,16 @@ function renderDashboard() {
       diffBar("Medium", db_.medium, totalCards, "#d97706") +
       diffBar("Hard",   db_.hard,   totalCards, "#dc2626");
 
+    // Charts (from analytics)
+    renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"));
+    renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"));
+    renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
+    renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
+
+    // Enable export if there's data
+    var totalAttempts = (analytics.lessonBreakdown || []).reduce(function(sum, l) { return sum + (l.total_attempts || 0); }, 0);
+    if (exportBtn) exportBtn.disabled = totalAttempts === 0;
+
     // Due for review
     var dueList = document.getElementById("dash-due-list");
     var dueBadge = document.getElementById("dash-due-badge");
@@ -3226,7 +3217,6 @@ function renderDashboard() {
     if (!(d.dueForReview || []).length) {
       dueList.innerHTML = '<div class="dash-empty-note">All caught up — no cards due.</div>';
     } else {
-      // Group lessons by class
       var byClass = {};
       var classOrder = [];
       d.dueForReview.forEach(function(l) {
@@ -3299,36 +3289,6 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
   showScreen("home");
 });
 
-/* ============================
-   ANALYTICS
-   ============================ */
-
-function renderAnalytics() {
-  showScreen("analytics");
-  var loadEl = document.getElementById("analytics-loading");
-  var errEl  = document.getElementById("analytics-error");
-  loadEl.classList.remove("hidden");
-  errEl.classList.add("hidden");
-  var exportBtn = document.getElementById("btn-analytics-export");
-  if (exportBtn) exportBtn.disabled = true;
-  ["analytics-heatmap-wrap","analytics-trend-wrap","analytics-srs-wrap","analytics-lesson-wrap"].forEach(function(id) {
-    document.getElementById(id).innerHTML = "";
-  });
-  Promise.all([store.getAnalytics(), store.getSrsDistribution()]).then(function(results) {
-    var d = results[0], srs = results[1];
-    loadEl.classList.add("hidden");
-    renderHeatmap(d.heatmap, document.getElementById("analytics-heatmap-wrap"));
-    renderWeeklyTrend(d.weeklyTrend, document.getElementById("analytics-trend-wrap"));
-    renderSrsDistribution(srs, document.getElementById("analytics-srs-wrap"));
-    renderLessonBreakdown(d.lessonBreakdown);
-    var totalAttempts = (d.lessonBreakdown || []).reduce(function(sum, l) { return sum + (l.total_attempts || 0); }, 0);
-    var exportBtn2 = document.getElementById("btn-analytics-export");
-    if (exportBtn2) exportBtn2.disabled = totalAttempts === 0;
-  }).catch(function() {
-    loadEl.classList.add("hidden");
-    errEl.classList.remove("hidden");
-  });
-}
 
 function renderHeatmap(rows, wrap) {
   var map = {};
@@ -3452,8 +3412,8 @@ function renderSrsDistribution(rows, wrap) {
   wrap.appendChild(note);
 }
 
-function renderLessonBreakdown(rows) {
-  var wrap = document.getElementById("analytics-lesson-wrap");
+function renderLessonBreakdown(rows, wrap) {
+  wrap = wrap || document.getElementById("dash-lesson-wrap");
   if (!rows || !rows.length) {
     wrap.innerHTML = '<div class="dash-empty-note">No study data yet.</div>';
     return;
@@ -3486,17 +3446,13 @@ function renderLessonBreakdown(rows) {
 }
 
 document.getElementById("btn-analytics").addEventListener("click", function() {
-  renderAnalytics();
+  renderDashboard(); showScreen("dashboard");
 });
 document.getElementById("btn-analytics-inline").addEventListener("click", function() {
-  renderAnalytics();
+  renderDashboard(); showScreen("dashboard");
 });
 
-document.getElementById("btn-analytics-back").addEventListener("click", function() {
-  showScreen("home");
-});
-
-document.getElementById("btn-analytics-export").addEventListener("click", function() {
+document.getElementById("btn-dashboard-export").addEventListener("click", function() {
   window.location.href = "/api/stats/analytics/export";
 });
 
@@ -3994,10 +3950,8 @@ function initUserNav() {
   var circle = document.getElementById("user-initial-circle");
   if (circle) circle.textContent = (currentUser.name || "?")[0].toUpperCase();
   document.getElementById("btn-dashboard").classList.remove("hidden");
-  document.getElementById("btn-analytics").classList.remove("hidden");
   // Sidebar server-only items
   document.getElementById("sidebar-dashboard-link").classList.remove("hidden");
-  document.getElementById("sidebar-analytics-link").classList.remove("hidden");
   document.getElementById("sidebar-classes-label").classList.remove("hidden");
   document.getElementById("sidebar-btn-new-class").classList.remove("hidden");
   var linkBtn = document.getElementById("btn-link-google");
@@ -4052,10 +4006,6 @@ function closeSidebar() {
   document.getElementById("sidebar-dashboard-link").addEventListener("click", function() {
     closeSidebar();
     document.getElementById("btn-dashboard").click();
-  });
-  document.getElementById("sidebar-analytics-link").addEventListener("click", function() {
-    closeSidebar();
-    document.getElementById("btn-analytics").click();
   });
   document.getElementById("sidebar-btn-new-class").addEventListener("click", function() {
     closeSidebar();
@@ -4273,8 +4223,6 @@ if (IS_SERVER && !currentUser) {
 } else {
   initUserNav();
   if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
-  if (IS_SERVER) document.getElementById("btn-analytics").style.display = "";
-  // btn-dashboard-inline / btn-analytics-inline hidden via display:none (replaced by sidebar)
   renderSharedWithMe();
   restoreLastScreen();
 }
@@ -4832,7 +4780,7 @@ document.addEventListener("keydown", function(e) {
     }
     else if ((e.key === "s" || e.key === "S") && state.homeSelectMode) document.getElementById("btn-study-classes").click();
     else if (e.key === "n" || e.key === "N") openNewClass();
-    else if ((e.key === "a" || e.key === "A") && IS_SERVER) renderAnalytics();
+    else if ((e.key === "a" || e.key === "A") && IS_SERVER) { renderDashboard(); showScreen("dashboard"); }
     else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list .class-card", 1); }
     else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); moveFocus("#class-list .class-card", -1); }
     else if (e.key === "Enter") {
@@ -4914,9 +4862,6 @@ document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") document.getElementById("btn-dashboard-back").click();
   }
 
-  else if (screen === "analytics") {
-    if (e.key === "Escape") document.getElementById("btn-analytics-back").click();
-  }
 });
 
 function injectKeyHints() {
@@ -4938,7 +4883,6 @@ function injectKeyHints() {
     ["btn-results-back",   "[Esc]"],
     ["btn-stats-back",     "[Esc]"],
     ["btn-dashboard-back", "[Esc]"],
-    ["btn-analytics-back", "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
     ["btn-fc-learning",    "[1]"],
     ["btn-fc-known",       "[2]"],
