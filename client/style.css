@@ -158,6 +158,8 @@ body {
   cursor: pointer;
   color: var(--text2);
   padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 6px;
   line-height: 1;
 }
@@ -437,6 +439,7 @@ body {
   justify-content: center;
   gap: 6px;
   padding: 8px 16px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-weight: 500;
@@ -487,7 +490,7 @@ body {
 }
 .btn-warning:hover:not(:disabled) { background: #b45309; }
 
-.btn-sm { padding: 6px 12px; font-size: 0.8125rem; }
+.btn-sm { padding: 6px 12px; font-size: 0.8125rem; min-height: 0; }
 .btn-lg { padding: 12px 24px; font-size: 0.9375rem; }
 .btn-full { width: 100%; }
 
@@ -504,6 +507,7 @@ body {
 
 .pill {
   padding: 6px 14px;
+  min-height: 44px;
   border-radius: 20px;
   border: 1.5px solid var(--border);
   background: var(--surface);
@@ -1774,7 +1778,7 @@ code {
   color: var(--primary);
   font-size: 0.8125rem;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 10px 0;
   text-align: center;
   text-decoration: underline;
 }
