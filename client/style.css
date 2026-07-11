@@ -133,38 +133,34 @@ body {
 .nav-search-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   flex: 1;
   min-width: 0;
-  max-width: 340px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 10px;
+  background: #eef0f8;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 18px;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  color: var(--text2);
-  font-size: 0.875rem;
+  color: #7b82a8;
+  font-size: 0.975rem;
   user-select: none;
+  transition: background 0.15s;
 }
-.nav-search-bar:hover { border-color: var(--accent, #4f8ef7); }
-.nav-search-bar:focus { outline: none; border-color: var(--accent, #4f8ef7); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #4f8ef7) 20%, transparent); }
+.nav-search-bar:hover { background: #e5e8f2; }
+.nav-search-bar:focus { outline: 2px solid var(--accent, #4f8ef7); outline-offset: 2px; }
 
-.nav-search-icon { font-size: 0.85rem; opacity: 0.7; flex-shrink: 0; }
-
-.nav-search-placeholder { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.nav-search-kbd {
-  font-size: 0.65rem;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 5px;
-  flex-shrink: 0;
-  display: none;
+@media (prefers-color-scheme: dark) {
+  .nav-search-bar { background: #2a2d3e; color: #8890b5; }
+  .nav-search-bar:hover { background: #31354a; }
 }
-@media (min-width: 500px) { .nav-search-kbd { display: inline; } }
-@media (max-width: 480px) { .nav-search-bar { max-width: none; } }
+:root[data-theme="dark"] .nav-search-bar { background: #2a2d3e; color: #8890b5; }
+:root[data-theme="dark"] .nav-search-bar:hover { background: #31354a; }
+:root[data-theme="light"] .nav-search-bar { background: #eef0f8; color: #7b82a8; }
+:root[data-theme="light"] .nav-search-bar:hover { background: #e5e8f2; }
+
+.nav-search-icon { flex-shrink: 0; opacity: 0.75; }
+
+.nav-search-placeholder { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 450; }
 
 .screen-title {
   font-size: 1.125rem;
