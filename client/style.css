@@ -284,16 +284,23 @@ body {
 .home-header .nav-search-bar { flex: 1; }
 .home-header #user-nav { display: flex; align-items: center; gap: 8px; }
 
-.btn-new-class-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.home-select-btn {
+  font-size: 0.8125rem;
+  font-weight: 500;
   flex-shrink: 0;
 }
+.home-new-class-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+}
+@media (max-width: 500px) { .home-new-class-label { display: none; } }
 
 /* "Lớp của bạn" section heading above the class grid */
 .home-section-title {
