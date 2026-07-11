@@ -1221,7 +1221,7 @@ function renderLessons() {
           '</div>' +
           (isDue ? '<span class="due-badge">' + dueCount + ' due</span>' : '') +
           '<span class="format-badge ' + lesson.format + '">' +
-            (lesson.format === "term-def" ? "Term↔Def" : lesson.format === "mcq" ? "MCQ" : lesson.format === "true-false" ? "True/False" : "Image↔Def") +
+            (lesson.format === "term-def" ? "Thẻ học" : lesson.format === "mcq" ? "MCQ" : lesson.format === "true-false" ? "True/False" : "Image↔Def") +
           '</span>' +
           (state.selectMode
             ? ''
@@ -1652,6 +1652,8 @@ function openLesson(lessonId) {
   state.currentLesson = lesson;
   document.getElementById("lesson-detail-title").textContent = lesson.title;
   document.getElementById("btn-bulk-add").style.display = lesson.format === "image-def" ? "none" : "";
+  var _countBadge = document.getElementById("lesson-card-count");
+  if (_countBadge) _countBadge.classList.add("hidden");
   setCardSelectMode(false); // resets state + toolbar; renderCards() below handles the re-render
   renderCards();
   showScreen("lesson");
@@ -1663,14 +1665,17 @@ function renderCards() {
   store.getCards(state.currentLesson.id).then(function(cards) {
     var list = document.getElementById("card-list");
     var empty = document.getElementById("empty-lesson");
+    var countBadge = document.getElementById("lesson-card-count");
     list.innerHTML = "";
     if (cards.length === 0) {
       empty.classList.remove("hidden");
       list.classList.add("hidden");
+      if (countBadge) { countBadge.textContent = "0 cards"; countBadge.classList.remove("hidden"); }
       return;
     }
     empty.classList.add("hidden");
     list.classList.remove("hidden");
+    if (countBadge) { countBadge.textContent = cards.length + " card" + (cards.length !== 1 ? "s" : ""); countBadge.classList.remove("hidden"); }
     var attemptsRaw = IS_SERVER ? [] : JSON.parse(localStorage.getItem("fc-attempts") || "[]");
     cards.forEach(function(card, i) {
       var item = document.createElement("div");
@@ -2018,6 +2023,7 @@ document.getElementById("btn-save-card-mcq").addEventListener("click", function(
 });
 
 document.getElementById("btn-add-card").addEventListener("click", openAddCard);
+document.getElementById("btn-empty-add-card").addEventListener("click", openAddCard);
 
 /* ============================
    TRUE/FALSE CARD MODAL
@@ -2171,6 +2177,8 @@ function openBulkAdd() {
   document.getElementById("modal-bulk-title").textContent = "Bulk Add Cards";
   document.getElementById("bulk-input").value = "";
   document.getElementById("bulk-preview").innerHTML = "";
+  var errEl = document.getElementById("bulk-error");
+  if (errEl) errEl.classList.add("hidden");
   var hint = format === "term-def"
     ? "One card per line: term | definition\nSupports LaTeX: $\\hat{\\beta}$ or $$\\sum_{i=1}^n x_i$$"
     : format === "true-false"
@@ -2187,7 +2195,12 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
   var raw    = document.getElementById("bulk-input").value;
   var format = state.currentLesson ? state.currentLesson.format : "term-def";
   var cards  = format === "term-def" ? parseBulkTermDef(raw) : format === "true-false" ? parseBulkTF(raw) : parseBulkMCQ(raw);
-  if (cards.length === 0) { alert("No valid cards found. Check the format."); return; }
+  var errEl  = document.getElementById("bulk-error");
+  if (cards.length === 0) {
+    if (errEl) { errEl.textContent = "No valid cards found. Check the format."; errEl.classList.remove("hidden"); }
+    return;
+  }
+  if (errEl) errEl.classList.add("hidden");
   var withLesson = cards.map(function(c) {
     return { lessonId: state.currentLesson.id, format: c.format, data: c.data };
   });
@@ -2261,12 +2274,23 @@ function setPillGroup(groupId, value) {
 }
 
 // Pill group click handlers
+var FILTER_HINTS = {
+  all:      "Học tất cả thẻ",
+  due:      "Chỉ thẻ đến hạn ôn tập (SRS)",
+  learning: "Thẻ chưa thuộc / đang học",
+  hard:     "Thẻ khó được ưu tiên đầu tiên"
+};
+
 ["setup-count","setup-filter","setup-mode","setup-order"].forEach(function(groupId) {
   document.getElementById(groupId).addEventListener("click", function(e) {
     var pill = e.target.closest(".pill");
     if (!pill) return;
     this.querySelectorAll(".pill").forEach(function(p) { p.classList.remove("active"); });
     pill.classList.add("active");
+    if (groupId === "setup-filter") {
+      var hint = document.getElementById("setup-filter-hint");
+      if (hint) hint.textContent = FILTER_HINTS[pill.dataset.value] || "";
+    }
   });
 });
 
@@ -3285,6 +3309,8 @@ function renderAnalytics() {
   var errEl  = document.getElementById("analytics-error");
   loadEl.classList.remove("hidden");
   errEl.classList.add("hidden");
+  var exportBtn = document.getElementById("btn-analytics-export");
+  if (exportBtn) exportBtn.disabled = true;
   ["analytics-heatmap-wrap","analytics-trend-wrap","analytics-srs-wrap","analytics-lesson-wrap"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
@@ -3295,6 +3321,9 @@ function renderAnalytics() {
     renderWeeklyTrend(d.weeklyTrend, document.getElementById("analytics-trend-wrap"));
     renderSrsDistribution(srs, document.getElementById("analytics-srs-wrap"));
     renderLessonBreakdown(d.lessonBreakdown);
+    var totalAttempts = (d.lessonBreakdown || []).reduce(function(sum, l) { return sum + (l.total_attempts || 0); }, 0);
+    var exportBtn2 = document.getElementById("btn-analytics-export");
+    if (exportBtn2) exportBtn2.disabled = totalAttempts === 0;
   }).catch(function() {
     loadEl.classList.add("hidden");
     errEl.classList.remove("hidden");
@@ -3516,7 +3545,7 @@ function renderBulkImportPreview(raw) {
     var header = document.createElement("div");
     header.className = "bi-lesson-header";
     var badge = '<span class="format-badge ' + section.format + '" style="margin-left:6px">' +
-      (section.format === "term-def" ? "Term↔Def" : section.format === "true-false" ? "True/False" : "MCQ") + '</span>';
+      (section.format === "term-def" ? "Thẻ học" : section.format === "true-false" ? "True/False" : "MCQ") + '</span>';
     header.innerHTML = escHtml(section.title) + badge +
       '<span class="bi-lesson-count">' + section.cards.length + ' card' +
       (section.cards.length !== 1 ? 's' : '') + '</span>';

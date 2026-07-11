@@ -167,6 +167,24 @@
     <button class="btn btn-sm btn-ghost" id="btn-select-classes-cancel">Cancel</button>
     <button class="btn btn-sm btn-primary" id="btn-study-classes" disabled>Study</button>
   </div>
+  <div class="lesson-sort-bar">
+    <span class="home-section-title">Lớp của bạn</span>
+    <div class="sort-controls">
+      <label class="sort-label" for="class-sort-select">Sort by</label>
+      <select id="class-sort-select" class="sort-select">
+        <option value="level">Level</option>
+        <option value="name">Name (A–Z)</option>
+        <option value="due_count">Due count</option>
+        <option value="date_added">Date added</option>
+      </select>
+      <button id="class-sort-dir" class="sort-dir-btn" title="Toggle sort direction">↑</button>
+    </div>
+  </div>
+  <div id="class-list" class="class-grid"></div>
+  <div id="empty-home" class="empty-state hidden">
+    <div class="empty-icon">📚</div>
+    <p>No classes yet. Create your first class to get started.</p>
+  </div>
   <div id="home-charts-section" class="hidden">
     <div id="home-streak-card" class="dash-streak-card"></div>
     <h3 class="dash-section-label">Overview</h3>
@@ -185,24 +203,6 @@
         <div id="home-srs-wrap"></div>
       </div>
     </div>
-  </div>
-  <div class="lesson-sort-bar">
-    <span class="home-section-title">Lớp của bạn</span>
-    <div class="sort-controls">
-      <label class="sort-label" for="class-sort-select">Sort by</label>
-      <select id="class-sort-select" class="sort-select">
-        <option value="level">Level</option>
-        <option value="name">Name (A–Z)</option>
-        <option value="due_count">Due count</option>
-        <option value="date_added">Date added</option>
-      </select>
-      <button id="class-sort-dir" class="sort-dir-btn" title="Toggle sort direction">↑</button>
-    </div>
-  </div>
-  <div id="class-list" class="class-grid"></div>
-  <div id="empty-home" class="empty-state hidden">
-    <div class="empty-icon">📚</div>
-    <p>No classes yet. Create your first class to get started.</p>
   </div>
   <div id="shared-with-me-section" class="hidden">
     <h3 class="section-heading">Shared with me</h3>
@@ -267,7 +267,7 @@
       <div id="analytics-srs-wrap"></div>
     </div>
   </div>
-  <h3 class="dash-section-label">Lesson Accuracy (worst first)</h3>
+  <h3 class="dash-section-label">Lesson Accuracy</h3>
   <div id="analytics-lesson-wrap" class="analytics-lesson-list"></div>
 </div>
 
@@ -323,6 +323,7 @@
   <header class="app-header">
     <button class="btn btn-ghost back-btn" id="btn-lesson-back">← Back</button>
     <h2 id="lesson-detail-title" class="screen-title"></h2>
+    <span id="lesson-card-count" class="lesson-count-badge hidden"></span>
     <div class="header-actions">
       <button class="btn btn-ghost" id="btn-select-cards">☑ Select</button>
       <div class="dropdown-wrap">
@@ -345,6 +346,7 @@
   <div id="empty-lesson" class="empty-state hidden">
     <div class="empty-icon">🃏</div>
     <p>No cards yet. Add cards to start studying.</p>
+    <button class="btn btn-primary" id="btn-empty-add-card">+ Add Card</button>
   </div>
 </div>
 
@@ -373,6 +375,7 @@
         <button class="pill" data-value="learning">Still Learning</button>
         <button class="pill" data-value="hard">Hard First</button>
       </div>
+      <p class="setup-filter-hint" id="setup-filter-hint">Học tất cả thẻ</p>
     </div>
     <div class="setup-section">
       <label class="setup-label">Mode</label>
@@ -404,7 +407,7 @@
 <!-- ===== SCREEN: Flashcard Study ===== -->
 <div id="screen-flashcard" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-fc-back">✕</button>
+    <button class="btn btn-ghost back-btn" id="btn-fc-back" title="Thoát phiên học">← Thoát</button>
     <div class="fc-progress-wrap">
       <span id="fc-progress-text">1 / 10</span>
       <div class="progress-bar"><div id="fc-progress-fill" class="progress-fill"></div></div>
@@ -549,7 +552,7 @@
       <label class="form-label">Name</label>
       <input type="text" id="class-name-input" class="form-input" placeholder="e.g. Machine Learning">
       <label class="form-label">Level <span class="form-label-hint">(optional — for sorting)</span></label>
-      <input type="number" id="class-level-input" class="form-input" placeholder="e.g. 1, 2, 3…" min="1" max="999" style="width:120px">
+      <input type="number" id="class-level-input" class="form-input" placeholder="Số thứ tự sắp xếp (vd: 1, 2, 3)" min="1" max="999" style="width:180px">
       <label class="form-label">Color</label>
       <div class="color-picker" id="color-picker"></div>
       <label class="form-label">Icon</label>
@@ -698,6 +701,7 @@
     </div>
     <div class="modal-body">
       <p class="form-hint" id="bulk-hint"></p>
+      <div id="bulk-error" class="auth-error hidden"></div>
       <textarea id="bulk-input" class="form-textarea" rows="10" placeholder="Paste cards here..."></textarea>
       <div id="bulk-preview" class="bulk-preview"></div>
     </div>
@@ -903,7 +907,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
     <div class="search-input-wrap">
       <span class="search-icon-prefix" aria-hidden="true">🔍</span>
       <input type="text" id="search-input" class="search-input"
-        placeholder="Search classes, lessons, cards…"
+        placeholder="Tìm lớp, bài học, thẻ…"
         autocomplete="off" spellcheck="false"
         aria-label="Search query" aria-autocomplete="list" aria-controls="search-results">
       <kbd class="search-esc-hint">Esc</kbd>

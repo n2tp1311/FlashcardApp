@@ -157,7 +157,7 @@ body {
   font-size: 1rem;
   cursor: pointer;
   color: var(--text2);
-  padding: 4px 6px;
+  padding: 10px;
   border-radius: 6px;
   line-height: 1;
 }
@@ -216,7 +216,8 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 12px;
+  padding: 10px 16px;
+  min-height: 44px;
   border-radius: 7px;
   cursor: pointer;
   font-size: 0.85rem;
@@ -228,6 +229,13 @@ body {
 }
 .sidebar-class-item:hover { background: var(--bg2, #f0f2f7); color: var(--text); }
 .sidebar-class-icon { flex-shrink: 0; font-size: 1rem; }
+
+.setup-filter-hint {
+  font-size: 0.78rem;
+  color: var(--text2);
+  margin-top: 6px;
+  min-height: 1.2em;
+}
 .sidebar-class-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 
 .sidebar-new-class {
@@ -236,6 +244,7 @@ body {
   gap: 8px;
   margin: 8px 10px 0;
   padding: 7px 12px;
+  min-height: 44px;
   border-radius: 7px;
   cursor: pointer;
   font-size: 0.85rem;
@@ -286,7 +295,7 @@ body {
   border: none;
   cursor: pointer;
   color: var(--text2);
-  padding: 6px;
+  padding: 12px;
   border-radius: 6px;
   display: none;
   flex-shrink: 0;
@@ -308,6 +317,7 @@ body {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
+  min-height: 44px;
   border-radius: 8px;
   flex-shrink: 0;
   font-size: 0.875rem;
@@ -376,6 +386,7 @@ body {
   gap: 10px;
   flex: 1;
   min-width: 0;
+  min-height: 44px;
   background: #eef0f8;
   border: none;
   border-radius: 50px;
@@ -722,6 +733,17 @@ body {
   .select-count { margin-right: 0; width: 100%; order: 3; }
 }
 
+/* Lesson screen card count badge */
+.lesson-count-badge {
+  font-size: 0.75rem;
+  color: var(--text2);
+  background: var(--surface2);
+  border-radius: 20px;
+  padding: 2px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* ============================
    CARD LIST
    ============================ */
@@ -880,6 +902,7 @@ body {
 .form-input {
   width: 100%;
   padding: 9px 12px;
+  min-height: 44px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
@@ -1856,6 +1879,8 @@ code {
   padding: 4px;
   border-radius: 50%;
   transition: opacity 0.15s;
+  min-width: 44px;
+  min-height: 44px;
 }
 .user-avatar-btn:hover { opacity: 0.85; }
 
@@ -1907,6 +1932,11 @@ code {
   #btn-select-classes { display: none; }
   /* Show the ☑ Select item inside the ⋮ dropdown */
   .home-select-mobile { display: flex !important; }
+}
+
+/* M10: single column class grid on small phones */
+@media (max-width: 480px) {
+  .class-grid { grid-template-columns: 1fr; }
 }
 /* On desktop, hide the ☑ Select item from the ⋮ dropdown (it lives in the header) */
 .home-select-mobile { display: none; }
@@ -2345,11 +2375,16 @@ code {
 }
 
 .btn-key-hint {
-  font-size: 0.6875rem;
+  font-size: 0.65rem;
   font-weight: 400;
-  opacity: 0.65;
+  opacity: 0.5;
+  color: var(--text3);
   margin-left: 4px;
   font-family: monospace;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 3px;
 }
 
 .keymap-modal {
@@ -2534,7 +2569,7 @@ code {
   font-size: 1rem;
   color: var(--text);
   outline: none;
-  padding: 0;
+  padding: 12px 0;
 }
 
 .search-input::placeholder { color: var(--text2); }
