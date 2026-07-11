@@ -76,23 +76,62 @@
 </div>
 
 <!-- ===== SCREEN: Home (Class List) ===== -->
-<div id="screen-home" class="screen">
+<div id="screen-home" class="screen screen-with-sidebar">
+  <!-- ===== SIDEBAR ===== -->
+  <nav id="sidebar" class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-icon">🗃️</span>
+      <span class="sidebar-brand-text">Flashcards</span>
+    </div>
+    <ul class="sidebar-nav-list">
+      <li class="sidebar-nav-item sidebar-nav-active" id="sidebar-home-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Trang chủ
+      </li>
+      <li class="sidebar-nav-item hidden" id="sidebar-dashboard-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </li>
+      <li class="sidebar-nav-item hidden" id="sidebar-analytics-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </li>
+    </ul>
+    <div class="sidebar-section-label hidden" id="sidebar-classes-label">Lớp của bạn</div>
+    <ul id="sidebar-class-list" class="sidebar-class-list"></ul>
+    <button class="sidebar-new-class hidden" id="sidebar-btn-new-class">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Lớp mới
+    </button>
+  </nav>
+  <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
+
+  <div class="home-main">
   <div id="ptr-indicator" class="ptr-indicator" aria-hidden="true">
     <div class="ptr-circle"></div>
     <span class="ptr-label">Pull to refresh</span>
   </div>
-  <header class="app-header">
-    <h1 class="app-title">Flashcards</h1>
+  <!-- ===== HOME HEADER ===== -->
+  <header class="home-header">
+    <button class="btn-hamburger" id="btn-sidebar-toggle" aria-label="Toggle sidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
     <div class="nav-search-bar" id="btn-search" role="button" tabindex="0" title="Search (Ctrl+K)" aria-label="Search">
       <svg class="nav-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span class="nav-search-placeholder">Tìm thẻ ghi nhớ</span>
     </div>
     <div id="user-nav" class="user-nav hidden">
+      <button class="btn btn-ghost" id="btn-select-classes" title="Select Classes">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="4" height="4" rx="1"/><rect x="3" y="12" width="4" height="4" rx="1"/><rect x="3" y="19" width="4" height="4" rx="1"/><line x1="11" y1="7" x2="21" y2="7"/><line x1="11" y1="14" x2="21" y2="14"/><line x1="11" y1="21" x2="21" y2="21"/></svg>
+      </button>
+      <button class="btn btn-primary btn-new-class-circle" id="btn-new-class" title="New Class">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
       <div class="dropdown-wrap">
-        <button class="user-avatar-btn" id="btn-user-menu">
+        <button class="user-avatar-btn" id="btn-user-menu" title="Account">
           <img id="user-avatar-img" class="user-avatar hidden" src="" alt="">
+          <span id="user-initial-circle" class="user-initial-circle"></span>
           <span id="user-name-display" class="user-name"></span>
-          <span class="user-chevron">▾</span>
         </button>
         <div class="dropdown-menu dropdown-menu-right hidden" id="user-dropdown-menu">
           <div class="dropdown-header" id="user-dropdown-email"></div>
@@ -105,10 +144,11 @@
         </div>
       </div>
     </div>
-    <button class="btn btn-ghost nav-inline-btn hidden" id="btn-dashboard-inline">📊 Dashboard</button>
-    <button class="btn btn-ghost nav-inline-btn hidden" id="btn-analytics-inline">📈 Analytics</button>
-    <div class="dropdown-wrap">
-      <button class="btn btn-ghost btn-icon" id="btn-home-menu" title="More options">⋮</button>
+    <!-- Keep for compatibility, hidden always -->
+    <button class="btn btn-ghost nav-inline-btn hidden" id="btn-dashboard-inline" style="display:none"></button>
+    <button class="btn btn-ghost nav-inline-btn hidden" id="btn-analytics-inline" style="display:none"></button>
+    <div class="dropdown-wrap" style="display:none">
+      <button class="btn btn-ghost btn-icon" id="btn-home-menu">⋮</button>
       <div class="dropdown-menu dropdown-menu-right hidden" id="home-dropdown-menu">
         <button class="dropdown-item home-select-mobile" id="btn-home-select">☑ Select Classes</button>
         <div class="dropdown-divider home-select-mobile"></div>
@@ -116,9 +156,9 @@
         <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-analytics">📈 Analytics</button>
       </div>
     </div>
-    <button class="btn btn-ghost" id="btn-select-classes">☑ Select</button>
-    <button class="btn btn-primary" id="btn-new-class">+ New Class</button>
   </header>
+
+  <!-- ===== HOME CONTENT ===== -->
   <div id="home-select-bar" class="select-bar hidden">
     <label class="select-all-label">
       <input type="checkbox" id="select-all-classes"> Select all
@@ -147,14 +187,17 @@
     </div>
   </div>
   <div class="lesson-sort-bar">
-    <label class="sort-label" for="class-sort-select">Sort by</label>
-    <select id="class-sort-select" class="sort-select">
-      <option value="level">Level</option>
-      <option value="name">Name (A–Z)</option>
-      <option value="due_count">Due count</option>
-      <option value="date_added">Date added</option>
-    </select>
-    <button id="class-sort-dir" class="sort-dir-btn" title="Toggle sort direction">↑</button>
+    <span class="home-section-title">Lớp của bạn</span>
+    <div class="sort-controls">
+      <label class="sort-label" for="class-sort-select">Sort by</label>
+      <select id="class-sort-select" class="sort-select">
+        <option value="level">Level</option>
+        <option value="name">Name (A–Z)</option>
+        <option value="due_count">Due count</option>
+        <option value="date_added">Date added</option>
+      </select>
+      <button id="class-sort-dir" class="sort-dir-btn" title="Toggle sort direction">↑</button>
+    </div>
   </div>
   <div id="class-list" class="class-grid"></div>
   <div id="empty-home" class="empty-state hidden">
@@ -165,6 +208,7 @@
     <h3 class="section-heading">Shared with me</h3>
     <div id="shared-class-list" class="class-grid"></div>
   </div>
+  </div><!-- /.home-main -->
 </div>
 
 <!-- ===== SCREEN: Dashboard ===== -->

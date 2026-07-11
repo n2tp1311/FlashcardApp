@@ -111,8 +111,227 @@ body {
 
 .screen.active { display: flex; }
 
+/* ── Home screen: sidebar layout ─────────────────────────── */
+.screen-with-sidebar {
+  flex-direction: row;
+  padding: 0;
+  min-height: 100vh;
+  align-items: stretch;
+}
+
 /* ============================
-   HEADER
+   SIDEBAR
+   ============================ */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0 32px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px 24px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.sidebar-brand-icon { font-size: 1.5rem; }
+
+.sidebar-nav-list {
+  list-style: none;
+  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text2);
+  transition: background 0.12s, color 0.12s;
+  user-select: none;
+}
+.sidebar-nav-item:hover { background: var(--bg2, #f0f2f7); color: var(--text); }
+.sidebar-nav-item svg { flex-shrink: 0; opacity: 0.7; }
+.sidebar-nav-active { background: #eef0ff !important; color: #4f46e5 !important; }
+.sidebar-nav-active svg { opacity: 1; stroke: #4f46e5; }
+
+[data-theme="dark"] .sidebar-nav-active { background: #1e1b3a !important; color: #818cf8 !important; }
+[data-theme="dark"] .sidebar-nav-active svg { stroke: #818cf8; }
+
+.sidebar-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text2);
+  padding: 16px 20px 6px;
+}
+
+.sidebar-class-list {
+  list-style: none;
+  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar-class-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text2);
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-class-item:hover { background: var(--bg2, #f0f2f7); color: var(--text); }
+.sidebar-class-icon { flex-shrink: 0; font-size: 1rem; }
+.sidebar-class-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+
+.sidebar-new-class {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 10px 0;
+  padding: 7px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text2);
+  background: none;
+  border: none;
+  width: calc(100% - 20px);
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+.sidebar-new-class:hover { background: var(--bg2, #f0f2f7); color: var(--primary); }
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 9;
+}
+.sidebar-overlay.active { display: block; }
+
+/* ── Home main content ───────────────────────────────────── */
+.home-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 28px 80px;
+}
+
+/* ── Home header (replaces .app-header on home screen) ──── */
+.home-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 8;
+}
+
+.btn-hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text2);
+  padding: 6px;
+  border-radius: 6px;
+  display: none;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+.btn-hamburger:hover { background: var(--bg2); color: var(--text); }
+
+/* home header: search bar fills gap, user-nav right-aligned */
+.home-header .nav-search-bar { flex: 1; }
+.home-header #user-nav { display: flex; align-items: center; gap: 8px; }
+
+.btn-new-class-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* "Lớp của bạn" section heading above the class grid */
+.home-section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Mobile: sidebar hidden, hamburger visible ─────────── */
+@media (max-width: 767px) {
+  .screen-with-sidebar { flex-direction: column; }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 20;
+  }
+  .sidebar.sidebar-open { transform: translateX(0); }
+  .sidebar-overlay { display: block; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; position: fixed; }
+  .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+
+  .home-main { padding: 0 16px 80px; }
+  .btn-hamburger { display: flex; }
+  .home-header { position: sticky; top: 0; }
+}
+
+/* ============================
+   HEADER (other screens)
    ============================ */
 .app-header {
   display: flex;
@@ -1609,34 +1828,42 @@ code {
 .user-avatar-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition);
+  padding: 4px;
+  border-radius: 50%;
+  transition: opacity 0.15s;
 }
-.user-avatar-btn:hover { background: var(--surface2); }
+.user-avatar-btn:hover { opacity: 0.85; }
 
 .user-avatar {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.user-name {
-  font-size: 0.8125rem;
-  color: var(--text2);
-  font-weight: 500;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Circle with initial (shown when no photo) */
+.user-initial-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
 }
 
-.user-chevron { font-size: 0.625rem; color: var(--text2); }
+.user-name { display: none; } /* name shown in sidebar dropdown header only */
+
+.user-chevron { display: none; }
 
 /* ============================
    RESPONSIVE

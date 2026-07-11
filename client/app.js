@@ -927,6 +927,7 @@ function renderHome() {
   renderHomeCharts();
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
+    renderSidebarClasses(classes);
     classes = sortClasses(classes, state.currentClassSort, state.currentClassSortDir);
     document.getElementById("class-sort-select").value = state.currentClassSort;
     document.getElementById("class-sort-dir").textContent = state.currentClassSortDir === "desc" ? "↓" : "↑";
@@ -3961,10 +3962,15 @@ function initUserNav() {
   nav.classList.remove("hidden");
   document.getElementById("user-name-display").textContent = currentUser.name;
   document.getElementById("user-dropdown-email").textContent = currentUser.email || "";
+  var circle = document.getElementById("user-initial-circle");
+  if (circle) circle.textContent = (currentUser.name || "?")[0].toUpperCase();
   document.getElementById("btn-dashboard").classList.remove("hidden");
   document.getElementById("btn-analytics").classList.remove("hidden");
-  document.getElementById("btn-dashboard-inline").classList.remove("hidden");
-  document.getElementById("btn-analytics-inline").classList.remove("hidden");
+  // Sidebar server-only items
+  document.getElementById("sidebar-dashboard-link").classList.remove("hidden");
+  document.getElementById("sidebar-analytics-link").classList.remove("hidden");
+  document.getElementById("sidebar-classes-label").classList.remove("hidden");
+  document.getElementById("sidebar-btn-new-class").classList.remove("hidden");
   var linkBtn = document.getElementById("btn-link-google");
   if (linkBtn && window.APP_CONFIG && window.APP_CONFIG.googleEnabled) {
     linkBtn.classList.remove("hidden");
@@ -3973,6 +3979,59 @@ function initUserNav() {
   }
   loadUserPreferences();
 }
+
+function renderSidebarClasses(classes) {
+  var list = document.getElementById("sidebar-class-list");
+  if (!list) return;
+  list.innerHTML = "";
+  (classes || []).forEach(function(cls) {
+    var li = document.createElement("li");
+    li.className = "sidebar-class-item";
+    li.title = cls.name;
+    li.innerHTML =
+      '<span class="sidebar-class-icon">' + escHtml(cls.icon || "📚") + '</span>' +
+      '<span class="sidebar-class-name">' + escHtml(cls.name) + '</span>';
+    if (cls.due_count > 0) {
+      li.innerHTML += '<span class="due-badge" style="font-size:0.65rem;padding:1px 5px">' + cls.due_count + '</span>';
+    }
+    li.addEventListener("click", function() { closeSidebar(); openClass(cls.id); });
+    list.appendChild(li);
+  });
+}
+
+function openSidebar() {
+  document.getElementById("sidebar").classList.add("sidebar-open");
+  document.getElementById("sidebar-overlay").classList.add("active");
+}
+function closeSidebar() {
+  document.getElementById("sidebar").classList.remove("sidebar-open");
+  document.getElementById("sidebar-overlay").classList.remove("active");
+}
+
+(function initSidebar() {
+  document.getElementById("btn-sidebar-toggle").addEventListener("click", function() {
+    var sidebar = document.getElementById("sidebar");
+    if (sidebar.classList.contains("sidebar-open")) { closeSidebar(); } else { openSidebar(); }
+  });
+  document.getElementById("sidebar-overlay").addEventListener("click", closeSidebar);
+  document.getElementById("sidebar-home-link").addEventListener("click", function() {
+    closeSidebar();
+    renderHome();
+    showScreen("home");
+  });
+  document.getElementById("sidebar-dashboard-link").addEventListener("click", function() {
+    closeSidebar();
+    document.getElementById("btn-dashboard").click();
+  });
+  document.getElementById("sidebar-analytics-link").addEventListener("click", function() {
+    closeSidebar();
+    document.getElementById("btn-analytics").click();
+  });
+  document.getElementById("sidebar-btn-new-class").addEventListener("click", function() {
+    closeSidebar();
+    document.getElementById("btn-new-class").click();
+  });
+}());
 
 // Auth tab switching
 document.querySelectorAll(".auth-tab").forEach(function(tab) {
@@ -4185,8 +4244,7 @@ if (IS_SERVER && !currentUser) {
   initUserNav();
   if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
   if (IS_SERVER) document.getElementById("btn-analytics").style.display = "";
-  if (IS_SERVER) document.getElementById("btn-dashboard-inline").style.display = "";
-  if (IS_SERVER) document.getElementById("btn-analytics-inline").style.display = "";
+  // btn-dashboard-inline / btn-analytics-inline hidden via display:none (replaced by sidebar)
   renderSharedWithMe();
   restoreLastScreen();
 }
@@ -4857,9 +4915,11 @@ function injectKeyHints() {
     ["btn-fc-audio-front", "[P]"],
     ["btn-fc-audio-back",  "[P]"]
   ];
+  var iconOnlyBtns = { "btn-new-class": true, "btn-select-classes": true };
   hints.forEach(function(pair) {
     var btn = document.getElementById(pair[0]);
     if (!btn) return;
+    if (iconOnlyBtns[pair[0]]) return; // circle icon buttons — hint would clutter
     var span = document.createElement("span");
     span.className = "btn-key-hint";
     span.textContent = " " + pair[1];
