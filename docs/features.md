@@ -127,5 +127,15 @@
 - Recall mode: explanation shown in the reveal area after "Reveal Answer"
 - Server validates: if provided, must be a non-empty string
 
+## Global Search
+- Command-palette style modal opened by Ctrl/Cmd+K or the 🔍 button in the header
+- Searches classes, lessons, and cards simultaneously with a single debounced query (200ms)
+- Results grouped into three sections (Classes / Lessons / Cards), up to 5 per group
+- Match highlighted in blue within result titles; breadcrumb shows class name (lessons) or class › lesson (cards)
+- Card text extracted server-side via `json_extract` CASE expression covering all formats: term-def (term), mcq (question), true-false (statement), image-def (def)
+- Keyboard navigation: ArrowUp/Down to move, Enter to select, Escape to close; clicks also work
+- Selecting a class opens that class; selecting a lesson or card navigates to the lesson screen
+- Minimum 2-character query before any search fires; Escape and click-outside close the modal
+
 ## Recall Mode (removed)
 - Recall mode was removed; historical attempt records with `source='recall'` are preserved in the DB

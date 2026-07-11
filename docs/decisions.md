@@ -135,5 +135,13 @@ In card select mode, a guard `if (e.target.tagName === "INPUT") return` on the i
 ## 2026-06-19 — Variable MCQ choices: dynamic rows over static 5 fields
 MCQ cards now support 1–4 distractors (2–5 total choices) instead of a fixed 3. Two UI approaches were considered: (A) 5 static input fields with the first required and others optional, (B) dynamic rows with add/remove buttons starting from 1. Chose B: MCQ authoring is deliberate, not a fast-input flow, so clean UX (only the fields you need) outweighs the small amount of extra JS. Server validates `distractors.length` is 1–4 on both single and bulk card endpoints. `clearDistractorList()` caps at 4 rows on load to guard against corrupt DB data.
 
+## 2026-07-11 — Search uses command-palette pattern (standalone overlay) over filter-in-place
+
+Two industry patterns were considered for global search: (A) filter-in-place — search bar in the main nav that filters the current list in real time; (B) command palette — modal overlay opened by Ctrl/Cmd+K that searches all content types simultaneously. Chose B because (A) only works on the currently visible screen and can't reach across classes/lessons/cards in one step; the command palette pattern (Linear, Notion, VS Code) is better suited for navigating a hierarchical content tree without knowing exactly where something lives. The standalone modal also avoids adding persistent nav space for a feature most users won't use every interaction.
+
+## 2026-07-11 — Card text extracted server-side via CASE/json_extract rather than full-scan in client
+
+The search endpoint needed to search card text across four formats (term-def, mcq, true-false, image-def), each storing text in a different JSON field. Options: (A) fetch all card JSON rows and parse in JS; (B) use a stored/generated column; (C) use a CASE expression in the WHERE/SELECT with `json_extract`. Chose C: it runs a single SQL pass with no extra storage, no migration, and no application-layer JSON parsing. The CASE expression is duplicated between the SELECT alias and the WHERE COALESCE — a known SQLite limitation (no reference to SELECT aliases in WHERE), but SQLite query planning computes it efficiently.
+
 ## 2026-06-18 — Multi-agent development workflow adopted
 Established a three-role agent loop: Planner (Plan subagent) produces step-by-step implementation specs; Executor (main Claude session) implements them; Reviewer (general-purpose subagent) audits the diff for correctness and security. A fourth Research agent (general-purpose with WebSearch) is spun up on-demand for evidence gathering. This separation prevents context contamination between planning and implementation and gives each role a clean starting point.
