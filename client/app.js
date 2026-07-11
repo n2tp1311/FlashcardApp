@@ -4599,7 +4599,11 @@ function selectSearchResult(type, data) {
   var modalEl = document.getElementById("modal-search");
   var inputEl = document.getElementById("search-input");
 
-  document.getElementById("btn-search").addEventListener("click", openSearchModal);
+  var navBar = document.getElementById("btn-search");
+  navBar.addEventListener("click", openSearchModal);
+  navBar.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSearchModal(); }
+  });
 
   modalEl.addEventListener("click", function(e) {
     if (e.target === modalEl) closeSearchModal();

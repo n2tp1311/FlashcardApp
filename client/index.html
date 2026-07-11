@@ -83,7 +83,11 @@
   </div>
   <header class="app-header">
     <h1 class="app-title">Flashcards</h1>
-    <button class="btn btn-ghost btn-icon" id="btn-search" title="Search (Ctrl+K)">🔍</button>
+    <div class="nav-search-bar" id="btn-search" role="button" tabindex="0" title="Search (Ctrl+K)" aria-label="Search">
+      <span class="nav-search-icon">🔍</span>
+      <span class="nav-search-placeholder">Search…</span>
+      <kbd class="nav-search-kbd">⌘K</kbd>
+    </div>
     <div id="user-nav" class="user-nav hidden">
       <div class="dropdown-wrap">
         <button class="user-avatar-btn" id="btn-user-menu">
