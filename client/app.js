@@ -4964,3 +4964,127 @@ injectKeyHints();
     }
   }, { passive: true });
 }());
+
+// Swipe gestures: flashcard left/right, edge back, search modal dismiss
+(function initSwipeGestures() {
+  var SWIPE_THRESHOLD = 75;
+  var MAX_ROT = 18;
+
+  // ─── 1. Flashcard: right = known, left = learning ─────────────────────
+  var scene = document.getElementById("fc-scene");
+  var fcStartX, fcStartY, fcDragging = false, fcDx = 0;
+
+  var knownHint = document.createElement("div");
+  knownHint.className = "fc-swipe-hint fc-swipe-known";
+  knownHint.textContent = "✓ Biết rồi";
+
+  var learnHint = document.createElement("div");
+  learnHint.className = "fc-swipe-hint fc-swipe-learning";
+  learnHint.textContent = "✗ Học lại";
+
+  scene.appendChild(knownHint);
+  scene.appendChild(learnHint);
+
+  scene.addEventListener("touchstart", function(e) {
+    fcStartX = e.touches[0].clientX;
+    fcStartY = e.touches[0].clientY;
+    fcDragging = false;
+    fcDx = 0;
+  }, { passive: true });
+
+  scene.addEventListener("touchmove", function(e) {
+    var dx = e.touches[0].clientX - fcStartX;
+    var dy = e.touches[0].clientY - fcStartY;
+    if (!fcDragging) {
+      if (Math.abs(dx) < 8) return;
+      if (Math.abs(dy) > Math.abs(dx)) return;
+      fcDragging = true;
+    }
+    fcDx = dx;
+    var rot = (dx / (window.innerWidth * 0.5)) * MAX_ROT;
+    scene.style.transition = "none";
+    scene.style.transform = "translateX(" + dx + "px) rotate(" + rot + "deg)";
+    var pct = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+    if (dx > 0) {
+      knownHint.style.opacity = pct;
+      learnHint.style.opacity = 0;
+    } else {
+      learnHint.style.opacity = pct;
+      knownHint.style.opacity = 0;
+    }
+  }, { passive: true });
+
+  scene.addEventListener("touchend", function() {
+    if (!fcDragging) return;
+    fcDragging = false;
+    knownHint.style.opacity = 0;
+    learnHint.style.opacity = 0;
+    var dx = fcDx;
+    fcDx = 0;
+    if (dx > SWIPE_THRESHOLD) {
+      scene.style.transition = "transform 0.25s ease-out";
+      scene.style.transform = "translateX(" + (window.innerWidth + 100) + "px) rotate(" + MAX_ROT + "deg)";
+      setTimeout(function() {
+        scene.style.transition = "none";
+        scene.style.transform = "";
+        document.getElementById("btn-fc-known").click();
+      }, 250);
+    } else if (dx < -SWIPE_THRESHOLD) {
+      scene.style.transition = "transform 0.25s ease-out";
+      scene.style.transform = "translateX(-" + (window.innerWidth + 100) + "px) rotate(-" + MAX_ROT + "deg)";
+      setTimeout(function() {
+        scene.style.transition = "none";
+        scene.style.transform = "";
+        document.getElementById("btn-fc-learning").click();
+      }, 250);
+    } else {
+      scene.style.transition = "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)";
+      scene.style.transform = "";
+    }
+  });
+
+  // ─── 2. Edge back swipe (left edge → swipe right → go back) ───────────
+  var EDGE_ZONE = 30;
+  var EDGE_THRESHOLD = 90;
+  var edgeStartX, edgeStartY, edgeActive = false;
+
+  document.addEventListener("touchstart", function(e) {
+    edgeStartX = e.touches[0].clientX;
+    edgeStartY = e.touches[0].clientY;
+    edgeActive = edgeStartX < EDGE_ZONE;
+  }, { passive: true });
+
+  document.addEventListener("touchend", function(e) {
+    if (!edgeActive) return;
+    edgeActive = false;
+    if (getActiveScreen() === "flashcard") return;
+    var dx = e.changedTouches[0].clientX - edgeStartX;
+    var dy = e.changedTouches[0].clientY - edgeStartY;
+    if (dx > EDGE_THRESHOLD && Math.abs(dy) < dx * 0.6) {
+      var backMap = {
+        "class": "btn-class-back",
+        "lesson": "btn-lesson-back",
+        "quiz": "btn-quiz-back",
+        "stats": "btn-stats-back",
+        "dashboard": "btn-dashboard-back"
+      };
+      var btn = backMap[getActiveScreen()];
+      if (btn) {
+        var el = document.getElementById(btn);
+        if (el) el.click();
+      }
+    }
+  }, { passive: true });
+
+  // ─── 3. Search modal: swipe down to close ─────────────────────────────
+  var modal = document.getElementById("search-modal");
+  var modalStartY;
+  if (modal) {
+    modal.addEventListener("touchstart", function(e) {
+      modalStartY = e.touches[0].clientY;
+    }, { passive: true });
+    modal.addEventListener("touchend", function(e) {
+      if (e.changedTouches[0].clientY - modalStartY > 80) closeSearchModal();
+    }, { passive: true });
+  }
+}());

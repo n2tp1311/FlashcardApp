@@ -1135,6 +1135,35 @@ code {
   height: 280px;
   flex-shrink: 0;
   cursor: pointer;
+  touch-action: pan-y;
+  position: relative;
+}
+
+.fc-swipe-hint {
+  position: absolute;
+  top: 50%;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 10;
+  border: 3px solid currentColor;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.fc-swipe-known {
+  left: 16px;
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.12);
+  transform: translateY(-50%) rotate(-15deg);
+}
+.fc-swipe-learning {
+  right: 16px;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.12);
+  transform: translateY(-50%) rotate(15deg);
 }
 
 .fc-card {
