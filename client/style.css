@@ -148,7 +148,8 @@ body {
   border-bottom: 1px solid var(--border);
   margin-bottom: 12px;
 }
-.sidebar-brand-icon { font-size: 1.5rem; }
+.sidebar-brand-logo { border-radius: 8px; flex-shrink: 0; }
+.sidebar-brand-text { font-size: 1.1rem; letter-spacing: -0.02em; }
 .sidebar-close-btn {
   display: none;
   margin-left: auto;
@@ -1708,14 +1709,20 @@ code {
   gap: 16px;
 }
 
-.auth-logo { font-size: 3rem; }
+.auth-logo { line-height: 0; }
+.auth-logo img { display: block; border-radius: 14px; }
 
 .auth-title {
   font-size: 1.625rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   color: var(--text);
   margin: 0;
 }
+
+/* Wordmark weight-contrast (used in auth title + sidebar brand) */
+.brand-flash { font-weight: 800; color: var(--text); }
+.brand-cards { font-weight: 300; color: var(--primary); }
 
 .auth-tabs {
   display: flex;
