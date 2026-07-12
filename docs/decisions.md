@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-07-12 — Flashcard swipe: translate `#fc-scene`, not `#fc-card`
+
+The swipe drag transform (`translateX + rotate`) is applied to `#fc-scene` (the wrapper) rather than `#fc-card` (which carries `transform-style: preserve-3d` and the flip `rotateY(180deg)`). Applying translateX directly to `.fc-card` would compose with the flip transform, requiring separate tracking of the current flip state to avoid clobbering `rotateY`. By moving the parent scene instead, the 3D flip mechanism inside the card is untouched regardless of drag position. Alternative: keep both transforms on `.fc-card` using a matrix composition — rejected for complexity and the risk of flip-state drift on snap-back.
+
+## 2026-07-12 — Swipe hints are DOM nodes injected into `#fc-scene`, not pseudo-elements
+
+`✓ Biết rồi` and `✗ Học lại` label nodes are appended to `#fc-scene` at init time (not created per-swipe). They are always in the DOM with `opacity: 0` and `pointer-events: none`. This avoids repeated DOM creation/removal during gesture and keeps `opacity` directly settable from JS (pseudo-elements cannot be animated from JS without CSS custom properties). Alternative: CSS `::before`/`::after` on `.fc-scene` with a `--hint-opacity` var — rejected because two separate custom properties (one per side) plus a `data-dragging-dir` attribute still requires JS involvement; DOM nodes are simpler and no less performant.
+
 ## 2026-07-07 — Inline nav buttons use CSS media query + `.hidden` class layering
 
 Dashboard and Analytics in the home header use two overlapping hide mechanisms: the `hidden` class (removed after login via `initUserNav()`) and a `@media (min-width:680px)` CSS rule that switches `.nav-inline-btn` from `display:none` to `display:inline-flex`. This means the buttons start hidden (no flash of content before login), and the responsive behavior is pure CSS with no JS resize listener. On narrow screens the same buttons in the ⋮ dropdown (`.dash-analytics-dropdown`) are suppressed by `display:none !important` from the same media query, so the items move between inline and dropdown without JS. Alternative: toggle classes in a JS `resize` handler — rejected because CSS media queries are simpler, instant, and avoid layout-query overhead.

@@ -137,5 +137,15 @@
 - Selecting a class opens that class; selecting a lesson or card navigates to the lesson screen
 - Minimum 2-character query before any search fires; Escape and click-outside close the modal
 
+## Mobile PWA & Swipe Gestures
+- PWA icons: `apple-touch-icon.png` (180px, full-bleed for iOS), `icon-192.png`, `icon-512.png` generated from logo SVG via Playwright at build time
+- `manifest.json` with `display: standalone`, `theme_color: #4338ca`, `background_color: #1a1744`
+- Meta tags: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `theme-color`, `apple-touch-icon`
+- Flashcard swipe: drag `#fc-scene` horizontally; right swipe (> 75px) = Know It, left swipe = Learning; card flies off screen with rotation then triggers the mark; short swipe (< 75px) snaps back with spring animation
+- Swipe hint labels: `✓ Biết rồi` (green, left side) and `✗ Học lại` (red, right side) fade in as drag distance grows toward threshold; rotate ±15° like Tinder labels
+- `touch-action: pan-y` on `.fc-scene` — browser owns vertical scroll, JS owns horizontal swipe
+- Edge back swipe: start from x < 30px, swipe right > 90px → triggers back button for current screen; excluded on flashcard screen (handled by card swipe instead)
+- Search modal: swipe down > 80px closes it
+
 ## Recall Mode (removed)
 - Recall mode was removed; historical attempt records with `source='recall'` are preserved in the DB
