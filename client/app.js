@@ -3950,8 +3950,9 @@ function initUserNav() {
   var circle = document.getElementById("user-initial-circle");
   if (circle) circle.textContent = (currentUser.name || "?")[0].toUpperCase();
   document.getElementById("btn-dashboard").classList.remove("hidden");
-  // Sidebar server-only items
+  // Sidebar items
   document.getElementById("sidebar-dashboard-link").classList.remove("hidden");
+  document.getElementById("sidebar-select-link").classList.remove("hidden");
   document.getElementById("sidebar-classes-label").classList.remove("hidden");
   document.getElementById("sidebar-btn-new-class").classList.remove("hidden");
   var linkBtn = document.getElementById("btn-link-google");
@@ -4006,6 +4007,10 @@ function closeSidebar() {
   document.getElementById("sidebar-dashboard-link").addEventListener("click", function() {
     closeSidebar();
     document.getElementById("btn-dashboard").click();
+  });
+  document.getElementById("sidebar-select-link").addEventListener("click", function() {
+    closeSidebar();
+    document.getElementById("btn-select-classes").click();
   });
   document.getElementById("sidebar-btn-new-class").addEventListener("click", function() {
     closeSidebar();
