@@ -5061,6 +5061,11 @@ injectKeyHints();
     var dx = e.changedTouches[0].clientX - edgeStartX;
     var dy = e.changedTouches[0].clientY - edgeStartY;
     if (dx > EDGE_THRESHOLD && Math.abs(dy) < dx * 0.6) {
+      var screen = getActiveScreen();
+      if (screen === "home") {
+        openSidebar();
+        return;
+      }
       var backMap = {
         "class": "btn-class-back",
         "lesson": "btn-lesson-back",
@@ -5068,7 +5073,7 @@ injectKeyHints();
         "stats": "btn-stats-back",
         "dashboard": "btn-dashboard-back"
       };
-      var btn = backMap[getActiveScreen()];
+      var btn = backMap[screen];
       if (btn) {
         var el = document.getElementById(btn);
         if (el) el.click();
