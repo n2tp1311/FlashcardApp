@@ -1956,7 +1956,7 @@ code {
    RESPONSIVE
    ============================ */
 @media (max-width: 600px) {
-  .screen { padding: 0 12px 60px; }
+  .screen { padding: env(safe-area-inset-top, 0px) 12px max(60px, calc(40px + env(safe-area-inset-bottom, 0px))); }
   .app-header { padding: 12px 0; gap: 8px; }
   .app-title { font-size: 1.125rem; }
   .fc-scene { height: 220px; }
