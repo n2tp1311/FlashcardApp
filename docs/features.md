@@ -13,7 +13,7 @@
 - Create/edit/delete classes (icon, color)
 - Create/edit/delete lessons (term↔def, MCQ, True/False, or Image↔Def format)
 - Bulk import via pipe-delimited text (MCQ: `question | correct | wrong1 [| wrong2 | wrong3 | wrong4]`; T/F: `statement | true` or `statement | false [;; explanation]`)
-- AI prompt guide with copy button; AI generates 2–4 distractors per card
+- AI prompt guide with copy button; AI generates 2–4 distractors per card; length rule relaxed — options should be comparable but natural phrasing takes priority over exact word-count matching
 - Bulk delete lessons: "☑ Select" on class screen enters select mode with checkboxes, select-all, and "Delete selected" to remove multiple lessons and their cards at once
 - Bulk delete cards: "☑ Select" on lesson screen enters card select mode with checkboxes, select-all, and "Delete selected" to remove multiple cards at once
 
@@ -41,8 +41,7 @@
 - "Hard First" filter for focused review
 - "Due Only" filter to quiz only SRS-due cards
 - Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons
-- MCQ → T/F expansion in quiz mode: setup screen shows a 0–100% slider (default from account preferences, initially 20%, hidden for non-MCQ lessons); selected fraction of MCQ cards are replaced by True/False sub-questions at quiz time ("Is X the correct answer to Q?"); each expanded card records SRS attempts against the source MCQ card so difficulty and due-date update normally
-- Account preferences: "⚙ Preferences" in the user dropdown; saves MCQ→T/F default expansion % to the server and caches in localStorage so the setup screen always reflects the saved value immediately after login
+- Account preferences: "⚙ Preferences" in the user dropdown; saves dark mode and font scale to the server and caches in localStorage
 - Lesson sort: "Sort by" dropdown on the class screen; options are Date added (newest first), Last studied, Last card added, Due count; choice persisted in localStorage per browser
 - Class sort: "Sort by" dropdown on the home screen; options are Level, Name (A–Z), Due count, Date added; choice persisted in localStorage; classes with no level set sort last (after all leveled classes), tie-broken by date added
 - Class level field: optional integer on each class ("Level" input in class editor, 1–999); used to sequence courses; can be cleared; persists to server; round-trips through export/import and class share

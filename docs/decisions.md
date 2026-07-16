@@ -46,21 +46,13 @@ Classes with `level=null` are assigned `Infinity` in `sortClasses()` when sortin
 
 The `btn-save-preferences` handler now writes the new value back to `localStorage` immediately after updating state, before the PUT fetch completes. This ensures that if the user logs out and back in quickly, `loadUserPreferences()` reads the correct cached value synchronously rather than the stale pre-save value. Without this, the stale cache would be applied on the next login until the async fetch resolved.
 
-## 2026-07-02 — Account preferences: localStorage cache to close post-login timing race
-
-`loadUserPreferences()` fires an async fetch on every login/init. `openSetup()` reads `state.tfExpansionPctDefault` synchronously. If the user navigates to the study setup before the fetch resolves (one RTT after login), they see the hardcoded default (20%) instead of their saved value. Fixed by caching the server response in `localStorage` under `fc-preferences` and applying it synchronously at page load before `restoreLastScreen()` runs. The cache is cleared on logout to prevent cross-user bleed. Alternative: make `openSetup` async and await a preferences promise — rejected because it would require refactoring the entire navigation stack.
-
 ## 2026-07-02 — Account preferences: PUT uses read-modify-write merge, not full replace
 
 `PUT /api/auth/preferences` reads the current `preferences` JSON column, merges the incoming object over it with `Object.assign`, then writes back. This ensures future preference keys added by new code are not silently deleted when an older client (or a client that only knows about one key) saves. Alternative: send the full preferences object from the client on every save — rejected because the client only knows about the keys it renders in the modal; it cannot preserve server-side keys it is unaware of.
 
 ## 2026-07-02 — Recall mode removed
 
-Recall mode (free-recall textarea + three-grade self-assessment) was removed from UI and JS. The DB `source='recall'` value in the `attempts` CHECK constraint was already removed in a prior migration; historical records are preserved. Decision: recall added friction (typing + self-grading) that interrupted study flow and is superseded by MCQ→T/F expansion, which provides a comparable retrieval-practice effect with lower friction.
-
-## 2026-06-28 — MCQ → T/F expansion: virtual cards record SRS against source card ID
-
-When a MCQ card is expanded to T/F sub-questions, the original MCQ card is removed from the deck. To prevent MCQ cards from being permanently frozen at SRS step 0 for users who always study with T/F expansion, each virtual T/F card stores `_sourceCardId` (the original MCQ card's DB id). `answerQuiz` records the attempt using `card._sourceCardId` instead of `card.id`, so the real card's `srs_due_at` and difficulty level continue to advance. Multiple attempts are recorded per expansion (one per T/F sub-question), which is acceptable — the SRS step only advances on the last attempt in the batch. Alternative considered: record one aggregate attempt after all sub-questions for the same source are answered — rejected for complexity.
+Recall mode (free-recall textarea + three-grade self-assessment) was removed from UI and JS. The DB `source='recall'` value in the `attempts` CHECK constraint was already removed in a prior migration; historical records are preserved. Decision: recall added friction that interrupted study flow.
 
 ## 2026-06-28 — True/False: correct stored as lowercase string "true"/"false", displayed as title-case
 
