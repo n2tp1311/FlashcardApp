@@ -733,7 +733,6 @@ var state = {
   currentClassLessons: [],
 
   // User preferences (loaded from server after login)
-  tfExpansionPctDefault: 20,
   darkMode: false,
   fontScale: 1,
 
@@ -2551,12 +2550,6 @@ function openSetup(scope) {
   document.getElementById("pill-order-interleaved").style.display = multiLesson ? "" : "none";
   setPillGroup("setup-order", "in-order");
 
-  var hasMcq = state.studyScope.lessons.some(function(l) { return l.format === "mcq"; });
-  document.getElementById("setup-tf-pct-section").style.display = hasMcq ? "" : "none";
-  var defaultTfPct = state.tfExpansionPctDefault;
-  document.getElementById("tf-expansion-pct").value = defaultTfPct;
-  document.getElementById("tf-expansion-pct-label").textContent = defaultTfPct + "%";
-
   showScreen("setup");
 }
 
@@ -2588,10 +2581,6 @@ var FILTER_HINTS = {
   });
 });
 
-document.getElementById("tf-expansion-pct").addEventListener("input", function() {
-  document.getElementById("tf-expansion-pct-label").textContent = this.value + "%";
-});
-
 // Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
 function returnFromStudy() {
   var target = state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson";
@@ -2610,10 +2599,8 @@ document.getElementById("btn-start-study").addEventListener("click", function() 
   var mode    = document.querySelector("#setup-mode .pill.active").dataset.value;
   var orderEl = document.querySelector("#setup-order .pill.active");
   var order   = orderEl ? orderEl.dataset.value : "in-order";
-  var tfPct   = parseInt(document.getElementById("tf-expansion-pct").value, 10) || 0;
-
-  state.setupSnapshot = { count: count, filter: filter, mode: mode, order: order, tfPct: tfPct };
-  startStudy(count, filter, mode, order, tfPct);
+  state.setupSnapshot = true;
+  startStudy(count, filter, mode, order);
 });
 
 function getDifficultyWeight(stats) {
@@ -2639,7 +2626,7 @@ function weightedShuffle(cards, statsMap) {
   return result;
 }
 
-function startStudy(count, filter, mode, order, tfPct) {
+function startStudy(count, filter, mode, order) {
   var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
   store.getBulkCards(ids).then(function(cards) {
     // Rebuild per-lesson grouping for blocked mode
@@ -2709,7 +2696,7 @@ function startStudy(count, filter, mode, order, tfPct) {
           state.studyFlipped = false;
           startFlashcards();
         } else if (mode === "quiz") {
-          state.quizCards  = (tfPct > 0) ? expandMCQToTF(filtered, tfPct) : filtered;
+          state.quizCards  = filtered;
           state.quizIndex  = 0;
           state.quizScore  = 0;
           state.quizResults = [];
@@ -2974,36 +2961,6 @@ function buildQuizOptions(card) {
   return shuffle([correct].concat(distractors));
 }
 
-function expandMCQToTF(cards, pct) {
-  var mcqCards = cards.filter(function(c) { return c.format === "mcq"; });
-  var n = Math.max(0, Math.round(mcqCards.length * pct / 100));
-  if (n === 0) return cards;
-  var toExpand = shuffle(mcqCards.slice()).slice(0, n);
-  var toExpandSet = {};
-  toExpand.forEach(function(c) { toExpandSet[c.id] = true; });
-  var result = [];
-  cards.forEach(function(card) {
-    if (card.format !== "mcq" || !toExpandSet[card.id]) {
-      result.push(card);
-      return;
-    }
-    shuffle([card.data.correct].concat(card.data.distractors)).forEach(function(opt, idx) {
-      result.push({
-        id: card.id + "_tf_" + idx,
-        format: "true-false",
-        lesson_id: card.lesson_id,
-        data: {
-          statement: 'Is "' + opt + '" the correct answer to: "' + card.data.question + '"?',
-          correct: opt === card.data.correct ? "true" : "false"
-        },
-        _expandedFromMcq: true,
-        _sourceCardId: card.id
-      });
-    });
-  });
-  return result;
-}
-
 function renderQuizCard() {
   var cards = state.quizCards;
   var i     = state.quizIndex;
@@ -3077,7 +3034,7 @@ function answerQuiz(selectedIdx) {
 
   if (isCorrect) state.quizScore++;
 
-  store.recordAttempt({ cardId: card._expandedFromMcq ? card._sourceCardId : card.id, correct: isCorrect, source: "quiz" });
+  store.recordAttempt({ cardId: card.id, correct: isCorrect, source: "quiz" });
 
   // Save result
   state.quizResults.push({ card: card, correct: isCorrect, selected: selectedVal });
@@ -3187,7 +3144,7 @@ function showQuizResults() {
 document.getElementById("btn-results-retry").addEventListener("click", function() {
   var snap = state.setupSnapshot;
   if (!snap) { returnFromStudy(); return; }
-  state.quizCards  = shuffle(state.studyCards.length > 0 ? state.studyCards : state.quizCards);
+  state.quizCards  = shuffle(state.quizCards);
   state.quizIndex  = 0;
   state.quizScore  = 0;
   state.quizResults = [];
@@ -3974,8 +3931,8 @@ Order cards within each lesson basic to advanced:
 - Avoid grammatical clues in the stem that hint at the correct answer.
 - Avoid negation in the correct answer; test what something is, not what it isn't.
 - For formulas, ask "Which formula represents X?" with all options as formulas.
-- Length rule: all options must be the same length (±1 word). Rewrite until they match.
 - Distractors must be plausible, grammatically parallel, and drawn from concepts in the source text.
+- Keep options comparable in length — avoid options so much shorter or longer that length itself signals the answer. Natural phrasing takes priority over exact word-count matching.
 - Each distractor must be wrong for a different reason.
 - Include 2–4 distractors (3–5 total options). Use fewer only when fewer plausible ones exist.
 - Avoid "all of the above" and "none of the above".
@@ -4257,9 +4214,6 @@ function applyFontScale(scale) {
 }
 
 function applyPrefs(prefs) {
-  if (typeof prefs.tfExpansionPctDefault === "number") {
-    state.tfExpansionPctDefault = prefs.tfExpansionPctDefault;
-  }
   if (typeof prefs.darkMode === "boolean") {
     applyDarkMode(prefs.darkMode);
   }
@@ -4523,8 +4477,6 @@ function prefFontLabel() {
 
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
-  document.getElementById("pref-tf-pct").value = state.tfExpansionPctDefault;
-  document.getElementById("pref-tf-pct-label").textContent = state.tfExpansionPctDefault + "%";
   document.getElementById("pref-dark-mode").checked = state.darkMode;
   prefFontLabel();
   openModal("preferences");
@@ -4539,16 +4491,10 @@ document.getElementById("pref-font-increase").addEventListener("click", function
   prefFontLabel();
 });
 
-document.getElementById("pref-tf-pct").addEventListener("input", function() {
-  document.getElementById("pref-tf-pct-label").textContent = this.value + "%";
-});
-
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
-  var pct = parseInt(document.getElementById("pref-tf-pct").value, 10);
   var dark = document.getElementById("pref-dark-mode").checked;
-  state.tfExpansionPctDefault = pct;
   applyDarkMode(dark);
-  var prefs = { tfExpansionPctDefault: pct, darkMode: dark, fontScale: state.fontScale };
+  var prefs = { darkMode: dark, fontScale: state.fontScale };
   try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",

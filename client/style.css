@@ -1080,18 +1080,13 @@ code {
 .pref-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .pref-row .form-label { margin-bottom: 0; flex-shrink: 0; }
 .font-scale-row { display: flex; align-items: center; gap: 8px; }
-.font-scale-row .tf-pct-label { min-width: 44px; text-align: center; }
+.font-scale-row .tf-pct-label { font-size: 0.875rem; font-weight: 600; color: var(--primary); min-width: 44px; text-align: center; }
 .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
 .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 12px; transition: background 0.2s; }
 .toggle-track::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
 .toggle-switch input:checked + .toggle-track { background: var(--primary); }
 .toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
-
-.tf-pct-row { display: flex; align-items: center; gap: 12px; }
-.tf-pct-slider { flex: 1; accent-color: var(--primary); cursor: pointer; }
-.tf-pct-label { font-size: 0.875rem; font-weight: 600; color: var(--primary); min-width: 38px; text-align: right; }
-.setup-hint { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
 
 /* ============================
    FLASHCARD STUDY
