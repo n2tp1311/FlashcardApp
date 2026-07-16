@@ -751,6 +751,25 @@ var state = {
   }()),
   currentLessonSortDir: (function() {
     try { return localStorage.getItem("fc-lesson-sort-dir") || "desc"; } catch (_) { return "desc"; }
+  }()),
+
+  // Home view toggle: "grid" or "list" (persisted)
+  homeView: (function() {
+    try { return localStorage.getItem("fc-home-view") || "grid"; } catch (_) { return "grid"; }
+  }()),
+  // Home slicer filter: "all" or a level string like "1", "2" (persisted)
+  homeFilter: (function() {
+    try { return localStorage.getItem("fc-home-filter") || "all"; } catch (_) { return "all"; }
+  }()),
+  _classAccuracyMap: {},
+
+  // Lesson format filter: "all" or a format string (resets per class)
+  lessonFilter: "all",
+  _lessonAccuracyMap: {},
+
+  // Dashboard period in days (persisted)
+  dashPeriod: (function() {
+    try { return parseInt(localStorage.getItem("fc-dash-period"), 10) || 60; } catch (_) { return 60; }
   }())
 };
 
@@ -910,77 +929,258 @@ function renderHomeCharts() {
 function renderHome() {
   setHomeSelectMode(false);
   renderHomeCharts();
+  _updateHomeViewToggle();
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
     renderSidebarClasses(classes);
     classes = sortClasses(classes, state.currentClassSort, state.currentClassSortDir);
     document.getElementById("class-sort-select").value = state.currentClassSort;
     document.getElementById("class-sort-dir").textContent = state.currentClassSortDir === "desc" ? "↓" : "↑";
-    var grid = document.getElementById("class-list");
-    var empty = document.getElementById("empty-home");
-    grid.innerHTML = "";
-    if (classes.length === 0) {
-      empty.classList.remove("hidden");
-      grid.classList.add("hidden");
-      return;
-    }
-    empty.classList.add("hidden");
-    grid.classList.remove("hidden");
-    classes.forEach(function(cls) {
-      var card = document.createElement("div");
-      card.className = "class-card";
-      card.tabIndex = -1;
-      card.dataset.classId = cls.id;
-      card.innerHTML =
-        '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
-        '<span class="class-icon">' + cls.icon + '</span>' +
-        '<div class="class-name">' + escHtml(cls.name) + '</div>' +
-        '<div class="class-meta" id="cls-meta-' + cls.id + '">Loading...</div>' +
-        (cls.due_count > 0 ? '<span class="due-badge class-due-badge">' + cls.due_count + ' due</span>' : '') +
-        '<div class="progress-mini-wrap" id="cls-prog-wrap-' + cls.id + '" style="display:none">' +
-          '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="width:0%;background:' + cls.color + '"></div></div>' +
-          '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
-        '</div>' +
-        '<div class="class-card-actions">' +
-          '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">✏️</button>' +
-          '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">🗑️</button>' +
-        '</div>';
-      card.addEventListener("click", function(e) {
-        if (e.target.closest("[data-cls-edit],[data-cls-del]")) return;
-        if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
-        openClass(cls.id);
-      });
-      card.querySelector("[data-cls-edit]").addEventListener("click", function(e) {
-        e.stopPropagation();
-        openEditClass(cls.id);
-      });
-      card.querySelector("[data-cls-del]").addEventListener("click", function(e) {
-        e.stopPropagation();
-        confirmDelete('Delete class "' + cls.name + '" and all its lessons and cards?', function() {
-          store.deleteClass(cls.id).then(renderHome);
-        });
-      });
-      grid.appendChild(card);
 
-      // Load lesson count + progress async
-      store.getLessons(cls.id).then(function(lessons) {
-        var meta = document.getElementById("cls-meta-" + cls.id);
-        if (meta) meta.textContent = lessons.length + " lesson" + (lessons.length !== 1 ? "s" : "");
-      });
-      store.getProgress("class", cls.id).then(function(p) {
-        if (!p || p.total === 0) return;
-        var wrap = document.getElementById("cls-prog-wrap-" + cls.id);
-        var fill = document.getElementById("cls-prog-fill-" + cls.id);
-        var text = document.getElementById("cls-prog-text-" + cls.id);
-        if (!wrap) return;
-        var pct = Math.round(p.known / p.total * 100);
-        wrap.style.display = "";
-        fill.style.width = pct + "%";
-        text.textContent = p.known + " / " + p.total + " known (" + pct + "%)";
-      });
-    });
+    // Build slicer pills from unique levels
+    _renderHomeSlicer(classes);
+
+    // Apply filter
+    var filtered = _applyHomeFilter(classes);
+
+    _renderClassItems(filtered);
+
+    // Load accuracy async (server only)
+    if (IS_SERVER && store.getClassAccuracy) {
+      store.getClassAccuracy().then(function(accMap) {
+        state._classAccuracyMap = accMap;
+        _applyClassAccuracy(accMap);
+      }).catch(function() {});
+    }
   });
 }
+
+function _updateHomeViewToggle() {
+  document.querySelectorAll("#home-view-toggle .view-toggle-btn").forEach(function(btn) {
+    btn.classList.toggle("active", btn.dataset.view === state.homeView);
+  });
+}
+
+function _renderHomeSlicer(classes) {
+  var bar = document.getElementById("home-slicer-bar");
+  if (!bar) return;
+  var levels = [];
+  classes.forEach(function(c) {
+    if (c.level != null && c.level !== "" && levels.indexOf(String(c.level)) === -1) {
+      levels.push(String(c.level));
+    }
+  });
+  levels.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+
+  bar.innerHTML = "";
+  if (levels.length === 0) {
+    bar.classList.add("hidden");
+    if (state.homeFilter !== "all") {
+      state.homeFilter = "all";
+      try { localStorage.setItem("fc-home-filter", "all"); } catch (_) {}
+    }
+    return;
+  }
+
+  // Validate before building pills so active class is applied correctly
+  if (state.homeFilter !== "all" && levels.indexOf(state.homeFilter) === -1) {
+    state.homeFilter = "all";
+    try { localStorage.setItem("fc-home-filter", "all"); } catch (_) {}
+  }
+
+  bar.classList.remove("hidden");
+
+  var allBtn = document.createElement("button");
+  allBtn.className = "pill" + (state.homeFilter === "all" ? " active" : "");
+  allBtn.dataset.filter = "all";
+  allBtn.textContent = "All";
+  bar.appendChild(allBtn);
+
+  levels.forEach(function(lv) {
+    var btn = document.createElement("button");
+    btn.className = "pill" + (state.homeFilter === lv ? " active" : "");
+    btn.dataset.filter = lv;
+    btn.textContent = "L" + lv;
+    bar.appendChild(btn);
+  });
+}
+
+function _applyHomeFilter(classes) {
+  if (state.homeFilter === "all") return classes;
+  return classes.filter(function(c) { return String(c.level) === state.homeFilter; });
+}
+
+function _renderClassItems(classes) {
+  var container = document.getElementById("class-list");
+  var empty = document.getElementById("empty-home");
+  container.innerHTML = "";
+
+  if (classes.length === 0) {
+    empty.classList.remove("hidden");
+    container.classList.add("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+  container.classList.remove("hidden");
+
+  if (state.homeView === "list") {
+    container.className = "class-list-view";
+    classes.forEach(function(cls) { _renderClassListRow(cls, container); });
+  } else {
+    container.className = "class-grid";
+    classes.forEach(function(cls) { _renderClassGridCard(cls, container); });
+  }
+}
+
+function _renderClassGridCard(cls, container) {
+  var card = document.createElement("div");
+  card.className = "class-card";
+  card.tabIndex = -1;
+  card.dataset.classId = cls.id;
+  card.innerHTML =
+    '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
+    '<span class="class-icon">' + cls.icon + '</span>' +
+    '<div class="class-name">' + escHtml(cls.name) + '</div>' +
+    '<div class="class-meta" id="cls-meta-' + cls.id + '">Loading...</div>' +
+    (cls.due_count > 0 ? '<span class="due-badge class-due-badge">' + cls.due_count + ' due</span>' : '') +
+    '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
+    '<div class="progress-mini-wrap" id="cls-prog-wrap-' + cls.id + '" style="display:none">' +
+      '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="width:0%;background:' + cls.color + '"></div></div>' +
+      '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
+    '</div>' +
+    '<div class="class-card-actions">' +
+      '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">✏️</button>' +
+      '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">🗑️</button>' +
+    '</div>';
+  card.addEventListener("click", function(e) {
+    if (e.target.closest("[data-cls-edit],[data-cls-del]")) return;
+    if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
+    openClass(cls.id);
+  });
+  card.querySelector("[data-cls-edit]").addEventListener("click", function(e) {
+    e.stopPropagation();
+    openEditClass(cls.id);
+  });
+  card.querySelector("[data-cls-del]").addEventListener("click", function(e) {
+    e.stopPropagation();
+    confirmDelete('Delete class "' + cls.name + '" and all its lessons and cards?', function() {
+      store.deleteClass(cls.id).then(renderHome);
+    });
+  });
+  container.appendChild(card);
+
+  store.getLessons(cls.id).then(function(lessons) {
+    var meta = document.getElementById("cls-meta-" + cls.id);
+    if (meta) meta.textContent = lessons.length + " lesson" + (lessons.length !== 1 ? "s" : "");
+  });
+  store.getProgress("class", cls.id).then(function(p) {
+    if (!p || p.total === 0) return;
+    var wrap = document.getElementById("cls-prog-wrap-" + cls.id);
+    var fill = document.getElementById("cls-prog-fill-" + cls.id);
+    var text = document.getElementById("cls-prog-text-" + cls.id);
+    if (!wrap) return;
+    var pct = Math.round(p.known / p.total * 100);
+    wrap.style.display = "";
+    fill.style.width = pct + "%";
+    text.textContent = p.known + " / " + p.total + " known (" + pct + "%)";
+  });
+  // Apply cached accuracy immediately if available
+  if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
+    _setClassAccuracyPill(cls.id, state._classAccuracyMap[cls.id]);
+  }
+}
+
+function _renderClassListRow(cls, container) {
+  var row = document.createElement("div");
+  row.className = "class-list-row";
+  row.tabIndex = -1;
+  row.dataset.classId = cls.id;
+  row.innerHTML =
+    '<div class="class-list-colorbar" style="background:' + cls.color + '"></div>' +
+    '<span class="class-list-icon">' + cls.icon + '</span>' +
+    '<div class="class-list-info">' +
+      '<div class="class-list-name">' + escHtml(cls.name) + '</div>' +
+      '<div class="class-list-meta" id="cls-meta-' + cls.id + '">Loading...</div>' +
+    '</div>' +
+    '<div class="class-list-right">' +
+      (cls.due_count > 0 ? '<span class="due-badge">' + cls.due_count + ' due</span>' : '') +
+      '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
+      (state.homeSelectMode ? '' :
+        '<div class="class-list-actions">' +
+          '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">✏️</button>' +
+          '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">🗑️</button>' +
+        '</div>') +
+    '</div>';
+  row.addEventListener("click", function(e) {
+    if (e.target.closest("[data-cls-edit],[data-cls-del]")) return;
+    if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
+    openClass(cls.id);
+  });
+  var editBtn = row.querySelector("[data-cls-edit]");
+  var delBtn = row.querySelector("[data-cls-del]");
+  if (editBtn) editBtn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    openEditClass(cls.id);
+  });
+  if (delBtn) delBtn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    confirmDelete('Delete class "' + cls.name + '" and all its lessons and cards?', function() {
+      store.deleteClass(cls.id).then(renderHome);
+    });
+  });
+  container.appendChild(row);
+
+  store.getLessons(cls.id).then(function(lessons) {
+    var meta = document.getElementById("cls-meta-" + cls.id);
+    if (meta) meta.textContent = lessons.length + " lesson" + (lessons.length !== 1 ? "s" : "");
+  });
+  if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
+    _setClassAccuracyPill(cls.id, state._classAccuracyMap[cls.id]);
+  }
+}
+
+function _setClassAccuracyPill(classId, acc) {
+  var el = document.getElementById("cls-acc-" + classId);
+  if (!el || acc.total === 0) return;
+  var pct = Math.round(acc.correct / acc.total * 100);
+  el.textContent = pct + "%";
+  el.classList.remove("hidden", "acc-high", "acc-mid", "acc-low");
+  el.classList.add(pct >= 70 ? "acc-high" : pct >= 40 ? "acc-mid" : "acc-low");
+}
+
+function _applyClassAccuracy(accMap) {
+  Object.keys(accMap).forEach(function(cid) {
+    _setClassAccuracyPill(cid, accMap[cid]);
+  });
+}
+
+(function initHomeFilterBar() {
+  var slicerBar = document.getElementById("home-slicer-bar");
+  if (slicerBar) {
+    slicerBar.addEventListener("click", function(e) {
+      var btn = e.target.closest(".pill");
+      if (!btn) return;
+      state.homeFilter = btn.dataset.filter;
+      try { localStorage.setItem("fc-home-filter", state.homeFilter); } catch (_) {}
+      slicerBar.querySelectorAll(".pill").forEach(function(b) {
+        b.classList.toggle("active", b.dataset.filter === state.homeFilter);
+      });
+      _renderClassItems(_applyHomeFilter(state.homeClasses));
+    });
+  }
+
+  var viewToggle = document.getElementById("home-view-toggle");
+  if (viewToggle) {
+    viewToggle.addEventListener("click", function(e) {
+      var btn = e.target.closest(".view-toggle-btn");
+      if (!btn) return;
+      state.homeView = btn.dataset.view;
+      try { localStorage.setItem("fc-home-view", state.homeView); } catch (_) {}
+      _updateHomeViewToggle();
+      _renderClassItems(_applyHomeFilter(state.homeClasses));
+    });
+  }
+}());
 
 document.getElementById("class-sort-select").addEventListener("change", function() {
   state.currentClassSort = this.value;
@@ -998,6 +1198,8 @@ function openClass(classId) {
   store.getClass(classId).then(function(cls) {
     if (!cls) return;
     state.currentClass = cls;
+    state.lessonFilter = "all";
+    state._lessonAccuracyMap = {};
     var nameEl = document.getElementById("class-detail-name");
     nameEl.textContent = cls.icon + " " + cls.name;
     setSelectMode(false);
@@ -1152,105 +1354,191 @@ function sortLessons(lessons, dueInfo, key, dir) {
 function renderLessons() {
   if (!state.currentClass) return;
   store.getLessons(state.currentClass.id).then(function(lessons) {
-    state.currentClassLessons = lessons; // cache for server-mode lookups
-    var list = document.getElementById("lesson-list");
-    var empty = document.getElementById("empty-class");
-    list.innerHTML = "";
-    if (lessons.length === 0) {
-      empty.classList.remove("hidden");
-      list.classList.add("hidden");
-      return;
+    state.currentClassLessons = lessons;
+    _renderLessonSlicer(lessons);
+    _renderLessonItems(lessons, state._lessonAccuracyMap);
+
+    // Load accuracy async (server only)
+    if (IS_SERVER && store.getLessonAccuracy) {
+      store.getLessonAccuracy(state.currentClass.id).then(function(accMap) {
+        state._lessonAccuracyMap = accMap;
+        _applyLessonAccuracy(accMap);
+      }).catch(function() {});
     }
-    empty.classList.add("hidden");
-    list.classList.remove("hidden");
-    var lessonIds = lessons.map(function(l) { return l.id; });
+  });
+}
 
-    // Load due info for all lessons in one call, then render badges
-    store.getDueLessons(lessonIds).then(function(dueInfo) {
-      var sortKey = state.currentLessonSort || "date_added";
-      lessons = sortLessons(lessons, dueInfo, sortKey, state.currentLessonSortDir);
-      var now = Math.floor(Date.now() / 1000);
+function _renderLessonSlicer(lessons) {
+  var bar = document.getElementById("lesson-slicer-bar");
+  if (!bar) return;
+  var formats = [];
+  lessons.forEach(function(l) {
+    if (formats.indexOf(l.format) === -1) formats.push(l.format);
+  });
 
-      lessons.forEach(function(lesson) {
-        var item = document.createElement("div");
-        var selected = state.selectMode && state.selectedLessonIds.indexOf(lesson.id) !== -1;
-        var isDue = dueInfo.due.indexOf(lesson.id) !== -1;
-        var dueCount = (dueInfo.dueCounts && dueInfo.dueCounts[lesson.id]) || 0;
-        var nextReviewAt = dueInfo.schedule && dueInfo.schedule[lesson.id];
-        var reviewLabel = "";
-        if (isDue) {
-          reviewLabel = dueCount + " card" + (dueCount !== 1 ? "s" : "") + " due for review";
-        } else if (nextReviewAt) {
-          var secsLeft = nextReviewAt - now;
-          var reviewLabel2 = secsLeft < 3600 ? Math.ceil(secsLeft / 60) + "m"
-            : secsLeft < 86400 ? Math.ceil(secsLeft / 3600) + "h"
-            : Math.ceil(secsLeft / 86400) + "d";
-          reviewLabel = "Next review in " + reviewLabel2;
-        }
+  bar.innerHTML = "";
+  if (formats.length <= 1) {
+    bar.classList.add("hidden");
+    state.lessonFilter = "all";
+    return;
+  }
 
-        item.className = "lesson-item" + (selected ? " selected" : "") + (isDue ? " lesson-due" : "");
-        item.dataset.lessonId = lesson.id;
-        item.tabIndex = -1;
-        item.innerHTML =
-          (state.selectMode
-            ? '<input type="checkbox" class="lesson-check"' + (selected ? " checked" : "") + '>'
-            : '') +
-          '<div class="lesson-info">' +
-            '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
-            '<div class="lesson-meta" id="les-meta-' + lesson.id + '">Loading...</div>' +
-            (reviewLabel ? '<div class="lesson-due-label' + (isDue ? " is-due" : "") + '">' + reviewLabel + '</div>' : '') +
-            '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
-              '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="width:0%"></div></div>' +
-              '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +
-            '</div>' +
+  // Validate before building pills so active class is applied correctly
+  if (state.lessonFilter !== "all" && formats.indexOf(state.lessonFilter) === -1) {
+    state.lessonFilter = "all";
+  }
+
+  bar.classList.remove("hidden");
+
+  var formatLabels = { "term-def": "Thẻ học", "mcq": "MCQ", "true-false": "True/False", "image-def": "Image↔Def" };
+  var allBtn = document.createElement("button");
+  allBtn.className = "pill" + (state.lessonFilter === "all" ? " active" : "");
+  allBtn.dataset.filter = "all";
+  allBtn.textContent = "All";
+  bar.appendChild(allBtn);
+
+  formats.forEach(function(fmt) {
+    var btn = document.createElement("button");
+    btn.className = "pill" + (state.lessonFilter === fmt ? " active" : "");
+    btn.dataset.filter = fmt;
+    btn.textContent = formatLabels[fmt] || fmt;
+    bar.appendChild(btn);
+  });
+}
+
+function _renderLessonItems(lessons, accMap) {
+  var list = document.getElementById("lesson-list");
+  var empty = document.getElementById("empty-class");
+  list.innerHTML = "";
+
+  var filtered = state.lessonFilter === "all" ? lessons
+    : lessons.filter(function(l) { return l.format === state.lessonFilter; });
+
+  if (filtered.length === 0) {
+    empty.classList.remove("hidden");
+    list.classList.add("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+  list.classList.remove("hidden");
+  var lessonIds = filtered.map(function(l) { return l.id; });
+
+  store.getDueLessons(lessonIds).then(function(dueInfo) {
+    var sortKey = state.currentLessonSort || "date_added";
+    filtered = sortLessons(filtered, dueInfo, sortKey, state.currentLessonSortDir);
+    var now = Math.floor(Date.now() / 1000);
+
+    filtered.forEach(function(lesson) {
+      var item = document.createElement("div");
+      var selected = state.selectMode && state.selectedLessonIds.indexOf(lesson.id) !== -1;
+      var isDue = dueInfo.due.indexOf(lesson.id) !== -1;
+      var dueCount = (dueInfo.dueCounts && dueInfo.dueCounts[lesson.id]) || 0;
+      var nextReviewAt = dueInfo.schedule && dueInfo.schedule[lesson.id];
+      var reviewLabel = "";
+      if (isDue) {
+        reviewLabel = dueCount + " card" + (dueCount !== 1 ? "s" : "") + " due for review";
+      } else if (nextReviewAt) {
+        var secsLeft = nextReviewAt - now;
+        var reviewLabel2 = secsLeft < 3600 ? Math.ceil(secsLeft / 60) + "m"
+          : secsLeft < 86400 ? Math.ceil(secsLeft / 3600) + "h"
+          : Math.ceil(secsLeft / 86400) + "d";
+        reviewLabel = "Next review in " + reviewLabel2;
+      }
+
+      var acc = accMap && accMap[lesson.id];
+      var accHtml = acc && acc.total > 0
+        ? '<span class="lesson-acc-pill ' + (acc.pct >= 70 ? "acc-high" : acc.pct >= 40 ? "acc-mid" : "acc-low") + '" id="les-acc-' + lesson.id + '">' + acc.pct + '%</span>'
+        : '<span class="lesson-acc-pill hidden" id="les-acc-' + lesson.id + '"></span>';
+
+      item.className = "lesson-item" + (selected ? " selected" : "") + (isDue ? " lesson-due" : "");
+      item.dataset.lessonId = lesson.id;
+      item.tabIndex = -1;
+      item.innerHTML =
+        (state.selectMode
+          ? '<input type="checkbox" class="lesson-check"' + (selected ? " checked" : "") + '>'
+          : '') +
+        '<div class="lesson-info">' +
+          '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
+          '<div class="lesson-meta" id="les-meta-' + lesson.id + '">Loading...</div>' +
+          (reviewLabel ? '<div class="lesson-due-label' + (isDue ? " is-due" : "") + '">' + reviewLabel + '</div>' : '') +
+          '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
+            '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="width:0%"></div></div>' +
+            '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +
           '</div>' +
-          (isDue ? '<span class="due-badge">' + dueCount + ' due</span>' : '') +
-          '<span class="format-badge ' + lesson.format + '">' +
-            (lesson.format === "term-def" ? "Thẻ học" : lesson.format === "mcq" ? "MCQ" : lesson.format === "true-false" ? "True/False" : "Image↔Def") +
-          '</span>' +
-          (state.selectMode
-            ? ''
-            : '<div class="lesson-actions">' +
-                '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">✏️</button>' +
-                '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">🗑️</button>' +
-              '</div>');
-        item.addEventListener("click", function(e) {
-          if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
-          if (e.target.closest("[data-les-edit],[data-les-del]")) return;
-          openLesson(lesson.id);
+        '</div>' +
+        (isDue ? '<span class="due-badge">' + dueCount + ' due</span>' : '') +
+        accHtml +
+        '<span class="format-badge ' + lesson.format + '">' +
+          (lesson.format === "term-def" ? "Thẻ học" : lesson.format === "mcq" ? "MCQ" : lesson.format === "true-false" ? "True/False" : "Image↔Def") +
+        '</span>' +
+        (state.selectMode
+          ? ''
+          : '<div class="lesson-actions">' +
+              '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">✏️</button>' +
+              '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">🗑️</button>' +
+            '</div>');
+      item.addEventListener("click", function(e) {
+        if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
+        if (e.target.closest("[data-les-edit],[data-les-del]")) return;
+        openLesson(lesson.id);
+      });
+      if (!state.selectMode) {
+        item.querySelector("[data-les-edit]").addEventListener("click", function(e) {
+          e.stopPropagation();
+          openEditLesson(lesson.id);
         });
-        if (!state.selectMode) {
-          item.querySelector("[data-les-edit]").addEventListener("click", function(e) {
-            e.stopPropagation();
-            openEditLesson(lesson.id);
+        item.querySelector("[data-les-del]").addEventListener("click", function(e) {
+          e.stopPropagation();
+          confirmDelete('Delete lesson "' + lesson.title + '" and all its cards?', function() {
+            store.deleteLesson(lesson.id).then(renderLessons);
           });
-          item.querySelector("[data-les-del]").addEventListener("click", function(e) {
-            e.stopPropagation();
-            confirmDelete('Delete lesson "' + lesson.title + '" and all its cards?', function() {
-              store.deleteLesson(lesson.id).then(renderLessons);
-            });
-          });
-        }
-        list.appendChild(item);
-        store.getCards(lesson.id).then(function(cards) {
-          var meta = document.getElementById("les-meta-" + lesson.id);
-          if (meta) meta.textContent = cards.length + " card" + (cards.length !== 1 ? "s" : "");
         });
-        store.getProgress("lesson", lesson.id).then(function(p) {
-          if (!p || p.total === 0) return;
-          var wrap = document.getElementById("les-prog-wrap-" + lesson.id);
-          var fill = document.getElementById("les-prog-fill-" + lesson.id);
-          var text = document.getElementById("les-prog-text-" + lesson.id);
-          if (!wrap) return;
-          var pct = Math.round(p.known / p.total * 100);
-          wrap.style.display = "";
-          fill.style.width = pct + "%";
-          text.textContent = p.known + " / " + p.total + " known (" + pct + "%)";
-        });
+      }
+      list.appendChild(item);
+      store.getCards(lesson.id).then(function(cards) {
+        var meta = document.getElementById("les-meta-" + lesson.id);
+        if (meta) meta.textContent = cards.length + " card" + (cards.length !== 1 ? "s" : "");
+      });
+      store.getProgress("lesson", lesson.id).then(function(p) {
+        if (!p || p.total === 0) return;
+        var wrap = document.getElementById("les-prog-wrap-" + lesson.id);
+        var fill = document.getElementById("les-prog-fill-" + lesson.id);
+        var text = document.getElementById("les-prog-text-" + lesson.id);
+        if (!wrap) return;
+        var pct = Math.round(p.known / p.total * 100);
+        wrap.style.display = "";
+        fill.style.width = pct + "%";
+        text.textContent = p.known + " / " + p.total + " known (" + pct + "%)";
       });
     });
   });
 }
+
+function _applyLessonAccuracy(accMap) {
+  Object.keys(accMap).forEach(function(lid) {
+    var acc = accMap[lid];
+    if (acc.total === 0) return;
+    var el = document.getElementById("les-acc-" + lid);
+    if (!el) return;
+    el.textContent = acc.pct + "%";
+    el.classList.remove("hidden", "acc-high", "acc-mid", "acc-low");
+    el.classList.add(acc.pct >= 70 ? "acc-high" : acc.pct >= 40 ? "acc-mid" : "acc-low");
+  });
+}
+
+(function initLessonSlicerBar() {
+  var bar = document.getElementById("lesson-slicer-bar");
+  if (!bar) return;
+  bar.addEventListener("click", function(e) {
+    var btn = e.target.closest(".pill");
+    if (!btn) return;
+    state.lessonFilter = btn.dataset.filter;
+    bar.querySelectorAll(".pill").forEach(function(b) {
+      b.classList.toggle("active", b.dataset.filter === state.lessonFilter);
+    });
+    _renderLessonItems(state.currentClassLessons, state._lessonAccuracyMap);
+  });
+}());
 
 /* ============================
    MULTI-LESSON SELECTION
@@ -1322,14 +1610,19 @@ function setHomeSelectMode(on) {
   var allCheck = document.getElementById("select-all-classes");
   if (allCheck) allCheck.checked = false;
 
-  document.querySelectorAll("#class-list .class-card").forEach(function(card) {
+  document.querySelectorAll("#class-list [data-class-id]").forEach(function(card) {
     card.classList.remove("selected");
     var existing = card.querySelector(".lesson-check");
     if (on && !existing) {
       var check = document.createElement("input");
       check.type = "checkbox";
       check.className = "lesson-check";
-      card.insertBefore(check, card.firstChild);
+      if (card.classList.contains("class-list-row")) {
+        var colorbar = card.querySelector(".class-list-colorbar");
+        card.insertBefore(check, colorbar ? colorbar.nextSibling : card.firstChild);
+      } else {
+        card.insertBefore(check, card.firstChild);
+      }
     } else if (!on && existing) {
       existing.remove();
     }
@@ -1381,7 +1674,7 @@ document.getElementById("select-all-classes").addEventListener("change", functio
   } else {
     state.selectedClassIds = [];
   }
-  document.querySelectorAll("#class-list .class-card").forEach(function(card) {
+  document.querySelectorAll("#class-list [data-class-id]").forEach(function(card) {
     var sel = state.selectedClassIds.indexOf(card.dataset.classId) !== -1;
     card.classList.toggle("selected", sel);
     var check = card.querySelector(".lesson-check");
@@ -1647,7 +1940,23 @@ function openLesson(lessonId) {
 
 function renderCards() {
   if (!state.currentLesson) return;
-  store.getCards(state.currentLesson.id).then(function(cards) {
+  var lessonId = state.currentLesson.id;
+  var dataPromise = IS_SERVER
+    ? store.getLessonStats(lessonId)
+    : store.getCards(lessonId).then(function(cards) {
+        var attemptsRaw = JSON.parse(localStorage.getItem("fc-attempts") || "[]");
+        var statsMap = {};
+        cards.forEach(function(card) {
+          var ca = attemptsRaw.filter(function(a) { return a.card_id === card.id; });
+          statsMap[card.id] = computeStats(ca);
+        });
+        return { cards: cards, statsMap: statsMap };
+      });
+
+  dataPromise.then(function(result) {
+    if (!state.currentLesson || state.currentLesson.id !== lessonId) return;
+    var cards = result.cards;
+    var statsMap = result.statsMap;
     var list = document.getElementById("card-list");
     var empty = document.getElementById("empty-lesson");
     var countBadge = document.getElementById("lesson-card-count");
@@ -1661,15 +1970,15 @@ function renderCards() {
     empty.classList.add("hidden");
     list.classList.remove("hidden");
     if (countBadge) { countBadge.textContent = cards.length + " card" + (cards.length !== 1 ? "s" : ""); countBadge.classList.remove("hidden"); }
-    var attemptsRaw = IS_SERVER ? [] : JSON.parse(localStorage.getItem("fc-attempts") || "[]");
     cards.forEach(function(card, i) {
       var item = document.createElement("div");
       item.className = "card-item" + (state.selectedCardIds.indexOf(card.id) !== -1 ? " selected" : "");
       item.dataset.cardId = card.id;
-      var cardAttempts = attemptsRaw.filter(function(a) { return a.card_id === card.id; });
-      var stats = computeStats(cardAttempts);
-      var diffPill = '<span class="diff-pill ' + stats.level + '">' +
-        (stats.total === 0 ? "New" : stats.level.charAt(0).toUpperCase() + stats.level.slice(1)) + '</span>';
+      var stats = statsMap[card.id] || { total: 0, correct: 0, level: "new" };
+      var pct = stats.total > 0 ? Math.round(stats.correct / stats.total * 100) : null;
+      var pillLabel = stats.total === 0 ? "New"
+        : stats.level.charAt(0).toUpperCase() + stats.level.slice(1) + " · " + pct + "%";
+      var diffPill = '<span class="diff-pill ' + stats.level + '">' + pillLabel + '</span>';
 
       var termEl = document.createElement("div");
       var defEl  = document.createElement("div");
@@ -3164,8 +3473,11 @@ function renderDashboard() {
     document.getElementById(id).innerHTML = "";
   });
 
-  Promise.all([store.getDashboard(), store.getAnalytics(), store.getSrsDistribution()]).then(function(results) {
+  Promise.all([store.getDashboard(), store.getAnalytics(state.dashPeriod), store.getSrsDistribution()]).then(function(results) {
     var d = results[0], analytics = results[1], srs = results[2];
+    var days = analytics.days || state.dashPeriod || 60;
+    var heatmapTitle = document.getElementById("dash-heatmap-title");
+    if (heatmapTitle) heatmapTitle.textContent = days + "-Day Study Heatmap";
     loadEl.classList.add("hidden");
 
     // Summary stat cards with streak first
@@ -3199,8 +3511,8 @@ function renderDashboard() {
       diffBar("Hard",   db_.hard,   totalCards, "#dc2626");
 
     // Charts (from analytics)
-    renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"));
-    renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"));
+    renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
+    renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
     renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
     renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
@@ -3289,14 +3601,43 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
   showScreen("home");
 });
 
+(function initDashPeriodPills() {
+  var bar = document.getElementById("dash-period-bar");
+  if (!bar) return;
+  function updatePills() {
+    bar.querySelectorAll(".pill").forEach(function(btn) {
+      btn.classList.toggle("active", parseInt(btn.dataset.period, 10) === state.dashPeriod);
+    });
+  }
+  updatePills();
+  bar.addEventListener("click", function(e) {
+    var btn = e.target.closest(".pill");
+    if (!btn) return;
+    state.dashPeriod = parseInt(btn.dataset.period, 10);
+    try { localStorage.setItem("fc-dash-period", state.dashPeriod); } catch (_) {}
+    updatePills();
+    document.getElementById("dash-heatmap-wrap").innerHTML = "";
+    document.getElementById("dash-trend-wrap").innerHTML = "";
+    document.getElementById("dash-lesson-wrap").innerHTML = "";
+    store.getAnalytics(state.dashPeriod).then(function(analytics) {
+      var days = analytics.days || state.dashPeriod;
+      var heatmapTitle = document.getElementById("dash-heatmap-title");
+      if (heatmapTitle) heatmapTitle.textContent = days + "-Day Study Heatmap";
+      renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
+      renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
+      renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
+    });
+  });
+}());
 
-function renderHeatmap(rows, wrap) {
+function renderHeatmap(rows, wrap, days) {
+  if (!days) days = 60;
   var map = {};
   rows.forEach(function(r) { map[r.day] = r.cnt; });
 
   var today = new Date();
   var cells = [];
-  for (var i = 59; i >= 0; i--) {
+  for (var i = days - 1; i >= 0; i--) {
     // Use UTC date arithmetic to match server's date(created_at,'unixepoch') which returns UTC dates
     var d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
     var key = d.toISOString().slice(0, 10);
@@ -3822,8 +4163,10 @@ var SQLiteAdapter = (function() {
 
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
     getDashboard: function() { return req("GET", "/stats/dashboard"); },
-    getAnalytics: function() { return req("GET", "/stats/analytics"); },
+    getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
     getSrsDistribution: function() { return req("GET", "/stats/srs-distribution"); },
+    getClassAccuracy: function() { return req("GET", "/stats/accuracy/classes"); },
+    getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
 
     markCardsSeen: function(cardIds) {
       if (!cardIds || !cardIds.length) return Promise.resolve();
@@ -4287,6 +4630,8 @@ function cloneInvitedClass(classId, name) {
 function openSharedClassStudy(cls) {
   // Open the class detail but in read-only view (just lessons list)
   state.currentClass = cls;
+  state.lessonFilter = "all";
+  state._lessonAccuracyMap = {};
   state.sharedViewMode = true;
   document.getElementById("class-detail-name").textContent = cls.icon + " " + cls.name;
   renderLessons();
@@ -4629,6 +4974,8 @@ function selectSearchResult(type, data) {
   store.getClass(targetClassId).then(function(cls) {
     if (!cls) return;
     state.currentClass = cls;
+    state.lessonFilter = "all";
+    state._lessonAccuracyMap = {};
     store.getLessons(targetClassId).then(function(lessons) {
       state.currentClassLessons = lessons;
       openLesson(targetLessonId);
@@ -4786,8 +5133,8 @@ document.addEventListener("keydown", function(e) {
     else if ((e.key === "s" || e.key === "S") && state.homeSelectMode) document.getElementById("btn-study-classes").click();
     else if (e.key === "n" || e.key === "N") openNewClass();
     else if ((e.key === "a" || e.key === "A") && IS_SERVER) { renderDashboard(); showScreen("dashboard"); }
-    else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list .class-card", 1); }
-    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); moveFocus("#class-list .class-card", -1); }
+    else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list [data-class-id]", 1); }
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); moveFocus("#class-list [data-class-id]", -1); }
     else if (e.key === "Enter") {
       var f = document.activeElement;
       if (f && f.dataset.classId) {

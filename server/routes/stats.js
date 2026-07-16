@@ -283,20 +283,23 @@ router.get("/dashboard", requireAuth, (req, res) => {
 
 router.get("/analytics", requireAuth, function(req, res) {
   var uid = req.session.userId;
+  var parsedDays = parseInt(req.query.days, 10);
+  var days = Math.min(90, Math.max(7, isNaN(parsedDays) ? 60 : parsedDays));
+  var secs = days * 86400;
 
   var heatmapRows = db.prepare(
     "SELECT date(created_at,'unixepoch') AS day, COUNT(*) AS cnt " +
     "FROM attempts " +
-    "WHERE user_id=? AND created_at >= strftime('%s','now','-60 days') " +
+    "WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
     "GROUP BY day"
-  ).all(uid);
+  ).all(uid, secs);
 
   var weeklyRows = db.prepare(
     "SELECT CAST((strftime('%s','now') - created_at) / 604800 AS INTEGER) AS weeks_ago, COUNT(*) AS cnt " +
     "FROM attempts " +
-    "WHERE user_id=? AND created_at >= strftime('%s','now','-84 days') " +
+    "WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
     "GROUP BY weeks_ago"
-  ).all(uid);
+  ).all(uid, secs);
 
   var lessonRows = db.prepare(
     "SELECT l.id, l.title, cl.name AS class_name, " +
@@ -311,7 +314,45 @@ router.get("/analytics", requireAuth, function(req, res) {
     "ORDER BY (correct_attempts * 1.0 / total_attempts) ASC"
   ).all(uid, uid);
 
-  res.json({ heatmap: heatmapRows, weeklyTrend: weeklyRows, lessonBreakdown: lessonRows });
+  res.json({ heatmap: heatmapRows, weeklyTrend: weeklyRows, lessonBreakdown: lessonRows, days: days });
+});
+
+router.get("/accuracy/classes", requireAuth, function(req, res) {
+  var uid = req.session.userId;
+  var rows = db.prepare(
+    "SELECT l.class_id, COUNT(a.id) AS total, " +
+    "SUM(CASE WHEN a.correct = 1 THEN 1 ELSE 0 END) AS correct " +
+    "FROM attempts a " +
+    "JOIN cards c ON a.card_id = c.id " +
+    "JOIN lessons l ON c.lesson_id = l.id " +
+    "JOIN classes cl ON l.class_id = cl.id " +
+    "WHERE a.user_id = ? AND cl.user_id = ? " +
+    "GROUP BY l.class_id"
+  ).all(uid, uid);
+  var map = {};
+  rows.forEach(function(r) { map[r.class_id] = { correct: r.correct || 0, total: r.total || 0 }; });
+  res.json(map);
+});
+
+router.get("/accuracy/lessons", requireAuth, function(req, res) {
+  var uid = req.session.userId;
+  var classId = req.query.classId;
+  if (!classId) return res.status(400).json({ error: "classId required" });
+  var cls = db.prepare("SELECT id FROM classes WHERE id = ? AND user_id = ?").get(classId, uid);
+  if (!cls) return res.status(404).json({ error: "Not found" });
+  var rows = db.prepare(
+    "SELECT c.lesson_id, COUNT(a.id) AS total, " +
+    "SUM(CASE WHEN a.correct = 1 THEN 1 ELSE 0 END) AS correct " +
+    "FROM attempts a JOIN cards c ON a.card_id = c.id " +
+    "JOIN lessons l ON c.lesson_id = l.id " +
+    "WHERE l.class_id = ? AND a.user_id = ? GROUP BY c.lesson_id"
+  ).all(classId, uid);
+  var map = {};
+  rows.forEach(function(r) {
+    var pct = r.total > 0 ? Math.round((r.correct || 0) / r.total * 100) : 0;
+    map[r.lesson_id] = { correct: r.correct || 0, total: r.total || 0, pct: pct };
+  });
+  res.json(map);
 });
 
 router.get("/analytics/export", requireAuth, function(req, res) {
