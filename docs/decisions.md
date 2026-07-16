@@ -1,5 +1,17 @@
 # Decision Log
 
+## 2026-07-16 — Level slicer uses level integer as filter key, not level label
+
+The slicer pill stores the raw level integer (e.g. `"1"`) as `data-filter` and compares it against `String(cls.level)`. Using the label `"L1"` as the key was considered but rejected: the label is presentational and may be formatted differently in the future; comparing raw values avoids a label-to-value mapping step and survives level values that aren't simple integers.
+
+## 2026-07-16 — `[data-class-id]` selector for multi-select instead of `.class-card`
+
+`setHomeSelectMode` and the keyboard arrow-key handler use `#class-list [data-class-id]` rather than `#class-list .class-card`. Both grid cards (`.class-card`) and list rows (`.class-list-row`) carry `data-class-id`, so the attribute selector works for both views without needing to know the current view. Alternative: run two separate queries (`querySelectorAll('.class-card, .class-list-row')`) — rejected for redundancy; the shared attribute is cleaner.
+
+## 2026-07-16 — Dashboard period change re-fetches only analytics, not full dashboard
+
+Clicking a period pill calls `store.getAnalytics(days)` (just heatmap + weekly trend + lesson breakdown) rather than re-running the full `renderDashboard()` which also fetches streak, summary counts, SRS distribution, etc. Those aggregates are not time-windowed (the lesson breakdown is intentionally all-time) so re-fetching them on every period change would be wasteful. The heatmap and trend are the only charts that depend on the window.
+
 ## 2026-07-12 — Flashcard swipe: translate `#fc-scene`, not `#fc-card`
 
 The swipe drag transform (`translateX + rotate`) is applied to `#fc-scene` (the wrapper) rather than `#fc-card` (which carries `transform-style: preserve-3d` and the flip `rotateY(180deg)`). Applying translateX directly to `.fc-card` would compose with the flip transform, requiring separate tracking of the current flip state to avoid clobbering `rotateY`. By moving the parent scene instead, the 3D flip mechanism inside the card is untouched regardless of drag position. Alternative: keep both transforms on `.fc-card` using a matrix composition — rejected for complexity and the risk of flip-state drift on snap-back.

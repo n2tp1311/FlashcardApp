@@ -98,6 +98,25 @@
 - CSV analytics export uses `[image]` in the `card_front` column for image-def cards
 - Image-def format pill hidden in local/localStorage mode (upload requires server)
 
+## Home Screen — Views & Filters
+
+- **Grid / List view toggle**: segmented control in the home header switches class display between a `.class-grid` card layout and a `.class-list-view` compact row layout; choice persisted in `fc-home-view` localStorage key
+- **Level slicer pills**: when any class has a `level` set, a pill bar appears above the class list with "All" + one pill per distinct level (L1, L2 …); clicking a pill hides classes of other levels; choice persisted in `fc-home-filter`; pill bar hidden when no classes have levels
+- **Accuracy per class**: after classes load, `GET /api/stats/accuracy/classes` fetches correct/total attempt counts; each class card (grid) and class row (list) shows a color-coded accuracy pill — green (≥70%), orange (≥40%), red (<40%); hidden until data arrives
+
+## Class Screen — Lesson Format Filter & Accuracy
+
+- **Lesson format slicer**: when lessons of more than one format exist (term-def, MCQ, True/False, image-def), a pill bar above the lesson list lets the user filter to a single format; bar hidden when all lessons share one format or there are none
+- **Accuracy per lesson**: `GET /api/stats/accuracy/lessons?classId=X` fetches per-lesson accuracy; each lesson row shows a color-coded accuracy pill using the same high/mid/low tiers as the class pill
+
+## Card Screen — Accuracy in Diff-Pill
+
+- Diff-pills now show `"Easy · 80%"` format (level + % accuracy) for cards that have attempt history; shows `"New"` for cards with no attempts
+
+## Dashboard — Period Selector
+
+- Four period pills (7d / 30d / 60d / 90d) above the heatmap control the analytics window; choice persisted in `fc-dash-period`; switching a period re-fetches only analytics (not the full dashboard) and updates heatmap, weekly trend, and heatmap title
+
 ## Analytics (server mode only)
 
 - `📈 Analytics` button on home header; `A` key on home screen; `Esc` to go back
