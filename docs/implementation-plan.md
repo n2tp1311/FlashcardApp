@@ -279,7 +279,7 @@ A speaker button on the flashcard front and back triggers Web Speech API `Speech
 
 | Setting | Value |
 |---------|-------|
-| Trigger | Click 🔊 button or keyboard shortcut `P` |
+| Trigger | Click speaker icon button or keyboard shortcut `P` |
 | Scope | Flashcard mode (front and back face); term-def and MCQ |
 | Language | Browser default; no override in v1 |
 
@@ -874,7 +874,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 - `?` modal listing all shortcuts. Desktop button hints `[K]`.
 
 **Priority 2 — Audio Pronunciation** (§5.8)
-- 🔊 button on flashcard front and back; Web Speech API TTS.
+- Speaker icon button on flashcard front and back; Web Speech API TTS.
 - Keyboard shortcut `P`; silent fallback when API unavailable.
 
 **Priority 3 — Analytics Screen** (§5.12)

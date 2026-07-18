@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-07-18 — Overflow moved from `.fc-front`/`.fc-back` to `.fc-content` to fix WebKit backface-visibility bleed-through
+
+The flashcard back face was showing two speaker icons: the back's own plus the front's, mirrored, bleeding through. Root cause: `.fc-front`/`.fc-back` had both `backface-visibility: hidden` and `overflow: auto` inside a `preserve-3d` flip container — a known WebKit bug where `overflow` other than `visible` on a backface-hidden element breaks the hiding, so the face rotated away still renders. Fix: `overflow` moved onto `.fc-content` (the only in-flow child; the audio button/badge/hint are all `position: absolute` and unaffected) with `max-height: 100%; overflow-y: auto; overflow-x: hidden`, leaving `.fc-front`/`.fc-back` with no `overflow` declaration so `backface-visibility` works correctly. Alternative: keep `overflow: auto` on the face and instead try to suppress the bleed with `z-index`/opacity tricks — rejected because it treats the symptom, not the documented cause, and would likely resurface on other WebKit versions.
+
 ## 2026-07-16 — Level slicer uses level integer as filter key, not level label
 
 The slicer pill stores the raw level integer (e.g. `"1"`) as `data-filter` and compares it against `String(cls.level)`. Using the label `"L1"` as the key was considered but rejected: the label is presentational and may be formatted differently in the future; comparing raw values avoids a label-to-value mapping step and survives level values that aren't simple integers.

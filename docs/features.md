@@ -48,7 +48,8 @@
 
 ## Audio Pronunciation
 
-- `🔊` button on each card face (front and back) speaks the card text via Web Speech API
+- Inline SVG speaker icon (matches the app's other feather-style line icons) on each card face (front and back) speaks the card text via Web Speech API
+- `.fc-front`/`.fc-back` no longer set `overflow: auto` themselves — `overflow` lives on `.fc-content` instead, since `overflow` on a `backface-visibility: hidden` face inside a 3D-rotated card is a known WebKit bug that lets the hidden face (and its speaker icon) render through during the flip
 - `P` key speaks the currently visible face (front before flip, back after)
 - LaTeX (`$...$` and `$$...$$`) stripped before speaking so math notation is skipped
 - `.fc-back` buttons are `pointer-events: none` until the card is flipped — prevents accidental clicks on the hidden face
