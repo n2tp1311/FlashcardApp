@@ -1414,12 +1414,12 @@ function _renderLessonSlicer(lessons) {
 function _renderLessonItems(lessons, accMap) {
   var list = document.getElementById("lesson-list");
   var empty = document.getElementById("empty-class");
-  list.innerHTML = "";
 
   var filtered = state.lessonFilter === "all" ? lessons
     : lessons.filter(function(l) { return l.format === state.lessonFilter; });
 
   if (filtered.length === 0) {
+    list.innerHTML = "";
     empty.classList.remove("hidden");
     list.classList.add("hidden");
     return;
@@ -1433,6 +1433,10 @@ function _renderLessonItems(lessons, accMap) {
     filtered = sortLessons(filtered, dueInfo, sortKey, state.currentLessonSortDir);
     var now = Math.floor(Date.now() / 1000);
 
+    // Clear and repopulate in the same tick as the resolved data — an empty
+    // intermediate paint here would shrink the page and make the browser
+    // clamp window.scrollY, which never gets restored once items are re-added.
+    list.innerHTML = "";
     filtered.forEach(function(lesson) {
       var item = document.createElement("div");
       var selected = state.selectMode && state.selectedLessonIds.indexOf(lesson.id) !== -1;
