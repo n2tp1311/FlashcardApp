@@ -16,6 +16,7 @@
 - AI prompt guide with copy button; AI generates 2–4 distractors per card; length rule relaxed — options should be comparable but natural phrasing takes priority over exact word-count matching
 - Bulk delete lessons: "☑ Select" on class screen enters select mode with checkboxes, select-all, and "Delete selected" to remove multiple lessons and their cards at once
 - Bulk delete cards: "☑ Select" on lesson screen enters card select mode with checkboxes, select-all, and "Delete selected" to remove multiple cards at once
+- Lesson list re-render (after add/edit/delete/sort/filter) swaps old and new items atomically instead of clearing then repopulating after a network round trip — keeps scroll position stable instead of jumping to the top
 
 ## Spaced Repetition
 - Per-card SRS intervals: 10min → 1h → 4h → 1d → 3d → 7d → 21d (step advances on correct, resets on wrong)
