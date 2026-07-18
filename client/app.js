@@ -97,8 +97,32 @@ function _pickVoice() {
 if (window.speechSynthesis) {
   _ttsVoice = _pickVoice();
   if (typeof window.speechSynthesis.addEventListener === "function") {
-    window.speechSynthesis.addEventListener("voiceschanged", function() { _ttsVoice = _pickVoice(); });
+    window.speechSynthesis.addEventListener("voiceschanged", function() {
+      _ttsVoice = _pickVoice();
+      var modal = document.getElementById("modal-preferences");
+      if (modal && !modal.classList.contains("hidden")) populateVoiceSelect();
+    });
   }
+}
+
+function _resolveVoice(voiceURI) {
+  if (voiceURI && window.speechSynthesis) {
+    var match = window.speechSynthesis.getVoices().find(function(v) { return v.voiceURI === voiceURI; });
+    if (match) return match;
+  }
+  return _ttsVoice || _pickVoice();
+}
+
+function speakWith(text, voiceURI, rate) {
+  if (!window.speechSynthesis || !text) return;
+  window.speechSynthesis.cancel();
+  setTimeout(function() {
+    var u = new SpeechSynthesisUtterance(text);
+    var voice = _resolveVoice(voiceURI);
+    if (voice) u.voice = voice;
+    u.rate = rate || 0.9;
+    window.speechSynthesis.speak(u);
+  }, 50);
 }
 
 function speakText(text) {
@@ -108,14 +132,7 @@ function speakText(text) {
     .replace(/\$(?!\$)[\s\S]+?(?<!\$)\$/g, "")
     .trim();
   if (!clean) return;
-  window.speechSynthesis.cancel();
-  setTimeout(function() {
-    var u = new SpeechSynthesisUtterance(clean);
-    var voice = _ttsVoice || _pickVoice();
-    if (voice) u.voice = voice;
-    u.rate = 0.9;
-    window.speechSynthesis.speak(u);
-  }, 50);
+  speakWith(clean, state.ttsVoiceURI, state.ttsRate);
 }
 
 function setStudyLessonLabel(elId, card) {
@@ -735,6 +752,8 @@ var state = {
   // User preferences (loaded from server after login)
   darkMode: false,
   fontScale: 1,
+  ttsVoiceURI: "",
+  ttsRate: 0.9,
 
   // Lesson sort preference (persisted in localStorage)
   currentLessonSort: (function() {
@@ -4206,6 +4225,7 @@ function applyDarkMode(enabled) {
   document.documentElement.setAttribute("data-theme", state.darkMode ? "dark" : "light");
 }
 
+var TTS_RATE_MIN = 0.5, TTS_RATE_MAX = 1.5, TTS_RATE_STEP = 0.1;
 var FONT_SCALE_MIN = 0.7, FONT_SCALE_MAX = 1.5, FONT_SCALE_STEP = 0.1;
 function applyFontScale(scale) {
   scale = Math.round(Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, scale)) * 10) / 10;
@@ -4219,6 +4239,12 @@ function applyPrefs(prefs) {
   }
   if (typeof prefs.fontScale === "number") {
     applyFontScale(prefs.fontScale);
+  }
+  if (typeof prefs.ttsVoice === "string") {
+    state.ttsVoiceURI = prefs.ttsVoice;
+  }
+  if (typeof prefs.ttsRate === "number") {
+    state.ttsRate = prefs.ttsRate;
   }
 }
 
@@ -4475,10 +4501,43 @@ function prefFontLabel() {
   document.getElementById("pref-font-label").textContent = Math.round(state.fontScale * 100) + "%";
 }
 
+function prefRateLabel(rate) {
+  var el = document.getElementById("pref-rate-label");
+  el.textContent = rate.toFixed(1) + "x";
+  el.dataset.rate = rate;
+}
+
+function populateVoiceSelect() {
+  var sel = document.getElementById("pref-tts-voice");
+  if (!window.speechSynthesis) {
+    sel.innerHTML = '<option value="">Not supported in this browser</option>';
+    return;
+  }
+  var voices = window.speechSynthesis.getVoices().slice().sort(function(a, b) {
+    return a.lang === b.lang ? a.name.localeCompare(b.name) : a.lang.localeCompare(b.lang);
+  });
+  sel.innerHTML = '<option value="">Auto (recommended)</option>';
+  voices.forEach(function(v) {
+    var opt = document.createElement("option");
+    opt.value = v.voiceURI;
+    opt.textContent = v.name + " (" + v.lang + ")";
+    sel.appendChild(opt);
+  });
+  sel.value = state.ttsVoiceURI || "";
+  if (sel.selectedIndex === -1) sel.selectedIndex = 0;
+}
+
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
   document.getElementById("pref-dark-mode").checked = state.darkMode;
   prefFontLabel();
+  prefRateLabel(state.ttsRate);
+  populateVoiceSelect();
+  var ttsSupported = !!window.speechSynthesis;
+  document.getElementById("pref-tts-voice").disabled = !ttsSupported;
+  document.getElementById("pref-rate-decrease").disabled = !ttsSupported;
+  document.getElementById("pref-rate-increase").disabled = !ttsSupported;
+  document.getElementById("pref-tts-test").disabled = !ttsSupported;
   openModal("preferences");
 });
 
@@ -4491,10 +4550,29 @@ document.getElementById("pref-font-increase").addEventListener("click", function
   prefFontLabel();
 });
 
+document.getElementById("pref-rate-decrease").addEventListener("click", function() {
+  var cur = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
+  prefRateLabel(Math.round(Math.max(TTS_RATE_MIN, cur - TTS_RATE_STEP) * 10) / 10);
+});
+document.getElementById("pref-rate-increase").addEventListener("click", function() {
+  var cur = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
+  prefRateLabel(Math.round(Math.min(TTS_RATE_MAX, cur + TTS_RATE_STEP) * 10) / 10);
+});
+
+document.getElementById("pref-tts-test").addEventListener("click", function() {
+  var voiceURI = document.getElementById("pref-tts-voice").value;
+  var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
+  speakWith("This is a test of the voice and speed settings.", voiceURI, rate);
+});
+
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
   var dark = document.getElementById("pref-dark-mode").checked;
   applyDarkMode(dark);
-  var prefs = { darkMode: dark, fontScale: state.fontScale };
+  var voiceURI = document.getElementById("pref-tts-voice").value;
+  var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
+  state.ttsVoiceURI = voiceURI;
+  state.ttsRate = rate;
+  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsVoice: voiceURI, ttsRate: rate };
   try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",
