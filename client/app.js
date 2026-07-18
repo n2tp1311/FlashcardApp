@@ -97,28 +97,16 @@ function _pickVoice() {
 if (window.speechSynthesis) {
   _ttsVoice = _pickVoice();
   if (typeof window.speechSynthesis.addEventListener === "function") {
-    window.speechSynthesis.addEventListener("voiceschanged", function() {
-      _ttsVoice = _pickVoice();
-      var modal = document.getElementById("modal-preferences");
-      if (modal && !modal.classList.contains("hidden")) populateVoiceSelect();
-    });
+    window.speechSynthesis.addEventListener("voiceschanged", function() { _ttsVoice = _pickVoice(); });
   }
 }
 
-function _resolveVoice(voiceURI) {
-  if (voiceURI && window.speechSynthesis) {
-    var match = window.speechSynthesis.getVoices().find(function(v) { return v.voiceURI === voiceURI; });
-    if (match) return match;
-  }
-  return _ttsVoice || _pickVoice();
-}
-
-function speakWith(text, voiceURI, rate) {
+function speakWith(text, rate) {
   if (!window.speechSynthesis || !text) return;
   window.speechSynthesis.cancel();
   setTimeout(function() {
     var u = new SpeechSynthesisUtterance(text);
-    var voice = _resolveVoice(voiceURI);
+    var voice = _ttsVoice || _pickVoice();
     if (voice) u.voice = voice;
     u.rate = rate || 0.9;
     window.speechSynthesis.speak(u);
@@ -132,7 +120,7 @@ function speakText(text) {
     .replace(/\$(?!\$)[\s\S]+?(?<!\$)\$/g, "")
     .trim();
   if (!clean) return;
-  speakWith(clean, state.ttsVoiceURI, state.ttsRate);
+  speakWith(clean, state.ttsRate);
 }
 
 function setStudyLessonLabel(elId, card) {
@@ -752,7 +740,6 @@ var state = {
   // User preferences (loaded from server after login)
   darkMode: false,
   fontScale: 1,
-  ttsVoiceURI: "",
   ttsRate: 0.9,
 
   // Lesson sort preference (persisted in localStorage)
@@ -4240,9 +4227,6 @@ function applyPrefs(prefs) {
   if (typeof prefs.fontScale === "number") {
     applyFontScale(prefs.fontScale);
   }
-  if (typeof prefs.ttsVoice === "string") {
-    state.ttsVoiceURI = prefs.ttsVoice;
-  }
   if (typeof prefs.ttsRate === "number") {
     state.ttsRate = prefs.ttsRate;
   }
@@ -4507,34 +4491,12 @@ function prefRateLabel(rate) {
   el.dataset.rate = rate;
 }
 
-function populateVoiceSelect() {
-  var sel = document.getElementById("pref-tts-voice");
-  if (!window.speechSynthesis) {
-    sel.innerHTML = '<option value="">Not supported in this browser</option>';
-    return;
-  }
-  var voices = window.speechSynthesis.getVoices().slice().sort(function(a, b) {
-    return a.lang === b.lang ? a.name.localeCompare(b.name) : a.lang.localeCompare(b.lang);
-  });
-  sel.innerHTML = '<option value="">Auto (recommended)</option>';
-  voices.forEach(function(v) {
-    var opt = document.createElement("option");
-    opt.value = v.voiceURI;
-    opt.textContent = v.name + " (" + v.lang + ")";
-    sel.appendChild(opt);
-  });
-  sel.value = state.ttsVoiceURI || "";
-  if (sel.selectedIndex === -1) sel.selectedIndex = 0;
-}
-
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
   document.getElementById("pref-dark-mode").checked = state.darkMode;
   prefFontLabel();
   prefRateLabel(state.ttsRate);
-  populateVoiceSelect();
   var ttsSupported = !!window.speechSynthesis;
-  document.getElementById("pref-tts-voice").disabled = !ttsSupported;
   document.getElementById("pref-rate-decrease").disabled = !ttsSupported;
   document.getElementById("pref-rate-increase").disabled = !ttsSupported;
   document.getElementById("pref-tts-test").disabled = !ttsSupported;
@@ -4560,19 +4522,16 @@ document.getElementById("pref-rate-increase").addEventListener("click", function
 });
 
 document.getElementById("pref-tts-test").addEventListener("click", function() {
-  var voiceURI = document.getElementById("pref-tts-voice").value;
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
-  speakWith("This is a test of the voice and speed settings.", voiceURI, rate);
+  speakWith("This is a test of the speed setting.", rate);
 });
 
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
   var dark = document.getElementById("pref-dark-mode").checked;
   applyDarkMode(dark);
-  var voiceURI = document.getElementById("pref-tts-voice").value;
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
-  state.ttsVoiceURI = voiceURI;
   state.ttsRate = rate;
-  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsVoice: voiceURI, ttsRate: rate };
+  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate };
   try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",

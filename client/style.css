@@ -1080,8 +1080,6 @@ code {
 .pref-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .pref-row .form-label { margin-bottom: 0; flex-shrink: 0; }
 .font-scale-row { display: flex; align-items: center; gap: 8px; }
-.pref-voice-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.pref-voice-select { max-width: 180px; }
 .font-scale-row .tf-pct-label { font-size: 0.875rem; font-weight: 600; color: var(--primary); min-width: 44px; text-align: center; }
 .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
