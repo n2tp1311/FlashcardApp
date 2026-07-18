@@ -54,8 +54,10 @@
 - LaTeX (`$...$` and `$$...$$`) stripped before speaking so math notation is skipped
 - `.fc-back` buttons are `pointer-events: none` until the card is flipped — prevents accidental clicks on the hidden face
 - 50ms `setTimeout` around `speak()` avoids a Safari bug where synchronous `cancel()+speak()` silently drops the utterance
-- Voice selection: prefers Google en-US voices (Chrome), then Enhanced/Premium/Neural en-US (Apple), then any en-US, then any English; cached after first pick via `voiceschanged` event (with synchronous init for Safari which never fires the event)
-- `rate = 0.9` for more natural cadence
+- Voice selection: "Auto" (default) prefers Google en-US voices (Chrome), then Enhanced/Premium/Neural en-US (Apple), then any en-US, then any English; cached after first pick via `voiceschanged` event (with synchronous init for Safari which never fires the event)
+- `rate = 0.9` by default for a more natural cadence
+- Preferences modal (⚙ Preferences): Voice dropdown lists every voice from `speechSynthesis.getVoices()` (sorted by language, then name), plus "Auto (recommended)"; a Speed control (0.5x–1.5x in 0.1 steps) sets the rate; a 🔊 Test button previews the in-progress selection immediately, without requiring Save first
+- Voice/rate choice stored server-side per-user via the same `preferences` JSON blob as dark mode and font scale (`ttsVoice` = `voiceURI` or `""` for Auto, `ttsRate` = number); falls back to Auto/0.9 when the saved `voiceURI` isn't present in the current browser's voice list
 
 ## Keyboard-Only Mode
 
