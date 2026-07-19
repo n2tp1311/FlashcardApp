@@ -205,6 +205,9 @@ try { db.exec("ALTER TABLE users ADD COLUMN preferences TEXT"); } catch (_) {}
 // Migration: add level column to classes for manual course ordering
 try { db.exec("ALTER TABLE classes ADD COLUMN level INTEGER"); } catch (_) {}
 
+// Migration: add archived flag to classes — archived classes are excluded from due/review aggregation
+try { db.exec("ALTER TABLE classes ADD COLUMN archived INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+
 // Migration: add last_seen_at to card_states for per-card visit tracking
 try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catch (_) {}
 

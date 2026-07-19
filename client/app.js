@@ -766,6 +766,10 @@ var state = {
   homeFilter: (function() {
     try { return localStorage.getItem("fc-home-filter") || "all"; } catch (_) { return "all"; }
   }()),
+  // Show archived classes instead of active ones (persisted)
+  showArchived: (function() {
+    try { return localStorage.getItem("fc-show-archived") === "1"; } catch (_) { return false; }
+  }()),
   _classAccuracyMap: {},
 
   // Lesson format filter: "all" or a format string (resets per class)
@@ -937,13 +941,13 @@ function renderHome() {
   _updateHomeViewToggle();
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
-    renderSidebarClasses(classes);
+    renderSidebarClasses(classes.filter(function(c) { return !c.archived; }));
     classes = sortClasses(classes, state.currentClassSort, state.currentClassSortDir);
     document.getElementById("class-sort-select").value = state.currentClassSort;
     document.getElementById("class-sort-dir").textContent = state.currentClassSortDir === "desc" ? "↓" : "↑";
 
-    // Build slicer pills from unique levels
-    _renderHomeSlicer(classes);
+    // Build slicer pills from unique levels among classes in the current archived/active view
+    _renderHomeSlicer(classes.filter(function(c) { return !!c.archived === state.showArchived; }));
 
     // Apply filter
     var filtered = _applyHomeFilter(classes);
@@ -1011,8 +1015,9 @@ function _renderHomeSlicer(classes) {
 }
 
 function _applyHomeFilter(classes) {
-  if (state.homeFilter === "all") return classes;
-  return classes.filter(function(c) { return String(c.level) === state.homeFilter; });
+  var base = classes.filter(function(c) { return !!c.archived === state.showArchived; });
+  if (state.homeFilter === "all") return base;
+  return base.filter(function(c) { return String(c.level) === state.homeFilter; });
 }
 
 function _renderClassItems(classes) {
@@ -1021,6 +1026,9 @@ function _renderClassItems(classes) {
   container.innerHTML = "";
 
   if (classes.length === 0) {
+    empty.querySelector("p").textContent = state.showArchived
+      ? "No archived classes."
+      : "No classes yet. Create your first class to get started.";
     empty.classList.remove("hidden");
     container.classList.add("hidden");
     return;
@@ -1037,9 +1045,13 @@ function _renderClassItems(classes) {
   }
 }
 
+function toggleClassArchived(cls) {
+  return store.updateClass(cls.id, { archived: cls.archived ? 0 : 1 }).then(renderHome);
+}
+
 function _renderClassGridCard(cls, container) {
   var card = document.createElement("div");
-  card.className = "class-card";
+  card.className = "class-card" + (cls.archived ? " class-card-archived" : "");
   card.tabIndex = -1;
   card.dataset.classId = cls.id;
   card.innerHTML =
@@ -1054,13 +1066,18 @@ function _renderClassGridCard(cls, container) {
       '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
     '</div>' +
     '<div class="class-card-actions">' +
+      '<button class="icon-btn" title="' + (cls.archived ? "Unarchive" : "Archive") + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? "📤" : "🗄️") + '</button>' +
       '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">✏️</button>' +
       '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">🗑️</button>' +
     '</div>';
   card.addEventListener("click", function(e) {
-    if (e.target.closest("[data-cls-edit],[data-cls-del]")) return;
+    if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive]")) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
     openClass(cls.id);
+  });
+  card.querySelector("[data-cls-archive]").addEventListener("click", function(e) {
+    e.stopPropagation();
+    toggleClassArchived(cls);
   });
   card.querySelector("[data-cls-edit]").addEventListener("click", function(e) {
     e.stopPropagation();
@@ -1097,7 +1114,7 @@ function _renderClassGridCard(cls, container) {
 
 function _renderClassListRow(cls, container) {
   var row = document.createElement("div");
-  row.className = "class-list-row";
+  row.className = "class-list-row" + (cls.archived ? " class-list-row-archived" : "");
   row.tabIndex = -1;
   row.dataset.classId = cls.id;
   row.innerHTML =
@@ -1112,17 +1129,23 @@ function _renderClassListRow(cls, container) {
       '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
       (state.homeSelectMode ? '' :
         '<div class="class-list-actions">' +
+          '<button class="icon-btn" title="' + (cls.archived ? "Unarchive" : "Archive") + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? "📤" : "🗄️") + '</button>' +
           '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">✏️</button>' +
           '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">🗑️</button>' +
         '</div>') +
     '</div>';
   row.addEventListener("click", function(e) {
-    if (e.target.closest("[data-cls-edit],[data-cls-del]")) return;
+    if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive]")) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
     openClass(cls.id);
   });
+  var archiveBtn = row.querySelector("[data-cls-archive]");
   var editBtn = row.querySelector("[data-cls-edit]");
   var delBtn = row.querySelector("[data-cls-del]");
+  if (archiveBtn) archiveBtn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    toggleClassArchived(cls);
+  });
   if (editBtn) editBtn.addEventListener("click", function(e) {
     e.stopPropagation();
     openEditClass(cls.id);
@@ -1174,6 +1197,17 @@ function _applyClassAccuracy(accMap) {
     });
   }
 
+  var archiveToggle = document.getElementById("btn-toggle-archived");
+  if (archiveToggle) {
+    archiveToggle.classList.toggle("active", state.showArchived);
+    archiveToggle.addEventListener("click", function() {
+      state.showArchived = !state.showArchived;
+      try { localStorage.setItem("fc-show-archived", state.showArchived ? "1" : "0"); } catch (_) {}
+      archiveToggle.classList.toggle("active", state.showArchived);
+      renderHome();
+    });
+  }
+
   var viewToggle = document.getElementById("home-view-toggle");
   if (viewToggle) {
     viewToggle.addEventListener("click", function(e) {
@@ -1206,7 +1240,9 @@ function openClass(classId) {
     state.lessonFilter = "all";
     state._lessonAccuracyMap = {};
     var nameEl = document.getElementById("class-detail-name");
-    nameEl.textContent = cls.icon + " " + cls.name;
+    nameEl.innerHTML = escHtml(cls.icon + " " + cls.name) +
+      (cls.archived ? ' <span class="archived-badge">Archived</span>' : "");
+    document.getElementById("btn-archive-class").textContent = cls.archived ? "📤 Unarchive Class" : "🗄️ Archive Class";
     setSelectMode(false);
     document.getElementById("lesson-sort-select").value = state.currentLessonSort;
     document.getElementById("lesson-sort-dir").textContent = state.currentLessonSortDir === "desc" ? "↓" : "↑";
@@ -1324,6 +1360,12 @@ document.getElementById("btn-new-class").addEventListener("click", openNewClass)
 document.getElementById("btn-class-back").addEventListener("click", function() { renderHome(); showScreen("home"); saveScreenState("home"); });
 document.getElementById("btn-edit-class").addEventListener("click", function() {
   if (state.currentClass) openEditClass(state.currentClass.id);
+});
+document.getElementById("btn-archive-class").addEventListener("click", function() {
+  if (!state.currentClass) return;
+  toggleClassArchived(state.currentClass).then(function() {
+    if (state.currentClass) openClass(state.currentClass.id);
+  });
 });
 document.getElementById("btn-class-stats").addEventListener("click", function() {
   if (state.currentClass) openStats("class", state.currentClass.id, state.currentClass.name);

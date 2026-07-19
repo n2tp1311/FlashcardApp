@@ -194,13 +194,16 @@
   </div>
   <div id="home-filter-bar" class="home-filter-bar">
     <div id="home-slicer-bar" class="slicer-bar"></div>
-    <div id="home-view-toggle" class="view-toggle">
-      <button class="view-toggle-btn" data-view="grid" title="Grid view">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-      </button>
-      <button class="view-toggle-btn" data-view="list" title="List view">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
-      </button>
+    <div class="home-right-controls">
+      <button id="btn-toggle-archived" class="pill" title="Show archived classes">🗄️ Archived</button>
+      <div id="home-view-toggle" class="view-toggle">
+        <button class="view-toggle-btn" data-view="grid" title="Grid view">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        </button>
+        <button class="view-toggle-btn" data-view="list" title="List view">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
+        </button>
+      </div>
     </div>
   </div>
   <div id="class-list" class="class-grid"></div>
@@ -283,6 +286,7 @@
         <div class="dropdown-menu hidden" id="class-dropdown-menu">
           <button class="dropdown-item" id="btn-class-stats">📊 Stats</button>
           <button class="dropdown-item" id="btn-edit-class">✏️ Edit Class</button>
+          <button class="dropdown-item" id="btn-archive-class">🗄️ Archive Class</button>
           <button class="dropdown-item" id="btn-share-class">🔗 Share</button>
           <button class="dropdown-item" id="btn-prompt-guide">💡 AI Prompt Guide</button>
           <div class="dropdown-divider"></div>

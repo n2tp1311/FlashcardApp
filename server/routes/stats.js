@@ -165,20 +165,20 @@ router.post("/difficulty-map", requireAuth, (req, res) => {
 router.get("/dashboard", requireAuth, (req, res) => {
   const uid = req.session.userId;
 
-  // Summary counts
-  const totalClasses  = db.prepare("SELECT COUNT(*) AS n FROM classes WHERE user_id = ?").get(uid).n;
+  // Summary counts — archived classes are excluded from all dashboard aggregation
+  const totalClasses  = db.prepare("SELECT COUNT(*) AS n FROM classes WHERE user_id = ? AND archived = 0").get(uid).n;
   const totalLessons  = db.prepare(
-    "SELECT COUNT(*) AS n FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+    "SELECT COUNT(*) AS n FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ? AND c.archived = 0"
   ).get(uid).n;
   const totalCards    = db.prepare(
-    "SELECT COUNT(*) AS n FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+    "SELECT COUNT(*) AS n FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id WHERE c.user_id = ? AND c.archived = 0"
   ).get(uid).n;
   const totalSessions = db.prepare("SELECT COUNT(*) AS n FROM quiz_sessions WHERE user_id = ?").get(uid).n;
   const attRow        = db.prepare("SELECT COUNT(*) AS total, SUM(correct) AS correct_count FROM attempts WHERE user_id = ?").get(uid);
 
   // Difficulty breakdown — compute via existing helper on all user cards
   const allCardIds = db.prepare(
-    "SELECT ca.id FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+    "SELECT ca.id FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id WHERE c.user_id = ? AND c.archived = 0"
   ).all(uid).map(r => r.id);
 
   const withStats = getCardsWithStats(allCardIds, uid);
@@ -187,7 +187,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
 
   // Due for review — lessons with at least 1 card whose srs_due_at has passed
   const allLessons = db.prepare(
-    "SELECT l.id, l.title, l.class_id, c.name AS class_name FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ?"
+    "SELECT l.id, l.title, l.class_id, c.name AS class_name FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ? AND c.archived = 0"
   ).all(uid);
 
   const nowSec = Math.floor(Date.now() / 1000);
@@ -197,7 +197,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
     "JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
     "JOIN lessons l ON ca.lesson_id = l.id " +
     "JOIN classes c ON l.class_id = c.id " +
-    "WHERE c.user_id = ? AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
     "GROUP BY ca.lesson_id"
   ).all(uid, uid, nowSec);
 
@@ -221,7 +221,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
     "JOIN cards ca ON a.card_id = ca.id " +
     "JOIN lessons l ON ca.lesson_id = l.id " +
     "JOIN classes c ON l.class_id = c.id " +
-    "WHERE c.user_id = ? AND a.user_id = ? " +
+    "WHERE c.user_id = ? AND a.user_id = ? AND c.archived = 0 " +
     "ORDER BY l.id, ca.id, a.created_at"
   ).all(uid, uid);
 
@@ -306,7 +306,7 @@ router.get("/analytics", requireAuth, function(req, res) {
     "COUNT(a.id) AS total_attempts, " +
     "SUM(CASE WHEN a.correct=1 THEN 1 ELSE 0 END) AS correct_attempts " +
     "FROM lessons l " +
-    "JOIN classes cl ON cl.id=l.class_id AND cl.user_id=? " +
+    "JOIN classes cl ON cl.id=l.class_id AND cl.user_id=? AND cl.archived=0 " +
     "LEFT JOIN cards c ON c.lesson_id=l.id " +
     "LEFT JOIN attempts a ON a.card_id=c.id AND a.user_id=? " +
     "GROUP BY l.id " +

@@ -21,7 +21,7 @@ router.get("/", requireAuth, (req, res) => {
   const uid    = req.session.userId;
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = db.prepare(
-    "SELECT cl.*, COALESCE(dc.due_count, 0) AS due_count " +
+    "SELECT cl.*, CASE WHEN cl.archived = 1 THEN 0 ELSE COALESCE(dc.due_count, 0) END AS due_count " +
     "FROM classes cl " +
     "LEFT JOIN (" +
       "SELECT l.class_id, COUNT(*) AS due_count " +
@@ -64,15 +64,16 @@ router.put("/:id", requireAuth, (req, res) => {
   const cls = db.prepare("SELECT * FROM classes WHERE id = ? AND user_id = ?")
     .get(req.params.id, req.session.userId);
   if (!cls) return res.status(404).json({ error: "Not found" });
-  const { name, color, icon, sort_order, level } = req.body;
+  const { name, color, icon, sort_order, level, archived } = req.body;
   db.prepare(
-    "UPDATE classes SET name = ?, color = ?, icon = ?, sort_order = ?, level = ? WHERE id = ?"
+    "UPDATE classes SET name = ?, color = ?, icon = ?, sort_order = ?, level = ?, archived = ? WHERE id = ?"
   ).run(
     name        ?? cls.name,
     color       ?? cls.color,
     icon        ?? cls.icon,
     sort_order  ?? cls.sort_order,
     normalizeLevel(level, cls.level),
+    archived != null ? (archived ? 1 : 0) : cls.archived,
     req.params.id
   );
   res.json(db.prepare("SELECT * FROM classes WHERE id = ?").get(req.params.id));
