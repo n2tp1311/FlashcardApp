@@ -1702,7 +1702,7 @@ function updateHomeSelectBar() {
   if (countEl) countEl.textContent = n + " class" + (n !== 1 ? "es" : "") + " selected";
   var studyBtn = document.getElementById("btn-study-classes");
   if (studyBtn) studyBtn.disabled = n === 0;
-  var total = (state.homeClasses || []).length;
+  var total = document.querySelectorAll("#class-list [data-class-id]").length;
   var allCheck = document.getElementById("select-all-classes");
   if (allCheck) allCheck.checked = total > 0 && n === total;
 }
@@ -1721,7 +1721,8 @@ document.getElementById("btn-select-classes-cancel").addEventListener("click", f
 
 document.getElementById("select-all-classes").addEventListener("change", function() {
   if (this.checked) {
-    state.selectedClassIds = (state.homeClasses || []).map(function(c) { return c.id; });
+    state.selectedClassIds = Array.from(document.querySelectorAll("#class-list [data-class-id]"))
+      .map(function(card) { return card.dataset.classId; });
   } else {
     state.selectedClassIds = [];
   }
