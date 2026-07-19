@@ -866,6 +866,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Session persistence (SQLiteSessionStore) | Done | Replaced MemoryStore; survives Railway restarts |
 | Screen state restoration on refresh | Done | `fc-last-screen` localStorage key; restores class/lesson |
 | Bulk delete lessons + cards | Done | Select mode with checkboxes, select-all, delete |
+| Archive classes | Done | Excluded from dashboard/due aggregation; still browsable/studyable on demand |
 
 ### 11.2 Pending Features — Priority Order
 

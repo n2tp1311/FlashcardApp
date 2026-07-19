@@ -17,6 +17,9 @@
 - Bulk delete lessons: "☑ Select" on class screen enters select mode with checkboxes, select-all, and "Delete selected" to remove multiple lessons and their cards at once
 - Bulk delete cards: "☑ Select" on lesson screen enters card select mode with checkboxes, select-all, and "Delete selected" to remove multiple cards at once
 - Lesson list re-render (after add/edit/delete/sort/filter) swaps old and new items atomically instead of clearing then repopulating after a network round trip — keeps scroll position stable instead of jumping to the top
+- Archive a class (🗄️ icon on the class card, or "Archive Class" in the class-detail ⋮ menu): archived classes are hidden from the home list, sidebar, and level slicer by default; an "🗄️ Archived" toggle pill next to the grid/list view switch shows only archived classes (with an "Unarchive" action) when active
+- Archived classes are excluded from dashboard summary counts, "due for review," streak-relevant struggling-lesson detection, and analytics lesson breakdown — but remain fully browsable and studyable on demand if opened directly (their due badges still work inside their own lesson list)
+- Export/import round-trips the archived flag; class-sharing clones always start unarchived
 
 ## Spaced Repetition
 - Per-card SRS intervals: 10min → 1h → 4h → 1d → 3d → 7d → 21d (step advances on correct, resets on wrong)
