@@ -5,6 +5,32 @@
 "use strict";
 
 /* ============================
+   ICONS (minimalist SVG, feather-style)
+   Used inside dynamically-generated template strings; static HTML
+   inlines the same paths directly.
+   ============================ */
+
+function svgIcon(pathInner, size) {
+  size = size || 14;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + pathInner + '</svg>';
+}
+
+var ICON_EDIT     = svgIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>');
+var ICON_DELETE   = svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>');
+var ICON_ARCHIVE  = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>');
+var ICON_UNARCHIVE = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="12" y1="17" x2="12" y2="11"/><polyline points="9 14 12 11 15 14"/>');
+var ICON_CHECK    = svgIcon('<polyline points="20 6 9 17 4 12"/>');
+var ICON_X        = svgIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
+var ICON_FLAME     = svgIcon('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>');
+var ICON_COPY     = svgIcon('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>');
+var ICON_SAVE     = svgIcon('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>');
+var ICON_CHEVRON_UP   = svgIcon('<polyline points="18 15 12 9 6 15"/>');
+var ICON_CHEVRON_DOWN = svgIcon('<polyline points="6 9 12 15 18 9"/>');
+var ICON_ARROW_LEFT   = svgIcon('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>');
+var ICON_ARROW_RIGHT  = svgIcon('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>');
+var ICON_LIGHTBULB    = svgIcon('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/>');
+
+/* ============================
    LATEX RENDERING
    ============================ */
 
@@ -923,7 +949,7 @@ function renderHomeCharts() {
   document.getElementById("home-summary-grid").innerHTML = "";
   store.getDashboard().then(function(dash) {
     var grid = document.getElementById("home-summary-grid");
-    grid.innerHTML = statCard("🔥 " + dash.streak, dash.streak === 1 ? "Day Streak" : "Days Streak");
+    grid.innerHTML = statCard(ICON_FLAME + " " + dash.streak, dash.streak === 1 ? "Day Streak" : "Days Streak");
     [
       [dash.summary.classes,      "Classes"],
       [dash.summary.lessons,      "Lessons"],
@@ -944,7 +970,7 @@ function renderHome() {
     renderSidebarClasses(classes.filter(function(c) { return !c.archived; }));
     classes = sortClasses(classes, state.currentClassSort, state.currentClassSortDir);
     document.getElementById("class-sort-select").value = state.currentClassSort;
-    document.getElementById("class-sort-dir").textContent = state.currentClassSortDir === "desc" ? "↓" : "↑";
+    document.getElementById("class-sort-dir").innerHTML = state.currentClassSortDir === "desc" ? ICON_CHEVRON_DOWN : ICON_CHEVRON_UP;
 
     // Build slicer pills from unique levels among classes in the current archived/active view
     _renderHomeSlicer(classes.filter(function(c) { return !!c.archived === state.showArchived; }));
@@ -1066,9 +1092,9 @@ function _renderClassGridCard(cls, container) {
       '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
     '</div>' +
     '<div class="class-card-actions">' +
-      '<button class="icon-btn" title="' + (cls.archived ? "Unarchive" : "Archive") + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? "📤" : "🗄️") + '</button>' +
-      '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">✏️</button>' +
-      '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">🗑️</button>' +
+      '<button class="icon-btn" title="' + (cls.archived ? "Unarchive" : "Archive") + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
+      '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
+      '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
     '</div>';
   card.addEventListener("click", function(e) {
     if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive]")) return;
@@ -1129,9 +1155,9 @@ function _renderClassListRow(cls, container) {
       '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
       (state.homeSelectMode ? '' :
         '<div class="class-list-actions">' +
-          '<button class="icon-btn" title="' + (cls.archived ? "Unarchive" : "Archive") + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? "📤" : "🗄️") + '</button>' +
-          '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">✏️</button>' +
-          '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">🗑️</button>' +
+          '<button class="icon-btn" title="' + (cls.archived ? "Unarchive" : "Archive") + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
+          '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
+          '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
         '</div>') +
     '</div>';
   row.addEventListener("click", function(e) {
@@ -1242,10 +1268,10 @@ function openClass(classId) {
     var nameEl = document.getElementById("class-detail-name");
     nameEl.innerHTML = escHtml(cls.icon + " " + cls.name) +
       (cls.archived ? ' <span class="archived-badge">Archived</span>' : "");
-    document.getElementById("btn-archive-class").textContent = cls.archived ? "📤 Unarchive Class" : "🗄️ Archive Class";
+    document.getElementById("btn-archive-class").innerHTML = (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + " " + (cls.archived ? "Unarchive Class" : "Archive Class");
     setSelectMode(false);
     document.getElementById("lesson-sort-select").value = state.currentLessonSort;
-    document.getElementById("lesson-sort-dir").textContent = state.currentLessonSortDir === "desc" ? "↓" : "↑";
+    document.getElementById("lesson-sort-dir").innerHTML = state.currentLessonSortDir === "desc" ? ICON_CHEVRON_DOWN : ICON_CHEVRON_UP;
     showScreen("class");
     saveScreenState("class", classId);
     renderLessons();
@@ -1261,7 +1287,7 @@ document.getElementById("lesson-sort-select").addEventListener("change", functio
 document.getElementById("lesson-sort-dir").addEventListener("click", function() {
   state.currentLessonSortDir = state.currentLessonSortDir === "asc" ? "desc" : "asc";
   try { localStorage.setItem("fc-lesson-sort-dir", state.currentLessonSortDir); } catch (_) {}
-  document.getElementById("lesson-sort-dir").textContent = state.currentLessonSortDir === "desc" ? "↓" : "↑";
+  document.getElementById("lesson-sort-dir").innerHTML = state.currentLessonSortDir === "desc" ? ICON_CHEVRON_DOWN : ICON_CHEVRON_UP;
   renderLessons();
 });
 
@@ -1525,8 +1551,8 @@ function _renderLessonItems(lessons, accMap) {
         (state.selectMode
           ? ''
           : '<div class="lesson-actions">' +
-              '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">✏️</button>' +
-              '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">🗑️</button>' +
+              '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">' + ICON_EDIT + '</button>' +
+              '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">' + ICON_DELETE + '</button>' +
             '</div>');
       item.addEventListener("click", function(e) {
         if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
@@ -2067,8 +2093,8 @@ function renderCards() {
         diffPill +
         (state.cardSelectMode ? '' :
           '<div class="card-actions">' +
-            '<button class="icon-btn" title="Edit" data-card-edit="' + card.id + '">✏️</button>' +
-            '<button class="icon-btn danger" title="Delete" data-card-del="' + card.id + '">🗑️</button>' +
+            '<button class="icon-btn" title="Edit" data-card-edit="' + card.id + '">' + ICON_EDIT + '</button>' +
+            '<button class="icon-btn danger" title="Delete" data-card-del="' + card.id + '">' + ICON_DELETE + '</button>' +
           '</div>');
 
       var contentEl = item.querySelector(".card-content");
@@ -2199,7 +2225,9 @@ function mcqDistractorRow(value) {
   var rm = document.createElement("button");
   rm.type = "button";
   rm.className = "icon-btn danger";
-  rm.textContent = "✕";
+  rm.title = "Remove";
+  rm.setAttribute("aria-label", "Remove wrong answer");
+  rm.innerHTML = ICON_X;
   rm.addEventListener("click", function() {
     row.parentNode.removeChild(row);
     syncDistractorUI();
@@ -2842,7 +2870,7 @@ function renderFlashcard() {
     expEl.className = "explanation-panel";
     expEl.open = true;
     var sum = document.createElement("summary");
-    sum.textContent = "Explanation";
+    sum.innerHTML = ICON_LIGHTBULB + " Explanation";
     var body = document.createElement("div");
     body.className = "explanation-body";
     renderLatex(card.data.explanation, body);
@@ -2871,7 +2899,7 @@ function renderFlashcard() {
 
   // Prev/Next
   document.getElementById("btn-fc-prev").disabled = i === 0;
-  document.getElementById("btn-fc-next").textContent = i === cards.length - 1 ? "Finish" : "Next →";
+  document.getElementById("btn-fc-next").innerHTML = i === cards.length - 1 ? "Finish" : "Next " + ICON_ARROW_RIGHT;
 }
 
 function renderFcDots() {
@@ -3141,7 +3169,7 @@ function answerQuiz(selectedIdx) {
     expEl.id   = "quiz-explanation";
     expEl.className = "explanation-panel";
     var sumEl  = document.createElement("summary");
-    sumEl.textContent = "Explanation";
+    sumEl.innerHTML = ICON_LIGHTBULB + " Explanation";
     var bodyEl = document.createElement("div");
     bodyEl.className = "explanation-body";
     renderLatex(card.data.explanation, bodyEl);
@@ -3157,7 +3185,7 @@ function answerQuiz(selectedIdx) {
       nextBtn.id = "quiz-next-btn";
       nextBtn.className = "btn btn-primary btn-full";
       nextBtn.style.marginTop = "8px";
-      nextBtn.textContent = "Next →";
+      nextBtn.innerHTML = "Next " + ICON_ARROW_RIGHT;
       nextBtn.addEventListener("click", function() {
         state.quizIndex++;
         renderQuizCard();
@@ -3525,7 +3553,7 @@ function renderDashboard() {
 
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
-    summaryGrid.innerHTML = statCard("🔥 " + d.streak, d.streak === 1 ? "Day Streak" : "Days Streak");
+    summaryGrid.innerHTML = statCard(ICON_FLAME + " " + d.streak, d.streak === 1 ? "Day Streak" : "Days Streak");
     [
       [d.summary.classes,      "Classes"],
       [d.summary.lessons,      "Lessons"],
@@ -4052,8 +4080,8 @@ document.getElementById("modal-prompt-guide").addEventListener("click", function
 document.getElementById("btn-copy-prompt").addEventListener("click", function() {
   navigator.clipboard.writeText(AI_EXTRACTION_PROMPT).then(function() {
     var btn = document.getElementById("btn-copy-prompt");
-    btn.textContent = "✓ Copied!";
-    setTimeout(function() { btn.textContent = "📋 Copy Prompt"; }, 2000);
+    btn.innerHTML = ICON_CHECK + " Copied!";
+    setTimeout(function() { btn.innerHTML = ICON_COPY + " Copy Prompt"; }, 2000);
   });
 });
 
@@ -4663,7 +4691,7 @@ function renderSharedWithMe() {
           '<div class="class-name">' + escHtml(cls.name) + '</div>' +
           '<div class="class-meta">by ' + escHtml(cls.owner_name) + '</div>' +
           '<div class="class-card-actions">' +
-            '<button class="btn btn-sm btn-outline" data-clone-invite="' + cls.id + '">💾 Save Copy</button>' +
+            '<button class="btn btn-sm btn-outline" data-clone-invite="' + cls.id + '">' + ICON_SAVE + ' Save Copy</button>' +
           '</div>';
         card.addEventListener("click", function(e) {
           if (e.target.closest("[data-clone-invite]")) return;
@@ -4831,7 +4859,7 @@ document.getElementById("btn-copy-share-link").addEventListener("click", functio
   var input = document.getElementById("share-link-input");
   navigator.clipboard.writeText(input.value).then(function() {
     var btn = document.getElementById("btn-copy-share-link");
-    btn.textContent = "✓ Copied";
+    btn.innerHTML = ICON_CHECK + " Copied";
     setTimeout(function() { btn.textContent = "Copy"; }, 2000);
   });
 });
@@ -5386,11 +5414,11 @@ injectKeyHints();
 
   var knownHint = document.createElement("div");
   knownHint.className = "fc-swipe-hint fc-swipe-known";
-  knownHint.textContent = "✓ Biết rồi";
+  knownHint.innerHTML = ICON_CHECK + " Biết rồi";
 
   var learnHint = document.createElement("div");
   learnHint.className = "fc-swipe-hint fc-swipe-learning";
-  learnHint.textContent = "✗ Học lại";
+  learnHint.innerHTML = ICON_X + " Học lại";
 
   scene.appendChild(knownHint);
   scene.appendChild(learnHint);

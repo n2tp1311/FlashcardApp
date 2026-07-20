@@ -68,7 +68,7 @@
       <label class="form-label">Email</label>
       <input type="email" id="forgot-email" class="form-input" placeholder="you@example.com" autocomplete="email">
       <button type="button" class="btn btn-primary btn-full" id="btn-send-reset" style="margin-top:8px">Send Reset Link</button>
-      <button type="button" class="btn-link" id="btn-back-to-login">← Back to sign in</button>
+      <button type="button" class="btn-link" id="btn-back-to-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to sign in</button>
     </div>
 
     <!-- Reset password form (shown when ?token= present) -->
@@ -91,7 +91,7 @@
     <div class="sidebar-brand">
       <img src="/logo.svg" width="32" height="32" alt="" class="sidebar-brand-logo">
       <span class="sidebar-brand-text"><span class="brand-flash">Flash</span><span class="brand-cards">cards</span></span>
-      <button class="sidebar-close-btn" id="btn-sidebar-close" aria-label="Close menu">✕</button>
+      <button class="sidebar-close-btn" id="btn-sidebar-close" aria-label="Close menu"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <ul class="sidebar-nav-list">
       <li class="sidebar-nav-item sidebar-nav-active" id="sidebar-home-link">
@@ -145,9 +145,9 @@
         <div class="dropdown-menu dropdown-menu-right hidden" id="user-dropdown-menu">
           <div class="dropdown-header" id="user-dropdown-email"></div>
           <div class="dropdown-divider"></div>
-          <button class="dropdown-item" id="btn-open-preferences">⚙ Preferences</button>
-          <button class="dropdown-item" id="btn-show-keymap">⌨ Keyboard shortcuts</button>
-          <a href="/api/auth/google?link=1" class="dropdown-item" id="btn-link-google">🔗 Link Google Account</a>
+          <button class="dropdown-item" id="btn-open-preferences"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Preferences</button>
+          <button class="dropdown-item" id="btn-show-keymap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg> Keyboard shortcuts</button>
+          <a href="/api/auth/google?link=1" class="dropdown-item" id="btn-link-google"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Link Google Account</a>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item danger" id="btn-logout">Sign Out</button>
         </div>
@@ -157,12 +157,12 @@
     <button class="btn btn-ghost nav-inline-btn hidden" id="btn-dashboard-inline" style="display:none"></button>
     <button class="btn btn-ghost nav-inline-btn hidden" id="btn-analytics-inline" style="display:none"></button>
     <div class="dropdown-wrap" style="display:none">
-      <button class="btn btn-ghost btn-icon" id="btn-home-menu">⋮</button>
+      <button class="btn btn-ghost btn-icon" id="btn-home-menu" title="More options" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
       <div class="dropdown-menu dropdown-menu-right hidden" id="home-dropdown-menu">
-        <button class="dropdown-item home-select-mobile" id="btn-home-select">☑ Select Classes</button>
+        <button class="dropdown-item home-select-mobile" id="btn-home-select"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select Classes</button>
         <div class="dropdown-divider home-select-mobile"></div>
-        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-dashboard">📊 Dashboard</button>
-        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-analytics" style="display:none">📈 Analytics</button>
+        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-dashboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Dashboard</button>
+        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-analytics" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Analytics</button>
       </div>
     </div>
   </header>
@@ -189,13 +189,13 @@
         <option value="due_count">Due count</option>
         <option value="date_added">Date added</option>
       </select>
-      <button id="class-sort-dir" class="sort-dir-btn" title="Toggle sort direction">↑</button>
+      <button id="class-sort-dir" class="sort-dir-btn" title="Toggle sort direction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
     </div>
   </div>
   <div id="home-filter-bar" class="home-filter-bar">
     <div id="home-slicer-bar" class="slicer-bar"></div>
     <div class="home-right-controls">
-      <button id="btn-toggle-archived" class="pill" title="Show archived classes">🗄️ Archived</button>
+      <button id="btn-toggle-archived" class="pill" title="Show archived classes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Archived</button>
       <div id="home-view-toggle" class="view-toggle">
         <button class="view-toggle-btn" data-view="grid" title="Grid view">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
@@ -208,7 +208,7 @@
   </div>
   <div id="class-list" class="class-grid"></div>
   <div id="empty-home" class="empty-state hidden">
-    <div class="empty-icon">📚</div>
+    <div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
     <p>No classes yet. Create your first class to get started.</p>
   </div>
   <div id="shared-with-me-section" class="hidden">
@@ -221,9 +221,9 @@
 <!-- ===== SCREEN: Dashboard ===== -->
 <div id="screen-dashboard" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-dashboard-back">← Back</button>
+    <button class="btn btn-ghost back-btn" id="btn-dashboard-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
     <h2 class="screen-title">Dashboard</h2>
-    <button class="btn btn-ghost btn-sm" id="btn-dashboard-export">⬇ Export CSV</button>
+    <button class="btn btn-ghost btn-sm" id="btn-dashboard-export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
   </header>
   <div id="dash-loading" class="empty-state"><p>Loading…</p></div>
   <div id="dash-error" class="empty-state hidden"><p>Failed to load dashboard.</p></div>
@@ -277,20 +277,20 @@
 <!-- ===== SCREEN: Class Detail (Lesson List) ===== -->
 <div id="screen-class" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-class-back">← Back</button>
+    <button class="btn btn-ghost back-btn" id="btn-class-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
     <h2 id="class-detail-name" class="screen-title"></h2>
     <div class="header-actions">
-      <button class="btn btn-ghost" id="btn-select-lessons">☑ Select</button>
+      <button class="btn btn-ghost" id="btn-select-lessons"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select</button>
       <div class="dropdown-wrap">
-        <button class="btn btn-ghost btn-icon" id="btn-class-menu" title="More options">⋮</button>
+        <button class="btn btn-ghost btn-icon" id="btn-class-menu" title="More options" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
         <div class="dropdown-menu hidden" id="class-dropdown-menu">
-          <button class="dropdown-item" id="btn-class-stats">📊 Stats</button>
-          <button class="dropdown-item" id="btn-edit-class">✏️ Edit Class</button>
-          <button class="dropdown-item" id="btn-archive-class">🗄️ Archive Class</button>
-          <button class="dropdown-item" id="btn-share-class">🔗 Share</button>
-          <button class="dropdown-item" id="btn-prompt-guide">💡 AI Prompt Guide</button>
+          <button class="dropdown-item" id="btn-class-stats"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Stats</button>
+          <button class="dropdown-item" id="btn-edit-class"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit Class</button>
+          <button class="dropdown-item" id="btn-archive-class"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Archive Class</button>
+          <button class="dropdown-item" id="btn-share-class"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
+          <button class="dropdown-item" id="btn-prompt-guide"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg> AI Prompt Guide</button>
           <div class="dropdown-divider"></div>
-          <button class="dropdown-item" id="btn-bulk-import">⬇ Bulk Import</button>
+          <button class="dropdown-item" id="btn-bulk-import"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Bulk Import</button>
         </div>
       </div>
       <button class="btn btn-primary" id="btn-new-lesson">+ Lesson</button>
@@ -313,12 +313,12 @@
       <option value="date_modified">Last card added</option>
       <option value="due_count">Due count</option>
     </select>
-    <button id="lesson-sort-dir" class="sort-dir-btn" title="Toggle sort direction">↑</button>
+    <button id="lesson-sort-dir" class="sort-dir-btn" title="Toggle sort direction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
   </div>
   <div id="lesson-slicer-bar" class="slicer-bar hidden"></div>
   <div id="lesson-list" class="lesson-list"></div>
   <div id="empty-class" class="empty-state hidden">
-    <div class="empty-icon">📝</div>
+    <div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
     <p>No lessons yet. Add a lesson to this class.</p>
   </div>
 </div>
@@ -326,16 +326,16 @@
 <!-- ===== SCREEN: Lesson Detail (Card List) ===== -->
 <div id="screen-lesson" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-lesson-back">← Back</button>
+    <button class="btn btn-ghost back-btn" id="btn-lesson-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
     <h2 id="lesson-detail-title" class="screen-title"></h2>
     <span id="lesson-card-count" class="lesson-count-badge hidden"></span>
     <div class="header-actions">
-      <button class="btn btn-ghost" id="btn-select-cards">☑ Select</button>
+      <button class="btn btn-ghost" id="btn-select-cards"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select</button>
       <div class="dropdown-wrap">
-        <button class="btn btn-ghost btn-icon" id="btn-lesson-menu" title="More options">⋮</button>
+        <button class="btn btn-ghost btn-icon" id="btn-lesson-menu" title="More options" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
         <div class="dropdown-menu hidden" id="lesson-dropdown-menu">
-          <button class="dropdown-item" id="btn-lesson-stats">📊 Stats</button>
-          <button class="dropdown-item" id="btn-edit-lesson">✏️ Edit Lesson</button>
+          <button class="dropdown-item" id="btn-lesson-stats"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Stats</button>
+          <button class="dropdown-item" id="btn-edit-lesson"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit Lesson</button>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item" id="btn-add-card">+ Add Card</button>
           <button class="dropdown-item" id="btn-bulk-add">+ Bulk Add</button>
@@ -349,7 +349,7 @@
   </div>
   <div id="card-list" class="card-list"></div>
   <div id="empty-lesson" class="empty-state hidden">
-    <div class="empty-icon">🃏</div>
+    <div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
     <p>No cards yet. Add cards to start studying.</p>
     <button class="btn btn-primary" id="btn-empty-add-card">+ Add Card</button>
   </div>
@@ -358,7 +358,7 @@
 <!-- ===== SCREEN: Study Setup ===== -->
 <div id="screen-setup" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-setup-back">← Back</button>
+    <button class="btn btn-ghost back-btn" id="btn-setup-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
     <h2 class="screen-title">Study Setup</h2>
   </header>
   <div class="setup-container">
@@ -404,16 +404,16 @@
 <!-- ===== SCREEN: Flashcard Study ===== -->
 <div id="screen-flashcard" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-fc-back" title="Thoát phiên học">← Thoát</button>
+    <button class="btn btn-ghost back-btn" id="btn-fc-back" title="Thoát phiên học"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Thoát</button>
     <div class="fc-progress-wrap">
       <span id="fc-progress-text">1 / 10</span>
       <div class="progress-bar"><div id="fc-progress-fill" class="progress-fill"></div></div>
     </div>
-    <button class="btn btn-ghost" id="btn-fc-shuffle">⇌ Shuffle</button>
+    <button class="btn btn-ghost" id="btn-fc-shuffle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Shuffle</button>
   </header>
   <div class="fc-toolbar">
-    <button class="btn btn-sm btn-ghost" id="btn-fc-reset">↺ Reset</button>
-    <button class="btn btn-sm btn-ghost" id="btn-fc-study-hard">📌 Hard Only</button>
+    <button class="btn btn-sm btn-ghost" id="btn-fc-reset"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Reset</button>
+    <button class="btn btn-sm btn-ghost" id="btn-fc-study-hard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg> Hard Only</button>
     <button class="btn btn-sm btn-ghost btn-icon btn-toolbar-danger" id="btn-fc-delete-card" title="Delete card" aria-label="Delete card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
   </div>
   <div id="fc-lesson-label" class="study-lesson-label hidden"></div>
@@ -434,19 +434,19 @@
   <div id="fc-explanation" class="hidden"></div>
   <div class="fc-dots" id="fc-dots"></div>
   <div class="fc-nav">
-    <button class="btn btn-outline btn-lg" id="btn-fc-prev">← Prev</button>
+    <button class="btn btn-outline btn-lg" id="btn-fc-prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Prev</button>
     <div class="fc-mark-btns">
-      <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Still Learning (1)">✗ Learning</button>
-      <button class="btn btn-success btn-mark" id="btn-fc-known" title="Know It (2)">✓ Know It</button>
+      <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Still Learning (1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Learning</button>
+      <button class="btn btn-success btn-mark" id="btn-fc-known" title="Know It (2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Know It</button>
     </div>
-    <button class="btn btn-outline btn-lg" id="btn-fc-next">Next →</button>
+    <button class="btn btn-outline btn-lg" id="btn-fc-next">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
   </div>
 </div>
 
 <!-- ===== SCREEN: Quiz ===== -->
 <div id="screen-quiz" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-quiz-back">✕</button>
+    <button class="btn btn-ghost back-btn" id="btn-quiz-back" title="Exit quiz" aria-label="Exit quiz"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="fc-progress-wrap">
       <span id="quiz-progress-text">1 / 10</span>
       <div class="progress-bar"><div id="quiz-progress-fill" class="progress-fill"></div></div>
@@ -480,9 +480,9 @@
     <div class="results-detail" id="results-detail"></div>
     <div class="results-review-hint" id="results-review-hint"></div>
     <div class="results-actions">
-      <button class="btn btn-outline" id="btn-results-retry">↺ Retry</button>
-      <button class="btn btn-outline" id="btn-results-change">⚙ Change Setup</button>
-      <button class="btn btn-primary" id="btn-results-back">← Back to Lesson</button>
+      <button class="btn btn-outline" id="btn-results-retry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Retry</button>
+      <button class="btn btn-outline" id="btn-results-change"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Change Setup</button>
+      <button class="btn btn-primary" id="btn-results-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Lesson</button>
     </div>
   </div>
 </div>
@@ -490,7 +490,7 @@
 <!-- ===== SCREEN: Stats ===== -->
 <div id="screen-stats" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-stats-back">← Back</button>
+    <button class="btn btn-ghost back-btn" id="btn-stats-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
     <h2 id="stats-title" class="screen-title">Stats</h2>
   </header>
   <div class="stats-tabs">
@@ -510,7 +510,7 @@
   <div id="modal-preferences" class="modal hidden">
     <div class="modal-header">
       <h3>Preferences</h3>
-      <button class="modal-close" data-modal="preferences">✕</button>
+      <button class="modal-close" data-modal="preferences" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <div class="pref-row">
@@ -548,7 +548,7 @@
   <div id="modal-class" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-class-title">New Class</h3>
-      <button class="modal-close" data-modal="class">✕</button>
+      <button class="modal-close" data-modal="class" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Name</label>
@@ -570,7 +570,7 @@
   <div id="modal-lesson" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-lesson-title">New Lesson</h3>
-      <button class="modal-close" data-modal="lesson">✕</button>
+      <button class="modal-close" data-modal="lesson" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Title</label>
@@ -594,7 +594,7 @@
   <div id="modal-card-termdef" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-card-termdef-title">Add Card</h3>
-      <button class="modal-close" data-modal="card-termdef">✕</button>
+      <button class="modal-close" data-modal="card-termdef" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Term</label>
@@ -616,7 +616,7 @@
   <div id="modal-card-mcq" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-card-mcq-title">Add Card</h3>
-      <button class="modal-close" data-modal="card-mcq">✕</button>
+      <button class="modal-close" data-modal="card-mcq" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Question</label>
@@ -647,7 +647,7 @@
   <div id="modal-card-tf" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-card-tf-title">Add Card</h3>
-      <button class="modal-close" data-modal="card-tf">✕</button>
+      <button class="modal-close" data-modal="card-tf" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Statement</label>
@@ -676,7 +676,7 @@
   <div id="modal-card-imagedef" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-card-imagedef-title">Add Card</h3>
-      <button class="modal-close" data-modal="card-imagedef">✕</button>
+      <button class="modal-close" data-modal="card-imagedef" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Image (front)</label>
@@ -699,7 +699,7 @@
   <div id="modal-bulk" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-bulk-title">Bulk Add Cards</h3>
-      <button class="modal-close" data-modal="bulk">✕</button>
+      <button class="modal-close" data-modal="bulk" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <p class="form-hint" id="bulk-hint"></p>
@@ -717,7 +717,7 @@
   <div id="modal-bulk-import" class="modal hidden">
     <div class="modal-header">
       <h3>Bulk Import Lessons &amp; Cards</h3>
-      <button class="modal-close" data-modal="bulk-import">✕</button>
+      <button class="modal-close" data-modal="bulk-import" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <p class="form-hint" style="line-height:1.6">
@@ -746,7 +746,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   <div id="modal-delete" class="modal hidden">
     <div class="modal-header">
       <h3>Confirm Delete</h3>
-      <button class="modal-close" data-modal="delete">✕</button>
+      <button class="modal-close" data-modal="delete" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <p id="delete-confirm-text">Are you sure?</p>
@@ -765,7 +765,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
     <h2 id="share-class-name" class="screen-title"></h2>
     <div class="header-actions">
       <span id="share-owner-label" class="share-owner-label"></span>
-      <button class="btn btn-primary" id="btn-clone-shared">💾 Save to My Classes</button>
+      <button class="btn btn-primary" id="btn-clone-shared"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save to My Classes</button>
     </div>
   </header>
   <div id="share-lesson-list" class="lesson-list"></div>
@@ -780,7 +780,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   <div class="modal share-modal">
     <div class="modal-header">
       <h3>Share Class</h3>
-      <button class="btn btn-ghost btn-sm" id="btn-share-modal-close">✕</button>
+      <button class="btn btn-ghost btn-sm" id="btn-share-modal-close" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
 
     <!-- Share Link -->
@@ -790,9 +790,9 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <div id="share-link-row" class="share-link-row hidden">
         <input id="share-link-input" class="share-link-input" readonly />
         <button class="btn btn-outline btn-sm" id="btn-copy-share-link">Copy</button>
-        <button class="btn btn-danger btn-sm" id="btn-revoke-share-link" title="Disable link">✕</button>
+        <button class="btn btn-danger btn-sm" id="btn-revoke-share-link" title="Disable link" aria-label="Disable link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <button class="btn btn-outline" id="btn-generate-share-link">🔗 Generate Link</button>
+      <button class="btn btn-outline" id="btn-generate-share-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Generate Link</button>
     </div>
 
     <!-- Invite by username/email -->
@@ -821,14 +821,14 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   <div class="modal prompt-guide-modal">
     <div class="modal-header">
       <h3>AI Extraction Prompt</h3>
-      <button class="btn btn-ghost btn-sm" id="btn-prompt-guide-close">✕</button>
+      <button class="btn btn-ghost btn-sm" id="btn-prompt-guide-close" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <p class="prompt-guide-desc">Paste this prompt into any AI (ChatGPT, Claude, Gemini…) followed by your text to generate flashcards.</p>
     <div class="prompt-guide-box">
       <pre id="prompt-guide-text"></pre>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-primary" id="btn-copy-prompt">📋 Copy Prompt</button>
+      <button class="btn btn-primary" id="btn-copy-prompt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Copy Prompt</button>
     </div>
   </div>
 </div>
@@ -838,7 +838,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   <div class="modal keymap-modal">
     <div class="modal-header">
       <h3>Keyboard Shortcuts</h3>
-      <button class="modal-close" id="btn-keymap-close">✕</button>
+      <button class="modal-close" id="btn-keymap-close" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body keymap-body">
       <div class="keymap-section">
@@ -907,7 +907,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 <div id="modal-search" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Search">
   <div class="modal search-modal">
     <div class="search-input-wrap">
-      <span class="search-icon-prefix" aria-hidden="true">🔍</span>
+      <span class="search-icon-prefix" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input type="text" id="search-input" class="search-input"
         placeholder="Tìm lớp, bài học, thẻ…"
         autocomplete="off" spellcheck="false"
