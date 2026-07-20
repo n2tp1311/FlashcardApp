@@ -91,25 +91,25 @@
     <div class="sidebar-brand">
       <img src="/logo.svg" width="32" height="32" alt="" class="sidebar-brand-logo">
       <span class="sidebar-brand-text"><span class="brand-flash">Flash</span><span class="brand-cards">cards</span></span>
-      <button class="sidebar-close-btn" id="btn-sidebar-close" aria-label="Close menu"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="sidebar-close-btn" id="btn-sidebar-close" aria-label="Close menu" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <ul class="sidebar-nav-list">
       <li class="sidebar-nav-item sidebar-nav-active" id="sidebar-home-link">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Trang chủ
+        <span data-i18n="nav.home">Trang chủ</span>
       </li>
       <li class="sidebar-nav-item hidden" id="sidebar-dashboard-link">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Dashboard
+        <span data-i18n="nav.dashboard">Dashboard</span>
       </li>
       <li class="sidebar-nav-item hidden" id="sidebar-select-link">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Chọn lớp
+        <span data-i18n="nav.selectClasses">Chọn lớp</span>
       </li>
     </ul>
-    <div class="sidebar-section-label hidden" id="sidebar-classes-label">Lớp của bạn</div>
+    <div class="sidebar-section-label hidden" id="sidebar-classes-label" data-i18n="sidebar.yourClasses">Lớp của bạn</div>
     <ul id="sidebar-class-list" class="sidebar-class-list"></ul>
-    <button class="sidebar-new-class hidden" id="sidebar-btn-new-class">
+    <button class="sidebar-new-class hidden" id="sidebar-btn-new-class" data-i18n="sidebar.newClass">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Lớp mới
     </button>
@@ -119,25 +119,25 @@
   <div class="home-main">
   <div id="ptr-indicator" class="ptr-indicator" aria-hidden="true">
     <div class="ptr-circle"></div>
-    <span class="ptr-label">Pull to refresh</span>
+    <span class="ptr-label" data-i18n="common.pullToRefresh">Pull to refresh</span>
   </div>
   <!-- ===== HOME HEADER ===== -->
   <header class="home-header">
-    <button class="btn-hamburger" id="btn-sidebar-toggle" aria-label="Toggle sidebar">
+    <button class="btn-hamburger" id="btn-sidebar-toggle" aria-label="Toggle sidebar" data-i18n-aria="sidebar.toggle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div class="nav-search-bar" id="btn-search" role="button" tabindex="0" title="Search (Ctrl+K)" aria-label="Search">
+    <div class="nav-search-bar" id="btn-search" role="button" tabindex="0" title="Search (Ctrl+K)" aria-label="Search" data-i18n-title="search.titleHint" data-i18n-aria="search.label">
       <svg class="nav-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <span class="nav-search-placeholder">Tìm thẻ ghi nhớ</span>
+      <span class="nav-search-placeholder" data-i18n="search.placeholder">Tìm thẻ ghi nhớ</span>
     </div>
     <div id="user-nav" class="user-nav hidden">
-      <button class="btn btn-ghost home-select-btn" id="btn-select-classes">Select</button>
+      <button class="btn btn-ghost home-select-btn" id="btn-select-classes" data-i18n="common.select">Select</button>
       <button class="btn btn-primary home-new-class-btn" id="btn-new-class">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span class="home-new-class-label">Lớp mới</span>
+        <span class="home-new-class-label" data-i18n="sidebar.newClass">Lớp mới</span>
       </button>
       <div class="dropdown-wrap">
-        <button class="user-avatar-btn" id="btn-user-menu" title="Account">
+        <button class="user-avatar-btn" id="btn-user-menu" title="Account" data-i18n-title="user.account">
           <img id="user-avatar-img" class="user-avatar hidden" src="" alt="">
           <span id="user-initial-circle" class="user-initial-circle"></span>
           <span id="user-name-display" class="user-name"></span>
@@ -145,11 +145,11 @@
         <div class="dropdown-menu dropdown-menu-right hidden" id="user-dropdown-menu">
           <div class="dropdown-header" id="user-dropdown-email"></div>
           <div class="dropdown-divider"></div>
-          <button class="dropdown-item" id="btn-open-preferences"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Preferences</button>
-          <button class="dropdown-item" id="btn-show-keymap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg> Keyboard shortcuts</button>
-          <a href="/api/auth/google?link=1" class="dropdown-item" id="btn-link-google"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Link Google Account</a>
+          <button class="dropdown-item" id="btn-open-preferences"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span data-i18n="pref.title">Preferences</span></button>
+          <button class="dropdown-item" id="btn-show-keymap" data-i18n="keymap.title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg> Keyboard shortcuts</button>
+          <a href="/api/auth/google?link=1" class="dropdown-item" id="btn-link-google" data-i18n="user.linkGoogle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Link Google Account</a>
           <div class="dropdown-divider"></div>
-          <button class="dropdown-item danger" id="btn-logout">Sign Out</button>
+          <button class="dropdown-item danger" id="btn-logout" data-i18n="user.signOut">Sign Out</button>
         </div>
       </div>
     </div>
@@ -159,10 +159,10 @@
     <div class="dropdown-wrap" style="display:none">
       <button class="btn btn-ghost btn-icon" id="btn-home-menu" title="More options" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
       <div class="dropdown-menu dropdown-menu-right hidden" id="home-dropdown-menu">
-        <button class="dropdown-item home-select-mobile" id="btn-home-select"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select Classes</button>
+        <button class="dropdown-item home-select-mobile" id="btn-home-select" data-i18n="home.selectClasses"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select Classes</button>
         <div class="dropdown-divider home-select-mobile"></div>
-        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-dashboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Dashboard</button>
-        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-analytics" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Analytics</button>
+        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-dashboard" data-i18n="nav.dashboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Dashboard</button>
+        <button class="dropdown-item dash-analytics-dropdown hidden" id="btn-analytics" style="display:none" data-i18n="nav.analytics"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Analytics</button>
       </div>
     </div>
   </header>
@@ -173,34 +173,34 @@
   </div>
   <div id="home-select-bar" class="select-bar hidden">
     <label class="select-all-label">
-      <input type="checkbox" id="select-all-classes"> Select all
+      <input type="checkbox" id="select-all-classes"> <span data-i18n="common.selectAll">Select all</span>
     </label>
-    <span id="home-select-count" class="select-count">0 classes selected</span>
+    <span id="home-select-count" class="select-count" data-i18n="home.classesSelectedCount">0 classes selected</span>
     <button class="btn btn-sm btn-ghost" id="btn-select-classes-cancel" data-i18n="common.cancel">Cancel</button>
-    <button class="btn btn-sm btn-primary" id="btn-study-classes" disabled>Study</button>
+    <button class="btn btn-sm btn-primary" id="btn-study-classes" disabled data-i18n="common.study">Study</button>
   </div>
   <div class="lesson-sort-bar">
-    <span class="home-section-title">Lớp của bạn</span>
+    <span class="home-section-title" data-i18n="sidebar.yourClasses">Lớp của bạn</span>
     <div class="sort-controls">
-      <label class="sort-label" for="class-sort-select">Sort by</label>
+      <label class="sort-label" for="class-sort-select" data-i18n="sort.sortBy">Sort by</label>
       <select id="class-sort-select" class="sort-select">
-        <option value="level">Level</option>
-        <option value="name">Name (A–Z)</option>
-        <option value="due_count">Due count</option>
-        <option value="date_added">Date added</option>
+        <option value="level" data-i18n="sort.level">Level</option>
+        <option value="name" data-i18n="sort.nameAZ">Name (A–Z)</option>
+        <option value="due_count" data-i18n="sort.dueCount">Due count</option>
+        <option value="date_added" data-i18n="sort.dateAdded">Date added</option>
       </select>
-      <button id="class-sort-dir" class="sort-dir-btn" title="Toggle sort direction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+      <button id="class-sort-dir" class="sort-dir-btn" title="Toggle sort direction" data-i18n-title="sort.toggleDirection"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
     </div>
   </div>
   <div id="home-filter-bar" class="home-filter-bar">
     <div id="home-slicer-bar" class="slicer-bar"></div>
     <div class="home-right-controls">
-      <button id="btn-toggle-archived" class="pill" title="Show archived classes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Archived</button>
+      <button id="btn-toggle-archived" class="pill" title="Show archived classes" data-i18n-title="archive.showArchived" data-i18n="archive.archived"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Archived</button>
       <div id="home-view-toggle" class="view-toggle">
-        <button class="view-toggle-btn" data-view="grid" title="Grid view">
+        <button class="view-toggle-btn" data-view="grid" title="Grid view" data-i18n-title="view.grid" data-i18n-aria="view.grid">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
         </button>
-        <button class="view-toggle-btn" data-view="list" title="List view">
+        <button class="view-toggle-btn" data-view="list" title="List view" data-i18n-title="view.list" data-i18n-aria="view.list">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
         </button>
       </div>
@@ -209,10 +209,10 @@
   <div id="class-list" class="class-grid"></div>
   <div id="empty-home" class="empty-state hidden">
     <div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-    <p>No classes yet. Create your first class to get started.</p>
+    <p data-i18n="home.emptyDefault">No classes yet. Create your first class to get started.</p>
   </div>
   <div id="shared-with-me-section" class="hidden">
-    <h3 class="section-heading">Shared with me</h3>
+    <h3 class="section-heading" data-i18n="share.sharedWithMe">Shared with me</h3>
     <div id="shared-class-list" class="class-grid"></div>
   </div>
   </div><!-- /.home-main -->

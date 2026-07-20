@@ -47,7 +47,58 @@ Object.assign(TRANSLATIONS.en, {
   "pref.darkMode": "Dark mode",
   "pref.language": "Language",
   "pref.speed": "Speed",
-  "pref.testSpeed": "Test speed"
+  "pref.testSpeed": "Test speed",
+
+  "nav.home": "Home",
+  "nav.dashboard": "Dashboard",
+  "nav.selectClasses": "Select Classes",
+  "nav.analytics": "Analytics",
+  "sidebar.yourClasses": "Your Classes",
+  "sidebar.newClass": "New Class",
+  "sidebar.toggle": "Toggle sidebar",
+  "common.pullToRefresh": "Pull to refresh",
+  "common.select": "Select",
+  "common.selectAll": "Select all",
+  "common.study": "Study",
+  "search.titleHint": "Search (Ctrl+K)",
+  "search.label": "Search",
+  "search.placeholder": "Search flashcards",
+  "user.account": "Account",
+  "user.linkGoogle": "Link Google Account",
+  "user.signOut": "Sign Out",
+  "home.selectClasses": "Select Classes",
+  "home.classesSelectedCount": "{n} class(es) selected",
+  "home.emptyDefault": "No classes yet. Create your first class to get started.",
+  "sort.sortBy": "Sort by",
+  "sort.level": "Level",
+  "sort.nameAZ": "Name (A–Z)",
+  "sort.dueCount": "Due count",
+  "sort.dateAdded": "Date added",
+  "sort.toggleDirection": "Toggle sort direction",
+  "archive.showArchived": "Show archived classes",
+  "archive.archived": "Archived",
+  "view.grid": "Grid view",
+  "view.list": "List view",
+  "share.sharedWithMe": "Shared with me",
+
+  "common.loading": "Loading...",
+  "common.archive": "Archive",
+  "common.unarchive": "Unarchive",
+  "common.edit": "Edit",
+  "common.delete": "Delete",
+  "home.emptyArchived": "No archived classes.",
+  "count.due": "{n} due",
+  "count.lessons": "{n} lesson(s)",
+  "count.knownProgress": "{known} / {total} known ({pct}%)",
+  "confirm.deleteClass": "Delete class \"{name}\" and all its lessons and cards?",
+
+  "stat.dayStreak": "Day Streak",
+  "stat.classes": "Classes",
+  "stat.lessons": "Lessons",
+  "stat.cards": "Cards",
+  "stat.sessions": "Sessions",
+  "stat.attempts": "Attempts",
+  "dashboard.heatmapTitle": "{n}-Day Study Heatmap"
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -58,7 +109,58 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.darkMode": "Chế độ tối",
   "pref.language": "Ngôn ngữ",
   "pref.speed": "Tốc độ",
-  "pref.testSpeed": "Nghe thử tốc độ"
+  "pref.testSpeed": "Nghe thử tốc độ",
+
+  "nav.home": "Trang chủ",
+  "nav.dashboard": "Bảng điều khiển",
+  "nav.selectClasses": "Chọn lớp",
+  "nav.analytics": "Phân tích",
+  "sidebar.yourClasses": "Lớp của bạn",
+  "sidebar.newClass": "Lớp mới",
+  "sidebar.toggle": "Đóng/mở thanh bên",
+  "common.pullToRefresh": "Kéo để làm mới",
+  "common.select": "Chọn",
+  "common.selectAll": "Chọn tất cả",
+  "common.study": "Học",
+  "search.titleHint": "Tìm kiếm (Ctrl+K)",
+  "search.label": "Tìm kiếm",
+  "search.placeholder": "Tìm thẻ ghi nhớ",
+  "user.account": "Tài khoản",
+  "user.linkGoogle": "Liên kết tài khoản Google",
+  "user.signOut": "Đăng xuất",
+  "home.selectClasses": "Chọn lớp",
+  "home.classesSelectedCount": "Đã chọn {n} lớp",
+  "home.emptyDefault": "Chưa có lớp nào. Tạo lớp đầu tiên để bắt đầu.",
+  "sort.sortBy": "Sắp xếp theo",
+  "sort.level": "Cấp độ",
+  "sort.nameAZ": "Tên (A–Z)",
+  "sort.dueCount": "Số thẻ cần ôn",
+  "sort.dateAdded": "Ngày thêm",
+  "sort.toggleDirection": "Đổi chiều sắp xếp",
+  "archive.showArchived": "Hiện lớp đã lưu trữ",
+  "archive.archived": "Đã lưu trữ",
+  "view.grid": "Xem dạng lưới",
+  "view.list": "Xem dạng danh sách",
+  "share.sharedWithMe": "Được chia sẻ với tôi",
+
+  "common.loading": "Đang tải...",
+  "common.archive": "Lưu trữ",
+  "common.unarchive": "Bỏ lưu trữ",
+  "common.edit": "Sửa",
+  "common.delete": "Xóa",
+  "home.emptyArchived": "Không có lớp nào đã lưu trữ.",
+  "count.due": "{n} thẻ cần ôn",
+  "count.lessons": "{n} bài học",
+  "count.knownProgress": "{known} / {total} đã thuộc ({pct}%)",
+  "confirm.deleteClass": "Xóa lớp \"{name}\" cùng toàn bộ bài học và thẻ ghi nhớ?",
+
+  "stat.dayStreak": "Ngày liên tục",
+  "stat.classes": "Lớp học",
+  "stat.lessons": "Bài học",
+  "stat.cards": "Thẻ ghi nhớ",
+  "stat.sessions": "Phiên học",
+  "stat.attempts": "Lượt làm",
+  "dashboard.heatmapTitle": "Biểu đồ học {n} ngày qua"
 });
 
 function t(key, vars) {
@@ -78,7 +180,22 @@ function t(key, vars) {
 function applyI18n(root) {
   root = root || document;
   root.querySelectorAll("[data-i18n]").forEach(function(el) {
-    el.textContent = t(el.getAttribute("data-i18n"));
+    var text = t(el.getAttribute("data-i18n"));
+    // Buttons that pair an inline SVG icon with a trailing text node
+    // (e.g. <button>{svg} Archive</button>) must keep the icon — update
+    // just the last text-node child instead of clobbering everything.
+    var lastText = null;
+    for (var i = el.childNodes.length - 1; i >= 0; i--) {
+      if (el.childNodes[i].nodeType === 3) { lastText = el.childNodes[i]; break; }
+    }
+    var hasElementChild = Array.prototype.some.call(el.childNodes, function(n) { return n.nodeType === 1; });
+    if (lastText && hasElementChild) {
+      // Preserve which side the icon is on: "{icon} Text" vs "Text {icon}"
+      var pad = (lastText.previousSibling ? " " : "") + text + (lastText.nextSibling ? " " : "");
+      lastText.data = pad;
+    } else {
+      el.textContent = text;
+    }
   });
   root.querySelectorAll("[data-i18n-placeholder]").forEach(function(el) {
     el.placeholder = t(el.getAttribute("data-i18n-placeholder"));
@@ -1013,13 +1130,13 @@ function renderHomeCharts() {
   document.getElementById("home-summary-grid").innerHTML = "";
   store.getDashboard().then(function(dash) {
     var grid = document.getElementById("home-summary-grid");
-    grid.innerHTML = statCard(ICON_FLAME + " " + dash.streak, dash.streak === 1 ? "Day Streak" : "Days Streak");
+    grid.innerHTML = statCard(ICON_FLAME + " " + dash.streak, t("stat.dayStreak"));
     [
-      [dash.summary.classes,      "Classes"],
-      [dash.summary.lessons,      "Lessons"],
-      [dash.summary.cards,        "Cards"],
-      [dash.summary.quizSessions, "Sessions"],
-      [dash.summary.attempts,     "Attempts"]
+      [dash.summary.classes,      t("stat.classes")],
+      [dash.summary.lessons,      t("stat.lessons")],
+      [dash.summary.cards,        t("stat.cards")],
+      [dash.summary.quizSessions, t("stat.sessions")],
+      [dash.summary.attempts,     t("stat.attempts")]
     ].forEach(function(item) { grid.innerHTML += statCard(item[0], item[1]); });
     section.classList.remove("hidden");
   }).catch(function() { section.classList.add("hidden"); });
@@ -1117,8 +1234,8 @@ function _renderClassItems(classes) {
 
   if (classes.length === 0) {
     empty.querySelector("p").textContent = state.showArchived
-      ? "No archived classes."
-      : "No classes yet. Create your first class to get started.";
+      ? t("home.emptyArchived")
+      : t("home.emptyDefault");
     empty.classList.remove("hidden");
     container.classList.add("hidden");
     return;
@@ -1148,17 +1265,17 @@ function _renderClassGridCard(cls, container) {
     '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
     '<span class="class-icon">' + cls.icon + '</span>' +
     '<div class="class-name">' + escHtml(cls.name) + '</div>' +
-    '<div class="class-meta" id="cls-meta-' + cls.id + '">Loading...</div>' +
-    (cls.due_count > 0 ? '<span class="due-badge class-due-badge">' + cls.due_count + ' due</span>' : '') +
+    '<div class="class-meta" id="cls-meta-' + cls.id + '">' + t("common.loading") + '</div>' +
+    (cls.due_count > 0 ? '<span class="due-badge class-due-badge">' + t("count.due", { n: cls.due_count }) + '</span>' : '') +
     '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
     '<div class="progress-mini-wrap" id="cls-prog-wrap-' + cls.id + '" style="display:none">' +
       '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="width:0%;background:' + cls.color + '"></div></div>' +
       '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
     '</div>' +
     '<div class="class-card-actions">' +
-      '<button class="icon-btn" title="' + (cls.archived ? "Unarchive" : "Archive") + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
-      '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
-      '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
+      '<button class="icon-btn" title="' + (cls.archived ? t("common.unarchive") : t("common.archive")) + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
+      '<button class="icon-btn" title="' + t("common.edit") + '" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
+      '<button class="icon-btn danger" title="' + t("common.delete") + '" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
     '</div>';
   card.addEventListener("click", function(e) {
     if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive]")) return;
@@ -1175,7 +1292,7 @@ function _renderClassGridCard(cls, container) {
   });
   card.querySelector("[data-cls-del]").addEventListener("click", function(e) {
     e.stopPropagation();
-    confirmDelete('Delete class "' + cls.name + '" and all its lessons and cards?', function() {
+    confirmDelete(t("confirm.deleteClass", { name: cls.name }), function() {
       store.deleteClass(cls.id).then(renderHome);
     });
   });
@@ -1183,7 +1300,7 @@ function _renderClassGridCard(cls, container) {
 
   store.getLessons(cls.id).then(function(lessons) {
     var meta = document.getElementById("cls-meta-" + cls.id);
-    if (meta) meta.textContent = lessons.length + " lesson" + (lessons.length !== 1 ? "s" : "");
+    if (meta) meta.textContent = t("count.lessons", { n: lessons.length });
   });
   store.getProgress("class", cls.id).then(function(p) {
     if (!p || p.total === 0) return;
@@ -1194,7 +1311,7 @@ function _renderClassGridCard(cls, container) {
     var pct = Math.round(p.known / p.total * 100);
     wrap.style.display = "";
     fill.style.width = pct + "%";
-    text.textContent = p.known + " / " + p.total + " known (" + pct + "%)";
+    text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
   });
   // Apply cached accuracy immediately if available
   if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
@@ -1212,16 +1329,20 @@ function _renderClassListRow(cls, container) {
     '<span class="class-list-icon">' + cls.icon + '</span>' +
     '<div class="class-list-info">' +
       '<div class="class-list-name">' + escHtml(cls.name) + '</div>' +
-      '<div class="class-list-meta" id="cls-meta-' + cls.id + '">Loading...</div>' +
+      '<div class="class-list-meta" id="cls-meta-' + cls.id + '">' + t("common.loading") + '</div>' +
+      '<div class="progress-mini-wrap" id="cls-prog-wrap-' + cls.id + '" style="display:none">' +
+        '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="width:0%;background:' + cls.color + '"></div></div>' +
+        '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
+      '</div>' +
     '</div>' +
     '<div class="class-list-right">' +
-      (cls.due_count > 0 ? '<span class="due-badge">' + cls.due_count + ' due</span>' : '') +
+      (cls.due_count > 0 ? '<span class="due-badge">' + t("count.due", { n: cls.due_count }) + '</span>' : '') +
       '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
       (state.homeSelectMode ? '' :
         '<div class="class-list-actions">' +
-          '<button class="icon-btn" title="' + (cls.archived ? "Unarchive" : "Archive") + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
-          '<button class="icon-btn" title="Edit" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
-          '<button class="icon-btn danger" title="Delete" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
+          '<button class="icon-btn" title="' + (cls.archived ? t("common.unarchive") : t("common.archive")) + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
+          '<button class="icon-btn" title="' + t("common.edit") + '" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
+          '<button class="icon-btn danger" title="' + t("common.delete") + '" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
         '</div>') +
     '</div>';
   row.addEventListener("click", function(e) {
@@ -1242,7 +1363,7 @@ function _renderClassListRow(cls, container) {
   });
   if (delBtn) delBtn.addEventListener("click", function(e) {
     e.stopPropagation();
-    confirmDelete('Delete class "' + cls.name + '" and all its lessons and cards?', function() {
+    confirmDelete(t("confirm.deleteClass", { name: cls.name }), function() {
       store.deleteClass(cls.id).then(renderHome);
     });
   });
@@ -1250,7 +1371,18 @@ function _renderClassListRow(cls, container) {
 
   store.getLessons(cls.id).then(function(lessons) {
     var meta = document.getElementById("cls-meta-" + cls.id);
-    if (meta) meta.textContent = lessons.length + " lesson" + (lessons.length !== 1 ? "s" : "");
+    if (meta) meta.textContent = t("count.lessons", { n: lessons.length });
+  });
+  store.getProgress("class", cls.id).then(function(p) {
+    if (!p || p.total === 0) return;
+    var wrap = document.getElementById("cls-prog-wrap-" + cls.id);
+    var fill = document.getElementById("cls-prog-fill-" + cls.id);
+    var text = document.getElementById("cls-prog-text-" + cls.id);
+    if (!wrap) return;
+    var pct = Math.round(p.known / p.total * 100);
+    wrap.style.display = "";
+    fill.style.width = pct + "%";
+    text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
   });
   if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
     _setClassAccuracyPill(cls.id, state._classAccuracyMap[cls.id]);
@@ -1789,7 +1921,7 @@ function toggleClassSelection(classId) {
 function updateHomeSelectBar() {
   var n = state.selectedClassIds.length;
   var countEl = document.getElementById("home-select-count");
-  if (countEl) countEl.textContent = n + " class" + (n !== 1 ? "es" : "") + " selected";
+  if (countEl) countEl.textContent = t("home.classesSelectedCount", { n: n });
   var studyBtn = document.getElementById("btn-study-classes");
   if (studyBtn) studyBtn.disabled = n === 0;
   var total = document.querySelectorAll("#class-list [data-class-id]").length;
@@ -3612,18 +3744,18 @@ function renderDashboard() {
     var d = results[0], analytics = results[1], srs = results[2];
     var days = analytics.days || state.dashPeriod || 60;
     var heatmapTitle = document.getElementById("dash-heatmap-title");
-    if (heatmapTitle) heatmapTitle.textContent = days + "-Day Study Heatmap";
+    if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
     loadEl.classList.add("hidden");
 
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
-    summaryGrid.innerHTML = statCard(ICON_FLAME + " " + d.streak, d.streak === 1 ? "Day Streak" : "Days Streak");
+    summaryGrid.innerHTML = statCard(ICON_FLAME + " " + d.streak, t("stat.dayStreak"));
     [
-      [d.summary.classes,      "Classes"],
-      [d.summary.lessons,      "Lessons"],
-      [d.summary.cards,        "Cards"],
-      [d.summary.quizSessions, "Sessions"],
-      [d.summary.attempts,     "Attempts"]
+      [d.summary.classes,      t("stat.classes")],
+      [d.summary.lessons,      t("stat.lessons")],
+      [d.summary.cards,        t("stat.cards")],
+      [d.summary.quizSessions, t("stat.sessions")],
+      [d.summary.attempts,     t("stat.attempts")]
     ].forEach(function(item) { summaryGrid.innerHTML += statCard(item[0], item[1]); });
 
     // Accuracy bar
