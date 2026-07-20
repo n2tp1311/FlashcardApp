@@ -2045,6 +2045,11 @@ code {
   padding: 4px 8px;
 }
 
+.btn-toolbar-danger:hover:not(:disabled) {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
 /* ============================
    SHARE FEATURE
    ============================ */

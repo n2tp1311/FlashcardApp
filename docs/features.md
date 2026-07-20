@@ -46,6 +46,8 @@
 - "Due Only" filter to quiz only SRS-due cards
 - Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons
 - Account preferences: "⚙ Preferences" in the user dropdown; saves dark mode and font scale to the server and caches in localStorage
+- Flashcard flip only triggers on a plain click — a click that ends an active text selection (e.g. dragging to select text for copy/translate) is ignored, checked via `window.getSelection().toString()`
+- Delete-card button (🗑) in both flashcard toolbar and quiz header removes the currently shown card immediately (with the standard confirm dialog) and advances to the next card; deleting the last remaining card exits back to the lesson/class screen
 - Lesson sort: "Sort by" dropdown on the class screen; options are Date added (newest first), Last studied, Last card added, Due count; choice persisted in localStorage per browser
 - Class sort: "Sort by" dropdown on the home screen; options are Level, Name (A–Z), Due count, Date added; choice persisted in localStorage; classes with no level set sort last (after all leveled classes), tie-broken by date added
 - Class level field: optional integer on each class ("Level" input in class editor, 1–999); used to sequence courses; can be cleared; persists to server; round-trips through export/import and class share

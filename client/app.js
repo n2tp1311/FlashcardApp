@@ -2898,6 +2898,10 @@ function renderFcDots() {
 }
 
 document.getElementById("fc-scene").addEventListener("click", function() {
+  // A click still fires after a text-selection drag (mousedown+mouseup on the
+  // same element) — skip the flip so selecting text to copy/translate doesn't flip the card.
+  var sel = window.getSelection();
+  if (sel && sel.toString().length > 0) return;
   state.studyFlipped = !state.studyFlipped;
   document.getElementById("fc-card").classList.toggle("flipped", state.studyFlipped);
   var expContainer = document.getElementById("fc-explanation");
@@ -2937,6 +2941,24 @@ document.getElementById("btn-fc-shuffle").addEventListener("click", function() {
 document.getElementById("btn-fc-reset").addEventListener("click", function() {
   state.studyIndex = 0;
   renderFlashcard();
+});
+
+document.getElementById("btn-fc-delete-card").addEventListener("click", function() {
+  var card = state.studyCards[state.studyIndex];
+  if (!card) return;
+  confirmDelete("Delete this card?", function() {
+    store.deleteCard(card.id, card.lesson_id).then(function() {
+      state.studyCards.splice(state.studyIndex, 1);
+      if (state.studyCards.length === 0) {
+        returnFromStudy();
+        return;
+      }
+      if (state.studyIndex >= state.studyCards.length) {
+        state.studyIndex = state.studyCards.length - 1;
+      }
+      renderFlashcard();
+    });
+  });
 });
 
 document.getElementById("btn-fc-study-hard").addEventListener("click", function() {
@@ -3148,6 +3170,17 @@ function answerQuiz(selectedIdx) {
 
 document.getElementById("btn-quiz-back").addEventListener("click", function() {
   returnFromStudy();
+});
+
+document.getElementById("btn-quiz-delete-card").addEventListener("click", function() {
+  var card = state.quizCards[state.quizIndex];
+  if (!card) return;
+  confirmDelete("Delete this card?", function() {
+    store.deleteCard(card.id, card.lesson_id).then(function() {
+      state.quizCards.splice(state.quizIndex, 1);
+      renderQuizCard();
+    });
+  });
 });
 
 /* ============================
