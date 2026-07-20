@@ -98,7 +98,40 @@ Object.assign(TRANSLATIONS.en, {
   "stat.cards": "Cards",
   "stat.sessions": "Sessions",
   "stat.attempts": "Attempts",
-  "dashboard.heatmapTitle": "{n}-Day Study Heatmap"
+  "dashboard.heatmapTitle": "{n}-Day Study Heatmap",
+
+  "auth.signIn": "Sign In",
+  "auth.createAccount": "Create Account",
+  "auth.continueWithGoogle": "Continue with Google",
+  "common.or": "or",
+  "auth.email": "Email",
+  "auth.emailPlaceholder": "you@example.com",
+  "auth.password": "Password",
+  "auth.forgotPassword": "Forgot password?",
+  "auth.name": "Name",
+  "auth.namePlaceholder": "Your name",
+  "auth.minChars": "Min. 6 characters",
+  "auth.forgotHint": "Enter your email and we'll send a reset link.",
+  "auth.sendResetLink": "Send Reset Link",
+  "auth.resetHint": "Choose a new password for your account.",
+  "auth.newPassword": "New Password",
+  "auth.confirmPassword": "Confirm Password",
+  "auth.repeatPassword": "Repeat password",
+  "auth.setNewPassword": "Set New Password",
+  "auth.backToSignIn": "Back to sign in",
+  "auth.loginFailed": "Login failed",
+  "common.networkError": "Network error",
+  "auth.registrationFailed": "Registration failed",
+  "auth.enterEmail": "Please enter your email",
+  "auth.devResetLink": "Dev mode — reset link: {url}",
+  "auth.resetLinkSent": "If that email exists, a reset link has been sent. Check your inbox.",
+  "auth.minCharsError": "Password must be at least 6 characters",
+  "auth.passwordsNoMatch": "Passwords do not match",
+  "auth.resetFailed": "Reset failed",
+  "auth.googleCancelled": "Google sign-in was cancelled.",
+  "auth.googleFailed": "Google sign-in failed. Please try again.",
+  "auth.googleAlreadyLinked": "This Google account is already linked to another user.",
+  "auth.genericError": "Authentication error."
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -160,7 +193,40 @@ Object.assign(TRANSLATIONS.vi, {
   "stat.cards": "Thẻ ghi nhớ",
   "stat.sessions": "Phiên học",
   "stat.attempts": "Lượt làm",
-  "dashboard.heatmapTitle": "Biểu đồ học {n} ngày qua"
+  "dashboard.heatmapTitle": "Biểu đồ học {n} ngày qua",
+
+  "auth.signIn": "Đăng nhập",
+  "auth.createAccount": "Tạo tài khoản",
+  "auth.continueWithGoogle": "Tiếp tục với Google",
+  "common.or": "hoặc",
+  "auth.email": "Email",
+  "auth.emailPlaceholder": "you@example.com",
+  "auth.password": "Mật khẩu",
+  "auth.forgotPassword": "Quên mật khẩu?",
+  "auth.name": "Tên",
+  "auth.namePlaceholder": "Tên của bạn",
+  "auth.minChars": "Tối thiểu 6 ký tự",
+  "auth.forgotHint": "Nhập email của bạn, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.",
+  "auth.sendResetLink": "Gửi liên kết đặt lại",
+  "auth.resetHint": "Chọn mật khẩu mới cho tài khoản của bạn.",
+  "auth.newPassword": "Mật khẩu mới",
+  "auth.confirmPassword": "Xác nhận mật khẩu",
+  "auth.repeatPassword": "Nhập lại mật khẩu",
+  "auth.setNewPassword": "Đặt mật khẩu mới",
+  "auth.backToSignIn": "Quay lại đăng nhập",
+  "auth.loginFailed": "Đăng nhập thất bại",
+  "common.networkError": "Lỗi kết nối mạng",
+  "auth.registrationFailed": "Đăng ký thất bại",
+  "auth.enterEmail": "Vui lòng nhập email của bạn",
+  "auth.devResetLink": "Chế độ dev — liên kết đặt lại: {url}",
+  "auth.resetLinkSent": "Nếu email này tồn tại, liên kết đặt lại mật khẩu đã được gửi. Hãy kiểm tra hộp thư của bạn.",
+  "auth.minCharsError": "Mật khẩu phải có ít nhất 6 ký tự",
+  "auth.passwordsNoMatch": "Mật khẩu không khớp",
+  "auth.resetFailed": "Đặt lại mật khẩu thất bại",
+  "auth.googleCancelled": "Đăng nhập Google đã bị hủy.",
+  "auth.googleFailed": "Đăng nhập Google thất bại. Vui lòng thử lại.",
+  "auth.googleAlreadyLinked": "Tài khoản Google này đã được liên kết với người dùng khác.",
+  "auth.genericError": "Lỗi xác thực."
 });
 
 function t(key, vars) {
@@ -4677,12 +4743,12 @@ document.getElementById("form-login").addEventListener("submit", function(e) {
     body: JSON.stringify({ email: email, password: password })
   }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
   .then(function(res) {
-    if (!res.ok) { showAuthError("login", res.d.error || "Login failed"); return; }
+    if (!res.ok) { showAuthError("login", res.d.error || t("auth.loginFailed")); return; }
     currentUser = res.d;
     initUserNav();
     renderSharedWithMe();
     restoreLastScreen();
-  }).catch(function() { showAuthError("login", "Network error"); });
+  }).catch(function() { showAuthError("login", t("common.networkError")); });
 });
 
 document.getElementById("form-register").addEventListener("submit", function(e) {
@@ -4698,13 +4764,13 @@ document.getElementById("form-register").addEventListener("submit", function(e) 
     body: JSON.stringify({ name: name, email: email, password: password })
   }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
   .then(function(res) {
-    if (!res.ok) { showAuthError("register", res.d.error || "Registration failed"); return; }
+    if (!res.ok) { showAuthError("register", res.d.error || t("auth.registrationFailed")); return; }
     currentUser = res.d;
     initUserNav();
     try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
     renderSharedWithMe();
     restoreLastScreen();
-  }).catch(function() { showAuthError("register", "Network error"); });
+  }).catch(function() { showAuthError("register", t("common.networkError")); });
 });
 
 // Forgot password
@@ -4719,7 +4785,7 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
   clearAuthError("forgot");
   document.getElementById("forgot-success").classList.add("hidden");
   var email = document.getElementById("forgot-email").value.trim();
-  if (!email) { showAuthError("forgot", "Please enter your email"); return; }
+  if (!email) { showAuthError("forgot", t("auth.enterEmail")); return; }
   fetch("/api/auth/forgot-password", {
     method: "POST",
     credentials: "same-origin",
@@ -4730,11 +4796,11 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
     var successEl = document.getElementById("forgot-success");
     successEl.classList.remove("hidden");
     if (d._devResetUrl) {
-      successEl.textContent = "Dev mode — reset link: " + d._devResetUrl;
+      successEl.textContent = t("auth.devResetLink", { url: d._devResetUrl });
     } else {
-      successEl.textContent = "If that email exists, a reset link has been sent. Check your inbox.";
+      successEl.textContent = t("auth.resetLinkSent");
     }
-  }).catch(function() { showAuthError("forgot", "Network error"); });
+  }).catch(function() { showAuthError("forgot", t("common.networkError")); });
 });
 
 // Reset password (shown when page loaded with ?token=)
@@ -4746,8 +4812,8 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
     clearAuthError("reset");
     var pw  = document.getElementById("reset-password").value;
     var pw2 = document.getElementById("reset-password2").value;
-    if (pw.length < 6) { showAuthError("reset", "Password must be at least 6 characters"); return; }
-    if (pw !== pw2)    { showAuthError("reset", "Passwords do not match"); return; }
+    if (pw.length < 6) { showAuthError("reset", t("auth.minCharsError")); return; }
+    if (pw !== pw2)    { showAuthError("reset", t("auth.passwordsNoMatch")); return; }
     fetch("/api/auth/reset-password", {
       method: "POST",
       credentials: "same-origin",
@@ -4755,7 +4821,7 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
       body: JSON.stringify({ token: resetToken, password: pw })
     }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
     .then(function(res) {
-      if (!res.ok) { showAuthError("reset", res.d.error || "Reset failed"); return; }
+      if (!res.ok) { showAuthError("reset", res.d.error || t("auth.resetFailed")); return; }
       currentUser = res.d;
       initUserNav();
       try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
@@ -4771,11 +4837,11 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
   var params = new URLSearchParams(window.location.search);
   if (params.get("auth_error")) {
     var msgs = {
-      google_cancelled: "Google sign-in was cancelled.",
-      google_failed: "Google sign-in failed. Please try again.",
-      google_already_linked: "This Google account is already linked to another user."
+      google_cancelled: t("auth.googleCancelled"),
+      google_failed: t("auth.googleFailed"),
+      google_already_linked: t("auth.googleAlreadyLinked")
     };
-    var msg = msgs[params.get("auth_error")] || "Authentication error.";
+    var msg = msgs[params.get("auth_error")] || t("auth.genericError");
     showAuthError("login", msg);
     showAuthPanel("login");
     history.replaceState({}, "", "/");
