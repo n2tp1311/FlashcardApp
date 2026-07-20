@@ -1,5 +1,12 @@
 # Feature Stories
 
+## UI / Design
+- All emoji UI-chrome icons (buttons, headers, dropdown items, empty-state illustrations, sort-direction/kebab/close controls) replaced with a single minimalist SVG icon set (feather-style: `stroke="currentColor"`, `stroke-width="2"`, rounded caps) for visual consistency across the whole app
+- `svgIcon()` + `ICON_*` constants in `client/app.js` provide reusable icons for dynamically-generated list rows (class/lesson/card edit/delete/archive buttons); static screens/modals in `client/index.html` inline the same paths directly
+- User-chosen content icons are explicitly out of scope and untouched: `CLASS_ICONS` (the emoji picker for personalizing a class) and any place a class's own `cls.icon` is displayed
+- Literal keyboard-key glyphs (e.g. `⌫`, arrow keys inside `<kbd>` in the shortcuts modal) and typographic in-sentence arrows (e.g. "Term → Definition" pill label, "Image↔Def" format badge) are intentionally left as Unicode text — they represent a physical key or a text separator, not an interactive icon
+- Added missing `title`/`aria-label` to every icon-only button that lacked one during the pass (16 modal-close buttons, kebab "more options" menus, MCQ remove-distractor button)
+
 ## Auth
 - Email/password register & login
 - Google OAuth (sign in, auto-register, link existing account)
