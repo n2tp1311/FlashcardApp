@@ -31,6 +31,67 @@ var ICON_ARROW_RIGHT  = svgIcon('<line x1="5" y1="12" x2="19" y2="12"/><polyline
 var ICON_LIGHTBULB    = svgIcon('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/>');
 
 /* ============================
+   I18N (English / Vietnamese)
+   TRANSLATIONS is populated screen-by-screen below; t() falls back
+   EN -> raw key so a missing entry degrades instead of crashing.
+   ============================ */
+
+var TRANSLATIONS = { en: {}, vi: {} };
+
+Object.assign(TRANSLATIONS.en, {
+  "common.close": "Close",
+  "common.cancel": "Cancel",
+  "common.save": "Save",
+  "pref.title": "Preferences",
+  "pref.textSize": "Text size",
+  "pref.darkMode": "Dark mode",
+  "pref.language": "Language",
+  "pref.speed": "Speed",
+  "pref.testSpeed": "Test speed"
+});
+Object.assign(TRANSLATIONS.vi, {
+  "common.close": "Đóng",
+  "common.cancel": "Hủy",
+  "common.save": "Lưu",
+  "pref.title": "Tùy chọn",
+  "pref.textSize": "Cỡ chữ",
+  "pref.darkMode": "Chế độ tối",
+  "pref.language": "Ngôn ngữ",
+  "pref.speed": "Tốc độ",
+  "pref.testSpeed": "Nghe thử tốc độ"
+});
+
+function t(key, vars) {
+  var lang = (typeof state !== "undefined" && state.language) || "en";
+  var dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  var str = dict[key];
+  if (str === undefined) str = TRANSLATIONS.en[key];
+  if (str === undefined) return key;
+  if (vars) {
+    Object.keys(vars).forEach(function(k) {
+      str = str.split("{" + k + "}").join(vars[k]);
+    });
+  }
+  return str;
+}
+
+function applyI18n(root) {
+  root = root || document;
+  root.querySelectorAll("[data-i18n]").forEach(function(el) {
+    el.textContent = t(el.getAttribute("data-i18n"));
+  });
+  root.querySelectorAll("[data-i18n-placeholder]").forEach(function(el) {
+    el.placeholder = t(el.getAttribute("data-i18n-placeholder"));
+  });
+  root.querySelectorAll("[data-i18n-title]").forEach(function(el) {
+    el.title = t(el.getAttribute("data-i18n-title"));
+  });
+  root.querySelectorAll("[data-i18n-aria]").forEach(function(el) {
+    el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
+  });
+}
+
+/* ============================
    LATEX RENDERING
    ============================ */
 
@@ -767,6 +828,9 @@ var state = {
   darkMode: false,
   fontScale: 1,
   ttsRate: 0.9,
+  language: (function() {
+    try { return localStorage.getItem("fc-language") || "en"; } catch (_) { return "en"; }
+  }()),
 
   // Lesson sort preference (persisted in localStorage)
   currentLessonSort: (function() {
@@ -4320,6 +4384,18 @@ function applyDarkMode(enabled) {
   document.documentElement.setAttribute("data-theme", state.darkMode ? "dark" : "light");
 }
 
+function applyLanguage(lang) {
+  state.language = (lang === "vi") ? "vi" : "en";
+  document.documentElement.setAttribute("lang", state.language);
+  applyI18n();
+  // Static chrome updates everywhere via applyI18n(); refresh the most
+  // commonly-visible dynamic list (home) so it doesn't show stale text
+  // until the next navigation re-renders it anyway.
+  if (state.homeClasses && state.homeClasses.length && document.getElementById("screen-home").classList.contains("active")) {
+    renderHome();
+  }
+}
+
 var TTS_RATE_MIN = 0.5, TTS_RATE_MAX = 1.5, TTS_RATE_STEP = 0.1;
 var FONT_SCALE_MIN = 0.7, FONT_SCALE_MAX = 1.5, FONT_SCALE_STEP = 0.1;
 function applyFontScale(scale) {
@@ -4337,6 +4413,9 @@ function applyPrefs(prefs) {
   }
   if (typeof prefs.ttsRate === "number") {
     state.ttsRate = prefs.ttsRate;
+  }
+  if (typeof prefs.language === "string") {
+    applyLanguage(prefs.language);
   }
 }
 
@@ -4604,11 +4683,22 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-dark-mode").checked = state.darkMode;
   prefFontLabel();
   prefRateLabel(state.ttsRate);
+  document.getElementById("pref-lang-en").classList.toggle("active", state.language !== "vi");
+  document.getElementById("pref-lang-vi").classList.toggle("active", state.language === "vi");
   var ttsSupported = !!window.speechSynthesis;
   document.getElementById("pref-rate-decrease").disabled = !ttsSupported;
   document.getElementById("pref-rate-increase").disabled = !ttsSupported;
   document.getElementById("pref-tts-test").disabled = !ttsSupported;
   openModal("preferences");
+});
+
+document.getElementById("pref-lang-en").addEventListener("click", function() {
+  this.classList.add("active");
+  document.getElementById("pref-lang-vi").classList.remove("active");
+});
+document.getElementById("pref-lang-vi").addEventListener("click", function() {
+  this.classList.add("active");
+  document.getElementById("pref-lang-en").classList.remove("active");
 });
 
 document.getElementById("pref-font-decrease").addEventListener("click", function() {
@@ -4639,7 +4729,9 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   applyDarkMode(dark);
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
   state.ttsRate = rate;
-  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate };
+  var lang = document.getElementById("pref-lang-vi").classList.contains("active") ? "vi" : "en";
+  applyLanguage(lang);
+  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang };
   try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",
@@ -4656,6 +4748,9 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
 
 // Choose adapter
 var store = IS_SERVER ? SQLiteAdapter : LocalStorageAdapter;
+
+document.documentElement.setAttribute("lang", state.language);
+applyI18n();
 
 if (IS_SERVER && !currentUser) {
   showScreen("auth");

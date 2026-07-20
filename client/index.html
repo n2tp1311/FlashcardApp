@@ -176,7 +176,7 @@
       <input type="checkbox" id="select-all-classes"> Select all
     </label>
     <span id="home-select-count" class="select-count">0 classes selected</span>
-    <button class="btn btn-sm btn-ghost" id="btn-select-classes-cancel">Cancel</button>
+    <button class="btn btn-sm btn-ghost" id="btn-select-classes-cancel" data-i18n="common.cancel">Cancel</button>
     <button class="btn btn-sm btn-primary" id="btn-study-classes" disabled>Study</button>
   </div>
   <div class="lesson-sort-bar">
@@ -301,7 +301,7 @@
       <input type="checkbox" id="select-all-lessons"> Select all
     </label>
     <span id="select-count" class="select-count">0 selected</span>
-    <button class="btn btn-sm btn-ghost" id="btn-select-cancel">Cancel</button>
+    <button class="btn btn-sm btn-ghost" id="btn-select-cancel" data-i18n="common.cancel">Cancel</button>
     <button class="btn btn-sm btn-danger" id="btn-delete-selected-lessons" disabled>Delete selected</button>
     <button class="btn btn-sm btn-primary" id="btn-study-selected" disabled>Study selected</button>
   </div>
@@ -509,12 +509,12 @@
   <!-- Preferences Modal -->
   <div id="modal-preferences" class="modal hidden">
     <div class="modal-header">
-      <h3>Preferences</h3>
-      <button class="modal-close" data-modal="preferences" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h3 data-i18n="pref.title">Preferences</h3>
+      <button class="modal-close" data-modal="preferences" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <div class="pref-row">
-        <label class="form-label">Text size</label>
+        <label class="form-label" data-i18n="pref.textSize">Text size</label>
         <div class="font-scale-row">
           <button type="button" class="btn btn-sm btn-ghost" id="pref-font-decrease">A−</button>
           <span id="pref-font-label" class="tf-pct-label">100%</span>
@@ -522,25 +522,32 @@
         </div>
       </div>
       <div class="pref-row">
-        <label class="form-label" for="pref-dark-mode">Dark mode</label>
+        <label class="form-label" for="pref-dark-mode" data-i18n="pref.darkMode">Dark mode</label>
         <label class="toggle-switch">
           <input type="checkbox" id="pref-dark-mode">
           <span class="toggle-track"></span>
         </label>
       </div>
       <div class="pref-row">
-        <label class="form-label">Speed</label>
+        <label class="form-label" data-i18n="pref.language">Language</label>
+        <div class="font-scale-row">
+          <button type="button" class="pill" data-lang="en" id="pref-lang-en">English</button>
+          <button type="button" class="pill" data-lang="vi" id="pref-lang-vi">Tiếng Việt</button>
+        </div>
+      </div>
+      <div class="pref-row">
+        <label class="form-label" data-i18n="pref.speed">Speed</label>
         <div class="font-scale-row">
           <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-decrease">−</button>
           <span id="pref-rate-label" class="tf-pct-label">0.9x</span>
           <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-increase">+</button>
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-tts-test" title="Test speed" aria-label="Test speed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+          <button type="button" class="btn btn-sm btn-ghost" id="pref-tts-test" title="Test speed" aria-label="Test speed" data-i18n-title="pref.testSpeed" data-i18n-aria="pref.testSpeed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="preferences">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-preferences">Save</button>
+      <button class="btn btn-ghost" data-modal="preferences" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-preferences" data-i18n="common.save">Save</button>
     </div>
   </div>
 
@@ -548,7 +555,7 @@
   <div id="modal-class" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-class-title">New Class</h3>
-      <button class="modal-close" data-modal="class" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="class" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Name</label>
@@ -561,8 +568,8 @@
       <div class="icon-picker" id="icon-picker"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="class" id="btn-cancel-class">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-class">Save</button>
+      <button class="btn btn-ghost" data-modal="class" id="btn-cancel-class" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-class" data-i18n="common.save">Save</button>
     </div>
   </div>
 
@@ -570,7 +577,7 @@
   <div id="modal-lesson" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-lesson-title">New Lesson</h3>
-      <button class="modal-close" data-modal="lesson" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="lesson" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Title</label>
@@ -585,8 +592,8 @@
       <p class="form-hint" id="format-hint">Best for vocabulary, concepts, formulas. Bulk: term | definition</p>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="lesson">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-lesson">Save</button>
+      <button class="btn btn-ghost" data-modal="lesson" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-lesson" data-i18n="common.save">Save</button>
     </div>
   </div>
 
@@ -594,7 +601,7 @@
   <div id="modal-card-termdef" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-card-termdef-title">Add Card</h3>
-      <button class="modal-close" data-modal="card-termdef" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="card-termdef" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Term</label>
@@ -607,8 +614,8 @@
       <div id="card-def-preview" class="latex-preview"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="card-termdef">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-card-termdef">Save</button>
+      <button class="btn btn-ghost" data-modal="card-termdef" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-termdef" data-i18n="common.save">Save</button>
     </div>
   </div>
 
@@ -616,7 +623,7 @@
   <div id="modal-card-mcq" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-card-mcq-title">Add Card</h3>
-      <button class="modal-close" data-modal="card-mcq" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="card-mcq" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Question</label>
@@ -638,8 +645,8 @@
       </details>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="card-mcq">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-card-mcq">Save</button>
+      <button class="btn btn-ghost" data-modal="card-mcq" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-mcq" data-i18n="common.save">Save</button>
     </div>
   </div>
 
@@ -647,7 +654,7 @@
   <div id="modal-card-tf" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-card-tf-title">Add Card</h3>
-      <button class="modal-close" data-modal="card-tf" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="card-tf" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Statement</label>
@@ -667,8 +674,8 @@
       </details>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="card-tf">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-card-tf">Save</button>
+      <button class="btn btn-ghost" data-modal="card-tf" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-tf" data-i18n="common.save">Save</button>
     </div>
   </div>
 
@@ -676,7 +683,7 @@
   <div id="modal-card-imagedef" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-card-imagedef-title">Add Card</h3>
-      <button class="modal-close" data-modal="card-imagedef" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="card-imagedef" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <label class="form-label">Image (front)</label>
@@ -690,8 +697,8 @@
       <textarea id="card-imagedef-input" class="form-textarea" rows="3" placeholder="e.g. The Eiffel Tower, built 1889, Paris."></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="card-imagedef">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-card-imagedef">Save</button>
+      <button class="btn btn-ghost" data-modal="card-imagedef" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-imagedef" data-i18n="common.save">Save</button>
     </div>
   </div>
 
@@ -699,7 +706,7 @@
   <div id="modal-bulk" class="modal hidden">
     <div class="modal-header">
       <h3 id="modal-bulk-title">Bulk Add Cards</h3>
-      <button class="modal-close" data-modal="bulk" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="bulk" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <p class="form-hint" id="bulk-hint"></p>
@@ -708,7 +715,7 @@
       <div id="bulk-preview" class="bulk-preview"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="bulk">Cancel</button>
+      <button class="btn btn-ghost" data-modal="bulk" data-i18n="common.cancel">Cancel</button>
       <button class="btn btn-primary" id="btn-save-bulk">Add Cards</button>
     </div>
   </div>
@@ -717,7 +724,7 @@
   <div id="modal-bulk-import" class="modal hidden">
     <div class="modal-header">
       <h3>Bulk Import Lessons &amp; Cards</h3>
-      <button class="modal-close" data-modal="bulk-import" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="bulk-import" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <p class="form-hint" style="line-height:1.6">
@@ -737,7 +744,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <div id="bulk-import-preview" class="bulk-import-preview"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="bulk-import">Cancel</button>
+      <button class="btn btn-ghost" data-modal="bulk-import" data-i18n="common.cancel">Cancel</button>
       <button class="btn btn-primary" id="btn-save-bulk-import">Import</button>
     </div>
   </div>
@@ -746,13 +753,13 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   <div id="modal-delete" class="modal hidden">
     <div class="modal-header">
       <h3>Confirm Delete</h3>
-      <button class="modal-close" data-modal="delete" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" data-modal="delete" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <p id="delete-confirm-text">Are you sure?</p>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="delete">Cancel</button>
+      <button class="btn btn-ghost" data-modal="delete" data-i18n="common.cancel">Cancel</button>
       <button class="btn btn-danger" id="btn-confirm-delete">Delete</button>
     </div>
   </div>
@@ -780,7 +787,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   <div class="modal share-modal">
     <div class="modal-header">
       <h3>Share Class</h3>
-      <button class="btn btn-ghost btn-sm" id="btn-share-modal-close" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="btn btn-ghost btn-sm" id="btn-share-modal-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
 
     <!-- Share Link -->
@@ -821,7 +828,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   <div class="modal prompt-guide-modal">
     <div class="modal-header">
       <h3>AI Extraction Prompt</h3>
-      <button class="btn btn-ghost btn-sm" id="btn-prompt-guide-close" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="btn btn-ghost btn-sm" id="btn-prompt-guide-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <p class="prompt-guide-desc">Paste this prompt into any AI (ChatGPT, Claude, Gemini…) followed by your text to generate flashcards.</p>
     <div class="prompt-guide-box">
@@ -838,7 +845,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   <div class="modal keymap-modal">
     <div class="modal-header">
       <h3>Keyboard Shortcuts</h3>
-      <button class="modal-close" id="btn-keymap-close" title="Close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" id="btn-keymap-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body keymap-body">
       <div class="keymap-section">
