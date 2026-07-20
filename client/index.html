@@ -277,72 +277,72 @@
 <!-- ===== SCREEN: Class Detail (Lesson List) ===== -->
 <div id="screen-class" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-class-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+    <button class="btn btn-ghost back-btn" id="btn-class-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
     <h2 id="class-detail-name" class="screen-title"></h2>
     <div class="header-actions">
-      <button class="btn btn-ghost" id="btn-select-lessons"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select</button>
+      <button class="btn btn-ghost" id="btn-select-lessons" data-i18n="common.select"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select</button>
       <div class="dropdown-wrap">
-        <button class="btn btn-ghost btn-icon" id="btn-class-menu" title="More options" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+        <button class="btn btn-ghost btn-icon" id="btn-class-menu" title="More options" aria-label="More options" data-i18n-title="common.moreOptions" data-i18n-aria="common.moreOptions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
         <div class="dropdown-menu hidden" id="class-dropdown-menu">
-          <button class="dropdown-item" id="btn-class-stats"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Stats</button>
-          <button class="dropdown-item" id="btn-edit-class"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit Class</button>
-          <button class="dropdown-item" id="btn-archive-class"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Archive Class</button>
-          <button class="dropdown-item" id="btn-share-class"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
-          <button class="dropdown-item" id="btn-prompt-guide"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg> AI Prompt Guide</button>
+          <button class="dropdown-item" id="btn-class-stats" data-i18n="common.stats"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Stats</button>
+          <button class="dropdown-item" id="btn-edit-class" data-i18n="class.editClass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit Class</button>
+          <button class="dropdown-item" id="btn-archive-class" data-i18n="class.archiveClass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Archive Class</button>
+          <button class="dropdown-item" id="btn-share-class" data-i18n="common.share"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
+          <button class="dropdown-item" id="btn-prompt-guide" data-i18n="class.aiPromptGuide"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg> AI Prompt Guide</button>
           <div class="dropdown-divider"></div>
-          <button class="dropdown-item" id="btn-bulk-import"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Bulk Import</button>
+          <button class="dropdown-item" id="btn-bulk-import" data-i18n="class.bulkImport"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Bulk Import</button>
         </div>
       </div>
-      <button class="btn btn-primary" id="btn-new-lesson">+ Lesson</button>
+      <button class="btn btn-primary" id="btn-new-lesson" data-i18n="class.newLesson">+ Lesson</button>
     </div>
   </header>
   <div id="lesson-select-bar" class="select-bar hidden">
     <label class="select-all-label">
-      <input type="checkbox" id="select-all-lessons"> Select all
+      <input type="checkbox" id="select-all-lessons"> <span data-i18n="common.selectAll">Select all</span>
     </label>
-    <span id="select-count" class="select-count">0 selected</span>
+    <span id="select-count" class="select-count" data-i18n="common.zeroSelected">0 selected</span>
     <button class="btn btn-sm btn-ghost" id="btn-select-cancel" data-i18n="common.cancel">Cancel</button>
-    <button class="btn btn-sm btn-danger" id="btn-delete-selected-lessons" disabled>Delete selected</button>
-    <button class="btn btn-sm btn-primary" id="btn-study-selected" disabled>Study selected</button>
+    <button class="btn btn-sm btn-danger" id="btn-delete-selected-lessons" disabled data-i18n="common.deleteSelected">Delete selected</button>
+    <button class="btn btn-sm btn-primary" id="btn-study-selected" disabled data-i18n="lesson.studySelected">Study selected</button>
   </div>
   <div class="lesson-sort-bar">
-    <label class="sort-label" for="lesson-sort-select">Sort by</label>
+    <label class="sort-label" for="lesson-sort-select" data-i18n="sort.sortBy">Sort by</label>
     <select id="lesson-sort-select" class="sort-select">
-      <option value="date_added">Date added</option>
-      <option value="date_interacted">Last studied</option>
-      <option value="date_modified">Last card added</option>
-      <option value="due_count">Due count</option>
+      <option value="date_added" data-i18n="sort.dateAdded">Date added</option>
+      <option value="date_interacted" data-i18n="sort.lastStudied">Last studied</option>
+      <option value="date_modified" data-i18n="sort.lastCardAdded">Last card added</option>
+      <option value="due_count" data-i18n="sort.dueCount">Due count</option>
     </select>
-    <button id="lesson-sort-dir" class="sort-dir-btn" title="Toggle sort direction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+    <button id="lesson-sort-dir" class="sort-dir-btn" title="Toggle sort direction" data-i18n-title="sort.toggleDirection"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
   </div>
   <div id="lesson-slicer-bar" class="slicer-bar hidden"></div>
   <div id="lesson-list" class="lesson-list"></div>
   <div id="empty-class" class="empty-state hidden">
     <div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-    <p>No lessons yet. Add a lesson to this class.</p>
+    <p data-i18n="class.emptyLessons">No lessons yet. Add a lesson to this class.</p>
   </div>
 </div>
 
 <!-- ===== SCREEN: Lesson Detail (Card List) ===== -->
 <div id="screen-lesson" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-lesson-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+    <button class="btn btn-ghost back-btn" id="btn-lesson-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
     <h2 id="lesson-detail-title" class="screen-title"></h2>
     <span id="lesson-card-count" class="lesson-count-badge hidden"></span>
     <div class="header-actions">
-      <button class="btn btn-ghost" id="btn-select-cards"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select</button>
+      <button class="btn btn-ghost" id="btn-select-cards" data-i18n="common.select"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select</button>
       <div class="dropdown-wrap">
-        <button class="btn btn-ghost btn-icon" id="btn-lesson-menu" title="More options" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+        <button class="btn btn-ghost btn-icon" id="btn-lesson-menu" title="More options" aria-label="More options" data-i18n-title="common.moreOptions" data-i18n-aria="common.moreOptions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
         <div class="dropdown-menu hidden" id="lesson-dropdown-menu">
-          <button class="dropdown-item" id="btn-lesson-stats"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Stats</button>
-          <button class="dropdown-item" id="btn-edit-lesson"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit Lesson</button>
+          <button class="dropdown-item" id="btn-lesson-stats" data-i18n="common.stats"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Stats</button>
+          <button class="dropdown-item" id="btn-edit-lesson" data-i18n="lesson.editLesson"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit Lesson</button>
           <div class="dropdown-divider"></div>
-          <button class="dropdown-item" id="btn-add-card">+ Add Card</button>
-          <button class="dropdown-item" id="btn-bulk-add">+ Bulk Add</button>
+          <button class="dropdown-item" id="btn-add-card" data-i18n="lesson.addCard">+ Add Card</button>
+          <button class="dropdown-item" id="btn-bulk-add" data-i18n="lesson.bulkAdd">+ Bulk Add</button>
         </div>
       </div>
-      <button class="btn btn-warning btn-sm hidden" id="btn-review-due">Review 0 due</button>
-      <button class="btn btn-primary" id="btn-study-lesson">Study</button>
+      <button class="btn btn-warning btn-sm hidden" id="btn-review-due" data-i18n="lesson.reviewDueZero">Review 0 due</button>
+      <button class="btn btn-primary" id="btn-study-lesson" data-i18n="common.study">Study</button>
     </div>
   </header>
   <div class="lesson-toolbar" id="lesson-toolbar" style="display:none">
@@ -350,54 +350,54 @@
   <div id="card-list" class="card-list"></div>
   <div id="empty-lesson" class="empty-state hidden">
     <div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-    <p>No cards yet. Add cards to start studying.</p>
-    <button class="btn btn-primary" id="btn-empty-add-card">+ Add Card</button>
+    <p data-i18n="lesson.emptyCards">No cards yet. Add cards to start studying.</p>
+    <button class="btn btn-primary" id="btn-empty-add-card" data-i18n="lesson.addCard">+ Add Card</button>
   </div>
 </div>
 
 <!-- ===== SCREEN: Study Setup ===== -->
 <div id="screen-setup" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-setup-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
-    <h2 class="screen-title">Study Setup</h2>
+    <button class="btn btn-ghost back-btn" id="btn-setup-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+    <h2 class="screen-title" data-i18n="setup.title">Study Setup</h2>
   </header>
   <div class="setup-container">
     <p id="setup-scope-label" class="setup-scope hidden"></p>
     <div class="setup-section">
-      <label class="setup-label">Card Count</label>
+      <label class="setup-label" data-i18n="setup.cardCount">Card Count</label>
       <div class="pill-group" id="setup-count">
         <button class="pill" data-value="10">10</button>
         <button class="pill" data-value="25">25</button>
         <button class="pill" data-value="50">50</button>
-        <button class="pill active" data-value="all">All</button>
+        <button class="pill active" data-value="all" data-i18n="setup.all">All</button>
       </div>
     </div>
     <div class="setup-section">
-      <label class="setup-label">Filter</label>
+      <label class="setup-label" data-i18n="setup.filter">Filter</label>
       <div class="pill-group" id="setup-filter">
-        <button class="pill active" data-value="all">All Cards</button>
-        <button class="pill" data-value="due">Due Only</button>
-        <button class="pill" data-value="learning">Still Learning</button>
-        <button class="pill" data-value="hard">Hard First</button>
+        <button class="pill active" data-value="all" data-i18n="setup.allCards">All Cards</button>
+        <button class="pill" data-value="due" data-i18n="setup.dueOnly">Due Only</button>
+        <button class="pill" data-value="learning" data-i18n="setup.stillLearning">Still Learning</button>
+        <button class="pill" data-value="hard" data-i18n="setup.hardFirst">Hard First</button>
       </div>
-      <p class="setup-filter-hint" id="setup-filter-hint">Học tất cả thẻ</p>
+      <p class="setup-filter-hint" id="setup-filter-hint" data-i18n="setup.hintAll">Học tất cả thẻ</p>
     </div>
     <div class="setup-section">
-      <label class="setup-label">Mode</label>
+      <label class="setup-label" data-i18n="setup.mode">Mode</label>
       <div class="pill-group" id="setup-mode">
-        <button class="pill active" data-value="flashcard">Flashcards</button>
-        <button class="pill" data-value="quiz">Quiz</button>
+        <button class="pill active" data-value="flashcard" data-i18n="setup.flashcards">Flashcards</button>
+        <button class="pill" data-value="quiz" data-i18n="setup.quiz">Quiz</button>
       </div>
     </div>
     <div class="setup-section" id="setup-order-section">
-      <label class="setup-label">Card Order</label>
+      <label class="setup-label" data-i18n="setup.cardOrder">Card Order</label>
       <div class="pill-group" id="setup-order">
-        <button class="pill active" data-value="in-order">In Order</button>
-        <button class="pill" data-value="shuffle">Shuffle</button>
+        <button class="pill active" data-value="in-order" data-i18n="setup.inOrder">In Order</button>
+        <button class="pill" data-value="shuffle" data-i18n="common.shuffle">Shuffle</button>
         <button class="pill" id="pill-order-interleaved" data-value="interleaved" style="display:none">Interleaved ✦</button>
       </div>
     </div>
-    <button class="btn btn-primary btn-full" id="btn-start-study">Start Studying</button>
+    <button class="btn btn-primary btn-full" id="btn-start-study" data-i18n="setup.startStudying">Start Studying</button>
   </div>
 </div>
 

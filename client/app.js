@@ -131,7 +131,76 @@ Object.assign(TRANSLATIONS.en, {
   "auth.googleCancelled": "Google sign-in was cancelled.",
   "auth.googleFailed": "Google sign-in failed. Please try again.",
   "auth.googleAlreadyLinked": "This Google account is already linked to another user.",
-  "auth.genericError": "Authentication error."
+  "auth.genericError": "Authentication error.",
+
+  "common.back": "Back",
+  "common.moreOptions": "More options",
+  "common.stats": "Stats",
+  "common.share": "Share",
+  "common.zeroSelected": "0 selected",
+  "common.deleteSelected": "Delete selected",
+  "common.shuffle": "Shuffle",
+  "class.editClass": "Edit Class",
+  "class.archiveClass": "Archive Class",
+  "class.aiPromptGuide": "AI Prompt Guide",
+  "class.bulkImport": "Bulk Import",
+  "class.newLesson": "+ Lesson",
+  "class.emptyLessons": "No lessons yet. Add a lesson to this class.",
+  "lesson.studySelected": "Study selected",
+  "lesson.editLesson": "Edit Lesson",
+  "lesson.addCard": "+ Add Card",
+  "lesson.bulkAdd": "+ Bulk Add",
+  "lesson.reviewDueZero": "Review 0 due",
+  "lesson.emptyCards": "No cards yet. Add cards to start studying.",
+  "sort.lastStudied": "Last studied",
+  "sort.lastCardAdded": "Last card added",
+  "setup.title": "Study Setup",
+  "setup.cardCount": "Card Count",
+  "setup.all": "All",
+  "setup.filter": "Filter",
+  "setup.allCards": "All Cards",
+  "setup.dueOnly": "Due Only",
+  "setup.stillLearning": "Still Learning",
+  "setup.hardFirst": "Hard First",
+  "setup.mode": "Mode",
+  "setup.flashcards": "Flashcards",
+  "setup.quiz": "Quiz",
+  "setup.cardOrder": "Card Order",
+  "setup.inOrder": "In Order",
+  "setup.startStudying": "Start Studying",
+  "setup.studyingTogether": "Studying {n} lessons together",
+  "setup.hintAll": "Study all cards",
+  "setup.hintDue": "Only cards due for review (SRS)",
+  "setup.hintLearning": "Cards not yet known / still learning",
+  "setup.hintHard": "Hard cards prioritized first",
+
+  "count.cardsDueForReview": "{n} card(s) due for review",
+  "lesson.nextReviewIn": "Next review in {time}",
+  "format.termDef": "Term↔Def",
+  "format.mcq": "MCQ",
+  "format.trueFalse": "True/False",
+  "format.imageDef": "Image↔Def",
+  "count.cards": "{n} card(s)",
+  "confirm.deleteLesson": "Delete lesson \"{title}\" and all its cards?",
+  "alert.noCardsDue": "No cards are due for review right now.",
+  "bulk.andMore": "... and {n} more",
+  "bulk.summary": "{lessons} lesson(s), {cards} card(s) total",
+  "class.unarchiveClass": "Unarchive Class",
+
+  "time.never": "never",
+  "time.justNow": "just now",
+  "time.minutesAgo": "{n}m ago",
+  "time.hoursAgo": "{n}h ago",
+  "time.daysAgo": "{n}d ago",
+  "time.weeksAgo": "{n}w ago",
+  "time.notScheduled": "not scheduled",
+  "time.now": "now",
+  "time.inMinutes": "in {n}m",
+  "time.inHours": "in {n}h",
+  "time.inDays": "in {n}d",
+  "card.lastSeen": "Last seen",
+  "card.lastStudied": "Last studied",
+  "card.nextReview": "Next review"
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -226,7 +295,76 @@ Object.assign(TRANSLATIONS.vi, {
   "auth.googleCancelled": "Đăng nhập Google đã bị hủy.",
   "auth.googleFailed": "Đăng nhập Google thất bại. Vui lòng thử lại.",
   "auth.googleAlreadyLinked": "Tài khoản Google này đã được liên kết với người dùng khác.",
-  "auth.genericError": "Lỗi xác thực."
+  "auth.genericError": "Lỗi xác thực.",
+
+  "common.back": "Quay lại",
+  "common.moreOptions": "Thêm tùy chọn",
+  "common.stats": "Thống kê",
+  "common.share": "Chia sẻ",
+  "common.zeroSelected": "Đã chọn 0",
+  "common.deleteSelected": "Xóa mục đã chọn",
+  "common.shuffle": "Xáo trộn",
+  "class.editClass": "Sửa lớp",
+  "class.archiveClass": "Lưu trữ lớp",
+  "class.aiPromptGuide": "Hướng dẫn Prompt AI",
+  "class.bulkImport": "Nhập hàng loạt",
+  "class.newLesson": "+ Bài học",
+  "class.emptyLessons": "Chưa có bài học nào. Thêm bài học vào lớp này.",
+  "lesson.studySelected": "Học mục đã chọn",
+  "lesson.editLesson": "Sửa bài học",
+  "lesson.addCard": "+ Thêm thẻ",
+  "lesson.bulkAdd": "+ Thêm hàng loạt",
+  "lesson.reviewDueZero": "Ôn tập 0 thẻ",
+  "lesson.emptyCards": "Chưa có thẻ nào. Thêm thẻ để bắt đầu học.",
+  "sort.lastStudied": "Học gần nhất",
+  "sort.lastCardAdded": "Thẻ thêm gần nhất",
+  "setup.title": "Thiết lập học",
+  "setup.cardCount": "Số lượng thẻ",
+  "setup.all": "Tất cả",
+  "setup.filter": "Bộ lọc",
+  "setup.allCards": "Tất cả thẻ",
+  "setup.dueOnly": "Chỉ thẻ đến hạn",
+  "setup.stillLearning": "Đang học",
+  "setup.hardFirst": "Thẻ khó trước",
+  "setup.mode": "Chế độ",
+  "setup.flashcards": "Thẻ ghi nhớ",
+  "setup.quiz": "Trắc nghiệm",
+  "setup.cardOrder": "Thứ tự thẻ",
+  "setup.inOrder": "Theo thứ tự",
+  "setup.startStudying": "Bắt đầu học",
+  "setup.studyingTogether": "Đang học {n} bài học cùng lúc",
+  "setup.hintAll": "Học tất cả thẻ",
+  "setup.hintDue": "Chỉ thẻ đến hạn ôn tập (SRS)",
+  "setup.hintLearning": "Thẻ chưa thuộc / đang học",
+  "setup.hintHard": "Thẻ khó được ưu tiên đầu tiên",
+
+  "count.cardsDueForReview": "{n} thẻ đến hạn ôn tập",
+  "lesson.nextReviewIn": "Ôn tập tiếp theo sau {time}",
+  "format.termDef": "Thuật ngữ↔Định nghĩa",
+  "format.mcq": "Trắc nghiệm",
+  "format.trueFalse": "Đúng/Sai",
+  "format.imageDef": "Hình↔Định nghĩa",
+  "count.cards": "{n} thẻ",
+  "confirm.deleteLesson": "Xóa bài học \"{title}\" cùng toàn bộ thẻ ghi nhớ?",
+  "alert.noCardsDue": "Hiện chưa có thẻ nào đến hạn ôn tập.",
+  "bulk.andMore": "... và {n} thẻ nữa",
+  "bulk.summary": "{lessons} bài học, tổng {cards} thẻ",
+  "class.unarchiveClass": "Bỏ lưu trữ lớp",
+
+  "time.never": "chưa bao giờ",
+  "time.justNow": "vừa xong",
+  "time.minutesAgo": "{n} phút trước",
+  "time.hoursAgo": "{n} giờ trước",
+  "time.daysAgo": "{n} ngày trước",
+  "time.weeksAgo": "{n} tuần trước",
+  "time.notScheduled": "chưa lên lịch",
+  "time.now": "ngay bây giờ",
+  "time.inMinutes": "còn {n} phút",
+  "time.inHours": "còn {n} giờ",
+  "time.inDays": "còn {n} ngày",
+  "card.lastSeen": "Lần xem gần nhất",
+  "card.lastStudied": "Học gần nhất",
+  "card.nextReview": "Lần ôn tiếp theo"
 });
 
 function t(key, vars) {
@@ -1529,8 +1667,8 @@ function openClass(classId) {
     state._lessonAccuracyMap = {};
     var nameEl = document.getElementById("class-detail-name");
     nameEl.innerHTML = escHtml(cls.icon + " " + cls.name) +
-      (cls.archived ? ' <span class="archived-badge">Archived</span>' : "");
-    document.getElementById("btn-archive-class").innerHTML = (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + " " + (cls.archived ? "Unarchive Class" : "Archive Class");
+      (cls.archived ? ' <span class="archived-badge">' + t("archive.archived") + '</span>' : "");
+    document.getElementById("btn-archive-class").innerHTML = (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + " " + (cls.archived ? t("class.unarchiveClass") : t("class.archiveClass"));
     setSelectMode(false);
     document.getElementById("lesson-sort-select").value = state.currentLessonSort;
     document.getElementById("lesson-sort-dir").innerHTML = state.currentLessonSortDir === "desc" ? ICON_CHEVRON_DOWN : ICON_CHEVRON_UP;
@@ -1725,20 +1863,26 @@ function _renderLessonSlicer(lessons) {
 
   bar.classList.remove("hidden");
 
-  var formatLabels = { "term-def": "Thẻ học", "mcq": "MCQ", "true-false": "True/False", "image-def": "Image↔Def" };
   var allBtn = document.createElement("button");
   allBtn.className = "pill" + (state.lessonFilter === "all" ? " active" : "");
   allBtn.dataset.filter = "all";
-  allBtn.textContent = "All";
+  allBtn.textContent = t("setup.all");
   bar.appendChild(allBtn);
 
   formats.forEach(function(fmt) {
     var btn = document.createElement("button");
     btn.className = "pill" + (state.lessonFilter === fmt ? " active" : "");
     btn.dataset.filter = fmt;
-    btn.textContent = formatLabels[fmt] || fmt;
+    btn.textContent = formatLabel(fmt);
     bar.appendChild(btn);
   });
+}
+
+function formatLabel(format) {
+  return format === "term-def" ? t("format.termDef")
+    : format === "mcq" ? t("format.mcq")
+    : format === "true-false" ? t("format.trueFalse")
+    : t("format.imageDef");
 }
 
 function _renderLessonItems(lessons, accMap) {
@@ -1775,13 +1919,13 @@ function _renderLessonItems(lessons, accMap) {
       var nextReviewAt = dueInfo.schedule && dueInfo.schedule[lesson.id];
       var reviewLabel = "";
       if (isDue) {
-        reviewLabel = dueCount + " card" + (dueCount !== 1 ? "s" : "") + " due for review";
+        reviewLabel = t("count.cardsDueForReview", { n: dueCount });
       } else if (nextReviewAt) {
         var secsLeft = nextReviewAt - now;
         var reviewLabel2 = secsLeft < 3600 ? Math.ceil(secsLeft / 60) + "m"
           : secsLeft < 86400 ? Math.ceil(secsLeft / 3600) + "h"
           : Math.ceil(secsLeft / 86400) + "d";
-        reviewLabel = "Next review in " + reviewLabel2;
+        reviewLabel = t("lesson.nextReviewIn", { time: reviewLabel2 });
       }
 
       var acc = accMap && accMap[lesson.id];
@@ -1798,23 +1942,21 @@ function _renderLessonItems(lessons, accMap) {
           : '') +
         '<div class="lesson-info">' +
           '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
-          '<div class="lesson-meta" id="les-meta-' + lesson.id + '">Loading...</div>' +
+          '<div class="lesson-meta" id="les-meta-' + lesson.id + '">' + t("common.loading") + '</div>' +
           (reviewLabel ? '<div class="lesson-due-label' + (isDue ? " is-due" : "") + '">' + reviewLabel + '</div>' : '') +
           '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
             '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="width:0%"></div></div>' +
             '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +
           '</div>' +
         '</div>' +
-        (isDue ? '<span class="due-badge">' + dueCount + ' due</span>' : '') +
+        (isDue ? '<span class="due-badge">' + t("count.due", { n: dueCount }) + '</span>' : '') +
         accHtml +
-        '<span class="format-badge ' + lesson.format + '">' +
-          (lesson.format === "term-def" ? "Thẻ học" : lesson.format === "mcq" ? "MCQ" : lesson.format === "true-false" ? "True/False" : "Image↔Def") +
-        '</span>' +
+        '<span class="format-badge ' + lesson.format + '">' + formatLabel(lesson.format) + '</span>' +
         (state.selectMode
           ? ''
           : '<div class="lesson-actions">' +
-              '<button class="icon-btn" title="Edit" data-les-edit="' + lesson.id + '">' + ICON_EDIT + '</button>' +
-              '<button class="icon-btn danger" title="Delete" data-les-del="' + lesson.id + '">' + ICON_DELETE + '</button>' +
+              '<button class="icon-btn" title="' + t("common.edit") + '" data-les-edit="' + lesson.id + '">' + ICON_EDIT + '</button>' +
+              '<button class="icon-btn danger" title="' + t("common.delete") + '" data-les-del="' + lesson.id + '">' + ICON_DELETE + '</button>' +
             '</div>');
       item.addEventListener("click", function(e) {
         if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
@@ -1828,7 +1970,7 @@ function _renderLessonItems(lessons, accMap) {
         });
         item.querySelector("[data-les-del]").addEventListener("click", function(e) {
           e.stopPropagation();
-          confirmDelete('Delete lesson "' + lesson.title + '" and all its cards?', function() {
+          confirmDelete(t("confirm.deleteLesson", { title: lesson.title }), function() {
             store.deleteLesson(lesson.id).then(renderLessons);
           });
         });
@@ -1836,7 +1978,7 @@ function _renderLessonItems(lessons, accMap) {
       list.appendChild(item);
       store.getCards(lesson.id).then(function(cards) {
         var meta = document.getElementById("les-meta-" + lesson.id);
-        if (meta) meta.textContent = cards.length + " card" + (cards.length !== 1 ? "s" : "");
+        if (meta) meta.textContent = t("count.cards", { n: cards.length });
       });
       store.getProgress("lesson", lesson.id).then(function(p) {
         if (!p || p.total === 0) return;
@@ -1847,7 +1989,7 @@ function _renderLessonItems(lessons, accMap) {
         var pct = Math.round(p.known / p.total * 100);
         wrap.style.display = "";
         fill.style.width = pct + "%";
-        text.textContent = p.known + " / " + p.total + " known (" + pct + "%)";
+        text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
       });
     });
   });
@@ -2304,12 +2446,12 @@ function renderCards() {
     if (cards.length === 0) {
       empty.classList.remove("hidden");
       list.classList.add("hidden");
-      if (countBadge) { countBadge.textContent = "0 cards"; countBadge.classList.remove("hidden"); }
+      if (countBadge) { countBadge.textContent = t("count.cards", { n: 0 }); countBadge.classList.remove("hidden"); }
       return;
     }
     empty.classList.add("hidden");
     list.classList.remove("hidden");
-    if (countBadge) { countBadge.textContent = cards.length + " card" + (cards.length !== 1 ? "s" : ""); countBadge.classList.remove("hidden"); }
+    if (countBadge) { countBadge.textContent = t("count.cards", { n: cards.length }); countBadge.classList.remove("hidden"); }
     cards.forEach(function(card, i) {
       var item = document.createElement("div");
       item.className = "card-item" + (state.selectedCardIds.indexOf(card.id) !== -1 ? " selected" : "");
@@ -2367,9 +2509,9 @@ function renderCards() {
         var tsDiv = document.createElement("div");
         tsDiv.className = "card-timestamps";
         var tsItems = [
-          { label: "Last seen", value: relativeTime(card.last_seen_at) },
-          { label: "Last studied", value: relativeTime(card.last_studied_at) },
-          { label: "Next review", value: futureRelativeTime(card.srs_due_at) }
+          { label: t("card.lastSeen"), value: relativeTime(card.last_seen_at) },
+          { label: t("card.lastStudied"), value: relativeTime(card.last_studied_at) },
+          { label: t("card.nextReview"), value: futureRelativeTime(card.srs_due_at) }
         ];
         tsItems.forEach(function(ts) {
           var span = document.createElement("span");
@@ -2441,7 +2583,7 @@ document.getElementById("btn-review-due").addEventListener("click", function() {
   var dueCards = (state.currentLessonCards || []).filter(function(c) {
     return c.srs_due_at && c.srs_due_at <= nowSec;
   });
-  if (!dueCards.length) { alert("No cards are due for review right now."); return; }
+  if (!dueCards.length) { alert(t("alert.noCardsDue")); return; }
   state.studyScope = {
     lessonIds: [state.currentLesson.id],
     lessons: [state.currentLesson],
@@ -2882,7 +3024,7 @@ function openSetup(scope) {
   // Show scope label when studying more than one lesson
   var scopeLabel = document.getElementById("setup-scope-label");
   if (state.studyScope.lessons.length > 1) {
-    scopeLabel.textContent = "Studying " + state.studyScope.lessons.length + " lessons together";
+    scopeLabel.textContent = t("setup.studyingTogether", { n: state.studyScope.lessons.length });
     scopeLabel.classList.remove("hidden");
   } else {
     scopeLabel.classList.add("hidden");
@@ -2904,11 +3046,11 @@ function setPillGroup(groupId, value) {
 }
 
 // Pill group click handlers
-var FILTER_HINTS = {
-  all:      "Học tất cả thẻ",
-  due:      "Chỉ thẻ đến hạn ôn tập (SRS)",
-  learning: "Thẻ chưa thuộc / đang học",
-  hard:     "Thẻ khó được ưu tiên đầu tiên"
+var FILTER_HINT_KEYS = {
+  all:      "setup.hintAll",
+  due:      "setup.hintDue",
+  learning: "setup.hintLearning",
+  hard:     "setup.hintHard"
 };
 
 ["setup-count","setup-filter","setup-mode","setup-order"].forEach(function(groupId) {
@@ -2919,7 +3061,8 @@ var FILTER_HINTS = {
     pill.classList.add("active");
     if (groupId === "setup-filter") {
       var hint = document.getElementById("setup-filter-hint");
-      if (hint) hint.textContent = FILTER_HINTS[pill.dataset.value] || "";
+      var key = FILTER_HINT_KEYS[pill.dataset.value];
+      if (hint) hint.textContent = key ? t(key) : "";
     }
   });
 });
@@ -4174,11 +4317,9 @@ function renderBulkImportPreview(raw) {
 
     var header = document.createElement("div");
     header.className = "bi-lesson-header";
-    var badge = '<span class="format-badge ' + section.format + '" style="margin-left:6px">' +
-      (section.format === "term-def" ? "Thẻ học" : section.format === "true-false" ? "True/False" : "MCQ") + '</span>';
+    var badge = '<span class="format-badge ' + section.format + '" style="margin-left:6px">' + formatLabel(section.format) + '</span>';
     header.innerHTML = escHtml(section.title) + badge +
-      '<span class="bi-lesson-count">' + section.cards.length + ' card' +
-      (section.cards.length !== 1 ? 's' : '') + '</span>';
+      '<span class="bi-lesson-count">' + t("count.cards", { n: section.cards.length }) + '</span>';
     block.appendChild(header);
 
     // Show up to 3 card rows as preview
@@ -4200,7 +4341,7 @@ function renderBulkImportPreview(raw) {
     if (section.cards.length > 3) {
       var more = document.createElement("div");
       more.className = "bi-card-row";
-      more.textContent = "... and " + (section.cards.length - 3) + " more";
+      more.textContent = t("bulk.andMore", { n: section.cards.length - 3 });
       block.appendChild(more);
     }
     preview.appendChild(block);
@@ -4209,8 +4350,7 @@ function renderBulkImportPreview(raw) {
   var total = sections.reduce(function(n, s) { return n + s.cards.length; }, 0);
   var summary = document.createElement("div");
   summary.className = "bulk-preview-count";
-  summary.textContent = sections.length + " lesson" + (sections.length !== 1 ? "s" : "") +
-    ", " + total + " card" + (total !== 1 ? "s" : "") + " total";
+  summary.textContent = t("bulk.summary", { lessons: sections.length, cards: total });
   preview.insertBefore(summary, preview.firstChild);
 }
 
@@ -4392,22 +4532,22 @@ function escHtml(str) {
 }
 
 function relativeTime(unixSec) {
-  if (!unixSec) return "never";
+  if (!unixSec) return t("time.never");
   var diff = Math.floor(Date.now() / 1000) - unixSec;
-  if (diff < 60)           return "just now";
-  if (diff < 3600)         return Math.floor(diff / 60) + "m ago";
-  if (diff < 86400)        return Math.floor(diff / 3600) + "h ago";
-  if (diff < 7 * 86400)   return Math.floor(diff / 86400) + "d ago";
-  return Math.floor(diff / (7 * 86400)) + "w ago";
+  if (diff < 60)          return t("time.justNow");
+  if (diff < 3600)        return t("time.minutesAgo", { n: Math.floor(diff / 60) });
+  if (diff < 86400)       return t("time.hoursAgo", { n: Math.floor(diff / 3600) });
+  if (diff < 7 * 86400)   return t("time.daysAgo", { n: Math.floor(diff / 86400) });
+  return t("time.weeksAgo", { n: Math.floor(diff / (7 * 86400)) });
 }
 
 function futureRelativeTime(unixSec) {
-  if (!unixSec) return "not scheduled";
+  if (!unixSec) return t("time.notScheduled");
   var diff = unixSec - Math.floor(Date.now() / 1000);
-  if (diff <= 0)           return "now";
-  if (diff < 3600)         return "in " + Math.floor(diff / 60) + "m";
-  if (diff < 86400)        return "in " + Math.floor(diff / 3600) + "h";
-  return "in " + Math.floor(diff / 86400) + "d";
+  if (diff <= 0)    return t("time.now");
+  if (diff < 3600)  return t("time.inMinutes", { n: Math.floor(diff / 60) });
+  if (diff < 86400) return t("time.inHours", { n: Math.floor(diff / 3600) });
+  return t("time.inDays", { n: Math.floor(diff / 86400) });
 }
 
 /* ============================
