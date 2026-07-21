@@ -415,7 +415,8 @@ Object.assign(TRANSLATIONS.en, {
   "promptGuide.copyPrompt": "Copy Prompt",
   "tts.testPhrase": "This is a test of the speed setting.",
   "common.releaseToRefresh": "Release to refresh",
-  "alert.noLessonsInSelectedClasses": "The selected classes have no lessons."
+  "alert.noLessonsInSelectedClasses": "The selected classes have no lessons.",
+  "quiz.exit": "Exit quiz"
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -794,7 +795,8 @@ Object.assign(TRANSLATIONS.vi, {
   "promptGuide.copyPrompt": "Sao chép Prompt",
   "tts.testPhrase": "Đây là bản kiểm tra tốc độ đọc.",
   "common.releaseToRefresh": "Thả để làm mới",
-  "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào."
+  "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào.",
+  "quiz.exit": "Thoát bài kiểm tra"
 });
 
 function t(key, vars) {
