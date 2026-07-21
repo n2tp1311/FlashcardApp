@@ -3771,12 +3771,10 @@ function renderFlashcard() {
     expContainer.appendChild(expEl);
   }
 
-  // Difficulty badge
-  var attempts = JSON.parse(localStorage.getItem("fc-attempts") || "[]")
-    .filter(function(a) { return a.card_id === card.id; });
-  document.getElementById("fc-diff-badge").outerHTML;
+  // Difficulty badge — read from the already-fetched studyStatsMap (server-backed accuracy
+  // history), not localStorage's "fc-attempts" (only ever populated in local/offline mode).
   var badge = document.getElementById("fc-diff-badge");
-  var stats = computeStats(attempts);
+  var stats = (state.studyStatsMap && state.studyStatsMap[card.id]) || { total: 0, correct: 0, blended: 0, level: "new" };
   badge.className = "fc-difficulty-badge badge-" + (stats.total === 0 ? "new" : stats.level);
   badge.textContent = stats.total === 0 ? t("difficulty.new") :
     difficultyLabel(stats.level) + " · " + stats.correct + "/" + stats.total;
@@ -3805,8 +3803,20 @@ function renderFcDots() {
     if (i === state.studyIndex) dot.classList.add("active");
     var card = cards[i];
     var known = state.studyKnownMap[card.id];
-    if (known === true)  dot.classList.add("known");
-    if (known === false) dot.classList.add("learning");
+    if (known === true) {
+      dot.classList.add("known");
+    } else if (known === false) {
+      dot.classList.add("learning");
+    } else {
+      // Not yet marked this session — preview the card's historical difficulty
+      // (same level used for the on-card Easy/Medium/Hard/New badge) instead of
+      // leaving every unmarked dot looking identical.
+      var stats = state.studyStatsMap && state.studyStatsMap[card.id];
+      var level = stats ? stats.level : "new";
+      if (level === "easy") dot.classList.add("known");
+      else if (level === "medium") dot.classList.add("medium");
+      else if (level === "hard") dot.classList.add("learning");
+    }
     (function(idx) {
       dot.addEventListener("click", function() {
         state.studyIndex = idx;
