@@ -847,6 +847,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | AI prompt guide with copy button | Done | |
 | Flashcard study mode | Done | 3D flip, keyboard nav, marking |
 | Quiz mode (MCQ) | Done | Auto-generated distractors, keyboard 1-4 |
+| Quiz answer review (Prev/Next through answered questions) | Done | Read-only replay of the original shuffle/answer; delete-card still allowed while reviewing |
 | Study setup (count, filter, direction, mode) | Done | |
 | Multi-lesson selection | Done | |
 | Progressive difficulty (weighted shuffle) | Done | Hard 3×, medium 2× |

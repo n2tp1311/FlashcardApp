@@ -50,6 +50,7 @@
 ## Study
 - Flashcard mode (flip, mark known/learning)
 - Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def; True/False shows two large True/False buttons)
+- Quiz answer review: Prev/Next nav (also `←`/`→`) lets you revisit already-answered questions read-only — options are disabled and re-colored (correct/wrong/dimmed) from the saved shuffle, so the exact layout you saw when answering is reproduced; the answer itself can't be changed, but the delete-card button still works on a reviewed card and adjusts score/results accordingly
 - True/False lesson format: statement card with True or False answer; optional explanation shown after answering; bulk import `statement | true/false [;; explanation]`; works in flashcard and quiz modes
 - MCQ cards support 1–4 distractors (2–5 total choices); dynamic add/remove in card editor
 - Study setup: card count, filter, direction, mode
