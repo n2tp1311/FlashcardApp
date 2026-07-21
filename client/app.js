@@ -234,7 +234,20 @@ Object.assign(TRANSLATIONS.en, {
   "difficulty.new": "New",
   "difficulty.easy": "Easy",
   "difficulty.medium": "Medium",
-  "difficulty.hard": "Hard"
+  "difficulty.hard": "Hard",
+
+  "stats.titlePrefix": "Stats: {title}",
+  "stats.overview": "Overview",
+  "stats.hardestCards": "Hardest Cards",
+  "stats.allAttempted": "All Attempted",
+  "stats.totalCards": "Total Cards",
+  "stats.attempted": "Attempted",
+  "stats.accuracy": "Accuracy",
+  "stats.totalAttempts": "Total Attempts",
+  "stats.difficultyBreakdown": "Difficulty Breakdown",
+  "stats.noAttemptedCards": "No attempted cards yet.",
+  "card.imagePlaceholder": "[image]",
+  "stats.correctOutOfPct": "{correct} / {total} correct ({pct}%)"
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -432,7 +445,20 @@ Object.assign(TRANSLATIONS.vi, {
   "difficulty.new": "Mới",
   "difficulty.easy": "Dễ",
   "difficulty.medium": "Trung bình",
-  "difficulty.hard": "Khó"
+  "difficulty.hard": "Khó",
+
+  "stats.titlePrefix": "Thống kê: {title}",
+  "stats.overview": "Tổng quan",
+  "stats.hardestCards": "Thẻ khó nhất",
+  "stats.allAttempted": "Tất cả đã làm",
+  "stats.totalCards": "Tổng số thẻ",
+  "stats.attempted": "Đã làm",
+  "stats.accuracy": "Độ chính xác",
+  "stats.totalAttempts": "Tổng lượt làm",
+  "stats.difficultyBreakdown": "Phân bố độ khó",
+  "stats.noAttemptedCards": "Chưa có thẻ nào được làm.",
+  "card.imagePlaceholder": "[hình ảnh]",
+  "stats.correctOutOfPct": "{correct} / {total} đúng ({pct}%)"
 });
 
 function t(key, vars) {
@@ -3757,7 +3783,7 @@ document.getElementById("btn-results-back").addEventListener("click", function()
    ============================ */
 
 function openStats(type, id, title) {
-  document.getElementById("stats-title").textContent = "Stats: " + title;
+  document.getElementById("stats-title").textContent = t("stats.titlePrefix", { title: title });
   // Reset tabs
   document.querySelectorAll(".tab").forEach(function(t) { t.classList.toggle("active", t.dataset.tab === "overview"); });
   document.querySelectorAll(".stats-panel").forEach(function(p) { p.classList.toggle("active", p.id === "stats-overview"); });
@@ -3834,12 +3860,12 @@ function renderStatsOverview(type, id) {
 
     panel.innerHTML =
       '<div class="stats-overview-grid">' +
-        statCard(totalCards, "Total Cards") +
-        statCard(attempted, "Attempted") +
-        statCard(accuracy + "%", "Accuracy") +
-        statCard(totalAttempts, "Total Attempts") +
+        statCard(totalCards, t("stats.totalCards")) +
+        statCard(attempted, t("stats.attempted")) +
+        statCard(accuracy + "%", t("stats.accuracy")) +
+        statCard(totalAttempts, t("stats.totalAttempts")) +
       '</div>' +
-      '<div class="diff-bar-label">Difficulty Breakdown</div>' +
+      '<div class="diff-bar-label">' + t("stats.difficultyBreakdown") + '</div>' +
       diffBar(t("difficulty.new"), diffCounts.new, totalCards, "#9ca3af") +
       diffBar(t("difficulty.easy"), diffCounts.easy, totalCards, "#16a34a") +
       diffBar(t("difficulty.medium"), diffCounts.medium, totalCards, "#d97706") +
@@ -3865,7 +3891,7 @@ function renderStatsHardest(type, id) {
   var scope = { type: type, id: id };
   store.getHardestCards({ scope: scope, limit: 30 }).then(function(items) {
     if (items.length === 0) {
-      panel.innerHTML = '<div class="empty-state"><p>No attempted cards yet.</p></div>';
+      panel.innerHTML = '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>';
       return;
     }
     panel.innerHTML = "";
@@ -3880,7 +3906,7 @@ function renderStatsAll(type, id) {
     // In server mode, getHardestCards returns ALL attempted cards sorted by difficulty
     store.getHardestCards({ scope: { type: type, id: id }, limit: 9999 }).then(function(items) {
       if (items.length === 0) {
-        panel.innerHTML = '<div class="empty-state"><p>No attempted cards yet.</p></div>';
+        panel.innerHTML = '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>';
         return;
       }
       panel.innerHTML = "";
@@ -3902,7 +3928,7 @@ function renderStatsAll(type, id) {
       return allAttempts.some(function(a) { return a.card_id === c.id; });
     });
     if (attempted.length === 0) {
-      panel.innerHTML = '<div class="empty-state"><p>No attempted cards yet.</p></div>';
+      panel.innerHTML = '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>';
       return;
     }
     panel.innerHTML = "";
@@ -3928,7 +3954,7 @@ function buildStatsCardEl(card, stats) {
     renderLatex(card.data.statement, qEl);
     aEl.textContent = card.data.correct === "true" ? t("common.true") : t("common.false");
   } else if (card.format === "image-def") {
-    qEl.textContent = "[image]";
+    qEl.textContent = t("card.imagePlaceholder");
     renderLatex(card.data.def, aEl);
   } else {
     renderLatex(card.data.question, qEl);
@@ -3945,8 +3971,10 @@ function buildStatsCardEl(card, stats) {
   item.appendChild(aEl);
   var acc = document.createElement("div");
   acc.className = "stats-accuracy";
-  acc.textContent = stats.correct + " / " + stats.total + " correct (" +
-    (stats.total > 0 ? Math.round(stats.correct / stats.total * 100) : 0) + "%)";
+  acc.textContent = t("stats.correctOutOfPct", {
+    correct: stats.correct, total: stats.total,
+    pct: (stats.total > 0 ? Math.round(stats.correct / stats.total * 100) : 0)
+  });
   item.appendChild(acc);
   return item;
 }
