@@ -1,5 +1,12 @@
 # Feature Stories
 
+## Localization (English / Vietnamese)
+- Preferences modal has an English / Tiếng Việt language toggle; selection persisted server-side via `/api/auth/preferences` and cached in `localStorage["fc-language"]`/`fc-preferences` for instant load before the network round-trip
+- Custom lightweight i18n system (no external library, no build step): `TRANSLATIONS.{en,vi}` dictionaries, `t(key, vars)` lookup with English fallback and `{var}` interpolation, `applyI18n(root)` DOM-walker driven by `data-i18n`/`data-i18n-placeholder`/`data-i18n-title`/`data-i18n-aria` attributes
+- Icon-preserving translation: `applyI18n` updates only the last text node of an icon+label button (rather than clobbering `innerHTML`), so inline SVG icons survive a language switch without needing every button label wrapped in a `<span>`
+- Every screen, modal, and dynamically-generated string (search results, share invite list, validation/error alerts, MCQ distractor fields, relative-time labels, difficulty/format badges) is wired through `t()` — covers the full app, not just static markup
+- Explicitly out of scope: user-authored content (card text, class/lesson names, `cls.icon`), server error strings passed through verbatim, and the AI-extraction-prompt text (instructional copy meant for an external AI tool, not the app's own UI)
+
 ## UI / Design
 - All emoji UI-chrome icons (buttons, headers, dropdown items, empty-state illustrations, sort-direction/kebab/close controls) replaced with a single minimalist SVG icon set (feather-style: `stroke="currentColor"`, `stroke-width="2"`, rounded caps) for visual consistency across the whole app
 - `svgIcon()` + `ICON_*` constants in `client/app.js` provide reusable icons for dynamically-generated list rows (class/lesson/card edit/delete/archive buttons); static screens/modals in `client/index.html` inline the same paths directly

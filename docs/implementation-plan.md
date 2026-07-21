@@ -831,7 +831,7 @@ POST /api/import  { classes, lessons, cards, history, known }
 
 ---
 
-## 11. Current Build Status (as of 2026-06-25)
+## 11. Current Build Status (as of 2026-07-21)
 
 ### 11.1 Completed Features
 
@@ -867,6 +867,10 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Screen state restoration on refresh | Done | `fc-last-screen` localStorage key; restores class/lesson |
 | Bulk delete lessons + cards | Done | Select mode with checkboxes, select-all, delete |
 | Archive classes | Done | Excluded from dashboard/due aggregation; still browsable/studyable on demand |
+| UI language toggle (English/Vietnamese) | Done | Preferences modal; custom `t()`/`applyI18n()` i18n system, `data-i18n*` attributes, persisted via `/api/auth/preferences` + localStorage |
+| Delete-card button in study/quiz modes | Done | Trash icon in flashcard toolbar and quiz header; confirms then removes card from the active session |
+| Minimalist icon unification | Done | All screens/modals now use a single feather-style inline-SVG icon set (`ICON_*` constants in app.js) |
+| Text-selection no longer flips flashcard | Done | `#fc-scene` click handler checks `window.getSelection()` before flipping, so selecting text to copy/translate doesn't trigger a flip |
 
 ### 11.2 Pending Features — Priority Order
 
