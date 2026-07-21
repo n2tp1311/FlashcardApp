@@ -249,10 +249,11 @@ User selects:
 ### 5.3 Flashcard Study Mode
 
 - 3D flip animation (rotateY, perspective 1200px)
-- Navigation: ← → buttons, keyboard arrows, dot strip
-- Marking: ✗ Still learning (key: 1) / ✓ Know it (key: 2), auto-advance 400ms
-- Toolbar: Shuffle, Reset, "Study ✗ only" toggle
+- Navigation: ← → buttons, keyboard arrows, dot strip — dots preview each card's historical difficulty (green/amber/red/neutral) until marked this session
+- Marking: ✗ Still learning (key: 1) / ✓ Know it (key: 2) / ⚡ Easy (key: 3, sends `grade: "easy"` for a +2 SRS step jump), auto-advance 400ms
+- Toolbar: Shuffle, Edit card, Delete card (Reset/"Study Hard Only" removed — unused)
 - Difficulty badge on each card (Easy/Medium/Hard/New + correct/total)
+- Edit card without leaving the study session: pencil icon opens the same edit modal as the lesson card list, pre-filled with the on-screen card's data; saving patches the in-progress session array and re-renders immediately
 
 ### 5.4 Quiz Mode
 
@@ -305,7 +306,7 @@ Every user action reachable from the keyboard. Extends existing shortcuts to cov
 | Home | `N` | New class |
 | Class | `N` | New lesson; `E` edit class; `Backspace` back |
 | Lesson | `N` | New card; `B` bulk paste; `S` start study; `Backspace` back |
-| Flashcard | `P` play pronunciation; `S` shuffle; `R` reset; `F` filter still-learning |
+| Flashcard | `P` play pronunciation; `S` shuffle; `1`/`2`/`3` mark learning/known/easy |
 | Quiz | `Esc` back to setup |
 | Global | `H` home; `?` show key map overlay |
 
@@ -850,6 +851,8 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Quiz mode (MCQ) | Done | Auto-generated distractors, keyboard 1-4 |
 | Quiz answer review (Prev/Next through answered questions) | Done | Read-only replay of the original shuffle/answer; delete-card still allowed while reviewing |
 | SRS recognition-vs-recall cap | Done | Quiz-correct capped at srs_step=2; only Flashcard-correct advances past it. `server/routes/attempts.js` |
+| Manual difficulty grading in Flashcard mode | Done | Optional ⚡ Easy button/key 3 sends `grade: "easy"` for a +2 SRS step jump; wires up the previously-dormant server `grade` field |
+| Edit card from Flashcard/Quiz study screens | Done | Pencil icon opens the existing edit modal pre-filled; saves patch the in-progress session in place |
 | Study setup (count, filter, direction, mode) | Done | Mode hint explains the recall/recognition tradeoff |
 | Multi-lesson selection | Done | |
 | Progressive difficulty (weighted shuffle) | Done | Hard 3×, medium 2× |

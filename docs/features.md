@@ -51,6 +51,9 @@
 
 ## Study
 - Flashcard mode (flip, mark known/learning)
+- Manual difficulty grading: an optional ⚡ Easy button/key `3` alongside Still Learning/Know It sends `grade: "easy"` on the attempt, jumping the SRS step by +2 instead of the default +1 — wires up a `grade` field the server already supported but no client previously sent
+- Edit card from Flashcard or Quiz study screens: pencil icon in the toolbar/header opens the same edit modal used from the lesson card list, pre-filled with the on-screen card's data (no network refetch — reuses the card already in memory, avoiding a stale-lesson lookup bug during multi-lesson sessions); saving patches the in-progress session array and re-renders immediately, no need to leave the study session to fix a confusing card
+- Removed unused Flashcard toolbar buttons: Reset (jump back to card 1) and "Hard Only" (filter to hard/new cards) — both removed per user feedback that they went unused; their keyboard shortcuts (R/F) and keymap-modal entries were removed with them
 - Flashcard progress-dot strip previews each upcoming card's historical difficulty (green/orange/red/neutral for easy/medium/hard/new, same levels as the on-card Easy/Medium/Hard/New badge) until it's marked this session, at which point the dot switches to reflect the fresh Know It/Still Learning decision instead — lets you see at a glance which cards ahead are likely to give trouble
 - Fixed: the on-card difficulty badge in Flashcard mode was reading from `localStorage["fc-attempts"]` (only ever populated in local/offline mode), so in server mode it always showed "New" regardless of actual accuracy history; now reads from the same server-backed `studyStatsMap` used everywhere else (dot strip, Stats screen, weighted shuffle)
 - Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def; True/False shows two large True/False buttons)
@@ -92,7 +95,7 @@
 - Responsive inline nav: at ≥680px viewport width, Dashboard and Analytics appear as inline header buttons (`.nav-inline-btn`); on narrow screens they fall back to the ⋮ dropdown (`.dash-analytics-dropdown`)
 - Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
 - Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back
-- Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2` mark learning/known, `S` shuffle, `R` reset, `F` filter hard, `P` pronounce
+- Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2`/`3` mark learning/known/easy, `S` shuffle, `P` pronounce
 - Quiz: `1`–`5` select option, `Esc` back; Recall: `Enter` reveal, `1`/`2`/`3` grade, `Esc` back
 - Global: `H` go home, `?` toggle keymap modal, `Esc` close any open modal
 - `?` key shortcut modal lists all bindings; `⌨` header button also opens it
