@@ -41,6 +41,7 @@
 - "Review N due" button on lesson screen launches quiz filtered to due cards only
 - Due counts on class cards (home screen) and dashboard grouped by class
 - Dashboard due lessons grouped by class with clickable rows to launch review
+- Recognition-vs-recall gate: a Quiz-mode correct answer can advance a card's SRS step up to `RECOGNITION_CAP_STEP` (2 — the 4h same-day interval) but no further; only a Flashcard-mode correct recall can push a card into 1-day+ intervals. Server clamps the *resulting* step (not just the current one), so a large single-answer jump can't leapfrog past the cap. Quiz screen shows an inline hint when an answer plateaus this way; the Results screen aggregates a count of how many cards plateaued that session in case the per-question hint was missed (e.g. a slow response on the last question)
 
 ## Performance
 - Bulk cards endpoint (`POST /api/cards/by-lessons`): multi-lesson quiz startup reduced from 2N+1 HTTP requests (N `getCards` + N `getKnownMap` per lesson) to 2 requests total regardless of lesson count; 10-lesson quiz goes from 21 requests to 2 (90% reduction)
@@ -53,7 +54,7 @@
 - Quiz answer review: Prev/Next nav (also `←`/`→`) lets you revisit already-answered questions read-only — options are disabled and re-colored (correct/wrong/dimmed) from the saved shuffle, so the exact layout you saw when answering is reproduced; the answer itself can't be changed, but the delete-card button still works on a reviewed card and adjusts score/results accordingly
 - True/False lesson format: statement card with True or False answer; optional explanation shown after answering; bulk import `statement | true/false [;; explanation]`; works in flashcard and quiz modes
 - MCQ cards support 1–4 distractors (2–5 total choices); dynamic add/remove in card editor
-- Study setup: card count, filter, direction, mode
+- Study setup: card count, filter, direction, mode — a hint line under the mode picker explains the Flashcard-vs-Quiz recall/recognition tradeoff, swapping text as the pill selection changes
 - Multi-lesson selection → combined study session; lesson name badge shown above each question/card so the subject is always visible
 - Multi-class quiz: "☑ Select" button (or `X` key) on home screen enters class select mode; check multiple classes and click "Study" to fetch all their lessons and launch a cross-class interleaved session
 - Progressive difficulty: hard cards weighted 3×, medium 2×

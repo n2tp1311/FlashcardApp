@@ -244,7 +244,7 @@ User selects:
 2. Card count: 10 / 25 / 50 / All
 3. Filter: All cards or "Still learning only"
 4. Direction (Format A only): Term → Def or Def → Term
-5. Mode: Flashcards or Quiz
+5. Mode: Flashcards or Quiz — hint line under the mode picker explains the recall-vs-recognition tradeoff (§5.4's SRS cap)
 
 ### 5.3 Flashcard Study Mode
 
@@ -260,6 +260,7 @@ User selects:
 - Correct → green, wrong → red, others dim
 - Space/Enter to advance after answering
 - Results: score ring, percentage, grade, retry/change/back
+- SRS recognition cap: a quiz-correct answer can't advance a card's `srs_step` past `RECOGNITION_CAP_STEP` (2 — the 4h interval); only a flashcard-mode correct answer can cross into 1-day+ intervals (`server/routes/attempts.js`). Inline hint on the quiz screen when this triggers; aggregate count on the Results screen
 
 ### 5.5 History & Difficulty
 
@@ -848,7 +849,8 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Flashcard study mode | Done | 3D flip, keyboard nav, marking |
 | Quiz mode (MCQ) | Done | Auto-generated distractors, keyboard 1-4 |
 | Quiz answer review (Prev/Next through answered questions) | Done | Read-only replay of the original shuffle/answer; delete-card still allowed while reviewing |
-| Study setup (count, filter, direction, mode) | Done | |
+| SRS recognition-vs-recall cap | Done | Quiz-correct capped at srs_step=2; only Flashcard-correct advances past it. `server/routes/attempts.js` |
+| Study setup (count, filter, direction, mode) | Done | Mode hint explains the recall/recognition tradeoff |
 | Multi-lesson selection | Done | |
 | Progressive difficulty (weighted shuffle) | Done | Hard 3×, medium 2× |
 | Per-card SRS (step-based intervals) | Done | 10min → 1h → 4h → 1d → 3d → 7d → 21d; resets on wrong |
