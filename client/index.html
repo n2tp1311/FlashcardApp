@@ -221,27 +221,27 @@
 <!-- ===== SCREEN: Dashboard ===== -->
 <div id="screen-dashboard" class="screen">
   <header class="app-header">
-    <button class="btn btn-ghost back-btn" id="btn-dashboard-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
-    <h2 class="screen-title">Dashboard</h2>
-    <button class="btn btn-ghost btn-sm" id="btn-dashboard-export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
+    <button class="btn btn-ghost back-btn" id="btn-dashboard-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+    <h2 class="screen-title" data-i18n="nav.dashboard">Dashboard</h2>
+    <button class="btn btn-ghost btn-sm" id="btn-dashboard-export" data-i18n="dashboard.exportCsv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
   </header>
-  <div id="dash-loading" class="empty-state"><p>Loading…</p></div>
-  <div id="dash-error" class="empty-state hidden"><p>Failed to load dashboard.</p></div>
+  <div id="dash-loading" class="empty-state"><p data-i18n="common.loadingEllipsis">Loading…</p></div>
+  <div id="dash-error" class="empty-state hidden"><p data-i18n="dashboard.loadFailed">Failed to load dashboard.</p></div>
 
   <div class="dash-summary-grid" id="dash-summary-grid"></div>
 
-  <h3 class="dash-section-label">Overall Accuracy</h3>
+  <h3 class="dash-section-label" data-i18n="dashboard.overallAccuracy">Overall Accuracy</h3>
   <div id="dash-accuracy-wrap" class="dash-accuracy-wrap"></div>
 
-  <h3 class="dash-section-label">Card Difficulty Breakdown</h3>
+  <h3 class="dash-section-label" data-i18n="dashboard.cardDifficultyBreakdown">Card Difficulty Breakdown</h3>
   <div id="dash-diff-breakdown"></div>
 
-  <h3 class="dash-section-label">Study Charts</h3>
+  <h3 class="dash-section-label" data-i18n="dashboard.studyCharts">Study Charts</h3>
   <div class="slicer-bar" id="dash-period-bar">
-    <button class="pill" data-period="7">7 days</button>
-    <button class="pill" data-period="30">30 days</button>
-    <button class="pill" data-period="60">60 days</button>
-    <button class="pill" data-period="90">90 days</button>
+    <button class="pill" data-period="7" data-i18n="dashboard.days7">7 days</button>
+    <button class="pill" data-period="30" data-i18n="dashboard.days30">30 days</button>
+    <button class="pill" data-period="60" data-i18n="dashboard.days60">60 days</button>
+    <button class="pill" data-period="90" data-i18n="dashboard.days90">90 days</button>
   </div>
   <div class="analytics-charts-grid">
     <div class="stat-card analytics-chart-card" style="overflow-x:auto">
@@ -249,26 +249,26 @@
       <div id="dash-heatmap-wrap" class="heatmap-wrap"></div>
     </div>
     <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title">Weekly Study Trend</h3>
+      <h3 class="analytics-chart-title" data-i18n="dashboard.weeklyTrend">Weekly Study Trend</h3>
       <div id="dash-trend-wrap"></div>
     </div>
     <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title">SRS Interval Distribution</h3>
+      <h3 class="analytics-chart-title" data-i18n="dashboard.srsDistribution">SRS Interval Distribution</h3>
       <div id="dash-srs-wrap"></div>
     </div>
   </div>
 
-  <h3 class="dash-section-label">Lesson Accuracy</h3>
+  <h3 class="dash-section-label" data-i18n="dashboard.lessonAccuracy">Lesson Accuracy</h3>
   <div id="dash-lesson-wrap" class="analytics-lesson-list"></div>
 
   <h3 class="dash-section-label">
-    Due for Review
+    <span data-i18n="dashboard.dueForReview">Due for Review</span>
     <span class="dash-badge" id="dash-due-badge"></span>
   </h3>
   <div id="dash-due-list" class="dash-lesson-list"></div>
 
   <h3 class="dash-section-label">
-    Struggling Lessons
+    <span data-i18n="dashboard.strugglingLessons">Struggling Lessons</span>
     <span class="dash-badge dash-badge-warn" id="dash-struggle-badge"></span>
   </h3>
   <div id="dash-struggle-list" class="dash-lesson-list"></div>

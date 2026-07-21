@@ -247,7 +247,36 @@ Object.assign(TRANSLATIONS.en, {
   "stats.difficultyBreakdown": "Difficulty Breakdown",
   "stats.noAttemptedCards": "No attempted cards yet.",
   "card.imagePlaceholder": "[image]",
-  "stats.correctOutOfPct": "{correct} / {total} correct ({pct}%)"
+  "stats.correctOutOfPct": "{correct} / {total} correct ({pct}%)",
+
+  "dashboard.exportCsv": "Export CSV",
+  "common.loadingEllipsis": "Loading…",
+  "dashboard.loadFailed": "Failed to load dashboard.",
+  "dashboard.overallAccuracy": "Overall Accuracy",
+  "dashboard.cardDifficultyBreakdown": "Card Difficulty Breakdown",
+  "dashboard.studyCharts": "Study Charts",
+  "dashboard.days7": "7 days",
+  "dashboard.days30": "30 days",
+  "dashboard.days60": "60 days",
+  "dashboard.days90": "90 days",
+  "dashboard.weeklyTrend": "Weekly Study Trend",
+  "dashboard.srsDistribution": "SRS Interval Distribution",
+  "dashboard.lessonAccuracy": "Lesson Accuracy",
+  "dashboard.dueForReview": "Due for Review",
+  "dashboard.strugglingLessons": "Struggling Lessons",
+  "dashboard.accuracyLabel": "{pct}% — {correct} / {total} correct",
+  "dashboard.allCaughtUp": "All caught up — no cards due.",
+  "dashboard.noStrugglingLessons": "No struggling lessons — great work!",
+  "dashboard.pctHard": "{pct}% hard",
+  "common.due": "Due",
+  "dashboard.thisWeek": "This week",
+  "dashboard.lastWeek": "Last week",
+  "dashboard.noCardsInSrs": "No cards in SRS yet.",
+  "dashboard.cardsInSrs": "{n} card(s) in SRS",
+  "dashboard.noStudyData": "No study data yet.",
+  "dashboard.attemptsAbbrev": "{n} att.",
+  "dashboard.attemptsCount": "{n} attempt(s)",
+  "dashboard.monthAbbrevs": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -458,7 +487,36 @@ Object.assign(TRANSLATIONS.vi, {
   "stats.difficultyBreakdown": "Phân bố độ khó",
   "stats.noAttemptedCards": "Chưa có thẻ nào được làm.",
   "card.imagePlaceholder": "[hình ảnh]",
-  "stats.correctOutOfPct": "{correct} / {total} đúng ({pct}%)"
+  "stats.correctOutOfPct": "{correct} / {total} đúng ({pct}%)",
+
+  "dashboard.exportCsv": "Xuất CSV",
+  "common.loadingEllipsis": "Đang tải…",
+  "dashboard.loadFailed": "Tải bảng điều khiển thất bại.",
+  "dashboard.overallAccuracy": "Độ chính xác tổng thể",
+  "dashboard.cardDifficultyBreakdown": "Phân bố độ khó thẻ",
+  "dashboard.studyCharts": "Biểu đồ học tập",
+  "dashboard.days7": "7 ngày",
+  "dashboard.days30": "30 ngày",
+  "dashboard.days60": "60 ngày",
+  "dashboard.days90": "90 ngày",
+  "dashboard.weeklyTrend": "Xu hướng học theo tuần",
+  "dashboard.srsDistribution": "Phân bố khoảng lặp SRS",
+  "dashboard.lessonAccuracy": "Độ chính xác bài học",
+  "dashboard.dueForReview": "Đến hạn ôn tập",
+  "dashboard.strugglingLessons": "Bài học đang gặp khó",
+  "dashboard.accuracyLabel": "{pct}% — {correct} / {total} đúng",
+  "dashboard.allCaughtUp": "Đã hoàn thành hết — không có thẻ nào đến hạn.",
+  "dashboard.noStrugglingLessons": "Không có bài học nào gặp khó — làm tốt lắm!",
+  "dashboard.pctHard": "{pct}% khó",
+  "common.due": "Đến hạn",
+  "dashboard.thisWeek": "Tuần này",
+  "dashboard.lastWeek": "Tuần trước",
+  "dashboard.noCardsInSrs": "Chưa có thẻ nào trong SRS.",
+  "dashboard.cardsInSrs": "{n} thẻ trong SRS",
+  "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
+  "dashboard.attemptsAbbrev": "{n} lượt",
+  "dashboard.attemptsCount": "{n} lượt làm",
+  "dashboard.monthAbbrevs": "Th1,Th2,Th3,Th4,Th5,Th6,Th7,Th8,Th9,Th10,Th11,Th12"
 });
 
 function t(key, vars) {
@@ -4073,8 +4131,7 @@ function renderDashboard() {
     var accPct = d.accuracy.total > 0
       ? Math.round(d.accuracy.correct / d.accuracy.total * 100) : 0;
     document.getElementById("dash-accuracy-wrap").innerHTML =
-      '<div class="dash-accuracy-label">' + accPct + '% — ' +
-        d.accuracy.correct + ' / ' + d.accuracy.total + ' correct</div>' +
+      '<div class="dash-accuracy-label">' + t("dashboard.accuracyLabel", { pct: accPct, correct: d.accuracy.correct, total: d.accuracy.total }) + '</div>' +
       '<div class="dash-accuracy-bar">' +
         '<div class="dash-accuracy-fill" style="width:' + accPct + '%"></div>' +
       '</div>';
@@ -4105,7 +4162,7 @@ function renderDashboard() {
     dueBadge.textContent = totalDueCards || "";
     dueList.innerHTML = "";
     if (!(d.dueForReview || []).length) {
-      dueList.innerHTML = '<div class="dash-empty-note">All caught up — no cards due.</div>';
+      dueList.innerHTML = '<div class="dash-empty-note">' + t("dashboard.allCaughtUp") + '</div>';
     } else {
       var byClass = {};
       var classOrder = [];
@@ -4123,14 +4180,14 @@ function renderDashboard() {
         header.className = "dash-class-due-header";
         header.innerHTML =
           '<span class="dash-class-due-name">' + escHtml(group.class_name) + '</span>' +
-          '<span class="due-badge">' + group.total + ' due</span>';
+          '<span class="due-badge">' + t("count.due", { n: group.total }) + '</span>';
         dueList.appendChild(header);
         group.lessons.forEach(function(l) {
           var row = document.createElement("div");
           row.className = "dash-lesson-row dash-lesson-clickable dash-lesson-sub";
           row.innerHTML =
             '<span class="dash-lesson-title">' + escHtml(l.title) + '</span>' +
-            '<span class="due-badge">' + l.dueCount + ' due</span>';
+            '<span class="due-badge">' + t("count.due", { n: l.dueCount }) + '</span>';
           row.addEventListener("click", function() { openDueReview(l.id, l.class_id); });
           dueList.appendChild(row);
         });
@@ -4142,7 +4199,7 @@ function renderDashboard() {
     var strugBadge = document.getElementById("dash-struggle-badge");
     strugBadge.textContent = d.strugglingLessons.length || "";
     if (!d.strugglingLessons.length) {
-      strugList.innerHTML = '<div class="dash-empty-note">No struggling lessons — great work!</div>';
+      strugList.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStrugglingLessons") + '</div>';
     } else {
       strugList.innerHTML = d.strugglingLessons.map(function(l) {
         return dashLessonRow(l, "struggle");
@@ -4157,8 +4214,8 @@ function renderDashboard() {
 
 function dashLessonRow(lesson, type) {
   var badge = type === "struggle"
-    ? '<span class="diff-pill hard">' + Math.round(lesson.hardRatio * 100) + '% hard</span>'
-    : '<span class="due-badge">Due</span>';
+    ? '<span class="diff-pill hard">' + t("dashboard.pctHard", { pct: Math.round(lesson.hardRatio * 100) }) + '</span>'
+    : '<span class="due-badge">' + t("common.due") + '</span>';
   return '<div class="dash-lesson-row">' +
     '<div class="dash-lesson-info">' +
       '<span class="dash-lesson-title">' + escHtml(lesson.title) + '</span>' +
@@ -4200,7 +4257,7 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     store.getAnalytics(state.dashPeriod).then(function(analytics) {
       var days = analytics.days || state.dashPeriod;
       var heatmapTitle = document.getElementById("dash-heatmap-title");
-      if (heatmapTitle) heatmapTitle.textContent = days + "-Day Study Heatmap";
+      if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
       renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
       renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
       renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
@@ -4230,7 +4287,7 @@ function renderHeatmap(rows, wrap, days) {
     return "heat-3";
   }
 
-  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var MONTHS = t("dashboard.monthAbbrevs").split(",");
   var firstDay = cells[0].dayOfWeek;
   var padded = [];
   for (var p = 0; p < firstDay; p++) padded.push(null);
@@ -4255,7 +4312,7 @@ function renderHeatmap(rows, wrap, days) {
         cellEl.className = "heatmap-cell heat-empty";
       } else {
         cellEl.className = "heatmap-cell " + intensity(cell.cnt);
-        cellEl.title = cell.key + ": " + cell.cnt + " attempt" + (cell.cnt !== 1 ? "s" : "");
+        cellEl.title = cell.key + ": " + t("dashboard.attemptsCount", { n: cell.cnt });
         if (!firstRealCell) firstRealCell = cell;
       }
       colEl.appendChild(cellEl);
@@ -4290,9 +4347,9 @@ function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
 
   weeks.forEach(function(week) {
     var pct = max > 0 ? Math.round(week.cnt / max * 100) : 0;
-    var label = week.weeksAgo === 0 ? "This week" :
-                week.weeksAgo === 1 ? "Last week" :
-                week.weeksAgo + "w ago";
+    var label = week.weeksAgo === 0 ? t("dashboard.thisWeek") :
+                week.weeksAgo === 1 ? t("dashboard.lastWeek") :
+                t("time.weeksAgo", { n: week.weeksAgo });
     var rowEl = document.createElement("div");
     rowEl.className = "trend-row";
     rowEl.innerHTML =
@@ -4310,7 +4367,7 @@ function stepLabel(step) {
 
 function renderSrsDistribution(rows, wrap) {
   if (!rows || !rows.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">No cards in SRS yet.</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noCardsInSrs") + '</div>';
     return;
   }
   var max = rows.reduce(function(m, r) { return Math.max(m, r.cnt); }, 1);
@@ -4327,14 +4384,14 @@ function renderSrsDistribution(rows, wrap) {
   });
   var note = document.createElement("div");
   note.className = "srs-total-note";
-  note.textContent = total + ' card' + (total !== 1 ? 's' : '') + ' in SRS';
+  note.textContent = t("dashboard.cardsInSrs", { n: total });
   wrap.appendChild(note);
 }
 
 function renderLessonBreakdown(rows, wrap) {
   wrap = wrap || document.getElementById("dash-lesson-wrap");
   if (!rows || !rows.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">No study data yet.</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStudyData") + '</div>';
     return;
   }
   rows.forEach(function(lesson) {
@@ -4355,7 +4412,7 @@ function renderLessonBreakdown(rows, wrap) {
         '<div class="analytics-retention-bar">' +
           '<div class="analytics-retention-fill" style="width:' + accuracy + '%;background:' + barColor + '"></div>' +
         '</div>' +
-        '<span class="analytics-lesson-attempts">' + lesson.total_attempts + ' att.</span>' +
+        '<span class="analytics-lesson-attempts">' + t("dashboard.attemptsAbbrev", { n: lesson.total_attempts }) + '</span>' +
       '</div>';
     rowEl.addEventListener("click", function() {
       openStats("lesson", lesson.id, lesson.title);
