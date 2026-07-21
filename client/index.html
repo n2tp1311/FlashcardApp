@@ -380,7 +380,7 @@
         <button class="pill" data-value="learning" data-i18n="setup.stillLearning">Still Learning</button>
         <button class="pill" data-value="hard" data-i18n="setup.hardFirst">Hard First</button>
       </div>
-      <p class="setup-filter-hint" id="setup-filter-hint" data-i18n="setup.hintAll">Học tất cả thẻ</p>
+      <p class="setup-filter-hint" id="setup-filter-hint">Study all cards</p>
     </div>
     <div class="setup-section">
       <label class="setup-label" data-i18n="setup.mode">Mode</label>
@@ -388,6 +388,7 @@
         <button class="pill active" data-value="flashcard" data-i18n="setup.flashcards">Flashcards</button>
         <button class="pill" data-value="quiz" data-i18n="setup.quiz">Quiz</button>
       </div>
+      <p class="setup-filter-hint" id="setup-mode-hint">Recall it yourself first — the strongest signal for spaced repetition.</p>
     </div>
     <div class="setup-section" id="setup-order-section">
       <label class="setup-label" data-i18n="setup.cardOrder">Card Order</label>
@@ -460,7 +461,7 @@
       <div id="quiz-question" class="quiz-question"></div>
     </div>
     <div id="quiz-options" class="quiz-options"></div>
-    <div class="quiz-nav">
+    <div class="quiz-nav" id="quiz-nav">
       <button class="btn btn-outline btn-lg hidden" id="btn-quiz-prev" data-i18n="study.prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Prev</button>
       <button class="btn btn-outline btn-lg hidden" id="btn-quiz-review-next" data-i18n="study.next">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
     </div>
@@ -483,6 +484,7 @@
     <div class="results-grade" id="results-grade"></div>
     <div class="results-detail" id="results-detail"></div>
     <div class="results-review-hint" id="results-review-hint"></div>
+    <div class="quiz-cap-hint hidden" id="results-cap-note"></div>
     <div class="results-actions">
       <button class="btn btn-outline" id="btn-results-retry" data-i18n="results.retry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Retry</button>
       <button class="btn btn-outline" id="btn-results-change" data-i18n="results.changeSetup"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Change Setup</button>

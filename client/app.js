@@ -173,6 +173,8 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintDue": "Only cards due for review (SRS)",
   "setup.hintLearning": "Cards not yet known / still learning",
   "setup.hintHard": "Hard cards prioritized first",
+  "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
+  "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
 
   "count.cardsDueForReview": "{n} card(s) due for review",
   "lesson.nextReviewIn": "Next review in {time}",
@@ -230,6 +232,7 @@ Object.assign(TRANSLATIONS.en, {
   "results.hintGreat": "Great job! Cards scheduled for spaced repetition.",
   "results.hintOk": "Cards scheduled — focus on the ones you missed.",
   "results.hintKeepPracticing": "Keep practicing — missed cards are due again soon.",
+  "results.cappedNote": "{n} card(s) need a Flashcard-mode recall to move to a longer review interval.",
 
   "difficulty.new": "New",
   "difficulty.easy": "Easy",
@@ -417,6 +420,7 @@ Object.assign(TRANSLATIONS.en, {
   "common.releaseToRefresh": "Release to refresh",
   "alert.noLessonsInSelectedClasses": "The selected classes have no lessons.",
   "quiz.exit": "Exit quiz",
+  "quiz.cappedHint": "Correct — but this card needs a Flashcard-mode recall to move to a longer review interval.",
   "study.explanation": "Explanation",
   "keymap.reviewPrevNext": "Review prev / next answered question"
 });
@@ -555,6 +559,8 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintDue": "Chỉ thẻ đến hạn ôn tập (SRS)",
   "setup.hintLearning": "Thẻ chưa thuộc / đang học",
   "setup.hintHard": "Thẻ khó được ưu tiên đầu tiên",
+  "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
+  "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
 
   "count.cardsDueForReview": "{n} thẻ đến hạn ôn tập",
   "lesson.nextReviewIn": "Ôn tập tiếp theo sau {time}",
@@ -612,6 +618,7 @@ Object.assign(TRANSLATIONS.vi, {
   "results.hintGreat": "Làm tốt lắm! Các thẻ đã được lên lịch ôn tập ngắt quãng.",
   "results.hintOk": "Đã lên lịch ôn tập — tập trung vào những thẻ bạn làm sai.",
   "results.hintKeepPracticing": "Tiếp tục luyện tập — các thẻ sai sẽ sớm đến hạn ôn lại.",
+  "results.cappedNote": "{n} thẻ cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
 
   "difficulty.new": "Mới",
   "difficulty.easy": "Dễ",
@@ -799,6 +806,7 @@ Object.assign(TRANSLATIONS.vi, {
   "common.releaseToRefresh": "Thả để làm mới",
   "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào.",
   "quiz.exit": "Thoát bài kiểm tra",
+  "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "study.explanation": "Giải thích",
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
@@ -3466,6 +3474,8 @@ function openSetup(scope) {
   setPillGroup("setup-count", "all");
   setPillGroup("setup-filter", "all");
   setPillGroup("setup-mode", "flashcard");
+  document.getElementById("setup-filter-hint").textContent = t(FILTER_HINT_KEYS.all);
+  document.getElementById("setup-mode-hint").textContent = t(MODE_HINT_KEYS.flashcard);
 
   // Show scope label when studying more than one lesson
   var scopeLabel = document.getElementById("setup-scope-label");
@@ -3499,6 +3509,11 @@ var FILTER_HINT_KEYS = {
   hard:     "setup.hintHard"
 };
 
+var MODE_HINT_KEYS = {
+  flashcard: "setup.hintFlashcardMode",
+  quiz:      "setup.hintQuizMode"
+};
+
 ["setup-count","setup-filter","setup-mode","setup-order"].forEach(function(groupId) {
   document.getElementById(groupId).addEventListener("click", function(e) {
     var pill = e.target.closest(".pill");
@@ -3509,6 +3524,11 @@ var FILTER_HINT_KEYS = {
       var hint = document.getElementById("setup-filter-hint");
       var key = FILTER_HINT_KEYS[pill.dataset.value];
       if (hint) hint.textContent = key ? t(key) : "";
+    }
+    if (groupId === "setup-mode") {
+      var modeHint = document.getElementById("setup-mode-hint");
+      var modeKey = MODE_HINT_KEYS[pill.dataset.value];
+      if (modeHint) modeHint.textContent = modeKey ? t(modeKey) : "";
     }
   });
 });
@@ -3932,6 +3952,8 @@ function renderQuizCard() {
   if (prevExp) prevExp.remove();
   var prevNext = document.getElementById("quiz-next-btn");
   if (prevNext) prevNext.remove();
+  var prevCap = document.getElementById("quiz-cap-hint");
+  if (prevCap) prevCap.remove();
 
   if (i >= total) { showQuizResults(); return; }
 
@@ -4004,8 +4026,20 @@ function renderQuizCard() {
     optsEl.after(expEl);
   }
 
+  if (priorResult && priorResult.capped) showQuizCapHint();
+
   document.getElementById("btn-quiz-prev").classList.toggle("hidden", i === 0);
   document.getElementById("btn-quiz-review-next").classList.toggle("hidden", !priorResult);
+}
+
+function showQuizCapHint() {
+  var old = document.getElementById("quiz-cap-hint");
+  if (old) old.remove();
+  var hintEl = document.createElement("div");
+  hintEl.id = "quiz-cap-hint";
+  hintEl.className = "quiz-cap-hint";
+  hintEl.textContent = t("quiz.cappedHint");
+  document.getElementById("quiz-nav").before(hintEl);
 }
 
 function answerQuiz(selectedIdx) {
@@ -4023,11 +4057,17 @@ function answerQuiz(selectedIdx) {
 
   if (isCorrect) state.quizScore++;
 
-  store.recordAttempt({ cardId: card.id, correct: isCorrect, source: "quiz" });
-
   // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
   // selectedIdx — not just the value — is needed to mark "wrong" correctly when two options share text)
-  state.quizResults.push({ card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct });
+  var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, capped: false };
+  state.quizResults.push(resultEntry);
+
+  store.recordAttempt({ cardId: card.id, correct: isCorrect, source: "quiz" }).then(function(res) {
+    if (res && res.capped) {
+      resultEntry.capped = true;
+      if (state.quizCards[state.quizIndex] === card) showQuizCapHint();
+    }
+  }).catch(function() { /* fire-and-forget on network error, same resilience as before */ });
 
   // Visual feedback
   var optsEl = document.getElementById("quiz-options");
@@ -4156,6 +4196,18 @@ function showQuizResults() {
     ? t("results.hintOk")
     : t("results.hintKeepPracticing");
   document.getElementById("results-review-hint").textContent = reviewMsg;
+
+  // Surface a summary of any cards that plateaued this session (quiz-correct but capped) —
+  // per-question hints can be missed if the card was the last one answered (results screen
+  // replaces the quiz screen before a slow network response lands).
+  var cappedCount = state.quizResults.filter(function(r) { return r.capped; }).length;
+  var capNote = document.getElementById("results-cap-note");
+  if (cappedCount > 0) {
+    capNote.textContent = t("results.cappedNote", { n: cappedCount });
+    capNote.classList.remove("hidden");
+  } else {
+    capNote.classList.add("hidden");
+  }
 
   // Save session so reminder badges update
   if (state.studyScope) {

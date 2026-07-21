@@ -1493,6 +1493,17 @@ code {
   line-height: 1.6;
 }
 
+/* Recognition-cap hint (quiz) */
+.quiz-cap-hint {
+  font-size: 0.8125rem;
+  color: var(--warning);
+  background: var(--warning-light);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin-top: 12px;
+}
+
 /* ============================
    RESULTS
    ============================ */

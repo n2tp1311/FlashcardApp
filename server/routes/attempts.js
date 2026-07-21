@@ -9,6 +9,8 @@ const router  = express.Router();
 const SRS_INTERVALS = [600, 3600, 14400, 86400, 259200, 604800, 1814400];
 const SRS_MAX_INTERVAL = 365 * 86400;
 
+const RECOGNITION_CAP_STEP = 2;
+
 function getInterval(step) {
   if (step < SRS_INTERVALS.length) return SRS_INTERVALS[step];
   const extra = step - (SRS_INTERVALS.length - 1);
@@ -49,7 +51,7 @@ router.post("/", requireAuth, (req, res) => {
 
   // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
   if (stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now) {
-    return res.status(201).json({ ok: true, srs_step: curStep, srs_due_at: stateRow.srs_due_at });
+    return res.status(201).json({ ok: true, srs_step: curStep, srs_due_at: stateRow.srs_due_at, capped: false });
   }
 
   let newStep;
@@ -57,13 +59,22 @@ router.post("/", requireAuth, (req, res) => {
   else if (grade === "medium") newStep = curStep + 1;
   else if (grade === "hard")   newStep = 0;
   else                         newStep = correct ? curStep + 1 : 0;
+
+  // Recognizing the right answer among options isn't strong enough evidence of recall to earn
+  // a longer review interval — clamp against the RESULTING step (not just curStep) so a large
+  // jump (e.g. a future grade="easy" on quiz) can't leapfrog past the cap in one hop.
+  let capped = false;
+  if (source === "quiz" && correct) {
+    const ceiling = curStep >= RECOGNITION_CAP_STEP ? curStep : RECOGNITION_CAP_STEP;
+    if (newStep > ceiling) { newStep = ceiling; capped = true; }
+  }
   const dueAt = now + getInterval(newStep);
   db.prepare(
     "INSERT INTO card_states (card_id, user_id, srs_step, srs_due_at) VALUES (?, ?, ?, ?) " +
     "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_step = excluded.srs_step, srs_due_at = excluded.srs_due_at"
   ).run(cardId, userId, newStep, dueAt);
 
-  res.status(201).json({ ok: true, srs_step: newStep, srs_due_at: dueAt });
+  res.status(201).json({ ok: true, srs_step: newStep, srs_due_at: dueAt, capped: capped });
 });
 
 module.exports = router;
