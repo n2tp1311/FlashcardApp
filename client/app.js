@@ -172,7 +172,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.studyingTogether": "Studying {n} lessons together",
   "setup.hintAll": "Study all cards",
   "setup.hintDue": "Only cards due for review (SRS)",
-  "setup.hintNeedsRecall": "Cards stuck at a short review interval — answer them in Flashcard mode to unlock longer intervals",
+  "setup.hintNeedsRecall": "Due cards stuck at a short review interval — answer them in Flashcard mode to unlock longer intervals",
   "setup.hintLearning": "Cards not yet known / still learning",
   "setup.hintHard": "Hard cards prioritized first",
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
@@ -560,7 +560,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.studyingTogether": "Đang học {n} bài học cùng lúc",
   "setup.hintAll": "Học tất cả thẻ",
   "setup.hintDue": "Chỉ thẻ đến hạn ôn tập (SRS)",
-  "setup.hintNeedsRecall": "Thẻ đang kẹt ở khoảng ôn ngắn — trả lời đúng ở chế độ Thẻ ghi nhớ để mở khóa khoảng ôn dài hơn",
+  "setup.hintNeedsRecall": "Thẻ đến hạn nhưng đang kẹt ở khoảng ôn ngắn — trả lời đúng ở chế độ Thẻ ghi nhớ để mở khóa khoảng ôn dài hơn",
   "setup.hintLearning": "Thẻ chưa thuộc / đang học",
   "setup.hintHard": "Thẻ khó được ưu tiên đầu tiên",
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
@@ -3620,7 +3620,10 @@ function startStudy(count, filter, mode, order) {
           var nowSec2 = Math.floor(Date.now() / 1000);
           filtered = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
         } else if (filter === "needsRecall") {
-          filtered = cards.filter(function(c) { return c.srs_step != null && c.srs_step >= RECOGNITION_CAP_STEP; });
+          var nowSec3 = Math.floor(Date.now() / 1000);
+          filtered = cards.filter(function(c) {
+            return c.srs_step != null && c.srs_step >= RECOGNITION_CAP_STEP && c.srs_due_at && c.srs_due_at <= nowSec3;
+          });
         } else if (filter === "learning") {
           filtered = cards.filter(function(c) { return knownMap[c.id] !== true; });
         } else if (filter === "hard") {
