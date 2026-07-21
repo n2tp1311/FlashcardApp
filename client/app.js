@@ -416,7 +416,9 @@ Object.assign(TRANSLATIONS.en, {
   "tts.testPhrase": "This is a test of the speed setting.",
   "common.releaseToRefresh": "Release to refresh",
   "alert.noLessonsInSelectedClasses": "The selected classes have no lessons.",
-  "quiz.exit": "Exit quiz"
+  "quiz.exit": "Exit quiz",
+  "study.explanation": "Explanation",
+  "keymap.reviewPrevNext": "Review prev / next answered question"
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -796,7 +798,9 @@ Object.assign(TRANSLATIONS.vi, {
   "tts.testPhrase": "Đây là bản kiểm tra tốc độ đọc.",
   "common.releaseToRefresh": "Thả để làm mới",
   "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào.",
-  "quiz.exit": "Thoát bài kiểm tra"
+  "quiz.exit": "Thoát bài kiểm tra",
+  "study.explanation": "Giải thích",
+  "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
 
 function t(key, vars) {
@@ -3717,7 +3721,7 @@ function renderFlashcard() {
     expEl.className = "explanation-panel";
     expEl.open = true;
     var sum = document.createElement("summary");
-    sum.innerHTML = ICON_LIGHTBULB + " Explanation";
+    sum.innerHTML = ICON_LIGHTBULB + " " + t("study.explanation");
     var body = document.createElement("div");
     body.className = "explanation-body";
     renderLatex(card.data.explanation, body);
@@ -3911,10 +3915,18 @@ function buildQuizOptions(card) {
   return shuffle([correct].concat(distractors));
 }
 
+function findQuizResult(card) {
+  return state.quizResults.find(function(r) { return r.card.id === card.id; });
+}
+
 function renderQuizCard() {
   var cards = state.quizCards;
   var i     = state.quizIndex;
   var total = cards.length;
+
+  // Cancel any pending auto-advance from the previous answer — otherwise it fires
+  // later against whatever card the user has since navigated to via Prev/Next/delete.
+  clearTimeout(state.quizAdvanceTimer);
 
   var prevExp = document.getElementById("quiz-explanation");
   if (prevExp) prevExp.remove();
@@ -3924,9 +3936,11 @@ function renderQuizCard() {
   if (i >= total) { showQuizResults(); return; }
 
   var card = cards[i];
+  var priorResult = findQuizResult(card);
+
   document.getElementById("quiz-progress-text").textContent = (i + 1) + " / " + total;
   document.getElementById("quiz-progress-fill").style.width = ((i + 1) / total * 100) + "%";
-  document.getElementById("quiz-score-display").textContent = state.quizScore + " / " + i;
+  document.getElementById("quiz-score-display").textContent = state.quizScore + " / " + state.quizResults.length;
 
   // Lesson label (multi-lesson sessions)
   setStudyLessonLabel("quiz-lesson-label", card);
@@ -3950,10 +3964,11 @@ function renderQuizCard() {
     renderLatex(card.data.term, qEl);
   }
 
-  // Options
-  var opts = buildQuizOptions(card);
+  // Options — replay the exact shuffled set from when this card was first answered
+  // (buildQuizOptions() re-shuffles on every call, so a reviewed card must reuse its saved opts)
+  var opts = priorResult ? priorResult.opts : buildQuizOptions(card);
   state.quizOptions = opts;
-  state.quizAnswered = false;
+  state.quizAnswered = !!priorResult;
 
   var optsEl = document.getElementById("quiz-options");
   optsEl.innerHTML = "";
@@ -3964,9 +3979,33 @@ function renderQuizCard() {
     btn.innerHTML = '<span class="opt-num">' + (idx + 1) + '</span><span class="opt-text"></span>';
     var textEl = btn.querySelector(".opt-text");
     renderLatex(opt, textEl);
-    btn.addEventListener("click", function() { answerQuiz(idx); });
+    if (priorResult) {
+      btn.disabled = true;
+      if (opt === priorResult.correctVal) btn.classList.add("correct");
+      else if (idx === priorResult.selectedIdx) btn.classList.add("wrong");
+      else btn.classList.add("dimmed");
+    } else {
+      btn.addEventListener("click", function() { answerQuiz(idx); });
+    }
     optsEl.appendChild(btn);
   });
+
+  if (priorResult && (card.format === "mcq" || card.format === "true-false") && card.data.explanation) {
+    var expEl  = document.createElement("details");
+    expEl.id   = "quiz-explanation";
+    expEl.className = "explanation-panel";
+    var sumEl  = document.createElement("summary");
+    sumEl.innerHTML = ICON_LIGHTBULB + " " + t("study.explanation");
+    var bodyEl = document.createElement("div");
+    bodyEl.className = "explanation-body";
+    renderLatex(card.data.explanation, bodyEl);
+    expEl.appendChild(sumEl);
+    expEl.appendChild(bodyEl);
+    optsEl.after(expEl);
+  }
+
+  document.getElementById("btn-quiz-prev").classList.toggle("hidden", i === 0);
+  document.getElementById("btn-quiz-review-next").classList.toggle("hidden", !priorResult);
 }
 
 function answerQuiz(selectedIdx) {
@@ -3986,8 +4025,9 @@ function answerQuiz(selectedIdx) {
 
   store.recordAttempt({ cardId: card.id, correct: isCorrect, source: "quiz" });
 
-  // Save result
-  state.quizResults.push({ card: card, correct: isCorrect, selected: selectedVal });
+  // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
+  // selectedIdx — not just the value — is needed to mark "wrong" correctly when two options share text)
+  state.quizResults.push({ card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct });
 
   // Visual feedback
   var optsEl = document.getElementById("quiz-options");
@@ -4004,9 +4044,9 @@ function answerQuiz(selectedIdx) {
   });
 
   document.getElementById("quiz-score-display").textContent =
-    state.quizScore + " / " + (state.quizIndex + 1);
+    state.quizScore + " / " + state.quizResults.length;
 
-  var advanceTimer = setTimeout(function() {
+  var advanceTimer = state.quizAdvanceTimer = setTimeout(function() {
     state.quizIndex++;
     renderQuizCard();
   }, 1200);
@@ -4016,7 +4056,7 @@ function answerQuiz(selectedIdx) {
     expEl.id   = "quiz-explanation";
     expEl.className = "explanation-panel";
     var sumEl  = document.createElement("summary");
-    sumEl.innerHTML = ICON_LIGHTBULB + " Explanation";
+    sumEl.innerHTML = ICON_LIGHTBULB + " " + t("study.explanation");
     var bodyEl = document.createElement("div");
     bodyEl.className = "explanation-body";
     renderLatex(card.data.explanation, bodyEl);
@@ -4047,12 +4087,36 @@ document.getElementById("btn-quiz-back").addEventListener("click", function() {
   returnFromStudy();
 });
 
+document.getElementById("btn-quiz-prev").addEventListener("click", function() {
+  if (state.quizIndex === 0) return;
+  state.quizIndex--;
+  renderQuizCard();
+});
+
+document.getElementById("btn-quiz-review-next").addEventListener("click", function() {
+  var card = state.quizCards[state.quizIndex];
+  if (!card || !findQuizResult(card)) return;
+  state.quizIndex++;
+  renderQuizCard();
+});
+
 document.getElementById("btn-quiz-delete-card").addEventListener("click", function() {
   var card = state.quizCards[state.quizIndex];
   if (!card) return;
   confirmDelete(t("confirm.deleteCard"), function() {
     store.deleteCard(card.id, card.lesson_id).then(function() {
-      state.quizCards.splice(state.quizIndex, 1);
+      // Re-locate by reference rather than trusting state.quizIndex — it may have moved
+      // (Prev/Next review, or the auto-advance timer) during the confirm-modal/network wait.
+      var idx = state.quizCards.indexOf(card);
+      if (idx !== -1) {
+        state.quizCards.splice(idx, 1);
+        if (idx < state.quizIndex) state.quizIndex--;
+      }
+      var resIdx = state.quizResults.findIndex(function(r) { return r.card.id === card.id; });
+      if (resIdx !== -1) {
+        if (state.quizResults[resIdx].correct) state.quizScore--;
+        state.quizResults.splice(resIdx, 1);
+      }
       renderQuizCard();
     });
   });
@@ -6165,6 +6229,8 @@ document.addEventListener("keydown", function(e) {
     var num = parseInt(e.key, 10);
     if (num >= 1 && num <= 5 && num <= state.quizOptions.length) answerQuiz(num - 1);
     else if (e.key === "Escape") returnFromStudy();
+    else if (e.key === "ArrowLeft") document.getElementById("btn-quiz-prev").click();
+    else if (e.key === "ArrowRight") document.getElementById("btn-quiz-review-next").click();
   }
 
   else if (screen === "results") {

@@ -460,6 +460,10 @@
       <div id="quiz-question" class="quiz-question"></div>
     </div>
     <div id="quiz-options" class="quiz-options"></div>
+    <div class="quiz-nav">
+      <button class="btn btn-outline btn-lg hidden" id="btn-quiz-prev" data-i18n="study.prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Prev</button>
+      <button class="btn btn-outline btn-lg hidden" id="btn-quiz-review-next" data-i18n="study.next">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+    </div>
   </div>
 </div>
 
@@ -893,6 +897,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <div class="keymap-section">
         <div class="keymap-section-title" data-i18n="setup.quiz">Quiz</div>
         <div class="keymap-row"><kbd class="kbd">1</kbd>–<kbd class="kbd">5</kbd><span data-i18n="keymap.selectOption">Select option</span></div>
+        <div class="keymap-row"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd><span data-i18n="keymap.reviewPrevNext">Review prev / next answered question</span></div>
         <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="keymap.backToSetup">Back to setup</span></div>
       </div>
       <div class="keymap-section">

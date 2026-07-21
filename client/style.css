@@ -1450,6 +1450,13 @@ code {
 .quiz-options.tf-mode .quiz-opt { flex: 1; justify-content: center; text-align: center; font-size: 1.125rem; font-weight: 600; padding: 24px 16px; }
 .quiz-options.tf-mode .opt-num { display: none; }
 
+.quiz-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#btn-quiz-review-next { margin-left: auto; }
+
 /* True/False answer picker in card modal */
 .tf-answer-picker { display: flex; gap: 10px; margin-top: 4px; }
 .tf-answer-btn { flex: 1; padding: 16px; font-size: 1rem; font-weight: 600; border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-family: inherit; transition: background var(--transition), border-color var(--transition), color var(--transition); }
