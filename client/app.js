@@ -208,8 +208,7 @@ Object.assign(TRANSLATIONS.en, {
 
   "study.exitSession": "Exit study session",
   "study.exit": "Exit",
-  "common.reset": "Reset",
-  "study.hardOnly": "Hard Only",
+  "study.editCard": "Edit card",
   "study.deleteCard": "Delete card",
   "study.clickToFlip": "Click to flip",
   "study.speakP": "Speak (P)",
@@ -220,6 +219,8 @@ Object.assign(TRANSLATIONS.en, {
   "study.learning": "Learning",
   "study.knowItHint": "Know It (2)",
   "study.knowIt": "Know It",
+  "study.easyHint": "Easy (3)",
+  "study.easy": "Easy",
   "study.next": "Next",
   "results.title": "Results",
   "results.retry": "Retry",
@@ -357,8 +358,6 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.sectionFlashcards": "Flashcards",
   "keymap.prevNext": "Prev / Next",
   "keymap.flipCard": "Flip card",
-  "keymap.resetToStart": "Reset to start",
-  "keymap.filterHardNew": "Filter hard/new",
   "keymap.pronounce": "Pronounce",
   "keymap.selectOption": "Select option",
   "keymap.backToSetup": "Back to setup",
@@ -596,8 +595,7 @@ Object.assign(TRANSLATIONS.vi, {
 
   "study.exitSession": "Thoát phiên học",
   "study.exit": "Thoát",
-  "common.reset": "Đặt lại",
-  "study.hardOnly": "Chỉ thẻ khó",
+  "study.editCard": "Sửa thẻ",
   "study.deleteCard": "Xóa thẻ",
   "study.clickToFlip": "Nhấn để lật thẻ",
   "study.speakP": "Đọc (P)",
@@ -608,6 +606,8 @@ Object.assign(TRANSLATIONS.vi, {
   "study.learning": "Đang học",
   "study.knowItHint": "Đã thuộc (2)",
   "study.knowIt": "Đã thuộc",
+  "study.easyHint": "Dễ (3)",
+  "study.easy": "Dễ",
   "study.next": "Tiếp",
   "results.title": "Kết quả",
   "results.retry": "Làm lại",
@@ -745,8 +745,6 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.sectionFlashcards": "Thẻ ghi nhớ",
   "keymap.prevNext": "Trước / Tiếp",
   "keymap.flipCard": "Lật thẻ",
-  "keymap.resetToStart": "Về đầu",
-  "keymap.filterHardNew": "Lọc thẻ khó/mới",
   "keymap.pronounce": "Phát âm",
   "keymap.selectOption": "Chọn đáp án",
   "keymap.backToSetup": "Về thiết lập",
@@ -3174,11 +3172,18 @@ function openAddCard() {
   }
 }
 
-function openEditCard(cardId) {
+function openEditCard(cardId, presetCard) {
   state.editingCardId = cardId;
-  store.getCards(state.currentLesson.id).then(function(cards) {
+  // A study/quiz session may span multiple lessons, so state.currentLesson can be the wrong
+  // lesson for the card actually on screen — reuse the card object already in memory instead
+  // of refetching by (possibly mismatched) lesson id.
+  var lookup = presetCard ? Promise.resolve([presetCard]) : store.getCards(state.currentLesson.id);
+  lookup.then(function(cards) {
     var card = cards.find(function(c) { return c.id === cardId; });
     if (!card) return;
+    // Save handlers use this (not state.currentLesson, which can be null or the wrong
+    // lesson during a multi-lesson study/quiz session) to persist the edit.
+    state.editingCardLessonId = card.lesson_id;
     if (card.format === "term-def") {
       document.getElementById("modal-card-termdef-title").textContent = t("card.editCard");
       document.getElementById("card-term-input").value = card.data.term;
@@ -3222,6 +3227,22 @@ function openEditCard(cardId) {
   });
 }
 
+// After saving an edit, the lesson card list (if visible) is refreshed via renderCards() as
+// before — but if the edit was opened from mid-Flashcard/Quiz session, that in-memory array
+// won't pick up the change until the session restarts unless we patch it here too.
+function syncEditedCardIntoStudySession(cardId, data) {
+  var fcCard = state.studyCards && state.studyCards.find(function(c) { return c.id === cardId; });
+  if (fcCard) {
+    fcCard.data = data;
+    if (state.studyCards[state.studyIndex] === fcCard) renderFlashcard();
+  }
+  var quizCard = state.quizCards && state.quizCards.find(function(c) { return c.id === cardId; });
+  if (quizCard) {
+    quizCard.data = data;
+    if (state.quizCards[state.quizIndex] === quizCard) renderQuizCard();
+  }
+}
+
 document.getElementById("btn-save-card-termdef").addEventListener("click", function() {
   var term = document.getElementById("card-term-input").value.trim();
   var def  = document.getElementById("card-def-input").value.trim();
@@ -3229,11 +3250,15 @@ document.getElementById("btn-save-card-termdef").addEventListener("click", funct
   var data = { term: term, def: def };
   var p;
   if (state.editingCardId) {
-    p = store.updateCard(state.editingCardId, state.currentLesson.id, { data: data });
+    p = store.updateCard(state.editingCardId, state.editingCardLessonId, { data: data });
   } else {
     p = store.createCard({ lessonId: state.currentLesson.id, format: "term-def", data: data });
   }
-  p.then(function() { closeModal("card-termdef"); renderCards(); });
+  p.then(function() {
+    closeModal("card-termdef");
+    if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
+    renderCards();
+  });
 });
 
 document.getElementById("btn-save-card-mcq").addEventListener("click", function() {
@@ -3251,11 +3276,15 @@ document.getElementById("btn-save-card-mcq").addEventListener("click", function(
   if (explanation) data.explanation = explanation;
   var p;
   if (state.editingCardId) {
-    p = store.updateCard(state.editingCardId, state.currentLesson.id, { data: data });
+    p = store.updateCard(state.editingCardId, state.editingCardLessonId, { data: data });
   } else {
     p = store.createCard({ lessonId: state.currentLesson.id, format: "mcq", data: data });
   }
-  p.then(function() { closeModal("card-mcq"); renderCards(); });
+  p.then(function() {
+    closeModal("card-mcq");
+    if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
+    renderCards();
+  });
 });
 
 document.getElementById("btn-add-card").addEventListener("click", openAddCard);
@@ -3285,9 +3314,13 @@ document.getElementById("btn-save-card-tf").addEventListener("click", function()
   var data = { statement: statement, correct: state.tfAnswer };
   if (explanation) data.explanation = explanation;
   var p = state.editingCardId
-    ? store.updateCard(state.editingCardId, state.currentLesson.id, { data: data })
+    ? store.updateCard(state.editingCardId, state.editingCardLessonId, { data: data })
     : store.createCard({ lessonId: state.currentLesson.id, format: "true-false", data: data });
-  p.then(function() { closeModal("card-tf"); renderCards(); });
+  p.then(function() {
+    closeModal("card-tf");
+    if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
+    renderCards();
+  });
 });
 
 /* ============================
@@ -3356,9 +3389,13 @@ document.getElementById("btn-save-card-imagedef").addEventListener("click", func
   if (!def) { alert(t("validate.enterDefinition")); return; }
   var data = { imageUrl: stagedImageUrl, def: def };
   var p = state.editingCardId
-    ? store.updateCard(state.editingCardId, state.currentLesson.id, { data: data })
+    ? store.updateCard(state.editingCardId, state.editingCardLessonId, { data: data })
     : store.createCard({ lessonId: state.currentLesson.id, format: "image-def", data: data });
-  p.then(function() { closeModal("card-imagedef"); renderCards(); });
+  p.then(function() {
+    closeModal("card-imagedef");
+    if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
+    renderCards();
+  });
 });
 
 /* ============================
@@ -3868,9 +3905,10 @@ document.getElementById("btn-fc-shuffle").addEventListener("click", function() {
   renderFlashcard();
 });
 
-document.getElementById("btn-fc-reset").addEventListener("click", function() {
-  state.studyIndex = 0;
-  renderFlashcard();
+document.getElementById("btn-fc-edit-card").addEventListener("click", function() {
+  var card = state.studyCards[state.studyIndex];
+  if (!card) return;
+  openEditCard(card.id, card);
 });
 
 document.getElementById("btn-fc-delete-card").addEventListener("click", function() {
@@ -3891,25 +3929,15 @@ document.getElementById("btn-fc-delete-card").addEventListener("click", function
   });
 });
 
-document.getElementById("btn-fc-study-hard").addEventListener("click", function() {
-  var allAttempts = JSON.parse(localStorage.getItem("fc-attempts") || "[]");
-  var hard = state.studyCards.filter(function(c) {
-    var cardAttempts = allAttempts.filter(function(a) { return a.card_id === c.id; });
-    var stats = computeStats(cardAttempts);
-    return stats.level === "hard" || stats.total === 0;
-  });
-  if (hard.length === 0) { alert("No hard/new cards in current set."); return; }
-  state.studyCards = shuffle(hard);
-  state.studyIndex = 0;
-  renderFlashcard();
-});
 
-function markCard(known) {
+function markCard(known, grade) {
   var card = state.studyCards[state.studyIndex];
   if (!card) return;
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known);
-  store.recordAttempt({ cardId: card.id, correct: known, source: "flashcard" });
+  var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
+  if (grade) attemptFields.grade = grade;
+  store.recordAttempt(attemptFields);
   renderFcDots();
   // Auto-advance after 400ms
   setTimeout(function() {
@@ -3922,6 +3950,7 @@ function markCard(known) {
 
 document.getElementById("btn-fc-learning").addEventListener("click", function() { markCard(false); });
 document.getElementById("btn-fc-known").addEventListener("click", function()    { markCard(true);  });
+document.getElementById("btn-fc-easy").addEventListener("click", function()     { markCard(true, "easy"); });
 
 document.getElementById("btn-fc-back").addEventListener("click", function() {
   returnFromStudy();
@@ -4169,6 +4198,12 @@ document.getElementById("btn-quiz-review-next").addEventListener("click", functi
   if (!card || !findQuizResult(card)) return;
   state.quizIndex++;
   renderQuizCard();
+});
+
+document.getElementById("btn-quiz-edit-card").addEventListener("click", function() {
+  var card = state.quizCards[state.quizIndex];
+  if (!card) return;
+  openEditCard(card.id, card);
 });
 
 document.getElementById("btn-quiz-delete-card").addEventListener("click", function() {
@@ -6302,9 +6337,8 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === " " || e.key === "Enter") { e.preventDefault(); document.getElementById("fc-scene").click(); }
     else if (e.key === "1") document.getElementById("btn-fc-learning").click();
     else if (e.key === "2") document.getElementById("btn-fc-known").click();
+    else if (e.key === "3") document.getElementById("btn-fc-easy").click();
     else if (e.key === "s" || e.key === "S") document.getElementById("btn-fc-shuffle").click();
-    else if (e.key === "r" || e.key === "R") document.getElementById("btn-fc-reset").click();
-    else if (e.key === "f" || e.key === "F") document.getElementById("btn-fc-study-hard").click();
     else if (e.key === "p" || e.key === "P") speakText(state.studyFlipped ? state.studyBackText : state.studyFrontText);
   }
 
@@ -6344,8 +6378,6 @@ function injectKeyHints() {
     ["btn-bulk-add",       "[B]"],
     ["btn-study-lesson",   "[S]"],
     ["btn-fc-shuffle",     "[S]"],
-    ["btn-fc-reset",       "[R]"],
-    ["btn-fc-study-hard",  "[F]"],
     ["btn-results-retry",  "[R]"],
     ["btn-results-back",   "[Esc]"],
     ["btn-stats-back",     "[Esc]"],
@@ -6353,6 +6385,7 @@ function injectKeyHints() {
     ["btn-quiz-back",      "[Esc]"],
     ["btn-fc-learning",    "[1]"],
     ["btn-fc-known",       "[2]"],
+    ["btn-fc-easy",        "[3]"],
     ["btn-fc-audio-front", "[P]"],
     ["btn-fc-audio-back",  "[P]"]
   ];
