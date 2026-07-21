@@ -200,7 +200,41 @@ Object.assign(TRANSLATIONS.en, {
   "time.inDays": "in {n}d",
   "card.lastSeen": "Last seen",
   "card.lastStudied": "Last studied",
-  "card.nextReview": "Next review"
+  "card.nextReview": "Next review",
+
+  "study.exitSession": "Exit study session",
+  "study.exit": "Exit",
+  "common.reset": "Reset",
+  "study.hardOnly": "Hard Only",
+  "study.deleteCard": "Delete card",
+  "study.clickToFlip": "Click to flip",
+  "study.speakP": "Speak (P)",
+  "study.speakFront": "Speak front",
+  "study.speakBack": "Speak back",
+  "study.prev": "Prev",
+  "study.stillLearningHint": "Still Learning (1)",
+  "study.learning": "Learning",
+  "study.knowItHint": "Know It (2)",
+  "study.knowIt": "Know It",
+  "study.next": "Next",
+  "results.title": "Results",
+  "results.retry": "Retry",
+  "results.changeSetup": "Change Setup",
+  "results.backToLesson": "Back to Lesson",
+
+  "confirm.deleteCard": "Delete this card?",
+  "common.true": "True",
+  "common.false": "False",
+  "study.finish": "Finish",
+  "results.correctOutOf": "{score} correct out of {total} questions",
+  "results.hintGreat": "Great job! Cards scheduled for spaced repetition.",
+  "results.hintOk": "Cards scheduled — focus on the ones you missed.",
+  "results.hintKeepPracticing": "Keep practicing — missed cards are due again soon.",
+
+  "difficulty.new": "New",
+  "difficulty.easy": "Easy",
+  "difficulty.medium": "Medium",
+  "difficulty.hard": "Hard"
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -364,7 +398,41 @@ Object.assign(TRANSLATIONS.vi, {
   "time.inDays": "còn {n} ngày",
   "card.lastSeen": "Lần xem gần nhất",
   "card.lastStudied": "Học gần nhất",
-  "card.nextReview": "Lần ôn tiếp theo"
+  "card.nextReview": "Lần ôn tiếp theo",
+
+  "study.exitSession": "Thoát phiên học",
+  "study.exit": "Thoát",
+  "common.reset": "Đặt lại",
+  "study.hardOnly": "Chỉ thẻ khó",
+  "study.deleteCard": "Xóa thẻ",
+  "study.clickToFlip": "Nhấn để lật thẻ",
+  "study.speakP": "Đọc (P)",
+  "study.speakFront": "Đọc mặt trước",
+  "study.speakBack": "Đọc mặt sau",
+  "study.prev": "Trước",
+  "study.stillLearningHint": "Đang học (1)",
+  "study.learning": "Đang học",
+  "study.knowItHint": "Đã thuộc (2)",
+  "study.knowIt": "Đã thuộc",
+  "study.next": "Tiếp",
+  "results.title": "Kết quả",
+  "results.retry": "Làm lại",
+  "results.changeSetup": "Đổi thiết lập",
+  "results.backToLesson": "Về bài học",
+
+  "confirm.deleteCard": "Xóa thẻ này?",
+  "common.true": "Đúng",
+  "common.false": "Sai",
+  "study.finish": "Hoàn thành",
+  "results.correctOutOf": "{score} câu đúng trên tổng {total} câu",
+  "results.hintGreat": "Làm tốt lắm! Các thẻ đã được lên lịch ôn tập ngắt quãng.",
+  "results.hintOk": "Đã lên lịch ôn tập — tập trung vào những thẻ bạn làm sai.",
+  "results.hintKeepPracticing": "Tiếp tục luyện tập — các thẻ sai sẽ sớm đến hạn ôn lại.",
+
+  "difficulty.new": "Mới",
+  "difficulty.easy": "Dễ",
+  "difficulty.medium": "Trung bình",
+  "difficulty.hard": "Khó"
 });
 
 function t(key, vars) {
@@ -1054,6 +1122,13 @@ var LocalStorageAdapter = (function() {
 /* ============================
    DIFFICULTY CALCULATION
    ============================ */
+
+function difficultyLabel(level) {
+  return level === "easy" ? t("difficulty.easy")
+    : level === "medium" ? t("difficulty.medium")
+    : level === "hard" ? t("difficulty.hard")
+    : t("difficulty.new");
+}
 
 function computeStats(attempts) {
   if (!attempts || attempts.length === 0) {
@@ -2458,8 +2533,8 @@ function renderCards() {
       item.dataset.cardId = card.id;
       var stats = statsMap[card.id] || { total: 0, correct: 0, level: "new" };
       var pct = stats.total > 0 ? Math.round(stats.correct / stats.total * 100) : null;
-      var pillLabel = stats.total === 0 ? "New"
-        : stats.level.charAt(0).toUpperCase() + stats.level.slice(1) + " · " + pct + "%";
+      var pillLabel = stats.total === 0 ? t("difficulty.new")
+        : difficultyLabel(stats.level) + " · " + pct + "%";
       var diffPill = '<span class="diff-pill ' + stats.level + '">' + pillLabel + '</span>';
 
       var termEl = document.createElement("div");
@@ -2497,8 +2572,8 @@ function renderCards() {
         diffPill +
         (state.cardSelectMode ? '' :
           '<div class="card-actions">' +
-            '<button class="icon-btn" title="Edit" data-card-edit="' + card.id + '">' + ICON_EDIT + '</button>' +
-            '<button class="icon-btn danger" title="Delete" data-card-del="' + card.id + '">' + ICON_DELETE + '</button>' +
+            '<button class="icon-btn" title="' + t("common.edit") + '" data-card-edit="' + card.id + '">' + ICON_EDIT + '</button>' +
+            '<button class="icon-btn danger" title="' + t("common.delete") + '" data-card-del="' + card.id + '">' + ICON_DELETE + '</button>' +
           '</div>');
 
       var contentEl = item.querySelector(".card-content");
@@ -2534,7 +2609,7 @@ function renderCards() {
           openEditCard(card.id);
         });
         item.querySelector("[data-card-del]").addEventListener("click", function() {
-          confirmDelete("Delete this card?", function() {
+          confirmDelete(t("confirm.deleteCard"), function() {
             store.deleteCard(card.id, state.currentLesson.id).then(renderCards);
           });
         });
@@ -3235,7 +3310,7 @@ function renderFlashcard() {
     frontAudioBtn.style.visibility = "";
   } else if (card.format === "true-false") {
     front = card.data.statement;
-    back  = card.data.correct === "true" ? "True" : "False";
+    back  = card.data.correct === "true" ? t("common.true") : t("common.false");
     state.studyFrontText = front || "";
     state.studyBackText  = back  || "";
     frontEl.innerHTML = "";
@@ -3291,8 +3366,8 @@ function renderFlashcard() {
   var badge = document.getElementById("fc-diff-badge");
   var stats = computeStats(attempts);
   badge.className = "fc-difficulty-badge badge-" + (stats.total === 0 ? "new" : stats.level);
-  badge.textContent = stats.total === 0 ? "New" :
-    (stats.level.charAt(0).toUpperCase() + stats.level.slice(1)) + " · " + stats.correct + "/" + stats.total;
+  badge.textContent = stats.total === 0 ? t("difficulty.new") :
+    difficultyLabel(stats.level) + " · " + stats.correct + "/" + stats.total;
 
   // Dots
   renderFcDots();
@@ -3304,7 +3379,7 @@ function renderFlashcard() {
 
   // Prev/Next
   document.getElementById("btn-fc-prev").disabled = i === 0;
-  document.getElementById("btn-fc-next").innerHTML = i === cards.length - 1 ? "Finish" : "Next " + ICON_ARROW_RIGHT;
+  document.getElementById("btn-fc-next").innerHTML = i === cards.length - 1 ? t("study.finish") : t("study.next") + " " + ICON_ARROW_RIGHT;
 }
 
 function renderFcDots() {
@@ -3379,7 +3454,7 @@ document.getElementById("btn-fc-reset").addEventListener("click", function() {
 document.getElementById("btn-fc-delete-card").addEventListener("click", function() {
   var card = state.studyCards[state.studyIndex];
   if (!card) return;
-  confirmDelete("Delete this card?", function() {
+  confirmDelete(t("confirm.deleteCard"), function() {
     store.deleteCard(card.id, card.lesson_id).then(function() {
       state.studyCards.splice(state.studyIndex, 1);
       if (state.studyCards.length === 0) {
@@ -3445,7 +3520,7 @@ function startQuiz() {
 
 function buildQuizOptions(card) {
   if (card.format === "true-false") {
-    return ["True", "False"];
+    return [t("common.true"), t("common.false")];
   }
   if (card.format === "mcq") {
     return shuffle([card.data.correct].concat(card.data.distractors));
@@ -3534,7 +3609,7 @@ function answerQuiz(selectedIdx) {
   var card    = state.quizCards[state.quizIndex];
   var opts    = state.quizOptions;
   var correct = card.format === "mcq" ? card.data.correct :
-    card.format === "true-false" ? (card.data.correct === "true" ? "True" : "False") :
+    card.format === "true-false" ? (card.data.correct === "true" ? t("common.true") : t("common.false")) :
     card.format === "image-def" ? card.data.def :
     card.data.def;
   var selectedVal = opts[selectedIdx];
@@ -3608,7 +3683,7 @@ document.getElementById("btn-quiz-back").addEventListener("click", function() {
 document.getElementById("btn-quiz-delete-card").addEventListener("click", function() {
   var card = state.quizCards[state.quizIndex];
   if (!card) return;
-  confirmDelete("Delete this card?", function() {
+  confirmDelete(t("confirm.deleteCard"), function() {
     store.deleteCard(card.id, card.lesson_id).then(function() {
       state.quizCards.splice(state.quizIndex, 1);
       renderQuizCard();
@@ -3626,8 +3701,7 @@ function showQuizResults() {
   var pct    = total > 0 ? Math.round(score / total * 100) : 0;
 
   document.getElementById("results-pct").textContent = pct + "%";
-  document.getElementById("results-detail").textContent =
-    score + " correct out of " + total + " questions";
+  document.getElementById("results-detail").textContent = t("results.correctOutOf", { score: score, total: total });
 
   var grade;
   if (pct >= 90) grade = "A";
@@ -3646,10 +3720,10 @@ function showQuizResults() {
 
   // SRS schedules each card individually based on correct/wrong answers
   var reviewMsg = pct >= 80
-    ? "Great job! Cards scheduled for spaced repetition."
+    ? t("results.hintGreat")
     : pct >= 50
-    ? "Cards scheduled — focus on the ones you missed."
-    : "Keep practicing — missed cards are due again soon.";
+    ? t("results.hintOk")
+    : t("results.hintKeepPracticing");
   document.getElementById("results-review-hint").textContent = reviewMsg;
 
   // Save session so reminder badges update
@@ -3766,10 +3840,10 @@ function renderStatsOverview(type, id) {
         statCard(totalAttempts, "Total Attempts") +
       '</div>' +
       '<div class="diff-bar-label">Difficulty Breakdown</div>' +
-      diffBar("New", diffCounts.new, totalCards, "#9ca3af") +
-      diffBar("Easy", diffCounts.easy, totalCards, "#16a34a") +
-      diffBar("Medium", diffCounts.medium, totalCards, "#d97706") +
-      diffBar("Hard", diffCounts.hard, totalCards, "#dc2626");
+      diffBar(t("difficulty.new"), diffCounts.new, totalCards, "#9ca3af") +
+      diffBar(t("difficulty.easy"), diffCounts.easy, totalCards, "#16a34a") +
+      diffBar(t("difficulty.medium"), diffCounts.medium, totalCards, "#d97706") +
+      diffBar(t("difficulty.hard"), diffCounts.hard, totalCards, "#dc2626");
   });
 }
 
@@ -3852,7 +3926,7 @@ function buildStatsCardEl(card, stats) {
     renderLatex(card.data.def,  aEl);
   } else if (card.format === "true-false") {
     renderLatex(card.data.statement, qEl);
-    aEl.textContent = card.data.correct === "true" ? "True" : "False";
+    aEl.textContent = card.data.correct === "true" ? t("common.true") : t("common.false");
   } else if (card.format === "image-def") {
     qEl.textContent = "[image]";
     renderLatex(card.data.def, aEl);
@@ -3865,7 +3939,7 @@ function buildStatsCardEl(card, stats) {
   header.appendChild(qEl);
   var pill = document.createElement("span");
   pill.className = "diff-pill " + stats.level;
-  pill.textContent = stats.level.charAt(0).toUpperCase() + stats.level.slice(1);
+  pill.textContent = difficultyLabel(stats.level);
   header.appendChild(pill);
   item.appendChild(header);
   item.appendChild(aEl);
@@ -3981,10 +4055,10 @@ function renderDashboard() {
     var db_ = d.diffBreakdown;
     var totalCards = db_.new + db_.easy + db_.medium + db_.hard;
     document.getElementById("dash-diff-breakdown").innerHTML =
-      diffBar("New",    db_.new,    totalCards, "#9ca3af") +
-      diffBar("Easy",   db_.easy,   totalCards, "#16a34a") +
-      diffBar("Medium", db_.medium, totalCards, "#d97706") +
-      diffBar("Hard",   db_.hard,   totalCards, "#dc2626");
+      diffBar(t("difficulty.new"),    db_.new,    totalCards, "#9ca3af") +
+      diffBar(t("difficulty.easy"),   db_.easy,   totalCards, "#16a34a") +
+      diffBar(t("difficulty.medium"), db_.medium, totalCards, "#d97706") +
+      diffBar(t("difficulty.hard"),   db_.hard,   totalCards, "#dc2626");
 
     // Charts (from analytics)
     renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
