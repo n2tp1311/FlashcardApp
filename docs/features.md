@@ -42,7 +42,7 @@
 - Due counts on class cards (home screen) and dashboard grouped by class
 - Dashboard due lessons grouped by class with clickable rows to launch review
 - Recognition-vs-recall gate: a Quiz-mode correct answer can advance a card's SRS step up to `RECOGNITION_CAP_STEP` (2 — the 4h same-day interval) but no further; only a Flashcard-mode correct recall can push a card into 1-day+ intervals. Server clamps the *resulting* step (not just the current one), so a large single-answer jump can't leapfrog past the cap. Quiz screen shows an inline hint when an answer plateaus this way; the Results screen aggregates a count of how many cards plateaued that session in case the per-question hint was missed (e.g. a slow response on the last question)
-- "Needs Recall" filter on Study Setup (right after "Due Only"): surfaces every card at or past the recognition cap (`srs_step >= 2`), independent of due status, so cards stuck behind the gate can be proactively cleared in one batch rather than discovered piecemeal during Quiz sessions. Selecting it auto-switches Mode to Flashcard (still overridable) since Quiz mode structurally can't advance these cards further
+- "Needs Recall" filter on Study Setup (right after "Due Only"): surfaces due cards at or past the recognition cap (`srs_step >= 2 AND due`), so cards stuck behind the gate can be proactively cleared in one batch rather than discovered piecemeal during Quiz sessions. Selecting it auto-switches Mode to Flashcard (still overridable) since Quiz mode structurally can't advance these cards further
 
 ## Performance
 - Bulk cards endpoint (`POST /api/cards/by-lessons`): multi-lesson quiz startup reduced from 2N+1 HTTP requests (N `getCards` + N `getKnownMap` per lesson) to 2 requests total regardless of lesson count; 10-lesson quiz goes from 21 requests to 2 (90% reduction)
@@ -128,6 +128,7 @@
 - **Grid / List view toggle**: segmented control in the home header switches class display between a `.class-grid` card layout and a `.class-list-view` compact row layout; choice persisted in `fc-home-view` localStorage key
 - **Level slicer pills**: when any class has a `level` set, a pill bar appears above the class list with "All" + one pill per distinct level (L1, L2 …); clicking a pill hides classes of other levels; choice persisted in `fc-home-filter`; pill bar hidden when no classes have levels
 - **Accuracy per class**: after classes load, `GET /api/stats/accuracy/classes` fetches correct/total attempt counts; each class card (grid) and class row (list) shows a color-coded accuracy pill — green (≥70%), orange (≥40%), red (<40%); hidden until data arrives
+- List-view class titles wrap up to 2 lines (`-webkit-line-clamp`) instead of truncating to a single line with an ellipsis — long class names (book titles, course names) were getting cut down to just a few characters on narrow/mobile viewports
 
 ## Class Screen — Lesson Format Filter & Accuracy
 
