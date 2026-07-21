@@ -392,7 +392,30 @@ Object.assign(TRANSLATIONS.en, {
   "lesson.pickerImageDef": "Image → Definition",
   "bulk.hintTermDef": "One card per line: term | definition\nSupports LaTeX: $\\hat{\\beta}$ or $$\\sum_{i=1}^n x_i$$",
   "bulk.hintTrueFalse": "One card per line: statement | true  or  statement | false [;; explanation]",
-  "bulk.hintMcq": "One card per line: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]"
+  "bulk.hintMcq": "One card per line: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]",
+
+  "common.remove": "Remove",
+  "share.failedToInvite": "Failed to invite",
+  "common.classSingular": "Class",
+  "common.lessonSingular": "Lesson",
+  "common.cardSingular": "Card",
+  "share.byOwner": "by {name}",
+  "confirm.deleteSelectedCards": "Delete {n} card(s)?",
+  "confirm.deleteSelectedLessons": "Delete {n} lesson(s) and all their cards?",
+  "card.imageAlt": "Card image",
+  "study.reviewDue": "Review {n} due",
+  "mcq.wrongAnswerPlaceholder": "Wrong answer",
+  "mcq.removeWrongAnswer": "Remove wrong answer",
+  "validate.imageUploadRequiresServer": "Image upload requires server mode.",
+  "validate.fileTooLarge": "File exceeds 5 MB limit.",
+  "error.uploadFailed": "Upload failed",
+  "error.uploadFailedWithMessage": "Upload failed: {message}",
+  "study.noCardsMatchFilter": "No cards match the selected filter.",
+  "common.copied": "Copied!",
+  "promptGuide.copyPrompt": "Copy Prompt",
+  "tts.testPhrase": "This is a test of the speed setting.",
+  "common.releaseToRefresh": "Release to refresh",
+  "alert.noLessonsInSelectedClasses": "The selected classes have no lessons."
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -748,7 +771,30 @@ Object.assign(TRANSLATIONS.vi, {
   "lesson.pickerImageDef": "Hình ảnh → Định nghĩa",
   "bulk.hintTermDef": "Mỗi dòng một thẻ: thuật ngữ | định nghĩa\nHỗ trợ LaTeX: $\\hat{\\beta}$ hoặc $$\\sum_{i=1}^n x_i$$",
   "bulk.hintTrueFalse": "Mỗi dòng một thẻ: câu | true  hoặc  câu | false [;; giải thích]",
-  "bulk.hintMcq": "Mỗi dòng một thẻ: câu hỏi | đáp án đúng | sai1 [| sai2 | sai3 | sai4]"
+  "bulk.hintMcq": "Mỗi dòng một thẻ: câu hỏi | đáp án đúng | sai1 [| sai2 | sai3 | sai4]",
+
+  "common.remove": "Xóa",
+  "share.failedToInvite": "Mời thất bại",
+  "common.classSingular": "Lớp",
+  "common.lessonSingular": "Bài học",
+  "common.cardSingular": "Thẻ",
+  "share.byOwner": "bởi {name}",
+  "confirm.deleteSelectedCards": "Xóa {n} thẻ?",
+  "confirm.deleteSelectedLessons": "Xóa {n} bài học cùng toàn bộ thẻ ghi nhớ?",
+  "card.imageAlt": "Hình ảnh thẻ",
+  "study.reviewDue": "Ôn {n} thẻ đến hạn",
+  "mcq.wrongAnswerPlaceholder": "Đáp án sai",
+  "mcq.removeWrongAnswer": "Xóa đáp án sai",
+  "validate.imageUploadRequiresServer": "Tải ảnh lên yêu cầu chế độ server.",
+  "validate.fileTooLarge": "Tệp vượt quá giới hạn 5 MB.",
+  "error.uploadFailed": "Tải lên thất bại",
+  "error.uploadFailedWithMessage": "Tải lên thất bại: {message}",
+  "study.noCardsMatchFilter": "Không có thẻ nào khớp với bộ lọc đã chọn.",
+  "common.copied": "Đã sao chép!",
+  "promptGuide.copyPrompt": "Sao chép Prompt",
+  "tts.testPhrase": "Đây là bản kiểm tra tốc độ đọc.",
+  "common.releaseToRefresh": "Thả để làm mới",
+  "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào."
 });
 
 function t(key, vars) {
@@ -1466,11 +1512,10 @@ function computeStats(attempts) {
 }
 
 function getDiffBadgeHTML(stats) {
-  if (stats.total === 0) return '<span class="fc-difficulty-badge badge-new">New</span>';
-  var labels = { easy: "Easy", medium: "Medium", hard: "Hard" };
+  if (stats.total === 0) return '<span class="fc-difficulty-badge badge-new">' + t("difficulty.new") + '</span>';
   var classes = { easy: "badge-easy", medium: "badge-medium", hard: "badge-hard" };
   return '<span class="fc-difficulty-badge ' + classes[stats.level] + '">' +
-    labels[stats.level] + ' · ' + stats.correct + '/' + stats.total + '</span>';
+    difficultyLabel(stats.level) + ' · ' + stats.correct + '/' + stats.total + '</span>';
 }
 
 /* ============================
@@ -2567,7 +2612,7 @@ document.getElementById("btn-study-classes").addEventListener("click", function(
     .then(function(lessonArrays) {
       var allLessons = lessonArrays.reduce(function(acc, arr) { return acc.concat(arr); }, []);
       if (allLessons.length === 0) {
-        alert("The selected classes have no lessons.");
+        alert(t("alert.noLessonsInSelectedClasses"));
         return;
       }
       var lessonIds = allLessons.map(function(l) { return l.id; });
@@ -2577,7 +2622,7 @@ document.getElementById("btn-study-classes").addEventListener("click", function(
         lessonIds: lessonIds,
         lessons: allLessons,
         returnScreen: "home",
-        title: n + " class" + (n !== 1 ? "es" : "") + " selected"
+        title: t("home.classesSelectedCount", { n: n })
       });
     });
 });
@@ -2620,7 +2665,7 @@ function setCardSelectMode(on) {
       var ids = state.selectedCardIds.slice();
       if (ids.length === 0) return;
       confirmDelete(
-        "Delete " + ids.length + " card" + (ids.length !== 1 ? "s" : "") + "?",
+        t("confirm.deleteSelectedCards", { n: ids.length }),
         function() {
           Promise.all(ids.map(function(id) {
             return store.deleteCard(id, state.currentLesson.id);
@@ -2704,7 +2749,7 @@ document.getElementById("btn-delete-selected-lessons").addEventListener("click",
   var ids = state.selectedLessonIds.slice();
   if (ids.length === 0) return;
   confirmDelete(
-    "Delete " + ids.length + " lesson" + (ids.length !== 1 ? "s" : "") + " and all their cards?",
+    t("confirm.deleteSelectedLessons", { n: ids.length }),
     function() {
       Promise.all(ids.map(function(id) { return store.deleteLesson(id); }))
         .then(function() { setSelectMode(false); renderLessons(); })
@@ -2868,7 +2913,7 @@ function renderCards() {
       } else if (card.format === "image-def") {
         var cImg = document.createElement("img");
         cImg.src = card.data.imageUrl;
-        cImg.alt = "Card image";
+        cImg.alt = t("card.imageAlt");
         cImg.style.maxHeight = "60px";
         cImg.style.maxWidth  = "120px";
         cImg.style.objectFit = "contain";
@@ -2944,7 +2989,7 @@ function renderCards() {
       var dueCount = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec; }).length;
       var dueBtn = document.getElementById("btn-review-due");
       if (dueCount > 0) {
-        dueBtn.textContent = "Review " + dueCount + " due";
+        dueBtn.textContent = t("study.reviewDue", { n: dueCount });
         dueBtn.classList.remove("hidden");
       } else {
         dueBtn.classList.add("hidden");
@@ -3019,13 +3064,13 @@ function mcqDistractorRow(value) {
   var input = document.createElement("input");
   input.type = "text";
   input.className = "form-input";
-  input.placeholder = "Wrong answer";
+  input.placeholder = t("mcq.wrongAnswerPlaceholder");
   input.value = value || "";
   var rm = document.createElement("button");
   rm.type = "button";
   rm.className = "icon-btn danger";
-  rm.title = "Remove";
-  rm.setAttribute("aria-label", "Remove wrong answer");
+  rm.title = t("common.remove");
+  rm.setAttribute("aria-label", t("mcq.removeWrongAnswer"));
   rm.innerHTML = ICON_X;
   rm.addEventListener("click", function() {
     row.parentNode.removeChild(row);
@@ -3245,14 +3290,14 @@ document.getElementById("card-image-drop").addEventListener("click", function(e)
 
 function handleImageFile(file) {
   if (!file) return;
-  if (!IS_SERVER) { alert("Image upload requires server mode."); return; }
+  if (!IS_SERVER) { alert(t("validate.imageUploadRequiresServer")); return; }
   var ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];
   if (ALLOWED.indexOf(file.type) === -1) {
     alert(t("validate.unsupportedFileType"));
     return;
   }
   if (file.size > 5 * 1024 * 1024) {
-    alert("File exceeds 5 MB limit.");
+    alert(t("validate.fileTooLarge"));
     return;
   }
   var reader = new FileReader();
@@ -3269,9 +3314,9 @@ function handleImageFile(file) {
   var formData = new FormData();
   formData.append("image", file);
   fetch("/api/upload", { method: "POST", credentials: "same-origin", body: formData })
-    .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error || "Upload failed"); return d; }); })
+    .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error || t("error.uploadFailed")); return d; }); })
     .then(function(d) { if (uploadSeq === mySeq) stagedImageUrl = d.url; })
-    .catch(function(err) { if (uploadSeq === mySeq) { alert("Upload failed: " + err.message); stagedImageUrl = previousUrl; } });
+    .catch(function(err) { if (uploadSeq === mySeq) { alert(t("error.uploadFailedWithMessage", { message: err.message })); stagedImageUrl = previousUrl; } });
 }
 
 document.getElementById("card-image-input").addEventListener("change", function() {
@@ -3562,7 +3607,7 @@ function startStudy(count, filter, mode, order) {
         }
 
         if (filtered.length === 0) {
-          alert("No cards match the selected filter.");
+          alert(t("study.noCardsMatchFilter"));
           return;
         }
 
@@ -3644,7 +3689,7 @@ function renderFlashcard() {
     frontEl.innerHTML = "";
     var fcImg = document.createElement("img");
     fcImg.src = card.data.imageUrl;
-    fcImg.alt = "Card image";
+    fcImg.alt = t("card.imageAlt");
     fcImg.style.maxWidth  = "100%";
     fcImg.style.maxHeight = "240px";
     fcImg.style.objectFit = "contain";
@@ -3894,7 +3939,7 @@ function renderQuizCard() {
   } else if (card.format === "image-def") {
     var qImg = document.createElement("img");
     qImg.src = card.data.imageUrl;
-    qImg.alt = "Card image";
+    qImg.alt = t("card.imageAlt");
     qImg.style.maxWidth  = "100%";
     qImg.style.maxHeight = "200px";
     qImg.style.objectFit = "contain";
@@ -3985,7 +4030,7 @@ function answerQuiz(selectedIdx) {
       nextBtn.id = "quiz-next-btn";
       nextBtn.className = "btn btn-primary btn-full";
       nextBtn.style.marginTop = "8px";
-      nextBtn.innerHTML = "Next " + ICON_ARROW_RIGHT;
+      nextBtn.innerHTML = t("study.next") + " " + ICON_ARROW_RIGHT;
       nextBtn.addEventListener("click", function() {
         state.quizIndex++;
         renderQuizCard();
@@ -4877,8 +4922,8 @@ document.getElementById("modal-prompt-guide").addEventListener("click", function
 document.getElementById("btn-copy-prompt").addEventListener("click", function() {
   navigator.clipboard.writeText(AI_EXTRACTION_PROMPT).then(function() {
     var btn = document.getElementById("btn-copy-prompt");
-    btn.innerHTML = ICON_CHECK + " Copied!";
-    setTimeout(function() { btn.innerHTML = ICON_COPY + " Copy Prompt"; }, 2000);
+    btn.innerHTML = ICON_CHECK + " " + t("common.copied");
+    setTimeout(function() { btn.innerHTML = ICON_COPY + " " + t("promptGuide.copyPrompt"); }, 2000);
   });
 });
 
@@ -5363,7 +5408,7 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
       renderSharedWithMe();
       history.replaceState({}, "", "/");
       restoreLastScreen();
-    }).catch(function() { showAuthError("reset", "Network error"); });
+    }).catch(function() { showAuthError("reset", t("common.networkError")); });
   });
 })();
 
@@ -5454,7 +5499,7 @@ document.getElementById("pref-rate-increase").addEventListener("click", function
 
 document.getElementById("pref-tts-test").addEventListener("click", function() {
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
-  speakWith("This is a test of the speed setting.", rate);
+  speakWith(t("tts.testPhrase"), rate);
 });
 
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
@@ -5571,7 +5616,7 @@ if (shareToken) {
 
 function renderShareScreen(data, token) {
   document.getElementById("share-class-name").textContent = data.cls.icon + " " + data.cls.name;
-  document.getElementById("share-owner-label").textContent = "by " + data.ownerName;
+  document.getElementById("share-owner-label").textContent = t("share.byOwner", { name: data.ownerName });
 
   var lessonList = document.getElementById("share-lesson-list");
   lessonList.innerHTML = "";
@@ -5582,7 +5627,7 @@ function renderShareScreen(data, token) {
     item.innerHTML =
       '<div class="lesson-item-info">' +
         '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
-        '<div class="lesson-meta">' + cards.length + " card" + (cards.length !== 1 ? "s" : "") + '</div>' +
+        '<div class="lesson-meta">' + t("count.cards", { n: cards.length }) + '</div>' +
       '</div>';
     lessonList.appendChild(item);
   });
@@ -5687,8 +5732,8 @@ document.getElementById("btn-copy-share-link").addEventListener("click", functio
   var input = document.getElementById("share-link-input");
   navigator.clipboard.writeText(input.value).then(function() {
     var btn = document.getElementById("btn-copy-share-link");
-    btn.innerHTML = ICON_CHECK + " Copied";
-    setTimeout(function() { btn.textContent = "Copy"; }, 2000);
+    btn.innerHTML = ICON_CHECK + " " + t("common.copied");
+    setTimeout(function() { btn.textContent = t("common.copy"); }, 2000);
   });
 });
 
@@ -5708,7 +5753,7 @@ function loadInviteList(classId) {
     .then(function(users) {
       var list = document.getElementById("share-invite-list");
       if (!users.length) {
-        list.innerHTML = '<p class="share-empty-text">No one invited yet.</p>';
+        list.innerHTML = '<p class="share-empty-text">' + t("share.noOneInvited") + '</p>';
         return;
       }
       list.innerHTML = "";
@@ -5718,7 +5763,7 @@ function loadInviteList(classId) {
         row.innerHTML =
           '<span class="share-user-name">' + escHtml(u.name) + '</span>' +
           '<span class="share-user-email">' + escHtml(u.email) + '</span>' +
-          '<button class="btn btn-danger btn-sm" data-remove-user="' + u.id + '">Remove</button>';
+          '<button class="btn btn-danger btn-sm" data-remove-user="' + u.id + '">' + t("common.remove") + '</button>';
         row.querySelector("[data-remove-user]").addEventListener("click", function() {
           fetch("/api/share/invite/" + classId + "/" + u.id, { method: "DELETE", credentials: "same-origin" })
             .then(function() { loadInviteList(classId); });
@@ -5742,7 +5787,7 @@ document.getElementById("btn-send-invite").addEventListener("click", function() 
   }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
   .then(function(res) {
     if (!res.ok) {
-      errEl.textContent = res.d.error || "Failed to invite";
+      errEl.textContent = res.d.error || t("share.failedToInvite");
       errEl.classList.remove("hidden");
       return;
     }
@@ -5833,7 +5878,7 @@ function renderSearchResults(results, q) {
     container.appendChild(section);
   }
 
-  makeSection("Classes", results.classes, "class", function(cls) {
+  makeSection(t("stat.classes"), results.classes, "class", function(cls) {
     var el = document.createElement("div");
     el.className = "search-result-item";
     el.innerHTML =
@@ -5841,11 +5886,11 @@ function renderSearchResults(results, q) {
       '<div class="search-result-main">' +
         '<div class="search-result-title">' + highlightMatch(cls.name, q) + '</div>' +
       '</div>' +
-      '<span class="search-result-type">Class</span>';
+      '<span class="search-result-type">' + t("common.classSingular") + '</span>';
     return el;
   });
 
-  makeSection("Lessons", results.lessons, "lesson", function(lesson) {
+  makeSection(t("stat.lessons"), results.lessons, "lesson", function(lesson) {
     var el = document.createElement("div");
     el.className = "search-result-item";
     el.innerHTML =
@@ -5854,11 +5899,11 @@ function renderSearchResults(results, q) {
         '<div class="search-result-title">' + highlightMatch(lesson.title, q) + '</div>' +
         '<div class="search-result-breadcrumb">' + escHtml(lesson.class_name) + '</div>' +
       '</div>' +
-      '<span class="search-result-type">Lesson</span>';
+      '<span class="search-result-type">' + t("common.lessonSingular") + '</span>';
     return el;
   });
 
-  makeSection("Cards", results.cards, "card", function(card) {
+  makeSection(t("stat.cards"), results.cards, "card", function(card) {
     var el = document.createElement("div");
     el.className = "search-result-item";
     el.innerHTML =
@@ -5869,7 +5914,7 @@ function renderSearchResults(results, q) {
           escHtml(card.class_name) + ' › ' + escHtml(card.lesson_title) +
         '</div>' +
       '</div>' +
-      '<span class="search-result-type">Card</span>';
+      '<span class="search-result-type">' + t("common.cardSingular") + '</span>';
     return el;
   });
 }
@@ -6206,7 +6251,7 @@ injectKeyHints();
     setHeight(Math.min(Math.round(h), 64));
     var ready = dy >= THRESHOLD;
     circle.style.transform = "rotate(" + Math.min(dy / THRESHOLD, 1) * 320 + "deg)";
-    label.textContent = ready ? "Release to refresh" : "Pull to refresh";
+    label.textContent = ready ? t("common.releaseToRefresh") : t("common.pullToRefresh");
   }, { passive: true });
 
   document.addEventListener("touchend", function() {
