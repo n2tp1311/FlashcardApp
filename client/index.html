@@ -558,13 +558,13 @@
       <button class="modal-close" data-modal="class" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <label class="form-label">Name</label>
-      <input type="text" id="class-name-input" class="form-input" placeholder="e.g. Machine Learning">
-      <label class="form-label">Level <span class="form-label-hint">(optional — for sorting)</span></label>
-      <input type="number" id="class-level-input" class="form-input" placeholder="Số thứ tự sắp xếp (vd: 1, 2, 3)" min="1" max="999" style="width:180px">
-      <label class="form-label">Color</label>
+      <label class="form-label" data-i18n="form.name">Name</label>
+      <input type="text" id="class-name-input" class="form-input" placeholder="e.g. Machine Learning" data-i18n-placeholder="class.namePlaceholder">
+      <label class="form-label"><span data-i18n="class.level">Level</span> <span class="form-label-hint" data-i18n="class.levelHint">(optional — for sorting)</span></label>
+      <input type="number" id="class-level-input" class="form-input" placeholder="Số thứ tự sắp xếp (vd: 1, 2, 3)" min="1" max="999" style="width:180px" data-i18n-placeholder="class.levelPlaceholder">
+      <label class="form-label" data-i18n="form.color">Color</label>
       <div class="color-picker" id="color-picker"></div>
-      <label class="form-label">Icon</label>
+      <label class="form-label" data-i18n="form.icon">Icon</label>
       <div class="icon-picker" id="icon-picker"></div>
     </div>
     <div class="modal-footer">
@@ -580,16 +580,16 @@
       <button class="modal-close" data-modal="lesson" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <label class="form-label">Title</label>
-      <input type="text" id="lesson-title-input" class="form-input" placeholder="e.g. Week 1: Linear Regression">
-      <label class="form-label">Format</label>
+      <label class="form-label" data-i18n="form.title">Title</label>
+      <input type="text" id="lesson-title-input" class="form-input" placeholder="e.g. Week 1: Linear Regression" data-i18n-placeholder="lesson.titlePlaceholder">
+      <label class="form-label" data-i18n="lesson.format">Format</label>
       <div class="pill-group" id="lesson-format-picker">
-        <button class="pill active" data-value="term-def">Term → Definition</button>
-        <button class="pill" data-value="mcq">Multiple Choice</button>
-        <button class="pill" data-value="true-false">True / False</button>
-        <button class="pill" data-value="image-def">Image → Definition</button>
+        <button class="pill active" data-value="term-def" data-i18n="lesson.pickerTermDef">Term → Definition</button>
+        <button class="pill" data-value="mcq" data-i18n="format.mcqPickerLabel">Multiple Choice</button>
+        <button class="pill" data-value="true-false" data-i18n="lesson.trueFalseSlash">True / False</button>
+        <button class="pill" data-value="image-def" data-i18n="lesson.pickerImageDef">Image → Definition</button>
       </div>
-      <p class="form-hint" id="format-hint">Best for vocabulary, concepts, formulas. Bulk: term | definition</p>
+      <p class="form-hint" id="format-hint" data-i18n="lesson.hintTermDef">Best for vocabulary, concepts, formulas. Bulk: term | definition</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="lesson" data-i18n="common.cancel">Cancel</button>
@@ -604,13 +604,13 @@
       <button class="modal-close" data-modal="card-termdef" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <label class="form-label">Term</label>
-      <textarea id="card-term-input" class="form-textarea" rows="2" placeholder="e.g. Ridge regression"></textarea>
-      <div class="preview-label">Preview:</div>
+      <label class="form-label" data-i18n="card.term">Term</label>
+      <textarea id="card-term-input" class="form-textarea" rows="2" placeholder="e.g. Ridge regression" data-i18n-placeholder="card.termPlaceholder"></textarea>
+      <div class="preview-label" data-i18n="form.previewColon">Preview:</div>
       <div id="card-term-preview" class="latex-preview"></div>
-      <label class="form-label">Definition</label>
-      <textarea id="card-def-input" class="form-textarea" rows="3" placeholder="e.g. $\hat{\beta} = (X^TX + \lambda I)^{-1}X^Ty$"></textarea>
-      <div class="preview-label">Preview:</div>
+      <label class="form-label" data-i18n="card.definition">Definition</label>
+      <textarea id="card-def-input" class="form-textarea" rows="3" placeholder="e.g. $\hat{\beta} = (X^TX + \lambda I)^{-1}X^Ty$" data-i18n-placeholder="card.defPlaceholder"></textarea>
+      <div class="preview-label" data-i18n="form.previewColon">Preview:</div>
       <div id="card-def-preview" class="latex-preview"></div>
     </div>
     <div class="modal-footer">
@@ -626,22 +626,22 @@
       <button class="modal-close" data-modal="card-mcq" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <label class="form-label">Question</label>
-      <textarea id="card-q-input" class="form-textarea" rows="2" placeholder="e.g. What loss does AdaBoost minimize?"></textarea>
-      <div class="preview-label">Preview:</div>
+      <label class="form-label" data-i18n="mcq.question">Question</label>
+      <textarea id="card-q-input" class="form-textarea" rows="2" placeholder="e.g. What loss does AdaBoost minimize?" data-i18n-placeholder="mcq.questionPlaceholder"></textarea>
+      <div class="preview-label" data-i18n="form.previewColon">Preview:</div>
       <div id="card-q-preview" class="latex-preview"></div>
-      <label class="form-label">Correct Answer</label>
-      <input type="text" id="card-correct-input" class="form-input" placeholder="e.g. Exponential loss">
-      <div class="preview-label">Preview:</div>
+      <label class="form-label" data-i18n="mcq.correctAnswer">Correct Answer</label>
+      <input type="text" id="card-correct-input" class="form-input" placeholder="e.g. Exponential loss" data-i18n-placeholder="mcq.correctAnswerPlaceholder">
+      <div class="preview-label" data-i18n="form.previewColon">Preview:</div>
       <div id="card-correct-preview" class="latex-preview"></div>
-      <label class="form-label">Wrong Answers <span id="mcq-distractor-count"></span></label>
+      <label class="form-label"><span data-i18n="mcq.wrongAnswers">Wrong Answers</span> <span id="mcq-distractor-count"></span></label>
       <div id="mcq-distractor-list"></div>
-      <button type="button" class="btn btn-ghost btn-sm" id="btn-add-distractor" style="align-self:flex-start;margin-top:2px">+ Add choice</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-add-distractor" style="align-self:flex-start;margin-top:2px" data-i18n="mcq.addChoice">+ Add choice</button>
       <details id="mcq-explanation-details" style="margin-top:12px">
-        <summary class="form-label" style="cursor:pointer;user-select:none;list-style:none">Explanation (optional)</summary>
+        <summary class="form-label" style="cursor:pointer;user-select:none;list-style:none" data-i18n="card.explanationOptional">Explanation (optional)</summary>
         <textarea id="card-explanation-input" class="form-textarea" rows="3"
           placeholder="Why is this answer correct? Why are the distractors wrong?"
-          style="margin-top:6px"></textarea>
+          style="margin-top:6px" data-i18n-placeholder="mcq.explanationPlaceholder"></textarea>
       </details>
     </div>
     <div class="modal-footer">
@@ -657,20 +657,20 @@
       <button class="modal-close" data-modal="card-tf" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <label class="form-label">Statement</label>
-      <textarea id="card-tf-statement-input" class="form-textarea" rows="3" placeholder="e.g. The Earth revolves around the Sun."></textarea>
-      <div class="preview-label">Preview:</div>
+      <label class="form-label" data-i18n="tf.statement">Statement</label>
+      <textarea id="card-tf-statement-input" class="form-textarea" rows="3" placeholder="e.g. The Earth revolves around the Sun." data-i18n-placeholder="tf.statementPlaceholder"></textarea>
+      <div class="preview-label" data-i18n="form.previewColon">Preview:</div>
       <div id="card-tf-statement-preview" class="latex-preview"></div>
-      <label class="form-label">Answer</label>
+      <label class="form-label" data-i18n="tf.answer">Answer</label>
       <div class="tf-answer-picker" id="tf-answer-picker">
-        <button type="button" class="tf-answer-btn" data-value="true">True</button>
-        <button type="button" class="tf-answer-btn" data-value="false">False</button>
+        <button type="button" class="tf-answer-btn" data-value="true" data-i18n="common.true">True</button>
+        <button type="button" class="tf-answer-btn" data-value="false" data-i18n="common.false">False</button>
       </div>
       <details id="tf-explanation-details" style="margin-top:12px">
-        <summary class="form-label" style="cursor:pointer;user-select:none;list-style:none">Explanation (optional)</summary>
+        <summary class="form-label" style="cursor:pointer;user-select:none;list-style:none" data-i18n="card.explanationOptional">Explanation (optional)</summary>
         <textarea id="card-tf-explanation-input" class="form-textarea" rows="3"
           placeholder="Why is this true or false?"
-          style="margin-top:6px"></textarea>
+          style="margin-top:6px" data-i18n-placeholder="tf.explanationPlaceholder"></textarea>
       </details>
     </div>
     <div class="modal-footer">
@@ -686,15 +686,15 @@
       <button class="modal-close" data-modal="card-imagedef" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <label class="form-label">Image (front)</label>
+      <label class="form-label" data-i18n="imagedef.imageFront">Image (front)</label>
       <input type="file" id="card-image-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
       <div id="card-image-drop" class="image-drop-zone">
-        <span id="card-image-drop-label">Click or drag image here (JPEG, PNG, GIF, WebP · max 5 MB)</span>
+        <span id="card-image-drop-label" data-i18n="imagedef.dropLabel">Click or drag image here (JPEG, PNG, GIF, WebP · max 5 MB)</span>
         <img id="card-image-preview" class="image-preview hidden" src="" alt="Preview">
       </div>
-      <button type="button" class="btn btn-ghost btn-sm" id="btn-pick-image" style="align-self:flex-start;margin-top:4px">Choose Image</button>
-      <label class="form-label" style="margin-top:12px">Definition (back)</label>
-      <textarea id="card-imagedef-input" class="form-textarea" rows="3" placeholder="e.g. The Eiffel Tower, built 1889, Paris."></textarea>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-pick-image" style="align-self:flex-start;margin-top:4px" data-i18n="imagedef.chooseImage">Choose Image</button>
+      <label class="form-label" style="margin-top:12px" data-i18n="imagedef.definitionBack">Definition (back)</label>
+      <textarea id="card-imagedef-input" class="form-textarea" rows="3" placeholder="e.g. The Eiffel Tower, built 1889, Paris." data-i18n-placeholder="imagedef.defPlaceholder"></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="card-imagedef" data-i18n="common.cancel">Cancel</button>
@@ -711,29 +711,23 @@
     <div class="modal-body">
       <p class="form-hint" id="bulk-hint"></p>
       <div id="bulk-error" class="auth-error hidden"></div>
-      <textarea id="bulk-input" class="form-textarea" rows="10" placeholder="Paste cards here..."></textarea>
+      <textarea id="bulk-input" class="form-textarea" rows="10" placeholder="Paste cards here..." data-i18n-placeholder="bulk.pasteHere"></textarea>
       <div id="bulk-preview" class="bulk-preview"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="bulk" data-i18n="common.cancel">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-bulk">Add Cards</button>
+      <button class="btn btn-primary" id="btn-save-bulk" data-i18n="bulk.addCards">Add Cards</button>
     </div>
   </div>
 
   <!-- Bulk Lesson+Card Import Modal -->
   <div id="modal-bulk-import" class="modal hidden">
     <div class="modal-header">
-      <h3>Bulk Import Lessons &amp; Cards</h3>
+      <h3 data-i18n="bulkImport.title">Bulk Import Lessons &amp; Cards</h3>
       <button class="modal-close" data-modal="bulk-import" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <p class="form-hint" style="line-height:1.6">
-        Use <strong>#</strong> to start a lesson. Optionally add <code>| mcq</code> after the title for MCQ format (default is term→def).<br>
-        Then list cards below it, one per line.<br><br>
-        <strong>Term→Def:</strong> <code>term | definition</code><br>
-        <strong>MCQ:</strong> <code>question | correct | wrong1 | wrong2 | wrong3</code><br>
-        <strong>MCQ + explanation:</strong> <code>question | correct | wrong1 ;; Why the correct answer is right.</code>
-      </p>
+      <p class="form-hint" id="bulk-import-hint" style="line-height:1.6"></p>
       <textarea id="bulk-import-input" class="form-textarea" rows="12" placeholder="# Week 1: Linear Regression
 OLS estimator | $(X^TX)^{-1}X^Ty$
 Ridge regression | $(X^TX + \lambda I)^{-1}X^Ty$
@@ -745,22 +739,22 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="bulk-import" data-i18n="common.cancel">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-bulk-import">Import</button>
+      <button class="btn btn-primary" id="btn-save-bulk-import" data-i18n="common.import">Import</button>
     </div>
   </div>
 
   <!-- Delete Confirm Modal -->
   <div id="modal-delete" class="modal hidden">
     <div class="modal-header">
-      <h3>Confirm Delete</h3>
+      <h3 data-i18n="delete.confirmTitle">Confirm Delete</h3>
       <button class="modal-close" data-modal="delete" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <p id="delete-confirm-text">Are you sure?</p>
+      <p id="delete-confirm-text" data-i18n="delete.areYouSure">Are you sure?</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="delete" data-i18n="common.cancel">Cancel</button>
-      <button class="btn btn-danger" id="btn-confirm-delete">Delete</button>
+      <button class="btn btn-danger" id="btn-confirm-delete" data-i18n="common.delete">Delete</button>
     </div>
   </div>
 
@@ -772,13 +766,13 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
     <h2 id="share-class-name" class="screen-title"></h2>
     <div class="header-actions">
       <span id="share-owner-label" class="share-owner-label"></span>
-      <button class="btn btn-primary" id="btn-clone-shared"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save to My Classes</button>
+      <button class="btn btn-primary" id="btn-clone-shared" data-i18n="share.saveToMyClasses"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save to My Classes</button>
     </div>
   </header>
   <div id="share-lesson-list" class="lesson-list"></div>
   <div id="share-login-notice" class="share-login-notice hidden">
-    <p>Sign in or create an account to save this class to your library.</p>
-    <button class="btn btn-primary" id="btn-share-go-login">Sign In / Register</button>
+    <p data-i18n="share.signInHint">Sign in or create an account to save this class to your library.</p>
+    <button class="btn btn-primary" id="btn-share-go-login" data-i18n="share.signInRegister">Sign In / Register</button>
   </div>
 </div>
 
@@ -786,18 +780,18 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 <div id="modal-share" class="modal-overlay hidden">
   <div class="modal share-modal">
     <div class="modal-header">
-      <h3>Share Class</h3>
+      <h3 data-i18n="share.shareClass">Share Class</h3>
       <button class="btn btn-ghost btn-sm" id="btn-share-modal-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
 
     <!-- Share Link -->
     <div class="share-section">
-      <h4 class="share-section-title">Share Link</h4>
-      <p class="share-section-desc">Anyone with this link can study and save a copy of this class.</p>
+      <h4 class="share-section-title" data-i18n="share.shareLink">Share Link</h4>
+      <p class="share-section-desc" data-i18n="share.shareLinkDesc">Anyone with this link can study and save a copy of this class.</p>
       <div id="share-link-row" class="share-link-row hidden">
         <input id="share-link-input" class="share-link-input" readonly />
-        <button class="btn btn-outline btn-sm" id="btn-copy-share-link">Copy</button>
-        <button class="btn btn-danger btn-sm" id="btn-revoke-share-link" title="Disable link" aria-label="Disable link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="btn btn-outline btn-sm" id="btn-copy-share-link" data-i18n="common.copy">Copy</button>
+        <button class="btn btn-danger btn-sm" id="btn-revoke-share-link" title="Disable link" aria-label="Disable link" data-i18n-title="share.disableLink" data-i18n-aria="share.disableLink"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <button class="btn btn-outline" id="btn-generate-share-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Generate Link</button>
     </div>
@@ -807,17 +801,17 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <h4 class="share-section-title">Invite by Name or Email</h4>
       <p class="share-section-desc">They'll see this class in their "Shared with me" section.</p>
       <div class="share-invite-row">
-        <input id="share-invite-input" class="input" placeholder="Username or email..." />
-        <button class="btn btn-primary btn-sm" id="btn-send-invite">Invite</button>
+        <input id="share-invite-input" class="input" placeholder="Username or email..." data-i18n-placeholder="share.usernameOrEmail" />
+        <button class="btn btn-primary btn-sm" id="btn-send-invite" data-i18n="share.invite">Invite</button>
       </div>
       <div id="share-invite-error" class="share-error hidden"></div>
     </div>
 
     <!-- People with access -->
     <div class="share-section">
-      <h4 class="share-section-title">People with Access</h4>
+      <h4 class="share-section-title" data-i18n="share.peopleWithAccess">People with Access</h4>
       <div id="share-invite-list" class="share-invite-list">
-        <p class="share-empty-text">No one invited yet.</p>
+        <p class="share-empty-text" data-i18n="share.noOneInvited">No one invited yet.</p>
       </div>
     </div>
   </div>
@@ -827,10 +821,10 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 <div id="modal-prompt-guide" class="modal-overlay hidden">
   <div class="modal prompt-guide-modal">
     <div class="modal-header">
-      <h3>AI Extraction Prompt</h3>
+      <h3 data-i18n="promptGuide.title">AI Extraction Prompt</h3>
       <button class="btn btn-ghost btn-sm" id="btn-prompt-guide-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <p class="prompt-guide-desc">Paste this prompt into any AI (ChatGPT, Claude, Gemini…) followed by your text to generate flashcards.</p>
+    <p class="prompt-guide-desc" data-i18n="promptGuide.desc">Paste this prompt into any AI (ChatGPT, Claude, Gemini…) followed by your text to generate flashcards.</p>
     <div class="prompt-guide-box">
       <pre id="prompt-guide-text"></pre>
     </div>
@@ -844,67 +838,67 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 <div id="modal-keymap" class="modal-overlay hidden">
   <div class="modal keymap-modal">
     <div class="modal-header">
-      <h3>Keyboard Shortcuts</h3>
+      <h3 data-i18n="keymap.title">Keyboard Shortcuts</h3>
       <button class="modal-close" id="btn-keymap-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body keymap-body">
       <div class="keymap-section">
-        <div class="keymap-section-title">Global</div>
-        <div class="keymap-row"><kbd class="kbd">Ctrl/⌘</kbd><kbd class="kbd">K</kbd><span>Search</span></div>
-        <div class="keymap-row"><kbd class="kbd">?</kbd><span>Toggle this help</span></div>
-        <div class="keymap-row"><kbd class="kbd">H</kbd><span>Go to Home</span></div>
-        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span>Close / Go back</span></div>
+        <div class="keymap-section-title" data-i18n="keymap.sectionGlobal">Global</div>
+        <div class="keymap-row"><kbd class="kbd">Ctrl/⌘</kbd><kbd class="kbd">K</kbd><span data-i18n="keymap.search">Search</span></div>
+        <div class="keymap-row"><kbd class="kbd">?</kbd><span data-i18n="keymap.toggleHelp">Toggle this help</span></div>
+        <div class="keymap-row"><kbd class="kbd">H</kbd><span data-i18n="keymap.goHome">Go to Home</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="keymap.closeGoBack">Close / Go back</span></div>
       </div>
       <div class="keymap-section">
-        <div class="keymap-section-title">Home</div>
-        <div class="keymap-row"><kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd><span>Navigate classes</span></div>
-        <div class="keymap-row"><kbd class="kbd">Enter</kbd><span>Open class / toggle selection</span></div>
-        <div class="keymap-row"><kbd class="kbd">X</kbd><span>Toggle select mode</span></div>
-        <div class="keymap-row"><kbd class="kbd">Space</kbd><span>Toggle selection (select mode)</span></div>
-        <div class="keymap-row"><kbd class="kbd">A</kbd><span>Select all (select mode)</span></div>
-        <div class="keymap-row"><kbd class="kbd">S</kbd><span>Study selected (select mode)</span></div>
-        <div class="keymap-row"><kbd class="kbd">N</kbd><span>New class</span></div>
-        <div class="keymap-row"><kbd class="kbd">A</kbd><span>Analytics</span></div>
+        <div class="keymap-section-title" data-i18n="nav.home">Home</div>
+        <div class="keymap-row"><kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd><span data-i18n="keymap.navigateClasses">Navigate classes</span></div>
+        <div class="keymap-row"><kbd class="kbd">Enter</kbd><span data-i18n="keymap.openClassToggle">Open class / toggle selection</span></div>
+        <div class="keymap-row"><kbd class="kbd">X</kbd><span data-i18n="keymap.toggleSelectMode">Toggle select mode</span></div>
+        <div class="keymap-row"><kbd class="kbd">Space</kbd><span data-i18n="keymap.toggleSelectionSelectMode">Toggle selection (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">A</kbd><span data-i18n="keymap.selectAllSelectMode">Select all (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="keymap.studySelectedSelectMode">Study selected (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">N</kbd><span data-i18n="keymap.newClass">New class</span></div>
+        <div class="keymap-row"><kbd class="kbd">A</kbd><span data-i18n="nav.analytics">Analytics</span></div>
       </div>
       <div class="keymap-section">
-        <div class="keymap-section-title">Class</div>
-        <div class="keymap-row"><kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd><span>Navigate lessons</span></div>
-        <div class="keymap-row"><kbd class="kbd">Enter</kbd><span>Open lesson / toggle selection</span></div>
-        <div class="keymap-row"><kbd class="kbd">X</kbd><span>Toggle select mode</span></div>
-        <div class="keymap-row"><kbd class="kbd">Space</kbd><span>Toggle selection (select mode)</span></div>
-        <div class="keymap-row"><kbd class="kbd">A</kbd><span>Select all (select mode)</span></div>
-        <div class="keymap-row"><kbd class="kbd">S</kbd><span>Study selected (select mode)</span></div>
-        <div class="keymap-row"><kbd class="kbd">N</kbd><span>New lesson</span></div>
-        <div class="keymap-row"><kbd class="kbd">E</kbd><span>Edit class</span></div>
-        <div class="keymap-row"><kbd class="kbd">⌫</kbd><span>Back</span></div>
+        <div class="keymap-section-title" data-i18n="keymap.sectionClass">Class</div>
+        <div class="keymap-row"><kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd><span data-i18n="keymap.navigateLessons">Navigate lessons</span></div>
+        <div class="keymap-row"><kbd class="kbd">Enter</kbd><span data-i18n="keymap.openLessonToggle">Open lesson / toggle selection</span></div>
+        <div class="keymap-row"><kbd class="kbd">X</kbd><span data-i18n="keymap.toggleSelectMode">Toggle select mode</span></div>
+        <div class="keymap-row"><kbd class="kbd">Space</kbd><span data-i18n="keymap.toggleSelectionSelectMode">Toggle selection (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">A</kbd><span data-i18n="keymap.selectAllSelectMode">Select all (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="keymap.studySelectedSelectMode">Study selected (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">N</kbd><span data-i18n="keymap.newLesson">New lesson</span></div>
+        <div class="keymap-row"><kbd class="kbd">E</kbd><span data-i18n="class.editClass">Edit class</span></div>
+        <div class="keymap-row"><kbd class="kbd">⌫</kbd><span data-i18n="common.back">Back</span></div>
       </div>
       <div class="keymap-section">
-        <div class="keymap-section-title">Lesson</div>
-        <div class="keymap-row"><kbd class="kbd">N</kbd><span>New card</span></div>
-        <div class="keymap-row"><kbd class="kbd">B</kbd><span>Bulk paste</span></div>
-        <div class="keymap-row"><kbd class="kbd">S</kbd><span>Start study</span></div>
-        <div class="keymap-row"><kbd class="kbd">⌫</kbd><span>Back</span></div>
+        <div class="keymap-section-title" data-i18n="keymap.sectionLesson">Lesson</div>
+        <div class="keymap-row"><kbd class="kbd">N</kbd><span data-i18n="keymap.newCard">New card</span></div>
+        <div class="keymap-row"><kbd class="kbd">B</kbd><span data-i18n="keymap.bulkPaste">Bulk paste</span></div>
+        <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="keymap.startStudy">Start study</span></div>
+        <div class="keymap-row"><kbd class="kbd">⌫</kbd><span data-i18n="common.back">Back</span></div>
       </div>
       <div class="keymap-section">
-        <div class="keymap-section-title">Flashcards</div>
-        <div class="keymap-row"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd><span>Prev / Next</span></div>
-        <div class="keymap-row"><kbd class="kbd">Space</kbd><span>Flip card</span></div>
-        <div class="keymap-row"><kbd class="kbd">1</kbd><span>Still Learning</span></div>
-        <div class="keymap-row"><kbd class="kbd">2</kbd><span>Know It</span></div>
-        <div class="keymap-row"><kbd class="kbd">S</kbd><span>Shuffle</span></div>
-        <div class="keymap-row"><kbd class="kbd">R</kbd><span>Reset to start</span></div>
-        <div class="keymap-row"><kbd class="kbd">F</kbd><span>Filter hard/new</span></div>
-        <div class="keymap-row"><kbd class="kbd">P</kbd><span>Pronounce</span></div>
+        <div class="keymap-section-title" data-i18n="keymap.sectionFlashcards">Flashcards</div>
+        <div class="keymap-row"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd><span data-i18n="keymap.prevNext">Prev / Next</span></div>
+        <div class="keymap-row"><kbd class="kbd">Space</kbd><span data-i18n="keymap.flipCard">Flip card</span></div>
+        <div class="keymap-row"><kbd class="kbd">1</kbd><span data-i18n="study.learning">Still Learning</span></div>
+        <div class="keymap-row"><kbd class="kbd">2</kbd><span data-i18n="study.knowIt">Know It</span></div>
+        <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="common.shuffle">Shuffle</span></div>
+        <div class="keymap-row"><kbd class="kbd">R</kbd><span data-i18n="keymap.resetToStart">Reset to start</span></div>
+        <div class="keymap-row"><kbd class="kbd">F</kbd><span data-i18n="keymap.filterHardNew">Filter hard/new</span></div>
+        <div class="keymap-row"><kbd class="kbd">P</kbd><span data-i18n="keymap.pronounce">Pronounce</span></div>
       </div>
       <div class="keymap-section">
-        <div class="keymap-section-title">Quiz</div>
-        <div class="keymap-row"><kbd class="kbd">1</kbd>–<kbd class="kbd">5</kbd><span>Select option</span></div>
-        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span>Back to setup</span></div>
+        <div class="keymap-section-title" data-i18n="setup.quiz">Quiz</div>
+        <div class="keymap-row"><kbd class="kbd">1</kbd>–<kbd class="kbd">5</kbd><span data-i18n="keymap.selectOption">Select option</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="keymap.backToSetup">Back to setup</span></div>
       </div>
       <div class="keymap-section">
-        <div class="keymap-section-title">Results / Stats / Dashboard / Analytics</div>
-        <div class="keymap-row"><kbd class="kbd">R</kbd><span>Retry (Results only)</span></div>
-        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span>Back</span></div>
+        <div class="keymap-section-title" data-i18n="keymap.sectionResultsEtc">Results / Stats / Dashboard / Analytics</div>
+        <div class="keymap-row"><kbd class="kbd">R</kbd><span data-i18n="keymap.retryResultsOnly">Retry (Results only)</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="common.back">Back</span></div>
       </div>
     </div>
   </div>
@@ -922,7 +916,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <kbd class="search-esc-hint">Esc</kbd>
     </div>
     <div id="search-results" class="search-results" role="listbox" aria-label="Search results"></div>
-    <div id="search-empty" class="search-empty hidden">No results</div>
+    <div id="search-empty" class="search-empty hidden" data-i18n="search.noResults">No results</div>
   </div>
 </div>
 

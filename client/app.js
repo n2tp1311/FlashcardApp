@@ -276,7 +276,123 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.noStudyData": "No study data yet.",
   "dashboard.attemptsAbbrev": "{n} att.",
   "dashboard.attemptsCount": "{n} attempt(s)",
-  "dashboard.monthAbbrevs": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
+  "dashboard.monthAbbrevs": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+
+  "form.name": "Name",
+  "class.namePlaceholder": "e.g. Machine Learning",
+  "class.level": "Level",
+  "class.levelHint": "(optional — for sorting)",
+  "class.levelPlaceholder": "Sort order (e.g. 1, 2, 3)",
+  "form.color": "Color",
+  "form.icon": "Icon",
+  "form.title": "Title",
+  "lesson.titlePlaceholder": "e.g. Week 1: Linear Regression",
+  "lesson.format": "Format",
+  "format.mcqPickerLabel": "Multiple Choice",
+  "lesson.trueFalseSlash": "True / False",
+  "card.term": "Term",
+  "card.termPlaceholder": "e.g. Ridge regression",
+  "form.previewColon": "Preview:",
+  "card.definition": "Definition",
+  "card.defPlaceholder": "e.g. $\\hat{\\beta} = (X^TX + \\lambda I)^{-1}X^Ty$",
+  "mcq.question": "Question",
+  "mcq.questionPlaceholder": "e.g. What loss does AdaBoost minimize?",
+  "mcq.correctAnswer": "Correct Answer",
+  "mcq.correctAnswerPlaceholder": "e.g. Exponential loss",
+  "mcq.wrongAnswers": "Wrong Answers",
+  "mcq.addChoice": "+ Add choice",
+  "card.explanationOptional": "Explanation (optional)",
+  "mcq.explanationPlaceholder": "Why is this answer correct? Why are the distractors wrong?",
+  "tf.statement": "Statement",
+  "tf.statementPlaceholder": "e.g. The Earth revolves around the Sun.",
+  "tf.answer": "Answer",
+  "tf.explanationPlaceholder": "Why is this true or false?",
+  "imagedef.imageFront": "Image (front)",
+  "imagedef.dropLabel": "Click or drag image here (JPEG, PNG, GIF, WebP · max 5 MB)",
+  "imagedef.chooseImage": "Choose Image",
+  "imagedef.definitionBack": "Definition (back)",
+  "imagedef.defPlaceholder": "e.g. The Eiffel Tower, built 1889, Paris.",
+  "bulk.pasteHere": "Paste cards here...",
+  "bulk.addCards": "Add Cards",
+  "bulkImport.title": "Bulk Import Lessons & Cards",
+  "common.import": "Import",
+  "delete.confirmTitle": "Confirm Delete",
+  "delete.areYouSure": "Are you sure?",
+  "share.signInHint": "Sign in or create an account to save this class to your library.",
+  "share.signInRegister": "Sign In / Register",
+  "share.shareClass": "Share Class",
+  "share.shareLink": "Share Link",
+  "share.shareLinkDesc": "Anyone with this link can study and save a copy of this class.",
+  "common.copy": "Copy",
+  "share.disableLink": "Disable link",
+  "share.saveToMyClasses": "Save to My Classes",
+  "share.usernameOrEmail": "Username or email...",
+  "share.invite": "Invite",
+  "share.peopleWithAccess": "People with Access",
+  "share.noOneInvited": "No one invited yet.",
+  "promptGuide.title": "AI Extraction Prompt",
+  "promptGuide.desc": "Paste this prompt into any AI (ChatGPT, Claude, Gemini…) followed by your text to generate flashcards.",
+  "keymap.title": "Keyboard Shortcuts",
+  "keymap.sectionGlobal": "Global",
+  "keymap.search": "Search",
+  "keymap.toggleHelp": "Toggle this help",
+  "keymap.goHome": "Go to Home",
+  "keymap.closeGoBack": "Close / Go back",
+  "keymap.navigateClasses": "Navigate classes",
+  "keymap.openClassToggle": "Open class / toggle selection",
+  "keymap.newClass": "New class",
+  "keymap.sectionClass": "Class",
+  "keymap.navigateLessons": "Navigate lessons",
+  "keymap.openLessonToggle": "Open lesson / toggle selection",
+  "keymap.newLesson": "New lesson",
+  "keymap.sectionLesson": "Lesson",
+  "keymap.newCard": "New card",
+  "keymap.bulkPaste": "Bulk paste",
+  "keymap.startStudy": "Start study",
+  "keymap.sectionFlashcards": "Flashcards",
+  "keymap.prevNext": "Prev / Next",
+  "keymap.flipCard": "Flip card",
+  "keymap.resetToStart": "Reset to start",
+  "keymap.filterHardNew": "Filter hard/new",
+  "keymap.pronounce": "Pronounce",
+  "keymap.selectOption": "Select option",
+  "keymap.backToSetup": "Back to setup",
+  "keymap.sectionResultsEtc": "Results / Stats / Dashboard / Analytics",
+  "keymap.retryResultsOnly": "Retry (Results only)",
+  "keymap.toggleSelectMode": "Toggle select mode",
+  "keymap.toggleSelectionSelectMode": "Toggle selection (select mode)",
+  "keymap.selectAllSelectMode": "Select all (select mode)",
+  "keymap.studySelectedSelectMode": "Study selected (select mode)",
+  "search.noResults": "No results",
+
+  "bulkImport.hint": "Use <strong>#</strong> to start a lesson. Optionally add <code>| mcq</code> after the title for MCQ format (default is term→def).<br>Then list cards below it, one per line.<br><br><strong>Term→Def:</strong> <code>term | definition</code><br><strong>MCQ:</strong> <code>question | correct | wrong1 | wrong2 | wrong3</code><br><strong>MCQ + explanation:</strong> <code>question | correct | wrong1 ;; Why the correct answer is right.</code>",
+
+  "class.newClass": "New Class",
+  "lesson.newLesson": "New Lesson",
+  "bulk.addCardsTitle": "Bulk Add Cards",
+  "card.addCard": "Add Card",
+  "card.editCard": "Edit Card",
+  "lesson.hintTermDef": "Best for vocabulary, concepts, formulas. Bulk: term | definition",
+  "lesson.hintMcq": "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2…] [;; explanation]",
+  "lesson.hintTrueFalse": "Best for T/F statements. Bulk: statement | true  or  statement | false [;; explanation]",
+  "lesson.hintImageDef": "Image on front, text definition on back. Cards added one at a time (no bulk import).",
+  "validate.enterClassName": "Please enter a class name.",
+  "validate.enterLessonTitle": "Please enter a lesson title.",
+  "validate.fillTermDef": "Please fill in both term and definition.",
+  "validate.fillMcq": "Please fill in the question, correct answer, and 1–4 wrong answers.",
+  "validate.enterStatement": "Please enter a statement.",
+  "validate.selectTrueFalse": "Please select True or False.",
+  "validate.unsupportedFileType": "Unsupported file type. Please use JPEG, PNG, GIF, or WebP.",
+  "validate.chooseImageFirst": "Please choose an image first.",
+  "validate.enterDefinition": "Please enter a definition.",
+  "validate.levelMustBeNumber": "Level must be a number.",
+  "share.savedToClasses": "\"{name}\" saved to your classes!",
+  "common.failedToSave": "Failed to save",
+  "lesson.pickerTermDef": "Term → Definition",
+  "lesson.pickerImageDef": "Image → Definition",
+  "bulk.hintTermDef": "One card per line: term | definition\nSupports LaTeX: $\\hat{\\beta}$ or $$\\sum_{i=1}^n x_i$$",
+  "bulk.hintTrueFalse": "One card per line: statement | true  or  statement | false [;; explanation]",
+  "bulk.hintMcq": "One card per line: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]"
 });
 Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
@@ -516,7 +632,123 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
   "dashboard.attemptsAbbrev": "{n} lượt",
   "dashboard.attemptsCount": "{n} lượt làm",
-  "dashboard.monthAbbrevs": "Th1,Th2,Th3,Th4,Th5,Th6,Th7,Th8,Th9,Th10,Th11,Th12"
+  "dashboard.monthAbbrevs": "Th1,Th2,Th3,Th4,Th5,Th6,Th7,Th8,Th9,Th10,Th11,Th12",
+
+  "form.name": "Tên",
+  "class.namePlaceholder": "vd: Machine Learning",
+  "class.level": "Cấp độ",
+  "class.levelHint": "(tùy chọn — để sắp xếp)",
+  "class.levelPlaceholder": "Số thứ tự sắp xếp (vd: 1, 2, 3)",
+  "form.color": "Màu sắc",
+  "form.icon": "Biểu tượng",
+  "form.title": "Tiêu đề",
+  "lesson.titlePlaceholder": "vd: Tuần 1: Hồi quy tuyến tính",
+  "lesson.format": "Định dạng",
+  "format.mcqPickerLabel": "Trắc nghiệm",
+  "lesson.trueFalseSlash": "Đúng / Sai",
+  "card.term": "Thuật ngữ",
+  "card.termPlaceholder": "vd: Hồi quy Ridge",
+  "form.previewColon": "Xem trước:",
+  "card.definition": "Định nghĩa",
+  "card.defPlaceholder": "vd: $\\hat{\\beta} = (X^TX + \\lambda I)^{-1}X^Ty$",
+  "mcq.question": "Câu hỏi",
+  "mcq.questionPlaceholder": "vd: AdaBoost tối thiểu hóa hàm mất mát nào?",
+  "mcq.correctAnswer": "Đáp án đúng",
+  "mcq.correctAnswerPlaceholder": "vd: Exponential loss",
+  "mcq.wrongAnswers": "Đáp án sai",
+  "mcq.addChoice": "+ Thêm lựa chọn",
+  "card.explanationOptional": "Giải thích (tùy chọn)",
+  "mcq.explanationPlaceholder": "Vì sao đáp án này đúng? Vì sao các đáp án khác sai?",
+  "tf.statement": "Câu phát biểu",
+  "tf.statementPlaceholder": "vd: Trái Đất quay quanh Mặt Trời.",
+  "tf.answer": "Đáp án",
+  "tf.explanationPlaceholder": "Vì sao câu này đúng hay sai?",
+  "imagedef.imageFront": "Hình ảnh (mặt trước)",
+  "imagedef.dropLabel": "Nhấn hoặc kéo hình vào đây (JPEG, PNG, GIF, WebP · tối đa 5 MB)",
+  "imagedef.chooseImage": "Chọn hình ảnh",
+  "imagedef.definitionBack": "Định nghĩa (mặt sau)",
+  "imagedef.defPlaceholder": "vd: Tháp Eiffel, xây năm 1889, Paris.",
+  "bulk.pasteHere": "Dán các thẻ vào đây...",
+  "bulk.addCards": "Thêm thẻ",
+  "bulkImport.title": "Nhập hàng loạt bài học & thẻ",
+  "common.import": "Nhập",
+  "delete.confirmTitle": "Xác nhận xóa",
+  "delete.areYouSure": "Bạn có chắc chắn không?",
+  "share.signInHint": "Đăng nhập hoặc tạo tài khoản để lưu lớp này vào thư viện của bạn.",
+  "share.signInRegister": "Đăng nhập / Đăng ký",
+  "share.shareClass": "Chia sẻ lớp",
+  "share.shareLink": "Liên kết chia sẻ",
+  "share.shareLinkDesc": "Bất kỳ ai có liên kết này đều có thể học và lưu bản sao của lớp này.",
+  "common.copy": "Sao chép",
+  "share.disableLink": "Vô hiệu hóa liên kết",
+  "share.saveToMyClasses": "Lưu vào lớp của tôi",
+  "share.usernameOrEmail": "Tên đăng nhập hoặc email...",
+  "share.invite": "Mời",
+  "share.peopleWithAccess": "Người có quyền truy cập",
+  "share.noOneInvited": "Chưa mời ai.",
+  "promptGuide.title": "Prompt trích xuất AI",
+  "promptGuide.desc": "Dán prompt này vào bất kỳ AI nào (ChatGPT, Claude, Gemini…) kèm theo nội dung của bạn để tạo thẻ ghi nhớ.",
+  "keymap.title": "Phím tắt",
+  "keymap.sectionGlobal": "Toàn cục",
+  "keymap.search": "Tìm kiếm",
+  "keymap.toggleHelp": "Bật/tắt trợ giúp này",
+  "keymap.goHome": "Về trang chủ",
+  "keymap.closeGoBack": "Đóng / Quay lại",
+  "keymap.navigateClasses": "Di chuyển giữa các lớp",
+  "keymap.openClassToggle": "Mở lớp / chọn",
+  "keymap.newClass": "Lớp mới",
+  "keymap.sectionClass": "Lớp học",
+  "keymap.navigateLessons": "Di chuyển giữa các bài học",
+  "keymap.openLessonToggle": "Mở bài học / chọn",
+  "keymap.newLesson": "Bài học mới",
+  "keymap.sectionLesson": "Bài học",
+  "keymap.newCard": "Thẻ mới",
+  "keymap.bulkPaste": "Dán hàng loạt",
+  "keymap.startStudy": "Bắt đầu học",
+  "keymap.sectionFlashcards": "Thẻ ghi nhớ",
+  "keymap.prevNext": "Trước / Tiếp",
+  "keymap.flipCard": "Lật thẻ",
+  "keymap.resetToStart": "Về đầu",
+  "keymap.filterHardNew": "Lọc thẻ khó/mới",
+  "keymap.pronounce": "Phát âm",
+  "keymap.selectOption": "Chọn đáp án",
+  "keymap.backToSetup": "Về thiết lập",
+  "keymap.sectionResultsEtc": "Kết quả / Thống kê / Bảng điều khiển / Phân tích",
+  "keymap.retryResultsOnly": "Làm lại (chỉ ở Kết quả)",
+  "keymap.toggleSelectMode": "Bật/tắt chế độ chọn",
+  "keymap.toggleSelectionSelectMode": "Chọn/bỏ chọn (chế độ chọn)",
+  "keymap.selectAllSelectMode": "Chọn tất cả (chế độ chọn)",
+  "keymap.studySelectedSelectMode": "Học mục đã chọn (chế độ chọn)",
+  "search.noResults": "Không có kết quả",
+
+  "bulkImport.hint": "Dùng <strong>#</strong> để bắt đầu một bài học. Có thể thêm <code>| mcq</code> sau tiêu đề để dùng định dạng trắc nghiệm (mặc định là thuật ngữ→định nghĩa).<br>Sau đó liệt kê các thẻ bên dưới, mỗi thẻ một dòng.<br><br><strong>Thuật ngữ→Định nghĩa:</strong> <code>thuật ngữ | định nghĩa</code><br><strong>Trắc nghiệm:</strong> <code>câu hỏi | đáp án đúng | sai1 | sai2 | sai3</code><br><strong>Trắc nghiệm + giải thích:</strong> <code>câu hỏi | đáp án đúng | sai1 ;; Vì sao đáp án đúng là đúng.</code>",
+
+  "class.newClass": "Lớp mới",
+  "lesson.newLesson": "Bài học mới",
+  "bulk.addCardsTitle": "Thêm thẻ hàng loạt",
+  "card.addCard": "Thêm thẻ",
+  "card.editCard": "Sửa thẻ",
+  "lesson.hintTermDef": "Phù hợp cho từ vựng, khái niệm, công thức. Hàng loạt: thuật ngữ | định nghĩa",
+  "lesson.hintMcq": "Phù hợp để ôn thi. Hàng loạt: câu hỏi | đáp án đúng | sai1 [| sai2…] [;; giải thích]",
+  "lesson.hintTrueFalse": "Phù hợp cho câu Đúng/Sai. Hàng loạt: câu | true  hoặc  câu | false [;; giải thích]",
+  "lesson.hintImageDef": "Hình ảnh ở mặt trước, định nghĩa văn bản ở mặt sau. Thêm từng thẻ một (không nhập hàng loạt).",
+  "validate.enterClassName": "Vui lòng nhập tên lớp.",
+  "validate.enterLessonTitle": "Vui lòng nhập tiêu đề bài học.",
+  "validate.fillTermDef": "Vui lòng nhập cả thuật ngữ và định nghĩa.",
+  "validate.fillMcq": "Vui lòng nhập câu hỏi, đáp án đúng và 1–4 đáp án sai.",
+  "validate.enterStatement": "Vui lòng nhập câu phát biểu.",
+  "validate.selectTrueFalse": "Vui lòng chọn Đúng hoặc Sai.",
+  "validate.unsupportedFileType": "Định dạng tệp không hỗ trợ. Vui lòng dùng JPEG, PNG, GIF hoặc WebP.",
+  "validate.chooseImageFirst": "Vui lòng chọn hình ảnh trước.",
+  "validate.enterDefinition": "Vui lòng nhập định nghĩa.",
+  "validate.levelMustBeNumber": "Cấp độ phải là một số.",
+  "share.savedToClasses": "Đã lưu \"{name}\" vào lớp của bạn!",
+  "common.failedToSave": "Lưu thất bại",
+  "lesson.pickerTermDef": "Thuật ngữ → Định nghĩa",
+  "lesson.pickerImageDef": "Hình ảnh → Định nghĩa",
+  "bulk.hintTermDef": "Mỗi dòng một thẻ: thuật ngữ | định nghĩa\nHỗ trợ LaTeX: $\\hat{\\beta}$ hoặc $$\\sum_{i=1}^n x_i$$",
+  "bulk.hintTrueFalse": "Mỗi dòng một thẻ: câu | true  hoặc  câu | false [;; giải thích]",
+  "bulk.hintMcq": "Mỗi dòng một thẻ: câu hỏi | đáp án đúng | sai1 [| sai2 | sai3 | sai4]"
 });
 
 function t(key, vars) {
@@ -562,6 +794,10 @@ function applyI18n(root) {
   root.querySelectorAll("[data-i18n-aria]").forEach(function(el) {
     el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
   });
+  // Rich-HTML strings (embedded <strong>/<code>) can't go through the
+  // textContent path above without losing their formatting.
+  var bulkImportHint = document.getElementById("bulk-import-hint");
+  if (bulkImportHint) bulkImportHint.innerHTML = t("bulkImport.hint");
 }
 
 /* ============================
@@ -1888,7 +2124,7 @@ function initIconPicker() {
 
 function openNewClass() {
   state.editingClassId = null;
-  document.getElementById("modal-class-title").textContent = "New Class";
+  document.getElementById("modal-class-title").textContent = t("class.newClass");
   document.getElementById("class-name-input").value = "";
   document.getElementById("class-level-input").value = "";
   initColorPicker();
@@ -1904,7 +2140,7 @@ function openEditClass(classId) {
   store.getClass(classId).then(function(cls) {
     if (!cls) return;
     state.editingClassId = classId;
-    document.getElementById("modal-class-title").textContent = "Edit Class";
+    document.getElementById("modal-class-title").textContent = t("class.editClass");
     document.getElementById("class-name-input").value = cls.name;
     document.getElementById("class-level-input").value = cls.level != null ? cls.level : "";
     initColorPicker();
@@ -1923,12 +2159,12 @@ document.getElementById("btn-save-class").addEventListener("click", function() {
   var name  = document.getElementById("class-name-input").value.trim();
   var active_color = document.querySelector("#color-picker .color-swatch.active");
   var active_icon  = document.querySelector("#icon-picker .icon-opt.active");
-  if (!name) { alert("Please enter a class name."); return; }
+  if (!name) { alert(t("validate.enterClassName")); return; }
   var color = active_color ? active_color.dataset.color : CLASS_COLORS[0];
   var icon  = active_icon  ? active_icon.dataset.icon   : CLASS_ICONS[0];
   var levelVal = document.getElementById("class-level-input").value.trim();
   var level = levelVal !== "" ? parseInt(levelVal, 10) : null;
-  if (level !== null && isNaN(level)) { alert("Level must be a number."); return; }
+  if (level !== null && isNaN(level)) { alert(t("validate.levelMustBeNumber")); return; }
   var p;
   if (state.editingClassId) {
     p = store.updateClass(state.editingClassId, { name: name, color: color, icon: icon, level: level });
@@ -2481,11 +2717,11 @@ document.getElementById("btn-delete-selected-lessons").addEventListener("click",
    LESSON FORM MODAL
    ============================ */
 
-var FORMAT_HINTS = {
-  "term-def":   "Best for vocabulary, concepts, formulas. Bulk: term | definition",
-  "mcq":        "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2…] [;; explanation]",
-  "true-false": "Best for T/F statements. Bulk: statement | true  or  statement | false [;; explanation]",
-  "image-def":  "Image on front, text definition on back. Cards added one at a time (no bulk import)."
+var FORMAT_HINT_KEYS = {
+  "term-def":   "lesson.hintTermDef",
+  "mcq":        "lesson.hintMcq",
+  "true-false": "lesson.hintTrueFalse",
+  "image-def":  "lesson.hintImageDef"
 };
 
 function initLessonFormatPicker(selectedFormat) {
@@ -2494,7 +2730,7 @@ function initLessonFormatPicker(selectedFormat) {
     p.classList.toggle("active", p.dataset.value === selectedFormat);
     if (p.dataset.value === "image-def") p.style.display = IS_SERVER ? "" : "none";
   });
-  document.getElementById("format-hint").textContent = FORMAT_HINTS[selectedFormat] || "";
+  document.getElementById("format-hint").textContent = FORMAT_HINT_KEYS[selectedFormat] ? t(FORMAT_HINT_KEYS[selectedFormat]) : "";
 }
 
 document.getElementById("lesson-format-picker").addEventListener("click", function(e) {
@@ -2502,12 +2738,12 @@ document.getElementById("lesson-format-picker").addEventListener("click", functi
   if (!pill) return;
   this.querySelectorAll(".pill").forEach(function(p) { p.classList.remove("active"); });
   pill.classList.add("active");
-  document.getElementById("format-hint").textContent = FORMAT_HINTS[pill.dataset.value];
+  document.getElementById("format-hint").textContent = t(FORMAT_HINT_KEYS[pill.dataset.value]);
 });
 
 function openNewLesson() {
   state.editingLessonId = null;
-  document.getElementById("modal-lesson-title").textContent = "New Lesson";
+  document.getElementById("modal-lesson-title").textContent = t("lesson.newLesson");
   document.getElementById("lesson-title-input").value = "";
   initLessonFormatPicker("term-def");
   openModal("lesson");
@@ -2521,7 +2757,7 @@ function openEditLesson(lessonId) {
   var lesson = all.find(function(l) { return l.id === lessonId; });
   if (!lesson) return;
   state.editingLessonId = lessonId;
-  document.getElementById("modal-lesson-title").textContent = "Edit Lesson";
+  document.getElementById("modal-lesson-title").textContent = t("lesson.editLesson");
   document.getElementById("lesson-title-input").value = lesson.title;
   initLessonFormatPicker(lesson.format);
   // Lock format for existing lessons
@@ -2535,7 +2771,7 @@ function openEditLesson(lessonId) {
 
 document.getElementById("btn-save-lesson").addEventListener("click", function() {
   var title = document.getElementById("lesson-title-input").value.trim();
-  if (!title) { alert("Please enter a lesson title."); return; }
+  if (!title) { alert(t("validate.enterLessonTitle")); return; }
   var activePill = document.querySelector("#lesson-format-picker .pill.active");
   var format = activePill ? activePill.dataset.value : "term-def";
   // Re-enable pills after submit
@@ -2834,7 +3070,7 @@ function openAddCard() {
   state.editingCardId = null;
   var format = state.currentLesson.format;
   if (format === "term-def") {
-    document.getElementById("modal-card-termdef-title").textContent = "Add Card";
+    document.getElementById("modal-card-termdef-title").textContent = t("card.addCard");
     document.getElementById("card-term-input").value = "";
     document.getElementById("card-def-input").value = "";
     document.getElementById("card-term-preview").innerHTML = "";
@@ -2842,7 +3078,7 @@ function openAddCard() {
     openModal("card-termdef");
     document.getElementById("card-term-input").focus();
   } else if (format === "true-false") {
-    document.getElementById("modal-card-tf-title").textContent = "Add Card";
+    document.getElementById("modal-card-tf-title").textContent = t("card.addCard");
     document.getElementById("card-tf-statement-input").value = "";
     document.getElementById("card-tf-statement-preview").innerHTML = "";
     document.getElementById("card-tf-explanation-input").value = "";
@@ -2852,7 +3088,7 @@ function openAddCard() {
     openModal("card-tf");
     document.getElementById("card-tf-statement-input").focus();
   } else if (format === "image-def") {
-    document.getElementById("modal-card-imagedef-title").textContent = "Add Card";
+    document.getElementById("modal-card-imagedef-title").textContent = t("card.addCard");
     document.getElementById("card-image-input").value = "";
     document.getElementById("card-imagedef-input").value = "";
     document.getElementById("card-image-preview").src = "";
@@ -2862,7 +3098,7 @@ function openAddCard() {
     openModal("card-imagedef");
     document.getElementById("card-imagedef-input").focus();
   } else {
-    document.getElementById("modal-card-mcq-title").textContent = "Add Card";
+    document.getElementById("modal-card-mcq-title").textContent = t("card.addCard");
     document.getElementById("card-q-input").value = "";
     document.getElementById("card-correct-input").value = "";
     clearDistractorList();
@@ -2881,14 +3117,14 @@ function openEditCard(cardId) {
     var card = cards.find(function(c) { return c.id === cardId; });
     if (!card) return;
     if (card.format === "term-def") {
-      document.getElementById("modal-card-termdef-title").textContent = "Edit Card";
+      document.getElementById("modal-card-termdef-title").textContent = t("card.editCard");
       document.getElementById("card-term-input").value = card.data.term;
       document.getElementById("card-def-input").value  = card.data.def;
       renderLatex(card.data.term, document.getElementById("card-term-preview"));
       renderLatex(card.data.def,  document.getElementById("card-def-preview"));
       openModal("card-termdef");
     } else if (card.format === "true-false") {
-      document.getElementById("modal-card-tf-title").textContent = "Edit Card";
+      document.getElementById("modal-card-tf-title").textContent = t("card.editCard");
       document.getElementById("card-tf-statement-input").value = card.data.statement;
       renderLatex(card.data.statement, document.getElementById("card-tf-statement-preview"));
       state.tfAnswer = card.data.correct;
@@ -2900,7 +3136,7 @@ function openEditCard(cardId) {
       else document.getElementById("tf-explanation-details").removeAttribute("open");
       openModal("card-tf");
     } else if (card.format === "image-def") {
-      document.getElementById("modal-card-imagedef-title").textContent = "Edit Card";
+      document.getElementById("modal-card-imagedef-title").textContent = t("card.editCard");
       stagedImageUrl = card.data.imageUrl;
       var prevImg = document.getElementById("card-image-preview");
       prevImg.src = card.data.imageUrl;
@@ -2909,7 +3145,7 @@ function openEditCard(cardId) {
       document.getElementById("card-imagedef-input").value = card.data.def;
       openModal("card-imagedef");
     } else {
-      document.getElementById("modal-card-mcq-title").textContent = "Edit Card";
+      document.getElementById("modal-card-mcq-title").textContent = t("card.editCard");
       document.getElementById("card-q-input").value      = card.data.question;
       document.getElementById("card-correct-input").value = card.data.correct;
       clearDistractorList(card.data.distractors);
@@ -2926,7 +3162,7 @@ function openEditCard(cardId) {
 document.getElementById("btn-save-card-termdef").addEventListener("click", function() {
   var term = document.getElementById("card-term-input").value.trim();
   var def  = document.getElementById("card-def-input").value.trim();
-  if (!term || !def) { alert("Please fill in both term and definition."); return; }
+  if (!term || !def) { alert(t("validate.fillTermDef")); return; }
   var data = { term: term, def: def };
   var p;
   if (state.editingCardId) {
@@ -2944,7 +3180,7 @@ document.getElementById("btn-save-card-mcq").addEventListener("click", function(
     document.getElementById("mcq-distractor-list").querySelectorAll("input")
   ).map(function(i) { return i.value.trim(); }).filter(Boolean);
   if (!q || !c || distractors.length === 0 || distractors.length > 4) {
-    alert("Please fill in the question, correct answer, and 1–4 wrong answers.");
+    alert(t("validate.fillMcq"));
     return;
   }
   var explanation = document.getElementById("card-explanation-input").value.trim();
@@ -2980,8 +3216,8 @@ document.getElementById("card-tf-statement-input").addEventListener("input", fun
 
 document.getElementById("btn-save-card-tf").addEventListener("click", function() {
   var statement = document.getElementById("card-tf-statement-input").value.trim();
-  if (!statement) { alert("Please enter a statement."); return; }
-  if (!state.tfAnswer) { alert("Please select True or False."); return; }
+  if (!statement) { alert(t("validate.enterStatement")); return; }
+  if (!state.tfAnswer) { alert(t("validate.selectTrueFalse")); return; }
   var explanation = document.getElementById("card-tf-explanation-input").value.trim();
   var data = { statement: statement, correct: state.tfAnswer };
   if (explanation) data.explanation = explanation;
@@ -3012,7 +3248,7 @@ function handleImageFile(file) {
   if (!IS_SERVER) { alert("Image upload requires server mode."); return; }
   var ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];
   if (ALLOWED.indexOf(file.type) === -1) {
-    alert("Unsupported file type. Please use JPEG, PNG, GIF, or WebP.");
+    alert(t("validate.unsupportedFileType"));
     return;
   }
   if (file.size > 5 * 1024 * 1024) {
@@ -3052,9 +3288,9 @@ dropZone.addEventListener("drop", function(e) {
 });
 
 document.getElementById("btn-save-card-imagedef").addEventListener("click", function() {
-  if (!stagedImageUrl) { alert("Please choose an image first."); return; }
+  if (!stagedImageUrl) { alert(t("validate.chooseImageFirst")); return; }
   var def = document.getElementById("card-imagedef-input").value.trim();
-  if (!def) { alert("Please enter a definition."); return; }
+  if (!def) { alert(t("validate.enterDefinition")); return; }
   var data = { imageUrl: stagedImageUrl, def: def };
   var p = state.editingCardId
     ? store.updateCard(state.editingCardId, state.currentLesson.id, { data: data })
@@ -3111,16 +3347,16 @@ function renderBulkPreview(raw, format) {
 function openBulkAdd() {
   if (!state.currentLesson) return;
   var format = state.currentLesson.format;
-  document.getElementById("modal-bulk-title").textContent = "Bulk Add Cards";
+  document.getElementById("modal-bulk-title").textContent = t("bulk.addCardsTitle");
   document.getElementById("bulk-input").value = "";
   document.getElementById("bulk-preview").innerHTML = "";
   var errEl = document.getElementById("bulk-error");
   if (errEl) errEl.classList.add("hidden");
   var hint = format === "term-def"
-    ? "One card per line: term | definition\nSupports LaTeX: $\\hat{\\beta}$ or $$\\sum_{i=1}^n x_i$$"
+    ? t("bulk.hintTermDef")
     : format === "true-false"
-    ? "One card per line: statement | true  or  statement | false [;; explanation]"
-    : "One card per line: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]";
+    ? t("bulk.hintTrueFalse")
+    : t("bulk.hintMcq");
   document.getElementById("bulk-hint").textContent = hint;
   openModal("bulk");
   document.getElementById("bulk-input").focus();
@@ -5305,7 +5541,7 @@ function cloneInvitedClass(classId, name) {
       if (d.classId) {
         renderHome();
         renderSharedWithMe();
-        alert('"' + name + '" saved to your classes!');
+        alert(t("share.savedToClasses", { name: name }));
       }
     });
 }
@@ -5362,10 +5598,10 @@ function renderShareScreen(data, token) {
         .then(function(r) { return r.json(); })
         .then(function(d) {
           if (d.classId) {
-            alert('"' + data.cls.name + '" saved to your classes!');
+            alert(t("share.savedToClasses", { name: data.cls.name }));
             window.location.href = "/";
           } else {
-            alert(d.error || "Failed to save");
+            alert(d.error || t("common.failedToSave"));
           }
         });
     });
