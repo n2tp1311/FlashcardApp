@@ -160,6 +160,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.filter": "Filter",
   "setup.allCards": "All Cards",
   "setup.dueOnly": "Due Only",
+  "setup.needsRecall": "Needs Recall",
   "setup.stillLearning": "Still Learning",
   "setup.hardFirst": "Hard First",
   "setup.mode": "Mode",
@@ -171,6 +172,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.studyingTogether": "Studying {n} lessons together",
   "setup.hintAll": "Study all cards",
   "setup.hintDue": "Only cards due for review (SRS)",
+  "setup.hintNeedsRecall": "Cards stuck at a short review interval — answer them in Flashcard mode to unlock longer intervals",
   "setup.hintLearning": "Cards not yet known / still learning",
   "setup.hintHard": "Hard cards prioritized first",
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
@@ -546,6 +548,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.filter": "Bộ lọc",
   "setup.allCards": "Tất cả thẻ",
   "setup.dueOnly": "Chỉ thẻ đến hạn",
+  "setup.needsRecall": "Cần nhớ lại",
   "setup.stillLearning": "Đang học",
   "setup.hardFirst": "Thẻ khó trước",
   "setup.mode": "Chế độ",
@@ -557,6 +560,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.studyingTogether": "Đang học {n} bài học cùng lúc",
   "setup.hintAll": "Học tất cả thẻ",
   "setup.hintDue": "Chỉ thẻ đến hạn ôn tập (SRS)",
+  "setup.hintNeedsRecall": "Thẻ đang kẹt ở khoảng ôn ngắn — trả lời đúng ở chế độ Thẻ ghi nhớ để mở khóa khoảng ôn dài hơn",
   "setup.hintLearning": "Thẻ chưa thuộc / đang học",
   "setup.hintHard": "Thẻ khó được ưu tiên đầu tiên",
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
@@ -3503,10 +3507,11 @@ function setPillGroup(groupId, value) {
 
 // Pill group click handlers
 var FILTER_HINT_KEYS = {
-  all:      "setup.hintAll",
-  due:      "setup.hintDue",
-  learning: "setup.hintLearning",
-  hard:     "setup.hintHard"
+  all:         "setup.hintAll",
+  due:         "setup.hintDue",
+  needsRecall: "setup.hintNeedsRecall",
+  learning:    "setup.hintLearning",
+  hard:        "setup.hintHard"
 };
 
 var MODE_HINT_KEYS = {
@@ -3524,6 +3529,13 @@ var MODE_HINT_KEYS = {
       var hint = document.getElementById("setup-filter-hint");
       var key = FILTER_HINT_KEYS[pill.dataset.value];
       if (hint) hint.textContent = key ? t(key) : "";
+      // Quiz mode structurally can't advance these cards further (see RECOGNITION_CAP_STEP) —
+      // default to Flashcard so picking this filter doesn't silently produce a no-op session.
+      if (pill.dataset.value === "needsRecall") {
+        setPillGroup("setup-mode", "flashcard");
+        var modeHintOnFilterSwitch = document.getElementById("setup-mode-hint");
+        if (modeHintOnFilterSwitch) modeHintOnFilterSwitch.textContent = t(MODE_HINT_KEYS.flashcard);
+      }
     }
     if (groupId === "setup-mode") {
       var modeHint = document.getElementById("setup-mode-hint");
@@ -3578,6 +3590,10 @@ function weightedShuffle(cards, statsMap) {
   return result;
 }
 
+// Must match RECOGNITION_CAP_STEP in server/routes/attempts.js — used only to build the
+// "Needs Recall" filter list, not to compute SRS scheduling itself (that stays server-side).
+var RECOGNITION_CAP_STEP = 2;
+
 function startStudy(count, filter, mode, order) {
   var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
   store.getBulkCards(ids).then(function(cards) {
@@ -3603,6 +3619,8 @@ function startStudy(count, filter, mode, order) {
         if (filter === "due") {
           var nowSec2 = Math.floor(Date.now() / 1000);
           filtered = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
+        } else if (filter === "needsRecall") {
+          filtered = cards.filter(function(c) { return c.srs_step != null && c.srs_step >= RECOGNITION_CAP_STEP; });
         } else if (filter === "learning") {
           filtered = cards.filter(function(c) { return knownMap[c.id] !== true; });
         } else if (filter === "hard") {
