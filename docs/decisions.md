@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-07-22 — "Needs Recall" filter: client-side srs_step check, auto-switch (not lock) to Flashcard mode
+
+Following the recognition-vs-recall SRS cap (previous entry), users had no way to discover *which* cards were capped except reactively, by answering them in Quiz mode and seeing the hint. Added a "Needs Recall" filter to Study Setup (`srs_step >= RECOGNITION_CAP_STEP`, independent of due status) so capped cards can be proactively batched into a Flashcard session. This needed no server changes — `srs_step` was already returned on every card object by the existing `/cards/by-lessons` endpoint, so the filter is a pure client-side predicate in `startStudy()`, same shape as the existing `due`/`learning`/`hard` filters.
+
+`RECOGNITION_CAP_STEP=2` is duplicated client-side (with a comment pointing at the server's copy in `server/routes/attempts.js`) rather than fetched from an API — consistent with this codebase's existing tolerance for small hardcoded duplication over adding a config-fetch round-trip for a single tunable integer. Accepted as a known drift risk, same tradeoff already made for the client-side SRS interval display.
+
+A same-day code review flagged that selecting this filter didn't push the user toward Flashcard mode, so someone could pick "Needs Recall" + Quiz and get a session that structurally can't achieve anything (Quiz-correct on an already-capped card just re-plateaus). Chose an **auto-switch, not a lock**: selecting the filter flips the Mode pill to Flashcard automatically (and updates its hint text), but the user can still click back to Quiz manually if they have a reason to. A hard lock (disabling the Quiz pill while this filter is active) was considered and rejected as over-controlling for what's fundamentally a helpful default, not a hard constraint — consistent with the rest of the Setup screen's filter/mode pills being independent, user-overridable choices.
+
+**Known gap, not fixed:** this filter is silently non-functional in local/offline mode (`IS_SERVER===false`) since `LocalStorageAdapter` never tracks `srs_step` at all — it falls back to the existing empty-result alert. This mirrors the pre-existing `due` filter's identical gap in local mode; not a new regression, and local mode is not the primary supported path.
+
 ## 2026-07-22 — SRS recognition-vs-recall gate: soft plateau on the resulting step, not the current one
 
 Users can answer a card correctly in Quiz/MCQ mode by *recognizing* the right option, without being able to *recall* the same fact unprompted — a well-documented gap between recognition and free-recall memory (testing effect: Roediger & Karpicke 2006; generation effect: Slamecka & Graf 1978; transfer-appropriate processing: Morris, Bransford & Franks 1977). The app's SRS scheduler previously treated any correct answer identically regardless of which mode produced it, so a card could earn week-long review intervals purely from lucky/pattern-matched MCQ guesses.

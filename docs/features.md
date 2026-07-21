@@ -42,6 +42,7 @@
 - Due counts on class cards (home screen) and dashboard grouped by class
 - Dashboard due lessons grouped by class with clickable rows to launch review
 - Recognition-vs-recall gate: a Quiz-mode correct answer can advance a card's SRS step up to `RECOGNITION_CAP_STEP` (2 — the 4h same-day interval) but no further; only a Flashcard-mode correct recall can push a card into 1-day+ intervals. Server clamps the *resulting* step (not just the current one), so a large single-answer jump can't leapfrog past the cap. Quiz screen shows an inline hint when an answer plateaus this way; the Results screen aggregates a count of how many cards plateaued that session in case the per-question hint was missed (e.g. a slow response on the last question)
+- "Needs Recall" filter on Study Setup (right after "Due Only"): surfaces every card at or past the recognition cap (`srs_step >= 2`), independent of due status, so cards stuck behind the gate can be proactively cleared in one batch rather than discovered piecemeal during Quiz sessions. Selecting it auto-switches Mode to Flashcard (still overridable) since Quiz mode structurally can't advance these cards further
 
 ## Performance
 - Bulk cards endpoint (`POST /api/cards/by-lessons`): multi-lesson quiz startup reduced from 2N+1 HTTP requests (N `getCards` + N `getKnownMap` per lesson) to 2 requests total regardless of lesson count; 10-lesson quiz goes from 21 requests to 2 (90% reduction)

@@ -242,7 +242,7 @@ All text fields support **inline LaTeX** (`$...$`) and **display LaTeX** (`$$...
 User selects:
 1. Lesson(s): single, multiple, or entire class
 2. Card count: 10 / 25 / 50 / All
-3. Filter: All cards or "Still learning only"
+3. Filter: All / Due Only / Needs Recall (`srs_step >= RECOGNITION_CAP_STEP`, auto-switches Mode to Flashcard) / Still Learning / Hard First
 4. Direction (Format A only): Term → Def or Def → Term
 5. Mode: Flashcards or Quiz — hint line under the mode picker explains the recall-vs-recognition tradeoff (§5.4's SRS cap)
 
