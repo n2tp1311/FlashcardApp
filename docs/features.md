@@ -51,6 +51,8 @@
 
 ## Study
 - Flashcard mode (flip, mark known/learning)
+- Flashcard progress-dot strip previews each upcoming card's historical difficulty (green/orange/red/neutral for easy/medium/hard/new, same levels as the on-card Easy/Medium/Hard/New badge) until it's marked this session, at which point the dot switches to reflect the fresh Know It/Still Learning decision instead — lets you see at a glance which cards ahead are likely to give trouble
+- Fixed: the on-card difficulty badge in Flashcard mode was reading from `localStorage["fc-attempts"]` (only ever populated in local/offline mode), so in server mode it always showed "New" regardless of actual accuracy history; now reads from the same server-backed `studyStatsMap` used everywhere else (dot strip, Stats screen, weighted shuffle)
 - Quiz mode (MCQ with 2–5 choices, auto-generated distractors for term-def; True/False shows two large True/False buttons)
 - Quiz answer review: Prev/Next nav (also `←`/`→`) lets you revisit already-answered questions read-only — options are disabled and re-colored (correct/wrong/dimmed) from the saved shuffle, so the exact layout you saw when answering is reproduced; the answer itself can't be changed, but the delete-card button still works on a reviewed card and adjusts score/results accordingly
 - True/False lesson format: statement card with True or False answer; optional explanation shown after answering; bulk import `statement | true/false [;; explanation]`; works in flashcard and quiz modes
