@@ -1353,6 +1353,13 @@ code {
   font-weight: 600;
 }
 
+.mark-int {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  opacity: 0.8;
+  margin-left: 2px;
+}
+
 /* ============================
    QUIZ
    ============================ */
@@ -1419,6 +1426,7 @@ code {
   border-radius: var(--radius);
   padding: 14px 20px;
   cursor: pointer;
+  color: var(--text);
   font-size: 0.9375rem;
   font-family: inherit;
   text-align: left;
@@ -1453,7 +1461,9 @@ code {
 
 .quiz-opt.dimmed { opacity: 0.4; }
 
-.quiz-opt:disabled { cursor: default; }
+/* Keep answered options legible — the UA disabled-button style dims text to an unreadable
+   ~30% opacity, which is invisible on the correct/wrong tint (esp. in dark mode). */
+.quiz-opt:disabled { cursor: default; color: var(--text); }
 
 /* True/False quiz layout */
 .quiz-options.tf-mode { flex-direction: row; gap: 12px; }
@@ -1471,8 +1481,8 @@ code {
 .tf-answer-picker { display: flex; gap: 10px; margin-top: 4px; }
 .tf-answer-btn { flex: 1; padding: 16px; font-size: 1rem; font-weight: 600; border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-family: inherit; transition: background var(--transition), border-color var(--transition), color var(--transition); }
 .tf-answer-btn:hover { border-color: var(--primary); background: var(--primary-light); }
-.tf-answer-btn.selected[data-value="true"] { border-color: var(--success); background: var(--success-light); color: #166534; }
-.tf-answer-btn.selected[data-value="false"] { border-color: var(--danger); background: var(--danger-light); color: #991b1b; }
+.tf-answer-btn.selected[data-value="true"] { border-color: var(--success); background: var(--success-light); color: var(--text); }
+.tf-answer-btn.selected[data-value="false"] { border-color: var(--danger); background: var(--danger-light); color: var(--text); }
 
 /* Explanation panel (quiz) */
 .explanation-panel {
@@ -1601,6 +1611,7 @@ code {
   font-size: 0.6875rem;
   color: var(--text2);
   margin-top: 2px;
+  white-space: nowrap;
 }
 .lesson-due-label.is-due {
   color: #d97706;
@@ -2029,6 +2040,16 @@ code {
   #btn-select-classes { display: none; }
   /* Show the ☑ Select item inside the ⋮ dropdown */
   .home-select-mobile { display: flex !important; }
+
+  /* M12: keep the screen title readable — reserve space so the header-actions wrap to
+     a second row instead of squeezing the class/lesson name down to "…". */
+  .screen-title { min-width: 55%; }
+
+  /* M13: bigger, always-visible, better-spaced action icons for thumbs (hover-gated
+     icons are unreachable on touch, and 28px/4px targets are easy to mis-tap). */
+  .icon-btn { width: 40px; height: 40px; }
+  .class-card-actions, .lesson-actions { opacity: 1; }
+  .class-card-actions, .lesson-actions, .card-actions { gap: 10px; }
 }
 
 /* M10: single column class grid on small phones */
@@ -2291,6 +2312,12 @@ code {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.dash-period-note {
+  font-size: 0.75rem;
+  color: var(--text2);
+  margin: 8px 0 4px;
 }
 
 .dash-badge {

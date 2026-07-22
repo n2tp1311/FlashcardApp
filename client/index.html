@@ -243,6 +243,7 @@
     <button class="pill" data-period="60" data-i18n="dashboard.days60">60 days</button>
     <button class="pill" data-period="90" data-i18n="dashboard.days90">90 days</button>
   </div>
+  <p class="dash-period-note" data-i18n="dashboard.periodNote">Applies to the charts in this section only — the stats above are all-time.</p>
   <div class="analytics-charts-grid">
     <div class="stat-card analytics-chart-card" style="overflow-x:auto">
       <h3 class="analytics-chart-title" id="dash-heatmap-title">60-Day Study Heatmap</h3>
@@ -437,9 +438,9 @@
   <div class="fc-nav">
     <button class="btn btn-outline btn-lg" id="btn-fc-prev" data-i18n="study.prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Prev</button>
     <div class="fc-mark-btns">
-      <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Still Learning (1)" data-i18n-title="study.stillLearningHint" data-i18n="study.learning"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Learning</button>
-      <button class="btn btn-success btn-mark" id="btn-fc-known" title="Know It (2)" data-i18n-title="study.knowItHint" data-i18n="study.knowIt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Know It</button>
-      <button class="btn btn-primary btn-mark" id="btn-fc-easy" title="Confident (3)" data-i18n-title="study.confidentHint" data-i18n="study.confident"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Confident</button>
+      <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Still Learning (1)" data-i18n-title="study.stillLearningHint" data-i18n="study.learning"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Learning<span class="mark-int" id="fc-int-learning"></span></button>
+      <button class="btn btn-success btn-mark" id="btn-fc-known" title="Know It (2)" data-i18n-title="study.knowItHint" data-i18n="study.knowIt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Know It<span class="mark-int" id="fc-int-known"></span></button>
+      <button class="btn btn-primary btn-mark" id="btn-fc-easy" title="Confident (3)" data-i18n-title="study.confidentHint" data-i18n="study.confident"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Confident<span class="mark-int" id="fc-int-easy"></span></button>
     </div>
     <button class="btn btn-outline btn-lg" id="btn-fc-next" data-i18n="study.next">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
   </div>
@@ -801,13 +802,13 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <button class="btn btn-outline btn-sm" id="btn-copy-share-link" data-i18n="common.copy">Copy</button>
         <button class="btn btn-danger btn-sm" id="btn-revoke-share-link" title="Disable link" aria-label="Disable link" data-i18n-title="share.disableLink" data-i18n-aria="share.disableLink"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <button class="btn btn-outline" id="btn-generate-share-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Generate Link</button>
+      <button class="btn btn-outline" id="btn-generate-share-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg> <span data-i18n="share.generateLink">Generate Link</span></button>
     </div>
 
     <!-- Invite by username/email -->
     <div class="share-section">
-      <h4 class="share-section-title">Invite by Name or Email</h4>
-      <p class="share-section-desc">They'll see this class in their "Shared with me" section.</p>
+      <h4 class="share-section-title" data-i18n="share.inviteByNameEmail">Invite by Name or Email</h4>
+      <p class="share-section-desc" data-i18n="share.inviteHint">They'll see this class in their "Shared with me" section.</p>
       <div class="share-invite-row">
         <input id="share-invite-input" class="input" placeholder="Username or email..." data-i18n-placeholder="share.usernameOrEmail" />
         <button class="btn btn-primary btn-sm" id="btn-send-invite" data-i18n="share.invite">Invite</button>
@@ -901,6 +902,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">3</kbd><span data-i18n="study.confident">Confident</span></div>
         <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="common.shuffle">Shuffle</span></div>
         <div class="keymap-row"><kbd class="kbd">P</kbd><span data-i18n="keymap.pronounce">Pronounce</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="study.exit">Exit</span></div>
       </div>
       <div class="keymap-section">
         <div class="keymap-section-title" data-i18n="setup.quiz">Quiz</div>

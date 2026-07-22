@@ -138,6 +138,7 @@ Object.assign(TRANSLATIONS.en, {
   "common.stats": "Stats",
   "common.share": "Share",
   "common.zeroSelected": "0 selected",
+  "common.nSelected": "{n} selected",
   "common.deleteSelected": "Delete selected",
   "common.shuffle": "Shuffle",
   "class.editClass": "Edit Class",
@@ -266,6 +267,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.days60": "60 days",
   "dashboard.days90": "90 days",
   "dashboard.weeklyTrend": "Weekly Study Trend",
+  "dashboard.periodNote": "Applies to the charts in this section only — the stats above are all-time.",
   "dashboard.srsDistribution": "SRS Interval Distribution",
   "dashboard.lessonAccuracy": "Lesson Accuracy",
   "dashboard.dueForReview": "Due for Review",
@@ -329,6 +331,9 @@ Object.assign(TRANSLATIONS.en, {
   "share.shareClass": "Share Class",
   "share.shareLink": "Share Link",
   "share.shareLinkDesc": "Anyone with this link can study and save a copy of this class.",
+  "share.generateLink": "Generate Link",
+  "share.inviteByNameEmail": "Invite by Name or Email",
+  "share.inviteHint": "They'll see this class in their \"Shared with me\" section.",
   "common.copy": "Copy",
   "share.disableLink": "Disable link",
   "share.saveToMyClasses": "Save to My Classes",
@@ -526,6 +531,7 @@ Object.assign(TRANSLATIONS.vi, {
   "common.stats": "Thống kê",
   "common.share": "Chia sẻ",
   "common.zeroSelected": "Đã chọn 0",
+  "common.nSelected": "Đã chọn {n}",
   "common.deleteSelected": "Xóa mục đã chọn",
   "common.shuffle": "Xáo trộn",
   "class.editClass": "Sửa lớp",
@@ -654,6 +660,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.days60": "60 ngày",
   "dashboard.days90": "90 ngày",
   "dashboard.weeklyTrend": "Xu hướng học theo tuần",
+  "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — các số liệu phía trên tính toàn thời gian.",
   "dashboard.srsDistribution": "Phân bố khoảng lặp SRS",
   "dashboard.lessonAccuracy": "Độ chính xác bài học",
   "dashboard.dueForReview": "Đến hạn ôn tập",
@@ -717,6 +724,9 @@ Object.assign(TRANSLATIONS.vi, {
   "share.shareClass": "Chia sẻ lớp",
   "share.shareLink": "Liên kết chia sẻ",
   "share.shareLinkDesc": "Bất kỳ ai có liên kết này đều có thể học và lưu bản sao của lớp này.",
+  "share.generateLink": "Tạo liên kết",
+  "share.inviteByNameEmail": "Mời bằng Tên hoặc Email",
+  "share.inviteHint": "Họ sẽ thấy lớp này trong mục \"Được chia sẻ với tôi\".",
   "common.copy": "Sao chép",
   "share.disableLink": "Vô hiệu hóa liên kết",
   "share.saveToMyClasses": "Lưu vào lớp của tôi",
@@ -2524,7 +2534,7 @@ function toggleLessonSelection(lessonId) {
 
 function updateSelectBar() {
   var n = state.selectedLessonIds.length;
-  document.getElementById("select-count").textContent = n + " selected";
+  document.getElementById("select-count").textContent = t("common.nSelected", { n: n });
   document.getElementById("btn-study-selected").disabled = n === 0;
   document.getElementById("btn-delete-selected-lessons").disabled = n === 0;
   var total = (state.currentClassLessons || []).length;
@@ -2654,11 +2664,11 @@ function setCardSelectMode(on) {
     toolbar.innerHTML =
       '<div class="select-bar">' +
         '<label class="select-all-label">' +
-          '<input type="checkbox" id="select-all-cards"> Select all' +
+          '<input type="checkbox" id="select-all-cards"> ' + escHtml(t("common.selectAll")) +
         '</label>' +
-        '<span id="card-select-count" class="select-count">0 selected</span>' +
-        '<button class="btn btn-sm btn-ghost" id="btn-card-select-cancel">Cancel</button>' +
-        '<button class="btn btn-sm btn-danger" id="btn-delete-selected-cards" disabled>Delete selected</button>' +
+        '<span id="card-select-count" class="select-count">' + escHtml(t("common.zeroSelected")) + '</span>' +
+        '<button class="btn btn-sm btn-ghost" id="btn-card-select-cancel">' + escHtml(t("common.cancel")) + '</button>' +
+        '<button class="btn btn-sm btn-danger" id="btn-delete-selected-cards" disabled>' + escHtml(t("common.deleteSelected")) + '</button>' +
       '</div>';
     toolbar.style.display = "";
     document.getElementById("btn-card-select-cancel").addEventListener("click", function() {
@@ -2717,7 +2727,7 @@ function updateCardSelectBar() {
   var countEl = document.getElementById("card-select-count");
   var deleteBtn = document.getElementById("btn-delete-selected-cards");
   var allCheck = document.getElementById("select-all-cards");
-  if (countEl) countEl.textContent = n + " selected";
+  if (countEl) countEl.textContent = t("common.nSelected", { n: n });
   if (deleteBtn) deleteBtn.disabled = n === 0;
   var total = (state.currentLessonCards || []).length;
   if (allCheck) allCheck.checked = total > 0 && n === total;
@@ -2940,7 +2950,7 @@ function renderCards() {
         renderLatex(card.data.def, defEl);
       } else if (card.format === "true-false") {
         renderLatex(card.data.statement, termEl);
-        defEl.textContent = card.data.correct === "true" ? "✓ True" : "✓ False";
+        defEl.textContent = "✓ " + (card.data.correct === "true" ? t("common.true") : t("common.false"));
       } else {
         renderLatex(card.data.question, termEl);
         renderLatex("✓ " + card.data.correct, defEl);
@@ -3429,7 +3439,7 @@ function renderBulkPreview(raw, format) {
       renderLatex(card.data.def, defEl);
     } else if (format === "true-false") {
       renderLatex(card.data.statement, termEl);
-      defEl.textContent = card.data.correct === "true" ? "✓ True" : "✓ False";
+      defEl.textContent = "✓ " + (card.data.correct === "true" ? t("common.true") : t("common.false"));
     } else {
       renderLatex(card.data.question, termEl);
       renderLatex("✓ " + card.data.correct, defEl);
@@ -3826,6 +3836,16 @@ function renderFlashcard() {
   document.getElementById("btn-fc-learning").classList.toggle("btn-danger-active", known === false);
   document.getElementById("btn-fc-known").classList.toggle("btn-success-active", known === true);
 
+  // Interval preview: how long until the card comes back if graded this way (mirrors
+  // the +0/+1/+2 step logic in markCard()/server/routes/attempts.js). A not-yet-due card
+  // leaves its schedule untouched regardless of grade (same server-side early-return), so
+  // showing a preview there would promise a bump that doesn't actually happen.
+  var curStep = card.srs_step != null ? card.srs_step : 0;
+  var stillNotDue = card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000);
+  document.getElementById("fc-int-learning").textContent = stillNotDue ? "" : "· " + stepLabel(0);
+  document.getElementById("fc-int-known").textContent = stillNotDue ? "" : "· " + stepLabel(curStep + 1);
+  document.getElementById("fc-int-easy").textContent = stillNotDue ? "" : "· " + stepLabel(curStep + 2);
+
   // Prev/Next
   document.getElementById("btn-fc-prev").disabled = i === 0;
   document.getElementById("btn-fc-next").innerHTML = i === cards.length - 1 ? t("study.finish") : t("study.next") + " " + ICON_ARROW_RIGHT;
@@ -3939,7 +3959,12 @@ function markCard(known, grade) {
   store.setCardKnown(card.id, known);
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
   if (grade) attemptFields.grade = grade;
-  store.recordAttempt(attemptFields);
+  store.recordAttempt(attemptFields).then(function(res) {
+    if (res && res.srs_step != null) {
+      card.srs_step = res.srs_step;
+      card.srs_due_at = res.srs_due_at;
+    }
+  });
   renderFcDots();
   // Auto-advance after 400ms
   setTimeout(function() {
@@ -6221,27 +6246,9 @@ document.addEventListener("keydown", function(e) {
   }
 
   // Escape closes any open modal (search first, then keymap, then overlay, then share/prompt-guide)
-  if (e.key === "Escape") {
-    if (!document.getElementById("modal-search").classList.contains("hidden")) {
-      closeSearchModal();
-      return;
-    }
-    if (!document.getElementById("modal-keymap").classList.contains("hidden")) {
-      document.getElementById("modal-keymap").classList.add("hidden");
-      return;
-    }
-    if (!document.getElementById("modal-overlay").classList.contains("hidden")) {
-      closeAllModals();
-      return;
-    }
-    if (!document.getElementById("modal-share").classList.contains("hidden")) {
-      closeShareModal();
-      return;
-    }
-    if (!document.getElementById("modal-prompt-guide").classList.contains("hidden")) {
-      document.getElementById("modal-prompt-guide").classList.add("hidden");
-      return;
-    }
+  if (e.key === "Escape" && fcAnyOverlayOpen()) {
+    fcCloseTopModal();
+    return;
   }
 
   // Block all other shortcuts when any overlay modal is open or focus is in a text field
@@ -6281,7 +6288,7 @@ document.addEventListener("keydown", function(e) {
       allCheck.dispatchEvent(new Event("change"));
     }
     else if ((e.key === "s" || e.key === "S") && state.homeSelectMode) document.getElementById("btn-study-classes").click();
-    else if (e.key === "n" || e.key === "N") openNewClass();
+    else if (e.key === "n" || e.key === "N") { e.preventDefault(); openNewClass(); }
     else if ((e.key === "a" || e.key === "A") && IS_SERVER) { renderDashboard(); showScreen("dashboard"); }
     else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list [data-class-id]", 1); }
     else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); moveFocus("#class-list [data-class-id]", -1); }
@@ -6321,14 +6328,14 @@ document.addEventListener("keydown", function(e) {
     }
     else if ((e.key === "s" || e.key === "S") && state.selectMode) document.getElementById("btn-study-selected").click();
     else if (e.key === "Escape" && state.selectMode) setSelectMode(false);
-    else if (e.key === "n" || e.key === "N") openNewLesson();
-    else if (e.key === "e" || e.key === "E") { if (state.currentClass) openEditClass(state.currentClass.id); }
+    else if (e.key === "n" || e.key === "N") { e.preventDefault(); openNewLesson(); }
+    else if (e.key === "e" || e.key === "E") { e.preventDefault(); if (state.currentClass) openEditClass(state.currentClass.id); }
     else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-class-back").click(); }
   }
 
   else if (screen === "lesson") {
-    if (e.key === "n" || e.key === "N") openAddCard();
-    else if (e.key === "b" || e.key === "B") openBulkAdd();
+    if (e.key === "n" || e.key === "N") { e.preventDefault(); openAddCard(); }
+    else if (e.key === "b" || e.key === "B") { e.preventDefault(); openBulkAdd(); }
     else if (e.key === "s" || e.key === "S") { if (state.currentLesson) openSetup(); }
     else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-lesson-back").click(); }
   }
@@ -6349,6 +6356,7 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "3") document.getElementById("btn-fc-easy").click();
     else if (e.key === "s" || e.key === "S") document.getElementById("btn-fc-shuffle").click();
     else if (e.key === "p" || e.key === "P") speakText(state.studyFlipped ? state.studyBackText : state.studyFrontText);
+    else if (e.key === "Escape") document.getElementById("btn-fc-back").click();
   }
 
   else if (screen === "quiz") {
@@ -6411,6 +6419,50 @@ function injectKeyHints() {
 }
 
 injectKeyHints();
+
+/* ============================
+   BROWSER BACK BUTTON
+   The app is a single URL ("/") with no router, so a native Back press used to leave
+   the app entirely. Trap it: navigate one screen back in-app instead, re-arming each
+   time so Back stays inside the app. Back also closes an open modal first.
+   ============================ */
+var SCREEN_BACK_BTN = {
+  class:     "btn-class-back",
+  lesson:    "btn-lesson-back",
+  setup:     "btn-setup-back",
+  flashcard: "btn-fc-back",
+  quiz:      "btn-quiz-back",
+  results:   "btn-results-back",
+  stats:     "btn-stats-back",
+  dashboard: "btn-dashboard-back"
+};
+
+function fcAnyOverlayOpen() {
+  return ["modal-search", "modal-keymap", "modal-overlay", "modal-share", "modal-prompt-guide"]
+    .some(function(id) { var m = document.getElementById(id); return m && !m.classList.contains("hidden"); });
+}
+
+function fcCloseTopModal() {
+  var m = document.getElementById("modal-search");
+  if (m && !m.classList.contains("hidden")) { closeSearchModal(); return; }
+  m = document.getElementById("modal-keymap");
+  if (m && !m.classList.contains("hidden")) { m.classList.add("hidden"); return; }
+  m = document.getElementById("modal-overlay");
+  if (m && !m.classList.contains("hidden")) { closeAllModals(); return; }
+  m = document.getElementById("modal-share");
+  if (m && !m.classList.contains("hidden")) { closeShareModal(); return; }
+  m = document.getElementById("modal-prompt-guide");
+  if (m && !m.classList.contains("hidden")) { m.classList.add("hidden"); return; }
+}
+
+history.pushState({ fc: true }, "");
+window.addEventListener("popstate", function() {
+  history.pushState({ fc: true }, "");  // re-arm so the next Back is also trapped
+  if (fcAnyOverlayOpen()) { fcCloseTopModal(); return; }
+  var backId = SCREEN_BACK_BTN[getActiveScreen()];
+  if (backId) { var b = document.getElementById(backId); if (b) b.click(); }
+  // On home/auth (no back button) there's nothing to go back to in-app — stay put.
+});
 
 /* ============================
    PULL-TO-REFRESH (mobile)
