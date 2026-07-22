@@ -1345,7 +1345,7 @@ code {
   flex-basis: 100%;
   order: -1;
 }
-.fc-mark-btns .btn-mark { flex: 1; }
+.fc-mark-btns .btn-mark { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .btn-mark {
   padding: 10px 18px;
@@ -2032,6 +2032,10 @@ code {
   .quiz-opt { padding: 11px 14px; font-size: 0.875rem; }
   .fc-nav { gap: 8px; }
   .btn-mark { padding: 8px 12px; font-size: 0.8125rem; }
+  /* Interval preview text is the extra width that pushes the 3-button row past
+     a narrow viewport (white-space:nowrap means flex:1 can't shrink below it) —
+     drop it on mobile, same as the [key] hints hidden below. */
+  .mark-int { display: none; }
   .btn-lg { padding: 10px 16px; font-size: 0.875rem; }
   .class-grid { grid-template-columns: 1fr 1fr; }
   /* Compact user-nav so it doesn't fight for flex space with the title */
@@ -2933,7 +2937,11 @@ code {
 }
 
 .class-list-info {
-  flex: 1;
+  /* Explicit zero flex-basis, not "flex: 1" (auto basis) — Safari/WebKit has a known bug
+     where a flex item containing display:-webkit-box (the .class-list-name line-clamp)
+     can collapse its intrinsic width to near-zero, wrapping the title one character per
+     line. Starting from a zero basis sidesteps the circular content-vs-container sizing. */
+  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -2985,6 +2993,17 @@ code {
 
 .class-list-row:hover .class-list-actions {
   opacity: 1;
+}
+
+/* M14: these icons are hover-only (opacity:0) but were never removed from layout flow,
+   so on touch (no hover) they sat invisible while still eating ~124px from the row —
+   squeezing the title down to single-character wraps when a due-badge + accuracy pill
+   were also present. Hidden here (not just invisible) since the same actions are
+   reachable via the class's own ⋮ menu once opened. Placed after the base rule above
+   (not in the earlier shared mobile block) so it actually wins the cascade — the base
+   rule has equal specificity and comes later in this file. */
+@media (max-width: 600px) {
+  .class-list-actions { display: none; }
 }
 
 /* ============================
