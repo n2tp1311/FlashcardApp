@@ -40,9 +40,17 @@ router.get("/lesson/:id", requireAuth, (req, res) => {
   ).get(req.params.id, req.session.userId);
   if (!lesson) return res.status(404).json({ error: "Not found" });
 
-  const cards = db.prepare("SELECT * FROM cards WHERE lesson_id = ?").all(req.params.id);
+  const userId = req.session.userId;
+  const cards = db.prepare(
+    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_step, cs.srs_due_at, la.last_studied_at " +
+    "FROM cards " +
+    "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
+    "LEFT JOIN (SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE user_id = ? GROUP BY card_id) la ON la.card_id = cards.id " +
+    "WHERE cards.lesson_id = ? " +
+    "ORDER BY cards.sort_order, cards.created_at"
+  ).all(userId, userId, req.params.id);
   const statsMap = Object.fromEntries(
-    getCardsWithStats(cards.map(c => c.id), req.session.userId)
+    getCardsWithStats(cards.map(c => c.id), userId)
       .map(({ cardId, stats }) => [cardId, stats])
   );
   res.json({ cards: cards.map(c => ({ ...c, data: JSON.parse(c.data) })), statsMap });
