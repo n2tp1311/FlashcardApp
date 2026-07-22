@@ -355,6 +355,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.newCard": "New card",
   "keymap.bulkPaste": "Bulk paste",
   "keymap.startStudy": "Start study",
+  "keymap.sectionSetup": "Study Setup",
   "keymap.sectionFlashcards": "Flashcards",
   "keymap.prevNext": "Prev / Next",
   "keymap.flipCard": "Flip card",
@@ -742,6 +743,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.newCard": "Thẻ mới",
   "keymap.bulkPaste": "Dán hàng loạt",
   "keymap.startStudy": "Bắt đầu học",
+  "keymap.sectionSetup": "Thiết lập học",
   "keymap.sectionFlashcards": "Thẻ ghi nhớ",
   "keymap.prevNext": "Trước / Tiếp",
   "keymap.flipCard": "Lật thẻ",
@@ -6329,6 +6331,13 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "b" || e.key === "B") openBulkAdd();
     else if (e.key === "s" || e.key === "S") { if (state.currentLesson) openSetup(); }
     else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-lesson-back").click(); }
+  }
+
+  else if (screen === "setup") {
+    // Enter starts the session so the S→Enter path (open setup, then begin) is fully keyboard-driven;
+    // preventDefault stops a focused pill's native Enter-click from also firing.
+    if (e.key === "Enter") { e.preventDefault(); document.getElementById("btn-start-study").click(); }
+    else if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-setup-back").click(); }
   }
 
   else if (screen === "flashcard") {
