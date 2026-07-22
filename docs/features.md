@@ -6,6 +6,7 @@
 - Icon-preserving translation: `applyI18n` updates only the last text node of an icon+label button (rather than clobbering `innerHTML`), so inline SVG icons survive a language switch without needing every button label wrapped in a `<span>`
 - Every screen, modal, and dynamically-generated string (search results, share invite list, validation/error alerts, MCQ distractor fields, relative-time labels, difficulty/format badges) is wired through `t()` — covers the full app, not just static markup
 - Explicitly out of scope: user-authored content (card text, class/lesson names, `cls.icon`), server error strings passed through verbatim, and the AI-extraction-prompt text (instructional copy meant for an external AI tool, not the app's own UI)
+- Remaining gaps closed from the 10-agent UX audit: card-select-toolbar counter (`"N selected"`), the Generate Link / Invite-by-Name-or-Email share modal headings, and the True/False result badge (`"✓ True"`/`"✓ False"`) now go through `t()` instead of hardcoded English
 
 ## UI / Design
 - All emoji UI-chrome icons (buttons, headers, dropdown items, empty-state illustrations, sort-direction/kebab/close controls) replaced with a single minimalist SVG icon set (feather-style: `stroke="currentColor"`, `stroke-width="2"`, rounded caps) for visual consistency across the whole app
@@ -13,6 +14,8 @@
 - User-chosen content icons are explicitly out of scope and untouched: `CLASS_ICONS` (the emoji picker for personalizing a class) and any place a class's own `cls.icon` is displayed
 - Literal keyboard-key glyphs (e.g. `⌫`, arrow keys inside `<kbd>` in the shortcuts modal) and typographic in-sentence arrows (e.g. "Term → Definition" pill label, "Image↔Def" format badge) are intentionally left as Unicode text — they represent a physical key or a text separator, not an interactive icon
 - Added missing `title`/`aria-label` to every icon-only button that lacked one during the pass (16 modal-close buttons, kebab "more options" menus, MCQ remove-distractor button)
+- Dark-mode contrast fixes: `.quiz-opt`/`.tf-answer-btn` now set an explicit `color: var(--text)` — previously relied on the browser's default disabled-button text color, which Chromium dims to ~30% opacity and is effectively invisible on the tinted correct/wrong backgrounds in dark mode
+- Mobile (≤600px) touch targets: `.icon-btn` grown to 40×40px and always visible (was hover-only, unreachable on touch); `.screen-title` reserves 55% width so header action icons wrap to a second row instead of truncating the class/lesson name to "…"; `.lesson-due-label` no longer wraps mid-word
 
 ## Auth
 - Email/password register & login
@@ -73,6 +76,7 @@
 - Lesson sort: "Sort by" dropdown on the class screen; options are Date added (newest first), Last studied, Last card added, Due count; choice persisted in localStorage per browser
 - Class sort: "Sort by" dropdown on the home screen; options are Level, Name (A–Z), Due count, Date added; choice persisted in localStorage; classes with no level set sort last (after all leveled classes), tie-broken by date added
 - Class level field: optional integer on each class ("Level" input in class editor, 1–999); used to sequence courses; can be cleared; persists to server; round-trips through export/import and class share
+- Grading buttons preview their resulting SRS interval (e.g. "Know It · 4h"): computed client-side from the card's current `srs_step` via the same step table the Dashboard's SRS-distribution chart already uses (`stepLabel()`); suppressed for a not-yet-due card since grading it leaves the schedule untouched regardless of grade (mirrors the server's early-return in `attempts.js`); the local card's `srs_step`/`srs_due_at` are updated from the attempt response so re-grading the same card via Prev shows an accurate preview
 
 ## Audio Pronunciation
 
@@ -96,7 +100,9 @@
 - Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
 - Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back
 - Study Setup: `Enter` start studying, `Esc`/`⌫` back — completes the keyboard-only path (press `S` on a lesson to open setup, then `Enter` to begin, no mouse needed)
-- Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2`/`3` mark learning/known/confident, `S` shuffle, `P` pronounce
+- Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2`/`3` mark learning/known/confident, `S` shuffle, `P` pronounce, `Esc` exit to lesson screen
+- `N`/`B`/`E` shortcuts (new class/lesson/card, edit class) now call `e.preventDefault()` before opening their modal — previously the keystroke that triggered the shortcut also landed in the modal's now-focused text input
+- Native browser Back is trapped in-app: a single-URL SPA has no router, so a real Back press used to leave the app entirely; a `pushState`/`popstate` listener now re-arms on every pop and either closes the topmost open modal or clicks the current screen's own back button instead
 - Quiz: `1`–`5` select option, `Esc` back; Recall: `Enter` reveal, `1`/`2`/`3` grade, `Esc` back
 - Global: `H` go home, `?` toggle keymap modal, `Esc` close any open modal
 - `?` key shortcut modal lists all bindings; `⌨` header button also opens it
@@ -148,6 +154,7 @@
 ## Dashboard — Period Selector
 
 - Four period pills (7d / 30d / 60d / 90d) above the heatmap control the analytics window; choice persisted in `fc-dash-period`; switching a period re-fetches only analytics (not the full dashboard) and updates heatmap, weekly trend, and heatmap title
+- A note under the period pills clarifies the window only applies to the charts below it — the summary stats above (due counts, streak, etc.) are always all-time, not scoped to the selected period
 
 ## Analytics (server mode only)
 
