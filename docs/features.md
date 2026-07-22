@@ -204,6 +204,8 @@
 - `touch-action: pan-y` on `.fc-scene` — browser owns vertical scroll, JS owns horizontal swipe
 - Edge back swipe: start from x < 30px, swipe right > 90px → triggers back button for current screen; excluded on flashcard screen (handled by card swipe instead)
 - Search modal: swipe down > 80px closes it
+- Fixed (WebKit-specific): List view's hover-only class actions (edit/archive/delete) stayed in the layout flow at `opacity:0` on touch, silently eating ~124px from the row; a class with both a due-badge and an accuracy pill could squeeze the title down to one character per line. Actions are now `display:none` below 600px (still reachable via the class's ⋮ menu)
+- Fixed: the SRS interval preview text on Flashcard grading buttons (`· 10m` etc.) could push the 3-button row past a narrow viewport since `white-space:nowrap` blocks flex-shrink below content width; hidden on mobile, same as the `[key]` shortcut hints
 
 ## Recall Mode (removed)
 - Recall mode was removed; historical attempt records with `source='recall'` are preserved in the DB
