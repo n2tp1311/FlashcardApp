@@ -2340,6 +2340,30 @@ code {
 
 .dash-badge-warn { background: var(--warning, #d97706); }
 
+.dash-section-subnote {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text3);
+}
+
+.dash-source-pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.dash-source-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+
 .dash-accuracy-wrap { margin-bottom: 4px; }
 
 .dash-accuracy-label {

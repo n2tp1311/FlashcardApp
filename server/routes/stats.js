@@ -21,7 +21,7 @@ function getCardsWithStats(cardIds, userId) {
   if (!cardIds.length) return [];
   const placeholders = cardIds.map(() => "?").join(",");
   const attempts = db.prepare(
-    `SELECT card_id, correct FROM attempts WHERE card_id IN (${placeholders}) AND user_id = ? ORDER BY created_at`
+    `SELECT card_id, correct, created_at FROM attempts WHERE card_id IN (${placeholders}) AND user_id = ? ORDER BY created_at`
   ).all(...cardIds, userId);
 
   const byCard = {};
@@ -30,7 +30,11 @@ function getCardsWithStats(cardIds, userId) {
     byCard[a.card_id].push(a);
   });
 
-  return cardIds.map(id => ({ cardId: id, stats: computeStats(byCard[id] || []) }));
+  return cardIds.map(id => {
+    const cardAttempts = byCard[id] || [];
+    const lastAttemptAt = cardAttempts.length ? cardAttempts[cardAttempts.length - 1].created_at : 0;
+    return { cardId: id, stats: computeStats(cardAttempts), lastAttemptAt };
+  });
 }
 
 // GET /api/stats/lesson/:id
@@ -72,9 +76,9 @@ router.get("/class/:id", requireAuth, (req, res) => {
   res.json({ cards: cards.map(c => ({ ...c, data: JSON.parse(c.data) })), statsMap });
 });
 
-// GET /api/stats/hardest?scope=lesson|class|global&id=...&limit=30
+// GET /api/stats/hardest?scope=lesson|class|global&id=...&limit=30&sort=difficulty|recent
 router.get("/hardest", requireAuth, (req, res) => {
-  const { scope, id, limit = 30 } = req.query;
+  const { scope, id, limit = 30, sort = "difficulty" } = req.query;
   let cards;
 
   if (scope === "lesson") {
@@ -101,7 +105,7 @@ router.get("/hardest", requireAuth, (req, res) => {
 
   const withStats = getCardsWithStats(cards.map(c => c.id), req.session.userId)
     .filter(x => x.stats.total > 0)
-    .sort((a, b) => b.stats.blended - a.stats.blended)
+    .sort((a, b) => sort === "recent" ? b.lastAttemptAt - a.lastAttemptAt : b.stats.blended - a.stats.blended)
     .slice(0, parseInt(limit));
 
   const cardMap = Object.fromEntries(cards.map(c => [c.id, c]));
@@ -109,6 +113,43 @@ router.get("/hardest", requireAuth, (req, res) => {
     card: { ...cardMap[cardId], data: JSON.parse(cardMap[cardId].data) },
     stats
   })));
+});
+
+// GET /api/stats/trend?scope=lesson|class&id=... — weekly accuracy for the last 8 weeks,
+// scoped to one lesson/class (the Dashboard's Weekly Trend is volume-only and unscoped).
+router.get("/trend", requireAuth, (req, res) => {
+  const { scope, id } = req.query;
+  const uid = req.session.userId;
+  let cardIdRows;
+
+  if (scope === "lesson") {
+    const lesson = db.prepare(
+      "SELECT l.id FROM lessons l JOIN classes c ON l.class_id = c.id WHERE l.id = ? AND c.user_id = ?"
+    ).get(id, uid);
+    if (!lesson) return res.status(404).json({ error: "Not found" });
+    cardIdRows = db.prepare("SELECT id FROM cards WHERE lesson_id = ?").all(id);
+  } else if (scope === "class") {
+    const cls = db.prepare("SELECT id FROM classes WHERE id = ? AND user_id = ?").get(id, uid);
+    if (!cls) return res.status(404).json({ error: "Not found" });
+    cardIdRows = db.prepare(
+      "SELECT cards.id FROM cards JOIN lessons ON cards.lesson_id = lessons.id WHERE lessons.class_id = ?"
+    ).all(id);
+  } else {
+    return res.status(400).json({ error: "scope must be lesson or class" });
+  }
+
+  const cardIds = cardIdRows.map(r => r.id);
+  if (!cardIds.length) return res.json([]);
+
+  const placeholders = cardIds.map(() => "?").join(",");
+  const rows = db.prepare(
+    `SELECT CAST((strftime('%s','now') - created_at) / 604800 AS INTEGER) AS weeks_ago, ` +
+    `COUNT(*) AS total, SUM(CASE WHEN correct=1 THEN 1 ELSE 0 END) AS correct ` +
+    `FROM attempts WHERE card_id IN (${placeholders}) AND user_id = ? ` +
+    `AND created_at >= strftime('%s','now') - ? GROUP BY weeks_ago`
+  ).all(...cardIds, uid, 8 * 604800);
+
+  res.json(rows);
 });
 
 // GET /api/stats/progress/lesson/:id
@@ -222,37 +263,6 @@ router.get("/dashboard", requireAuth, (req, res) => {
     if (dueCountMap[l.id]) dueByClass[l.class_id] = (dueByClass[l.class_id] || 0) + dueCountMap[l.id];
   });
 
-  // Struggling lessons — lessons with >40% of attempted cards rated "hard"
-  const attemptRows = db.prepare(
-    "SELECT a.card_id, a.correct, l.id AS lesson_id, l.title, c.name AS class_name " +
-    "FROM attempts a " +
-    "JOIN cards ca ON a.card_id = ca.id " +
-    "JOIN lessons l ON ca.lesson_id = l.id " +
-    "JOIN classes c ON l.class_id = c.id " +
-    "WHERE c.user_id = ? AND a.user_id = ? AND c.archived = 0 " +
-    "ORDER BY l.id, ca.id, a.created_at"
-  ).all(uid, uid);
-
-  const lessonCardAttempts = {};
-  const lessonMeta = {};
-  attemptRows.forEach(r => {
-    if (!lessonCardAttempts[r.lesson_id]) lessonCardAttempts[r.lesson_id] = {};
-    if (!lessonCardAttempts[r.lesson_id][r.card_id]) lessonCardAttempts[r.lesson_id][r.card_id] = [];
-    lessonCardAttempts[r.lesson_id][r.card_id].push({ correct: r.correct });
-    lessonMeta[r.lesson_id] = { id: r.lesson_id, title: r.title, class_name: r.class_name };
-  });
-
-  const strugglingLessons = [];
-  Object.keys(lessonCardAttempts).forEach(lid => {
-    const cards = Object.values(lessonCardAttempts[lid]);
-    const hardCount = cards.filter(atts => computeStats(atts).level === "hard").length;
-    const hardRatio = hardCount / cards.length;
-    if (hardRatio > 0.4) {
-      strugglingLessons.push({ ...lessonMeta[lid], hardRatio });
-    }
-  });
-  strugglingLessons.sort((a, b) => b.hardRatio - a.hardRatio);
-
   // Study streak — consecutive days with at least one session
   const days = db.prepare(
     "SELECT DISTINCT date(taken_at, 'unixepoch') AS day FROM quiz_sessions WHERE user_id = ? ORDER BY day DESC"
@@ -284,7 +294,6 @@ router.get("/dashboard", requireAuth, (req, res) => {
     diffBreakdown,
     dueForReview,
     dueByClass,
-    strugglingLessons,
     streak
   });
 });
@@ -303,7 +312,8 @@ router.get("/analytics", requireAuth, function(req, res) {
   ).all(uid, secs);
 
   var weeklyRows = db.prepare(
-    "SELECT CAST((strftime('%s','now') - created_at) / 604800 AS INTEGER) AS weeks_ago, COUNT(*) AS cnt " +
+    "SELECT CAST((strftime('%s','now') - created_at) / 604800 AS INTEGER) AS weeks_ago, " +
+    "COUNT(*) AS cnt, SUM(CASE WHEN correct=1 THEN 1 ELSE 0 END) AS correct " +
     "FROM attempts " +
     "WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
     "GROUP BY weeks_ago"
@@ -322,7 +332,61 @@ router.get("/analytics", requireAuth, function(req, res) {
     "ORDER BY (correct_attempts * 1.0 / total_attempts) ASC"
   ).all(uid, uid);
 
-  res.json({ heatmap: heatmapRows, weeklyTrend: weeklyRows, lessonBreakdown: lessonRows, days: days });
+  // Accuracy split by study mode — windowed (unlike the dashboard's lifetime Overall
+  // Accuracy) since the point of this diagnostic is "how am I doing lately," not lifetime.
+  var accuracyBySourceRows = db.prepare(
+    "SELECT source, COUNT(*) AS total, SUM(CASE WHEN correct=1 THEN 1 ELSE 0 END) AS correct " +
+    "FROM attempts WHERE user_id=? AND created_at >= strftime('%s','now') - ? GROUP BY source"
+  ).all(uid, secs);
+  var accuracyBySource = {};
+  accuracyBySourceRows.forEach(function(r) { accuracyBySource[r.source] = { total: r.total, correct: r.correct || 0 }; });
+
+  var totalDurationMs = db.prepare(
+    "SELECT SUM(duration_ms) AS ms FROM attempts WHERE user_id=? AND created_at >= strftime('%s','now') - ?"
+  ).get(uid, secs).ms || 0;
+
+  // Struggling lessons — windowed (was lifetime on /dashboard; a lesson shouldn't stay
+  // flagged long after the user actually fixed it) and requires >=3 attempted cards so
+  // one bad card early on doesn't flag an otherwise-fine lesson.
+  var attemptRows = db.prepare(
+    "SELECT a.card_id, a.correct, l.id AS lesson_id, l.title, c.name AS class_name " +
+    "FROM attempts a " +
+    "JOIN cards ca ON a.card_id = ca.id " +
+    "JOIN lessons l ON ca.lesson_id = l.id " +
+    "JOIN classes c ON l.class_id = c.id " +
+    "WHERE c.user_id=? AND a.user_id=? AND c.archived=0 AND a.created_at >= strftime('%s','now') - ? " +
+    "ORDER BY l.id, ca.id, a.created_at"
+  ).all(uid, uid, secs);
+
+  var lessonCardAttempts = {};
+  var lessonMeta = {};
+  attemptRows.forEach(function(r) {
+    if (!lessonCardAttempts[r.lesson_id]) lessonCardAttempts[r.lesson_id] = {};
+    if (!lessonCardAttempts[r.lesson_id][r.card_id]) lessonCardAttempts[r.lesson_id][r.card_id] = [];
+    lessonCardAttempts[r.lesson_id][r.card_id].push({ correct: r.correct });
+    lessonMeta[r.lesson_id] = { id: r.lesson_id, title: r.title, class_name: r.class_name };
+  });
+
+  var MIN_STRUGGLING_SAMPLE = 3;
+  var strugglingLessons = [];
+  Object.keys(lessonCardAttempts).forEach(function(lid) {
+    var cardsAttempted = Object.values(lessonCardAttempts[lid]);
+    if (cardsAttempted.length < MIN_STRUGGLING_SAMPLE) return;
+    var hardCount = cardsAttempted.filter(function(atts) { return computeStats(atts).level === "hard"; }).length;
+    var hardRatio = hardCount / cardsAttempted.length;
+    if (hardRatio > 0.4) strugglingLessons.push(Object.assign({}, lessonMeta[lid], { hardRatio: hardRatio }));
+  });
+  strugglingLessons.sort(function(a, b) { return b.hardRatio - a.hardRatio; });
+
+  res.json({
+    heatmap: heatmapRows,
+    weeklyTrend: weeklyRows,
+    lessonBreakdown: lessonRows,
+    accuracyBySource: accuracyBySource,
+    totalDurationMs: totalDurationMs,
+    strugglingLessons: strugglingLessons,
+    days: days
+  });
 });
 
 router.get("/accuracy/classes", requireAuth, function(req, res) {
@@ -367,8 +431,9 @@ router.get("/analytics/export", requireAuth, function(req, res) {
   var uid = req.session.userId;
 
   var rows = db.prepare(
-    "SELECT date(a.created_at,'unixepoch') AS date, l.title AS lesson, " +
-    "c.data AS card_data, c.format AS card_format, a.correct AS result " +
+    "SELECT date(a.created_at,'unixepoch') AS date, strftime('%H',a.created_at,'unixepoch') AS hour, " +
+    "cl.name AS class_name, l.title AS lesson, " +
+    "c.data AS card_data, c.format AS card_format, a.source AS mode, a.correct AS result, a.duration_ms AS duration_ms " +
     "FROM attempts a " +
     "JOIN cards c ON a.card_id=c.id " +
     "JOIN lessons l ON c.lesson_id=l.id " +
@@ -383,13 +448,14 @@ router.get("/analytics/export", requireAuth, function(req, res) {
     return /[,"\n]/.test(v) ? '"' + v + '"' : v;
   }
 
-  var lines = ["date,lesson,card_front,result"];
+  var lines = ["date,hour,class,lesson,card_front,mode,result,duration_sec"];
   rows.forEach(function(row) {
     var data;
     try { data = JSON.parse(row.card_data); } catch(_) { data = {}; }
     var front = row.card_format === "image-def" ? "[image]" : (data.term || data.question || data.statement || "");
-    lines.push([csvField(row.date), csvField(row.lesson), csvField(front),
-      row.result === 1 ? "correct" : "incorrect"].join(","));
+    var durationSec = row.duration_ms != null ? Math.round(row.duration_ms / 1000) : "";
+    lines.push([csvField(row.date), csvField(row.hour), csvField(row.class_name), csvField(row.lesson), csvField(front),
+      csvField(row.mode), row.result === 1 ? "correct" : "incorrect", durationSec].join(","));
   });
 
   res.setHeader("Content-Type", "text/csv");

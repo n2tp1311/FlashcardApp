@@ -198,6 +198,10 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_lessons_class ON lessons(class_id)
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_lesson ON cards(lesson_id)"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_states_user_due ON card_states(user_id, srs_due_at)"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_attempts_cu_created ON attempts(card_id, user_id, created_at)"); } catch (_) {}
+// GET /api/stats/analytics runs several windowed queries (heatmap, weekly trend, accuracy
+// by source, total duration, struggling lessons) all filtered by user_id + created_at range
+// with no card_id predicate — the existing (card_id, user_id, created_at) index can't help there.
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_attempts_user_created ON attempts(user_id, created_at)"); } catch (_) {}
 
 // Migration: add preferences JSON column to users
 try { db.exec("ALTER TABLE users ADD COLUMN preferences TEXT"); } catch (_) {}
@@ -214,6 +218,9 @@ try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catc
 // Migration: per-card SRS intervals
 try { db.exec("ALTER TABLE card_states ADD COLUMN srs_step INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
 try { db.exec("ALTER TABLE card_states ADD COLUMN srs_due_at INTEGER"); } catch (_) {}
+
+// Migration: track time spent per attempt (client-measured, clamped server-side)
+try { db.exec("ALTER TABLE attempts ADD COLUMN duration_ms INTEGER"); } catch (_) {}
 
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.

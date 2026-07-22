@@ -21,9 +21,18 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+const MAX_DURATION_MS = 5 * 60 * 1000;
+
+// A backgrounded/idle tab can leave a card "shown" for hours — clamp instead of trusting
+// the raw client timestamp delta, so a single outlier can't blow up a "time studied" total.
+function clampDuration(durationMs) {
+  if (typeof durationMs !== "number" || !isFinite(durationMs)) return null;
+  return Math.min(Math.max(0, durationMs), MAX_DURATION_MS);
+}
+
 // POST /api/attempts
 router.post("/", requireAuth, (req, res) => {
-  const { cardId, correct, source, grade } = req.body;
+  const { cardId, correct, source, grade, durationMs } = req.body;
   if (!cardId || correct === undefined || !source)
     return res.status(400).json({ error: "cardId, correct, source required" });
 
@@ -39,8 +48,8 @@ router.post("/", requireAuth, (req, res) => {
   if (!card) return res.status(404).json({ error: "Card not found" });
 
   db.prepare(
-    "INSERT INTO attempts (id, card_id, user_id, correct, source) VALUES (?, ?, ?, ?, ?)"
-  ).run(genId(), cardId, userId, correct ? 1 : 0, source);
+    "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs));
 
   // Update per-card SRS: correct → advance step, wrong → reset to 0
   const stateRow = db.prepare(

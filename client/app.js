@@ -252,6 +252,7 @@ Object.assign(TRANSLATIONS.en, {
   "stats.accuracy": "Accuracy",
   "stats.totalAttempts": "Total Attempts",
   "stats.difficultyBreakdown": "Difficulty Breakdown",
+  "stats.accuracyTrend": "Accuracy Trend",
   "stats.noAttemptedCards": "No attempted cards yet.",
   "card.imagePlaceholder": "[image]",
   "stats.correctOutOfPct": "{correct} / {total} correct ({pct}%)",
@@ -269,9 +270,15 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.weeklyTrend": "Weekly Study Trend",
   "dashboard.periodNote": "Applies to the charts in this section only — the stats above are all-time.",
   "dashboard.srsDistribution": "SRS Interval Distribution",
+  "dashboard.studyTime": "Study Time",
+  "dashboard.minutesStudied": "minutes",
   "dashboard.lessonAccuracy": "Lesson Accuracy",
   "dashboard.dueForReview": "Due for Review",
   "dashboard.strugglingLessons": "Struggling Lessons",
+  "dashboard.lastNDays": "(last {n} days)",
+  "dashboard.accuracyBySourceQuiz": "Quiz: {pct}% ({n})",
+  "dashboard.accuracyBySourceFlashcard": "Flashcard: {pct}% ({n})",
+  "dashboard.accuracyBySourceRecall": "Recall: {pct}% ({n})",
   "dashboard.accuracyLabel": "{pct}% — {correct} / {total} correct",
   "dashboard.allCaughtUp": "All caught up — no cards due.",
   "dashboard.noStrugglingLessons": "No struggling lessons — great work!",
@@ -645,6 +652,7 @@ Object.assign(TRANSLATIONS.vi, {
   "stats.accuracy": "Độ chính xác",
   "stats.totalAttempts": "Tổng lượt làm",
   "stats.difficultyBreakdown": "Phân bố độ khó",
+  "stats.accuracyTrend": "Xu hướng độ chính xác",
   "stats.noAttemptedCards": "Chưa có thẻ nào được làm.",
   "card.imagePlaceholder": "[hình ảnh]",
   "stats.correctOutOfPct": "{correct} / {total} đúng ({pct}%)",
@@ -662,9 +670,15 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.weeklyTrend": "Xu hướng học theo tuần",
   "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — các số liệu phía trên tính toàn thời gian.",
   "dashboard.srsDistribution": "Phân bố khoảng lặp SRS",
+  "dashboard.studyTime": "Thời gian học",
+  "dashboard.minutesStudied": "phút",
   "dashboard.lessonAccuracy": "Độ chính xác bài học",
   "dashboard.dueForReview": "Đến hạn ôn tập",
   "dashboard.strugglingLessons": "Bài học đang gặp khó",
+  "dashboard.lastNDays": "(trong {n} ngày)",
+  "dashboard.accuracyBySourceQuiz": "Trắc nghiệm: {pct}% ({n})",
+  "dashboard.accuracyBySourceFlashcard": "Thẻ ghi nhớ: {pct}% ({n})",
+  "dashboard.accuracyBySourceRecall": "Tự nhớ lại: {pct}% ({n})",
   "dashboard.accuracyLabel": "{pct}% — {correct} / {total} đúng",
   "dashboard.allCaughtUp": "Đã hoàn thành hết — không có thẻ nào đến hạn.",
   "dashboard.noStrugglingLessons": "Không có bài học nào gặp khó — làm tốt lắm!",
@@ -3743,6 +3757,8 @@ function renderFlashcard() {
   var card  = cards[i];
   if (!card) return;
 
+  state.studyCardShownAt = Date.now();
+
   // Progress
   document.getElementById("fc-progress-text").textContent = (i + 1) + " / " + cards.length;
   document.getElementById("fc-progress-fill").style.width = ((i + 1) / cards.length * 100) + "%";
@@ -3959,6 +3975,7 @@ function markCard(known, grade) {
   store.setCardKnown(card.id, known);
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
   if (grade) attemptFields.grade = grade;
+  if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
   store.recordAttempt(attemptFields).then(function(res) {
     if (res && res.srs_step != null) {
       card.srs_step = res.srs_step;
@@ -4046,6 +4063,8 @@ function renderQuizCard() {
 
   var card = cards[i];
   var priorResult = findQuizResult(card);
+  // Don't reset the timer on a read-only Prev/Next replay of an already-answered card.
+  if (!priorResult) state.quizCardShownAt = Date.now();
 
   document.getElementById("quiz-progress-text").textContent = (i + 1) + " / " + total;
   document.getElementById("quiz-progress-fill").style.width = ((i + 1) / total * 100) + "%";
@@ -4149,7 +4168,9 @@ function answerQuiz(selectedIdx) {
   var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, capped: false };
   state.quizResults.push(resultEntry);
 
-  store.recordAttempt({ cardId: card.id, correct: isCorrect, source: "quiz" }).then(function(res) {
+  var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
+  if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
+  store.recordAttempt(quizAttemptFields).then(function(res) {
     if (res && res.capped) {
       resultEntry.capped = true;
       if (state.quizCards[state.quizIndex] === card) showQuizCapHint();
@@ -4344,8 +4365,11 @@ function openStats(type, id, title) {
   showScreen("stats");
 }
 
+var statsOverviewRequestId = 0;
+
 function renderStatsOverview(type, id) {
   var panel = document.getElementById("stats-overview");
+  var requestId = ++statsOverviewRequestId;
 
   // In server mode use getLessonStats / getHardestCards for aggregated data
   var statsPromise;
@@ -4419,7 +4443,19 @@ function renderStatsOverview(type, id) {
       diffBar(t("difficulty.new"), diffCounts.new, totalCards, "#9ca3af") +
       diffBar(t("difficulty.easy"), diffCounts.easy, totalCards, "#16a34a") +
       diffBar(t("difficulty.medium"), diffCounts.medium, totalCards, "#d97706") +
-      diffBar(t("difficulty.hard"), diffCounts.hard, totalCards, "#dc2626");
+      diffBar(t("difficulty.hard"), diffCounts.hard, totalCards, "#dc2626") +
+      (IS_SERVER ? '<div class="diff-bar-label">' + t("stats.accuracyTrend") + '</div><div id="stats-trend-wrap"></div>' : "");
+
+    // No server-side attempt history to bucket by week in local/offline mode.
+    if (IS_SERVER) {
+      store.getTrend(type, id).then(function(rows) {
+        // Ignore if the user has since navigated to a different lesson/class's stats —
+        // otherwise this stale response can render into the new panel's same-id element.
+        if (requestId !== statsOverviewRequestId) return;
+        var trendWrap = document.getElementById("stats-trend-wrap");
+        if (trendWrap) renderAccuracyTrend(rows, trendWrap);
+      });
+    }
   });
 }
 
@@ -4453,8 +4489,9 @@ function renderStatsAll(type, id) {
   var panel = document.getElementById("stats-all");
 
   if (IS_SERVER) {
-    // In server mode, getHardestCards returns ALL attempted cards sorted by difficulty
-    store.getHardestCards({ scope: { type: type, id: id }, limit: 9999 }).then(function(items) {
+    // Chronological (most-recently-attempted first) — distinct from the Hardest Cards
+    // tab's difficulty sort, which this tab used to silently reuse.
+    store.getHardestCards({ scope: { type: type, id: id }, limit: 9999, sort: "recent" }).then(function(items) {
       if (items.length === 0) {
         panel.innerHTML = '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>';
         return;
@@ -4596,7 +4633,7 @@ function renderDashboard() {
   var exportBtn = document.getElementById("btn-dashboard-export");
   if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
-   "dash-heatmap-wrap","dash-trend-wrap","dash-srs-wrap","dash-lesson-wrap",
+   "dash-heatmap-wrap","dash-trend-wrap","dash-srs-wrap","dash-time-wrap","dash-lesson-wrap",
    "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
@@ -4626,7 +4663,8 @@ function renderDashboard() {
       '<div class="dash-accuracy-label">' + t("dashboard.accuracyLabel", { pct: accPct, correct: d.accuracy.correct, total: d.accuracy.total }) + '</div>' +
       '<div class="dash-accuracy-bar">' +
         '<div class="dash-accuracy-fill" style="width:' + accPct + '%"></div>' +
-      '</div>';
+      '</div>' +
+      '<div id="dash-source-pills-wrap">' + renderAccuracyBySourcePills(analytics.accuracyBySource) + '</div>';
 
     // Difficulty breakdown
     var db_ = d.diffBreakdown;
@@ -4641,6 +4679,7 @@ function renderDashboard() {
     renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
     renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
     renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
+    renderStudyTime(analytics.totalDurationMs, document.getElementById("dash-time-wrap"));
     renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
     // Enable export if there's data
@@ -4686,14 +4725,19 @@ function renderDashboard() {
       });
     }
 
-    // Struggling lessons
+    // Struggling lessons — windowed by the same period pills as the charts above (moved
+    // off the all-time /dashboard payload so a lesson doesn't stay flagged long after
+    // the user actually fixed it)
     var strugList = document.getElementById("dash-struggle-list");
     var strugBadge = document.getElementById("dash-struggle-badge");
-    strugBadge.textContent = d.strugglingLessons.length || "";
-    if (!d.strugglingLessons.length) {
+    var strugPeriod = document.getElementById("dash-struggle-period");
+    var strugglingLessons = analytics.strugglingLessons || [];
+    if (strugPeriod) strugPeriod.textContent = t("dashboard.lastNDays", { n: days });
+    strugBadge.textContent = strugglingLessons.length || "";
+    if (!strugglingLessons.length) {
       strugList.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStrugglingLessons") + '</div>';
     } else {
-      strugList.innerHTML = d.strugglingLessons.map(function(l) {
+      strugList.innerHTML = strugglingLessons.map(function(l) {
         return dashLessonRow(l, "struggle");
       }).join("");
     }
@@ -4745,14 +4789,30 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     updatePills();
     document.getElementById("dash-heatmap-wrap").innerHTML = "";
     document.getElementById("dash-trend-wrap").innerHTML = "";
+    document.getElementById("dash-time-wrap").innerHTML = "";
     document.getElementById("dash-lesson-wrap").innerHTML = "";
+    document.getElementById("dash-struggle-list").innerHTML = "";
     store.getAnalytics(state.dashPeriod).then(function(analytics) {
       var days = analytics.days || state.dashPeriod;
       var heatmapTitle = document.getElementById("dash-heatmap-title");
       if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
       renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
       renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
+      renderStudyTime(analytics.totalDurationMs, document.getElementById("dash-time-wrap"));
       renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
+
+      var pillsWrap = document.getElementById("dash-source-pills-wrap");
+      if (pillsWrap) pillsWrap.innerHTML = renderAccuracyBySourcePills(analytics.accuracyBySource);
+
+      var strugList = document.getElementById("dash-struggle-list");
+      var strugBadge = document.getElementById("dash-struggle-badge");
+      var strugPeriod = document.getElementById("dash-struggle-period");
+      var strugglingLessons = analytics.strugglingLessons || [];
+      if (strugPeriod) strugPeriod.textContent = t("dashboard.lastNDays", { n: days });
+      strugBadge.textContent = strugglingLessons.length || "";
+      strugList.innerHTML = strugglingLessons.length
+        ? strugglingLessons.map(function(l) { return dashLessonRow(l, "struggle"); }).join("")
+        : '<div class="dash-empty-note">' + t("dashboard.noStrugglingLessons") + '</div>';
     });
   });
 }());
@@ -4827,14 +4887,14 @@ function renderHeatmap(rows, wrap, days) {
 function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
   if (maxWeeksAgo === undefined) maxWeeksAgo = 11;
   var map = {};
-  rows.forEach(function(r) { map[r.weeks_ago] = r.cnt; });
+  rows.forEach(function(r) { map[r.weeks_ago] = { cnt: r.cnt, correct: r.correct || 0 }; });
 
   var max = 0;
   var weeks = [];
   for (var w = maxWeeksAgo; w >= 0; w--) {
-    var cnt = map[w] || 0;
-    if (cnt > max) max = cnt;
-    weeks.push({ weeksAgo: w, cnt: cnt });
+    var wk = map[w] || { cnt: 0, correct: 0 };
+    if (wk.cnt > max) max = wk.cnt;
+    weeks.push({ weeksAgo: w, cnt: wk.cnt, correct: wk.correct });
   }
 
   weeks.forEach(function(week) {
@@ -4842,12 +4902,13 @@ function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
     var label = week.weeksAgo === 0 ? t("dashboard.thisWeek") :
                 week.weeksAgo === 1 ? t("dashboard.lastWeek") :
                 t("time.weeksAgo", { n: week.weeksAgo });
+    var countLabel = week.cnt === 0 ? "0" : week.cnt + " (" + Math.round(week.correct / week.cnt * 100) + "%)";
     var rowEl = document.createElement("div");
     rowEl.className = "trend-row";
     rowEl.innerHTML =
       '<span class="trend-label">' + escHtml(label) + '</span>' +
       '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
-      '<span class="trend-count">' + week.cnt + '</span>';
+      '<span class="trend-count">' + countLabel + '</span>';
     wrap.appendChild(rowEl);
   });
 }
@@ -4878,6 +4939,67 @@ function renderSrsDistribution(rows, wrap) {
   note.className = "srs-total-note";
   note.textContent = t("dashboard.cardsInSrs", { n: total });
   wrap.appendChild(note);
+}
+
+function renderStudyTime(totalDurationMs, wrap) {
+  var minutes = Math.round((totalDurationMs || 0) / 60000);
+  wrap.innerHTML =
+    '<div class="stat-value">' + minutes + '</div>' +
+    '<div class="stat-label">' + t("dashboard.minutesStudied") + '</div>';
+}
+
+var ACCURACY_SOURCE_KEYS = {
+  quiz: "dashboard.accuracyBySourceQuiz",
+  flashcard: "dashboard.accuracyBySourceFlashcard",
+  // "recall" mode was removed, but its historical attempts are preserved (see
+  // docs/decisions.md) and can still surface here if a user has old recall-sourced data.
+  recall: "dashboard.accuracyBySourceRecall"
+};
+
+function renderAccuracyBySourcePills(bySource) {
+  if (!bySource) return "";
+  var pills = [];
+  ["quiz", "flashcard", "recall"].forEach(function(source) {
+    var s = bySource[source];
+    if (!s || s.total === 0) return;
+    var pct = Math.round(s.correct / s.total * 100);
+    pills.push('<span class="dash-source-pill">' + escHtml(t(ACCURACY_SOURCE_KEYS[source], { pct: pct, n: s.total })) + '</span>');
+  });
+  return pills.length ? '<div class="dash-source-pills">' + pills.join("") + '</div>' : "";
+}
+
+// Lesson/class-scoped weekly accuracy trend (Stats screen) — same trend-row visual
+// language as renderWeeklyTrend/renderSrsDistribution, but bar width = accuracy %.
+function renderAccuracyTrend(rows, wrap, maxWeeksAgo) {
+  if (maxWeeksAgo === undefined) maxWeeksAgo = 7;
+  var map = {};
+  rows.forEach(function(r) { map[r.weeks_ago] = { total: r.total, correct: r.correct || 0 }; });
+
+  var weeks = [];
+  for (var w = maxWeeksAgo; w >= 0; w--) {
+    var wk = map[w] || { total: 0, correct: 0 };
+    weeks.push({ weeksAgo: w, total: wk.total, correct: wk.correct });
+  }
+
+  if (!weeks.some(function(wk) { return wk.total > 0; })) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("stats.noAttemptedCards") + '</div>';
+    return;
+  }
+
+  wrap.innerHTML = "";
+  weeks.forEach(function(week) {
+    var pct = week.total > 0 ? Math.round(week.correct / week.total * 100) : 0;
+    var label = week.weeksAgo === 0 ? t("dashboard.thisWeek") :
+                week.weeksAgo === 1 ? t("dashboard.lastWeek") :
+                t("time.weeksAgo", { n: week.weeksAgo });
+    var rowEl = document.createElement("div");
+    rowEl.className = "trend-row";
+    rowEl.innerHTML =
+      '<span class="trend-label">' + escHtml(label) + '</span>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="trend-count">' + (week.total > 0 ? week.correct + "/" + week.total : "—") + '</span>';
+    wrap.appendChild(rowEl);
+  });
 }
 
 function renderLessonBreakdown(rows, wrap) {
@@ -5259,6 +5381,7 @@ var SQLiteAdapter = (function() {
     recordAttempt: function(f) {
       var body = { cardId: f.cardId, correct: f.correct, source: f.source };
       if (f.grade) body.grade = f.grade;
+      if (f.durationMs != null) body.durationMs = f.durationMs;
       return req("POST", "/attempts", body);
     },
     getCardStats: function() { return Promise.resolve({ total: 0, correct: 0, blended: 0, level: "new" }); },
@@ -5275,6 +5398,7 @@ var SQLiteAdapter = (function() {
     getHardestCards: function(opts) {
       var scope = opts.scope;
       var qs = "scope=" + scope.type + (scope.id ? "&id=" + scope.id : "") + "&limit=" + (opts.limit || 30);
+      if (opts.sort) qs += "&sort=" + opts.sort;
       return req("GET", "/stats/hardest?" + qs);
     },
 
@@ -5289,6 +5413,7 @@ var SQLiteAdapter = (function() {
     getDashboard: function() { return req("GET", "/stats/dashboard"); },
     getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
     getSrsDistribution: function() { return req("GET", "/stats/srs-distribution"); },
+    getTrend: function(type, id) { return req("GET", "/stats/trend?scope=" + type + "&id=" + id); },
     getClassAccuracy: function() { return req("GET", "/stats/accuracy/classes"); },
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
 
