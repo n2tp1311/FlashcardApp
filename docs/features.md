@@ -161,9 +161,14 @@
 - `📈 Analytics` button on home header; `A` key on home screen; `Esc` to go back
 - `GET /api/stats/analytics` endpoint returns heatmap, weekly trend, and lesson breakdown
 - **90-day study heatmap** — GitHub-style calendar; cells colored by daily attempt count (0 / 1–5 / 6–15 / 16+); month labels; UTC date keys match server's SQLite `date('unixepoch')` dates
-- **12-week rolling trend** — CSS-only bar chart showing attempts per 7-day rolling window; "This week" / "Last week" / "Xw ago" labels
+- **12-week rolling trend** — CSS-only bar chart showing attempts per 7-day rolling window; "This week" / "Last week" / "Xw ago" labels; each row now also shows accuracy for that week (e.g. "12 (75%)"), not just volume
 - **Lesson accuracy breakdown** — all lessons with study data, sorted worst-first (lowest accuracy), with accuracy %, retention bar, attempt count; clicking a row navigates to the lesson's Stats screen
-- **CSV export** — "⬇ Export CSV" button downloads last 90 days of attempt history as `study-export.csv` (`date,lesson,card_front,result`)
+- **CSV export** — "⬇ Export CSV" button downloads last 90 days of attempt history as `study-export.csv`; columns: `date, hour, class, lesson, card_front, mode, result, duration_sec` (hour is UTC, matching the rest of the app's date bucketing; `mode` is quiz/flashcard/recall; `duration_sec` blank for attempts made before time tracking shipped)
+- **Study Time tile** — total minutes studied in the selected period, alongside the heatmap/trend/SRS-distribution charts; sourced from a new `attempts.duration_ms` column, timed client-side (card-shown to graded/answered) and clamped server-side to 5 minutes per attempt so a backgrounded tab can't inflate the total
+- **Accuracy by source** — Overall Accuracy gains secondary pills splitting Quiz (objective) vs Flashcard (self-rated) accuracy, since blending the two obscures how reliable the headline number actually is; a third "Recall" pill appears only for accounts with attempts from the removed Recall mode
+- **Struggling Lessons** moved from the all-time Dashboard payload into this windowed one — a lesson only surfaces if it has ≥3 attempted cards (was: any amount) in the selected period, so one bad card early on doesn't flag an otherwise-fine lesson, and a lesson stops being flagged once its bad attempts age out of the window
+- **Accuracy Trend** — new section on a lesson/class's Stats → Overview tab: 8 weeks of accuracy (not just volume) for that specific scope, so you can see whether a particular lesson is improving, flat, or slipping — the piece the flat lifetime "Hardest Cards"/"All Attempted" numbers couldn't show
+- **"All Attempted" tab** is now genuinely chronological (most-recently-studied first) — it used to silently reuse "Hardest Cards"' difficulty sort with a higher limit, so the two tabs looked identical
 
 ## Dashboard (server mode only)
 - Accessible from home screen header button
@@ -173,7 +178,7 @@
 - Overall accuracy progress bar
 - Card difficulty breakdown (easy/medium/hard/new counts)
 - Due-for-review lessons (grouped by urgency)
-- Struggling lessons: lessons where >40% of attempted cards are rated Hard
+- Struggling lessons: lessons where >40% of attempted cards are rated Hard (now windowed by the period selector and requires ≥3 attempted cards — see Analytics section)
 
 ## MCQ Explanation Field
 - Optional `explanation` field on MCQ cards; stored in card JSON data

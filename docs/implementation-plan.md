@@ -273,7 +273,7 @@ Easy < 0.3 | Medium 0.3–0.6 | Hard ≥ 0.6 | New = 0 attempts
 
 ### 5.6 Stats Screen
 
-Three tabs: Overview (counts, accuracy, difficulty bar), Hardest Cards (top 30), All Attempted.
+Three tabs: Overview (counts, accuracy, difficulty bar, 8-week Accuracy Trend), Hardest Cards (top 30, difficulty-sorted), All Attempted (chronological, most-recent first — `GET /stats/hardest?sort=recent`).
 Accessible per-lesson, per-class, or globally.
 
 ### 5.8 Audio Pronunciation
@@ -328,16 +328,19 @@ Rating map: ✗ Missed → Again(1), ~ Unsure → Hard(2), ✓ Got It → Good(3
 
 ### 5.12 Analytics Screen
 
-Dedicated `#screen-analytics` for study patterns and weak-spot discovery.
+Not a separate screen — the "📈 Analytics" nav button renders `#screen-dashboard` (`renderDashboard()` + `showScreen("dashboard")`), same as the "Dashboard" button. Study-pattern/weak-spot content lives inside that one screen, split into an all-time section (summary counts, Overall Accuracy + per-source pills, Difficulty Breakdown, Due for Review) and a period-windowed section below a 7/30/60/90-day pill bar (heatmap, Weekly Trend with accuracy, SRS Interval Distribution, Study Time, Lesson Accuracy, Struggling Lessons).
 
 | Section | Content |
 |---------|---------|
-| Daily heatmap | GitHub-style 90-day grid of study sessions |
-| Weak-spot report | Cards with >60% error rate in last 7 days |
-| Per-card retention | Accuracy bars for attempted cards |
-| Export | Download all attempt data as CSV |
+| Daily heatmap | GitHub-style grid, 7–90 days per the period selector |
+| Weekly trend | Attempts per week + accuracy % per week |
+| Struggling lessons | Lessons with >40% hard-rated cards, ≥3 attempted cards, within the selected period |
+| Accuracy by source | Quiz vs Flashcard (vs legacy Recall) accuracy split |
+| Study time | Total minutes in the selected period, from `attempts.duration_ms` |
+| Per-lesson/class retention | 8-week Accuracy Trend on the Stats screen's Overview tab |
+| Export | Download last 90 days of attempt data as CSV (date, hour, class, lesson, card_front, mode, result, duration_sec) |
 
-Data from existing `attempts` table — no schema changes.
+Data from the existing `attempts` table plus one new column, `duration_ms` (nullable INTEGER, client-timed, server-clamped to 5 minutes) — no other schema changes.
 
 ### 5.7 LaTeX Rendering
 
@@ -856,6 +859,9 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Manual difficulty grading in Flashcard mode | Done | Optional ⚡ Confident button/key 3 sends `grade: "easy"` for a +2 SRS step jump; wires up the previously-dormant server `grade` field. Labeled "Confident" (not "Easy") to avoid colliding with the difficulty-tier badge system |
 | SRS interval preview on grading buttons | Done | Shows resulting interval per button (e.g. "· 4h"); suppressed on not-yet-due cards since grading them doesn't move the schedule |
 | 10-agent UX audit fix batch | Done | i18n gaps (select toolbar, share modal, T/F badge), N/B/E keyboard leak into modal inputs, Esc exits Flashcard, browser-Back trapped in-app, mobile touch targets, dark-mode quiz-answer contrast, dashboard period-scope note |
+| Analytics/Stats UX audit fix batch (9 findings) | Done | Time tracking (`attempts.duration_ms`), per-lesson/class Accuracy Trend, windowed+min-sample Struggling Lessons, accuracy-by-source pills, Study Time tile, chronological "All Attempted" tab, richer CSV export, weekly-trend accuracy label |
+| Two WebKit-only mobile layout bugs | Done | Class list-view title collapsing to 1 char/line (hover-only actions eating layout space); Flashcard grading-button row overflowing off-screen (interval-preview text too wide) |
+| Undefined `--bg2` CSS variable | Done | Sidebar hover states unreadable in dark mode; renamed all 14 consumers to the actual `--surface2` token |
 | Edit card from Flashcard/Quiz study screens | Done | Pencil icon opens the existing edit modal pre-filled; saves patch the in-progress session in place |
 | Study setup (count, filter, direction, mode) | Done | Mode hint explains the recall/recognition tradeoff |
 | Multi-lesson selection | Done | |
