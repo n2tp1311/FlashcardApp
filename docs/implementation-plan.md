@@ -306,7 +306,8 @@ Every user action reachable from the keyboard. Extends existing shortcuts to cov
 | Home | `N` | New class |
 | Class | `N` | New lesson; `E` edit class; `Backspace` back |
 | Lesson | `N` | New card; `B` bulk paste; `S` start study; `Backspace` back |
-| Flashcard | `P` play pronunciation; `S` shuffle; `1`/`2`/`3` mark learning/known/easy |
+| Study Setup | `Enter` start studying; `Esc`/`Backspace` back |
+| Flashcard | `P` play pronunciation; `S` shuffle; `1`/`2`/`3` mark learning/known/confident |
 | Quiz | `Esc` back to setup |
 | Global | `H` home; `?` show key map overlay |
 
