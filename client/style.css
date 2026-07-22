@@ -1329,6 +1329,7 @@ code {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 4px 0;
   max-width: 600px;
@@ -1336,7 +1337,15 @@ code {
   width: 100%;
 }
 
-.fc-mark-btns { display: flex; gap: 8px; }
+/* Three grading buttons + Prev + Next don't fit on one 600px row, so the grading
+   buttons take their own full-width row on top and Prev/Next sit below. */
+.fc-mark-btns {
+  display: flex;
+  gap: 8px;
+  flex-basis: 100%;
+  order: -1;
+}
+.fc-mark-btns .btn-mark { flex: 1; }
 
 .btn-mark {
   padding: 10px 18px;
@@ -2010,10 +2019,7 @@ code {
   .fc-content { font-size: 0.9375rem; }
   .quiz-question { font-size: 0.9375rem; }
   .quiz-opt { padding: 11px 14px; font-size: 0.875rem; }
-  .fc-nav { gap: 8px; flex-wrap: wrap; }
-  /* 3 mark buttons no longer fit alongside Prev/Next on one row — give them their own row */
-  .fc-mark-btns { flex-basis: 100%; order: -1; }
-  .fc-mark-btns .btn-mark { flex: 1; }
+  .fc-nav { gap: 8px; }
   .btn-mark { padding: 8px 12px; font-size: 0.8125rem; }
   .btn-lg { padding: 10px 16px; font-size: 0.875rem; }
   .class-grid { grid-template-columns: 1fr 1fr; }
