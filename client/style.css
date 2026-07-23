@@ -1112,6 +1112,45 @@ code {
 
 .setup-section { display: flex; flex-direction: column; gap: 8px; }
 .setup-label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+
+.setup-presets-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.setup-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  min-height: 36px;
+}
+.setup-preset-chip-name { font-size: 0.8125rem; font-weight: 500; color: var(--text2); cursor: pointer; }
+.setup-preset-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+}
+.setup-preset-chip-remove:hover { background: var(--surface2); color: var(--danger); }
+.setup-preset-chip-remove svg { width: 12px; height: 12px; }
+.setup-preset-save-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.setup-preset-name-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8125rem;
+}
 .pref-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .pref-row .form-label { margin-bottom: 0; flex-shrink: 0; }
 .font-scale-row { display: flex; align-items: center; gap: 8px; }

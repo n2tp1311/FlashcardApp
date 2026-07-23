@@ -52,7 +52,6 @@ Object.assign(TRANSLATIONS.en, {
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
   "nav.selectClasses": "Select Classes",
-  "nav.analytics": "Analytics",
   "sidebar.yourClasses": "Your Classes",
   "sidebar.newClass": "New Class",
   "sidebar.toggle": "Toggle sidebar",
@@ -184,6 +183,10 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintHard": "Hard cards prioritized first",
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
+  "setup.presets": "Presets",
+  "setup.presetNamePlaceholder": "Preset name",
+  "setup.savePreset": "+ Save current as preset",
+  "setup.deletePresetConfirm": "Delete preset \"{name}\"?",
 
   "count.cardsDueForReview": "{n} card(s) due for review",
   "lesson.nextReviewIn": "Next review in {time}",
@@ -460,7 +463,6 @@ Object.assign(TRANSLATIONS.vi, {
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
   "nav.selectClasses": "Chọn lớp",
-  "nav.analytics": "Phân tích",
   "sidebar.yourClasses": "Lớp của bạn",
   "sidebar.newClass": "Lớp mới",
   "sidebar.toggle": "Đóng/mở thanh bên",
@@ -592,6 +594,10 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintHard": "Thẻ khó được ưu tiên đầu tiên",
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
+  "setup.presets": "Bộ lọc đã lưu",
+  "setup.presetNamePlaceholder": "Tên bộ lọc",
+  "setup.savePreset": "+ Lưu lựa chọn hiện tại",
+  "setup.deletePresetConfirm": "Xóa bộ lọc \"{name}\"?",
 
   "count.cardsDueForReview": "{n} thẻ đến hạn ôn tập",
   "lesson.nextReviewIn": "Ôn tập tiếp theo sau {time}",
@@ -1607,6 +1613,7 @@ var state = {
   // Study Setup
   setupRequestId: 0,
   setupDataPromise: null,
+  studyPresets: [],
 
   // Study
   studyCards: [],
@@ -3590,6 +3597,9 @@ function openSetup(scope) {
   document.getElementById("pill-order-interleaved").style.display = multiLesson ? "" : "none";
   setPillGroup("setup-order", "in-order");
 
+  renderSetupPresets();
+  resetSetupPresetSaveRow();
+
   showScreen("setup");
 
   // Fetch card + stats data once up front — both the live match-count preview below and
@@ -3641,6 +3651,116 @@ function setPillGroup(groupId, value) {
     p.classList.toggle("active", p.dataset.value === value);
   });
 }
+
+function renderSetupPresets() {
+  var list = document.getElementById("setup-presets-list");
+  if (!list) return;
+  list.innerHTML = state.studyPresets.map(function(preset) {
+    return '<span class="setup-preset-chip" data-preset-id="' + escHtml(preset.id) + '">' +
+      '<span class="setup-preset-chip-name" data-preset-id="' + escHtml(preset.id) + '">' + escHtml(preset.name) + '</span>' +
+      '<button class="setup-preset-chip-remove" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("common.delete")) + '">' + ICON_X + '</button>' +
+      '</span>';
+  }).join("");
+}
+
+function applyStudyPreset(preset) {
+  setPillGroup("setup-count", preset.count);
+  setPillGroup("setup-filter", preset.filter);
+  // Quiz mode structurally can't advance needsRecall cards further (see RECOGNITION_CAP_STEP) —
+  // same guard as the manual filter-pill handler, so a preset can't silently produce a no-op session.
+  var mode = preset.filter === "needsRecall" ? "flashcard" : preset.mode;
+  setPillGroup("setup-mode", mode);
+  // Interleaved only applies to multi-lesson sessions — its pill is hidden otherwise, so
+  // falling back avoids silently activating a pill the user can't see.
+  var multiLesson = state.studyScope && state.studyScope.lessons.length > 1;
+  var order = preset.order === "interleaved" && !multiLesson ? "in-order" : preset.order;
+  setPillGroup("setup-order", order);
+
+  var filterHint = document.getElementById("setup-filter-hint");
+  var filterKey = FILTER_HINT_KEYS[preset.filter];
+  if (filterHint) filterHint.textContent = filterKey ? t(filterKey) : "";
+  var modeHint = document.getElementById("setup-mode-hint");
+  var modeKey = MODE_HINT_KEYS[mode];
+  if (modeHint) modeHint.textContent = modeKey ? t(modeKey) : "";
+
+  var thisRequestId = state.setupRequestId;
+  state.setupDataPromise.then(function(data) {
+    if (thisRequestId === state.setupRequestId) updateSetupMatchCount(data);
+  });
+}
+
+function savePresetsToServer() {
+  fetch("/api/auth/preferences", {
+    method: "PUT",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ studyPresets: state.studyPresets })
+  }).catch(function() {});
+  try {
+    var cached = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
+    cached.studyPresets = state.studyPresets;
+    localStorage.setItem("fc-preferences", JSON.stringify(cached));
+  } catch (_) {}
+}
+
+function resetSetupPresetSaveRow() {
+  document.getElementById("setup-preset-name-input").classList.add("hidden");
+  document.getElementById("setup-preset-name-input").value = "";
+  document.getElementById("btn-setup-confirm-preset").classList.add("hidden");
+  document.getElementById("btn-setup-cancel-preset").classList.add("hidden");
+  document.getElementById("btn-setup-save-preset").classList.remove("hidden");
+}
+
+document.getElementById("setup-presets-list").addEventListener("click", function(e) {
+  var removeBtn = e.target.closest(".setup-preset-chip-remove");
+  if (removeBtn) {
+    var presetId = removeBtn.dataset.presetId;
+    var preset = state.studyPresets.filter(function(p) { return p.id === presetId; })[0];
+    if (!preset) return;
+    confirmDelete(t("setup.deletePresetConfirm", { name: preset.name }), function() {
+      state.studyPresets = state.studyPresets.filter(function(p) { return p.id !== presetId; });
+      savePresetsToServer();
+      renderSetupPresets();
+    });
+    return;
+  }
+  var chipName = e.target.closest(".setup-preset-chip-name");
+  if (chipName) {
+    var preset2 = state.studyPresets.filter(function(p) { return p.id === chipName.dataset.presetId; })[0];
+    if (preset2) applyStudyPreset(preset2);
+  }
+});
+
+document.getElementById("btn-setup-save-preset").addEventListener("click", function() {
+  this.classList.add("hidden");
+  document.getElementById("btn-setup-confirm-preset").classList.remove("hidden");
+  document.getElementById("btn-setup-cancel-preset").classList.remove("hidden");
+  var input = document.getElementById("setup-preset-name-input");
+  input.classList.remove("hidden");
+  input.focus();
+});
+
+document.getElementById("btn-setup-cancel-preset").addEventListener("click", function() {
+  resetSetupPresetSaveRow();
+});
+
+document.getElementById("btn-setup-confirm-preset").addEventListener("click", function() {
+  var name = document.getElementById("setup-preset-name-input").value.trim();
+  if (!name) return;
+  var orderEl = document.querySelector("#setup-order .pill.active");
+  var preset = {
+    id: genId("preset"),
+    name: name,
+    count: document.querySelector("#setup-count .pill.active").dataset.value,
+    filter: document.querySelector("#setup-filter .pill.active").dataset.value,
+    mode: document.querySelector("#setup-mode .pill.active").dataset.value,
+    order: orderEl ? orderEl.dataset.value : "in-order"
+  };
+  state.studyPresets.push(preset);
+  savePresetsToServer();
+  renderSetupPresets();
+  resetSetupPresetSaveRow();
+});
 
 // Pill group click handlers
 var FILTER_HINT_KEYS = {
@@ -5157,13 +5277,6 @@ function renderLessonBreakdown(rows, wrap) {
   });
 }
 
-document.getElementById("btn-analytics").addEventListener("click", function() {
-  renderDashboard(); showScreen("dashboard");
-});
-document.getElementById("btn-analytics-inline").addEventListener("click", function() {
-  renderDashboard(); showScreen("dashboard");
-});
-
 document.getElementById("btn-dashboard-export").addEventListener("click", function() {
   window.location.href = "/api/stats/analytics/export";
 });
@@ -5653,6 +5766,9 @@ function applyPrefs(prefs) {
   if (typeof prefs.language === "string") {
     applyLanguage(prefs.language);
   }
+  if (Array.isArray(prefs.studyPresets)) {
+    state.studyPresets = prefs.studyPresets;
+  }
 }
 
 function loadUserPreferences() {
@@ -5975,7 +6091,13 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   var lang = document.getElementById("pref-lang-vi").classList.contains("active") ? "vi" : "en";
   applyLanguage(lang);
   var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang };
-  try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
+  // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
+  // studyPresets (and any other field this handler doesn't know about) from the local cache
+  // until the next server fetch re-syncs it.
+  try {
+    var cachedPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
+    localStorage.setItem("fc-preferences", JSON.stringify(Object.assign({}, cachedPrefs, prefs)));
+  } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",
     credentials: "same-origin",
