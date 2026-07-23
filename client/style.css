@@ -802,11 +802,15 @@ body {
   font-weight: 600;
   color: var(--text);
   margin-bottom: 4px;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .card-def {
   font-size: 0.8125rem;
   color: var(--text2);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .card-num {

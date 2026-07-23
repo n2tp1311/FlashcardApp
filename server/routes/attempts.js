@@ -60,7 +60,7 @@ router.post("/", requireAuth, (req, res) => {
 
   // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
   if (stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now) {
-    return res.status(201).json({ ok: true, srs_step: curStep, srs_due_at: stateRow.srs_due_at, capped: false });
+    return res.status(201).json({ ok: true, srs_step: curStep, srs_due_at: stateRow.srs_due_at, capped: false, notDue: true });
   }
 
   let newStep;
@@ -83,7 +83,7 @@ router.post("/", requireAuth, (req, res) => {
     "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_step = excluded.srs_step, srs_due_at = excluded.srs_due_at"
   ).run(cardId, userId, newStep, dueAt);
 
-  res.status(201).json({ ok: true, srs_step: newStep, srs_due_at: dueAt, capped: capped });
+  res.status(201).json({ ok: true, srs_step: newStep, srs_due_at: dueAt, capped: capped, notDue: false });
 });
 
 module.exports = router;

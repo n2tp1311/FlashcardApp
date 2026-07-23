@@ -90,6 +90,9 @@ Object.assign(TRANSLATIONS.en, {
   "count.due": "{n} due",
   "count.lessons": "{n} lesson(s)",
   "count.knownProgress": "{known} / {total} known ({pct}%)",
+  "class.levelMeta": "Lv {level} · {lessons}",
+  "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
+  "class.accuracyTooltip": "Accuracy across all recorded attempts (Flashcard + Quiz)",
   "confirm.deleteClass": "Delete class \"{name}\" and all its lessons and cards?",
 
   "stat.dayStreak": "Day Streak",
@@ -97,6 +100,7 @@ Object.assign(TRANSLATIONS.en, {
   "stat.lessons": "Lessons",
   "stat.cards": "Cards",
   "stat.sessions": "Sessions",
+  "stat.sessionsHint": "Completed Quiz sessions only — Flashcard study is tracked under Attempts.",
   "stat.attempts": "Attempts",
   "dashboard.heatmapTitle": "{n}-Day Study Heatmap",
 
@@ -250,6 +254,7 @@ Object.assign(TRANSLATIONS.en, {
   "stats.totalCards": "Total Cards",
   "stats.attempted": "Attempted",
   "stats.accuracy": "Accuracy",
+  "stats.noDataYet": "No data yet",
   "stats.totalAttempts": "Total Attempts",
   "stats.difficultyBreakdown": "Difficulty Breakdown",
   "stats.accuracyTrend": "Accuracy Trend",
@@ -435,6 +440,7 @@ Object.assign(TRANSLATIONS.en, {
   "alert.noLessonsInSelectedClasses": "The selected classes have no lessons.",
   "quiz.exit": "Exit quiz",
   "quiz.cappedHint": "Correct — but this card needs a Flashcard-mode recall to move to a longer review interval.",
+  "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
   "keymap.reviewPrevNext": "Review prev / next answered question"
 });
@@ -490,6 +496,9 @@ Object.assign(TRANSLATIONS.vi, {
   "count.due": "{n} thẻ cần ôn",
   "count.lessons": "{n} bài học",
   "count.knownProgress": "{known} / {total} đã thuộc ({pct}%)",
+  "class.levelMeta": "Bậc {level} · {lessons}",
+  "class.knownTooltip": "Số thẻ bạn đã tự đánh dấu \"Đã thuộc\" trong chế độ Thẻ ghi nhớ",
+  "class.accuracyTooltip": "Độ chính xác trên toàn bộ lượt trả lời đã ghi nhận (Thẻ ghi nhớ + Trắc nghiệm)",
   "confirm.deleteClass": "Xóa lớp \"{name}\" cùng toàn bộ bài học và thẻ ghi nhớ?",
 
   "stat.dayStreak": "Ngày liên tục",
@@ -497,6 +506,7 @@ Object.assign(TRANSLATIONS.vi, {
   "stat.lessons": "Bài học",
   "stat.cards": "Thẻ ghi nhớ",
   "stat.sessions": "Phiên học",
+  "stat.sessionsHint": "Chỉ tính các phiên Quiz đã hoàn thành — học Thẻ ghi nhớ được tính trong Lượt làm.",
   "stat.attempts": "Lượt làm",
   "dashboard.heatmapTitle": "Biểu đồ học {n} ngày qua",
 
@@ -650,6 +660,7 @@ Object.assign(TRANSLATIONS.vi, {
   "stats.totalCards": "Tổng số thẻ",
   "stats.attempted": "Đã làm",
   "stats.accuracy": "Độ chính xác",
+  "stats.noDataYet": "Chưa có dữ liệu",
   "stats.totalAttempts": "Tổng lượt làm",
   "stats.difficultyBreakdown": "Phân bố độ khó",
   "stats.accuracyTrend": "Xu hướng độ chính xác",
@@ -835,6 +846,7 @@ Object.assign(TRANSLATIONS.vi, {
   "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào.",
   "quiz.exit": "Thoát bài kiểm tra",
   "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
+  "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
@@ -1821,9 +1833,9 @@ function renderHomeCharts() {
       [dash.summary.classes,      t("stat.classes")],
       [dash.summary.lessons,      t("stat.lessons")],
       [dash.summary.cards,        t("stat.cards")],
-      [dash.summary.quizSessions, t("stat.sessions")],
+      [dash.summary.quizSessions, t("stat.sessions"), t("stat.sessionsHint")],
       [dash.summary.attempts,     t("stat.attempts")]
-    ].forEach(function(item) { grid.innerHTML += statCard(item[0], item[1]); });
+    ].forEach(function(item) { grid.innerHTML += statCard(item[0], item[1], item[2]); });
     section.classList.remove("hidden");
   }).catch(function() { section.classList.add("hidden"); });
 }
@@ -1942,6 +1954,13 @@ function toggleClassArchived(cls) {
   return store.updateClass(cls.id, { archived: cls.archived ? 0 : 1 }).then(renderHome);
 }
 
+// "Level" is the default class-sort criterion but was never shown anywhere on the card
+// itself — folded into the existing lesson-count meta line rather than a new badge.
+function formatClassMeta(cls, lessonCount) {
+  var lessons = t("count.lessons", { n: lessonCount });
+  return cls.level != null && cls.level !== "" ? t("class.levelMeta", { level: cls.level, lessons: lessons }) : lessons;
+}
+
 function _renderClassGridCard(cls, container) {
   var card = document.createElement("div");
   card.className = "class-card" + (cls.archived ? " class-card-archived" : "");
@@ -1986,7 +2005,7 @@ function _renderClassGridCard(cls, container) {
 
   store.getLessons(cls.id).then(function(lessons) {
     var meta = document.getElementById("cls-meta-" + cls.id);
-    if (meta) meta.textContent = t("count.lessons", { n: lessons.length });
+    if (meta) meta.textContent = formatClassMeta(cls, lessons.length);
   });
   store.getProgress("class", cls.id).then(function(p) {
     if (!p || p.total === 0) return;
@@ -1998,6 +2017,7 @@ function _renderClassGridCard(cls, container) {
     wrap.style.display = "";
     fill.style.width = pct + "%";
     text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
+    text.title = t("class.knownTooltip");
   });
   // Apply cached accuracy immediately if available
   if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
@@ -2057,7 +2077,7 @@ function _renderClassListRow(cls, container) {
 
   store.getLessons(cls.id).then(function(lessons) {
     var meta = document.getElementById("cls-meta-" + cls.id);
-    if (meta) meta.textContent = t("count.lessons", { n: lessons.length });
+    if (meta) meta.textContent = formatClassMeta(cls, lessons.length);
   });
   store.getProgress("class", cls.id).then(function(p) {
     if (!p || p.total === 0) return;
@@ -2069,6 +2089,7 @@ function _renderClassListRow(cls, container) {
     wrap.style.display = "";
     fill.style.width = pct + "%";
     text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
+    text.title = t("class.knownTooltip");
   });
   if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
     _setClassAccuracyPill(cls.id, state._classAccuracyMap[cls.id]);
@@ -2080,6 +2101,7 @@ function _setClassAccuracyPill(classId, acc) {
   if (!el || acc.total === 0) return;
   var pct = Math.round(acc.correct / acc.total * 100);
   el.textContent = pct + "%";
+  el.title = t("class.accuracyTooltip");
   el.classList.remove("hidden", "acc-high", "acc-mid", "acc-low");
   el.classList.add(pct >= 70 ? "acc-high" : pct >= 40 ? "acc-mid" : "acc-low");
 }
@@ -2412,7 +2434,7 @@ function _renderLessonItems(lessons, accMap) {
 
       var acc = accMap && accMap[lesson.id];
       var accHtml = acc && acc.total > 0
-        ? '<span class="lesson-acc-pill ' + (acc.pct >= 70 ? "acc-high" : acc.pct >= 40 ? "acc-mid" : "acc-low") + '" id="les-acc-' + lesson.id + '">' + acc.pct + '%</span>'
+        ? '<span class="lesson-acc-pill ' + (acc.pct >= 70 ? "acc-high" : acc.pct >= 40 ? "acc-mid" : "acc-low") + '" id="les-acc-' + lesson.id + '" title="' + escHtml(t("class.accuracyTooltip")) + '">' + acc.pct + '%</span>'
         : '<span class="lesson-acc-pill hidden" id="les-acc-' + lesson.id + '"></span>';
 
       item.className = "lesson-item" + (selected ? " selected" : "") + (isDue ? " lesson-due" : "");
@@ -2472,6 +2494,7 @@ function _renderLessonItems(lessons, accMap) {
         wrap.style.display = "";
         fill.style.width = pct + "%";
         text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
+        text.title = t("class.knownTooltip");
       });
     });
   });
@@ -3758,6 +3781,12 @@ function renderFlashcard() {
   if (!card) return;
 
   state.studyCardShownAt = Date.now();
+  document.getElementById("fc-notdue-hint").classList.add("hidden");
+
+  // Cancel any pending auto-advance from a previous grade — otherwise it fires later
+  // against whatever card the user has since navigated to (Prev/Next/dot/shuffle/delete),
+  // same race Quiz mode already guards against via state.quizAdvanceTimer.
+  clearTimeout(state.fcAdvanceTimer);
 
   // Progress
   document.getElementById("fc-progress-text").textContent = (i + 1) + " / " + cards.length;
@@ -3983,13 +4012,25 @@ function markCard(known, grade) {
     }
   });
   renderFcDots();
-  // Auto-advance after 400ms
-  setTimeout(function() {
+
+  // Known client-side already (same check renderFlashcard() uses to blank the interval
+  // preview) — shown synchronously rather than waiting on the network response, since the
+  // normal 400ms auto-advance would otherwise hide it before most people could read it.
+  var stillNotDue = card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000);
+  if (stillNotDue) {
+    var hintEl = document.getElementById("fc-notdue-hint");
+    hintEl.textContent = t("study.notDueHint");
+    hintEl.classList.remove("hidden");
+  }
+
+  // Auto-advance — extended when the not-due hint is showing so it's actually readable.
+  var advanceDelay = stillNotDue ? 1200 : 400;
+  state.fcAdvanceTimer = setTimeout(function() {
     if (state.studyIndex < state.studyCards.length - 1) {
       state.studyIndex++;
       renderFlashcard();
     }
-  }, 400);
+  }, advanceDelay);
 }
 
 document.getElementById("btn-fc-learning").addEventListener("click", function() { markCard(false); });
@@ -4058,6 +4099,8 @@ function renderQuizCard() {
   if (prevNext) prevNext.remove();
   var prevCap = document.getElementById("quiz-cap-hint");
   if (prevCap) prevCap.remove();
+  var prevNotDue = document.getElementById("quiz-notdue-hint");
+  if (prevNotDue) prevNotDue.remove();
 
   if (i >= total) { showQuizResults(); return; }
 
@@ -4132,19 +4175,20 @@ function renderQuizCard() {
     optsEl.after(expEl);
   }
 
-  if (priorResult && priorResult.capped) showQuizCapHint();
+  if (priorResult && priorResult.capped) showQuizHint("quiz-cap-hint", "quiz.cappedHint");
+  if (priorResult && priorResult.notDue) showQuizHint("quiz-notdue-hint", "study.notDueHint");
 
   document.getElementById("btn-quiz-prev").classList.toggle("hidden", i === 0);
   document.getElementById("btn-quiz-review-next").classList.toggle("hidden", !priorResult);
 }
 
-function showQuizCapHint() {
-  var old = document.getElementById("quiz-cap-hint");
+function showQuizHint(id, textKey) {
+  var old = document.getElementById(id);
   if (old) old.remove();
   var hintEl = document.createElement("div");
-  hintEl.id = "quiz-cap-hint";
+  hintEl.id = id;
   hintEl.className = "quiz-cap-hint";
-  hintEl.textContent = t("quiz.cappedHint");
+  hintEl.textContent = t(textKey);
   document.getElementById("quiz-nav").before(hintEl);
 }
 
@@ -4165,7 +4209,7 @@ function answerQuiz(selectedIdx) {
 
   // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
   // selectedIdx — not just the value — is needed to mark "wrong" correctly when two options share text)
-  var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, capped: false };
+  var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, capped: false, notDue: false };
   state.quizResults.push(resultEntry);
 
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
@@ -4173,7 +4217,11 @@ function answerQuiz(selectedIdx) {
   store.recordAttempt(quizAttemptFields).then(function(res) {
     if (res && res.capped) {
       resultEntry.capped = true;
-      if (state.quizCards[state.quizIndex] === card) showQuizCapHint();
+      if (state.quizCards[state.quizIndex] === card) showQuizHint("quiz-cap-hint", "quiz.cappedHint");
+    }
+    if (res && res.notDue) {
+      resultEntry.notDue = true;
+      if (state.quizCards[state.quizIndex] === card) showQuizHint("quiz-notdue-hint", "study.notDueHint");
     }
   }).catch(function() { /* fire-and-forget on network error, same resilience as before */ });
 
@@ -4436,7 +4484,7 @@ function renderStatsOverview(type, id) {
       '<div class="stats-overview-grid">' +
         statCard(totalCards, t("stats.totalCards")) +
         statCard(attempted, t("stats.attempted")) +
-        statCard(accuracy + "%", t("stats.accuracy")) +
+        statCard(totalAttempts > 0 ? accuracy + "%" : t("stats.noDataYet"), t("stats.accuracy")) +
         statCard(totalAttempts, t("stats.totalAttempts")) +
       '</div>' +
       '<div class="diff-bar-label">' + t("stats.difficultyBreakdown") + '</div>' +
@@ -4459,8 +4507,9 @@ function renderStatsOverview(type, id) {
   });
 }
 
-function statCard(val, label) {
-  return '<div class="stat-card"><div class="stat-value">' + val + '</div><div class="stat-label">' + label + '</div></div>';
+function statCard(val, label, hint) {
+  var titleAttr = hint ? ' title="' + escHtml(hint) + '"' : "";
+  return '<div class="stat-card"' + titleAttr + '><div class="stat-value">' + val + '</div><div class="stat-label">' + label + '</div></div>';
 }
 
 function diffBar(name, count, total, color) {
@@ -4652,15 +4701,18 @@ function renderDashboard() {
       [d.summary.classes,      t("stat.classes")],
       [d.summary.lessons,      t("stat.lessons")],
       [d.summary.cards,        t("stat.cards")],
-      [d.summary.quizSessions, t("stat.sessions")],
+      [d.summary.quizSessions, t("stat.sessions"), t("stat.sessionsHint")],
       [d.summary.attempts,     t("stat.attempts")]
-    ].forEach(function(item) { summaryGrid.innerHTML += statCard(item[0], item[1]); });
+    ].forEach(function(item) { summaryGrid.innerHTML += statCard(item[0], item[1], item[2]); });
 
     // Accuracy bar
     var accPct = d.accuracy.total > 0
       ? Math.round(d.accuracy.correct / d.accuracy.total * 100) : 0;
+    var accuracyLabel = d.accuracy.total > 0
+      ? t("dashboard.accuracyLabel", { pct: accPct, correct: d.accuracy.correct, total: d.accuracy.total })
+      : t("stats.noDataYet");
     document.getElementById("dash-accuracy-wrap").innerHTML =
-      '<div class="dash-accuracy-label">' + t("dashboard.accuracyLabel", { pct: accPct, correct: d.accuracy.correct, total: d.accuracy.total }) + '</div>' +
+      '<div class="dash-accuracy-label">' + accuracyLabel + '</div>' +
       '<div class="dash-accuracy-bar">' +
         '<div class="dash-accuracy-fill" style="width:' + accPct + '%"></div>' +
       '</div>' +
