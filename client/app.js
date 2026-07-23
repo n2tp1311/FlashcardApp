@@ -6597,12 +6597,13 @@ window.addEventListener("popstate", function() {
   var circle = ind.querySelector(".ptr-circle");
   var label  = ind.querySelector(".ptr-label");
   var THRESHOLD = 72;
-  var startY = 0, lastDy = 0, pulling = false, busy = false;
+  var startX = 0, startY = 0, lastDy = 0, pulling = false, busy = false;
 
   function setHeight(px) { ind.style.height = px + "px"; }
 
   document.addEventListener("touchstart", function(e) {
     if (busy || getActiveScreen() !== "home" || window.scrollY > 4) return;
+    startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     lastDy = 0;
     pulling = false;
@@ -6614,6 +6615,10 @@ window.addEventListener("popstate", function() {
     if (window.scrollY > 4) { if (pulling) { setHeight(0); pulling = false; } return; }
     var dy = e.touches[0].clientY - startY;
     if (dy <= 0) { if (pulling) { setHeight(0); pulling = false; } return; }
+    // A diagonal gesture (e.g. the edge-swipe that opens the sidebar) can otherwise
+    // satisfy this threshold too, firing a spurious refresh on top of the sidebar animation.
+    var dx = Math.abs(e.touches[0].clientX - startX);
+    if (dx > dy) { if (pulling) { setHeight(0); pulling = false; } return; }
     lastDy = dy;
     pulling = true;
     // Rubber-band: full speed until threshold, slow beyond
