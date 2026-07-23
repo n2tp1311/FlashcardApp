@@ -37,6 +37,8 @@
 - Archive a class (🗄️ icon on the class card, or "Archive Class" in the class-detail ⋮ menu): archived classes are hidden from the home list, sidebar, and level slicer by default; an "🗄️ Archived" toggle pill next to the grid/list view switch shows only archived classes (with an "Unarchive" action) when active
 - Archived classes are excluded from dashboard summary counts, "due for review," streak-relevant struggling-lesson detection, and analytics lesson breakdown — but remain fully browsable and studyable on demand if opened directly (their due badges still work inside their own lesson list)
 - Export/import round-trips the archived flag; class-sharing clones always start unarchived
+- Class level (optional, set in the class editor, also the default Home sort key) is shown in the meta line on both Grid and List views ("Lv 3 · 11 lessons") — previously used only for sorting, never displayed anywhere
+- Long unbroken card text (e.g. a Definition pasted with no spaces) wraps instead of blowing out the lesson card list's page width (`.card-term`/`.card-def` gained `word-break`/`overflow-wrap`)
 
 ## Spaced Repetition
 - Per-card SRS intervals: 10min → 1h → 4h → 1d → 3d → 7d → 21d (step advances on correct, resets on wrong)
@@ -77,6 +79,7 @@
 - Class sort: "Sort by" dropdown on the home screen; options are Level, Name (A–Z), Due count, Date added; choice persisted in localStorage; classes with no level set sort last (after all leveled classes), tie-broken by date added
 - Class level field: optional integer on each class ("Level" input in class editor, 1–999); used to sequence courses; can be cleared; persists to server; round-trips through export/import and class share
 - Grading buttons preview their resulting SRS interval (e.g. "Know It · 4h"): computed client-side from the card's current `srs_step` via the same step table the Dashboard's SRS-distribution chart already uses (`stepLabel()`); suppressed for a not-yet-due card since grading it leaves the schedule untouched regardless of grade (mirrors the server's early-return in `attempts.js`); the local card's `srs_step`/`srs_due_at` are updated from the attempt response so re-grading the same card via Prev shows an accurate preview
+- Answering a not-yet-due card is no longer silent: a small hint explains the schedule didn't change, in both Flashcard (shown synchronously from the same client-side due-check as the interval preview, extending the 400ms auto-advance to 1200ms so it's readable) and Quiz mode (a `notDue` flag on the `POST /api/attempts` response, reusing the existing recognition-cap hint's DOM pattern)
 
 ## Audio Pronunciation
 
@@ -174,11 +177,12 @@
 - Accessible from home screen header button
 - `GET /api/stats/dashboard` endpoint, renders `#screen-dashboard`
 - Study streak (consecutive days with at least one graded attempt in either mode — not "completed Quiz session," which would miss Flashcard-only days)
-- Summary counts: classes, lessons, cards, sessions, attempts
-- Overall accuracy progress bar
+- Summary counts: classes, lessons, cards, sessions, attempts — the "Sessions" stat has a tooltip clarifying it only counts completed Quiz sessions (Flashcard study is tracked under Attempts instead, not double-counted)
+- Overall accuracy progress bar — shows "No data yet" instead of a bare "0%" when there's no attempt history at all, same fix applied to the Stats screen's Accuracy stat card
 - Card difficulty breakdown (easy/medium/hard/new counts)
 - Due-for-review lessons (grouped by urgency)
 - Struggling lessons: lessons where >40% of attempted cards are rated Hard (now windowed by the period selector and requires ≥3 attempted cards — see Analytics section)
+- The known-progress text ("X/Y known") and the accuracy pill sitting next to it on class cards both have tooltips now — they're genuinely different metrics (a manual Flashcard-mode "Know It" flag vs. computed accuracy across both modes) that can legitimately disagree, which read as a data bug without an explanation
 
 ## MCQ Explanation Field
 - Optional `explanation` field on MCQ cards; stored in card JSON data
