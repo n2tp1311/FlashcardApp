@@ -263,9 +263,14 @@ router.get("/dashboard", requireAuth, (req, res) => {
     if (dueCountMap[l.id]) dueByClass[l.class_id] = (dueByClass[l.class_id] || 0) + dueCountMap[l.id];
   });
 
-  // Study streak — consecutive days with at least one session
+  // Study streak — consecutive days with at least one graded attempt. Was based on
+  // quiz_sessions (only written when a Quiz session reaches the results screen), so
+  // Flashcard-only study, or a Quiz session started but not finished, was invisible to
+  // the streak — a user could study daily and still see it reset. attempts is written
+  // immediately by both modes (per Flashcard grade, per Quiz answer), so it reflects
+  // "did you study" rather than "did you finish a quiz."
   const days = db.prepare(
-    "SELECT DISTINCT date(taken_at, 'unixepoch') AS day FROM quiz_sessions WHERE user_id = ? ORDER BY day DESC"
+    "SELECT DISTINCT date(created_at, 'unixepoch') AS day FROM attempts WHERE user_id = ? ORDER BY day DESC"
   ).all(uid).map(r => r.day);
 
   let streak = 0;
