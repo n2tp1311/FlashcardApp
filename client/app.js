@@ -285,7 +285,6 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.lastNDays": "(last {n} days)",
   "dashboard.accuracyBySourceQuiz": "Quiz: {pct}% ({n})",
   "dashboard.accuracyBySourceFlashcard": "Flashcard: {pct}% ({n})",
-  "dashboard.accuracyBySourceRecall": "Recall: {pct}% ({n})",
   "dashboard.accuracyLabel": "{pct}% — {correct} / {total} correct",
   "dashboard.allCaughtUp": "All caught up — no cards due.",
   "dashboard.noStrugglingLessons": "No struggling lessons — great work!",
@@ -694,7 +693,6 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.lastNDays": "(trong {n} ngày)",
   "dashboard.accuracyBySourceQuiz": "Trắc nghiệm: {pct}% ({n})",
   "dashboard.accuracyBySourceFlashcard": "Thẻ ghi nhớ: {pct}% ({n})",
-  "dashboard.accuracyBySourceRecall": "Tự nhớ lại: {pct}% ({n})",
   "dashboard.accuracyLabel": "{pct}% — {correct} / {total} đúng",
   "dashboard.allCaughtUp": "Đã hoàn thành hết — không có thẻ nào đến hạn.",
   "dashboard.noStrugglingLessons": "Không có bài học nào gặp khó — làm tốt lắm!",
@@ -5077,16 +5075,13 @@ function renderStudyTime(totalDurationMs, wrap) {
 
 var ACCURACY_SOURCE_KEYS = {
   quiz: "dashboard.accuracyBySourceQuiz",
-  flashcard: "dashboard.accuracyBySourceFlashcard",
-  // "recall" mode was removed, but its historical attempts are preserved (see
-  // docs/decisions.md) and can still surface here if a user has old recall-sourced data.
-  recall: "dashboard.accuracyBySourceRecall"
+  flashcard: "dashboard.accuracyBySourceFlashcard"
 };
 
 function renderAccuracyBySourcePills(bySource) {
   if (!bySource) return "";
   var pills = [];
-  ["quiz", "flashcard", "recall"].forEach(function(source) {
+  ["quiz", "flashcard"].forEach(function(source) {
     var s = bySource[source];
     if (!s || s.total === 0) return;
     var pct = Math.round(s.correct / s.total * 100);
