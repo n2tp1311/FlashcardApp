@@ -239,6 +239,15 @@ body {
   margin-top: 6px;
   min-height: 1.2em;
 }
+
+.setup-match-count {
+  font-size: 0.8125rem;
+  color: var(--text2);
+  text-align: center;
+  margin: 4px 0 10px;
+  min-height: 1.2em;
+}
+.setup-match-count-warn { color: var(--warning); font-weight: 600; }
 .sidebar-class-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 
 .sidebar-new-class {

@@ -174,6 +174,8 @@ Object.assign(TRANSLATIONS.en, {
   "setup.cardOrder": "Card Order",
   "setup.inOrder": "In Order",
   "setup.startStudying": "Start Studying",
+  "setup.matchCount": "{n} card(s) match this filter",
+  "setup.loadFailed": "Couldn't load cards — try again.",
   "setup.studyingTogether": "Studying {n} lessons together",
   "setup.hintAll": "Study all cards",
   "setup.hintDue": "Only cards due for review (SRS)",
@@ -385,6 +387,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.toggleSelectionSelectMode": "Toggle selection (select mode)",
   "keymap.selectAllSelectMode": "Select all (select mode)",
   "keymap.studySelectedSelectMode": "Study selected (select mode)",
+  "keymap.deleteSelectedSelectMode": "Delete selected (select mode)",
   "search.noResults": "No results",
 
   "bulkImport.hint": "Use <strong>#</strong> to start a lesson. Optionally add <code>| mcq</code> after the title for MCQ format (default is term→def).<br>Then list cards below it, one per line.<br><br><strong>Term→Def:</strong> <code>term | definition</code><br><strong>MCQ:</strong> <code>question | correct | wrong1 | wrong2 | wrong3</code><br><strong>MCQ + explanation:</strong> <code>question | correct | wrong1 ;; Why the correct answer is right.</code>",
@@ -580,6 +583,8 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.cardOrder": "Thứ tự thẻ",
   "setup.inOrder": "Theo thứ tự",
   "setup.startStudying": "Bắt đầu học",
+  "setup.matchCount": "{n} thẻ khớp bộ lọc này",
+  "setup.loadFailed": "Không tải được thẻ — thử lại nhé.",
   "setup.studyingTogether": "Đang học {n} bài học cùng lúc",
   "setup.hintAll": "Học tất cả thẻ",
   "setup.hintDue": "Chỉ thẻ đến hạn ôn tập (SRS)",
@@ -791,6 +796,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.toggleSelectionSelectMode": "Chọn/bỏ chọn (chế độ chọn)",
   "keymap.selectAllSelectMode": "Chọn tất cả (chế độ chọn)",
   "keymap.studySelectedSelectMode": "Học mục đã chọn (chế độ chọn)",
+  "keymap.deleteSelectedSelectMode": "Xóa mục đã chọn (chế độ chọn)",
   "search.noResults": "Không có kết quả",
 
   "bulkImport.hint": "Dùng <strong>#</strong> để bắt đầu một bài học. Có thể thêm <code>| mcq</code> sau tiêu đề để dùng định dạng trắc nghiệm (mặc định là thuật ngữ→định nghĩa).<br>Sau đó liệt kê các thẻ bên dưới, mỗi thẻ một dòng.<br><br><strong>Thuật ngữ→Định nghĩa:</strong> <code>thuật ngữ | định nghĩa</code><br><strong>Trắc nghiệm:</strong> <code>câu hỏi | đáp án đúng | sai1 | sai2 | sai3</code><br><strong>Trắc nghiệm + giải thích:</strong> <code>câu hỏi | đáp án đúng | sai1 ;; Vì sao đáp án đúng là đúng.</code>",
@@ -1600,11 +1606,16 @@ var state = {
   tfAnswer: null,
   deleteCallback: null,
 
+  // Study Setup
+  setupRequestId: 0,
+  setupDataPromise: null,
+
   // Study
   studyCards: [],
   studyIndex: 0,
   studyMode: "flashcard",
   studyFlipped: false,
+  studyHasFlippedCard: false,
   studyKnownMap: {},
   studyFrontText: "",
   studyBackText: "",
@@ -3582,6 +3593,48 @@ function openSetup(scope) {
   setPillGroup("setup-order", "in-order");
 
   showScreen("setup");
+
+  // Fetch card + stats data once up front — both the live match-count preview below and
+  // the eventual Start click reuse this same promise (startStudy() awaits it too), so
+  // opening Setup never causes more network round-trips than clicking Start alone used to.
+  var matchCountEl = document.getElementById("setup-match-count");
+  if (matchCountEl) matchCountEl.textContent = "";
+  var requestId = ++state.setupRequestId;
+  var ids = state.studyScope.lessonIds;
+  state.setupDataPromise = store.getBulkCards(ids).then(function(cards) {
+    var knownMap = {};
+    cards.forEach(function(c) {
+      if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
+    });
+    return store.getDifficultyMap(cards.map(function(c) { return c.id; })).then(function(statsMap) {
+      var data = { cards: cards, knownMap: knownMap, statsMap: statsMap };
+      // Ignore if the user has since reopened Setup for a different scope before this resolved.
+      if (requestId === state.setupRequestId) updateSetupMatchCount(data);
+      return data;
+    });
+  }).catch(function() {
+    // A rejected promise here would otherwise leave the match count blank forever and make
+    // Start silently do nothing (its .then() never fires). Resolve with an empty card list
+    // instead — startStudy() already alerts on a zero-card result, so Start still gives
+    // the user a clear signal rather than a dead button.
+    if (requestId === state.setupRequestId && matchCountEl) {
+      matchCountEl.textContent = t("setup.loadFailed");
+      matchCountEl.classList.add("setup-match-count-warn");
+    }
+    return { cards: [], knownMap: {}, statsMap: {} };
+  });
+}
+
+function updateSetupMatchCount(data) {
+  var countEl = document.getElementById("setup-match-count");
+  if (!countEl || !data) return;
+  var filterPill = document.querySelector("#setup-filter .pill.active");
+  var filter = filterPill ? filterPill.dataset.value : "all";
+  var matched = filterCardsBySetup(data.cards, filter, data.knownMap, data.statsMap);
+  countEl.classList.toggle("setup-match-count-warn", matched.length === 0);
+  countEl.textContent = matched.length === 0
+    ? t("study.noCardsMatchFilter")
+    : t("setup.matchCount", { n: matched.length });
 }
 
 function setPillGroup(groupId, value) {
@@ -3622,6 +3675,11 @@ var MODE_HINT_KEYS = {
         var modeHintOnFilterSwitch = document.getElementById("setup-mode-hint");
         if (modeHintOnFilterSwitch) modeHintOnFilterSwitch.textContent = t(MODE_HINT_KEYS.flashcard);
       }
+      // Only the filter pill changes which cards match — count/mode/order don't.
+      var thisRequestId = state.setupRequestId;
+      state.setupDataPromise.then(function(data) {
+        if (thisRequestId === state.setupRequestId) updateSetupMatchCount(data);
+      });
     }
     if (groupId === "setup-mode") {
       var modeHint = document.getElementById("setup-mode-hint");
@@ -3680,9 +3738,39 @@ function weightedShuffle(cards, statsMap) {
 // "Needs Recall" filter list, not to compute SRS scheduling itself (that stays server-side).
 var RECOGNITION_CAP_STEP = 2;
 
+// Shared between the live match-count preview on Study Setup and startStudy() itself,
+// so the two can never drift out of sync on what counts as a "match".
+function filterCardsBySetup(cards, filter, knownMap, statsMap) {
+  if (filter === "due") {
+    var nowSec2 = Math.floor(Date.now() / 1000);
+    return cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
+  } else if (filter === "needsRecall") {
+    var nowSec3 = Math.floor(Date.now() / 1000);
+    return cards.filter(function(c) {
+      return c.srs_step != null && c.srs_step >= RECOGNITION_CAP_STEP && c.srs_due_at && c.srs_due_at <= nowSec3;
+    });
+  } else if (filter === "learning") {
+    return cards.filter(function(c) { return knownMap[c.id] !== true; });
+  } else if (filter === "hard") {
+    var hard = cards.filter(function(c) {
+      var s = statsMap[c.id];
+      return !s || s.level === "hard" || s.level === "medium" || s.level === "new";
+    });
+    return hard.length ? hard : cards;
+  }
+  return cards;
+}
+
 function startStudy(count, filter, mode, order) {
-  var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
-  store.getBulkCards(ids).then(function(cards) {
+  // Reuses the single fetch openSetup() already kicked off (populates state.setupDataPromise)
+  // instead of re-fetching — the promise resolves immediately if it already has, or waits if not.
+  state.setupDataPromise.then(function(data) {
+    var cards = data.cards, knownMap = data.knownMap, statsMap = data.statsMap;
+    var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
+
+    state.studyKnownMap = knownMap;
+    state.studyStatsMap = statsMap;
+
     // Rebuild per-lesson grouping for blocked mode
     var byLesson = {};
     cards.forEach(function(c) {
@@ -3691,77 +3779,49 @@ function startStudy(count, filter, mode, order) {
     });
     var cardArrays = ids.map(function(id) { return byLesson[id] || []; });
 
-    var knownMap = {};
-    cards.forEach(function(c) {
-      if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
-    });
-    state.studyKnownMap = knownMap;
+    var filtered = filterCardsBySetup(cards, filter, knownMap, statsMap);
 
-    // Build stats map for difficulty weighting
-    store.getDifficultyMap(cards.map(function(c) { return c.id; })).then(function(statsMap) {
-        state.studyStatsMap = statsMap;
-
-        var filtered = cards;
-        if (filter === "due") {
-          var nowSec2 = Math.floor(Date.now() / 1000);
-          filtered = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
-        } else if (filter === "needsRecall") {
-          var nowSec3 = Math.floor(Date.now() / 1000);
-          filtered = cards.filter(function(c) {
-            return c.srs_step != null && c.srs_step >= RECOGNITION_CAP_STEP && c.srs_due_at && c.srs_due_at <= nowSec3;
-          });
-        } else if (filter === "learning") {
-          filtered = cards.filter(function(c) { return knownMap[c.id] !== true; });
-        } else if (filter === "hard") {
-          var hard = cards.filter(function(c) {
-            var s = statsMap[c.id];
-            return !s || s.level === "hard" || s.level === "medium" || s.level === "new";
-          });
-          filtered = hard.length ? hard : cards;
-        }
-
-        if (order === "blocked") {
-          // Shuffle within each lesson group, then concatenate
-          var grouped = cardArrays.map(function(arr) {
-            var g = arr.filter(function(c) { return filtered.some(function(f) { return f.id === c.id; }); });
-            return weightedShuffle(g, statsMap);
-          });
-          filtered = grouped.reduce(function(acc, g) { return acc.concat(g); }, []);
-          if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
-        } else if (order === "shuffle" || order === "interleaved") {
-          if (count !== "all") {
-            filtered = weightedShuffle(filtered, statsMap).slice(0, parseInt(count, 10));
-          } else {
-            filtered = weightedShuffle(filtered, statsMap);
-          }
-        } else {
-          // "in-order": keep original DB order
-          if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
-        }
-
-        if (filtered.length === 0) {
-          alert(t("study.noCardsMatchFilter"));
-          return;
-        }
-
-        state.studyMode = mode;
-
-        // Record last_seen_at for all cards in this session (fire-and-forget)
-        store.markCardsSeen(filtered.map(function(c) { return c.id; }));
-
-        if (mode === "flashcard") {
-          state.studyCards = filtered;
-          state.studyIndex = 0;
-          state.studyFlipped = false;
-          startFlashcards();
-        } else if (mode === "quiz") {
-          state.quizCards  = filtered;
-          state.quizIndex  = 0;
-          state.quizScore  = 0;
-          state.quizResults = [];
-          startQuiz();
-        }
+    if (order === "blocked") {
+      // Shuffle within each lesson group, then concatenate
+      var grouped = cardArrays.map(function(arr) {
+        var g = arr.filter(function(c) { return filtered.some(function(f) { return f.id === c.id; }); });
+        return weightedShuffle(g, statsMap);
       });
+      filtered = grouped.reduce(function(acc, g) { return acc.concat(g); }, []);
+      if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
+    } else if (order === "shuffle" || order === "interleaved") {
+      if (count !== "all") {
+        filtered = weightedShuffle(filtered, statsMap).slice(0, parseInt(count, 10));
+      } else {
+        filtered = weightedShuffle(filtered, statsMap);
+      }
+    } else {
+      // "in-order": keep original DB order
+      if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
+    }
+
+    if (filtered.length === 0) {
+      alert(t("study.noCardsMatchFilter"));
+      return;
+    }
+
+    state.studyMode = mode;
+
+    // Record last_seen_at for all cards in this session (fire-and-forget)
+    store.markCardsSeen(filtered.map(function(c) { return c.id; }));
+
+    if (mode === "flashcard") {
+      state.studyCards = filtered;
+      state.studyIndex = 0;
+      state.studyFlipped = false;
+      startFlashcards();
+    } else if (mode === "quiz") {
+      state.quizCards  = filtered;
+      state.quizIndex  = 0;
+      state.quizScore  = 0;
+      state.quizResults = [];
+      startQuiz();
+    }
   });
 }
 
@@ -3774,6 +3834,12 @@ function startFlashcards() {
   showScreen("flashcard");
 }
 
+function setMarkButtonsEnabled(enabled) {
+  ["btn-fc-learning", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
+    document.getElementById(id).disabled = !enabled;
+  });
+}
+
 function renderFlashcard() {
   var cards = state.studyCards;
   var i     = state.studyIndex;
@@ -3782,6 +3848,11 @@ function renderFlashcard() {
 
   state.studyCardShownAt = Date.now();
   document.getElementById("fc-notdue-hint").classList.add("hidden");
+
+  // Grading buttons stay disabled until the card's been flipped at least once this card —
+  // otherwise a grade can be submitted on pure guesswork, without ever seeing the answer.
+  state.studyHasFlippedCard = false;
+  setMarkButtonsEnabled(false);
 
   // Cancel any pending auto-advance from a previous grade — otherwise it fires later
   // against whatever card the user has since navigated to (Prev/Next/dot/shuffle/delete),
@@ -3938,6 +4009,10 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   if (sel && sel.toString().length > 0) return;
   state.studyFlipped = !state.studyFlipped;
   document.getElementById("fc-card").classList.toggle("flipped", state.studyFlipped);
+  if (state.studyFlipped && !state.studyHasFlippedCard) {
+    state.studyHasFlippedCard = true;
+    setMarkButtonsEnabled(true);
+  }
   var expContainer = document.getElementById("fc-explanation");
   expContainer.classList.toggle("hidden", !state.studyFlipped || expContainer.innerHTML === "");
 });
@@ -5867,6 +5942,13 @@ document.getElementById("pref-lang-vi").addEventListener("click", function() {
   document.getElementById("pref-lang-en").classList.remove("active");
 });
 
+// Live preview, same as font-scale/TTS-rate below — applyDarkMode() is already instant
+// with no re-render side effect, so this just closes the gap where toggling did nothing
+// until Save. Not persisted until Save, consistent with those two settings.
+document.getElementById("pref-dark-mode").addEventListener("change", function() {
+  applyDarkMode(this.checked);
+});
+
 document.getElementById("pref-font-decrease").addEventListener("click", function() {
   applyFontScale(state.fontScale - FONT_SCALE_STEP);
   prefFontLabel();
@@ -6504,6 +6586,7 @@ document.addEventListener("keydown", function(e) {
       allCheck.dispatchEvent(new Event("change"));
     }
     else if ((e.key === "s" || e.key === "S") && state.selectMode) document.getElementById("btn-study-selected").click();
+    else if ((e.key === "d" || e.key === "D") && state.selectMode) document.getElementById("btn-delete-selected-lessons").click();
     else if (e.key === "Escape" && state.selectMode) setSelectMode(false);
     else if (e.key === "n" || e.key === "N") { e.preventDefault(); openNewLesson(); }
     else if (e.key === "e" || e.key === "E") { e.preventDefault(); if (state.currentClass) openEditClass(state.currentClass.id); }
@@ -6514,6 +6597,7 @@ document.addEventListener("keydown", function(e) {
     if (e.key === "n" || e.key === "N") { e.preventDefault(); openAddCard(); }
     else if (e.key === "b" || e.key === "B") { e.preventDefault(); openBulkAdd(); }
     else if (e.key === "s" || e.key === "S") { if (state.currentLesson) openSetup(); }
+    else if ((e.key === "d" || e.key === "D") && state.cardSelectMode) document.getElementById("btn-delete-selected-cards").click();
     else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-lesson-back").click(); }
   }
 
@@ -6736,6 +6820,7 @@ window.addEventListener("popstate", function() {
     if (!fcDragging) {
       if (Math.abs(dx) < 8) return;
       if (Math.abs(dy) > Math.abs(dx)) return;
+      if (!state.studyHasFlippedCard) return;
       fcDragging = true;
     }
     fcDx = dx;
