@@ -66,6 +66,7 @@
 - True/False lesson format: statement card with True or False answer; optional explanation shown after answering; bulk import `statement | true/false [;; explanation]`; works in flashcard and quiz modes
 - MCQ cards support 1–4 distractors (2–5 total choices); dynamic add/remove in card editor
 - Study setup: card count, filter, direction, mode — a hint line under the mode picker explains the Flashcard-vs-Quiz recall/recognition tradeoff, swapping text as the pill selection changes
+- Saveable Study Setup presets: "+ Save current as preset" captures the current Count/Filter/Mode/Order pill selection under a name; saved presets show as chips at the top of Study Setup — click a chip to reapply all 4 selections at once (hints and live match-count update accordingly), or its × to delete. Persisted server-side per-user (same preferences blob as dark mode/font scale), so presets survive reload; server mode only
 - Multi-lesson selection → combined study session; lesson name badge shown above each question/card so the subject is always visible
 - Multi-class quiz: "☑ Select" button (or `X` key) on home screen enters class select mode; check multiple classes and click "Study" to fetch all their lessons and launch a cross-class interleaved session
 - Progressive difficulty: hard cards weighted 3×, medium 2×
@@ -101,8 +102,7 @@
 
 - Unified keydown handler covers all screens — no mouse required
 - Home: `↑`/`↓` navigate class cards; `Enter` open class / toggle selection; `X` toggle select mode; `Space` toggle selection; `A` select all; `S` study selected; `Esc` exit select mode; `N` new class
-- Mobile home header: ⋮ dropdown consolidates Dashboard, Analytics, ☑ Select Classes, and Keyboard shortcuts — header stays single-row on 390px viewports; ☑ Select remains visible in header on desktop (≥601px)
-- Responsive inline nav: at ≥680px viewport width, Dashboard and Analytics appear as inline header buttons (`.nav-inline-btn`); on narrow screens they fall back to the ⋮ dropdown (`.dash-analytics-dropdown`)
+- Superseded: the header's old inline-button/⋮-dropdown responsive nav (Dashboard/Analytics/Select Classes) was replaced by the sidebar nav (see Home Screen section) — its markup is kept in the DOM but permanently hidden ("Keep for compatibility"), not an active mechanism. The orphaned duplicate "Analytics" label/buttons this left behind (rendered the identical Dashboard screen) were removed; Dashboard is reachable via the sidebar link or the `A` key
 - Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `D` delete selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
 - Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back; card select mode: `D` delete selected
 - Study Setup: `Enter` start studying, `Esc`/`⌫` back — completes the keyboard-only path (press `S` on a lesson to open setup, then `Enter` to begin, no mouse needed)
@@ -164,7 +164,7 @@
 
 ## Analytics (server mode only)
 
-- `📈 Analytics` button on home header; `A` key on home screen; `Esc` to go back
+- Renders inside the Dashboard screen (`#screen-dashboard`) — "Analytics" was never a separate screen, just a second nav label pointing at the same one; the duplicate label/buttons were removed (see Dashboard/Analytics nav cleanup below). Reachable via the sidebar's Dashboard link or the `A` key on Home; `Esc` to go back
 - `GET /api/stats/analytics` endpoint returns heatmap, weekly trend, and lesson breakdown
 - **90-day study heatmap** — GitHub-style calendar; cells colored by daily attempt count (0 / 1–5 / 6–15 / 16+); month labels; UTC date keys match server's SQLite `date('unixepoch')` dates
 - **12-week rolling trend** — CSS-only bar chart showing attempts per 7-day rolling window; "This week" / "Last week" / "Xw ago" labels; each row now also shows accuracy for that week (e.g. "12 (75%)"), not just volume
