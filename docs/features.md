@@ -173,7 +173,7 @@
 ## Dashboard (server mode only)
 - Accessible from home screen header button
 - `GET /api/stats/dashboard` endpoint, renders `#screen-dashboard`
-- Study streak (consecutive days with at least one session)
+- Study streak (consecutive days with at least one graded attempt in either mode — not "completed Quiz session," which would miss Flashcard-only days)
 - Summary counts: classes, lessons, cards, sessions, attempts
 - Overall accuracy progress bar
 - Card difficulty breakdown (easy/medium/hard/new counts)
