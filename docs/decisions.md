@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-07-24 — Dropped the legacy "Recall" pill from Overall Accuracy (reverses an earlier call)
+
+`renderAccuracyBySourcePills()` originally rendered a third "Recall" pill whenever an account had any `source='recall'` attempts left over from the removed Recall mode — a deliberate choice at the time to preserve visibility into old data rather than silently fold it into an aggregate. User feedback: Recall isn't a mode anymore, so it shouldn't visually read as one alongside Quiz/Flashcard. Changed `renderAccuracyBySourcePills()` to unconditionally iterate only `["quiz", "flashcard"]`, and removed the now-dead `ACCURACY_SOURCE_KEYS.recall` entry and its `dashboard.accuracyBySourceRecall` i18n strings (EN/VI). Legacy recall attempts still count toward the overall accuracy number and total (no DB/query change) — they just never get their own pill, verified via Playwright with both a mixed-source account and a recall-only account (empty pills row, not a fallback "Recall" pill).
+
 ## 2026-07-24 — "Ma sát & Tốc độ thao tác" batch: shared setup-data promise, flip-gate at the gesture layer, and a deliberate non-fix
 
 Implemented the 4 remaining findings from the audit's Friction & Speed theme.
