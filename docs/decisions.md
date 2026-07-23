@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-07-23 — Pull-to-refresh needed a horizontal-motion guard
+
+User report: swiping right to open the sidebar sometimes showed a blank/white panel briefly. Root cause: pull-to-refresh (`client/app.js`, mobile-only) only ever checked the vertical delta (`dy`) against its 72px threshold — it had no check on the horizontal component at all. The edge-swipe-to-open-sidebar gesture only requires the vertical drift to stay *under* 60% of the horizontal drift (`Math.abs(dy) < dx * 0.6`) to count as a sidebar-open swipe, which leaves plenty of room for `dy` to still cross pull-to-refresh's 72px threshold on the same gesture — firing both handlers at once. Pull-to-refresh's refreshing state (`renderHome()` + a 1200ms spinner) has no background color set on `#ptr-indicator`, so it reads as a blank/white bar pushed in from the top, landing right on top of the sidebar's slide-in animation. Fixed by adding the reciprocal check pull-to-refresh was missing: bail out if `|dx| > dy` (gesture is more horizontal than vertical), mirroring the guard the edge-swipe handler already had. Verified via Playwright by dispatching synthetic `TouchEvent`s for both a realistic diagonal sidebar-open swipe (sidebar opens, refresh stays inert) and a pure vertical pull (refresh still fires) — Playwright's touch-event dispatch works fine here since these are just DOM listeners, not native OS gesture recognizers.
+
 ## 2026-07-23 — Analytics/Stats fix batch: what moved, what stayed all-time, and what wasn't a bug
 
 Implemented all 9 findings from the UX audit's Analytics theme in one pass. Several sub-decisions worth recording:
