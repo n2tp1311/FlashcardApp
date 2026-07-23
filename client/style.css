@@ -1351,13 +1351,18 @@ code {
   padding: 10px 18px;
   font-size: 0.875rem;
   font-weight: 600;
+  flex-wrap: wrap;
+  row-gap: 2px;
 }
 
+/* flex-basis:100% forces this onto its own row within the button instead of widening
+   it inline after the label — keeps the 3-button row from growing past its container. */
 .mark-int {
+  flex-basis: 100%;
+  text-align: center;
   font-size: 0.6875rem;
   font-weight: 400;
   opacity: 0.8;
-  margin-left: 2px;
 }
 
 /* ============================
@@ -2032,10 +2037,6 @@ code {
   .quiz-opt { padding: 11px 14px; font-size: 0.875rem; }
   .fc-nav { gap: 8px; }
   .btn-mark { padding: 8px 12px; font-size: 0.8125rem; }
-  /* Interval preview text is the extra width that pushes the 3-button row past
-     a narrow viewport (white-space:nowrap means flex:1 can't shrink below it) —
-     drop it on mobile, same as the [key] hints hidden below. */
-  .mark-int { display: none; }
   .btn-lg { padding: 10px 16px; font-size: 0.875rem; }
   .class-grid { grid-template-columns: 1fr 1fr; }
   /* Compact user-nav so it doesn't fight for flex space with the title */
