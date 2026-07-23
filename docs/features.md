@@ -207,7 +207,7 @@
 - Flashcard swipe: drag `#fc-scene` horizontally; right swipe (> 75px) = Know It, left swipe = Learning; card flies off screen with rotation then triggers the mark; short swipe (< 75px) snaps back with spring animation
 - Swipe hint labels: `✓ Biết rồi` (green, left side) and `✗ Học lại` (red, right side) fade in as drag distance grows toward threshold; rotate ±15° like Tinder labels
 - `touch-action: pan-y` on `.fc-scene` — browser owns vertical scroll, JS owns horizontal swipe
-- Edge back swipe: start from x < 30px, swipe right > 90px → triggers back button for current screen; excluded on flashcard screen (handled by card swipe instead)
+- Edge back swipe: start from x < 30px, swipe right > 90px → triggers back button for current screen; excluded on flashcard screen (handled by card swipe instead) and on Home (used to open the sidebar — dropped, see decisions.md, since it fights iOS's own native edge-swipe-back gesture on installed PWAs). Open the sidebar via the hamburger button instead.
 - Search modal: swipe down > 80px closes it
 - Fixed (WebKit-specific): List view's hover-only class actions (edit/archive/delete) stayed in the layout flow at `opacity:0` on touch, silently eating ~124px from the row; a class with both a due-badge and an accuracy pill could squeeze the title down to one character per line. Actions are now `display:none` below 600px (still reachable via the class's ⋮ menu)
 - Fixed: the SRS interval preview text on Flashcard grading buttons (`· 10m` etc.) could push the 3-button row past a narrow viewport since `white-space:nowrap` blocks flex-shrink below content width; hidden on mobile, same as the `[key]` shortcut hints
