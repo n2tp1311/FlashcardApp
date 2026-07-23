@@ -6748,10 +6748,16 @@ window.addEventListener("popstate", function() {
     var dy = e.changedTouches[0].clientY - edgeStartY;
     if (dx > EDGE_THRESHOLD && Math.abs(dy) < dx * 0.6) {
       var screen = getActiveScreen();
-      if (screen === "home") {
-        openSidebar();
-        return;
-      }
+      // Home has no "back" target, so this used to open the sidebar instead — but a
+      // left-edge swipe-right is exactly the gesture iOS's own WKWebView back-navigation
+      // recognizer watches for, even in standalone/Add-to-Home-Screen mode. Our touch
+      // listeners are passive (can't preventDefault to suppress it), and this app's
+      // own history.pushState-based back-trap (see the popstate handler below) gives
+      // that native gesture real history to act on, so the two visibly fight — a blank
+      // white frame from iOS's own transition landing on top of the sidebar's slide-in.
+      // No known way to disable the native gesture from web content, so this one case
+      // was dropped; the hamburger button remains the way to open the sidebar on Home.
+      if (screen === "home") return;
       var backMap = {
         "class": "btn-class-back",
         "lesson": "btn-lesson-back",
