@@ -73,6 +73,7 @@
 - "Due Only" filter to quiz only SRS-due cards
 - Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons
 - Account preferences: "⚙ Preferences" in the user dropdown; saves dark mode and font scale to the server and caches in localStorage
+- Dark Mode toggle in Preferences previews live (theme changes immediately on toggle, before Save) — matches the existing live-preview behavior of font scale and TTS rate in the same modal
 - Flashcard flip only triggers on a plain click — a click that ends an active text selection (e.g. dragging to select text for copy/translate) is ignored, checked via `window.getSelection().toString()`
 - Delete-card button (🗑) in both flashcard toolbar and quiz header removes the currently shown card immediately (with the standard confirm dialog) and advances to the next card; deleting the last remaining card exits back to the lesson/class screen
 - Lesson sort: "Sort by" dropdown on the class screen; options are Date added (newest first), Last studied, Last card added, Due count; choice persisted in localStorage per browser
@@ -80,6 +81,8 @@
 - Class level field: optional integer on each class ("Level" input in class editor, 1–999); used to sequence courses; can be cleared; persists to server; round-trips through export/import and class share
 - Grading buttons preview their resulting SRS interval (e.g. "Know It · 4h"): computed client-side from the card's current `srs_step` via the same step table the Dashboard's SRS-distribution chart already uses (`stepLabel()`); suppressed for a not-yet-due card since grading it leaves the schedule untouched regardless of grade (mirrors the server's early-return in `attempts.js`); the local card's `srs_step`/`srs_due_at` are updated from the attempt response so re-grading the same card via Prev shows an accurate preview
 - Answering a not-yet-due card is no longer silent: a small hint explains the schedule didn't change, in both Flashcard (shown synchronously from the same client-side due-check as the interval preview, extending the 400ms auto-advance to 1200ms so it's readable) and Quiz mode (a `notDue` flag on the `POST /api/attempts` response, reusing the existing recognition-cap hint's DOM pattern)
+- Study Setup shows a live match-count ("N card(s) match this filter") before Start Studying, updating as the filter pill changes; zero-match state is styled as a warning so a 0-card session is visible before clicking Start, not just via the existing post-click alert. Card/stats data is prefetched once when Setup opens and shared with both the live count and Start Studying — no extra network round-trip versus before
+- Flashcard grading (mark buttons, `1`/`2`/`3` keys, and swipe) is blocked until the card has been flipped at least once this card — previously a card could be graded sight-unseen, contradicting the app's own "recall it yourself first" hint
 
 ## Audio Pronunciation
 
@@ -100,8 +103,8 @@
 - Home: `↑`/`↓` navigate class cards; `Enter` open class / toggle selection; `X` toggle select mode; `Space` toggle selection; `A` select all; `S` study selected; `Esc` exit select mode; `N` new class
 - Mobile home header: ⋮ dropdown consolidates Dashboard, Analytics, ☑ Select Classes, and Keyboard shortcuts — header stays single-row on 390px viewports; ☑ Select remains visible in header on desktop (≥601px)
 - Responsive inline nav: at ≥680px viewport width, Dashboard and Analytics appear as inline header buttons (`.nav-inline-btn`); on narrow screens they fall back to the ⋮ dropdown (`.dash-analytics-dropdown`)
-- Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
-- Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back
+- Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `D` delete selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
+- Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back; card select mode: `D` delete selected
 - Study Setup: `Enter` start studying, `Esc`/`⌫` back — completes the keyboard-only path (press `S` on a lesson to open setup, then `Enter` to begin, no mouse needed)
 - Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2`/`3` mark learning/known/confident, `S` shuffle, `P` pronounce, `Esc` exit to lesson screen
 - `N`/`B`/`E` shortcuts (new class/lesson/card, edit class) now call `e.preventDefault()` before opening their modal — previously the keystroke that triggered the shortcut also landed in the modal's now-focused text input

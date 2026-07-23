@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-07-24 — "Ma sát & Tốc độ thao tác" batch: shared setup-data promise, flip-gate at the gesture layer, and a deliberate non-fix
+
+Implemented the 4 remaining findings from the audit's Friction & Speed theme.
+
+**Study Setup's live match-count reuses one prefetched promise (`state.setupDataPromise`) instead of fetching per pill-click.** `openSetup()` now kicks off `store.getBulkCards(ids)` once, immediately on screen-open; both the live count (recomputed on every `setup-filter` pill click) and `startStudy()` await the same promise. This is the same shared-promise-plus-monotonic-request-id pattern used earlier this session for the Stats-screen trend-fetch race — a stale `openSetup()` call (user re-enters Setup for a different scope before the first fetch resolves) is discarded by comparing `state.setupRequestId` at resolution time, rather than by cancelling the underlying fetch. The filter-selection logic itself was extracted into `filterCardsBySetup()` so the live preview and the actual Start action can never compute a different card set from each other. Code review caught that the original promise chain had no `.catch()` — a rejected fetch would leave "Start Studying" silently doing nothing forever; fixed by resolving to an empty card set on failure so the existing zero-card alert path fires naturally instead of adding new error UI.
+
+**Flip-before-grade gating lives at the gesture layer, not just the button layer.** The three mark buttons get `.disabled` until `state.studyHasFlippedCard` is set, which also blocks the `1`/`2`/`3` keyboard shortcuts for free (a disabled button's `.click()` no-ops). Code review (two independent finder angles, same finding) caught that the swipe-to-grade gesture calls `.click()` on those same buttons programmatically but doesn't check the flag first — without a fix, swiping an unflipped card would play the full fly-off animation and then silently fail to grade, a worse UX than not gating swipe at all. Fixed by checking `state.studyHasFlippedCard` at the point the drag *starts* (in `touchmove`, before `fcDragging` is set), so an unflipped card doesn't animate at all rather than animating and then reverting.
+
+**Investigated, not fixed: Dark Mode's new live-preview toggle doesn't revert if Preferences is closed without Save.** This was flagged as a plausible-but-not-new-behavior. Font scale and TTS rate already live-preview on click with the same non-revert behavior — there is no dedicated Cancel button anywhere in this modal that implements revert-on-close for any of the three settings, only a Save button. Adding revert semantics for just Dark Mode would make it *inconsistent* with the other two live-previewed settings rather than fixing anything; left as-is to match existing precedent. Would revisit only as part of a modal-wide "revert on close" feature covering all three settings at once.
+
 ## 2026-07-24 — "Dữ liệu & Độ chính xác" batch: not-due hint timing, and one non-fix
 
 Implemented the 7 remaining findings from the audit's Data & Accuracy theme. Two decisions worth recording:
