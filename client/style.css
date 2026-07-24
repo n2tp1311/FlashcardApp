@@ -226,9 +226,6 @@ body {
   font-size: 0.85rem;
   color: var(--text2);
   transition: background 0.1s, color 0.1s;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .sidebar-class-item:hover { background: var(--surface2); color: var(--text); }
 .sidebar-class-icon { flex-shrink: 0; font-size: 1rem; }
@@ -248,7 +245,10 @@ body {
   min-height: 1.2em;
 }
 .setup-match-count-warn { color: var(--warning); font-weight: 600; }
-.sidebar-class-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+/* Wraps instead of ellipsizing — a native title attribute tooltip never shows on touch
+   (no :hover), so a truncated name had no way to be read at all on mobile. min-height
+   (not a fixed height) on .sidebar-class-item lets the row grow for a 2-line name. */
+.sidebar-class-name { overflow-wrap: break-word; flex: 1; min-width: 0; }
 
 .sidebar-new-class {
   display: flex;
@@ -2107,6 +2107,15 @@ code {
   .icon-btn { width: 40px; height: 40px; }
   .class-card-actions, .lesson-actions { opacity: 1; }
   .class-card-actions, .lesson-actions, .card-actions { gap: 10px; }
+
+  /* M15: lesson titles were mid-word ellipsizing even for realistic-length titles —
+     measured at 375px, the title box only got ~35% of the row (123px of 351px) because
+     row padding/gaps + the always-visible action icons (M13) + the format badge collectively
+     claimed the rest. Action icons stay (deliberate, M13); reclaim from the least essential
+     piece (format badge, purely categorical, still visible once the lesson is open) and
+     tighten padding/gap instead. */
+  .lesson-item { padding: 14px 14px; gap: 8px; }
+  .format-badge { display: none; }
 }
 
 /* M10: single column class grid on small phones */
