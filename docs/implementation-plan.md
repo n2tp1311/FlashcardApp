@@ -330,14 +330,15 @@ Rating map: ✗ Missed → Again(1), ~ Unsure → Hard(2), ✓ Got It → Good(3
 
 ### 5.12 Analytics Screen
 
-Not a separate screen — the "📈 Analytics" nav button renders `#screen-dashboard` (`renderDashboard()` + `showScreen("dashboard")`), same as the "Dashboard" button. Study-pattern/weak-spot content lives inside that one screen, split into an all-time section (summary counts, Overall Accuracy + per-source pills, Difficulty Breakdown, Due for Review) and a period-windowed section below a 7/30/60/90-day pill bar (heatmap, Weekly Trend with accuracy, SRS Interval Distribution, Study Time, Lesson Accuracy, Struggling Lessons).
+Not a separate screen — it renders inside `#screen-dashboard` (`renderDashboard()` + `showScreen("dashboard")`); "Analytics" was only ever a second nav label pointing at the same screen, and that duplicate label was removed (see §11 nav dedup entry). Study-pattern/weak-spot content lives inside that one screen, split into an all-time section (summary counts, Overall Accuracy + per-source pills, Difficulty Breakdown, Due for Review) and a period-windowed section below a 7/30/60/90-day pill bar (heatmap, Weekly Trend with accuracy, SRS Interval Distribution, Future Due forecast, Study Time, Lesson Accuracy, Struggling Lessons).
 
 | Section | Content |
 |---------|---------|
 | Daily heatmap | GitHub-style grid, 7–90 days per the period selector |
 | Weekly trend | Attempts per week + accuracy % per week |
 | Struggling lessons | Lessons with >40% hard-rated cards, ≥3 attempted cards, within the selected period |
-| Accuracy by source | Quiz vs Flashcard (vs legacy Recall) accuracy split |
+| Accuracy by source | Quiz vs Flashcard accuracy split (legacy Recall attempts count toward the total but aren't broken out as their own pill) |
+| Future Due forecast | Cards becoming due per day, next 14 days — fixed window, independent of the period pills |
 | Study time | Total minutes in the selected period, from `attempts.duration_ms` |
 | Per-lesson/class retention | 8-week Accuracy Trend on the Stats screen's Overview tab |
 | Export | Download last 90 days of attempt data as CSV (date, hour, class, lesson, card_front, mode, result, duration_sec) |
@@ -870,6 +871,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | "Dữ liệu & Độ chính xác" UX audit batch (7 findings) | Done | Long-text overflow-wrap, tooltips on Sessions/known%/accuracy%, not-due-answer hint (Flashcard + Quiz), class level shown in meta line, "No data yet" vs bare "0%" |
 | "Ma sát & Tốc độ thao tác" UX audit batch (4 findings) | Done | Live match-count preview on Study Setup (shared prefetch, no extra round-trip), grading blocked until card flipped (buttons/keys/swipe), Dark Mode live-preview toggle in Preferences, `D` shortcut for Delete Selected (Class + Lesson) |
 | "So sánh đối thủ" UX audit batch (2 of 8 findings) | Done | Removed orphaned duplicate "Analytics" nav (dead buttons/handlers left over from an unfinished sidebar migration); saveable Study Setup presets (name + reapply/delete a Count/Filter/Mode/Order combo, server-persisted). Remaining 6 findings (SRS algorithm customization, Anki `.apkg` import/export, new study modes, deeper analytics, tags/subdecks, richer card types) deferred — each is its own multi-week scoping decision, not a batch fix |
+| Future Due forecast chart | Done | One narrow slice of the deferred "shallow analytics" finding: `GET /api/stats/future-due`, 14-day-ahead due-count bar chart on Dashboard, independent of the period pills. Retention curve, per-card history, ease/button distribution, review-time stats still not built |
 | Edit card from Flashcard/Quiz study screens | Done | Pencil icon opens the existing edit modal pre-filled; saves patch the in-progress session in place |
 | Study setup (count, filter, direction, mode) | Done | Mode hint explains the recall/recognition tradeoff |
 | Multi-lesson selection | Done | |
