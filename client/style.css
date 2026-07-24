@@ -701,6 +701,15 @@ body {
 
 .lesson-meta { font-size: 0.75rem; color: var(--text2); margin-top: 2px; }
 
+.lesson-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.lesson-tag-chip {
+  font-size: 0.6875rem;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: var(--surface2);
+  color: var(--text2);
+}
+
 .format-badge {
   font-size: 0.6875rem;
   padding: 2px 8px;

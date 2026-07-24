@@ -41,8 +41,8 @@ function cloneClass(classId, toUserId) {
       const newId = genId();
       idMap[l.id] = newId;
       db.prepare(
-        "INSERT INTO lessons (id, class_id, title, format, sort_order) VALUES (?, ?, ?, ?, ?)"
-      ).run(newId, newClassId, l.title, l.format, l.sort_order);
+        "INSERT INTO lessons (id, class_id, title, format, sort_order, tags) VALUES (?, ?, ?, ?, ?, ?)"
+      ).run(newId, newClassId, l.title, l.format, l.sort_order, l.tags || null);
     });
 
     cards.forEach(c => {
@@ -90,7 +90,10 @@ router.get("/view/:token", (req, res) => {
 
   const { cls, lessons, cards } = getClassData(link.class_id);
   const owner = db.prepare("SELECT name FROM users WHERE id = ?").get(cls.user_id);
-  res.json({ cls, lessons, cards, ownerName: owner ? owner.name : "Unknown" });
+  // getClassData() keeps tags as a raw JSON string for cloneClass()'s INSERT passthrough —
+  // parse it here so the public view response matches every other lesson-returning endpoint.
+  const parsedLessons = lessons.map(l => ({ ...l, tags: l.tags ? JSON.parse(l.tags) : [] }));
+  res.json({ cls, lessons: parsedLessons, cards, ownerName: owner ? owner.name : "Unknown" });
 });
 
 // POST /api/share/clone/:token  — clone shared class into current user's account

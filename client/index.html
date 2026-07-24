@@ -324,6 +324,7 @@
     <button id="lesson-sort-dir" class="sort-dir-btn" title="Toggle sort direction" data-i18n-title="sort.toggleDirection"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
   </div>
   <div id="lesson-slicer-bar" class="slicer-bar hidden"></div>
+  <div id="lesson-tag-slicer-bar" class="slicer-bar hidden"></div>
   <div id="lesson-list" class="lesson-list"></div>
   <div id="empty-class" class="empty-state hidden">
     <div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
@@ -622,6 +623,9 @@
         <button class="pill" data-value="image-def" data-i18n="lesson.pickerImageDef">Image → Definition</button>
       </div>
       <p class="form-hint" id="format-hint" data-i18n="lesson.hintTermDef">Best for vocabulary, concepts, formulas. Bulk: term | definition</p>
+      <label class="form-label" data-i18n="lesson.tags">Tags</label>
+      <input type="text" id="lesson-tags-input" class="form-input" placeholder="linear-algebra, exam-prep" data-i18n-placeholder="lesson.tagsPlaceholder">
+      <p class="form-hint" data-i18n="lesson.tagsHint">Comma-separated</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="lesson" data-i18n="common.cancel">Cancel</button>

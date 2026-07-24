@@ -222,6 +222,9 @@ try { db.exec("ALTER TABLE card_states ADD COLUMN srs_due_at INTEGER"); } catch 
 // Migration: track time spent per attempt (client-measured, clamped server-side)
 try { db.exec("ALTER TABLE attempts ADD COLUMN duration_ms INTEGER"); } catch (_) {}
 
+// Migration: free-text tags on lessons, stored as a JSON array string
+try { db.exec("ALTER TABLE lessons ADD COLUMN tags TEXT"); } catch (_) {}
+
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
 const _prepare = db.prepare.bind(db);

@@ -29,9 +29,9 @@ router.get("/", requireAuth, (req, res) => {
     "SELECT l.id, l.class_id, l.title, l.format, " +
     "c.name AS class_name, c.icon AS class_icon " +
     "FROM lessons l JOIN classes c ON l.class_id = c.id " +
-    "WHERE c.user_id = ? AND LOWER(l.title) LIKE ? " +
+    "WHERE c.user_id = ? AND (LOWER(l.title) LIKE ? OR LOWER(l.tags) LIKE ?) " +
     "ORDER BY l.created_at DESC LIMIT 5"
-  ).all(uid, like);
+  ).all(uid, like, like);
 
   const cards = db.prepare(
     "SELECT ca.id, ca.lesson_id, ca.format, " +

@@ -49,8 +49,8 @@ router.post("/", requireAuth, (req, res) => {
       idMap[les.id] = newId;
       const classId = idMap[les.class_id] || les.class_id;
       db.prepare(
-        "INSERT OR IGNORE INTO lessons (id, class_id, title, format, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-      ).run(newId, classId, les.title, les.format, les.sort_order || 0, les.created_at || Math.floor(Date.now()/1000));
+        "INSERT OR IGNORE INTO lessons (id, class_id, title, format, sort_order, created_at, tags) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      ).run(newId, classId, les.title, les.format, les.sort_order || 0, les.created_at || Math.floor(Date.now()/1000), les.tags || null);
     });
 
     cards.forEach(card => {

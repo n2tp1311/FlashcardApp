@@ -408,6 +408,9 @@ Object.assign(TRANSLATIONS.en, {
   "lesson.hintTermDef": "Best for vocabulary, concepts, formulas. Bulk: term | definition",
   "lesson.hintMcq": "Best for exam prep. Bulk: question | correct | wrong1 [| wrong2…] [;; explanation]",
   "lesson.hintTrueFalse": "Best for T/F statements. Bulk: statement | true  or  statement | false [;; explanation]",
+  "lesson.tags": "Tags",
+  "lesson.tagsPlaceholder": "e.g. linear-algebra, exam-prep",
+  "lesson.tagsHint": "Comma-separated",
   "lesson.hintImageDef": "Image on front, text definition on back. Cards added one at a time (no bulk import).",
   "validate.enterClassName": "Please enter a class name.",
   "validate.enterLessonTitle": "Please enter a lesson title.",
@@ -826,6 +829,9 @@ Object.assign(TRANSLATIONS.vi, {
   "lesson.hintMcq": "Phù hợp để ôn thi. Hàng loạt: câu hỏi | đáp án đúng | sai1 [| sai2…] [;; giải thích]",
   "lesson.hintTrueFalse": "Phù hợp cho câu Đúng/Sai. Hàng loạt: câu | true  hoặc  câu | false [;; giải thích]",
   "lesson.hintImageDef": "Hình ảnh ở mặt trước, định nghĩa văn bản ở mặt sau. Thêm từng thẻ một (không nhập hàng loạt).",
+  "lesson.tags": "Nhãn",
+  "lesson.tagsPlaceholder": "vd: đại-số-tuyến-tính, ôn-thi",
+  "lesson.tagsHint": "Cách nhau bằng dấu phẩy",
   "validate.enterClassName": "Vui lòng nhập tên lớp.",
   "validate.enterLessonTitle": "Vui lòng nhập tiêu đề bài học.",
   "validate.fillTermDef": "Vui lòng nhập cả thuật ngữ và định nghĩa.",
@@ -1221,6 +1227,7 @@ var LocalStorageAdapter = (function() {
         class_id: fields.classId,
         title: fields.title,
         format: fields.format,
+        tags: normalizeTagsArray(fields.tags),
         sort_order: all.filter(function(l) { return l.class_id === fields.classId; }).length,
         created_at: Date.now()
       };
@@ -1232,6 +1239,7 @@ var LocalStorageAdapter = (function() {
       var all = load(KEY_LESSONS) || [];
       var idx = all.findIndex(function(l) { return l.id === id; });
       if (idx === -1) return Promise.resolve(null);
+      if (fields.tags !== undefined) fields = Object.assign({}, fields, { tags: normalizeTagsArray(fields.tags) });
       Object.assign(all[idx], fields);
       save(KEY_LESSONS, all);
       return Promise.resolve(all[idx]);
@@ -1708,6 +1716,8 @@ var state = {
 
   // Lesson format filter: "all" or a format string (resets per class)
   lessonFilter: "all",
+  // Lesson tag filter: "all" or a tag string (resets per class)
+  lessonTagFilter: "all",
   _lessonAccuracyMap: {},
 
   // Dashboard period in days (persisted)
@@ -2197,6 +2207,7 @@ function openClass(classId) {
     if (!cls) return;
     state.currentClass = cls;
     state.lessonFilter = "all";
+    state.lessonTagFilter = "all";
     state._lessonAccuracyMap = {};
     var nameEl = document.getElementById("class-detail-name");
     nameEl.innerHTML = escHtml(cls.icon + " " + cls.name) +
@@ -2362,6 +2373,7 @@ function renderLessons() {
   store.getLessons(state.currentClass.id).then(function(lessons) {
     state.currentClassLessons = lessons;
     _renderLessonSlicer(lessons);
+    _renderLessonTagSlicer(lessons);
     _renderLessonItems(lessons, state._lessonAccuracyMap);
 
     // Load accuracy async (server only)
@@ -2418,12 +2430,50 @@ function formatLabel(format) {
     : t("format.imageDef");
 }
 
+function _renderLessonTagSlicer(lessons) {
+  var bar = document.getElementById("lesson-tag-slicer-bar");
+  if (!bar) return;
+  var tags = [];
+  lessons.forEach(function(l) {
+    (l.tags || []).forEach(function(tg) { if (tags.indexOf(tg) === -1) tags.push(tg); });
+  });
+
+  bar.innerHTML = "";
+  if (tags.length === 0) {
+    bar.classList.add("hidden");
+    state.lessonTagFilter = "all";
+    return;
+  }
+
+  if (state.lessonTagFilter !== "all" && tags.indexOf(state.lessonTagFilter) === -1) {
+    state.lessonTagFilter = "all";
+  }
+
+  bar.classList.remove("hidden");
+
+  var allBtn = document.createElement("button");
+  allBtn.className = "pill" + (state.lessonTagFilter === "all" ? " active" : "");
+  allBtn.dataset.filter = "all";
+  allBtn.textContent = t("setup.all");
+  bar.appendChild(allBtn);
+
+  tags.forEach(function(tg) {
+    var btn = document.createElement("button");
+    btn.className = "pill" + (state.lessonTagFilter === tg ? " active" : "");
+    btn.dataset.filter = tg;
+    btn.textContent = tg;
+    bar.appendChild(btn);
+  });
+}
+
 function _renderLessonItems(lessons, accMap) {
   var list = document.getElementById("lesson-list");
   var empty = document.getElementById("empty-class");
 
-  var filtered = state.lessonFilter === "all" ? lessons
-    : lessons.filter(function(l) { return l.format === state.lessonFilter; });
+  var filtered = lessons.filter(function(l) {
+    return (state.lessonFilter === "all" || l.format === state.lessonFilter) &&
+      (state.lessonTagFilter === "all" || (l.tags && l.tags.indexOf(state.lessonTagFilter) !== -1));
+  });
 
   if (filtered.length === 0) {
     list.innerHTML = "";
@@ -2475,6 +2525,9 @@ function _renderLessonItems(lessons, accMap) {
           : '') +
         '<div class="lesson-info">' +
           '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
+          (lesson.tags && lesson.tags.length
+            ? '<div class="lesson-tags">' + lesson.tags.map(function(tg) { return '<span class="lesson-tag-chip">' + escHtml(tg) + '</span>'; }).join('') + '</div>'
+            : '') +
           '<div class="lesson-meta" id="les-meta-' + lesson.id + '">' + t("common.loading") + '</div>' +
           (reviewLabel ? '<div class="lesson-due-label' + (isDue ? " is-due" : "") + '">' + reviewLabel + '</div>' : '') +
           '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
@@ -2550,6 +2603,20 @@ function _applyLessonAccuracy(accMap) {
     state.lessonFilter = btn.dataset.filter;
     bar.querySelectorAll(".pill").forEach(function(b) {
       b.classList.toggle("active", b.dataset.filter === state.lessonFilter);
+    });
+    _renderLessonItems(state.currentClassLessons, state._lessonAccuracyMap);
+  });
+}());
+
+(function initLessonTagSlicerBar() {
+  var bar = document.getElementById("lesson-tag-slicer-bar");
+  if (!bar) return;
+  bar.addEventListener("click", function(e) {
+    var btn = e.target.closest(".pill");
+    if (!btn) return;
+    state.lessonTagFilter = btn.dataset.filter;
+    bar.querySelectorAll(".pill").forEach(function(b) {
+      b.classList.toggle("active", b.dataset.filter === state.lessonTagFilter);
     });
     _renderLessonItems(state.currentClassLessons, state._lessonAccuracyMap);
   });
@@ -2884,6 +2951,7 @@ function openNewLesson() {
   state.editingLessonId = null;
   document.getElementById("modal-lesson-title").textContent = t("lesson.newLesson");
   document.getElementById("lesson-title-input").value = "";
+  document.getElementById("lesson-tags-input").value = "";
   initLessonFormatPicker("term-def");
   openModal("lesson");
   document.getElementById("lesson-title-input").focus();
@@ -2898,6 +2966,7 @@ function openEditLesson(lessonId) {
   state.editingLessonId = lessonId;
   document.getElementById("modal-lesson-title").textContent = t("lesson.editLesson");
   document.getElementById("lesson-title-input").value = lesson.title;
+  document.getElementById("lesson-tags-input").value = (lesson.tags || []).join(", ");
   initLessonFormatPicker(lesson.format);
   // Lock format for existing lessons
   document.getElementById("lesson-format-picker").querySelectorAll(".pill").forEach(function(p) {
@@ -2908,9 +2977,27 @@ function openEditLesson(lessonId) {
   openModal("lesson");
 }
 
+// Mirrors server/routes/lessons.js's normalizeTags() exactly — trim/lowercase/dedupe/cap
+// at 10, applied to whatever tags end up in local storage too (not just the server path),
+// since LocalStorageAdapter has no separate authoritative validation layer of its own.
+function normalizeTagsArray(tags) {
+  var seen = [];
+  (tags || []).forEach(function(tag) {
+    if (typeof tag !== "string") return;
+    var t = tag.trim().toLowerCase();
+    if (t && seen.indexOf(t) === -1) seen.push(t);
+  });
+  return seen.slice(0, 10);
+}
+
+function parseTagsInput(value) {
+  return normalizeTagsArray(value.split(","));
+}
+
 document.getElementById("btn-save-lesson").addEventListener("click", function() {
   var title = document.getElementById("lesson-title-input").value.trim();
   if (!title) { alert(t("validate.enterLessonTitle")); return; }
+  var tags = parseTagsInput(document.getElementById("lesson-tags-input").value);
   var activePill = document.querySelector("#lesson-format-picker .pill.active");
   var format = activePill ? activePill.dataset.value : "term-def";
   // Re-enable pills after submit
@@ -2921,9 +3008,9 @@ document.getElementById("btn-save-lesson").addEventListener("click", function() 
   });
   var p;
   if (state.editingLessonId) {
-    p = store.updateLesson(state.editingLessonId, { title: title });
+    p = store.updateLesson(state.editingLessonId, { title: title, tags: tags });
   } else {
-    p = store.createLesson({ classId: state.currentClass.id, title: title, format: format });
+    p = store.createLesson({ classId: state.currentClass.id, title: title, format: format, tags: tags });
   }
   p.then(function() {
     closeModal("lesson");
@@ -5663,7 +5750,7 @@ var SQLiteAdapter = (function() {
     deleteClass: function(id)   { return req("DELETE", "/classes/" + id); },
 
     getLessons:   function(classId) { return req("GET",    "/classes/" + classId + "/lessons"); },
-    createLesson: function(f)       { return req("POST",   "/classes/" + f.classId + "/lessons", { title: f.title, format: f.format }); },
+    createLesson: function(f)       { return req("POST",   "/classes/" + f.classId + "/lessons", { title: f.title, format: f.format, tags: f.tags }); },
     updateLesson: function(id, f)   { return req("PUT",    "/lessons/" + id, f); },
     deleteLesson: function(id)      { return req("DELETE", "/lessons/" + id); },
 
@@ -6268,6 +6355,7 @@ function openSharedClassStudy(cls) {
   // Open the class detail but in read-only view (just lessons list)
   state.currentClass = cls;
   state.lessonFilter = "all";
+  state.lessonTagFilter = "all";
   state._lessonAccuracyMap = {};
   state.sharedViewMode = true;
   document.getElementById("class-detail-name").textContent = cls.icon + " " + cls.name;
@@ -6612,6 +6700,7 @@ function selectSearchResult(type, data) {
     if (!cls) return;
     state.currentClass = cls;
     state.lessonFilter = "all";
+    state.lessonTagFilter = "all";
     state._lessonAccuracyMap = {};
     store.getLessons(targetClassId).then(function(lessons) {
       state.currentClassLessons = lessons;
