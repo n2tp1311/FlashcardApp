@@ -2703,13 +2703,19 @@ code {
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
 
 .analytics-charts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: start;
-  gap: 16px;
+  /* Masonry via CSS multi-column: chart cards vary a lot in natural height (a calendar
+     heatmap vs. a 15-row bar list vs. a single number), so a uniform grid either stretches
+     short cards into big empty boxes or leaves whole cells blank at the end of a row.
+     Columns pack each card into whichever column has room next, eliminating both. */
+  columns: 3 260px;
+  column-gap: 16px;
   margin-bottom: 16px;
 }
-.analytics-chart-card { text-align: left; }
+.analytics-chart-card {
+  text-align: left;
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
 .analytics-chart-title {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -2719,7 +2725,7 @@ code {
   margin: 0 0 12px;
 }
 @media (max-width: 900px) {
-  .analytics-charts-grid { grid-template-columns: 1fr; }
+  .analytics-charts-grid { columns: 1; }
 }
 
 .analytics-lesson-list { display: flex; flex-direction: column; gap: 8px; }
