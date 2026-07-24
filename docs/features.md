@@ -187,6 +187,7 @@
 - Due-for-review lessons (grouped by urgency)
 - Struggling lessons: lessons where >40% of attempted cards are rated Hard (now windowed by the period selector and requires ≥3 attempted cards — see Analytics section)
 - The known-progress text ("X/Y known") and the accuracy pill sitting next to it on class cards both have tooltips now — they're genuinely different metrics (a manual Flashcard-mode "Know It" flag vs. computed accuracy across both modes) that can legitimately disagree, which read as a data bug without an explanation
+- The 5 chart cards in "Study Charts" (Heatmap, Weekly Trend, SRS Interval Distribution, Future Due, Study Time) pack into a CSS masonry layout instead of a uniform grid, so cards with very different natural heights (a 2-row chart next to a 15-row one) don't leave ragged empty space or a blank grid cell
 
 ## MCQ Explanation Field
 - Optional `explanation` field on MCQ cards; stored in card JSON data

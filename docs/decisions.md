@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-07-24 — Dashboard chart cards: CSS masonry instead of a uniform grid
+
+User feedback: the 5 Study Charts cards should "scale to fit the frame, no empty space" — a uniform `display:grid` with `align-items:start` left cards floating at mismatched heights within a row (a 2-row SRS Distribution card next to a 12-row Weekly Trend card, neither stretching to match), and once Future Due became a 5th card, 5 cards in a 3-column grid left one entire cell blank in the last row. Considered stretching cards to equal height (`align-items:stretch`) — rejected, since a stretched-but-mostly-empty card (e.g. "Study Time," a single number) would just move the blank space inside a card border rather than remove it. Switched `.analytics-charts-grid` to CSS multi-column (`columns: 3 260px`, each card `break-inside: avoid`) — cards pack into whichever column has room next regardless of individual height, which is robust to future chart additions/removals without needing to hand-tune which cards pair together. Verified via Playwright screenshots at 1400px and 390px (mobile collapses to a single column, same as before).
+
 ## 2026-07-24 — Future Due forecast: one narrow slice of "shallow analytics," fixed window, one real bug caught in review
 
 User pasted 4 more "So sánh đối thủ" findings (new study modes, deeper analytics, tags/subdecks, richer card types) — again flagged these as multi-week product-scope features rather than batch-implementing them, and asked the user to pick a slice. They chose the narrowest piece of the "shallow analytics" finding: a Future Due forecast (bar chart of cards becoming due over the next 14 days), leaving the rest of that finding (retention curve, per-card history, ease/button distribution, review-time stats) and the other 3 findings undecided.
