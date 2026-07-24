@@ -247,6 +247,7 @@ User selects:
 5. Mode: Flashcards or Quiz — hint line under the mode picker explains the recall-vs-recognition tradeoff (§5.4's SRS cap)
 6. Live match-count ("N card(s) match this filter") shown before Start Studying, recomputed as the Filter pill changes; zero-match state styled as a warning
 7. Saveable presets: capture the current Count/Filter/Mode/Order selection under a name, reapply or delete later; persisted server-side per-user (server mode only)
+8. Max reviews per day (Preferences setting): caps Due Only/Needs Recall session size to the remaining daily budget, most-overdue cards first — badges/counts elsewhere stay uncapped
 
 ### 5.3 Flashcard Study Mode
 
@@ -872,6 +873,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | "Ma sát & Tốc độ thao tác" UX audit batch (4 findings) | Done | Live match-count preview on Study Setup (shared prefetch, no extra round-trip), grading blocked until card flipped (buttons/keys/swipe), Dark Mode live-preview toggle in Preferences, `D` shortcut for Delete Selected (Class + Lesson) |
 | "So sánh đối thủ" UX audit batch (2 of 8 findings) | Done | Removed orphaned duplicate "Analytics" nav (dead buttons/handlers left over from an unfinished sidebar migration); saveable Study Setup presets (name + reapply/delete a Count/Filter/Mode/Order combo, server-persisted). Remaining 6 findings (SRS algorithm customization, Anki `.apkg` import/export, new study modes, deeper analytics, tags/subdecks, richer card types) deferred — each is its own multi-week scoping decision, not a batch fix |
 | Future Due forecast chart | Done | One narrow slice of the deferred "shallow analytics" finding: `GET /api/stats/future-due`, 14-day-ahead due-count bar chart on Dashboard, independent of the period pills. Retention curve, per-card history, ease/button distribution, review-time stats still not built |
+| Max reviews per day cap | Done | One narrow slice of the deferred "no SRS algorithm customization" finding: `GET /api/stats/reviews-today` + Preferences field caps Due Only/Needs Recall session size, most-overdue first; badges stay uncapped. Learning-steps customization, ease, graduating interval, FSRS still not built |
 | Edit card from Flashcard/Quiz study screens | Done | Pencil icon opens the existing edit modal pre-filled; saves patch the in-progress session in place |
 | Study setup (count, filter, direction, mode) | Done | Mode hint explains the recall/recognition tradeoff |
 | Multi-lesson selection | Done | |
