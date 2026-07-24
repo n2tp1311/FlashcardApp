@@ -476,4 +476,15 @@ router.get("/srs-distribution", requireAuth, (req, res) => {
   res.json(rows);
 });
 
+// GET /api/stats/future-due — how many cards become due over the next FUTURE_DUE_WINDOW_DAYS days
+const FUTURE_DUE_WINDOW_DAYS = 14;
+router.get("/future-due", requireAuth, (req, res) => {
+  const rows = db.prepare(
+    "SELECT date(srs_due_at,'unixepoch') AS day, COUNT(*) AS cnt FROM card_states " +
+    "WHERE user_id = ? AND srs_due_at > strftime('%s','now') AND srs_due_at <= strftime('%s','now') + ? " +
+    "GROUP BY day"
+  ).all(req.session.userId, FUTURE_DUE_WINDOW_DAYS * 86400);
+  res.json({ days: rows, windowDays: FUTURE_DUE_WINDOW_DAYS });
+});
+
 module.exports = router;

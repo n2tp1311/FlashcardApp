@@ -209,6 +209,7 @@ Object.assign(TRANSLATIONS.en, {
   "time.weeksAgo": "{n}w ago",
   "time.notScheduled": "not scheduled",
   "time.now": "now",
+  "time.today": "Today",
   "time.inMinutes": "in {n}m",
   "time.inHours": "in {n}h",
   "time.inDays": "in {n}d",
@@ -297,6 +298,8 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.lastWeek": "Last week",
   "dashboard.noCardsInSrs": "No cards in SRS yet.",
   "dashboard.cardsInSrs": "{n} card(s) in SRS",
+  "dashboard.futureDue": "Upcoming Reviews (Next {n} Days)",
+  "dashboard.noCardsDueSoon": "No cards due in the next {n} days.",
   "dashboard.noStudyData": "No study data yet.",
   "dashboard.attemptsAbbrev": "{n} att.",
   "dashboard.attemptsCount": "{n} attempt(s)",
@@ -620,6 +623,7 @@ Object.assign(TRANSLATIONS.vi, {
   "time.weeksAgo": "{n} tuần trước",
   "time.notScheduled": "chưa lên lịch",
   "time.now": "ngay bây giờ",
+  "time.today": "Hôm nay",
   "time.inMinutes": "còn {n} phút",
   "time.inHours": "còn {n} giờ",
   "time.inDays": "còn {n} ngày",
@@ -708,6 +712,8 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.lastWeek": "Tuần trước",
   "dashboard.noCardsInSrs": "Chưa có thẻ nào trong SRS.",
   "dashboard.cardsInSrs": "{n} thẻ trong SRS",
+  "dashboard.futureDue": "Sắp đến hạn ôn ({n} ngày tới)",
+  "dashboard.noCardsDueSoon": "Không có thẻ nào đến hạn trong {n} ngày tới.",
   "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
   "dashboard.attemptsAbbrev": "{n} lượt",
   "dashboard.attemptsCount": "{n} lượt làm",
@@ -4875,13 +4881,13 @@ function renderDashboard() {
   var exportBtn = document.getElementById("btn-dashboard-export");
   if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
-   "dash-heatmap-wrap","dash-trend-wrap","dash-srs-wrap","dash-time-wrap","dash-lesson-wrap",
+   "dash-heatmap-wrap","dash-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-time-wrap","dash-lesson-wrap",
    "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
 
-  Promise.all([store.getDashboard(), store.getAnalytics(state.dashPeriod), store.getSrsDistribution()]).then(function(results) {
-    var d = results[0], analytics = results[1], srs = results[2];
+  Promise.all([store.getDashboard(), store.getAnalytics(state.dashPeriod), store.getSrsDistribution(), store.getFutureDue()]).then(function(results) {
+    var d = results[0], analytics = results[1], srs = results[2], futureDue = results[3];
     var days = analytics.days || state.dashPeriod || 60;
     var heatmapTitle = document.getElementById("dash-heatmap-title");
     if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
@@ -4924,6 +4930,9 @@ function renderDashboard() {
     renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
     renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
     renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
+    var futureDueTitle = document.getElementById("dash-future-due-title");
+    if (futureDueTitle) futureDueTitle.textContent = t("dashboard.futureDue", { n: futureDue.windowDays });
+    renderFutureDue(futureDue, document.getElementById("dash-future-due-wrap"));
     renderStudyTime(analytics.totalDurationMs, document.getElementById("dash-time-wrap"));
     renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
@@ -5184,6 +5193,37 @@ function renderSrsDistribution(rows, wrap) {
   note.className = "srs-total-note";
   note.textContent = t("dashboard.cardsInSrs", { n: total });
   wrap.appendChild(note);
+}
+
+function renderFutureDue(data, wrap) {
+  if (!data || !data.days) return;
+  var map = {};
+  data.days.forEach(function(r) { map[r.day] = r.cnt; });
+  var now = new Date();
+  var buckets = [];
+  // Start at 0 (today), not 1 — the server's `srs_due_at > now` window includes cards due
+  // later today, grouped under today's UTC date. Skipping that bucket would silently drop
+  // them, and if today's the only day with due cards, wrongly show the empty state.
+  for (var i = 0; i <= data.windowDays; i++) {
+    var d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + i));
+    buckets.push({ n: i, cnt: map[d.toISOString().slice(0, 10)] || 0 });
+  }
+  if (buckets.every(function(b) { return b.cnt === 0; })) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noCardsDueSoon", { n: data.windowDays }) + '</div>';
+    return;
+  }
+  var max = buckets.reduce(function(m, b) { return Math.max(m, b.cnt); }, 1);
+  buckets.forEach(function(b) {
+    var pct = Math.round(b.cnt / max * 100);
+    var rowEl = document.createElement("div");
+    rowEl.className = "trend-row";
+    var label = b.n === 0 ? t("time.today") : t("time.inDays", { n: b.n });
+    rowEl.innerHTML =
+      '<span class="trend-label">' + escHtml(label) + '</span>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="trend-count">' + b.cnt + '</span>';
+    wrap.appendChild(rowEl);
+  });
 }
 
 function renderStudyTime(totalDurationMs, wrap) {
@@ -5648,6 +5688,7 @@ var SQLiteAdapter = (function() {
     getDashboard: function() { return req("GET", "/stats/dashboard"); },
     getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
     getSrsDistribution: function() { return req("GET", "/stats/srs-distribution"); },
+    getFutureDue: function() { return req("GET", "/stats/future-due"); },
     getTrend: function(type, id) { return req("GET", "/stats/trend?scope=" + type + "&id=" + id); },
     getClassAccuracy: function() { return req("GET", "/stats/accuracy/classes"); },
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
