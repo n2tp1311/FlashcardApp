@@ -487,4 +487,13 @@ router.get("/future-due", requireAuth, (req, res) => {
   res.json({ days: rows, windowDays: FUTURE_DUE_WINDOW_DAYS });
 });
 
+// GET /api/stats/reviews-today — approximates "reviews done today" as any graded attempt
+// today (attempts has no new-vs-review distinction), used to enforce the daily review cap
+router.get("/reviews-today", requireAuth, (req, res) => {
+  const row = db.prepare(
+    "SELECT COUNT(*) AS cnt FROM attempts WHERE user_id = ? AND date(created_at,'unixepoch') = date('now')"
+  ).get(req.session.userId);
+  res.json({ count: row.cnt });
+});
+
 module.exports = router;

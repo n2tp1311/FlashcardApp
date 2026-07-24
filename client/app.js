@@ -48,6 +48,8 @@ Object.assign(TRANSLATIONS.en, {
   "pref.language": "Language",
   "pref.speed": "Speed",
   "pref.testSpeed": "Test speed",
+  "pref.maxReviewsPerDay": "Max reviews per day",
+  "pref.noLimit": "No limit",
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
@@ -197,6 +199,7 @@ Object.assign(TRANSLATIONS.en, {
   "count.cards": "{n} card(s)",
   "confirm.deleteLesson": "Delete lesson \"{title}\" and all its cards?",
   "alert.noCardsDue": "No cards are due for review right now.",
+  "alert.dailyReviewCapReached": "You've hit your daily review cap — come back tomorrow!",
   "bulk.andMore": "... and {n} more",
   "bulk.summary": "{lessons} lesson(s), {cards} card(s) total",
   "class.unarchiveClass": "Unarchive Class",
@@ -462,6 +465,8 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.language": "Ngôn ngữ",
   "pref.speed": "Tốc độ",
   "pref.testSpeed": "Nghe thử tốc độ",
+  "pref.maxReviewsPerDay": "Số review tối đa mỗi ngày",
+  "pref.noLimit": "Không giới hạn",
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
@@ -611,6 +616,7 @@ Object.assign(TRANSLATIONS.vi, {
   "count.cards": "{n} thẻ",
   "confirm.deleteLesson": "Xóa bài học \"{title}\" cùng toàn bộ thẻ ghi nhớ?",
   "alert.noCardsDue": "Hiện chưa có thẻ nào đến hạn ôn tập.",
+  "alert.dailyReviewCapReached": "Bạn đã đạt giới hạn review hôm nay — quay lại vào ngày mai nhé!",
   "bulk.andMore": "... và {n} thẻ nữa",
   "bulk.summary": "{lessons} bài học, tổng {cards} thẻ",
   "class.unarchiveClass": "Bỏ lưu trữ lớp",
@@ -1620,6 +1626,7 @@ var state = {
   setupRequestId: 0,
   setupDataPromise: null,
   studyPresets: [],
+  maxReviewsPerDay: null,
 
   // Study
   studyCards: [],
@@ -3111,19 +3118,29 @@ document.getElementById("btn-review-due").addEventListener("click", function() {
     return c.srs_due_at && c.srs_due_at <= nowSec;
   });
   if (!dueCards.length) { alert(t("alert.noCardsDue")); return; }
-  state.studyScope = {
-    lessonIds: [state.currentLesson.id],
-    lessons: [state.currentLesson],
-    returnScreen: "lesson",
-    title: state.currentLesson.title
-  };
-  state.studyMode = "quiz";
-  state.quizCards  = shuffle(dueCards);
-  state.quizIndex  = 0;
-  state.quizScore  = 0;
-  state.quizResults = [];
-  store.markCardsSeen(dueCards.map(function(c) { return c.id; }));
-  startQuiz();
+  // This button bypasses Study Setup entirely, so it needs its own fresh reviews-today fetch
+  // to apply the same daily cap Study Setup's Due Only/Needs Recall filters respect.
+  var hasCap = IS_SERVER && state.maxReviewsPerDay !== null && state.maxReviewsPerDay !== undefined;
+  var capPromise = hasCap ? store.getReviewsToday() : Promise.resolve({ count: 0 });
+  capPromise.then(function(r) {
+    var capped = applyReviewCap(dueCards, r.count);
+    if (!capped.length) { alert(t("alert.dailyReviewCapReached")); return; }
+    state.studyScope = {
+      lessonIds: [state.currentLesson.id],
+      lessons: [state.currentLesson],
+      returnScreen: "lesson",
+      title: state.currentLesson.title
+    };
+    state.studyMode = "quiz";
+    state.quizCards  = shuffle(capped);
+    state.quizIndex  = 0;
+    state.quizScore  = 0;
+    state.quizResults = [];
+    store.markCardsSeen(capped.map(function(c) { return c.id; }));
+    startQuiz();
+  }).catch(function() {
+    alert(t("setup.loadFailed"));
+  });
 });
 
 /* ============================
@@ -3615,13 +3632,15 @@ function openSetup(scope) {
   if (matchCountEl) matchCountEl.textContent = "";
   var requestId = ++state.setupRequestId;
   var ids = state.studyScope.lessonIds;
-  state.setupDataPromise = store.getBulkCards(ids).then(function(cards) {
+  var reviewsTodayPromise = IS_SERVER ? store.getReviewsToday() : Promise.resolve({ count: 0 });
+  state.setupDataPromise = Promise.all([store.getBulkCards(ids), reviewsTodayPromise]).then(function(results) {
+    var cards = results[0], reviewsToday = results[1].count;
     var knownMap = {};
     cards.forEach(function(c) {
       if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
     });
     return store.getDifficultyMap(cards.map(function(c) { return c.id; })).then(function(statsMap) {
-      var data = { cards: cards, knownMap: knownMap, statsMap: statsMap };
+      var data = { cards: cards, knownMap: knownMap, statsMap: statsMap, reviewsToday: reviewsToday };
       // Ignore if the user has since reopened Setup for a different scope before this resolved.
       if (requestId === state.setupRequestId) updateSetupMatchCount(data);
       return data;
@@ -3635,7 +3654,7 @@ function openSetup(scope) {
       matchCountEl.textContent = t("setup.loadFailed");
       matchCountEl.classList.add("setup-match-count-warn");
     }
-    return { cards: [], knownMap: {}, statsMap: {} };
+    return { cards: [], knownMap: {}, statsMap: {}, reviewsToday: 0 };
   });
 }
 
@@ -3644,7 +3663,7 @@ function updateSetupMatchCount(data) {
   if (!countEl || !data) return;
   var filterPill = document.querySelector("#setup-filter .pill.active");
   var filter = filterPill ? filterPill.dataset.value : "all";
-  var matched = filterCardsBySetup(data.cards, filter, data.knownMap, data.statsMap);
+  var matched = filterCardsBySetup(data.cards, filter, data.knownMap, data.statsMap, data.reviewsToday);
   countEl.classList.toggle("setup-match-count-warn", matched.length === 0);
   countEl.textContent = matched.length === 0
     ? t("study.noCardsMatchFilter")
@@ -3862,17 +3881,31 @@ function weightedShuffle(cards, statsMap) {
 // "Needs Recall" filter list, not to compute SRS scheduling itself (that stays server-side).
 var RECOGNITION_CAP_STEP = 2;
 
+// Caps due/needsRecall cards to the user's remaining daily review budget (Preferences →
+// Max reviews per day), prioritizing the most-overdue cards rather than arbitrary DB order.
+// "Reviews done today" approximates to any graded attempt today (attempts has no new-vs-
+// review distinction) — a documented simplification, not a true Anki new/review split.
+function applyReviewCap(dueCards, reviewsToday) {
+  // null/undefined means "no limit" — checked explicitly (not a truthy check) so a real
+  // cap of 0 ("study nothing today") isn't mistaken for "no limit" set.
+  if (state.maxReviewsPerDay === null || state.maxReviewsPerDay === undefined) return dueCards;
+  var remaining = Math.max(0, state.maxReviewsPerDay - reviewsToday);
+  return dueCards.slice().sort(function(a, b) { return (a.srs_due_at || 0) - (b.srs_due_at || 0); }).slice(0, remaining);
+}
+
 // Shared between the live match-count preview on Study Setup and startStudy() itself,
 // so the two can never drift out of sync on what counts as a "match".
-function filterCardsBySetup(cards, filter, knownMap, statsMap) {
+function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday) {
   if (filter === "due") {
     var nowSec2 = Math.floor(Date.now() / 1000);
-    return cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
+    var due = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
+    return applyReviewCap(due, reviewsToday);
   } else if (filter === "needsRecall") {
     var nowSec3 = Math.floor(Date.now() / 1000);
-    return cards.filter(function(c) {
+    var needsRecall = cards.filter(function(c) {
       return c.srs_step != null && c.srs_step >= RECOGNITION_CAP_STEP && c.srs_due_at && c.srs_due_at <= nowSec3;
     });
+    return applyReviewCap(needsRecall, reviewsToday);
   } else if (filter === "learning") {
     return cards.filter(function(c) { return knownMap[c.id] !== true; });
   } else if (filter === "hard") {
@@ -3891,6 +3924,7 @@ function startStudy(count, filter, mode, order) {
   state.setupDataPromise.then(function(data) {
     var cards = data.cards, knownMap = data.knownMap, statsMap = data.statsMap;
     var ids = state.studyScope ? state.studyScope.lessonIds : [state.currentLesson.id];
+    var reviewsToday = data.reviewsToday;
 
     state.studyKnownMap = knownMap;
     state.studyStatsMap = statsMap;
@@ -3903,7 +3937,7 @@ function startStudy(count, filter, mode, order) {
     });
     var cardArrays = ids.map(function(id) { return byLesson[id] || []; });
 
-    var filtered = filterCardsBySetup(cards, filter, knownMap, statsMap);
+    var filtered = filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday);
 
     if (order === "blocked") {
       // Shuffle within each lesson group, then concatenate
@@ -5689,6 +5723,7 @@ var SQLiteAdapter = (function() {
     getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
     getSrsDistribution: function() { return req("GET", "/stats/srs-distribution"); },
     getFutureDue: function() { return req("GET", "/stats/future-due"); },
+    getReviewsToday: function() { return req("GET", "/stats/reviews-today"); },
     getTrend: function(type, id) { return req("GET", "/stats/trend?scope=" + type + "&id=" + id); },
     getClassAccuracy: function() { return req("GET", "/stats/accuracy/classes"); },
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
@@ -5809,6 +5844,9 @@ function applyPrefs(prefs) {
   }
   if (Array.isArray(prefs.studyPresets)) {
     state.studyPresets = prefs.studyPresets;
+  }
+  if (typeof prefs.maxReviewsPerDay === "number") {
+    state.maxReviewsPerDay = prefs.maxReviewsPerDay;
   }
 }
 
@@ -6082,6 +6120,8 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-rate-decrease").disabled = !ttsSupported;
   document.getElementById("pref-rate-increase").disabled = !ttsSupported;
   document.getElementById("pref-tts-test").disabled = !ttsSupported;
+  document.getElementById("pref-max-reviews").value =
+    (state.maxReviewsPerDay === null || state.maxReviewsPerDay === undefined) ? "" : state.maxReviewsPerDay;
   openModal("preferences");
 });
 
@@ -6131,7 +6171,12 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   state.ttsRate = rate;
   var lang = document.getElementById("pref-lang-vi").classList.contains("active") ? "vi" : "en";
   applyLanguage(lang);
-  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang };
+  // Empty field = no limit (null); a typed "0" is a real cap, not "no limit" — must not
+  // collapse to null via a truthy check. Negative input clamped to 0.
+  var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
+  var maxReviews = maxReviewsRaw === "" ? null : Math.max(0, parseInt(maxReviewsRaw, 10) || 0);
+  state.maxReviewsPerDay = maxReviews;
+  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
