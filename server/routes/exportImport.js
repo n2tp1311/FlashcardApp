@@ -40,8 +40,8 @@ router.post("/", requireAuth, (req, res) => {
       const newId = genId();
       idMap[cls.id] = newId;
       db.prepare(
-        "INSERT OR IGNORE INTO classes (id, user_id, name, color, icon, sort_order, level, archived, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "📚", cls.sort_order || 0, cls.level ?? null, cls.archived ? 1 : 0, cls.created_at || Math.floor(Date.now()/1000));
+        "INSERT OR IGNORE INTO classes (id, user_id, name, color, icon, sort_order, level, archived, created_at, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "📚", cls.sort_order || 0, cls.level ?? null, cls.archived ? 1 : 0, cls.created_at || Math.floor(Date.now()/1000), cls.tags || null);
     });
 
     lessons.forEach(les => {
@@ -49,8 +49,8 @@ router.post("/", requireAuth, (req, res) => {
       idMap[les.id] = newId;
       const classId = idMap[les.class_id] || les.class_id;
       db.prepare(
-        "INSERT OR IGNORE INTO lessons (id, class_id, title, format, sort_order, created_at, tags) VALUES (?, ?, ?, ?, ?, ?, ?)"
-      ).run(newId, classId, les.title, les.format, les.sort_order || 0, les.created_at || Math.floor(Date.now()/1000), les.tags || null);
+        "INSERT OR IGNORE INTO lessons (id, class_id, title, format, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+      ).run(newId, classId, les.title, les.format, les.sort_order || 0, les.created_at || Math.floor(Date.now()/1000));
     });
 
     cards.forEach(card => {

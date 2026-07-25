@@ -13,6 +13,10 @@ function genToken() {
   return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
 
+function parseClassTags(row) {
+  return Object.assign({}, row, { tags: row.tags ? JSON.parse(row.tags) : [] });
+}
+
 // Helper: get full class data (lessons + cards) for a class id
 function getClassData(classId) {
   const cls     = db.prepare("SELECT * FROM classes WHERE id = ?").get(classId);
@@ -33,16 +37,16 @@ function cloneClass(classId, toUserId) {
     const newClassId = genId();
     const count = db.prepare("SELECT COUNT(*) as n FROM classes WHERE user_id = ?").get(toUserId).n;
     db.prepare(
-      "INSERT INTO classes (id, user_id, name, color, icon, sort_order, level) VALUES (?, ?, ?, ?, ?, ?, ?)"
-    ).run(newClassId, toUserId, cls.name, cls.color, cls.icon, count, cls.level ?? null);
+      "INSERT INTO classes (id, user_id, name, color, icon, sort_order, level, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).run(newClassId, toUserId, cls.name, cls.color, cls.icon, count, cls.level ?? null, cls.tags || null);
     idMap[classId] = newClassId;
 
     lessons.forEach(l => {
       const newId = genId();
       idMap[l.id] = newId;
       db.prepare(
-        "INSERT INTO lessons (id, class_id, title, format, sort_order, tags) VALUES (?, ?, ?, ?, ?, ?)"
-      ).run(newId, newClassId, l.title, l.format, l.sort_order, l.tags || null);
+        "INSERT INTO lessons (id, class_id, title, format, sort_order) VALUES (?, ?, ?, ?, ?)"
+      ).run(newId, newClassId, l.title, l.format, l.sort_order);
     });
 
     cards.forEach(c => {
@@ -91,9 +95,9 @@ router.get("/view/:token", (req, res) => {
   const { cls, lessons, cards } = getClassData(link.class_id);
   const owner = db.prepare("SELECT name FROM users WHERE id = ?").get(cls.user_id);
   // getClassData() keeps tags as a raw JSON string for cloneClass()'s INSERT passthrough —
-  // parse it here so the public view response matches every other lesson-returning endpoint.
-  const parsedLessons = lessons.map(l => ({ ...l, tags: l.tags ? JSON.parse(l.tags) : [] }));
-  res.json({ cls, lessons: parsedLessons, cards, ownerName: owner ? owner.name : "Unknown" });
+  // parse it here so the public view response matches every other class-returning endpoint.
+  const parsedCls = { ...cls, tags: cls.tags ? JSON.parse(cls.tags) : [] };
+  res.json({ cls: parsedCls, lessons, cards, ownerName: owner ? owner.name : "Unknown" });
 });
 
 // POST /api/share/clone/:token  — clone shared class into current user's account
@@ -168,7 +172,7 @@ router.get("/shared-with-me", requireAuth, (req, res) => {
      WHERE i.user_id = ?
      ORDER BY i.created_at DESC`
   ).all(req.session.userId);
-  res.json(rows);
+  res.json(rows.map(parseClassTags));
 });
 
 // POST /api/share/clone-invite/:classId  — clone an invited class
