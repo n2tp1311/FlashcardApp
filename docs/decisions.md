@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-07-25 — Tags moved from lessons to classes/courses
+
+User feedback right after the lesson-tags feature shipped: "course tag please, lesson is not needed as much." Explicit choice on scope: replace, not add both — removed lesson tags entirely (input, chips, filter bar, search matching, DB column reference) rather than keep both levels, matching CLAUDE.md's "if you're certain something is unused, delete it completely" rather than leaving a half-used feature around.
+
+**Migration line removed, not reverted with a DROP COLUMN.** The `lessons.tags` column itself isn't dropped from already-migrated databases — given the DB corruption incident earlier this session, no schema-mutation risk was worth it for a column with no real user data in it. An unused leftover column is harmless: nothing reads `lesson.tags` anymore (confirmed via repo-wide grep after the removal), so any stale column on an already-migrated DB is inert JSON-string noise in a response, not a functional bug.
+
+**Applied the two write-path lessons learned from the lesson-tags build's own code review, this time from day one.** Export/import round-trip and class-share cloning both got their `tags` column added to the classes INSERT immediately, rather than being discovered as data-loss gaps by a second review pass — verified with real end-to-end flows (delete + re-import; two-account share + clone), not just read-through. Code review this round still caught one more gap in the same family: `GET /shared-with-me` also needed the same tag-parsing treatment the public share-view endpoint got, since it's a third place classes get returned to a client. Completeness in this category seems to require deliberately grepping for every `SELECT * FROM <table>` / `SELECT t.*` on the table gaining a new JSON column, not just tracing the feature's own UI paths — noting this pattern explicitly in case a future column addition hits the same shape of bug.
+
+**Chip placement changed proactively, not reactively.** Lesson tags had gone between the title and the meta line, sitting right next to a row that had *just* been fixed for title-crowding — a risk noticed only after the fact last time. Class tags went after the meta line from the start on both class-card layouts (Grid and List), designed around the known failure mode rather than rediscovering it.
+
 ## 2026-07-24 — Lesson tags: JSON column over a relational table, filter over a subdeck hierarchy
 
 User pasted the "flat organization, no tags/nested folders" audit finding — bundles nested subdecks (the biggest lift, a real hierarchy data model touching navigation everywhere), tags + filtering, and cross-lesson custom study (already substantially covered by existing multi-class/multi-lesson selection plus the saveable Study Setup presets built earlier this session). Flagged the spread, user picked tags + filter, explicitly not subdecks.

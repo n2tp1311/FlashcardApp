@@ -39,7 +39,7 @@
 - Export/import round-trips the archived flag; class-sharing clones always start unarchived
 - Class level (optional, set in the class editor, also the default Home sort key) is shown in the meta line on both Grid and List views ("Lv 3 · 11 lessons") — previously used only for sorting, never displayed anywhere
 - Long unbroken card text (e.g. a Definition pasted with no spaces) wraps instead of blowing out the lesson card list's page width (`.card-term`/`.card-def` gained `word-break`/`overflow-wrap`)
-- Lesson tags: comma-separated free text on each lesson (normalized — trimmed, lowercased, deduped, capped at 10), shown as chips below the lesson title; a tag filter/slicer on Class Detail (mirrors the existing format filter, composes with it) narrows the lesson list by tag; Global Search also matches tags, not just titles. Works in both server and local/offline mode. Tags survive export/import round-trips and class-share cloning
+- Class (course) tags: comma-separated free text on each class (normalized — trimmed, lowercased, deduped, capped at 10), shown as chips on class cards (Grid + List, below the meta line); a tag filter/slicer on Home (separate from, and composes with, the existing Level filter) narrows the class list by tag; Global Search also matches class tags, not just names. Works in both server and local/offline mode. Tags survive export/import round-trips and class-share cloning. (Tags briefly lived at the lesson level first — moved to classes per feedback that course-level tagging matters more)
 
 ## Spaced Repetition
 - Per-card SRS intervals: 10min → 1h → 4h → 1d → 3d → 7d → 21d (step advances on correct, resets on wrong)
