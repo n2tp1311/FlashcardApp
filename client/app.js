@@ -226,7 +226,7 @@ Object.assign(TRANSLATIONS.en, {
   "study.editCard": "Edit card",
   "study.deleteCard": "Delete card",
   "study.clickToFlip": "Click to flip",
-  "study.typeYourGuessPlaceholder": "Type your answer, then press Enter or flip to compare",
+  "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
   "study.speakP": "Speak (P)",
   "study.speakFront": "Speak front",
@@ -649,7 +649,7 @@ Object.assign(TRANSLATIONS.vi, {
   "study.editCard": "Sửa thẻ",
   "study.deleteCard": "Xóa thẻ",
   "study.clickToFlip": "Nhấn để lật thẻ",
-  "study.typeYourGuessPlaceholder": "Gõ đáp án của bạn, rồi nhấn Enter hoặc lật thẻ để so sánh",
+  "study.typeYourGuessPlaceholder": "Nhập câu trả lời...",
   "study.yourGuess": "Bạn đã trả lời: {text}",
   "study.speakP": "Đọc (P)",
   "study.speakFront": "Đọc mặt trước",
@@ -4093,8 +4093,12 @@ function startStudy(count, filter, mode, order) {
    ============================ */
 
 function startFlashcards() {
-  renderFlashcard();
+  // Screen must become visible before renderFlashcard() runs — it conditionally calls
+  // .focus() on #fc-type-input, which is a silent no-op while still inside a display:none
+  // ancestor (only matters at session start; subsequent cards render with the screen
+  // already visible).
   showScreen("flashcard");
+  renderFlashcard();
 }
 
 function setMarkButtonsEnabled(enabled) {
@@ -4124,6 +4128,9 @@ function renderFlashcard() {
   typeInput.value = "";
   typeInput.disabled = false;
   document.getElementById("fc-your-guess").classList.add("hidden");
+  // Auto-focus only when the toggle is on — the user turned it on specifically to type on
+  // every card, so this saves a click; when it's off the input isn't even visible.
+  if (state.typeToCompare) typeInput.focus();
 
   // Cancel any pending auto-advance from a previous grade — otherwise it fires later
   // against whatever card the user has since navigated to (Prev/Next/dot/shuffle/delete),
