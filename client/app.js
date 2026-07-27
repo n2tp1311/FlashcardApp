@@ -4144,9 +4144,18 @@ function renderFlashcard() {
   // Lesson label (multi-lesson sessions)
   setStudyLessonLabel("fc-lesson-label", card);
 
-  // Flip state
+  // Flip state — reset must be instant, not animated. If the previous card was left
+  // flipped (the common case: flip, grade, auto-advance), .fc-card's CSS transition would
+  // otherwise animate the un-flip over 500ms with the NEW card's content already swapped
+  // in below, briefly revealing its answer mid-rotation. Temporarily disabling the
+  // transition snaps it to front-facing immediately; the deliberate flip animation (user
+  // clicking/tapping the card) is untouched since that's a separate code path.
   state.studyFlipped = false;
-  document.getElementById("fc-card").classList.remove("flipped");
+  var fcCardEl = document.getElementById("fc-card");
+  fcCardEl.style.transition = "none";
+  fcCardEl.classList.remove("flipped");
+  void fcCardEl.offsetHeight; // force reflow so transition:none takes effect before it's cleared
+  fcCardEl.style.transition = "";
 
   // Content
   var frontEl = document.getElementById("fc-front-content");
