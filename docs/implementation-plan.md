@@ -259,6 +259,7 @@ User selects:
 - Toolbar: Shuffle, Edit card, Delete card (Reset/"Study Hard Only" removed — unused)
 - Difficulty badge on each card (Easy/Medium/Hard/New + correct/total)
 - Edit card without leaving the study session: pencil icon opens the same edit modal as the lesson card list, pre-filled with the on-screen card's data; saving patches the in-progress session array and re-renders immediately
+- Optional "Type answer before flipping" (Preferences toggle, off by default): text input on the card front, echoed as "Your answer: ..." above the back content on flip for self-comparison — cosmetic only, doesn't touch grading/attempts/SRS
 
 ### 5.4 Quiz Mode
 
