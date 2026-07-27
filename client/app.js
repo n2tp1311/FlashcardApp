@@ -50,6 +50,7 @@ Object.assign(TRANSLATIONS.en, {
   "pref.testSpeed": "Test speed",
   "pref.maxReviewsPerDay": "Max reviews per day",
   "pref.noLimit": "No limit",
+  "pref.typeBeforeFlip": "Type answer before flipping",
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
@@ -225,6 +226,8 @@ Object.assign(TRANSLATIONS.en, {
   "study.editCard": "Edit card",
   "study.deleteCard": "Delete card",
   "study.clickToFlip": "Click to flip",
+  "study.typeYourGuessPlaceholder": "Type your answer, then press Enter or flip to compare",
+  "study.yourGuess": "Your answer: {text}",
   "study.speakP": "Speak (P)",
   "study.speakFront": "Speak front",
   "study.speakBack": "Speak back",
@@ -470,6 +473,7 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.testSpeed": "Nghe thử tốc độ",
   "pref.maxReviewsPerDay": "Số review tối đa mỗi ngày",
   "pref.noLimit": "Không giới hạn",
+  "pref.typeBeforeFlip": "Gõ đáp án trước khi lật thẻ",
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
@@ -645,6 +649,8 @@ Object.assign(TRANSLATIONS.vi, {
   "study.editCard": "Sửa thẻ",
   "study.deleteCard": "Xóa thẻ",
   "study.clickToFlip": "Nhấn để lật thẻ",
+  "study.typeYourGuessPlaceholder": "Gõ đáp án của bạn, rồi nhấn Enter hoặc lật thẻ để so sánh",
+  "study.yourGuess": "Bạn đã trả lời: {text}",
   "study.speakP": "Đọc (P)",
   "study.speakFront": "Đọc mặt trước",
   "study.speakBack": "Đọc mặt sau",
@@ -1635,6 +1641,7 @@ var state = {
   setupDataPromise: null,
   studyPresets: [],
   maxReviewsPerDay: null,
+  typeToCompare: false,
 
   // Study
   studyCards: [],
@@ -4110,6 +4117,14 @@ function renderFlashcard() {
   state.studyHasFlippedCard = false;
   setMarkButtonsEnabled(false);
 
+  // Optional "type before flip" scratchpad (Preferences toggle) — reset per card, not tied
+  // to grading in any way; purely a self-comparison aid.
+  var typeInput = document.getElementById("fc-type-input");
+  typeInput.classList.toggle("hidden", !state.typeToCompare);
+  typeInput.value = "";
+  typeInput.disabled = false;
+  document.getElementById("fc-your-guess").classList.add("hidden");
+
   // Cancel any pending auto-advance from a previous grade — otherwise it fires later
   // against whatever card the user has since navigated to (Prev/Next/dot/shuffle/delete),
   // same race Quiz mode already guards against via state.quizAdvanceTimer.
@@ -4268,9 +4283,34 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   if (state.studyFlipped && !state.studyHasFlippedCard) {
     state.studyHasFlippedCard = true;
     setMarkButtonsEnabled(true);
+    if (state.typeToCompare) {
+      var typeInput = document.getElementById("fc-type-input");
+      var guess = typeInput.value.trim();
+      if (guess) {
+        var guessEl = document.getElementById("fc-your-guess");
+        guessEl.textContent = t("study.yourGuess", { text: guess });
+        guessEl.classList.remove("hidden");
+      }
+      typeInput.disabled = true;
+    }
   }
   var expContainer = document.getElementById("fc-explanation");
   expContainer.classList.toggle("hidden", !state.studyFlipped || expContainer.innerHTML === "");
+});
+
+document.getElementById("fc-type-input").addEventListener("click", function(e) {
+  e.stopPropagation();
+});
+document.getElementById("fc-type-input").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    // Also stop propagation, not just the default action — the flip below disables (and
+    // therefore blurs) this input mid-keydown, and the same keystroke would otherwise still
+    // bubble to the document-level global handler, whose own Enter-to-flip shortcut no longer
+    // sees an input focused and fires a second, undoing flip on the same keypress.
+    e.stopPropagation();
+    document.getElementById("fc-scene").click();
+  }
 });
 
 document.getElementById("btn-fc-audio-front").addEventListener("click", function(e) {
@@ -5946,6 +5986,9 @@ function applyPrefs(prefs) {
   if (typeof prefs.maxReviewsPerDay === "number") {
     state.maxReviewsPerDay = prefs.maxReviewsPerDay;
   }
+  if (typeof prefs.typeToCompare === "boolean") {
+    state.typeToCompare = prefs.typeToCompare;
+  }
 }
 
 function loadUserPreferences() {
@@ -6210,6 +6253,7 @@ function prefRateLabel(rate) {
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
   document.getElementById("pref-dark-mode").checked = state.darkMode;
+  document.getElementById("pref-type-compare").checked = state.typeToCompare;
   prefFontLabel();
   prefRateLabel(state.ttsRate);
   document.getElementById("pref-lang-en").classList.toggle("active", state.language !== "vi");
@@ -6274,7 +6318,9 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
   var maxReviews = maxReviewsRaw === "" ? null : Math.max(0, parseInt(maxReviewsRaw, 10) || 0);
   state.maxReviewsPerDay = maxReviews;
-  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews };
+  var typeToCompare = document.getElementById("pref-type-compare").checked;
+  state.typeToCompare = typeToCompare;
+  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, typeToCompare: typeToCompare };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
