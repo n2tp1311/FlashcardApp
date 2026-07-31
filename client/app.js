@@ -169,7 +169,6 @@ Object.assign(TRANSLATIONS.en, {
   "setup.dueOnly": "Due Only",
   "setup.needsRecall": "Needs Recall",
   "setup.stillLearning": "Still Learning",
-  "setup.hardFirst": "Hard First",
   "setup.mode": "Mode",
   "setup.flashcards": "Flashcards",
   "setup.quiz": "Quiz",
@@ -183,7 +182,6 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintDue": "Only cards due for review (SRS)",
   "setup.hintNeedsRecall": "Due cards stuck at a short review interval — answer them in Flashcard mode to unlock longer intervals",
   "setup.hintLearning": "Cards not yet known / still learning",
-  "setup.hintHard": "Hard cards prioritized first",
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
   "setup.presets": "Presets",
@@ -593,7 +591,6 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.dueOnly": "Chỉ thẻ đến hạn",
   "setup.needsRecall": "Cần nhớ lại",
   "setup.stillLearning": "Đang học",
-  "setup.hardFirst": "Thẻ khó trước",
   "setup.mode": "Chế độ",
   "setup.flashcards": "Thẻ ghi nhớ",
   "setup.quiz": "Trắc nghiệm",
@@ -607,7 +604,6 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintDue": "Chỉ thẻ đến hạn ôn tập (SRS)",
   "setup.hintNeedsRecall": "Thẻ đến hạn nhưng đang kẹt ở khoảng ôn ngắn — trả lời đúng ở chế độ Thẻ ghi nhớ để mở khóa khoảng ôn dài hơn",
   "setup.hintLearning": "Thẻ chưa thuộc / đang học",
-  "setup.hintHard": "Thẻ khó được ưu tiên đầu tiên",
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "setup.presets": "Bộ lọc đã lưu",
@@ -3901,8 +3897,7 @@ var FILTER_HINT_KEYS = {
   all:         "setup.hintAll",
   due:         "setup.hintDue",
   needsRecall: "setup.hintNeedsRecall",
-  learning:    "setup.hintLearning",
-  hard:        "setup.hintHard"
+  learning:    "setup.hintLearning"
 };
 
 var MODE_HINT_KEYS = {
@@ -4017,12 +4012,6 @@ function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday) {
     return applyReviewCap(needsRecall, reviewsToday);
   } else if (filter === "learning") {
     return cards.filter(function(c) { return knownMap[c.id] !== true; });
-  } else if (filter === "hard") {
-    var hard = cards.filter(function(c) {
-      var s = statsMap[c.id];
-      return !s || s.level === "hard" || s.level === "medium" || s.level === "new";
-    });
-    return hard.length ? hard : cards;
   }
   return cards;
 }
