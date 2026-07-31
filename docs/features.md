@@ -74,7 +74,6 @@
 - Multi-lesson selection → combined study session; lesson name badge shown above each question/card so the subject is always visible
 - Multi-class quiz: "☑ Select" button (or `X` key) on home screen enters class select mode; check multiple classes and click "Study" to fetch all their lessons and launch a cross-class interleaved session
 - Progressive difficulty: hard cards weighted 3×, medium 2×
-- "Hard First" filter for focused review
 - "Due Only" filter to quiz only SRS-due cards
 - Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons
 - Account preferences: "⚙ Preferences" in the user dropdown; saves dark mode and font scale to the server and caches in localStorage
