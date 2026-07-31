@@ -386,6 +386,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.bulkPaste": "Bulk paste",
   "keymap.startStudy": "Start study",
   "keymap.sectionSetup": "Study Setup",
+  "keymap.selectPreset": "Select preset",
   "keymap.sectionFlashcards": "Flashcards",
   "keymap.prevNext": "Prev / Next",
   "keymap.flipCard": "Flip card",
@@ -809,6 +810,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.bulkPaste": "Dán hàng loạt",
   "keymap.startStudy": "Bắt đầu học",
   "keymap.sectionSetup": "Thiết lập học",
+  "keymap.selectPreset": "Chọn preset",
   "keymap.sectionFlashcards": "Thẻ ghi nhớ",
   "keymap.prevNext": "Trước / Tiếp",
   "keymap.flipCard": "Lật thẻ",
@@ -3785,8 +3787,10 @@ function setPillGroup(groupId, value) {
 function renderSetupPresets() {
   var list = document.getElementById("setup-presets-list");
   if (!list) return;
-  list.innerHTML = state.studyPresets.map(function(preset) {
+  list.innerHTML = state.studyPresets.map(function(preset, i) {
+    var numBadge = i < 9 ? '<span class="setup-preset-chip-num">' + (i + 1) + '</span>' : '';
     return '<span class="setup-preset-chip" data-preset-id="' + escHtml(preset.id) + '">' +
+      numBadge +
       '<span class="setup-preset-chip-name" data-preset-id="' + escHtml(preset.id) + '">' + escHtml(preset.name) + '</span>' +
       '<button class="setup-preset-chip-remove" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("common.delete")) + '">' + ICON_X + '</button>' +
       '</span>';
@@ -6969,6 +6973,13 @@ document.addEventListener("keydown", function(e) {
     // preventDefault stops a focused pill's native Enter-click from also firing.
     if (e.key === "Enter") { e.preventDefault(); document.getElementById("btn-start-study").click(); }
     else if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-setup-back").click(); }
+    else {
+      var presetNum = parseInt(e.key, 10);
+      if (presetNum >= 1 && presetNum <= 9 && presetNum <= state.studyPresets.length) {
+        e.preventDefault();
+        applyStudyPreset(state.studyPresets[presetNum - 1]);
+      }
+    }
   }
 
   else if (screen === "flashcard") {

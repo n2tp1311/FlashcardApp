@@ -1133,6 +1133,19 @@ code {
   background: var(--surface);
   min-height: 36px;
 }
+.setup-preset-chip-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
 .setup-preset-chip-name { font-size: 0.8125rem; font-weight: 500; color: var(--text2); cursor: pointer; }
 .setup-preset-chip-remove {
   display: inline-flex;
