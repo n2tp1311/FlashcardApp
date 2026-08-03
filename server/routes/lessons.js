@@ -23,17 +23,46 @@ function ownLesson(lessonId, userId) {
 router.get("/classes/:classId/lessons", requireAuth, (req, res) => {
   if (!ownClass(req.params.classId, req.session.userId))
     return res.status(404).json({ error: "Not found" });
-  const rows = db.prepare(`
-    SELECT l.*,
-      MAX(c.created_at) AS last_modified_at,
-      MAX(a.created_at) AS last_interacted_at
-    FROM lessons l
-    LEFT JOIN cards c ON c.lesson_id = l.id
-    LEFT JOIN attempts a ON a.card_id = c.id AND a.user_id = ?
-    WHERE l.class_id = ?
-    GROUP BY l.id
-    ORDER BY l.sort_order, l.created_at
-  `).all(req.session.userId, req.params.classId);
+
+  const lessons = db.prepare(
+    "SELECT * FROM lessons WHERE class_id = ? ORDER BY sort_order, created_at"
+  ).all(req.params.classId);
+
+  if (lessons.length === 0) return res.json(lessons);
+
+  const lessonIds = lessons.map((l) => l.id);
+  const placeholders = lessonIds.map(() => "?").join(",");
+
+  // last_modified_at: latest card creation time per lesson (indexed on cards.lesson_id)
+  const modifiedRows = db.prepare(`
+    SELECT lesson_id, MAX(created_at) AS last_modified_at
+    FROM cards
+    WHERE lesson_id IN (${placeholders})
+    GROUP BY lesson_id
+  `).all(...lessonIds);
+  const lastModifiedByLesson = new Map(
+    modifiedRows.map((r) => [r.lesson_id, r.last_modified_at])
+  );
+
+  // last_interacted_at: latest attempt by this user on any card in the lesson,
+  // scoped up-front by user_id + lesson set to keep the join small.
+  const interactedRows = db.prepare(`
+    SELECT c.lesson_id AS lesson_id, MAX(a.created_at) AS last_interacted_at
+    FROM cards c
+    JOIN attempts a ON a.card_id = c.id
+    WHERE c.lesson_id IN (${placeholders}) AND a.user_id = ?
+    GROUP BY c.lesson_id
+  `).all(...lessonIds, req.session.userId);
+  const lastInteractedByLesson = new Map(
+    interactedRows.map((r) => [r.lesson_id, r.last_interacted_at])
+  );
+
+  const rows = lessons.map((lesson) => ({
+    ...lesson,
+    last_modified_at: lastModifiedByLesson.get(lesson.id) ?? null,
+    last_interacted_at: lastInteractedByLesson.get(lesson.id) ?? null,
+  }));
+
   res.json(rows);
 });
 
