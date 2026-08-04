@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-08-05 — New-card-today estimate: separate from "Max reviews per day," Setup screen not Dashboard
+
+Built via the full Explore → Plan → Implement → verify workflow. The schema has no "new card" flag at all, and turned out to have two different, non-interchangeable existing notions of "new": `computeStats([]).level === "new"` (zero rows in `attempts`, used by the Dashboard's difficulty breakdown) vs. a card with no `card_states` row at all (never seen *or* graded — invisible to every SRS query in the app). Went with the second definition for "available new cards" (`LEFT JOIN card_states ... WHERE cs.card_id IS NULL`) since it's the one that actually matches "never introduced to this user," not just "never graded."
+
+**Deliberately kept separate from the existing "Max reviews per day" preference**, even though both are "how much should I study today" concepts. That feature caps due-*review* load (`applyReviewCap`, `GET /api/stats/reviews-today`); this one estimates new-card *intake*. Different endpoint, different UI copy, no shared state — merging them would conflate "cards I already know that are due again" with "cards I've never seen," which behave completely differently for both the user's mental model and the SRS math.
+
+**Algorithm**: average new-cards-introduced per day, computed only over days that had ≥1 introduction (mirrors the study-time hero card's "exclude untracked days, don't count as zero" convention), adjusted by a 7-day accuracy multiplier (1.15/1.0/0.7/0.4 by accuracy band, neutral at 1.0 if fewer than 10 recent attempts to avoid a near-empty week whipsawing the number), clamped to the real count of un-introduced cards remaining. Verified live across every branch before shipping: zero cards ever created, cards-but-no-history (cold start default), personalized with strong accuracy, personalized with degraded accuracy (multiplier correctly pulled the number down), and "everything already introduced" (correctly overrides a nonzero formula result to 0, with distinct copy from the "0 due to low accuracy" case so the two don't read as the same situation).
+
+**UI placement: Study Setup, not the Dashboard.** This is a same-session, actionable number ("how many new cards should I add right now"), not a lifetime reflection stat — Setup is where the user is actively deciding what to study, matching the existing hint-line/live-match-count pattern already on that screen. Adding it to the Dashboard would've put a third "daily budget"-shaped number (after streak and reviews-remaining) on a screen where it can't actually be acted on.
+
 ## 2026-08-05 — Study Charts: 2-column masonry needed an empty-state fix, not just a column-count change
 
 Removing the Study Time card (moved to the summary hero, see the hero-card entries above) left 4 chart cards in the "Study Charts" section's CSS multi-column masonry, and 3 columns left one column (SRS Distribution alone) with a large empty gap below it. Tried 2 columns instead — real screenshots at seeded data showed column heights within ~80px of each other, down from ~350px, a clear win — and set `columns: 2 320px`.

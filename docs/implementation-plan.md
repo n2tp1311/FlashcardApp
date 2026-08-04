@@ -249,6 +249,7 @@ User selects:
 6. Live match-count ("N card(s) match this filter") shown before Start Studying, recomputed as the Filter pill changes; zero-match state styled as a warning
 7. Saveable presets: capture the current Count/Filter/Mode/Order selection under a name, reapply or delete later; persisted server-side per-user (server mode only)
 8. Max reviews per day (Preferences setting): caps Due Only/Needs Recall session size to the remaining daily budget, most-overdue cards first — badges/counts elsewhere stay uncapped
+9. New-card-today estimate (server mode only): callout above Presets recommending how many never-studied cards to introduce today, from historical new-card pace × a 7-day accuracy multiplier, clamped to cards actually remaining — a separate budget concept from #8, not a review-count feature
 
 ### 5.3 Flashcard Study Mode
 
