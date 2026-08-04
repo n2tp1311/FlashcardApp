@@ -512,4 +512,78 @@ router.get("/reviews-today", requireAuth, (req, res) => {
   res.json({ count: row.cnt });
 });
 
+// GET /api/stats/new-card-estimate — estimate how many never-studied cards the user could
+// reasonably introduce today, based on historical new-card pace and recent accuracy. A
+// separate concept from "Max reviews per day" (reviews-today above) — that caps due-review
+// load, this estimates new-card intake; deliberately kept as its own endpoint/number so the
+// two "daily budget" concepts don't get merged or confused in the UI.
+const NEW_CARD_ACCURACY_WINDOW_DAYS = 7;
+const NEW_CARD_COLD_START_MIN_ACTIVE_DAYS = 3;
+const NEW_CARD_COLD_START_MIN_RECENT_ATTEMPTS = 10;
+const NEW_CARD_COLD_START_DEFAULT = 10;
+
+router.get("/new-card-estimate", requireAuth, (req, res) => {
+  const uid = req.session.userId;
+
+  // Historical pace: for each card ever attempted, its first-attempt day is the day it was
+  // "new" to this user. Average new-cards-introduced only over days that had >=1 introduction
+  // (same "exclude untracked days, don't count as zero" convention as /dashboard's studyTime).
+  const introRow = db.prepare(`
+    SELECT COUNT(*) AS activeDays, AVG(cnt) AS avgNewPerActiveDay
+    FROM (
+      SELECT date(first_seen, 'unixepoch') AS day, COUNT(*) AS cnt
+      FROM (
+        SELECT card_id, MIN(created_at) AS first_seen
+        FROM attempts
+        WHERE user_id = ?
+        GROUP BY card_id
+      )
+      GROUP BY day
+    )
+  `).get(uid);
+  const activeDays = introRow.activeDays || 0;
+  const avgNewPerActiveDay = introRow.avgNewPerActiveDay || 0;
+
+  // Recent performance adjustment
+  const accRow = db.prepare(
+    "SELECT COUNT(*) AS total, SUM(CASE WHEN correct=1 THEN 1 ELSE 0 END) AS correct " +
+    "FROM attempts WHERE user_id = ? AND created_at >= strftime('%s','now') - ?"
+  ).get(uid, NEW_CARD_ACCURACY_WINDOW_DAYS * 86400);
+  const recentTotal   = accRow.total || 0;
+  const recentCorrect = accRow.correct || 0;
+
+  let accuracyMultiplier = 1.0;
+  if (recentTotal >= NEW_CARD_COLD_START_MIN_RECENT_ATTEMPTS) {
+    const acc = recentCorrect / recentTotal;
+    accuracyMultiplier = acc >= 0.85 ? 1.15 : acc >= 0.70 ? 1.0 : acc >= 0.50 ? 0.7 : 0.4;
+  }
+
+  // Cards never touched at all (no card_states row), non-archived classes only
+  const availRow = db.prepare(
+    "SELECT COUNT(*) AS n FROM cards ca " +
+    "JOIN lessons l ON ca.lesson_id = l.id " +
+    "JOIN classes c ON l.class_id = c.id " +
+    "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 AND cs.card_id IS NULL"
+  ).get(uid, uid);
+  const availableNewCards = availRow.n || 0;
+
+  const personalized = activeDays >= NEW_CARD_COLD_START_MIN_ACTIVE_DAYS;
+  let estimatedNewCards = personalized
+    ? Math.round(avgNewPerActiveDay * accuracyMultiplier)
+    : Math.min(NEW_CARD_COLD_START_DEFAULT, availableNewCards);
+  estimatedNewCards = Math.max(0, Math.min(estimatedNewCards, availableNewCards));
+
+  res.json({
+    estimatedNewCards,
+    availableNewCards,
+    personalized,
+    avgNewPerActiveDay: Math.round(avgNewPerActiveDay * 10) / 10,
+    activeDays,
+    recentAccuracy: recentTotal > 0 ? Math.round((recentCorrect / recentTotal) * 100) : null,
+    recentAttempts: recentTotal,
+    accuracyMultiplier
+  });
+});
+
 module.exports = router;
