@@ -105,9 +105,10 @@ Object.assign(TRANSLATIONS.en, {
   "stat.sessions": "Sessions",
   "stat.sessionsHint": "Completed Quiz sessions only — Flashcard study is tracked under Attempts.",
   "stat.attempts": "Attempts",
-  "stat.avgDaily": "Avg {v}/day",
-  "stat.minDaily": "Min {v}",
-  "stat.maxDaily": "Max {v}",
+  "stat.avgDailyLabel": "Avg/day",
+  "stat.minDailyLabel": "Min",
+  "stat.maxDailyLabel": "Max",
+  "stat.studyTimeTrackedHint": "Based on the {n} day(s) with tracked study time — days studied before time tracking shipped aren't counted here",
   "dashboard.heatmapTitle": "{n}-Day Study Heatmap",
 
   "auth.signIn": "Sign In",
@@ -530,9 +531,10 @@ Object.assign(TRANSLATIONS.vi, {
   "stat.sessions": "Phiên học",
   "stat.sessionsHint": "Chỉ tính các phiên Quiz đã hoàn thành — học Thẻ ghi nhớ được tính trong Lượt làm.",
   "stat.attempts": "Lượt làm",
-  "stat.avgDaily": "TB {v}/ngày",
-  "stat.minDaily": "Thấp nhất {v}",
-  "stat.maxDaily": "Cao nhất {v}",
+  "stat.avgDailyLabel": "TB/ngày",
+  "stat.minDailyLabel": "Thấp nhất",
+  "stat.maxDailyLabel": "Cao nhất",
+  "stat.studyTimeTrackedHint": "Dựa trên {n} ngày có ghi nhận thời gian học — các ngày học trước khi tính năng này ra mắt không được tính",
   "dashboard.heatmapTitle": "Biểu đồ học {n} ngày qua",
 
   "auth.signIn": "Đăng nhập",
@@ -4907,7 +4909,8 @@ function formatStudyDuration(ms) {
 }
 
 function streakTimeHeroCard(streak, studyTime) {
-  var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0 };
+  var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0, trackedDays: 0 };
+  var subHint = t("stat.studyTimeTrackedHint", { n: st.trackedDays });
   return '<div class="dash-hero-card">' +
     '<div class="dash-hero-main">' +
       '<div class="dash-hero-stat">' +
@@ -4920,11 +4923,18 @@ function streakTimeHeroCard(streak, studyTime) {
         '<div class="dash-hero-label">' + t("dashboard.studyTime") + '</div>' +
       '</div>' +
     '</div>' +
-    '<div class="dash-hero-sub">' +
-      '<span>' + t("stat.avgDaily", { v: formatStudyDuration(st.avgDailyMs) }) + '</span>' +
-      '<span>' + t("stat.minDaily", { v: formatStudyDuration(st.minDailyMs) }) + '</span>' +
-      '<span>' + t("stat.maxDaily", { v: formatStudyDuration(st.maxDailyMs) }) + '</span>' +
+    '<div class="dash-hero-sub" title="' + escHtml(subHint) + '">' +
+      heroSubCard(formatStudyDuration(st.avgDailyMs), t("stat.avgDailyLabel")) +
+      heroSubCard(formatStudyDuration(st.minDailyMs), t("stat.minDailyLabel")) +
+      heroSubCard(formatStudyDuration(st.maxDailyMs), t("stat.maxDailyLabel")) +
     '</div>' +
+  '</div>';
+}
+
+function heroSubCard(val, label) {
+  return '<div class="dash-hero-sub-card">' +
+    '<div class="dash-hero-sub-value">' + val + '</div>' +
+    '<div class="dash-hero-sub-label">' + label + '</div>' +
   '</div>';
 }
 

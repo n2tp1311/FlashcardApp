@@ -291,7 +291,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
   // but no tracked duration (made before duration_ms shipped) is excluded rather than
   // counted as a 0-minute day, which would skew avg/min down and always win "min."
   const studyTimeRow = db.prepare(`
-    SELECT SUM(ms) AS total, AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max
+    SELECT SUM(ms) AS total, AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
     FROM (
       SELECT SUM(duration_ms) AS ms
       FROM attempts
@@ -315,10 +315,11 @@ router.get("/dashboard", requireAuth, (req, res) => {
     dueByClass,
     streak,
     studyTime: {
-      totalMs:    studyTimeRow.total || 0,
-      avgDailyMs: Math.round(studyTimeRow.avg || 0),
-      minDailyMs: studyTimeRow.min || 0,
-      maxDailyMs: studyTimeRow.max || 0
+      totalMs:     studyTimeRow.total || 0,
+      avgDailyMs:  Math.round(studyTimeRow.avg || 0),
+      minDailyMs:  studyTimeRow.min || 0,
+      maxDailyMs:  studyTimeRow.max || 0,
+      trackedDays: studyTimeRow.trackedDays || 0
     }
   });
 });

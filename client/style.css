@@ -1797,14 +1797,14 @@ code {
 
 .dash-hero-card {
   grid-column: 1 / -1;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius);
   padding: 18px 20px;
-  background: var(--primary);
-  color: #fff;
 }
 .dash-hero-main { display: flex; align-items: center; }
 .dash-hero-stat { flex: 1; text-align: center; }
-.dash-hero-divider { width: 1px; align-self: stretch; background: rgba(255, 255, 255, 0.3); }
+.dash-hero-divider { width: 1px; align-self: stretch; background: var(--border); }
 .dash-hero-value {
   display: flex;
   align-items: center;
@@ -1812,19 +1812,27 @@ code {
   gap: 8px;
   font-size: 1.75rem;
   font-weight: 800;
+  color: var(--text);
 }
-.dash-hero-label { font-size: 0.8125rem; color: rgba(255, 255, 255, 0.85); margin-top: 4px; }
+.dash-hero-label { font-size: 0.8125rem; color: var(--text2); margin-top: 4px; }
 .dash-hero-sub {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 6px 18px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.9);
+  gap: 8px;
+  margin-top: 16px;
 }
+.dash-hero-sub-card {
+  flex: 1;
+  min-width: 90px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  text-align: center;
+}
+.dash-hero-sub-value { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
+.dash-hero-sub-label { font-size: 0.6875rem; color: var(--text2); margin-top: 2px; }
 
 .diff-bar-label { font-size: 0.8125rem; font-weight: 600; margin-bottom: 10px; color: var(--text); }
 
@@ -2662,7 +2670,8 @@ code {
   .dash-streak-num { font-size: 1.75rem; }
   .dash-hero-card { padding: 14px 16px; }
   .dash-hero-value { font-size: 1.375rem; gap: 6px; }
-  .dash-hero-sub { gap: 4px 12px; font-size: 0.6875rem; }
+  .dash-hero-sub-card { min-width: 0; padding: 6px 4px; }
+  .dash-hero-sub-value { font-size: 0.8125rem; }
 }
 
 /* ============================
