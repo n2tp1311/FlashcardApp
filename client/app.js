@@ -1883,14 +1883,7 @@ function renderHomeCharts() {
   document.getElementById("home-summary-grid").innerHTML = "";
   store.getDashboard().then(function(dash) {
     var grid = document.getElementById("home-summary-grid");
-    grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime);
-    [
-      [dash.summary.classes,      t("stat.classes")],
-      [dash.summary.lessons,      t("stat.lessons")],
-      [dash.summary.cards,        t("stat.cards")],
-      [dash.summary.quizSessions, t("stat.sessions"), t("stat.sessionsHint")],
-      [dash.summary.attempts,     t("stat.attempts")]
-    ].forEach(function(item) { grid.innerHTML += statCard(item[0], item[1], item[2]); });
+    grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary);
     section.classList.remove("hidden");
   }).catch(function() { section.classList.add("hidden"); });
 }
@@ -4908,9 +4901,9 @@ function formatStudyDuration(ms) {
   return h > 0 ? (h + "h " + m + "m") : (m + "m");
 }
 
-function streakTimeHeroCard(streak, studyTime) {
+function streakTimeHeroCard(streak, studyTime, summary) {
   var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0, trackedDays: 0 };
-  var subHint = t("stat.studyTimeTrackedHint", { n: st.trackedDays });
+  var trackedHint = t("stat.studyTimeTrackedHint", { n: st.trackedDays });
   return '<div class="dash-hero-card">' +
     '<div class="dash-hero-main">' +
       '<div class="dash-hero-stat">' +
@@ -4923,16 +4916,22 @@ function streakTimeHeroCard(streak, studyTime) {
         '<div class="dash-hero-label">' + t("dashboard.studyTime") + '</div>' +
       '</div>' +
     '</div>' +
-    '<div class="dash-hero-sub" title="' + escHtml(subHint) + '">' +
-      heroSubCard(formatStudyDuration(st.avgDailyMs), t("stat.avgDailyLabel")) +
-      heroSubCard(formatStudyDuration(st.minDailyMs), t("stat.minDailyLabel")) +
-      heroSubCard(formatStudyDuration(st.maxDailyMs), t("stat.maxDailyLabel")) +
+    '<div class="dash-hero-sub">' +
+      heroSubCard(formatStudyDuration(st.avgDailyMs), t("stat.avgDailyLabel"), trackedHint) +
+      heroSubCard(formatStudyDuration(st.minDailyMs), t("stat.minDailyLabel"), trackedHint) +
+      heroSubCard(formatStudyDuration(st.maxDailyMs), t("stat.maxDailyLabel"), trackedHint) +
+      heroSubCard(summary.classes,      t("stat.classes")) +
+      heroSubCard(summary.lessons,      t("stat.lessons")) +
+      heroSubCard(summary.cards,        t("stat.cards")) +
+      heroSubCard(summary.quizSessions, t("stat.sessions"), t("stat.sessionsHint")) +
+      heroSubCard(summary.attempts,     t("stat.attempts")) +
     '</div>' +
   '</div>';
 }
 
-function heroSubCard(val, label) {
-  return '<div class="dash-hero-sub-card">' +
+function heroSubCard(val, label, hint) {
+  var titleAttr = hint ? ' title="' + escHtml(hint) + '"' : "";
+  return '<div class="dash-hero-sub-card"' + titleAttr + '>' +
     '<div class="dash-hero-sub-value">' + val + '</div>' +
     '<div class="dash-hero-sub-label">' + label + '</div>' +
   '</div>';
@@ -5122,14 +5121,7 @@ function renderDashboard() {
 
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
-    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime);
-    [
-      [d.summary.classes,      t("stat.classes")],
-      [d.summary.lessons,      t("stat.lessons")],
-      [d.summary.cards,        t("stat.cards")],
-      [d.summary.quizSessions, t("stat.sessions"), t("stat.sessionsHint")],
-      [d.summary.attempts,     t("stat.attempts")]
-    ].forEach(function(item) { summaryGrid.innerHTML += statCard(item[0], item[1], item[2]); });
+    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary);
 
     // Accuracy bar
     var accPct = d.accuracy.total > 0
