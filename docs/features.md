@@ -54,6 +54,7 @@
 - Bulk cards endpoint (`POST /api/cards/by-lessons`): multi-lesson quiz startup reduced from 2N+1 HTTP requests (N `getCards` + N `getKnownMap` per lesson) to 2 requests total regardless of lesson count; 10-lesson quiz goes from 21 requests to 2 (90% reduction)
 - Per-card correlated subquery for `last_studied_at` replaced with a single `GROUP BY` aggregate JOIN on the attempts table
 - Added `idx_states_user_due ON card_states(user_id, srs_due_at)` and `idx_attempts_cu_created ON attempts(card_id, user_id, created_at)` indexes for faster SRS queries
+- `GET /api/classes/:classId/lessons`: the single query joining `lessons → cards → attempts` with aggregates forced SQLite to fan every card out across all its attempts before grouping, causing multi-second latency for classes with heavily-attempted lessons. Split into three smaller queries (lessons, then per-lesson `last_modified_at`/`last_interacted_at` batch-loaded and merged in JS) — see `docs/decisions.md` for why the attempts query needs `CROSS JOIN` rather than plain `JOIN`
 
 ## Study
 - Flashcard mode (flip, mark known/learning)
