@@ -3081,6 +3081,32 @@ code {
   flex-shrink: 0;
 }
 
+.home-tag-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.home-tag-filter-row .slicer-bar {
+  margin-bottom: 0;
+}
+.home-tag-filter-row .slicer-bar.collapsed {
+  display: none;
+}
+.icon-btn.filter-active {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+.tag-filter-active-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
 #btn-toggle-archived {
   min-height: 34px;
   padding: 5px 12px;

@@ -78,6 +78,7 @@ Object.assign(TRANSLATIONS.en, {
   "sort.dueCount": "Due count",
   "sort.dateAdded": "Date added",
   "sort.toggleDirection": "Toggle sort direction",
+  "home.tagFilterToggle": "Filter by tag",
   "archive.showArchived": "Show archived classes",
   "archive.archived": "Archived",
   "view.grid": "Grid view",
@@ -510,6 +511,7 @@ Object.assign(TRANSLATIONS.vi, {
   "sort.dueCount": "Số thẻ cần ôn",
   "sort.dateAdded": "Ngày thêm",
   "sort.toggleDirection": "Đổi chiều sắp xếp",
+  "home.tagFilterToggle": "Lọc theo tag",
   "archive.showArchived": "Hiện lớp đã lưu trữ",
   "archive.archived": "Đã lưu trữ",
   "view.grid": "Xem dạng lưới",
@@ -1738,6 +1740,11 @@ var state = {
   homeTagFilter: (function() {
     try { return localStorage.getItem("fc-home-tag-filter") || "all"; } catch (_) { return "all"; }
   }()),
+  // Whether the tag filter pill row is expanded (persisted; collapsed by default so the
+  // pill row — which can grow to many tags — doesn't eat vertical space until asked for)
+  homeTagBarExpanded: (function() {
+    try { return localStorage.getItem("fc-home-tag-expanded") === "1"; } catch (_) { return false; }
+  }()),
   // Show archived classes instead of active ones (persisted)
   showArchived: (function() {
     try { return localStorage.getItem("fc-show-archived") === "1"; } catch (_) { return false; }
@@ -1981,8 +1988,9 @@ function _renderHomeSlicer(classes) {
 }
 
 function _renderHomeTagSlicer(classes) {
+  var row = document.getElementById("home-tag-filter-row");
   var bar = document.getElementById("home-tag-slicer-bar");
-  if (!bar) return;
+  if (!row || !bar) return;
   var tags = [];
   classes.forEach(function(c) {
     (c.tags || []).forEach(function(tg) { if (tags.indexOf(tg) === -1) tags.push(tg); });
@@ -1990,7 +1998,7 @@ function _renderHomeTagSlicer(classes) {
 
   bar.innerHTML = "";
   if (tags.length === 0) {
-    bar.classList.add("hidden");
+    row.classList.add("hidden");
     if (state.homeTagFilter !== "all") {
       state.homeTagFilter = "all";
       try { localStorage.setItem("fc-home-tag-filter", "all"); } catch (_) {}
@@ -2003,7 +2011,7 @@ function _renderHomeTagSlicer(classes) {
     try { localStorage.setItem("fc-home-tag-filter", "all"); } catch (_) {}
   }
 
-  bar.classList.remove("hidden");
+  row.classList.remove("hidden");
 
   var allBtn = document.createElement("button");
   allBtn.className = "pill" + (state.homeTagFilter === "all" ? " active" : "");
@@ -2018,6 +2026,26 @@ function _renderHomeTagSlicer(classes) {
     btn.textContent = tg;
     bar.appendChild(btn);
   });
+
+  _syncTagFilterToggleUI();
+}
+
+// Keeps the collapse state, the toggle button's "filter active" tint, and the compact
+// active-tag label (shown only while collapsed, so the current filter is never invisible)
+// all in sync with state.homeTagFilter / state.homeTagBarExpanded.
+function _syncTagFilterToggleUI() {
+  var bar = document.getElementById("home-tag-slicer-bar");
+  var toggleBtn = document.getElementById("btn-tag-filter-toggle");
+  var label = document.getElementById("tag-filter-active-label");
+  if (!bar || !toggleBtn || !label) return;
+  bar.classList.toggle("collapsed", !state.homeTagBarExpanded);
+  toggleBtn.classList.toggle("filter-active", state.homeTagFilter !== "all");
+  if (state.homeTagFilter !== "all" && !state.homeTagBarExpanded) {
+    label.textContent = state.homeTagFilter;
+    label.classList.remove("hidden");
+  } else {
+    label.classList.add("hidden");
+  }
 }
 
 function _applyHomeFilter(classes) {
@@ -2249,7 +2277,17 @@ function _applyClassAccuracy(accMap) {
       tagSlicerBar.querySelectorAll(".pill").forEach(function(b) {
         b.classList.toggle("active", b.dataset.filter === state.homeTagFilter);
       });
+      _syncTagFilterToggleUI();
       _renderClassItems(_applyHomeFilter(state.homeClasses));
+    });
+  }
+
+  var tagFilterToggleBtn = document.getElementById("btn-tag-filter-toggle");
+  if (tagFilterToggleBtn) {
+    tagFilterToggleBtn.addEventListener("click", function() {
+      state.homeTagBarExpanded = !state.homeTagBarExpanded;
+      try { localStorage.setItem("fc-home-tag-expanded", state.homeTagBarExpanded ? "1" : "0"); } catch (_) {}
+      _syncTagFilterToggleUI();
     });
   }
 
