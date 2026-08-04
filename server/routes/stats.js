@@ -367,10 +367,6 @@ router.get("/analytics", requireAuth, function(req, res) {
   var accuracyBySource = {};
   accuracyBySourceRows.forEach(function(r) { accuracyBySource[r.source] = { total: r.total, correct: r.correct || 0 }; });
 
-  var totalDurationMs = db.prepare(
-    "SELECT SUM(duration_ms) AS ms FROM attempts WHERE user_id=? AND created_at >= strftime('%s','now') - ?"
-  ).get(uid, secs).ms || 0;
-
   // Struggling lessons — windowed (was lifetime on /dashboard; a lesson shouldn't stay
   // flagged long after the user actually fixed it) and requires >=3 attempted cards so
   // one bad card early on doesn't flag an otherwise-fine lesson.
@@ -409,7 +405,6 @@ router.get("/analytics", requireAuth, function(req, res) {
     weeklyTrend: weeklyRows,
     lessonBreakdown: lessonRows,
     accuracyBySource: accuracyBySource,
-    totalDurationMs: totalDurationMs,
     strugglingLessons: strugglingLessons,
     days: days
   });

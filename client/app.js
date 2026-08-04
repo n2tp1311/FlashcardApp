@@ -291,7 +291,6 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.periodNote": "Applies to the charts in this section only — the stats above are all-time.",
   "dashboard.srsDistribution": "SRS Interval Distribution",
   "dashboard.studyTime": "Study Time",
-  "dashboard.minutesStudied": "minutes",
   "dashboard.lessonAccuracy": "Lesson Accuracy",
   "dashboard.dueForReview": "Due for Review",
   "dashboard.strugglingLessons": "Struggling Lessons",
@@ -717,7 +716,6 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — các số liệu phía trên tính toàn thời gian.",
   "dashboard.srsDistribution": "Phân bố khoảng lặp SRS",
   "dashboard.studyTime": "Thời gian học",
-  "dashboard.minutesStudied": "phút",
   "dashboard.lessonAccuracy": "Độ chính xác bài học",
   "dashboard.dueForReview": "Đến hạn ôn tập",
   "dashboard.strugglingLessons": "Bài học đang gặp khó",
@@ -5107,7 +5105,7 @@ function renderDashboard() {
   var exportBtn = document.getElementById("btn-dashboard-export");
   if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
-   "dash-heatmap-wrap","dash-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-time-wrap","dash-lesson-wrap",
+   "dash-heatmap-wrap","dash-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-lesson-wrap",
    "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
@@ -5152,7 +5150,6 @@ function renderDashboard() {
     var futureDueTitle = document.getElementById("dash-future-due-title");
     if (futureDueTitle) futureDueTitle.textContent = t("dashboard.futureDue", { n: futureDue.windowDays });
     renderFutureDue(futureDue, document.getElementById("dash-future-due-wrap"));
-    renderStudyTime(analytics.totalDurationMs, document.getElementById("dash-time-wrap"));
     renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
     // Enable export if there's data
@@ -5262,7 +5259,6 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     updatePills();
     document.getElementById("dash-heatmap-wrap").innerHTML = "";
     document.getElementById("dash-trend-wrap").innerHTML = "";
-    document.getElementById("dash-time-wrap").innerHTML = "";
     document.getElementById("dash-lesson-wrap").innerHTML = "";
     document.getElementById("dash-struggle-list").innerHTML = "";
     store.getAnalytics(state.dashPeriod).then(function(analytics) {
@@ -5271,7 +5267,6 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
       if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
       renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
       renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
-      renderStudyTime(analytics.totalDurationMs, document.getElementById("dash-time-wrap"));
       renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
       var pillsWrap = document.getElementById("dash-source-pills-wrap");
@@ -5292,6 +5287,10 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
 
 function renderHeatmap(rows, wrap, days) {
   if (!days) days = 60;
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStudyData") + '</div>';
+    return;
+  }
   var map = {};
   rows.forEach(function(r) { map[r.day] = r.cnt; });
 
@@ -5359,6 +5358,10 @@ function renderHeatmap(rows, wrap, days) {
 
 function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
   if (maxWeeksAgo === undefined) maxWeeksAgo = 11;
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStudyData") + '</div>';
+    return;
+  }
   var map = {};
   rows.forEach(function(r) { map[r.weeks_ago] = { cnt: r.cnt, correct: r.correct || 0 }; });
 
@@ -5443,13 +5446,6 @@ function renderFutureDue(data, wrap) {
       '<span class="trend-count">' + b.cnt + '</span>';
     wrap.appendChild(rowEl);
   });
-}
-
-function renderStudyTime(totalDurationMs, wrap) {
-  var minutes = Math.round((totalDurationMs || 0) / 60000);
-  wrap.innerHTML =
-    '<div class="stat-value">' + minutes + '</div>' +
-    '<div class="stat-label">' + t("dashboard.minutesStudied") + '</div>';
 }
 
 var ACCURACY_SOURCE_KEYS = {
