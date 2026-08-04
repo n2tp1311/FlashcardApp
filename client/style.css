@@ -1799,7 +1799,7 @@ code {
   grid-column: 1 / -1;
   border-radius: var(--radius);
   padding: 18px 20px;
-  background: linear-gradient(135deg, var(--primary), #f59e0b);
+  background: var(--primary);
   color: #fff;
 }
 .dash-hero-main { display: flex; align-items: center; }
