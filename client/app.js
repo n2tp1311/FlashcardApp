@@ -22,6 +22,7 @@ var ICON_UNARCHIVE = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1
 var ICON_CHECK    = svgIcon('<polyline points="20 6 9 17 4 12"/>');
 var ICON_X        = svgIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
 var ICON_FLAME     = svgIcon('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>');
+var ICON_CLOCK     = svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>');
 var ICON_COPY     = svgIcon('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>');
 var ICON_SAVE     = svgIcon('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>');
 var ICON_CHEVRON_UP   = svgIcon('<polyline points="18 15 12 9 6 15"/>');
@@ -104,6 +105,9 @@ Object.assign(TRANSLATIONS.en, {
   "stat.sessions": "Sessions",
   "stat.sessionsHint": "Completed Quiz sessions only — Flashcard study is tracked under Attempts.",
   "stat.attempts": "Attempts",
+  "stat.avgDaily": "Avg {v}/day",
+  "stat.minDaily": "Min {v}",
+  "stat.maxDaily": "Max {v}",
   "dashboard.heatmapTitle": "{n}-Day Study Heatmap",
 
   "auth.signIn": "Sign In",
@@ -526,6 +530,9 @@ Object.assign(TRANSLATIONS.vi, {
   "stat.sessions": "Phiên học",
   "stat.sessionsHint": "Chỉ tính các phiên Quiz đã hoàn thành — học Thẻ ghi nhớ được tính trong Lượt làm.",
   "stat.attempts": "Lượt làm",
+  "stat.avgDaily": "TB {v}/ngày",
+  "stat.minDaily": "Thấp nhất {v}",
+  "stat.maxDaily": "Cao nhất {v}",
   "dashboard.heatmapTitle": "Biểu đồ học {n} ngày qua",
 
   "auth.signIn": "Đăng nhập",
@@ -1874,7 +1881,7 @@ function renderHomeCharts() {
   document.getElementById("home-summary-grid").innerHTML = "";
   store.getDashboard().then(function(dash) {
     var grid = document.getElementById("home-summary-grid");
-    grid.innerHTML = statCard(ICON_FLAME + " " + dash.streak, t("stat.dayStreak"));
+    grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime);
     [
       [dash.summary.classes,      t("stat.classes")],
       [dash.summary.lessons,      t("stat.lessons")],
@@ -4892,6 +4899,35 @@ function statCard(val, label, hint) {
   return '<div class="stat-card"' + titleAttr + '><div class="stat-value">' + val + '</div><div class="stat-label">' + label + '</div></div>';
 }
 
+function formatStudyDuration(ms) {
+  var totalMinutes = Math.round((ms || 0) / 60000);
+  var h = Math.floor(totalMinutes / 60);
+  var m = totalMinutes % 60;
+  return h > 0 ? (h + "h " + m + "m") : (m + "m");
+}
+
+function streakTimeHeroCard(streak, studyTime) {
+  var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0 };
+  return '<div class="dash-hero-card">' +
+    '<div class="dash-hero-main">' +
+      '<div class="dash-hero-stat">' +
+        '<div class="dash-hero-value">' + ICON_FLAME + ' ' + streak + '</div>' +
+        '<div class="dash-hero-label">' + t("stat.dayStreak") + '</div>' +
+      '</div>' +
+      '<div class="dash-hero-divider"></div>' +
+      '<div class="dash-hero-stat">' +
+        '<div class="dash-hero-value">' + ICON_CLOCK + ' ' + formatStudyDuration(st.totalMs) + '</div>' +
+        '<div class="dash-hero-label">' + t("dashboard.studyTime") + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dash-hero-sub">' +
+      '<span>' + t("stat.avgDaily", { v: formatStudyDuration(st.avgDailyMs) }) + '</span>' +
+      '<span>' + t("stat.minDaily", { v: formatStudyDuration(st.minDailyMs) }) + '</span>' +
+      '<span>' + t("stat.maxDaily", { v: formatStudyDuration(st.maxDailyMs) }) + '</span>' +
+    '</div>' +
+  '</div>';
+}
+
 function diffBar(name, count, total, color) {
   var pct = total > 0 ? (count / total * 100) : 0;
   return '<div class="diff-bar-row">' +
@@ -5076,7 +5112,7 @@ function renderDashboard() {
 
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
-    summaryGrid.innerHTML = statCard(ICON_FLAME + " " + d.streak, t("stat.dayStreak"));
+    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime);
     [
       [d.summary.classes,      t("stat.classes")],
       [d.summary.lessons,      t("stat.lessons")],

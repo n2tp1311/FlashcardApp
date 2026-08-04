@@ -287,6 +287,20 @@ router.get("/dashboard", requireAuth, (req, res) => {
     }
   }
 
+  // All-time study time — grouped by day like the streak above, so a day with attempts
+  // but no tracked duration (made before duration_ms shipped) is excluded rather than
+  // counted as a 0-minute day, which would skew avg/min down and always win "min."
+  const studyTimeRow = db.prepare(`
+    SELECT SUM(ms) AS total, AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max
+    FROM (
+      SELECT SUM(duration_ms) AS ms
+      FROM attempts
+      WHERE user_id = ?
+      GROUP BY date(created_at, 'unixepoch')
+      HAVING ms IS NOT NULL
+    )
+  `).get(uid);
+
   res.json({
     summary: {
       classes:      totalClasses,
@@ -299,7 +313,13 @@ router.get("/dashboard", requireAuth, (req, res) => {
     diffBreakdown,
     dueForReview,
     dueByClass,
-    streak
+    streak,
+    studyTime: {
+      totalMs:    studyTimeRow.total || 0,
+      avgDailyMs: Math.round(studyTimeRow.avg || 0),
+      minDailyMs: studyTimeRow.min || 0,
+      maxDailyMs: studyTimeRow.max || 0
+    }
   });
 });
 

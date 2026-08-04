@@ -1795,6 +1795,37 @@ code {
 .stat-value { font-size: 1.625rem; font-weight: 700; color: var(--text); }
 .stat-label { font-size: 0.75rem; color: var(--text2); margin-top: 4px; }
 
+.dash-hero-card {
+  grid-column: 1 / -1;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  background: linear-gradient(135deg, var(--primary), #f59e0b);
+  color: #fff;
+}
+.dash-hero-main { display: flex; align-items: center; }
+.dash-hero-stat { flex: 1; text-align: center; }
+.dash-hero-divider { width: 1px; align-self: stretch; background: rgba(255, 255, 255, 0.3); }
+.dash-hero-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+.dash-hero-label { font-size: 0.8125rem; color: rgba(255, 255, 255, 0.85); margin-top: 4px; }
+.dash-hero-sub {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .diff-bar-label { font-size: 0.8125rem; font-weight: 600; margin-bottom: 10px; color: var(--text); }
 
 .diff-bar-row {
@@ -2629,6 +2660,9 @@ code {
 @media (max-width: 480px) {
   .dash-summary-grid { grid-template-columns: repeat(3, 1fr); }
   .dash-streak-num { font-size: 1.75rem; }
+  .dash-hero-card { padding: 14px 16px; }
+  .dash-hero-value { font-size: 1.375rem; gap: 6px; }
+  .dash-hero-sub { gap: 4px 12px; font-size: 0.6875rem; }
 }
 
 /* ============================
