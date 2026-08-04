@@ -23,17 +23,48 @@ function ownLesson(lessonId, userId) {
 router.get("/classes/:classId/lessons", requireAuth, (req, res) => {
   if (!ownClass(req.params.classId, req.session.userId))
     return res.status(404).json({ error: "Not found" });
-  const rows = db.prepare(`
-    SELECT l.*,
-      MAX(c.created_at) AS last_modified_at,
-      MAX(a.created_at) AS last_interacted_at
-    FROM lessons l
-    LEFT JOIN cards c ON c.lesson_id = l.id
-    LEFT JOIN attempts a ON a.card_id = c.id AND a.user_id = ?
-    WHERE l.class_id = ?
-    GROUP BY l.id
-    ORDER BY l.sort_order, l.created_at
-  `).all(req.session.userId, req.params.classId);
+
+  const lessons = db.prepare(
+    "SELECT * FROM lessons WHERE class_id = ? ORDER BY sort_order, created_at"
+  ).all(req.params.classId);
+  if (!lessons.length) return res.json(lessons);
+
+  const lessonIds = lessons.map(l => l.id);
+  const placeholders = lessonIds.map(() => "?").join(",");
+
+  // last_modified_at: latest card creation time per lesson. Split out from the old
+  // single 3-way join below — it never needed attempts data, but the old query forced
+  // SQLite to fan every card out across all its attempts just to read c.created_at.
+  const modifiedRows = db.prepare(`
+    SELECT lesson_id, MAX(created_at) AS last_modified_at
+    FROM cards
+    WHERE lesson_id IN (${placeholders})
+    GROUP BY lesson_id
+  `).all(...lessonIds);
+  const lastModifiedByLesson = {};
+  modifiedRows.forEach(r => { lastModifiedByLesson[r.lesson_id] = r.last_modified_at; });
+
+  // last_interacted_at: latest attempt by this user on any card in the lesson set.
+  // CROSS JOIN (not JOIN) pins the join order — SQLite's planner otherwise drives this
+  // from attempts.user_id, scanning every attempt this user has ever made across every
+  // class before filtering down to these lessons, instead of seeking attempts per card
+  // via the idx_attempts_cu_created covering index the way the old query did.
+  const interactedRows = db.prepare(`
+    SELECT c.lesson_id AS lesson_id, MAX(a.created_at) AS last_interacted_at
+    FROM cards c
+    CROSS JOIN attempts a ON a.card_id = c.id AND a.user_id = ?
+    WHERE c.lesson_id IN (${placeholders})
+    GROUP BY c.lesson_id
+  `).all(req.session.userId, ...lessonIds);
+  const lastInteractedByLesson = {};
+  interactedRows.forEach(r => { lastInteractedByLesson[r.lesson_id] = r.last_interacted_at; });
+
+  const rows = lessons.map(lesson => ({
+    ...lesson,
+    last_modified_at: lastModifiedByLesson[lesson.id] ?? null,
+    last_interacted_at: lastInteractedByLesson[lesson.id] ?? null
+  }));
+
   res.json(rows);
 });
 
