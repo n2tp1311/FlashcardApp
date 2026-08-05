@@ -774,31 +774,6 @@ body {
   margin-bottom: 18px;
 }
 
-.setup-new-card-estimate {
-  background: var(--primary-light);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-bottom: 18px;
-}
-.setup-new-card-estimate-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--text2);
-}
-.setup-new-card-estimate-value {
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin-top: 3px;
-}
-.setup-new-card-estimate-note {
-  font-size: 0.78rem;
-  color: var(--text2);
-  margin-top: 4px;
-}
-
 @media (max-width: 480px) {
   .select-bar { gap: 10px; }
   .select-count { margin-right: 0; width: 100%; order: 3; }

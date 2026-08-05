@@ -194,9 +194,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
   "setup.newCardEstimateLabel": "New cards recommended today",
   "dashboard.newCardsShortLabel": "New Cards",
-  "setup.newCardEstimateValue": "{n} new cards",
   "setup.newCardEstimateDefaultNote": "Default estimate — not personalized yet. Keep studying and this will adapt to your pace.",
-  "setup.newCardEstimateZero": "0 new cards recommended today",
   "setup.newCardEstimateZeroNote": "Your accuracy dipped over the last week — focus on reviewing what you've already started before adding new cards.",
   "setup.newCardEstimatePersonalizedNote": "Based on your study history and recent accuracy.",
   "setup.newCardEstimateNoneLeft": "No new cards left — you've introduced everything!",
@@ -635,9 +633,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "setup.newCardEstimateLabel": "Số thẻ mới nên học hôm nay",
   "dashboard.newCardsShortLabel": "Thẻ mới",
-  "setup.newCardEstimateValue": "{n} thẻ mới",
   "setup.newCardEstimateDefaultNote": "Ước tính mặc định — chưa được cá nhân hóa. Học thêm để hệ thống điều chỉnh theo nhịp độ của bạn.",
-  "setup.newCardEstimateZero": "0 thẻ mới được đề xuất hôm nay",
   "setup.newCardEstimateZeroNote": "Độ chính xác của bạn giảm trong tuần qua — hãy tập trung ôn lại các thẻ đã học trước khi thêm thẻ mới.",
   "setup.newCardEstimatePersonalizedNote": "Dựa trên lịch sử học tập và độ chính xác gần đây của bạn.",
   "setup.newCardEstimateNoneLeft": "Không còn thẻ mới nào — bạn đã học hết rồi!",
@@ -3837,25 +3833,19 @@ function openSetup(scope) {
   // opening Setup never causes more network round-trips than clicking Start alone used to.
   var matchCountEl = document.getElementById("setup-match-count");
   if (matchCountEl) matchCountEl.textContent = "";
-  renderNewCardEstimate(null);
   var requestId = ++state.setupRequestId;
   var ids = state.studyScope.lessonIds;
   var reviewsTodayPromise = IS_SERVER ? store.getReviewsToday() : Promise.resolve({ count: 0 });
-  // Isolated .catch so a new-card-estimate failure can't blank out the match-count/cards flow.
-  var newCardEstimatePromise = IS_SERVER ? store.getNewCardEstimate().catch(function() { return null; }) : Promise.resolve(null);
-  state.setupDataPromise = Promise.all([store.getBulkCards(ids), reviewsTodayPromise, newCardEstimatePromise]).then(function(results) {
-    var cards = results[0], reviewsToday = results[1].count, newCardEstimate = results[2];
+  state.setupDataPromise = Promise.all([store.getBulkCards(ids), reviewsTodayPromise]).then(function(results) {
+    var cards = results[0], reviewsToday = results[1].count;
     var knownMap = {};
     cards.forEach(function(c) {
       if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
     });
     return store.getDifficultyMap(cards.map(function(c) { return c.id; })).then(function(statsMap) {
-      var data = { cards: cards, knownMap: knownMap, statsMap: statsMap, reviewsToday: reviewsToday, newCardEstimate: newCardEstimate };
+      var data = { cards: cards, knownMap: knownMap, statsMap: statsMap, reviewsToday: reviewsToday };
       // Ignore if the user has since reopened Setup for a different scope before this resolved.
-      if (requestId === state.setupRequestId) {
-        updateSetupMatchCount(data);
-        renderNewCardEstimate(data.newCardEstimate);
-      }
+      if (requestId === state.setupRequestId) updateSetupMatchCount(data);
       return data;
     });
   }).catch(function() {
@@ -3867,7 +3857,7 @@ function openSetup(scope) {
       matchCountEl.textContent = t("setup.loadFailed");
       matchCountEl.classList.add("setup-match-count-warn");
     }
-    return { cards: [], knownMap: {}, statsMap: {}, reviewsToday: 0, newCardEstimate: null };
+    return { cards: [], knownMap: {}, statsMap: {}, reviewsToday: 0 };
   });
 }
 
@@ -3881,28 +3871,6 @@ function updateSetupMatchCount(data) {
   countEl.textContent = matched.length === 0
     ? t("study.noCardsMatchFilter")
     : t("setup.matchCount", { n: matched.length });
-}
-
-function renderNewCardEstimate(estimate) {
-  var box = document.getElementById("setup-new-card-estimate");
-  if (!box) return;
-  if (!estimate) { box.classList.add("hidden"); return; }
-  var valueEl = document.getElementById("setup-new-card-estimate-value");
-  var noteEl  = document.getElementById("setup-new-card-estimate-note");
-  box.classList.remove("hidden");
-  if (estimate.availableNewCards === 0) {
-    valueEl.textContent = t("setup.newCardEstimateNoneLeft");
-    noteEl.textContent = "";
-  } else if (!estimate.personalized) {
-    valueEl.textContent = t("setup.newCardEstimateValue", { n: estimate.estimatedNewCards });
-    noteEl.textContent = t("setup.newCardEstimateDefaultNote");
-  } else if (estimate.estimatedNewCards === 0) {
-    valueEl.textContent = t("setup.newCardEstimateZero");
-    noteEl.textContent = t("setup.newCardEstimateZeroNote");
-  } else {
-    valueEl.textContent = t("setup.newCardEstimateValue", { n: estimate.estimatedNewCards });
-    noteEl.textContent = t("setup.newCardEstimatePersonalizedNote");
-  }
 }
 
 function setPillGroup(groupId, value) {
