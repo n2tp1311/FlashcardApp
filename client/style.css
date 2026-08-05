@@ -3081,17 +3081,7 @@ code {
   flex-shrink: 0;
 }
 
-.home-tag-filter-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.home-tag-filter-row .slicer-bar {
-  margin-bottom: 0;
-}
-.home-tag-filter-row .slicer-bar.collapsed {
+#home-tag-slicer-bar.collapsed {
   display: none;
 }
 .icon-btn.filter-active {
@@ -3105,6 +3095,7 @@ code {
   background: var(--primary-light);
   padding: 4px 10px;
   border-radius: 20px;
+  white-space: nowrap;
 }
 
 #btn-toggle-archived {

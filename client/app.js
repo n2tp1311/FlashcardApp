@@ -1988,9 +1988,9 @@ function _renderHomeSlicer(classes) {
 }
 
 function _renderHomeTagSlicer(classes) {
-  var row = document.getElementById("home-tag-filter-row");
+  var toggleBtn = document.getElementById("btn-tag-filter-toggle");
   var bar = document.getElementById("home-tag-slicer-bar");
-  if (!row || !bar) return;
+  if (!toggleBtn || !bar) return;
   var tags = [];
   classes.forEach(function(c) {
     (c.tags || []).forEach(function(tg) { if (tags.indexOf(tg) === -1) tags.push(tg); });
@@ -1998,11 +1998,13 @@ function _renderHomeTagSlicer(classes) {
 
   bar.innerHTML = "";
   if (tags.length === 0) {
-    row.classList.add("hidden");
+    toggleBtn.classList.add("hidden");
+    bar.classList.add("hidden");
     if (state.homeTagFilter !== "all") {
       state.homeTagFilter = "all";
       try { localStorage.setItem("fc-home-tag-filter", "all"); } catch (_) {}
     }
+    _syncTagFilterToggleUI();
     return;
   }
 
@@ -2011,7 +2013,8 @@ function _renderHomeTagSlicer(classes) {
     try { localStorage.setItem("fc-home-tag-filter", "all"); } catch (_) {}
   }
 
-  row.classList.remove("hidden");
+  toggleBtn.classList.remove("hidden");
+  bar.classList.remove("hidden");
 
   var allBtn = document.createElement("button");
   allBtn.className = "pill" + (state.homeTagFilter === "all" ? " active" : "");
