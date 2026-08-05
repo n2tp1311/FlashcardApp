@@ -299,6 +299,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.days60": "60 days",
   "dashboard.days90": "90 days",
   "dashboard.weeklyTrend": "Weekly Study Trend",
+  "dashboard.newCardsTrend": "New Cards Trend",
   "dashboard.periodNote": "Applies to the charts in this section only — the stats above are all-time.",
   "dashboard.srsDistribution": "SRS Interval Distribution",
   "dashboard.studyTime": "Study Time",
@@ -739,6 +740,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.days60": "60 ngày",
   "dashboard.days90": "90 ngày",
   "dashboard.weeklyTrend": "Xu hướng học theo tuần",
+  "dashboard.newCardsTrend": "Xu hướng thẻ mới",
   "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — các số liệu phía trên tính toàn thời gian.",
   "dashboard.srsDistribution": "Phân bố khoảng lặp SRS",
   "dashboard.studyTime": "Thời gian học",
@@ -5294,7 +5296,7 @@ function renderDashboard() {
   var exportBtn = document.getElementById("btn-dashboard-export");
   if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
-   "dash-heatmap-wrap","dash-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-lesson-wrap",
+   "dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-lesson-wrap",
    "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
@@ -5337,6 +5339,7 @@ function renderDashboard() {
     // Charts (from analytics)
     renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
     renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
+    renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), Math.ceil(days / 7));
     renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
     var futureDueTitle = document.getElementById("dash-future-due-title");
     if (futureDueTitle) futureDueTitle.textContent = t("dashboard.futureDue", { n: futureDue.windowDays });
@@ -5450,6 +5453,7 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     updatePills();
     document.getElementById("dash-heatmap-wrap").innerHTML = "";
     document.getElementById("dash-trend-wrap").innerHTML = "";
+    document.getElementById("dash-newcards-trend-wrap").innerHTML = "";
     document.getElementById("dash-lesson-wrap").innerHTML = "";
     document.getElementById("dash-struggle-list").innerHTML = "";
     store.getAnalytics(state.dashPeriod).then(function(analytics) {
@@ -5458,6 +5462,7 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
       if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
       renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
       renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
+      renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), Math.ceil(days / 7));
       renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
       var pillsWrap = document.getElementById("dash-source-pills-wrap");
@@ -5576,6 +5581,38 @@ function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
       '<span class="trend-label">' + escHtml(label) + '</span>' +
       '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
       '<span class="trend-count">' + countLabel + '</span>';
+    wrap.appendChild(rowEl);
+  });
+}
+
+function renderNewCardsTrend(rows, wrap, maxWeeksAgo) {
+  if (maxWeeksAgo === undefined) maxWeeksAgo = 11;
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStudyData") + '</div>';
+    return;
+  }
+  var map = {};
+  rows.forEach(function(r) { map[r.weeks_ago] = r.cnt; });
+
+  var max = 0;
+  var weeks = [];
+  for (var w = maxWeeksAgo; w >= 0; w--) {
+    var cnt = map[w] || 0;
+    if (cnt > max) max = cnt;
+    weeks.push({ weeksAgo: w, cnt: cnt });
+  }
+
+  weeks.forEach(function(week) {
+    var pct = max > 0 ? Math.round(week.cnt / max * 100) : 0;
+    var label = week.weeksAgo === 0 ? t("dashboard.thisWeek") :
+                week.weeksAgo === 1 ? t("dashboard.lastWeek") :
+                t("time.weeksAgo", { n: week.weeksAgo });
+    var rowEl = document.createElement("div");
+    rowEl.className = "trend-row";
+    rowEl.innerHTML =
+      '<span class="trend-label">' + escHtml(label) + '</span>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="trend-count">' + week.cnt + '</span>';
     wrap.appendChild(rowEl);
   });
 }

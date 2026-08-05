@@ -345,6 +345,22 @@ router.get("/analytics", requireAuth, function(req, res) {
     "GROUP BY weeks_ago"
   ).all(uid, secs);
 
+  // New-card introduction pace over time: each card's first-ever attempt (across all of the
+  // user's history, not just this window) is the day it was "new" to them. Same underlying
+  // signal as /new-card-estimate's historical-pace query, just bucketed by week instead of
+  // reduced to a single average — lets the trend chart show whether pace is rising or falling.
+  var newCardsWeeklyRows = db.prepare(`
+    SELECT CAST((strftime('%s','now') - first_seen) / 604800 AS INTEGER) AS weeks_ago, COUNT(*) AS cnt
+    FROM (
+      SELECT card_id, MIN(created_at) AS first_seen
+      FROM attempts
+      WHERE user_id = ?
+      GROUP BY card_id
+    )
+    WHERE first_seen >= strftime('%s','now') - ?
+    GROUP BY weeks_ago
+  `).all(uid, secs);
+
   var lessonRows = db.prepare(
     "SELECT l.id, l.title, cl.name AS class_name, " +
     "COUNT(a.id) AS total_attempts, " +
@@ -403,6 +419,7 @@ router.get("/analytics", requireAuth, function(req, res) {
   res.json({
     heatmap: heatmapRows,
     weeklyTrend: weeklyRows,
+    newCardsWeeklyTrend: newCardsWeeklyRows,
     lessonBreakdown: lessonRows,
     accuracyBySource: accuracyBySource,
     strugglingLessons: strugglingLessons,
