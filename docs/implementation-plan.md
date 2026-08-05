@@ -255,7 +255,7 @@ User selects:
 
 - 3D flip animation (rotateY, perspective 1200px)
 - Navigation: ← → buttons, keyboard arrows, dot strip — dots preview each card's historical difficulty (green/amber/red/neutral) until marked this session
-- Marking: ✗ Still learning (key: 1) / ✓ Know it (key: 2) / ⚡ Confident (key: 3, sends `grade: "easy"` for a +2 SRS step jump), auto-advance 400ms (1200ms when the card wasn't due, so the not-due hint is readable) — grading (buttons, keys, and swipe) is blocked until the card has been flipped at least once
+- Marking: ✗ Still learning (key: 1) / ↩ Hard (key: 2, sends `grade: "hard"` for a `max(step-1, 0)` step, i.e. correctly recalled but effortful, not a lapse) / ✓ Know it (key: 3) / ⚡ Confident (key: 4, sends `grade: "easy"` for a +2 SRS step jump), auto-advance 400ms (1200ms when the card wasn't due, so the not-due hint is readable) — grading (buttons, keys, and swipe) is blocked until the card has been flipped at least once
 - Each grading button previews its resulting SRS interval (e.g. "Know It · 4h"), suppressed on a not-yet-due card since grading it leaves the schedule unchanged
 - Toolbar: Shuffle, Edit card, Delete card (Reset/"Study Hard Only" removed — unused)
 - Difficulty badge on each card (Easy/Medium/Hard/New + correct/total)
@@ -863,7 +863,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Quiz mode (MCQ) | Done | Auto-generated distractors, keyboard 1-4 |
 | Quiz answer review (Prev/Next through answered questions) | Done | Read-only replay of the original shuffle/answer; delete-card still allowed while reviewing |
 | SRS recognition-vs-recall cap | Done | Quiz-correct capped at srs_step=2; only Flashcard-correct advances past it. `server/routes/attempts.js` |
-| Manual difficulty grading in Flashcard mode | Done | Optional ⚡ Confident button/key 3 sends `grade: "easy"` for a +2 SRS step jump; wires up the previously-dormant server `grade` field. Labeled "Confident" (not "Easy") to avoid colliding with the difficulty-tier badge system |
+| Manual difficulty grading in Flashcard mode | Done | Optional ⚡ Confident button/key 4 sends `grade: "easy"` for a +2 SRS step jump; ↩ Hard button/key 2 sends `grade: "hard"` for a `max(step-1, 0)` step (recalled but effortful, not a lapse — replaces the old dead-code reset-to-0 behavior). `grade` is now persisted on `attempts`. Labeled "Confident" (not "Easy") to avoid colliding with the difficulty-tier badge system |
 | SRS interval preview on grading buttons | Done | Shows resulting interval per button (e.g. "· 4h"); suppressed on not-yet-due cards since grading them doesn't move the schedule |
 | 10-agent UX audit fix batch | Done | i18n gaps (select toolbar, share modal, T/F badge), N/B/E keyboard leak into modal inputs, Esc exits Flashcard, browser-Back trapped in-app, mobile touch targets, dark-mode quiz-answer contrast, dashboard period-scope note |
 | Analytics/Stats UX audit fix batch (9 findings) | Done | Time tracking (`attempts.duration_ms`), per-lesson/class Accuracy Trend, windowed+min-sample Struggling Lessons, accuracy-by-source pills, Study Time tile, chronological "All Attempted" tab, richer CSV export, weekly-trend accuracy label |
