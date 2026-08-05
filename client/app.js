@@ -23,6 +23,7 @@ var ICON_CHECK    = svgIcon('<polyline points="20 6 9 17 4 12"/>');
 var ICON_X        = svgIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
 var ICON_FLAME     = svgIcon('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>');
 var ICON_CLOCK     = svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>');
+var ICON_PLUS_CIRCLE = svgIcon('<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>');
 var ICON_SETTINGS  = svgIcon('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>', 15);
 var ICON_COPY     = svgIcon('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>');
 var ICON_SAVE     = svgIcon('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>');
@@ -192,6 +193,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
   "setup.newCardEstimateLabel": "New cards recommended today",
+  "dashboard.newCardsShortLabel": "New Cards",
   "setup.newCardEstimateValue": "{n} new cards",
   "setup.newCardEstimateDefaultNote": "Default estimate — not personalized yet. Keep studying and this will adapt to your pace.",
   "setup.newCardEstimateZero": "0 new cards recommended today",
@@ -631,6 +633,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "setup.newCardEstimateLabel": "Số thẻ mới nên học hôm nay",
+  "dashboard.newCardsShortLabel": "Thẻ mới",
   "setup.newCardEstimateValue": "{n} thẻ mới",
   "setup.newCardEstimateDefaultNote": "Ước tính mặc định — chưa được cá nhân hóa. Học thêm để hệ thống điều chỉnh theo nhịp độ của bạn.",
   "setup.newCardEstimateZero": "0 thẻ mới được đề xuất hôm nay",
@@ -1661,20 +1664,22 @@ function shuffle(arr) {
    "hidden" | "show" | "highlight" (headline, at the top of the card).
    ============================ */
 var DASH_METRICS = [
-  { key: "streak",    labelKey: "stat.dayStreak" },
-  { key: "studyTime", labelKey: "dashboard.studyTime" },
-  { key: "avgDaily",  labelKey: "stat.avgDailyLabel" },
-  { key: "minDaily",  labelKey: "stat.minDailyLabel" },
-  { key: "maxDaily",  labelKey: "stat.maxDailyLabel" },
-  { key: "classes",   labelKey: "stat.classes" },
-  { key: "lessons",   labelKey: "stat.lessons" },
-  { key: "cards",     labelKey: "stat.cards" },
-  { key: "sessions",  labelKey: "stat.sessions" },
-  { key: "attempts",  labelKey: "stat.attempts" }
+  { key: "streak",          labelKey: "stat.dayStreak" },
+  { key: "studyTime",       labelKey: "dashboard.studyTime" },
+  { key: "newCardEstimate", labelKey: "setup.newCardEstimateLabel", shortLabelKey: "dashboard.newCardsShortLabel" },
+  { key: "avgDaily",        labelKey: "stat.avgDailyLabel" },
+  { key: "minDaily",        labelKey: "stat.minDailyLabel" },
+  { key: "maxDaily",        labelKey: "stat.maxDailyLabel" },
+  { key: "classes",         labelKey: "stat.classes" },
+  { key: "lessons",         labelKey: "stat.lessons" },
+  { key: "cards",           labelKey: "stat.cards" },
+  { key: "sessions",        labelKey: "stat.sessions" },
+  { key: "attempts",        labelKey: "stat.attempts" }
 ];
 
 var DEFAULT_DASH_METRIC_CONFIG = {
   streak: "highlight", studyTime: "highlight",
+  newCardEstimate: "show",
   avgDaily: "show", minDaily: "show", maxDaily: "show",
   classes: "show", lessons: "show", cards: "show", sessions: "show", attempts: "show"
 };
@@ -1939,9 +1944,12 @@ function renderHomeCharts() {
   if (!IS_SERVER) return;
   var section = document.getElementById("home-charts-section");
   document.getElementById("home-summary-grid").innerHTML = "";
-  store.getDashboard().then(function(dash) {
+  // Isolated .catch so a new-card-estimate failure can't blank out the rest of the board.
+  var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
+  Promise.all([store.getDashboard(), newCardEstimatePromise]).then(function(results) {
+    var dash = results[0], newCardEstimate = results[1];
     var grid = document.getElementById("home-summary-grid");
-    grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary);
+    grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary, newCardEstimate);
     section.classList.remove("hidden");
   }).catch(function() { section.classList.add("hidden"); });
 }
@@ -5021,19 +5029,20 @@ function formatStudyDuration(ms) {
   return h > 0 ? (h + "h " + m + "m") : (m + "m");
 }
 
-function _dashMetricValue(key, streak, studyTime, summary) {
+function _dashMetricValue(key, streak, studyTime, summary, newCardEstimate) {
   var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0 };
   switch (key) {
-    case "streak":    return String(streak);
-    case "studyTime": return formatStudyDuration(st.totalMs);
-    case "avgDaily":  return formatStudyDuration(st.avgDailyMs);
-    case "minDaily":  return formatStudyDuration(st.minDailyMs);
-    case "maxDaily":  return formatStudyDuration(st.maxDailyMs);
-    case "classes":   return String(summary.classes);
-    case "lessons":   return String(summary.lessons);
-    case "cards":     return String(summary.cards);
-    case "sessions":  return String(summary.quizSessions);
-    case "attempts":  return String(summary.attempts);
+    case "streak":          return String(streak);
+    case "studyTime":       return formatStudyDuration(st.totalMs);
+    case "newCardEstimate": return newCardEstimate ? String(newCardEstimate.estimatedNewCards) : "–";
+    case "avgDaily":        return formatStudyDuration(st.avgDailyMs);
+    case "minDaily":        return formatStudyDuration(st.minDailyMs);
+    case "maxDaily":        return formatStudyDuration(st.maxDailyMs);
+    case "classes":         return String(summary.classes);
+    case "lessons":         return String(summary.lessons);
+    case "cards":           return String(summary.cards);
+    case "sessions":        return String(summary.quizSessions);
+    case "attempts":        return String(summary.attempts);
     default: return "";
   }
 }
@@ -5041,20 +5050,28 @@ function _dashMetricValue(key, streak, studyTime, summary) {
 function _dashMetricIcon(key) {
   if (key === "streak") return ICON_FLAME;
   if (key === "studyTime") return ICON_CLOCK;
+  if (key === "newCardEstimate") return ICON_PLUS_CIRCLE;
   return "";
 }
 
-function _dashMetricHint(key, studyTime) {
+function _dashMetricHint(key, studyTime, newCardEstimate) {
   if (key === "sessions") return t("stat.sessionsHint");
   if (key === "avgDaily" || key === "minDaily" || key === "maxDaily") {
     var st = studyTime || { trackedDays: 0 };
     return t("stat.studyTimeTrackedHint", { n: st.trackedDays });
   }
+  if (key === "newCardEstimate") {
+    if (!newCardEstimate) return null;
+    if (newCardEstimate.availableNewCards === 0) return t("setup.newCardEstimateNoneLeft");
+    if (!newCardEstimate.personalized) return t("setup.newCardEstimateDefaultNote");
+    if (newCardEstimate.estimatedNewCards === 0) return t("setup.newCardEstimateZeroNote");
+    return t("setup.newCardEstimatePersonalizedNote");
+  }
   return null;
 }
 
-function streakTimeHeroCard(streak, studyTime, summary) {
-  state._dashHeroData = { streak: streak, studyTime: studyTime, summary: summary };
+function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate) {
+  state._dashHeroData = { streak: streak, studyTime: studyTime, summary: summary, newCardEstimate: newCardEstimate };
   var config = state.dashMetricConfig || DEFAULT_DASH_METRIC_CONFIG;
   var highlighted = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "highlight"; });
   var shown = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "show"; });
@@ -5069,13 +5086,13 @@ function streakTimeHeroCard(streak, studyTime, summary) {
   var mainHtml = highlighted.map(function(m, i) {
     return (i > 0 ? '<div class="dash-hero-divider"></div>' : '') +
       '<div class="dash-hero-stat">' +
-        '<div class="dash-hero-value">' + _dashMetricIcon(m.key) + ' ' + _dashMetricValue(m.key, streak, studyTime, summary) + '</div>' +
-        '<div class="dash-hero-label">' + t(m.labelKey) + '</div>' +
+        '<div class="dash-hero-value">' + _dashMetricIcon(m.key) + ' ' + _dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate) + '</div>' +
+        '<div class="dash-hero-label">' + t(m.shortLabelKey || m.labelKey) + '</div>' +
       '</div>';
   }).join('');
 
   var subHtml = shown.map(function(m) {
-    return heroSubCard(_dashMetricValue(m.key, streak, studyTime, summary), t(m.labelKey), _dashMetricHint(m.key, studyTime));
+    return heroSubCard(_dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate), t(m.shortLabelKey || m.labelKey), _dashMetricHint(m.key, studyTime, newCardEstimate));
   }).join('');
 
   return '<div class="dash-hero-card">' + gearBtn +
@@ -5094,7 +5111,7 @@ function _refreshDashHeroCards() {
     var hero = grid.querySelector(".dash-hero-card");
     if (!hero) return;
     var wrap = document.createElement("div");
-    wrap.innerHTML = streakTimeHeroCard(state._dashHeroData.streak, state._dashHeroData.studyTime, state._dashHeroData.summary);
+    wrap.innerHTML = streakTimeHeroCard(state._dashHeroData.streak, state._dashHeroData.studyTime, state._dashHeroData.summary, state._dashHeroData.newCardEstimate);
     hero.replaceWith(wrap.firstElementChild);
   });
 }
@@ -5282,8 +5299,10 @@ function renderDashboard() {
     document.getElementById(id).innerHTML = "";
   });
 
-  Promise.all([store.getDashboard(), store.getAnalytics(state.dashPeriod), store.getSrsDistribution(), store.getFutureDue()]).then(function(results) {
-    var d = results[0], analytics = results[1], srs = results[2], futureDue = results[3];
+  // Isolated .catch so a new-card-estimate failure can't blank out the rest of the dashboard.
+  var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
+  Promise.all([store.getDashboard(), store.getAnalytics(state.dashPeriod), store.getSrsDistribution(), store.getFutureDue(), newCardEstimatePromise]).then(function(results) {
+    var d = results[0], analytics = results[1], srs = results[2], futureDue = results[3], newCardEstimate = results[4];
     var days = analytics.days || state.dashPeriod || 60;
     var heatmapTitle = document.getElementById("dash-heatmap-title");
     if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
@@ -5291,7 +5310,7 @@ function renderDashboard() {
 
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
-    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary);
+    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary, newCardEstimate);
 
     // Accuracy bar
     var accPct = d.accuracy.total > 0
