@@ -3084,9 +3084,24 @@ code {
 #home-tag-slicer-bar.collapsed {
   display: none;
 }
+/* Matches the grounded, bordered look of #btn-toggle-archived / .view-toggle next to it —
+   the bare borderless .icon-btn base read as a floating stray icon in that same row. */
+#btn-tag-filter-toggle {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+#btn-tag-filter-toggle:hover {
+  background: var(--surface2);
+  border-color: var(--border);
+}
 .icon-btn.filter-active {
   color: var(--primary);
   background: var(--primary-light);
+  border-color: var(--primary);
 }
 .tag-filter-active-label {
   font-size: 0.8125rem;
