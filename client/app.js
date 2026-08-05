@@ -246,9 +246,11 @@ Object.assign(TRANSLATIONS.en, {
   "study.prev": "Prev",
   "study.stillLearningHint": "Still Learning (1)",
   "study.learning": "Learning",
-  "study.knowItHint": "Know It (2)",
+  "study.hardHint": "Hard (2) — recalled it, but it took some effort",
+  "study.hard": "Hard",
+  "study.knowItHint": "Know It (3)",
   "study.knowIt": "Know It",
-  "study.confidentHint": "Confident (3)",
+  "study.confidentHint": "Confident (4)",
   "study.confident": "Confident",
   "study.next": "Next",
   "results.title": "Results",
@@ -685,9 +687,11 @@ Object.assign(TRANSLATIONS.vi, {
   "study.prev": "Trước",
   "study.stillLearningHint": "Đang học (1)",
   "study.learning": "Đang học",
-  "study.knowItHint": "Đã thuộc (2)",
+  "study.hardHint": "Khó (2) — nhớ được, nhưng phải cố gắng",
+  "study.hard": "Khó",
+  "study.knowItHint": "Đã thuộc (3)",
   "study.knowIt": "Đã thuộc",
-  "study.confidentHint": "Rất chắc chắn (3)",
+  "study.confidentHint": "Rất chắc chắn (4)",
   "study.confident": "Rất chắc chắn",
   "study.next": "Tiếp",
   "results.title": "Kết quả",
@@ -4195,7 +4199,7 @@ function startFlashcards() {
 }
 
 function setMarkButtonsEnabled(enabled) {
-  ["btn-fc-learning", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
+  ["btn-fc-learning", "btn-fc-hard", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
     document.getElementById(id).disabled = !enabled;
   });
 }
@@ -4339,6 +4343,7 @@ function renderFlashcard() {
   var curStep = card.srs_step != null ? card.srs_step : 0;
   var stillNotDue = card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000);
   document.getElementById("fc-int-learning").textContent = stillNotDue ? "" : "· " + stepLabel(0);
+  document.getElementById("fc-int-hard").textContent = stillNotDue ? "" : "· " + stepLabel(Math.max(curStep - 1, 0));
   document.getElementById("fc-int-known").textContent = stillNotDue ? "" : "· " + stepLabel(curStep + 1);
   document.getElementById("fc-int-easy").textContent = stillNotDue ? "" : "· " + stepLabel(curStep + 2);
 
@@ -4514,6 +4519,7 @@ function markCard(known, grade) {
 }
 
 document.getElementById("btn-fc-learning").addEventListener("click", function() { markCard(false); });
+document.getElementById("btn-fc-hard").addEventListener("click", function()     { markCard(true, "hard"); });
 document.getElementById("btn-fc-known").addEventListener("click", function()    { markCard(true);  });
 document.getElementById("btn-fc-easy").addEventListener("click", function()     { markCard(true, "easy"); });
 
@@ -7267,8 +7273,9 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "ArrowRight") document.getElementById("btn-fc-next").click();
     else if (e.key === " " || e.key === "Enter") { e.preventDefault(); document.getElementById("fc-scene").click(); }
     else if (e.key === "1") document.getElementById("btn-fc-learning").click();
-    else if (e.key === "2") document.getElementById("btn-fc-known").click();
-    else if (e.key === "3") document.getElementById("btn-fc-easy").click();
+    else if (e.key === "2") document.getElementById("btn-fc-hard").click();
+    else if (e.key === "3") document.getElementById("btn-fc-known").click();
+    else if (e.key === "4") document.getElementById("btn-fc-easy").click();
     else if (e.key === "s" || e.key === "S") document.getElementById("btn-fc-shuffle").click();
     else if (e.key === "p" || e.key === "P") speakText(state.studyFlipped ? state.studyBackText : state.studyFrontText);
     else if (e.key === "Escape") document.getElementById("btn-fc-back").click();
@@ -7316,8 +7323,9 @@ function injectKeyHints() {
     ["btn-dashboard-back", "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
     ["btn-fc-learning",    "[1]"],
-    ["btn-fc-known",       "[2]"],
-    ["btn-fc-easy",        "[3]"],
+    ["btn-fc-hard",        "[2]"],
+    ["btn-fc-known",       "[3]"],
+    ["btn-fc-easy",        "[4]"],
     ["btn-fc-audio-front", "[P]"],
     ["btn-fc-audio-back",  "[P]"]
   ];

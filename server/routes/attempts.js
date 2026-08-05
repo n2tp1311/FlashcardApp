@@ -48,8 +48,8 @@ router.post("/", requireAuth, (req, res) => {
   if (!card) return res.status(404).json({ error: "Card not found" });
 
   db.prepare(
-    "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs));
+    "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).run(genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null);
 
   // Update per-card SRS: correct → advance step, wrong → reset to 0
   const stateRow = db.prepare(
@@ -66,7 +66,7 @@ router.post("/", requireAuth, (req, res) => {
   let newStep;
   if (grade === "easy")        newStep = curStep + 2;
   else if (grade === "medium") newStep = curStep + 1;
-  else if (grade === "hard")   newStep = 0;
+  else if (grade === "hard")   newStep = Math.max(curStep - 1, 0);
   else                         newStep = correct ? curStep + 1 : 0;
 
   // Recognizing the right answer among options isn't strong enough evidence of recall to earn

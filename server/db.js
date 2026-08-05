@@ -222,6 +222,10 @@ try { db.exec("ALTER TABLE card_states ADD COLUMN srs_due_at INTEGER"); } catch 
 // Migration: track time spent per attempt (client-measured, clamped server-side)
 try { db.exec("ALTER TABLE attempts ADD COLUMN duration_ms INTEGER"); } catch (_) {}
 
+// Migration: persist the client-submitted self-grade (easy/hard) on each attempt —
+// previously received in the request body and used to compute srs_step, then discarded
+try { db.exec("ALTER TABLE attempts ADD COLUMN grade TEXT"); } catch (_) {}
+
 // Migration: free-text tags on classes, stored as a JSON array string
 try { db.exec("ALTER TABLE classes ADD COLUMN tags TEXT"); } catch (_) {}
 

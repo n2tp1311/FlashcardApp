@@ -1458,7 +1458,7 @@ code {
   width: 100%;
 }
 
-/* Three grading buttons + Prev + Next don't fit on one 600px row, so the grading
+/* Four grading buttons + Prev + Next don't fit on one 600px row, so the grading
    buttons take their own full-width row on top and Prev/Next sit below. */
 .fc-mark-btns {
   display: flex;
