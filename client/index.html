@@ -599,6 +599,22 @@
     </div>
   </div>
 
+  <!-- Dashboard Metrics Modal -->
+  <div id="modal-dash-metrics" class="modal hidden">
+    <div class="modal-header">
+      <h3 data-i18n="dashboard.configureMetrics">Customize metrics</h3>
+      <button class="modal-close" data-modal="dash-metrics" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p class="dash-metrics-hint" data-i18n="dashboard.configureMetricsHint">Choose what to show on your summary board, and which metrics to feature at the top.</p>
+      <div id="dash-metrics-list" class="dash-metrics-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="dash-metrics" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-dash-metrics" data-i18n="common.save">Save</button>
+    </div>
+  </div>
+
   <!-- Class Form Modal -->
   <div id="modal-class" class="modal hidden">
     <div class="modal-header">

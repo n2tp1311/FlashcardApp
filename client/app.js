@@ -23,6 +23,7 @@ var ICON_CHECK    = svgIcon('<polyline points="20 6 9 17 4 12"/>');
 var ICON_X        = svgIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
 var ICON_FLAME     = svgIcon('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>');
 var ICON_CLOCK     = svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>');
+var ICON_SETTINGS  = svgIcon('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>', 15);
 var ICON_COPY     = svgIcon('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>');
 var ICON_SAVE     = svgIcon('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>');
 var ICON_CHEVRON_UP   = svgIcon('<polyline points="18 15 12 9 6 15"/>');
@@ -299,6 +300,12 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.periodNote": "Applies to the charts in this section only — the stats above are all-time.",
   "dashboard.srsDistribution": "SRS Interval Distribution",
   "dashboard.studyTime": "Study Time",
+  "dashboard.configureMetrics": "Customize metrics",
+  "dashboard.configureMetricsHint": "Choose what to show on your summary board, and which metrics to feature at the top.",
+  "dashboard.allMetricsHidden": "All metrics are hidden — customize to show some again.",
+  "dashboard.metricHidden": "Hidden",
+  "dashboard.metricShow": "Show",
+  "dashboard.metricHighlight": "Highlight",
   "dashboard.lessonAccuracy": "Lesson Accuracy",
   "dashboard.dueForReview": "Due for Review",
   "dashboard.strugglingLessons": "Struggling Lessons",
@@ -732,6 +739,12 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — các số liệu phía trên tính toàn thời gian.",
   "dashboard.srsDistribution": "Phân bố khoảng lặp SRS",
   "dashboard.studyTime": "Thời gian học",
+  "dashboard.configureMetrics": "Tùy chỉnh chỉ số",
+  "dashboard.configureMetricsHint": "Chọn những gì hiển thị trên bảng tổng quan, và chỉ số nào được nổi bật lên đầu.",
+  "dashboard.allMetricsHidden": "Tất cả chỉ số đang ẩn — tùy chỉnh để hiện lại.",
+  "dashboard.metricHidden": "Ẩn",
+  "dashboard.metricShow": "Hiện",
+  "dashboard.metricHighlight": "Nổi bật",
   "dashboard.lessonAccuracy": "Độ chính xác bài học",
   "dashboard.dueForReview": "Đến hạn ôn tập",
   "dashboard.strugglingLessons": "Bài học đang gặp khó",
@@ -1643,6 +1656,30 @@ function shuffle(arr) {
 }
 
 /* ============================
+   DASHBOARD METRIC CONFIG
+   Per-metric visibility for the summary-board hero card (Home + Dashboard share one config):
+   "hidden" | "show" | "highlight" (headline, at the top of the card).
+   ============================ */
+var DASH_METRICS = [
+  { key: "streak",    labelKey: "stat.dayStreak" },
+  { key: "studyTime", labelKey: "dashboard.studyTime" },
+  { key: "avgDaily",  labelKey: "stat.avgDailyLabel" },
+  { key: "minDaily",  labelKey: "stat.minDailyLabel" },
+  { key: "maxDaily",  labelKey: "stat.maxDailyLabel" },
+  { key: "classes",   labelKey: "stat.classes" },
+  { key: "lessons",   labelKey: "stat.lessons" },
+  { key: "cards",     labelKey: "stat.cards" },
+  { key: "sessions",  labelKey: "stat.sessions" },
+  { key: "attempts",  labelKey: "stat.attempts" }
+];
+
+var DEFAULT_DASH_METRIC_CONFIG = {
+  streak: "highlight", studyTime: "highlight",
+  avgDaily: "show", minDaily: "show", maxDaily: "show",
+  classes: "show", lessons: "show", cards: "show", sessions: "show", attempts: "show"
+};
+
+/* ============================
    APP STATE
    ============================ */
 
@@ -1663,6 +1700,8 @@ var state = {
   studyPresets: [],
   maxReviewsPerDay: null,
   typeToCompare: false,
+  dashMetricConfig: Object.assign({}, DEFAULT_DASH_METRIC_CONFIG),
+  _dashHeroData: null,
 
   // Study
   studyCards: [],
@@ -4982,32 +5021,82 @@ function formatStudyDuration(ms) {
   return h > 0 ? (h + "h " + m + "m") : (m + "m");
 }
 
+function _dashMetricValue(key, streak, studyTime, summary) {
+  var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0 };
+  switch (key) {
+    case "streak":    return String(streak);
+    case "studyTime": return formatStudyDuration(st.totalMs);
+    case "avgDaily":  return formatStudyDuration(st.avgDailyMs);
+    case "minDaily":  return formatStudyDuration(st.minDailyMs);
+    case "maxDaily":  return formatStudyDuration(st.maxDailyMs);
+    case "classes":   return String(summary.classes);
+    case "lessons":   return String(summary.lessons);
+    case "cards":     return String(summary.cards);
+    case "sessions":  return String(summary.quizSessions);
+    case "attempts":  return String(summary.attempts);
+    default: return "";
+  }
+}
+
+function _dashMetricIcon(key) {
+  if (key === "streak") return ICON_FLAME;
+  if (key === "studyTime") return ICON_CLOCK;
+  return "";
+}
+
+function _dashMetricHint(key, studyTime) {
+  if (key === "sessions") return t("stat.sessionsHint");
+  if (key === "avgDaily" || key === "minDaily" || key === "maxDaily") {
+    var st = studyTime || { trackedDays: 0 };
+    return t("stat.studyTimeTrackedHint", { n: st.trackedDays });
+  }
+  return null;
+}
+
 function streakTimeHeroCard(streak, studyTime, summary) {
-  var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0, trackedDays: 0 };
-  var trackedHint = t("stat.studyTimeTrackedHint", { n: st.trackedDays });
-  return '<div class="dash-hero-card">' +
-    '<div class="dash-hero-main">' +
+  state._dashHeroData = { streak: streak, studyTime: studyTime, summary: summary };
+  var config = state.dashMetricConfig || DEFAULT_DASH_METRIC_CONFIG;
+  var highlighted = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "highlight"; });
+  var shown = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "show"; });
+  var gearBtn = '<button class="icon-btn dash-hero-settings-btn" title="' + escHtml(t("dashboard.configureMetrics")) + '">' + ICON_SETTINGS + '</button>';
+
+  if (!highlighted.length && !shown.length) {
+    return '<div class="dash-hero-card dash-hero-empty">' + gearBtn +
+      '<div class="dash-hero-empty-note">' + t("dashboard.allMetricsHidden") + '</div>' +
+    '</div>';
+  }
+
+  var mainHtml = highlighted.map(function(m, i) {
+    return (i > 0 ? '<div class="dash-hero-divider"></div>' : '') +
       '<div class="dash-hero-stat">' +
-        '<div class="dash-hero-value">' + ICON_FLAME + ' ' + streak + '</div>' +
-        '<div class="dash-hero-label">' + t("stat.dayStreak") + '</div>' +
-      '</div>' +
-      '<div class="dash-hero-divider"></div>' +
-      '<div class="dash-hero-stat">' +
-        '<div class="dash-hero-value">' + ICON_CLOCK + ' ' + formatStudyDuration(st.totalMs) + '</div>' +
-        '<div class="dash-hero-label">' + t("dashboard.studyTime") + '</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="dash-hero-sub">' +
-      heroSubCard(formatStudyDuration(st.avgDailyMs), t("stat.avgDailyLabel"), trackedHint) +
-      heroSubCard(formatStudyDuration(st.minDailyMs), t("stat.minDailyLabel"), trackedHint) +
-      heroSubCard(formatStudyDuration(st.maxDailyMs), t("stat.maxDailyLabel"), trackedHint) +
-      heroSubCard(summary.classes,      t("stat.classes")) +
-      heroSubCard(summary.lessons,      t("stat.lessons")) +
-      heroSubCard(summary.cards,        t("stat.cards")) +
-      heroSubCard(summary.quizSessions, t("stat.sessions"), t("stat.sessionsHint")) +
-      heroSubCard(summary.attempts,     t("stat.attempts")) +
-    '</div>' +
+        '<div class="dash-hero-value">' + _dashMetricIcon(m.key) + ' ' + _dashMetricValue(m.key, streak, studyTime, summary) + '</div>' +
+        '<div class="dash-hero-label">' + t(m.labelKey) + '</div>' +
+      '</div>';
+  }).join('');
+
+  var subHtml = shown.map(function(m) {
+    return heroSubCard(_dashMetricValue(m.key, streak, studyTime, summary), t(m.labelKey), _dashMetricHint(m.key, studyTime));
+  }).join('');
+
+  return '<div class="dash-hero-card">' + gearBtn +
+    (mainHtml ? '<div class="dash-hero-main">' + mainHtml + '</div>' : '') +
+    (subHtml ? '<div class="dash-hero-sub">' + subHtml + '</div>' : '') +
   '</div>';
+}
+
+// Re-renders any already-rendered hero card(s) in place from the last data used to build
+// them, so saving the metrics config updates the board immediately without a network refetch.
+function _refreshDashHeroCards() {
+  if (!state._dashHeroData) return;
+  ["home-summary-grid", "dash-summary-grid"].forEach(function(gridId) {
+    var grid = document.getElementById(gridId);
+    if (!grid) return;
+    var hero = grid.querySelector(".dash-hero-card");
+    if (!hero) return;
+    var wrap = document.createElement("div");
+    wrap.innerHTML = streakTimeHeroCard(state._dashHeroData.streak, state._dashHeroData.studyTime, state._dashHeroData.summary);
+    hero.replaceWith(wrap.firstElementChild);
+  });
 }
 
 function heroSubCard(val, label, hint) {
@@ -6116,6 +6205,9 @@ function applyPrefs(prefs) {
   if (typeof prefs.typeToCompare === "boolean") {
     state.typeToCompare = prefs.typeToCompare;
   }
+  if (prefs.dashMetricConfig && typeof prefs.dashMetricConfig === "object") {
+    state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, prefs.dashMetricConfig);
+  }
 }
 
 function loadUserPreferences() {
@@ -6462,6 +6554,63 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
     body: JSON.stringify(prefs)
   }).catch(function() {});
   closeModal("preferences");
+});
+
+/* ============================
+   DASHBOARD METRICS MODAL
+   ============================ */
+var _dashMetricDraft = null;
+
+function _renderDashMetricsModalRows() {
+  var list = document.getElementById("dash-metrics-list");
+  if (!list) return;
+  list.innerHTML = DASH_METRICS.map(function(m) {
+    var mode = _dashMetricDraft[m.key] || "show";
+    var pills = ["hidden", "show", "highlight"].map(function(opt) {
+      var labelKey = "dashboard.metric" + opt.charAt(0).toUpperCase() + opt.slice(1);
+      return '<button type="button" class="pill' + (mode === opt ? " active" : "") + '" data-mode="' + opt + '">' + t(labelKey) + "</button>";
+    }).join("");
+    return '<div class="dash-metric-row">' +
+      '<span class="dash-metric-row-label">' + t(m.labelKey) + "</span>" +
+      '<div class="dash-metric-mode-group" data-metric="' + m.key + '">' + pills + "</div>" +
+    "</div>";
+  }).join("");
+}
+
+["home-summary-grid", "dash-summary-grid"].forEach(function(gridId) {
+  var grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.addEventListener("click", function(e) {
+    if (!e.target.closest(".dash-hero-settings-btn")) return;
+    _dashMetricDraft = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, state.dashMetricConfig);
+    _renderDashMetricsModalRows();
+    openModal("dash-metrics");
+  });
+});
+
+document.getElementById("dash-metrics-list").addEventListener("click", function(e) {
+  var modeBtn = e.target.closest(".pill");
+  if (!modeBtn) return;
+  var group = modeBtn.closest(".dash-metric-mode-group");
+  _dashMetricDraft[group.dataset.metric] = modeBtn.dataset.mode;
+  group.querySelectorAll(".pill").forEach(function(p) { p.classList.toggle("active", p === modeBtn); });
+});
+
+document.getElementById("btn-save-dash-metrics").addEventListener("click", function() {
+  state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, _dashMetricDraft);
+  var prefs = { dashMetricConfig: state.dashMetricConfig };
+  try {
+    var cachedPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
+    localStorage.setItem("fc-preferences", JSON.stringify(Object.assign({}, cachedPrefs, prefs)));
+  } catch (_) {}
+  fetch("/api/auth/preferences", {
+    method: "PUT",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(prefs)
+  }).catch(function() {});
+  _refreshDashHeroCards();
+  closeModal("dash-metrics");
 });
 
 /* ============================
