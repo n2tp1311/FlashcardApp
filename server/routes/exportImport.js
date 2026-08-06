@@ -65,15 +65,21 @@ router.post("/", requireAuth, (req, res) => {
     attempts.forEach(att => {
       const cardId = idMap[att.card_id] || att.card_id;
       db.prepare(
-        "INSERT OR IGNORE INTO attempts (id, card_id, user_id, correct, source, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-      ).run(genId(), cardId, userId, att.correct, att.source || "flashcard", att.created_at || Math.floor(Date.now()/1000));
+        "INSERT OR IGNORE INTO attempts (id, card_id, user_id, correct, source, created_at, duration_ms, grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      ).run(genId(), cardId, userId, att.correct, att.source || "flashcard", att.created_at || Math.floor(Date.now()/1000),
+            att.duration_ms ?? null, att.grade ?? null);
     });
 
     states.forEach(s => {
       const cardId = idMap[s.card_id] || s.card_id;
       db.prepare(
-        "INSERT OR REPLACE INTO card_states (card_id, user_id, known, updated_at) VALUES (?, ?, ?, ?)"
-      ).run(cardId, userId, s.known, s.updated_at || Math.floor(Date.now()/1000));
+        "INSERT OR REPLACE INTO card_states (card_id, user_id, known, updated_at, last_seen_at, srs_step, srs_due_at, " +
+        "fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_reps, fsrs_lapses, fsrs_learning_steps, fsrs_last_review_at, last_correct_source) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ).run(cardId, userId, s.known, s.updated_at || Math.floor(Date.now()/1000), s.last_seen_at ?? null,
+            s.srs_step ?? 0, s.srs_due_at ?? null, s.fsrs_stability ?? null, s.fsrs_difficulty ?? null,
+            s.fsrs_state ?? 0, s.fsrs_reps ?? 0, s.fsrs_lapses ?? 0, s.fsrs_learning_steps ?? 0,
+            s.fsrs_last_review_at ?? null, s.last_correct_source ?? null);
     });
   })();
 

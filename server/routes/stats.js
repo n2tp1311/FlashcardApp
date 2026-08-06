@@ -46,7 +46,7 @@ router.get("/lesson/:id", requireAuth, (req, res) => {
 
   const userId = req.session.userId;
   const cards = db.prepare(
-    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_step, cs.srs_due_at, la.last_studied_at " +
+    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, la.last_studied_at " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
     "LEFT JOIN (SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE user_id = ? GROUP BY card_id) la ON la.card_id = cards.id " +
@@ -501,10 +501,30 @@ router.get("/analytics/export", requireAuth, function(req, res) {
   res.send(lines.join("\n"));
 });
 
-// GET /api/stats/srs-distribution
+// GET /api/stats/srs-distribution — buckets by the FSRS interval a card is currently
+// scheduled at (srs_due_at minus its last review), using the same perceptual boundaries the
+// old fixed-step ladder used (10m/1h/4h/1d/3d/7d/21d/...), so the chart's shape stays
+// familiar even though the underlying scheduler is now continuous, not step-indexed. Cards
+// still in FSRS's Learning/Relearning state get their own bucket since they're qualitatively
+// different from "a Review card with a short interval."
 router.get("/srs-distribution", requireAuth, (req, res) => {
   const rows = db.prepare(
-    "SELECT srs_step, COUNT(*) AS cnt FROM card_states WHERE user_id = ? AND srs_due_at IS NOT NULL GROUP BY srs_step ORDER BY srs_step"
+    "SELECT bucket, COUNT(*) AS cnt FROM (" +
+    "  SELECT" +
+    "    CASE" +
+    "      WHEN fsrs_state IN (1,3) THEN 'learning'" +
+    "      WHEN iv <    3600 THEN 'b_10m'  WHEN iv <   14400 THEN 'b_1h'" +
+    "      WHEN iv <   86400 THEN 'b_4h'   WHEN iv <  259200 THEN 'b_1d'" +
+    "      WHEN iv <  604800 THEN 'b_3d'   WHEN iv < 1814400 THEN 'b_7d'" +
+    "      WHEN iv < 3628800 THEN 'b_21d'  WHEN iv < 7257600 THEN 'b_42d'" +
+    "      WHEN iv <14515200 THEN 'b_84d'  WHEN iv <29030400 THEN 'b_168d'" +
+    "      WHEN iv <31536000 THEN 'b_336d' ELSE 'b_1yr'" +
+    "    END AS bucket" +
+    "  FROM (" +
+    "    SELECT fsrs_state, srs_due_at - COALESCE(fsrs_last_review_at, updated_at) AS iv" +
+    "    FROM card_states WHERE user_id = ? AND srs_due_at IS NOT NULL" +
+    "  )" +
+    ") GROUP BY bucket"
   ).all(req.session.userId);
   res.json(rows);
 });

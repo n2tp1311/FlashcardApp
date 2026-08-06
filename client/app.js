@@ -188,7 +188,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.studyingTogether": "Studying {n} lessons together",
   "setup.hintAll": "Study all cards",
   "setup.hintDue": "Only cards due for review (SRS)",
-  "setup.hintNeedsRecall": "Due cards stuck at a short review interval — answer them in Flashcard mode to unlock longer intervals",
+  "setup.hintNeedsRecall": "Cards you've only confirmed by recognizing them in a quiz, not by recalling them — answer in Flashcard mode to confirm you really know them",
   "setup.hintLearning": "Cards not yet known / still learning",
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
@@ -324,6 +324,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.lastWeek": "Last week",
   "dashboard.noCardsInSrs": "No cards in SRS yet.",
   "dashboard.cardsInSrs": "{n} card(s) in SRS",
+  "srsBucket.learning": "Learning",
   "dashboard.futureDue": "Upcoming Reviews (Next {n} Days)",
   "dashboard.noCardsDueSoon": "No cards due in the next {n} days.",
   "dashboard.noStudyData": "No study data yet.",
@@ -629,7 +630,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.studyingTogether": "Đang học {n} bài học cùng lúc",
   "setup.hintAll": "Học tất cả thẻ",
   "setup.hintDue": "Chỉ thẻ đến hạn ôn tập (SRS)",
-  "setup.hintNeedsRecall": "Thẻ đến hạn nhưng đang kẹt ở khoảng ôn ngắn — trả lời đúng ở chế độ Thẻ ghi nhớ để mở khóa khoảng ôn dài hơn",
+  "setup.hintNeedsRecall": "Thẻ bạn mới chỉ nhận diện đúng trong bài quiz, chưa từng tự nhớ lại — trả lời ở chế độ Thẻ ghi nhớ để xác nhận bạn thực sự thuộc",
   "setup.hintLearning": "Thẻ chưa thuộc / đang học",
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
@@ -765,6 +766,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.lastWeek": "Tuần trước",
   "dashboard.noCardsInSrs": "Chưa có thẻ nào trong SRS.",
   "dashboard.cardsInSrs": "{n} thẻ trong SRS",
+  "srsBucket.learning": "Đang học",
   "dashboard.futureDue": "Sắp đến hạn ôn ({n} ngày tới)",
   "dashboard.noCardsDueSoon": "Không có thẻ nào đến hạn trong {n} ngày tới.",
   "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
@@ -3900,8 +3902,9 @@ function renderSetupPresets() {
 function applyStudyPreset(preset) {
   setPillGroup("setup-count", preset.count);
   setPillGroup("setup-filter", preset.filter);
-  // Quiz mode structurally can't advance needsRecall cards further (see RECOGNITION_CAP_STEP) —
-  // same guard as the manual filter-pill handler, so a preset can't silently produce a no-op session.
+  // needsRecall cards are, by definition, cards only ever confirmed via quiz recognition —
+  // studying them in Quiz mode again wouldn't change that, so force Flashcard mode, same
+  // guard as the manual filter-pill handler, so a preset can't silently produce a no-op session.
   var mode = preset.filter === "needsRecall" ? "flashcard" : preset.mode;
   setPillGroup("setup-mode", mode);
   // Interleaved only applies to multi-lesson sessions — its pill is hidden otherwise, so
@@ -4019,8 +4022,8 @@ var MODE_HINT_KEYS = {
       var hint = document.getElementById("setup-filter-hint");
       var key = FILTER_HINT_KEYS[pill.dataset.value];
       if (hint) hint.textContent = key ? t(key) : "";
-      // Quiz mode structurally can't advance these cards further (see RECOGNITION_CAP_STEP) —
-      // default to Flashcard so picking this filter doesn't silently produce a no-op session.
+      // needsRecall cards are only ever confirmed via quiz recognition — default to
+      // Flashcard so picking this filter doesn't silently produce a no-op session.
       if (pill.dataset.value === "needsRecall") {
         setPillGroup("setup-mode", "flashcard");
         var modeHintOnFilterSwitch = document.getElementById("setup-mode-hint");
@@ -4097,10 +4100,6 @@ function roundRobinMerge(groups) {
   return result;
 }
 
-// Must match RECOGNITION_CAP_STEP in server/routes/attempts.js — used only to build the
-// "Needs Recall" filter list, not to compute SRS scheduling itself (that stays server-side).
-var RECOGNITION_CAP_STEP = 2;
-
 // Caps due/needsRecall cards to the user's remaining daily review budget (Preferences →
 // Max reviews per day), prioritizing the most-overdue cards rather than arbitrary DB order.
 // "Reviews done today" approximates to any graded attempt today (attempts has no new-vs-
@@ -4121,9 +4120,13 @@ function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday) {
     var due = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
     return applyReviewCap(due, reviewsToday);
   } else if (filter === "needsRecall") {
+    // A card "needs recall" if its most recent correct answer came from quiz recognition,
+    // never from actively recalling it in Flashcard/Recall mode — the FSRS-era replacement
+    // for the old ladder's step-position check (RECOGNITION_CAP_STEP), using the same
+    // underlying intent: quiz answers are weaker evidence than active recall.
     var nowSec3 = Math.floor(Date.now() / 1000);
     var needsRecall = cards.filter(function(c) {
-      return c.srs_step != null && c.srs_step >= RECOGNITION_CAP_STEP && c.srs_due_at && c.srs_due_at <= nowSec3;
+      return c.last_correct_source === "quiz" && c.srs_due_at && c.srs_due_at <= nowSec3;
     });
     return applyReviewCap(needsRecall, reviewsToday);
   } else if (filter === "learning") {
@@ -4358,16 +4361,16 @@ function renderFlashcard() {
   document.getElementById("btn-fc-learning").classList.toggle("btn-danger-active", known === false);
   document.getElementById("btn-fc-known").classList.toggle("btn-success-active", known === true);
 
-  // Interval preview: how long until the card comes back if graded this way (mirrors
-  // the +0/+1/+2 step logic in markCard()/server/routes/attempts.js). A not-yet-due card
-  // leaves its schedule untouched regardless of grade (same server-side early-return), so
-  // showing a preview there would promise a bump that doesn't actually happen.
-  var curStep = card.srs_step != null ? card.srs_step : 0;
+  // Interval preview: how long until the card comes back if graded this way. Precomputed
+  // server-side (fsrs_preview_*, seconds-from-now) so this can never drift from the FSRS
+  // scheduler's actual math — see server/fsrs.js. A not-yet-due card leaves its schedule
+  // untouched regardless of grade (same server-side early-return), so showing a preview
+  // there would promise a bump that doesn't actually happen.
   var stillNotDue = card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000);
-  document.getElementById("fc-int-learning").textContent = stillNotDue ? "" : "· " + stepLabel(0);
-  document.getElementById("fc-int-hard").textContent = stillNotDue ? "" : "· " + stepLabel(Math.max(curStep - 1, 0));
-  document.getElementById("fc-int-known").textContent = stillNotDue ? "" : "· " + stepLabel(curStep + 1);
-  document.getElementById("fc-int-easy").textContent = stillNotDue ? "" : "· " + stepLabel(curStep + 2);
+  document.getElementById("fc-int-learning").textContent = stillNotDue ? "" : "· " + formatFsrsDuration(card.fsrs_preview_again);
+  document.getElementById("fc-int-hard").textContent = stillNotDue ? "" : "· " + formatFsrsDuration(card.fsrs_preview_hard);
+  document.getElementById("fc-int-known").textContent = stillNotDue ? "" : "· " + formatFsrsDuration(card.fsrs_preview_good);
+  document.getElementById("fc-int-easy").textContent = stillNotDue ? "" : "· " + formatFsrsDuration(card.fsrs_preview_easy);
 
   // Prev/Next
   document.getElementById("btn-fc-prev").disabled = i === 0;
@@ -4513,8 +4516,7 @@ function markCard(known, grade) {
   if (grade) attemptFields.grade = grade;
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
   store.recordAttempt(attemptFields).then(function(res) {
-    if (res && res.srs_step != null) {
-      card.srs_step = res.srs_step;
+    if (res && res.srs_due_at != null) {
       card.srs_due_at = res.srs_due_at;
     }
   });
@@ -5613,24 +5615,48 @@ function renderNewCardsTrend(rows, wrap, maxWeeksAgo) {
   });
 }
 
-var SRS_STEP_LABELS = ["10m","1h","4h","1d","3d","7d","21d","42d","84d","168d","336d","1yr"];
-function stepLabel(step) {
-  return SRS_STEP_LABELS[Math.min(step, SRS_STEP_LABELS.length - 1)];
+// Generic seconds → short duration string, replacing the old fixed-step lookup table now
+// that FSRS produces a continuous interval rather than an index into a fixed ladder. English
+// abbreviations regardless of locale, matching the old SRS_STEP_LABELS convention (never
+// translated either).
+function formatFsrsDuration(seconds) {
+  if (seconds == null) return "";
+  if (seconds < 60) return "<1m";
+  if (seconds < 3600) return Math.round(seconds / 60) + "m";
+  if (seconds < 86400) return Math.round(seconds / 3600) + "h";
+  var days = Math.round(seconds / 86400);
+  if (days < 30) return days + "d";
+  if (days < 365) return Math.round(days / 30) + "mo";
+  return Math.round(days / 365) + "yr";
 }
+
+// Same perceptual bucket boundaries the old step ladder used, so the distribution chart's
+// shape stays familiar even though the underlying scheduler is now continuous. "learning"
+// (FSRS Learning/Relearning state) is a distinct bucket, not a duration — sorted first.
+var FSRS_BUCKET_ORDER = ["learning","b_10m","b_1h","b_4h","b_1d","b_3d","b_7d","b_21d","b_42d","b_84d","b_168d","b_336d","b_1yr"];
+var FSRS_BUCKET_LABELS = {
+  learning: null, // resolved via t("srsBucket.learning") at render time (locale-aware)
+  b_10m: "10m", b_1h: "1h", b_4h: "4h", b_1d: "1d", b_3d: "3d", b_7d: "7d",
+  b_21d: "21d", b_42d: "42d", b_84d: "84d", b_168d: "168d", b_336d: "336d", b_1yr: "1yr"
+};
 
 function renderSrsDistribution(rows, wrap) {
   if (!rows || !rows.length) {
     wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noCardsInSrs") + '</div>';
     return;
   }
-  var max = rows.reduce(function(m, r) { return Math.max(m, r.cnt); }, 1);
-  var total = rows.reduce(function(s, r) { return s + r.cnt; }, 0);
-  rows.forEach(function(r) {
+  var sorted = rows.slice().sort(function(a, b) {
+    return FSRS_BUCKET_ORDER.indexOf(a.bucket) - FSRS_BUCKET_ORDER.indexOf(b.bucket);
+  });
+  var max = sorted.reduce(function(m, r) { return Math.max(m, r.cnt); }, 1);
+  var total = sorted.reduce(function(s, r) { return s + r.cnt; }, 0);
+  sorted.forEach(function(r) {
     var pct = Math.round(r.cnt / max * 100);
+    var label = r.bucket === "learning" ? t("srsBucket.learning") : (FSRS_BUCKET_LABELS[r.bucket] || r.bucket);
     var rowEl = document.createElement("div");
     rowEl.className = "trend-row";
     rowEl.innerHTML =
-      '<span class="trend-label">' + escHtml(stepLabel(r.srs_step)) + '</span>' +
+      '<span class="trend-label">' + escHtml(label) + '</span>' +
       '<div class="trend-bar-track"><div class="trend-bar-fill srs-bar-fill" style="width:' + pct + '%"></div></div>' +
       '<span class="trend-count">' + r.cnt + '</span>';
     wrap.appendChild(rowEl);

@@ -5,9 +5,31 @@ const path    = require("path");
 const fs      = require("fs");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
+const { previewIntervals } = require("../fsrs");
 const router  = express.Router();
 
 const UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads");
+
+// Precomputes what each of the 4 grading buttons would produce for this card, so the
+// flashcard screen's interval-preview text never has to duplicate FSRS math client-side.
+function attachFsrsPreview(row) {
+  var now = new Date();
+  var preview = previewIntervals({
+    srs_due_at: row.srs_due_at,
+    fsrs_stability: row.fsrs_stability,
+    fsrs_difficulty: row.fsrs_difficulty,
+    fsrs_state: row.fsrs_state,
+    fsrs_reps: row.fsrs_reps,
+    fsrs_lapses: row.fsrs_lapses,
+    fsrs_learning_steps: row.fsrs_learning_steps,
+    fsrs_last_review_at: row.fsrs_last_review_at
+  }, now);
+  row.fsrs_preview_again = preview.again;
+  row.fsrs_preview_hard  = preview.hard;
+  row.fsrs_preview_good  = preview.good;
+  row.fsrs_preview_easy  = preview.easy;
+  return row;
+}
 
 function unlinkUpload(imageUrl) {
   if (!imageUrl || typeof imageUrl !== "string" || !imageUrl.startsWith("/uploads/")) return;
@@ -60,7 +82,9 @@ router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   const lessonId = req.params.lessonId;
 
   const rows = db.prepare(
-    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_step, cs.srs_due_at, la.last_studied_at " +
+    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
+    "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
+    "cs.fsrs_learning_steps, cs.fsrs_last_review_at, la.last_studied_at " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
     "LEFT JOIN (SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE user_id = ? GROUP BY card_id) la ON la.card_id = cards.id " +
@@ -68,7 +92,7 @@ router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
     "ORDER BY cards.sort_order, cards.created_at"
   ).all(userId, userId, lessonId);
 
-  res.json(rows.map(r => ({ ...r, data: JSON.parse(r.data) })));
+  res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) })));
 });
 
 // POST /api/cards/by-lessons  { lessonIds: [...] }  — bulk load for multi-lesson quiz
@@ -88,7 +112,9 @@ router.post("/cards/by-lessons", requireAuth, (req, res) => {
     return res.status(404).json({ error: "Not found" });
 
   const rows = db.prepare(
-    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_step, cs.srs_due_at, la.last_studied_at " +
+    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
+    "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
+    "cs.fsrs_learning_steps, cs.fsrs_last_review_at, la.last_studied_at " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
     "LEFT JOIN (SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE user_id = ? GROUP BY card_id) la ON la.card_id = cards.id " +
@@ -96,7 +122,7 @@ router.post("/cards/by-lessons", requireAuth, (req, res) => {
     "ORDER BY cards.lesson_id, cards.sort_order, cards.created_at"
   ).all(userId, userId, ...lessonIds);
 
-  res.json(rows.map(r => ({ ...r, data: JSON.parse(r.data) })));
+  res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) })));
 });
 
 // POST /api/lessons/:lessonId/cards

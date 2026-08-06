@@ -229,6 +229,20 @@ try { db.exec("ALTER TABLE attempts ADD COLUMN grade TEXT"); } catch (_) {}
 // Migration: free-text tags on classes, stored as a JSON array string
 try { db.exec("ALTER TABLE classes ADD COLUMN tags TEXT"); } catch (_) {}
 
+// Migration: FSRS scheduler state, replacing the fixed srs_step ladder. srs_due_at is
+// reused as-is (still "when this card is next due", just computed differently now), so
+// this only adds genuinely new columns. srs_step is left in place, inert, rather than
+// dropped — nothing writes it anymore after this, and dropping columns is unnecessary
+// risk on a table that's had a real corruption incident before.
+try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_stability REAL"); } catch (_) {}
+try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_difficulty REAL"); } catch (_) {}
+try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_state INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_reps INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_lapses INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_learning_steps INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_last_review_at INTEGER"); } catch (_) {}
+try { db.exec("ALTER TABLE card_states ADD COLUMN last_correct_source TEXT"); } catch (_) {}
+
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
 const _prepare = db.prepare.bind(db);
@@ -260,5 +274,47 @@ db.transaction = function(fn) {
     }
   };
 };
+
+// One-time backfill: estimate initial FSRS stability/difficulty for cards that already
+// had SRS progress under the old fixed-step ladder, so existing users don't get bumped
+// back to "brand new" on migration day. srs_due_at is deliberately left untouched — this
+// only fills in the new fsrs_* columns, it never reschedules anything. Must run after the
+// db.prepare shim above (this uses multi-param .run() calls, which need array binding).
+runMigration("fsrs_backfill_from_srs_step", function() {
+  // Frozen snapshot of the old ladder's interval table. Copied here rather than imported
+  // from attempts.js, since that file's ladder is removed once FSRS lands — this migration
+  // must stay correct and reproducible independent of that file's later contents.
+  var OLD_SRS_INTERVALS = [600, 3600, 14400, 86400, 259200, 604800, 1814400];
+  var OLD_SRS_MAX_INTERVAL = 365 * 86400;
+  function oldGetInterval(step) {
+    if (step < OLD_SRS_INTERVALS.length) return OLD_SRS_INTERVALS[step];
+    var extra = step - (OLD_SRS_INTERVALS.length - 1);
+    return Math.min(OLD_SRS_INTERVALS[OLD_SRS_INTERVALS.length - 1] * Math.pow(2, extra), OLD_SRS_MAX_INTERVAL);
+  }
+  var DEFAULT_DIFFICULTY = 5.0; // neutral midpoint of FSRS's 1-10 scale — no per-card
+                                 // difficulty signal exists in the old data to do better
+
+  var rows = db.prepare(
+    "SELECT card_id, user_id, srs_step, srs_due_at FROM card_states WHERE srs_due_at IS NOT NULL"
+  ).all();
+  rows.forEach(function(r) {
+    var stabilityDays = oldGetInterval(r.srs_step || 0) / 86400;
+    var state = (r.srs_step || 0) === 0 ? 1 /* Learning */ : 2 /* Review */;
+    db.prepare(
+      "UPDATE card_states SET fsrs_stability = ?, fsrs_difficulty = ?, fsrs_state = ?, " +
+      "fsrs_reps = 1, fsrs_lapses = 0 WHERE card_id = ? AND user_id = ?"
+    ).run(stabilityDays, DEFAULT_DIFFICULTY, state, r.card_id, r.user_id);
+  });
+
+  // Backfill last_correct_source from real attempt history, powering the redesigned
+  // Needs Recall filter (which used to infer this from srs_step position).
+  db.exec(
+    "UPDATE card_states SET last_correct_source = (" +
+    "  SELECT a.source FROM attempts a" +
+    "  WHERE a.card_id = card_states.card_id AND a.user_id = card_states.user_id AND a.correct = 1" +
+    "  ORDER BY a.created_at DESC LIMIT 1" +
+    ") WHERE last_correct_source IS NULL"
+  );
+});
 
 module.exports = db;

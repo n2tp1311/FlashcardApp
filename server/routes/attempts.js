@@ -3,19 +3,8 @@
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
+const { scheduler, ratingFor, cardFromState } = require("../fsrs");
 const router  = express.Router();
-
-// 10min, 1h, 4h, 1d, 3d, 7d, 21d — then doubles each step, capped at 1 year
-const SRS_INTERVALS = [600, 3600, 14400, 86400, 259200, 604800, 1814400];
-const SRS_MAX_INTERVAL = 365 * 86400;
-
-const RECOGNITION_CAP_STEP = 2;
-
-function getInterval(step) {
-  if (step < SRS_INTERVALS.length) return SRS_INTERVALS[step];
-  const extra = step - (SRS_INTERVALS.length - 1);
-  return Math.min(SRS_INTERVALS[SRS_INTERVALS.length - 1] * Math.pow(2, extra), SRS_MAX_INTERVAL);
-}
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -51,39 +40,43 @@ router.post("/", requireAuth, (req, res) => {
     "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade) VALUES (?, ?, ?, ?, ?, ?, ?)"
   ).run(genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null);
 
-  // Update per-card SRS: correct → advance step, wrong → reset to 0
   const stateRow = db.prepare(
-    "SELECT srs_step, srs_due_at FROM card_states WHERE card_id = ? AND user_id = ?"
+    "SELECT srs_due_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_reps, fsrs_lapses, " +
+    "fsrs_learning_steps, fsrs_last_review_at, last_correct_source FROM card_states WHERE card_id = ? AND user_id = ?"
   ).get(cardId, userId);
-  const curStep = stateRow ? (stateRow.srs_step || 0) : 0;
   const now = Math.floor(Date.now() / 1000);
+  const nowDate = new Date(now * 1000);
 
   // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
   if (stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now) {
-    return res.status(201).json({ ok: true, srs_step: curStep, srs_due_at: stateRow.srs_due_at, capped: false, notDue: true });
+    return res.status(201).json({ ok: true, srs_due_at: stateRow.srs_due_at, capped: false, notDue: true });
   }
 
-  let newStep;
-  if (grade === "easy")        newStep = curStep + 2;
-  else if (grade === "medium") newStep = curStep + 1;
-  else if (grade === "hard")   newStep = Math.max(curStep - 1, 0);
-  else                         newStep = correct ? curStep + 1 : 0;
+  const rating = ratingFor(correct, grade, source);
+  const fsrsCard = cardFromState(stateRow, nowDate);
+  const nextCard = scheduler.next(fsrsCard, nowDate, rating).card;
+  const dueAt = Math.floor(nextCard.due.getTime() / 1000);
 
-  // Recognizing the right answer among options isn't strong enough evidence of recall to earn
-  // a longer review interval — clamp against the RESULTING step (not just curStep) so a large
-  // jump (e.g. a future grade="easy" on quiz) can't leapfrog past the cap in one hop.
-  let capped = false;
-  if (source === "quiz" && correct) {
-    const ceiling = curStep >= RECOGNITION_CAP_STEP ? curStep : RECOGNITION_CAP_STEP;
-    if (newStep > ceiling) { newStep = ceiling; capped = true; }
-  }
-  const dueAt = now + getInterval(newStep);
+  // Quiz recognition can't earn as long an interval as an equivalent flashcard/recall
+  // answer, by construction of the Hard-vs-Good rating mapping in ../fsrs.js — surfaced to
+  // the client under the old field name so no client-side changes are needed for this signal.
+  const capped = source === "quiz" && !!correct;
+
+  const lastCorrectSource = correct ? source : ((stateRow && stateRow.last_correct_source) || null);
+
   db.prepare(
-    "INSERT INTO card_states (card_id, user_id, srs_step, srs_due_at) VALUES (?, ?, ?, ?) " +
-    "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_step = excluded.srs_step, srs_due_at = excluded.srs_due_at"
-  ).run(cardId, userId, newStep, dueAt);
+    "INSERT INTO card_states (card_id, user_id, srs_due_at, fsrs_stability, fsrs_difficulty, " +
+    "fsrs_state, fsrs_reps, fsrs_lapses, fsrs_learning_steps, fsrs_last_review_at, last_correct_source) " +
+    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+    "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_due_at = excluded.srs_due_at, " +
+    "fsrs_stability = excluded.fsrs_stability, fsrs_difficulty = excluded.fsrs_difficulty, " +
+    "fsrs_state = excluded.fsrs_state, fsrs_reps = excluded.fsrs_reps, fsrs_lapses = excluded.fsrs_lapses, " +
+    "fsrs_learning_steps = excluded.fsrs_learning_steps, fsrs_last_review_at = excluded.fsrs_last_review_at, " +
+    "last_correct_source = excluded.last_correct_source"
+  ).run(cardId, userId, dueAt, nextCard.stability, nextCard.difficulty, nextCard.state,
+        nextCard.reps, nextCard.lapses, nextCard.learning_steps, now, lastCorrectSource);
 
-  res.status(201).json({ ok: true, srs_step: newStep, srs_due_at: dueAt, capped: capped, notDue: false });
+  res.status(201).json({ ok: true, srs_due_at: dueAt, capped: capped, notDue: false });
 });
 
 module.exports = router;
