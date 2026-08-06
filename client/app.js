@@ -4085,6 +4085,18 @@ function weightedShuffle(cards, statsMap) {
   return result;
 }
 
+// Takes one card from each group in turn (round-robin), skipping groups once they're
+// exhausted — guarantees alternation across groups instead of relying on chance, unlike a
+// flat shuffle of the combined list.
+function roundRobinMerge(groups) {
+  var result = [];
+  var maxLen = groups.reduce(function(m, g) { return Math.max(m, g.length); }, 0);
+  for (var i = 0; i < maxLen; i++) {
+    groups.forEach(function(g) { if (i < g.length) result.push(g[i]); });
+  }
+  return result;
+}
+
 // Must match RECOGNITION_CAP_STEP in server/routes/attempts.js — used only to build the
 // "Needs Recall" filter list, not to compute SRS scheduling itself (that stays server-side).
 var RECOGNITION_CAP_STEP = 2;
@@ -4149,12 +4161,22 @@ function startStudy(count, filter, mode, order) {
       });
       filtered = grouped.reduce(function(acc, g) { return acc.concat(g); }, []);
       if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
-    } else if (order === "shuffle" || order === "interleaved") {
+    } else if (order === "shuffle") {
       if (count !== "all") {
         filtered = weightedShuffle(filtered, statsMap).slice(0, parseInt(count, 10));
       } else {
         filtered = weightedShuffle(filtered, statsMap);
       }
+    } else if (order === "interleaved") {
+      // Round-robin across lesson groups guarantees alternation, unlike a flat shuffle
+      // (which is interleaved only in expectation and can still run several same-lesson
+      // cards in a row by chance). Each group keeps its own weighted-difficulty ordering.
+      var interleaveGroups = cardArrays.map(function(arr) {
+        var g = arr.filter(function(c) { return filtered.some(function(f) { return f.id === c.id; }); });
+        return weightedShuffle(g, statsMap);
+      });
+      filtered = roundRobinMerge(interleaveGroups);
+      if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
     } else {
       // "in-order": keep original DB order
       if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
