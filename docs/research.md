@@ -28,9 +28,9 @@ This file records the research findings that inform feature decisions for the Fl
 - An open-source JavaScript implementation is available (github.com/open-spaced-repetition/ts-fsrs).
 - The algorithm is per-card: each card tracks its own stability and difficulty parameters, updated after every review.
 
-**Decision:** Skipped for now. Current fixed-interval scheduler is sufficient for the user base. Adding FSRS later is low-risk — only the interval-calculation step changes; the quiz flow, UI, and database schema do not need to change.
+**Decision:** Implemented 2026-08-06 via `ts-fsrs`. The original "low-risk, only the interval-calculation step changes" assessment above was wrong — a full scoping pass found `srs_step` (not just the due-timestamp) was read directly by the "Needs Recall" filter, the flashcard interval-preview labels, and the SRS-distribution chart, all of which needed genuine redesign, plus a new `card_states` schema (stability/difficulty/state/reps/lapses/last-review). Existing per-card progress was preserved via a one-time backfill estimating initial stability/difficulty from each card's old `srs_step`, verified safe in an isolated copy of the production database before ever touching real data. See `docs/decisions.md` for the full design (rating mapping, migration verification, Needs Recall redesign).
 
-**Status:** Deferred. See `docs/decisions.md` for rationale.
+**Status:** Implemented.
 
 ---
 
@@ -85,7 +85,7 @@ This file records the research findings that inform feature decisions for the Fl
 | Finding | Implemented | Priority |
 |---------|-------------|----------|
 | Interleaved practice improves retention | Yes — default for multi-lesson sessions | — |
-| FSRS reduces reviews by 20-30% vs SM-2 | No | Low (deferred) |
+| FSRS reduces reviews by 20-30% vs SM-2 | Yes — replaced the fixed-step ladder | — |
 | Confidence-Based Repetition improves scheduling | No | Low (deferred — UX concern) |
 | Delayed/gated explanation improves transfer | No | 2 (MCQ Explanation Field) |
 | Free recall produces ~80% retention vs ~34% re-reading | No | 3 (Recall Mode) |

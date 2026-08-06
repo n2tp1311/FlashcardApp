@@ -243,7 +243,7 @@ All text fields support **inline LaTeX** (`$...$`) and **display LaTeX** (`$$...
 User selects:
 1. Lesson(s): single, multiple, or entire class
 2. Card count: 10 / 25 / 50 / All
-3. Filter: All / Due Only / Needs Recall (`srs_step >= RECOGNITION_CAP_STEP AND due`, auto-switches Mode to Flashcard) / Still Learning
+3. Filter: All / Due Only / Needs Recall (`last_correct_source === "quiz" AND due` — only ever confirmed via quiz recognition, not active recall; auto-switches Mode to Flashcard) / Still Learning
 4. Direction (Format A only): Term → Def or Def → Term
 5. Mode: Flashcards or Quiz — hint line under the mode picker explains the recall-vs-recognition tradeoff (§5.4's SRS cap)
 6. Live match-count ("N card(s) match this filter") shown before Start Studying, recomputed as the Filter pill changes; zero-match state styled as a warning
@@ -255,8 +255,8 @@ User selects:
 
 - 3D flip animation (rotateY, perspective 1200px)
 - Navigation: ← → buttons, keyboard arrows, dot strip — dots preview each card's historical difficulty (green/amber/red/neutral) until marked this session
-- Marking: ✗ Still learning (key: 1) / ↩ Hard (key: 2, sends `grade: "hard"` for a `max(step-1, 0)` step, i.e. correctly recalled but effortful, not a lapse) / ✓ Know it (key: 3) / ⚡ Confident (key: 4, sends `grade: "easy"` for a +2 SRS step jump), auto-advance 400ms (1200ms when the card wasn't due, so the not-due hint is readable) — grading (buttons, keys, and swipe) is blocked until the card has been flipped at least once
-- Each grading button previews its resulting SRS interval (e.g. "Know It · 4h"), suppressed on a not-yet-due card since grading it leaves the schedule unchanged
+- Marking: ✗ Still learning (key: 1, FSRS "Again") / ↩ Hard (key: 2, sends `grade: "hard"`, FSRS "Hard" — correctly recalled but effortful, a weaker success not a lapse) / ✓ Know it (key: 3, FSRS "Good") / ⚡ Confident (key: 4, sends `grade: "easy"`, FSRS "Easy"), auto-advance 400ms (1200ms when the card wasn't due, so the not-due hint is readable) — grading (buttons, keys, and swipe) is blocked until the card has been flipped at least once
+- Each grading button previews its resulting interval (e.g. "Know It · 4h"), precomputed server-side from the live FSRS scheduler so it can't drift from what actually happens; suppressed on a not-yet-due card since grading it leaves the schedule unchanged
 - Toolbar: Shuffle, Edit card, Delete card (Reset/"Study Hard Only" removed — unused)
 - Difficulty badge on each card (Easy/Medium/Hard/New + correct/total)
 - Edit card without leaving the study session: pencil icon opens the same edit modal as the lesson card list, pre-filled with the on-screen card's data; saving patches the in-progress session array and re-renders immediately
@@ -268,7 +268,7 @@ User selects:
 - Correct → green, wrong → red, others dim
 - Space/Enter to advance after answering
 - Results: score ring, percentage, grade, retry/change/back
-- SRS recognition cap: a quiz-correct answer can't advance a card's `srs_step` past `RECOGNITION_CAP_STEP` (2 — the 4h interval); only a flashcard-mode correct answer can cross into 1-day+ intervals (`server/routes/attempts.js`). Inline hint on the quiz screen when this triggers; aggregate count on the Results screen
+- SRS recognition cap: a quiz-correct answer is rated FSRS "Hard" rather than "Good" (`server/fsrs.js`), which always yields a shorter next interval than an equivalent flashcard-mode recall, by construction of the algorithm — no clamp arithmetic needed. Inline hint on the quiz screen when this triggers; aggregate count on the Results screen
 
 ### 5.5 History & Difficulty
 
@@ -862,9 +862,9 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Flashcard study mode | Done | 3D flip, keyboard nav, marking |
 | Quiz mode (MCQ) | Done | Auto-generated distractors, keyboard 1-4 |
 | Quiz answer review (Prev/Next through answered questions) | Done | Read-only replay of the original shuffle/answer; delete-card still allowed while reviewing |
-| SRS recognition-vs-recall cap | Done | Quiz-correct capped at srs_step=2; only Flashcard-correct advances past it. `server/routes/attempts.js` |
-| Manual difficulty grading in Flashcard mode | Done | Optional ⚡ Confident button/key 4 sends `grade: "easy"` for a +2 SRS step jump; ↩ Hard button/key 2 sends `grade: "hard"` for a `max(step-1, 0)` step (recalled but effortful, not a lapse — replaces the old dead-code reset-to-0 behavior). `grade` is now persisted on `attempts`. Labeled "Confident" (not "Easy") to avoid colliding with the difficulty-tier badge system |
-| SRS interval preview on grading buttons | Done | Shows resulting interval per button (e.g. "· 4h"); suppressed on not-yet-due cards since grading them doesn't move the schedule |
+| SRS recognition-vs-recall cap | Done | Quiz-correct rated FSRS "Hard" instead of "Good" — always yields a shorter interval than an equivalent Flashcard-correct, by construction. `server/fsrs.js` |
+| Manual difficulty grading in Flashcard mode | Done | Optional ⚡ Confident button/key 4 sends `grade: "easy"` (FSRS Easy); ↩ Hard button/key 2 sends `grade: "hard"` (FSRS Hard — recalled but effortful, a weaker success not a lapse). `grade` is persisted on `attempts`. Labeled "Confident" (not "Easy") to avoid colliding with the difficulty-tier badge system |
+| SRS interval preview on grading buttons | Done | Shows resulting interval per button (e.g. "· 4h"), precomputed server-side from the live FSRS scheduler; suppressed on not-yet-due cards since grading them doesn't move the schedule |
 | 10-agent UX audit fix batch | Done | i18n gaps (select toolbar, share modal, T/F badge), N/B/E keyboard leak into modal inputs, Esc exits Flashcard, browser-Back trapped in-app, mobile touch targets, dark-mode quiz-answer contrast, dashboard period-scope note |
 | Analytics/Stats UX audit fix batch (9 findings) | Done | Time tracking (`attempts.duration_ms`), per-lesson/class Accuracy Trend, windowed+min-sample Struggling Lessons, accuracy-by-source pills, Study Time tile, chronological "All Attempted" tab, richer CSV export, weekly-trend accuracy label |
 | Two WebKit-only mobile layout bugs | Done | Class list-view title collapsing to 1 char/line (hover-only actions eating layout space); Flashcard grading-button row overflowing off-screen (interval-preview text too wide) |
@@ -882,7 +882,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Study setup (count, filter, direction, mode) | Done | Mode hint explains the recall/recognition tradeoff |
 | Multi-lesson selection | Done | |
 | Progressive difficulty (weighted shuffle) | Done | Hard 3×, medium 2× |
-| Per-card SRS (step-based intervals) | Done | 10min → 1h → 4h → 1d → 3d → 7d → 21d; resets on wrong |
+| Per-card SRS (FSRS) | Done | Replaced the fixed step ladder 2026-08-06 — each card tracks its own stability/difficulty via `ts-fsrs`. Existing progress migrated from the old `srs_step` via a one-time backfill, `srs_due_at` preserved. `server/fsrs.js`, `docs/decisions.md` |
 | Due badges, "Review N due" button, due-only filter | Done | Per-lesson and per-class counts |
 | Dashboard due lessons grouped by class | Done | Clickable rows launch due-card quiz |
 | Share (public link + invite by username) | Done | Clone into own account |
