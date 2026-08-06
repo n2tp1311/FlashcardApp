@@ -78,7 +78,7 @@
 - Multi-class quiz: "☑ Select" button (or `X` key) on home screen enters class select mode; check multiple classes and click "Study" to fetch all their lessons and launch a cross-class interleaved session
 - Progressive difficulty: hard cards weighted 3×, medium 2×
 - "Due Only" filter to quiz only SRS-due cards
-- Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons
+- Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons — guarantees strict alternation via round-robin across lesson groups (each group independently weighted-shuffled), rather than relying on chance the way "Shuffle" does
 - Account preferences: "⚙ Preferences" in the user dropdown; saves dark mode and font scale to the server and caches in localStorage
 - Dark Mode toggle in Preferences previews live (theme changes immediately on toggle, before Save) — matches the existing live-preview behavior of font scale and TTS rate in the same modal
 - Flashcard flip only triggers on a plain click — a click that ends an active text selection (e.g. dragging to select text for copy/translate) is ignored, checked via `window.getSelection().toString()`

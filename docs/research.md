@@ -12,7 +12,7 @@ This file records the research findings that inform feature decisions for the Fl
 - Bjork & Roediger (foundational): Interleaving slows down the feeling of learning during practice but dramatically improves long-term retention and transfer. The difficulty is desirable — it forces the brain to discriminate between similar concepts.
 - 2024 study in *Learning and Instruction*: Confirmed interleaved practice produces more durable retention than blocked practice across multiple subject domains. The benefit is especially pronounced for conceptually related material (e.g., different lessons from the same class).
 
-**Decision:** Interleaved is the default. A "Card Order" pill on the study setup screen lets users switch to Blocked. The pill is hidden when only one lesson is selected.
+**Decision:** Interleaved is the default. A "Card Order" pill on the study setup screen lets users switch to Blocked. The pill is hidden when only one lesson is selected. Initially implemented as a flat weighted shuffle over the pooled cards (interleaved "in expectation" only); refined 2026-08-06 to a deterministic round-robin across lesson groups, guaranteeing alternation rather than relying on chance — see `docs/decisions.md`.
 
 **Status:** Implemented.
 
