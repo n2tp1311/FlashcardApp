@@ -334,7 +334,7 @@ Rating map: ✗ Missed → Again(1), ~ Unsure → Hard(2), ✓ Got It → Good(3
 
 ### 5.12 Analytics Screen
 
-Not a separate screen — it renders inside `#screen-dashboard` (`renderDashboard()` + `showScreen("dashboard")`); "Analytics" was only ever a second nav label pointing at the same screen, and that duplicate label was removed (see §11 nav dedup entry). Study-pattern/weak-spot content lives inside that one screen, split into an all-time section (summary counts, Overall Accuracy + per-source pills, Difficulty Breakdown, Due for Review) and a period-windowed section below a 7/30/60/90-day pill bar (heatmap, Weekly Trend with accuracy, SRS Interval Distribution, Future Due forecast, Study Time, Lesson Accuracy, Struggling Lessons).
+Not a separate screen — it renders inside `#screen-dashboard` (`renderDashboard()` + `showScreen("dashboard")`); "Analytics" was only ever a second nav label pointing at the same screen, and that duplicate label was removed (see §11 nav dedup entry). Study-pattern/weak-spot content lives inside that one screen, split into an all-time section (summary counts, Overall Accuracy + per-source pills, Difficulty Breakdown, Due for Review) and a period-windowed section below a 7/30/60/90-day pill bar (heatmap, Weekly Trend with accuracy, Memory Interval Distribution, Future Due forecast, Study Time, Lesson Accuracy, Struggling Lessons).
 
 | Section | Content |
 |---------|---------|

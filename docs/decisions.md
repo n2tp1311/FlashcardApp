@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-08-07 — Memory Interval Distribution chart: rename + fix silent period-pill bypass
+
+Prompted by a user question challenging whether the chart genuinely reflects FSRS (it does — audited the full data path, `fsrs_state` + `srs_due_at`/`fsrs_last_review_at`-derived interval, zero leftover `srs_step` references). Two changes came out of that audit, both user-directed:
+
+**Renamed** "SRS Interval Distribution" → "Memory Interval Distribution" in both locales. Explicit user call: end users don't need or care which scheduling algorithm is running under the hood; naming it after the algorithm (whether "SRS" generically or "FSRS" specifically, which was also considered and rejected) adds jargon without adding clarity.
+
+**Fixed a real bug found during the audit, unrelated to naming**: the chart lives inside the period-pill-gated "Study Charts" section, under a note claiming "Applies to the charts in this section only" — but `GET /api/stats/srs-distribution` took no window param at all, so it silently ignored whichever pill (7/30/60/90 days) was selected and always showed an all-time snapshot. Every sibling chart in that section already respected the pill; this one didn't. Added an optional `?days=` param, scoping to cards last reviewed within that window via `date(COALESCE(fsrs_last_review_at, updated_at),'unixepoch') >= date('now', '-N days')` — calendar-day-aligned from the start, applying the same lesson learned from the Study Time Min/Max bug earlier today (a raw-seconds cutoff can truncate a boundary day and corrupt the result). Reproduced and verified with 3 cards backdated to 1/20/50 days ago: 7d window → 1 card, 30d → 2, 90d/all-time → 3, exactly as expected.
+
 ## 2026-08-07 — Avg/Min/Max Study Time gets its own day-window selector
 
 Reverses a previously deliberate, repeatedly-reaffirmed choice (`docs/decisions.md:203-213` and two `docs/features.md` passages) to keep the hero card's Study Time stats strictly all-time, on user request. The headline "Study Time" total (the highlighted, larger stat) **stays all-time** — only Avg/day, Min, and Max per study day are now windowable. `server/routes/stats.js`'s `/dashboard` route computes these from two separate queries now: `totalMsRow` (unconditional, always all-time) and `studyTimeStatsRow` (windowed via an optional `?days=` query param, clamped 7-90 like `/analytics`, defaulting to `null`/all-time when omitted — fully backward-compatible, existing callers see no change).
