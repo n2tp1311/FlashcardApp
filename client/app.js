@@ -1054,31 +1054,81 @@ function splitLatex(text) {
    TEXT-TO-SPEECH
    ============================ */
 
-var _ttsVoice = null;
-function _pickVoice() {
-  var voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-  var en = voices.filter(function(v) { return /^en(-|$)/i.test(v.lang); });
-  if (!en.length) return voices[0];
-  return en.find(function(v) { return /google/i.test(v.name) && v.lang === "en-US"; }) ||
-    en.find(function(v) { return /enhanced|premium|neural/i.test(v.name) && v.lang === "en-US"; }) ||
-    en.find(function(v) { return v.lang === "en-US"; }) ||
-    en[0];
+// Vietnamese-exclusive diacritics only (đ, ơ/ư horn vowels, ă, and the stacked tone-on-
+// modified-vowel range U+1EA0-1EF9) — deliberately excludes base accented vowels shared
+// with French/Spanish/German/Portuguese (à/á/â/è/é/ê/etc.), which alone would false-positive
+// on card content in those languages. Plain Vietnamese text with only shared-vowel accents
+// and no tier-1 character (e.g. "Tôi tên là Phê") isn't caught by this and falls back to
+// state.language — an accepted gap, not a bug.
+var VI_DIACRITIC_RE = /[ĐđƠơƯưĂăẠ-ỹ]/;
+// Quality-tier name markers across engines: Apple (enhanced/premium), generic (neural),
+// Android/Google Cloud-style (wavenet/studio), Edge neural voices ("...Online (Natural)").
+var QUALITY_VOICE_RE = /enhanced|premium|neural|wavenet|studio|natural|online/i;
+
+var LANG_VOICE_CONFIG = {
+  vi: { poolRe: /^vi(-|$)/i, primaryLang: "vi-VN" },
+  en: { poolRe: /^en(-|$)/i, primaryLang: "en-US" }
+};
+
+function _detectSpeechLang(text) {
+  if (VI_DIACRITIC_RE.test(text)) return "vi";
+  return (typeof state !== "undefined" && state.language === "vi") ? "vi" : "en";
 }
+
+var _ttsVoices = [];
+var _ttsVoiceCache = {};
+function _refreshVoices() {
+  _ttsVoices = (window.speechSynthesis && window.speechSynthesis.getVoices()) || [];
+  _ttsVoiceCache = {};
+}
+
+// Picks the most realistic available voice for the given language: language-matched pool
+// first (falling back to English, then to whatever exists, rather than silence), ranked
+// Google > other quality-tier engines > exact-region match > first available.
+function _pickVoice(langHint) {
+  var lang = langHint === "vi" ? "vi" : "en";
+  if (_ttsVoiceCache[lang]) return _ttsVoiceCache[lang];
+  if (!_ttsVoices.length) _refreshVoices();
+  if (!_ttsVoices.length) return null;
+
+  var cfg = LANG_VOICE_CONFIG[lang];
+  var pool = _ttsVoices.filter(function(v) { return cfg.poolRe.test(v.lang); });
+  if (!pool.length && lang !== "en") {
+    cfg = LANG_VOICE_CONFIG.en;
+    pool = _ttsVoices.filter(function(v) { return cfg.poolRe.test(v.lang); });
+  }
+  if (!pool.length) pool = _ttsVoices;
+
+  var voice =
+    pool.find(function(v) { return /google/i.test(v.name) && v.lang === cfg.primaryLang; }) ||
+    pool.find(function(v) { return QUALITY_VOICE_RE.test(v.name) && v.lang === cfg.primaryLang; }) ||
+    pool.find(function(v) { return v.lang === cfg.primaryLang; }) ||
+    pool[0];
+
+  _ttsVoiceCache[lang] = voice;
+  return voice;
+}
+
 if (window.speechSynthesis) {
-  _ttsVoice = _pickVoice();
+  _refreshVoices();
   if (typeof window.speechSynthesis.addEventListener === "function") {
-    window.speechSynthesis.addEventListener("voiceschanged", function() { _ttsVoice = _pickVoice(); });
+    window.speechSynthesis.addEventListener("voiceschanged", _refreshVoices);
   }
 }
 
-function speakWith(text, rate) {
+function speakWith(text, rate, langHint) {
   if (!window.speechSynthesis || !text) return;
   window.speechSynthesis.cancel();
+  var lang = langHint === "vi" || langHint === "en" ? langHint : _detectSpeechLang(text);
   setTimeout(function() {
     var u = new SpeechSynthesisUtterance(text);
-    var voice = _ttsVoice || _pickVoice();
-    if (voice) u.voice = voice;
+    var voice = _pickVoice(lang);
+    if (voice) {
+      u.voice = voice;
+      u.lang = voice.lang;
+    } else {
+      u.lang = lang === "vi" ? "vi-VN" : "en-US";
+    }
     u.rate = rate || 0.9;
     window.speechSynthesis.speak(u);
   }, 50);
