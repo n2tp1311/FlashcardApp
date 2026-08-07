@@ -301,7 +301,15 @@ router.get("/dashboard", requireAuth, (req, res) => {
   const windowDays = (!isNaN(parsedWindowDays) && parsedWindowDays > 0)
     ? Math.min(90, Math.max(7, parsedWindowDays))
     : null;
-  const windowClause = windowDays ? "AND created_at >= strftime('%s','now') - ?" : "";
+  // Cutoff is calendar-day-aligned (date(...) >= date('now', '-N days')), not a raw
+  // now-minus-N*86400-seconds instant. A seconds-based cutoff can fall mid-day, so the
+  // oldest included day would only get the attempts after that instant summed — a
+  // truncated fraction of what the all-time query computes for that same day. That
+  // fake, artificially-small "day total" could then undercut the true minimum, making
+  // Min(window) appear lower than Min(all-time), which is otherwise impossible since a
+  // window is a subset of complete days. Aligning to full calendar days means every
+  // counted day is either wholly in or wholly out — never a partial sum.
+  const windowClause = windowDays ? "AND date(created_at, 'unixepoch') >= date('now', ?)" : "";
   const studyTimeStatsRow = windowDays
     ? db.prepare(`
         SELECT AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
@@ -312,7 +320,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
           GROUP BY date(created_at, 'unixepoch')
           HAVING ms IS NOT NULL
         )
-      `).get(uid, windowDays * 86400)
+      `).get(uid, "-" + windowDays + " days")
     : db.prepare(`
         SELECT AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
         FROM (
