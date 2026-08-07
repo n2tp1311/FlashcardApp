@@ -7641,11 +7641,13 @@ window.addEventListener("popstate", function() {
 
   var knownHint = document.createElement("div");
   knownHint.className = "fc-swipe-hint fc-swipe-known";
-  knownHint.innerHTML = ICON_CHECK + " Biết rồi";
+  knownHint.setAttribute("data-i18n", "study.knowIt");
+  knownHint.innerHTML = ICON_CHECK + " " + t("study.knowIt");
 
   var learnHint = document.createElement("div");
   learnHint.className = "fc-swipe-hint fc-swipe-learning";
-  learnHint.innerHTML = ICON_X + " Học lại";
+  learnHint.setAttribute("data-i18n", "study.learning");
+  learnHint.innerHTML = ICON_X + " " + t("study.learning");
 
   scene.appendChild(knownHint);
   scene.appendChild(learnHint);
@@ -7658,6 +7660,22 @@ window.addEventListener("popstate", function() {
   }, { passive: true });
 
   scene.addEventListener("touchmove", function(e) {
+    // A long-press-to-copy gesture also reports touch coordinate movement (the OS's
+    // selection handles / loupe being dragged) — without this check, that movement gets
+    // misread as a swipe-to-grade, since the two look identical from raw touch deltas
+    // alone. Defer to text selection whenever one is active, rather than guessing via
+    // timing: bail out of (and un-arm, if already mid-drag) the swipe entirely.
+    if (window.getSelection && window.getSelection().type === "Range") {
+      if (fcDragging) {
+        fcDragging = false;
+        fcDx = 0;
+        knownHint.style.opacity = 0;
+        learnHint.style.opacity = 0;
+        scene.style.transition = "transform 0.2s ease-out";
+        scene.style.transform = "";
+      }
+      return;
+    }
     var dx = e.touches[0].clientX - fcStartX;
     var dy = e.touches[0].clientY - fcStartY;
     if (!fcDragging) {
