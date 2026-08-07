@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-08-07 — Avg/Min/Max Study Time gets its own day-window selector
+
+Reverses a previously deliberate, repeatedly-reaffirmed choice (`docs/decisions.md:203-213` and two `docs/features.md` passages) to keep the hero card's Study Time stats strictly all-time, on user request. The headline "Study Time" total (the highlighted, larger stat) **stays all-time** — only Avg/day, Min, and Max per study day are now windowable. `server/routes/stats.js`'s `/dashboard` route computes these from two separate queries now: `totalMsRow` (unconditional, always all-time) and `studyTimeStatsRow` (windowed via an optional `?days=` query param, clamped 7-90 like `/analytics`, defaulting to `null`/all-time when omitted — fully backward-compatible, existing callers see no change).
+
+A single pill row (All time/7/30/60/90 days) renders once inside `streakTimeHeroCard()`, only when at least one of avgDaily/minDaily/maxDaily is actually visible per the metric-config. Since the hero card is a single shared component rendered on both Home and Dashboard (`#home-summary-grid`/`#dash-summary-grid`), the selected window is a persisted, shared `state.studyTimeWindowDays` (`localStorage["fc-studytime-window"]`) — picking a window on one screen is reflected on the other. Clicking a pill does a real refetch (`store.getDashboard(days)`), unlike the existing metrics-config-save path (`_refreshDashHeroCards()`, re-render only, no refetch) — the two flows share that same re-render function, but the window-pill handler updates `state._dashHeroData.studyTime` from a fresh server response first.
+
+Verified against seeded attempts spanning 1/3/20/45/85/200 days ago with distinct durations: every window's avg/min/max matched hand-calculated expectations exactly, and the all-time total stayed constant (1,500,000ms) across every window, confirming the headline stat is correctly unaffected.
+
+The existing "Study Charts" period-note copy (`dashboard.periodNote`, below the unrelated 7/30/60/90d bar further down the Dashboard) said "the stats above are all-time" — now false for Avg/Min/Max specifically, reworded to call out their own control.
+
 ## 2026-08-07 — Language-aware, realism-optimized TTS voice selection
 
 Built via the full Explore → Plan → Implement → verify workflow. `_pickVoice()` (`client/app.js`) was English-only regardless of the app's UI language or the actual card content being spoken — a Vietnamese-UI user, or anyone studying Vietnamese card content, always got an English voice reading it, which is the single biggest lever against "realistic" speech (a premium English voice reading Vietnamese text sounds far worse than a mediocre Vietnamese voice reading it correctly).
