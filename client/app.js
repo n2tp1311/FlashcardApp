@@ -307,6 +307,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.studyTime": "Study Time",
   "dashboard.configureMetrics": "Customize metrics",
   "dashboard.configureMetricsHint": "Choose what to show on your summary board, and which metrics to feature at the top.",
+  "dashboard.studyTimeWindowLabel": "Avg/Min/Max window",
   "dashboard.allMetricsHidden": "All metrics are hidden — customize to show some again.",
   "dashboard.metricHidden": "Hidden",
   "dashboard.metricShow": "Show",
@@ -751,6 +752,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.studyTime": "Thời gian học",
   "dashboard.configureMetrics": "Tùy chỉnh chỉ số",
   "dashboard.configureMetricsHint": "Chọn những gì hiển thị trên bảng tổng quan, và chỉ số nào được nổi bật lên đầu.",
+  "dashboard.studyTimeWindowLabel": "Khoảng TB/Thấp nhất/Cao nhất",
   "dashboard.allMetricsHidden": "Tất cả chỉ số đang ẩn — tùy chỉnh để hiện lại.",
   "dashboard.metricHidden": "Ẩn",
   "dashboard.metricShow": "Hiện",
@@ -5116,6 +5118,19 @@ function _dashMetricIcon(key) {
   return "";
 }
 
+// Appends the active window to Avg/Min/Max Study Time's label, e.g. "Avg/day(7)" for a
+// 7-day window vs plain "Avg/day" for all-time — reads the window off the actual studyTime
+// data just rendered (not the pending state), so the label can never claim a window the
+// displayed numbers don't actually reflect.
+function _dashMetricLabel(m, studyTime) {
+  var label = t(m.shortLabelKey || m.labelKey);
+  var dailyStatKeys = { avgDaily: 1, minDaily: 1, maxDaily: 1 };
+  if (dailyStatKeys[m.key] && studyTime && studyTime.windowDays) {
+    label += "(" + studyTime.windowDays + ")";
+  }
+  return label;
+}
+
 function _dashMetricHint(key, studyTime, newCardEstimate) {
   if (key === "sessions") return t("stat.sessionsHint");
   if (key === "avgDaily" || key === "minDaily" || key === "maxDaily") {
@@ -5150,41 +5165,17 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate) {
     return (i > 0 ? '<div class="dash-hero-divider"></div>' : '') +
       '<div class="dash-hero-stat">' +
         '<div class="dash-hero-value">' + _dashMetricIcon(m.key) + ' ' + _dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate) + '</div>' +
-        '<div class="dash-hero-label">' + t(m.shortLabelKey || m.labelKey) + '</div>' +
+        '<div class="dash-hero-label">' + escHtml(_dashMetricLabel(m, studyTime)) + '</div>' +
       '</div>';
   }).join('');
 
   var subHtml = shown.map(function(m) {
-    return heroSubCard(_dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate), t(m.shortLabelKey || m.labelKey), _dashMetricHint(m.key, studyTime, newCardEstimate));
+    return heroSubCard(_dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate), escHtml(_dashMetricLabel(m, studyTime)), _dashMetricHint(m.key, studyTime, newCardEstimate));
   }).join('');
-
-  // Avg/Min/Max Study Time can be scoped to a day window instead of always all-time —
-  // one shared control for all three, shown only when at least one is actually visible.
-  var dailyStatKeys = { avgDaily: 1, minDaily: 1, maxDaily: 1 };
-  var showsDailyStat = highlighted.concat(shown).some(function(m) { return dailyStatKeys[m.key]; });
-  var windowBarHtml = "";
-  if (showsDailyStat) {
-    var windowOptions = [
-      { days: null, labelKey: "stat.allTime" },
-      { days: 7,    labelKey: "dashboard.days7" },
-      { days: 30,   labelKey: "dashboard.days30" },
-      { days: 60,   labelKey: "dashboard.days60" },
-      { days: 90,   labelKey: "dashboard.days90" }
-    ];
-    var activeDays = state.studyTimeWindowDays || null;
-    windowBarHtml = '<div class="study-time-window-bar">' +
-      windowOptions.map(function(o) {
-        var isActive = o.days === activeDays;
-        return '<button class="pill study-time-window-pill' + (isActive ? ' active' : '') + '" data-window="' + (o.days || '') + '">' +
-          escHtml(t(o.labelKey)) + '</button>';
-      }).join('') +
-    '</div>';
-  }
 
   return '<div class="dash-hero-card">' + gearBtn +
     (mainHtml ? '<div class="dash-hero-main">' + mainHtml + '</div>' : '') +
     (subHtml ? '<div class="dash-hero-sub">' + subHtml + '</div>' : '') +
-    windowBarHtml +
   '</div>';
 }
 
@@ -6725,6 +6716,7 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
    DASHBOARD METRICS MODAL
    ============================ */
 var _dashMetricDraft = null;
+var _studyTimeWindowDraft = null;
 
 function _renderDashMetricsModalRows() {
   var list = document.getElementById("dash-metrics-list");
@@ -6742,24 +6734,33 @@ function _renderDashMetricsModalRows() {
   }).join("");
 }
 
+var STUDY_TIME_WINDOW_OPTIONS = [
+  { days: null, labelKey: "stat.allTime" },
+  { days: 7,    labelKey: "dashboard.days7" },
+  { days: 30,   labelKey: "dashboard.days30" },
+  { days: 60,   labelKey: "dashboard.days60" },
+  { days: 90,   labelKey: "dashboard.days90" }
+];
+
+function _renderStudyTimeWindowBar() {
+  var bar = document.getElementById("dash-studytime-window-bar");
+  if (!bar) return;
+  bar.innerHTML = STUDY_TIME_WINDOW_OPTIONS.map(function(o) {
+    var isActive = o.days === _studyTimeWindowDraft;
+    return '<button type="button" class="pill' + (isActive ? " active" : "") + '" data-window="' + (o.days || "") + '">' +
+      escHtml(t(o.labelKey)) + '</button>';
+  }).join("");
+}
+
 ["home-summary-grid", "dash-summary-grid"].forEach(function(gridId) {
   var grid = document.getElementById(gridId);
   if (!grid) return;
   grid.addEventListener("click", function(e) {
-    var winBtn = e.target.closest(".study-time-window-pill");
-    if (winBtn) {
-      var days = winBtn.dataset.window ? parseInt(winBtn.dataset.window, 10) : null;
-      state.studyTimeWindowDays = days;
-      try { localStorage.setItem("fc-studytime-window", days == null ? "" : String(days)); } catch (_) {}
-      store.getDashboard(days).then(function(dash) {
-        if (state._dashHeroData) state._dashHeroData.studyTime = dash.studyTime;
-        _refreshDashHeroCards();
-      });
-      return;
-    }
     if (!e.target.closest(".dash-hero-settings-btn")) return;
     _dashMetricDraft = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, state.dashMetricConfig);
+    _studyTimeWindowDraft = state.studyTimeWindowDays;
     _renderDashMetricsModalRows();
+    _renderStudyTimeWindowBar();
     openModal("dash-metrics");
   });
 });
@@ -6772,12 +6773,24 @@ document.getElementById("dash-metrics-list").addEventListener("click", function(
   group.querySelectorAll(".pill").forEach(function(p) { p.classList.toggle("active", p === modeBtn); });
 });
 
+document.getElementById("dash-studytime-window-bar").addEventListener("click", function(e) {
+  var winBtn = e.target.closest(".pill");
+  if (!winBtn) return;
+  _studyTimeWindowDraft = winBtn.dataset.window ? parseInt(winBtn.dataset.window, 10) : null;
+  this.querySelectorAll(".pill").forEach(function(p) { p.classList.toggle("active", p === winBtn); });
+});
+
 document.getElementById("btn-save-dash-metrics").addEventListener("click", function() {
   state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, _dashMetricDraft);
+  var windowChanged = _studyTimeWindowDraft !== state.studyTimeWindowDays;
+  state.studyTimeWindowDays = _studyTimeWindowDraft;
   var prefs = { dashMetricConfig: state.dashMetricConfig };
   try {
     var cachedPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
     localStorage.setItem("fc-preferences", JSON.stringify(Object.assign({}, cachedPrefs, prefs)));
+  } catch (_) {}
+  try {
+    localStorage.setItem("fc-studytime-window", state.studyTimeWindowDays == null ? "" : String(state.studyTimeWindowDays));
   } catch (_) {}
   fetch("/api/auth/preferences", {
     method: "PUT",
@@ -6785,7 +6798,14 @@ document.getElementById("btn-save-dash-metrics").addEventListener("click", funct
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(prefs)
   }).catch(function() {});
-  _refreshDashHeroCards();
+  if (windowChanged) {
+    store.getDashboard(state.studyTimeWindowDays).then(function(dash) {
+      if (state._dashHeroData) state._dashHeroData.studyTime = dash.studyTime;
+      _refreshDashHeroCards();
+    });
+  } else {
+    _refreshDashHeroCards();
+  }
   closeModal("dash-metrics");
 });
 
