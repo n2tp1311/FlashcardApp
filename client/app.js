@@ -7234,6 +7234,15 @@ document.getElementById("modal-keymap").addEventListener("click", function(e) {
 });
 document.getElementById("btn-show-keymap").addEventListener("click", toggleKeymapModal);
 
+// Number of columns a responsive CSS grid (auto-fill/auto-fit) is actually rendering right
+// now — read off the computed style, since it resolves the repeat()/minmax() shorthand into
+// the real track count for the current viewport, unlike counting DOM children.
+function _gridColumnCount(container) {
+  if (!container) return 1;
+  var cols = getComputedStyle(container).gridTemplateColumns.split(" ").filter(Boolean).length;
+  return cols || 1;
+}
+
 function moveFocus(selector, dir) {
   var items = Array.from(document.querySelectorAll(selector));
   if (!items.length) return;
@@ -7300,8 +7309,10 @@ document.addEventListener("keydown", function(e) {
     else if ((e.key === "s" || e.key === "S") && state.homeSelectMode) document.getElementById("btn-study-classes").click();
     else if (e.key === "n" || e.key === "N") { e.preventDefault(); openNewClass(); }
     else if ((e.key === "a" || e.key === "A") && IS_SERVER) { renderDashboard(); showScreen("dashboard"); }
-    else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list [data-class-id]", 1); }
-    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); moveFocus("#class-list [data-class-id]", -1); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list [data-class-id]", 1); }
+    else if (e.key === "ArrowLeft")  { e.preventDefault(); moveFocus("#class-list [data-class-id]", -1); }
+    else if (e.key === "ArrowDown")  { e.preventDefault(); moveFocus("#class-list [data-class-id]", _gridColumnCount(document.getElementById("class-list"))); }
+    else if (e.key === "ArrowUp")    { e.preventDefault(); moveFocus("#class-list [data-class-id]", -_gridColumnCount(document.getElementById("class-list"))); }
     else if (e.key === "Enter") {
       var f = document.activeElement;
       if (f && f.dataset.classId) {
