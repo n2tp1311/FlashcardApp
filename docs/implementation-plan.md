@@ -290,7 +290,7 @@ A speaker button on the flashcard front and back triggers Web Speech API `Speech
 |---------|-------|
 | Trigger | Click speaker icon button or keyboard shortcut `P` |
 | Scope | Flashcard mode (front and back face); term-def and MCQ |
-| Language | Browser default; no override in v1 |
+| Language | Auto-detected from card text content (Vietnamese-diacritic scan), falling back to UI language, then English — see `docs/decisions.md` |
 
 ### 5.9 Image Cards
 

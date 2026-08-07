@@ -1,5 +1,23 @@
 # Decision Log
 
+## 2026-08-07 — Language-aware, realism-optimized TTS voice selection
+
+Built via the full Explore → Plan → Implement → verify workflow. `_pickVoice()` (`client/app.js`) was English-only regardless of the app's UI language or the actual card content being spoken — a Vietnamese-UI user, or anyone studying Vietnamese card content, always got an English voice reading it, which is the single biggest lever against "realistic" speech (a premium English voice reading Vietnamese text sounds far worse than a mediocre Vietnamese voice reading it correctly).
+
+**Detection is content-based, not UI-language-based**, with UI language (`state.language`) only as a fallback: `_detectSpeechLang(text)` scans the actual text for Vietnamese-exclusive diacritics before falling back. This serves the real scenario of a Vietnamese-UI user studying English vocabulary (or vice versa) — the spoken voice should match the text, not the menu language.
+
+**The Vietnamese-detection regex is deliberately narrow** (`đ`/`Đ`, `ơ`/`ư` horn vowels, `ă`, and the Unicode `U+1EA0–U+1EF9` stacked-tone range) — it excludes base accented vowels shared with French/Spanish/German/Portuguese (à/á/â/è/é/ê/etc.), which alone would false-positive on card content in those languages (verified against French/Spanish/German test strings). Accepted trade-off: plain Vietnamese text using only shared-vowel accents and no tier-1 character (e.g. "Tôi tên là Phê") isn't caught and falls back to `state.language` — broadening the regex to catch it would reintroduce the French/German false-positive risk.
+
+**Quality-tier ranking was broadened** from `enhanced|premium|neural` to also catch `wavenet|studio` (Android/Google Cloud-style naming) and `natural|online` (Microsoft Edge's neural voices, named like "...Online (Natural)") — applied uniformly to whichever language pool is active, not hardcoded to English.
+
+**Caching moved from a single cached voice to a per-language cache** (`_ttsVoices` + `_ttsVoiceCache`), since the "right" voice can now differ per utterance based on content, not just be picked once at load — still refreshed together via the same `voiceschanged` event and Safari-synchronous-init workaround as before.
+
+**Fallback behavior**: no matching voice for the detected language falls back to English (some voice is better than none) before finally returning `null` if literally zero voices exist at all — matches the existing silent-degradation convention (no `console.warn`/toast anywhere in this code path).
+
+**No new preference, no schema/server change** — confirmed scope with the user before starting: this improves the existing automatic behavior, it doesn't add a voice picker UI or a cloud TTS integration (which would need an API key, incur cost, and require a backend proxy — a much larger change, considered and explicitly declined).
+
+**Verification note**: voice *audio* quality can't be judged by an agent. Verified mechanically instead — a 9-case test-string matrix for `_detectSpeechLang` (pure English, Vietnamese tier-1, the existing `tts.testPhrase` i18n string, tier-2-only Vietnamese fallback under both UI languages, and French/Spanish/German non-false-positive checks) run directly against the shipped regex, plus `_pickVoice()` ranking/fallback assertions via Playwright with `speechSynthesis.getVoices()` stubbed to a fixed fake voice list. Attempting to also verify the real `speak()` pipeline end-to-end hit a Chromium native-binding wall (`SpeechSynthesisUtterance.voice` rejects plain fake objects, requiring a real internal `SpeechSynthesisVoice` instance) — a test-harness limitation, not an app-logic risk, since `u.voice = <voice>` is unchanged mechanics from the original code.
+
 ## 2026-08-06 — Replace fixed-step SRS ladder with FSRS
 
 Built via the full Explore → Plan → Implement → verify workflow, informed by a Sonnet-research → Opus-review pass on spaced-repetition literature. Replaces `server/routes/attempts.js`'s flat, shared-for-every-card interval ladder (`SRS_INTERVALS`, 10min→1h→4h→1d→3d→7d→21d then doubling) with FSRS (`ts-fsrs`), a per-card Stability/Difficulty/Retrievability model. `card_states` gained `fsrs_stability`, `fsrs_difficulty`, `fsrs_state`, `fsrs_reps`, `fsrs_lapses`, `fsrs_learning_steps`, `fsrs_last_review_at`, `last_correct_source`; `srs_step` is left in place but inert (nothing writes or reads it anymore) rather than dropped — the `data/` directory shows a real DB corruption/recovery incident on 2026-07-24, so schema mutations on this table are treated with extra caution. Scheduler capped at a 365-day max interval (FSRS defaults to 100 years) to match the old ladder's behavior and avoid surprising this app's small user base with wildly long intervals.
