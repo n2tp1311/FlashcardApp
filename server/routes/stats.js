@@ -287,19 +287,42 @@ router.get("/dashboard", requireAuth, (req, res) => {
     }
   }
 
-  // All-time study time — grouped by day like the streak above, so a day with attempts
-  // but no tracked duration (made before duration_ms shipped) is excluded rather than
-  // counted as a 0-minute day, which would skew avg/min down and always win "min."
-  const studyTimeRow = db.prepare(`
-    SELECT SUM(ms) AS total, AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
-    FROM (
-      SELECT SUM(duration_ms) AS ms
-      FROM attempts
-      WHERE user_id = ?
-      GROUP BY date(created_at, 'unixepoch')
-      HAVING ms IS NOT NULL
-    )
-  `).get(uid);
+  // Total studied (headline "Study Time" stat) is always all-time, regardless of the
+  // avg/min/max window below — it's grouped with the streak/lifetime counts, not the
+  // per-day breakdown.
+  const totalMsRow = db.prepare("SELECT SUM(duration_ms) AS total FROM attempts WHERE user_id = ?").get(uid);
+
+  // Avg/Min/Max per study day — windowed if ?days= is given (clamped 7-90, same range as
+  // /analytics), else all-time (the original, backward-compatible default). Grouped by day
+  // so a day with attempts but no tracked duration (made before duration_ms shipped) is
+  // excluded rather than counted as a 0-minute day, which would skew avg/min down and
+  // always win "min."
+  const parsedWindowDays = parseInt(req.query.days, 10);
+  const windowDays = (!isNaN(parsedWindowDays) && parsedWindowDays > 0)
+    ? Math.min(90, Math.max(7, parsedWindowDays))
+    : null;
+  const windowClause = windowDays ? "AND created_at >= strftime('%s','now') - ?" : "";
+  const studyTimeStatsRow = windowDays
+    ? db.prepare(`
+        SELECT AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
+        FROM (
+          SELECT SUM(duration_ms) AS ms
+          FROM attempts
+          WHERE user_id = ? ${windowClause}
+          GROUP BY date(created_at, 'unixepoch')
+          HAVING ms IS NOT NULL
+        )
+      `).get(uid, windowDays * 86400)
+    : db.prepare(`
+        SELECT AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
+        FROM (
+          SELECT SUM(duration_ms) AS ms
+          FROM attempts
+          WHERE user_id = ?
+          GROUP BY date(created_at, 'unixepoch')
+          HAVING ms IS NOT NULL
+        )
+      `).get(uid);
 
   res.json({
     summary: {
@@ -315,11 +338,12 @@ router.get("/dashboard", requireAuth, (req, res) => {
     dueByClass,
     streak,
     studyTime: {
-      totalMs:     studyTimeRow.total || 0,
-      avgDailyMs:  Math.round(studyTimeRow.avg || 0),
-      minDailyMs:  studyTimeRow.min || 0,
-      maxDailyMs:  studyTimeRow.max || 0,
-      trackedDays: studyTimeRow.trackedDays || 0
+      totalMs:     totalMsRow.total || 0,
+      avgDailyMs:  Math.round(studyTimeStatsRow.avg || 0),
+      minDailyMs:  studyTimeStatsRow.min || 0,
+      maxDailyMs:  studyTimeStatsRow.max || 0,
+      trackedDays: studyTimeStatsRow.trackedDays || 0,
+      windowDays:  windowDays
     }
   });
 });

@@ -112,6 +112,8 @@ Object.assign(TRANSLATIONS.en, {
   "stat.minDailyLabel": "Min",
   "stat.maxDailyLabel": "Max",
   "stat.studyTimeTrackedHint": "Based on the {n} day(s) with tracked study time — days studied before time tracking shipped aren't counted here",
+  "stat.studyTimeWindowHint": "last {n} days",
+  "stat.allTime": "All time",
   "dashboard.heatmapTitle": "{n}-Day Study Heatmap",
 
   "auth.signIn": "Sign In",
@@ -300,7 +302,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.days90": "90 days",
   "dashboard.weeklyTrend": "Weekly Study Trend",
   "dashboard.newCardsTrend": "New Cards Trend",
-  "dashboard.periodNote": "Applies to the charts in this section only — the stats above are all-time.",
+  "dashboard.periodNote": "Applies to the charts in this section only — the summary card above is all-time, except Avg/Min/Max Study Time which has its own window control.",
   "dashboard.srsDistribution": "SRS Interval Distribution",
   "dashboard.studyTime": "Study Time",
   "dashboard.configureMetrics": "Customize metrics",
@@ -554,6 +556,8 @@ Object.assign(TRANSLATIONS.vi, {
   "stat.minDailyLabel": "Thấp nhất",
   "stat.maxDailyLabel": "Cao nhất",
   "stat.studyTimeTrackedHint": "Dựa trên {n} ngày có ghi nhận thời gian học — các ngày học trước khi tính năng này ra mắt không được tính",
+  "stat.studyTimeWindowHint": "{n} ngày gần nhất",
+  "stat.allTime": "Toàn thời gian",
   "dashboard.heatmapTitle": "Biểu đồ học {n} ngày qua",
 
   "auth.signIn": "Đăng nhập",
@@ -742,7 +746,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.days90": "90 ngày",
   "dashboard.weeklyTrend": "Xu hướng học theo tuần",
   "dashboard.newCardsTrend": "Xu hướng thẻ mới",
-  "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — các số liệu phía trên tính toàn thời gian.",
+  "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — thẻ tổng quan phía trên tính toàn thời gian, riêng Thời gian học TB/Thấp nhất/Cao nhất có bộ chọn khoảng thời gian riêng.",
   "dashboard.srsDistribution": "Phân bố khoảng lặp SRS",
   "dashboard.studyTime": "Thời gian học",
   "dashboard.configureMetrics": "Tùy chỉnh chỉ số",
@@ -1856,6 +1860,14 @@ var state = {
   // Dashboard period in days (persisted)
   dashPeriod: (function() {
     try { return parseInt(localStorage.getItem("fc-dash-period"), 10) || 60; } catch (_) { return 60; }
+  }()),
+
+  // Avg/Min/Max Study Time window in days; null = all-time (persisted)
+  studyTimeWindowDays: (function() {
+    try {
+      var v = parseInt(localStorage.getItem("fc-studytime-window"), 10);
+      return isNaN(v) ? null : v;
+    } catch (_) { return null; }
   }())
 };
 
@@ -2000,7 +2012,7 @@ function renderHomeCharts() {
   document.getElementById("home-summary-grid").innerHTML = "";
   // Isolated .catch so a new-card-estimate failure can't blank out the rest of the board.
   var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
-  Promise.all([store.getDashboard(), newCardEstimatePromise]).then(function(results) {
+  Promise.all([store.getDashboard(state.studyTimeWindowDays), newCardEstimatePromise]).then(function(results) {
     var dash = results[0], newCardEstimate = results[1];
     var grid = document.getElementById("home-summary-grid");
     grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary, newCardEstimate);
@@ -5107,8 +5119,9 @@ function _dashMetricIcon(key) {
 function _dashMetricHint(key, studyTime, newCardEstimate) {
   if (key === "sessions") return t("stat.sessionsHint");
   if (key === "avgDaily" || key === "minDaily" || key === "maxDaily") {
-    var st = studyTime || { trackedDays: 0 };
-    return t("stat.studyTimeTrackedHint", { n: st.trackedDays });
+    var st = studyTime || { trackedDays: 0, windowDays: null };
+    var base = t("stat.studyTimeTrackedHint", { n: st.trackedDays });
+    return st.windowDays ? base + " — " + t("stat.studyTimeWindowHint", { n: st.windowDays }) : base;
   }
   if (key === "newCardEstimate") {
     if (!newCardEstimate) return null;
@@ -5145,9 +5158,33 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate) {
     return heroSubCard(_dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate), t(m.shortLabelKey || m.labelKey), _dashMetricHint(m.key, studyTime, newCardEstimate));
   }).join('');
 
+  // Avg/Min/Max Study Time can be scoped to a day window instead of always all-time —
+  // one shared control for all three, shown only when at least one is actually visible.
+  var dailyStatKeys = { avgDaily: 1, minDaily: 1, maxDaily: 1 };
+  var showsDailyStat = highlighted.concat(shown).some(function(m) { return dailyStatKeys[m.key]; });
+  var windowBarHtml = "";
+  if (showsDailyStat) {
+    var windowOptions = [
+      { days: null, labelKey: "stat.allTime" },
+      { days: 7,    labelKey: "dashboard.days7" },
+      { days: 30,   labelKey: "dashboard.days30" },
+      { days: 60,   labelKey: "dashboard.days60" },
+      { days: 90,   labelKey: "dashboard.days90" }
+    ];
+    var activeDays = state.studyTimeWindowDays || null;
+    windowBarHtml = '<div class="study-time-window-bar">' +
+      windowOptions.map(function(o) {
+        var isActive = o.days === activeDays;
+        return '<button class="pill study-time-window-pill' + (isActive ? ' active' : '') + '" data-window="' + (o.days || '') + '">' +
+          escHtml(t(o.labelKey)) + '</button>';
+      }).join('') +
+    '</div>';
+  }
+
   return '<div class="dash-hero-card">' + gearBtn +
     (mainHtml ? '<div class="dash-hero-main">' + mainHtml + '</div>' : '') +
     (subHtml ? '<div class="dash-hero-sub">' + subHtml + '</div>' : '') +
+    windowBarHtml +
   '</div>';
 }
 
@@ -5351,7 +5388,7 @@ function renderDashboard() {
 
   // Isolated .catch so a new-card-estimate failure can't blank out the rest of the dashboard.
   var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
-  Promise.all([store.getDashboard(), store.getAnalytics(state.dashPeriod), store.getSrsDistribution(), store.getFutureDue(), newCardEstimatePromise]).then(function(results) {
+  Promise.all([store.getDashboard(state.studyTimeWindowDays), store.getAnalytics(state.dashPeriod), store.getSrsDistribution(), store.getFutureDue(), newCardEstimatePromise]).then(function(results) {
     var d = results[0], analytics = results[1], srs = results[2], futureDue = results[3], newCardEstimate = results[4];
     var days = analytics.days || state.dashPeriod || 60;
     var heatmapTitle = document.getElementById("dash-heatmap-title");
@@ -6200,7 +6237,7 @@ var SQLiteAdapter = (function() {
     },
 
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
-    getDashboard: function() { return req("GET", "/stats/dashboard"); },
+    getDashboard: function(days) { return req("GET", "/stats/dashboard" + (days ? "?days=" + days : "")); },
     getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
     getSrsDistribution: function() { return req("GET", "/stats/srs-distribution"); },
     getFutureDue: function() { return req("GET", "/stats/future-due"); },
@@ -6709,6 +6746,17 @@ function _renderDashMetricsModalRows() {
   var grid = document.getElementById(gridId);
   if (!grid) return;
   grid.addEventListener("click", function(e) {
+    var winBtn = e.target.closest(".study-time-window-pill");
+    if (winBtn) {
+      var days = winBtn.dataset.window ? parseInt(winBtn.dataset.window, 10) : null;
+      state.studyTimeWindowDays = days;
+      try { localStorage.setItem("fc-studytime-window", days == null ? "" : String(days)); } catch (_) {}
+      store.getDashboard(days).then(function(dash) {
+        if (state._dashHeroData) state._dashHeroData.studyTime = dash.studyTime;
+        _refreshDashHeroCards();
+      });
+      return;
+    }
     if (!e.target.closest(".dash-hero-settings-btn")) return;
     _dashMetricDraft = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, state.dashMetricConfig);
     _renderDashMetricsModalRows();
