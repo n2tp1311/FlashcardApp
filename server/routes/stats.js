@@ -539,7 +539,25 @@ router.get("/analytics/export", requireAuth, function(req, res) {
 // familiar even though the underlying scheduler is now continuous, not step-indexed. Cards
 // still in FSRS's Learning/Relearning state get their own bucket since they're qualitatively
 // different from "a Review card with a short interval."
+//
+// Optional ?days= scopes to cards last reviewed within that window (calendar-day-aligned,
+// same pattern as the Study Time fix — never a raw-seconds cutoff, which would let a
+// straddled day corrupt the bucket a card falls into). Matches this chart's home inside the
+// period-pill-gated "Study Charts" section, where every sibling chart already respects the
+// selected window — this one silently didn't, showing an always-all-time snapshot regardless
+// of the pill selected.
 router.get("/srs-distribution", requireAuth, (req, res) => {
+  const parsedWindowDays = parseInt(req.query.days, 10);
+  const windowDays = (!isNaN(parsedWindowDays) && parsedWindowDays > 0)
+    ? Math.min(90, Math.max(7, parsedWindowDays))
+    : null;
+  const windowClause = windowDays
+    ? "AND date(COALESCE(fsrs_last_review_at, updated_at), 'unixepoch') >= date('now', ?)"
+    : "";
+  const params = windowDays
+    ? [req.session.userId, "-" + windowDays + " days"]
+    : [req.session.userId];
+
   const rows = db.prepare(
     "SELECT bucket, COUNT(*) AS cnt FROM (" +
     "  SELECT" +
@@ -554,10 +572,10 @@ router.get("/srs-distribution", requireAuth, (req, res) => {
     "    END AS bucket" +
     "  FROM (" +
     "    SELECT fsrs_state, srs_due_at - COALESCE(fsrs_last_review_at, updated_at) AS iv" +
-    "    FROM card_states WHERE user_id = ? AND srs_due_at IS NOT NULL" +
+    "    FROM card_states WHERE user_id = ? AND srs_due_at IS NOT NULL " + windowClause +
     "  )" +
     ") GROUP BY bucket"
-  ).all(req.session.userId);
+  ).all(...params);
   res.json(rows);
 });
 

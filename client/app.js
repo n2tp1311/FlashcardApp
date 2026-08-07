@@ -303,7 +303,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.weeklyTrend": "Weekly Study Trend",
   "dashboard.newCardsTrend": "New Cards Trend",
   "dashboard.periodNote": "Applies to the charts in this section only — the summary card above is all-time, except Avg/Min/Max Study Time which has its own window control.",
-  "dashboard.srsDistribution": "SRS Interval Distribution",
+  "dashboard.srsDistribution": "Memory Interval Distribution",
   "dashboard.studyTime": "Study Time",
   "dashboard.configureMetrics": "Customize metrics",
   "dashboard.configureMetricsHint": "Choose what to show on your summary board, and which metrics to feature at the top.",
@@ -748,7 +748,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.weeklyTrend": "Xu hướng học theo tuần",
   "dashboard.newCardsTrend": "Xu hướng thẻ mới",
   "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — thẻ tổng quan phía trên tính toàn thời gian, riêng Thời gian học TB/Thấp nhất/Cao nhất có bộ chọn khoảng thời gian riêng.",
-  "dashboard.srsDistribution": "Phân bố khoảng lặp SRS",
+  "dashboard.srsDistribution": "Phân bố khoảng ghi nhớ",
   "dashboard.studyTime": "Thời gian học",
   "dashboard.configureMetrics": "Tùy chỉnh chỉ số",
   "dashboard.configureMetricsHint": "Chọn những gì hiển thị trên bảng tổng quan, và chỉ số nào được nổi bật lên đầu.",
@@ -5379,7 +5379,7 @@ function renderDashboard() {
 
   // Isolated .catch so a new-card-estimate failure can't blank out the rest of the dashboard.
   var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
-  Promise.all([store.getDashboard(state.studyTimeWindowDays), store.getAnalytics(state.dashPeriod), store.getSrsDistribution(), store.getFutureDue(), newCardEstimatePromise]).then(function(results) {
+  Promise.all([store.getDashboard(state.studyTimeWindowDays), store.getAnalytics(state.dashPeriod), store.getSrsDistribution(state.dashPeriod), store.getFutureDue(), newCardEstimatePromise]).then(function(results) {
     var d = results[0], analytics = results[1], srs = results[2], futureDue = results[3], newCardEstimate = results[4];
     var days = analytics.days || state.dashPeriod || 60;
     var heatmapTitle = document.getElementById("dash-heatmap-title");
@@ -5530,8 +5530,12 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     document.getElementById("dash-heatmap-wrap").innerHTML = "";
     document.getElementById("dash-trend-wrap").innerHTML = "";
     document.getElementById("dash-newcards-trend-wrap").innerHTML = "";
+    document.getElementById("dash-srs-wrap").innerHTML = "";
     document.getElementById("dash-lesson-wrap").innerHTML = "";
     document.getElementById("dash-struggle-list").innerHTML = "";
+    store.getSrsDistribution(state.dashPeriod).then(function(srs) {
+      renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
+    });
     store.getAnalytics(state.dashPeriod).then(function(analytics) {
       var days = analytics.days || state.dashPeriod;
       var heatmapTitle = document.getElementById("dash-heatmap-title");
@@ -6230,7 +6234,7 @@ var SQLiteAdapter = (function() {
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
     getDashboard: function(days) { return req("GET", "/stats/dashboard" + (days ? "?days=" + days : "")); },
     getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
-    getSrsDistribution: function() { return req("GET", "/stats/srs-distribution"); },
+    getSrsDistribution: function(days) { return req("GET", "/stats/srs-distribution" + (days ? "?days=" + days : "")); },
     getFutureDue: function() { return req("GET", "/stats/future-due"); },
     getReviewsToday: function() { return req("GET", "/stats/reviews-today"); },
     getNewCardEstimate: function() { return req("GET", "/stats/new-card-estimate"); },
