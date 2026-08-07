@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-08-07 — Long-press-to-copy vs. swipe-to-grade conflict; swipe hint i18n
+
+Two mobile-only bugs reported together: (1) long-pressing a flashcard to select/copy text would sometimes accidentally grade the card as known/unlearned; (2) the swipe hint labels always showed Vietnamese ("Biết rồi"/"Học lại") regardless of the app's language setting.
+
+**Bug 2 was a straight i18n bypass, not a detection bug.** The hint `<div>`s (`client/app.js`, `initSwipeGestures`) were created once at script load with hardcoded `innerHTML` strings that never called `t()` — confirmed by contrast with the grading buttons sitting right next to them, which correctly use `data-i18n`. Fixed by reusing the existing `study.knowIt`/`study.learning` keys (same wording as the buttons) and adding `data-i18n` attributes, so `applyI18n()` — already called document-wide on every language switch via `applyLanguage()` — updates them automatically too, with no separate update path needed.
+
+**Bug 1's root cause**: the swipe-to-grade gesture had a pure distance threshold (`Math.abs(dx) >= 8` px to arm, `75px` to commit) with no way to distinguish it from a long-press. A long-press's selection-handle/loupe dragging produces the same kind of touch-coordinate movement once the OS shows its native selection UI, so it could cross both thresholds and fire `.click()` on the grading buttons. The tempting fix — disable `user-select`/`-webkit-touch-callout` on the card — was explicitly rejected: the user wants long-press-to-copy to keep working, not be suppressed. Instead, the `touchmove` handler now checks `window.getSelection().type === "Range"` and defers entirely whenever a native selection is active (un-arming an in-progress drag if a selection starts mid-gesture), rather than guessing via a timing heuristic. This is a genuinely selective fix: a fast deliberate swipe never triggers the browser's long-press recognizer, so `getSelection().type` stays `"None"` throughout and the normal swipe path is completely unaffected.
+
+Verified: a normal swipe (no active selection) still transforms the card and grades it correctly; the identical touch-coordinate sequence with a simulated active `Range` selection leaves the card ungraded and the transform reset.
+
 ## 2026-08-07 — Memory Interval Distribution chart: rename + fix silent period-pill bypass
 
 Prompted by a user question challenging whether the chart genuinely reflects FSRS (it does — audited the full data path, `fsrs_state` + `srs_due_at`/`fsrs_last_review_at`-derived interval, zero leftover `srs_step` references). Two changes came out of that audit, both user-directed:

@@ -228,7 +228,8 @@
 - `manifest.json` with `display: standalone`, `theme_color: #4338ca`, `background_color: #1a1744`
 - Meta tags: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `theme-color`, `apple-touch-icon`
 - Flashcard swipe: drag `#fc-scene` horizontally; right swipe (> 75px) = Know It, left swipe = Learning; card flies off screen with rotation then triggers the mark; short swipe (< 75px) snaps back with spring animation
-- Swipe hint labels: `✓ Biết rồi` (green, left side) and `✗ Học lại` (red, right side) fade in as drag distance grows toward threshold; rotate ±15° like Tinder labels
+- Swipe hint labels (green "Know It" / red "Learning", reusing the same `study.knowIt`/`study.learning` i18n keys as the grading buttons) fade in as drag distance grows toward threshold; rotate ±15° like Tinder labels
+- Long-press-to-copy on a card no longer gets misread as a swipe: the `touchmove` handler checks `window.getSelection().type === "Range"` and defers to an active native text selection entirely (un-arming an in-progress drag if a selection starts mid-gesture), rather than disabling text selection on the card
 - `touch-action: pan-y` on `.fc-scene` — browser owns vertical scroll, JS owns horizontal swipe
 - Edge back swipe: start from x < 30px, swipe right > 90px → triggers back button for current screen, or opens the sidebar on Home; excluded on flashcard screen (handled by card swipe instead)
 - A separate non-passive `touchmove` listener on the leftmost 24px calls `preventDefault()` on a recognizably horizontal drag, attempting to suppress iOS's own native edge-swipe-back gesture in that same zone (a long-standing WKWebView quirk, active even in installed/standalone PWAs) — see decisions.md for the back-and-forth on this; effectiveness is unconfirmed on real devices
