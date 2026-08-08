@@ -7548,6 +7548,10 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "Escape") returnFromStudy();
   }
 
+  else if (screen === "flashcard-summary") {
+    if (e.key === "Escape") returnFromStudy();
+  }
+
   else if (screen === "stats") {
     if (e.key === "Escape") document.getElementById("btn-stats-back").click();
   }
