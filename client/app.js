@@ -53,7 +53,6 @@ Object.assign(TRANSLATIONS.en, {
   "pref.testSpeed": "Test speed",
   "pref.maxReviewsPerDay": "Max reviews per day",
   "pref.noLimit": "No limit",
-  "pref.typeBeforeFlip": "Type answer before flipping",
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
@@ -181,6 +180,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.stillLearning": "Still Learning",
   "setup.mode": "Mode",
   "setup.flashcards": "Flashcards",
+  "setup.flashcardWrite": "Flashcard & Write",
   "setup.quiz": "Quiz",
   "setup.cardOrder": "Card Order",
   "setup.inOrder": "In Order",
@@ -193,6 +193,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintNeedsRecall": "Cards you've only confirmed by recognizing them in a quiz, not by recalling them — answer in Flashcard mode to confirm you really know them",
   "setup.hintLearning": "Cards not yet known / still learning",
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
+  "setup.hintFlashcardWriteMode": "Type your answer before flipping, then flip to compare — an extra production step on top of recall.",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
   "setup.newCardEstimateLabel": "New cards recommended today",
   "dashboard.newCardsShortLabel": "New Cards",
@@ -504,7 +505,6 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.testSpeed": "Nghe thử tốc độ",
   "pref.maxReviewsPerDay": "Số review tối đa mỗi ngày",
   "pref.noLimit": "Không giới hạn",
-  "pref.typeBeforeFlip": "Gõ đáp án trước khi lật thẻ",
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
@@ -632,6 +632,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.stillLearning": "Đang học",
   "setup.mode": "Chế độ",
   "setup.flashcards": "Thẻ ghi nhớ",
+  "setup.flashcardWrite": "Thẻ & Viết",
   "setup.quiz": "Trắc nghiệm",
   "setup.cardOrder": "Thứ tự thẻ",
   "setup.inOrder": "Theo thứ tự",
@@ -644,6 +645,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintNeedsRecall": "Thẻ bạn mới chỉ nhận diện đúng trong bài quiz, chưa từng tự nhớ lại — trả lời ở chế độ Thẻ ghi nhớ để xác nhận bạn thực sự thuộc",
   "setup.hintLearning": "Thẻ chưa thuộc / đang học",
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
+  "setup.hintFlashcardWriteMode": "Gõ đáp án trước khi lật thẻ, rồi lật để so sánh — thêm một bước viết ra bên cạnh việc nhớ lại.",
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "setup.newCardEstimateLabel": "Số thẻ mới nên học hôm nay",
   "dashboard.newCardsShortLabel": "Thẻ mới",
@@ -1776,6 +1778,8 @@ var state = {
   setupDataPromise: null,
   studyPresets: [],
   maxReviewsPerDay: null,
+  // Whether to show the type-before-flip input this session — set by startStudy() from
+  // the chosen mode ("flashcard-write" vs plain "flashcard"), not a persisted preference.
   typeToCompare: false,
   dashMetricConfig: Object.assign({}, DEFAULT_DASH_METRIC_CONFIG),
   _dashHeroData: null,
@@ -4084,8 +4088,9 @@ var FILTER_HINT_KEYS = {
 };
 
 var MODE_HINT_KEYS = {
-  flashcard: "setup.hintFlashcardMode",
-  quiz:      "setup.hintQuizMode"
+  flashcard:       "setup.hintFlashcardMode",
+  "flashcard-write": "setup.hintFlashcardWriteMode",
+  quiz:            "setup.hintQuizMode"
 };
 
 ["setup-count","setup-filter","setup-mode","setup-order"].forEach(function(groupId) {
@@ -4318,10 +4323,15 @@ function startStudy(count, filter, mode, order) {
     // Record last_seen_at for all cards in this session (fire-and-forget)
     store.markCardsSeen(filtered.map(function(c) { return c.id; }));
 
-    if (mode === "flashcard") {
+    if (mode === "flashcard" || mode === "flashcard-write") {
       state.studyCards = filtered;
       state.studyIndex = 0;
       state.studyFlipped = false;
+      // "Flashcard & Write" is Flashcard mode with the type-before-flip input forced on
+      // for the whole session — same cards, same grading buttons, same SRS behavior, only
+      // this one cosmetic difference. Previously a standalone Preferences toggle; now
+      // chosen per-session as its own mode instead (see docs/decisions.md).
+      state.typeToCompare = (mode === "flashcard-write");
       // Session-scoped grading log for the end-of-session summary screen — keyed by
       // cardId so re-grading the same card (via Prev/Next) counts once, at its latest
       // status. "New" is snapshotted now, before any grading in this session can change
@@ -4373,14 +4383,15 @@ function renderFlashcard() {
   state.studyHasFlippedCard = false;
   setMarkButtonsEnabled(false);
 
-  // Optional "type before flip" scratchpad (Preferences toggle) — reset per card, not tied
-  // to grading in any way; purely a self-comparison aid.
+  // Optional "type before flip" scratchpad, on for the whole session in Flashcard & Write
+  // mode (state.typeToCompare, set once in startStudy()) — reset per card, not tied to
+  // grading in any way; purely a self-comparison aid.
   var typeInput = document.getElementById("fc-type-input");
   typeInput.classList.toggle("hidden", !state.typeToCompare);
   typeInput.value = "";
   typeInput.disabled = false;
   document.getElementById("fc-your-guess").classList.add("hidden");
-  // Auto-focus only when the toggle is on — the user turned it on specifically to type on
+  // Auto-focus only when the mode has it on — the user picked Flashcard & Write specifically to type on
   // every card, so this saves a click; when it's off the input isn't even visible.
   if (state.typeToCompare) typeInput.focus();
 
@@ -6441,9 +6452,6 @@ function applyPrefs(prefs) {
   if (typeof prefs.maxReviewsPerDay === "number") {
     state.maxReviewsPerDay = prefs.maxReviewsPerDay;
   }
-  if (typeof prefs.typeToCompare === "boolean") {
-    state.typeToCompare = prefs.typeToCompare;
-  }
   if (prefs.dashMetricConfig && typeof prefs.dashMetricConfig === "object") {
     state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, prefs.dashMetricConfig);
   }
@@ -6711,7 +6719,6 @@ function prefRateLabel(rate) {
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
   document.getElementById("pref-dark-mode").checked = state.darkMode;
-  document.getElementById("pref-type-compare").checked = state.typeToCompare;
   prefFontLabel();
   prefRateLabel(state.ttsRate);
   document.getElementById("pref-lang-en").classList.toggle("active", state.language !== "vi");
@@ -6776,9 +6783,7 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
   var maxReviews = maxReviewsRaw === "" ? null : Math.max(0, parseInt(maxReviewsRaw, 10) || 0);
   state.maxReviewsPerDay = maxReviews;
-  var typeToCompare = document.getElementById("pref-type-compare").checked;
-  state.typeToCompare = typeToCompare;
-  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, typeToCompare: typeToCompare };
+  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
