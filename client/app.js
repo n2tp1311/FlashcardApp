@@ -338,7 +338,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.noCardsDueSoon": "No cards due in the next {n} days.",
   "dashboard.noStudyData": "No study data yet.",
   "dashboard.attemptsAbbrev": "{n} att.",
-  "dashboard.attemptsCount": "{n} attempt(s)",
+  "dashboard.heatmapCellTooltip": "{date}: {duration} studied ({n} attempt(s))",
   "dashboard.monthAbbrevs": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
 
   "form.name": "Name",
@@ -789,7 +789,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.noCardsDueSoon": "Không có thẻ nào đến hạn trong {n} ngày tới.",
   "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
   "dashboard.attemptsAbbrev": "{n} lượt",
-  "dashboard.attemptsCount": "{n} lượt làm",
+  "dashboard.heatmapCellTooltip": "{date}: học {duration} ({n} lượt làm)",
   "dashboard.monthAbbrevs": "Th1,Th2,Th3,Th4,Th5,Th6,Th7,Th8,Th9,Th10,Th11,Th12",
 
   "form.name": "Tên",
@@ -5642,7 +5642,8 @@ function renderHeatmap(rows, wrap, days) {
     return;
   }
   var map = {};
-  rows.forEach(function(r) { map[r.day] = r.cnt; });
+  var msMap = {};
+  rows.forEach(function(r) { map[r.day] = r.cnt; msMap[r.day] = r.ms || 0; });
 
   var today = new Date();
   var cells = [];
@@ -5650,7 +5651,7 @@ function renderHeatmap(rows, wrap, days) {
     // Use UTC date arithmetic to match server's date(created_at,'unixepoch') which returns UTC dates
     var d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i));
     var key = d.toISOString().slice(0, 10);
-    cells.push({ key: key, cnt: map[key] || 0, month: d.getUTCMonth(), dayOfWeek: d.getUTCDay() });
+    cells.push({ key: key, cnt: map[key] || 0, ms: msMap[key] || 0, month: d.getUTCMonth(), day: d.getUTCDate(), dayOfWeek: d.getUTCDay() });
   }
 
   var maxCnt = rows.reduce(function(m, r) { return Math.max(m, r.cnt); }, 1);
@@ -5686,7 +5687,11 @@ function renderHeatmap(rows, wrap, days) {
         cellEl.className = "heatmap-cell heat-empty";
       } else {
         cellEl.className = "heatmap-cell " + intensity(cell.cnt);
-        cellEl.title = cell.key + ": " + t("dashboard.attemptsCount", { n: cell.cnt });
+        cellEl.title = t("dashboard.heatmapCellTooltip", {
+          date: MONTHS[cell.month] + " " + cell.day,
+          duration: formatStudyDuration(cell.ms),
+          n: cell.cnt
+        });
         if (!firstRealCell) firstRealCell = cell;
       }
       colEl.appendChild(cellEl);

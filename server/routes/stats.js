@@ -354,7 +354,7 @@ router.get("/analytics", requireAuth, function(req, res) {
   var secs = days * 86400;
 
   var heatmapRows = db.prepare(
-    "SELECT date(created_at,'unixepoch') AS day, COUNT(*) AS cnt " +
+    "SELECT date(created_at,'unixepoch') AS day, COUNT(*) AS cnt, SUM(duration_ms) AS ms " +
     "FROM attempts " +
     "WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
     "GROUP BY day"
