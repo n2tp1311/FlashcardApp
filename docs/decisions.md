@@ -16,6 +16,10 @@ Finishing a flashcard session previously called `returnFromStudy()` directly fro
 
 **Early Exit (`btn-fc-back`) deliberately skips the summary**, still calling `returnFromStudy()` directly — bailing out mid-session isn't "completing" it, and showing a completion-flavored screen there would be misleading.
 
+**Revised same day**: grading the last card required a separate manual "Finish" click even though every other card auto-advances — inconsistent, and easy to miss (the button is just a relabeled Next). The same `fcAdvanceTimer` in `markCard()` that advances to the next card now calls `showFlashcardSummary()` directly when there is no next card, so finishing behaves like every other card grade: instant, no extra click. The manual Finish button (`#btn-fc-next`'s last-card label) stays as the only path for a last card the user *skipped* (navigated to without grading — `markCard()`, and therefore the auto-advance timer, never ran for it).
+
+Removing that pause to look the last card over before it flies off-screen meant finishing had become a one-way door with no chance to look back. Added a **Review** button on the summary screen (`showScreen("flashcard")` + `renderFlashcard()`, leaving `state.studyIndex` wherever the session ended) so Prev/Next browsing is still available after finishing — "Back to Lesson" leaves for good, "Review" doesn't. Initially wired its label to the existing `summary.review` i18n key (the "N Review" stat-chip label), but caught before shipping that this collides semantically — the chip's "Review" is a noun (a card *category*, ↔ New), the button's "Review" is a verb (an action, "go look again"), and Vietnamese needs different words for the two ("Ôn tập" vs "Xem lại"). Split into a separate `summary.reviewAction` key.
+
 ## 2026-08-07 — Long-press-to-copy vs. swipe-to-grade conflict; swipe hint i18n
 
 Two mobile-only bugs reported together: (1) long-pressing a flashcard to select/copy text would sometimes accidentally grade the card as known/unlearned; (2) the swipe hint labels always showed Vietnamese ("Biết rồi"/"Học lại") regardless of the app's language setting.
