@@ -1721,6 +1721,30 @@ code {
 
 .results-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
+.summary-total-count {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.summary-newreview-row { display: flex; gap: 12px; width: 100%; }
+.summary-newreview-chip {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+}
+.summary-newreview-value { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+.summary-newreview-label { font-size: 0.75rem; color: var(--text2); }
+
+.summary-status-breakdown { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+
 /* Due review badges */
 .due-badge {
   font-size: 0.6875rem;

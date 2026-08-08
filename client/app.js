@@ -259,6 +259,11 @@ Object.assign(TRANSLATIONS.en, {
   "results.retry": "Retry",
   "results.changeSetup": "Change Setup",
   "results.backToLesson": "Back to Lesson",
+  "summary.title": "Session Complete",
+  "summary.cardsStudied": "cards studied",
+  "summary.new": "New",
+  "summary.review": "Review",
+  "summary.skippedNote": "{n} card(s) skipped (not graded)",
 
   "confirm.deleteCard": "Delete this card?",
   "common.true": "True",
@@ -704,6 +709,11 @@ Object.assign(TRANSLATIONS.vi, {
   "results.retry": "Làm lại",
   "results.changeSetup": "Đổi thiết lập",
   "results.backToLesson": "Về bài học",
+  "summary.title": "Hoàn thành phiên học",
+  "summary.cardsStudied": "thẻ đã học",
+  "summary.new": "Mới",
+  "summary.review": "Ôn tập",
+  "summary.skippedNote": "{n} thẻ đã bỏ qua (chưa chấm điểm)",
 
   "confirm.deleteCard": "Xóa thẻ này?",
   "common.true": "Đúng",
@@ -4115,6 +4125,45 @@ function returnFromStudy() {
   else renderLessons();
 }
 
+// Shown when a flashcard session finishes normally (not on early Exit) — how many cards
+// were graded, the new-vs-review split, and a status breakdown, all from state.studySessionLog.
+function showFlashcardSummary() {
+  var log = state.studySessionLog || {};
+  var gradedIds = Object.keys(log);
+  var total = gradedIds.length;
+  var counts = { learning: 0, hard: 0, known: 0, confident: 0 };
+  var newCount = 0;
+  gradedIds.forEach(function(id) {
+    counts[log[id]]++;
+    if (state.studySessionNewSet[id]) newCount++;
+  });
+
+  document.getElementById("summary-total-count").textContent = total;
+  document.getElementById("summary-new-count").textContent = newCount;
+  document.getElementById("summary-review-count").textContent = total - newCount;
+
+  document.getElementById("summary-status-breakdown").innerHTML =
+    diffBar(t("study.learning"),  counts.learning,  total, "var(--danger)") +
+    diffBar(t("study.hard"),      counts.hard,      total, "var(--warning)") +
+    diffBar(t("study.knowIt"),    counts.known,     total, "var(--success)") +
+    diffBar(t("study.confident"), counts.confident, total, "var(--primary)");
+
+  var skippedCount = (state.studyCards ? state.studyCards.length : 0) - total;
+  var skippedNote = document.getElementById("summary-skipped-note");
+  if (skippedCount > 0) {
+    skippedNote.textContent = t("summary.skippedNote", { n: skippedCount });
+    skippedNote.classList.remove("hidden");
+  } else {
+    skippedNote.classList.add("hidden");
+  }
+
+  showScreen("flashcard-summary");
+}
+
+document.getElementById("btn-summary-back").addEventListener("click", function() {
+  returnFromStudy();
+});
+
 document.getElementById("btn-setup-back").addEventListener("click", function() {
   returnFromStudy();
 });
@@ -4263,6 +4312,13 @@ function startStudy(count, filter, mode, order) {
       state.studyCards = filtered;
       state.studyIndex = 0;
       state.studyFlipped = false;
+      // Session-scoped grading log for the end-of-session summary screen — keyed by
+      // cardId so re-grading the same card (via Prev/Next) counts once, at its latest
+      // status. "New" is snapshotted now, before any grading in this session can change
+      // it — a card with no prior attempts (last_studied_at unset) is new, else review.
+      state.studySessionLog = {};
+      state.studySessionNewSet = {};
+      filtered.forEach(function(c) { if (!c.last_studied_at) state.studySessionNewSet[c.id] = true; });
       startFlashcards();
     } else if (mode === "quiz") {
       state.quizCards  = filtered;
@@ -4535,8 +4591,9 @@ document.getElementById("btn-fc-next").addEventListener("click", function() {
     state.studyIndex++;
     renderFlashcard();
   } else {
-    // Finished
-    returnFromStudy();
+    // Finished — show the session summary rather than jumping straight back (an early
+    // Exit via btn-fc-back skips this, since bailing out mid-session isn't "completing" it).
+    showFlashcardSummary();
   }
 });
 
@@ -4576,6 +4633,7 @@ function markCard(known, grade) {
   if (!card) return;
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known);
+  state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
   if (grade) attemptFields.grade = grade;
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
@@ -7500,6 +7558,7 @@ function injectKeyHints() {
     ["btn-fc-shuffle",     "[S]"],
     ["btn-results-retry",  "[R]"],
     ["btn-results-back",   "[Esc]"],
+    ["btn-summary-back",   "[Esc]"],
     ["btn-stats-back",     "[Esc]"],
     ["btn-dashboard-back", "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
@@ -7538,7 +7597,8 @@ var SCREEN_BACK_BTN = {
   quiz:      "btn-quiz-back",
   results:   "btn-results-back",
   stats:     "btn-stats-back",
-  dashboard: "btn-dashboard-back"
+  dashboard: "btn-dashboard-back",
+  "flashcard-summary": "btn-summary-back"
 };
 
 function fcAnyOverlayOpen() {
