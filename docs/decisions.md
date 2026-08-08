@@ -1,5 +1,21 @@
 # Decision Log
 
+## 2026-08-09 — Flashcard session summary screen
+
+Finishing a flashcard session previously called `returnFromStudy()` directly from the Finish button (the last card's relabeled Next button) — straight back to the lesson, no feedback of any kind. Quiz mode already had this covered via its Results screen (score ring/percentage/grade), so scope was Flashcard mode only.
+
+**New per-session state, not persisted server-side**: `state.studySessionLog` (`{cardId: "learning"|"hard"|"known"|"confident"}`, written in `markCard()` alongside the existing `studyKnownMap` write) and `state.studySessionNewSet` (snapshotted once at session start in `startStudy()`, from `!card.last_studied_at` on the freshly-fetched card list — before any grading in the session could change it). Both reset per session, not accumulated across sessions.
+
+**Keyed by cardId, not appended as an array** — re-grading the same card via Prev/Next (already possible before this feature) overwrites its entry rather than double-counting it, so the summary always reflects each card's *final* status for the session, not every intermediate grading event.
+
+**"New" is a session-start snapshot, deliberately not re-checked at summary time** — after grading, a card's `last_studied_at`/`fsrs_state` would no longer be null even server-side, so re-deriving "was this new" from current data at the end of the session would make every graded card look like a review. The whole point of a new-vs-review count is "what was true when the session began."
+
+**Skipped-card note**: `state.studyCards.length - Object.keys(studySessionLog).length` — cards the user navigated past without pressing a grade button (the mark buttons aren't mandatory before Next/Prev, only gated behind having flipped the card at least once). Shown only when nonzero.
+
+**Reused `diffBar()`** (the same horizontal-bar component already powering the Dashboard's Card Difficulty Breakdown) for the 4-status breakdown, colored via `var(--danger)`/`var(--warning)`/`var(--success)`/`var(--primary)` — the same CSS custom properties the grading buttons themselves use, so the bars map 1:1 to the buttons the user actually pressed, and (unlike the difficulty breakdown's existing hardcoded hex colors) correctly re-themes for dark mode.
+
+**Early Exit (`btn-fc-back`) deliberately skips the summary**, still calling `returnFromStudy()` directly — bailing out mid-session isn't "completing" it, and showing a completion-flavored screen there would be misleading.
+
 ## 2026-08-07 — Long-press-to-copy vs. swipe-to-grade conflict; swipe hint i18n
 
 Two mobile-only bugs reported together: (1) long-pressing a flashcard to select/copy text would sometimes accidentally grade the card as known/unlearned; (2) the swipe hint labels always showed Vietnamese ("Biết rồi"/"Học lại") regardless of the app's language setting.
