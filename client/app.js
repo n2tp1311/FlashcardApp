@@ -264,6 +264,7 @@ Object.assign(TRANSLATIONS.en, {
   "summary.new": "New",
   "summary.review": "Review",
   "summary.skippedNote": "{n} card(s) skipped (not graded)",
+  "summary.reviewAction": "Review",
 
   "confirm.deleteCard": "Delete this card?",
   "common.true": "True",
@@ -714,6 +715,7 @@ Object.assign(TRANSLATIONS.vi, {
   "summary.new": "Mới",
   "summary.review": "Ôn tập",
   "summary.skippedNote": "{n} thẻ đã bỏ qua (chưa chấm điểm)",
+  "summary.reviewAction": "Xem lại",
 
   "confirm.deleteCard": "Xóa thẻ này?",
   "common.true": "Đúng",
@@ -4164,6 +4166,14 @@ document.getElementById("btn-summary-back").addEventListener("click", function()
   returnFromStudy();
 });
 
+// Lets the user browse back through the session's cards (Prev/Next) instead of only
+// being able to leave — useful now that finishing the last card auto-shows this screen
+// with no pause to look it over first.
+document.getElementById("btn-summary-review").addEventListener("click", function() {
+  showScreen("flashcard");
+  renderFlashcard();
+});
+
 document.getElementById("btn-setup-back").addEventListener("click", function() {
   returnFromStudy();
 });
@@ -4655,11 +4665,16 @@ function markCard(known, grade) {
   }
 
   // Auto-advance — extended when the not-due hint is showing so it's actually readable.
+  // Grading the last card auto-finishes the session (shows the summary) instead of
+  // sitting there waiting for a manual Finish click — the button stays as a fallback for
+  // a last card the user navigated to without grading (skipped).
   var advanceDelay = stillNotDue ? 1200 : 400;
   state.fcAdvanceTimer = setTimeout(function() {
     if (state.studyIndex < state.studyCards.length - 1) {
       state.studyIndex++;
       renderFlashcard();
+    } else {
+      showFlashcardSummary();
     }
   }, advanceDelay);
 }
