@@ -245,7 +245,7 @@ User selects:
 2. Card count: 10 / 25 / 50 / All
 3. Filter: All / Due Only / Needs Recall (`last_correct_source === "quiz" AND due` — only ever confirmed via quiz recognition, not active recall; auto-switches Mode to Flashcard) / Still Learning
 4. Direction (Format A only): Term → Def or Def → Term
-5. Mode: Flashcards or Quiz — hint line under the mode picker explains the recall-vs-recognition tradeoff (§5.4's SRS cap)
+5. Mode: Flashcards, Flashcard & Write (types an answer before flipping, forced on for the session — was a Preferences toggle, now its own mode), or Quiz — hint line under the mode picker explains the recall-vs-recognition tradeoff (§5.4's SRS cap)
 6. Live match-count ("N card(s) match this filter") shown before Start Studying, recomputed as the Filter pill changes; zero-match state styled as a warning
 7. Saveable presets: capture the current Count/Filter/Mode/Order selection under a name, reapply or delete later; persisted server-side per-user (server mode only)
 8. Max reviews per day (Preferences setting): caps Due Only/Needs Recall session size to the remaining daily budget, most-overdue cards first — badges/counts elsewhere stay uncapped

@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-08-09 — "Type before flip" becomes a third study mode, not a Preferences toggle
+
+Reverses the explicit design choice recorded in `docs/decisions.md:129-137` (2026-07-27) — that entry's whole point was that this feature had to stay a hidden, opt-in Preferences toggle rather than a Study Setup mode, precisely because a real selectable mode built on the same idea (Recall mode) had been tried and rejected twice for adding friction. On direct user request ("now we have 3 mode: 1. flashcard 2. flashcard & write 3. quiz"), it's now `#setup-mode`'s third pill, `flashcard-write`.
+
+**The invariant that mattered most in the original decision still holds**: no new grading pathway. "Flashcard & Write" is not a revival of the old free-text-graded Recall mode — it's exactly the existing Flashcard mode's cards, grading buttons, and SRS behavior, with the type-before-flip input forced visible for the session instead of user-toggled. `startStudy()` now sets `state.typeToCompare = (mode === "flashcard-write")` once at session start (in the same branch as plain `"flashcard"`, which shares its `startFlashcards()` call and `state.studyCards` array) — `renderFlashcard()`'s and the flip-handler's existing logic for that flag is completely unchanged, just re-sourced from the chosen mode instead of a persisted preference.
+
+Removed entirely: the Preferences toggle row, its Save/load wiring (`applyPrefs()`, the modal-open checkbox sync, the Save-handler read), and the now-orphaned `pref.typeBeforeFlip` i18n key. Old accounts with a saved `typeToCompare: true` preference blob simply have that field ignored now — harmless, no migration needed, since the mode choice at the start of every session is what actually decides the input's visibility.
+
 ## 2026-08-09 — Flashcard session summary screen
 
 Finishing a flashcard session previously called `returnFromStudy()` directly from the Finish button (the last card's relabeled Next button) — straight back to the lesson, no feedback of any kind. Quiz mode already had this covered via its Results screen (score ring/percentage/grade), so scope was Flashcard mode only.
@@ -126,7 +134,7 @@ A Railway-bot-authored PR (#1) correctly diagnosed `GET /api/classes/:classId/le
 
 **PR #1 was closed in favor of a direct fix**, referencing the PR in the commit — its own diagnosis and the three-query split were correct and did the harder diagnostic work; the query-planner fix was the one gap found during review.
 
-## 2026-07-27 — Optional "type before flip" toggle, deliberately not a Recall-mode revival
+## 2026-07-27 — Optional "type before flip" toggle, deliberately not a Recall-mode revival (superseded 2026-08-09 — became a third study mode, see top of this file)
 
 User asked, mid-task: "while doing flashcard, I wanna to write out then compare with back flashcard to confirm whether know it or not, but make it optional only." Worth recording why this wasn't treated as a third attempt at Recall mode: this app had a full Recall mode (free-text answer + 3-button self-grade, a separate selectable Study Setup mode) removed 2026-07-02 for adding friction that interrupted study flow, and a later proposal to bring it back was independently rejected again for the same reason ("typing felt slow, self-grading felt subjective" — see the 2026-07-22 "SRS recognition-vs-recall gate" entry below). Flagged this history to the user before building anything.
 
