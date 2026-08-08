@@ -308,12 +308,12 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.days90": "90 days",
   "dashboard.weeklyTrend": "Weekly Study Trend",
   "dashboard.newCardsTrend": "New Cards Trend",
-  "dashboard.periodNote": "Applies to the charts in this section only — the summary card above is all-time, except Avg/Min/Max Study Time which has its own window control.",
+  "dashboard.periodNote": "Applies to the charts in this section only — the summary card above is all-time, except Study Time which has its own window control.",
   "dashboard.srsDistribution": "Memory Interval Distribution",
   "dashboard.studyTime": "Study Time",
   "dashboard.configureMetrics": "Customize metrics",
   "dashboard.configureMetricsHint": "Choose what to show on your summary board, and which metrics to feature at the top.",
-  "dashboard.studyTimeWindowLabel": "Avg/Min/Max window",
+  "dashboard.studyTimeWindowLabel": "Study Time window",
   "dashboard.allMetricsHidden": "All metrics are hidden — customize to show some again.",
   "dashboard.metricHidden": "Hidden",
   "dashboard.metricShow": "Show",
@@ -759,12 +759,12 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.days90": "90 ngày",
   "dashboard.weeklyTrend": "Xu hướng học theo tuần",
   "dashboard.newCardsTrend": "Xu hướng thẻ mới",
-  "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — thẻ tổng quan phía trên tính toàn thời gian, riêng Thời gian học TB/Thấp nhất/Cao nhất có bộ chọn khoảng thời gian riêng.",
+  "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — thẻ tổng quan phía trên tính toàn thời gian, riêng Thời gian học có bộ chọn khoảng thời gian riêng.",
   "dashboard.srsDistribution": "Phân bố khoảng ghi nhớ",
   "dashboard.studyTime": "Thời gian học",
   "dashboard.configureMetrics": "Tùy chỉnh chỉ số",
   "dashboard.configureMetricsHint": "Chọn những gì hiển thị trên bảng tổng quan, và chỉ số nào được nổi bật lên đầu.",
-  "dashboard.studyTimeWindowLabel": "Khoảng TB/Thấp nhất/Cao nhất",
+  "dashboard.studyTimeWindowLabel": "Khoảng thời gian học",
   "dashboard.allMetricsHidden": "Tất cả chỉ số đang ẩn — tùy chỉnh để hiện lại.",
   "dashboard.metricHidden": "Ẩn",
   "dashboard.metricShow": "Hiện",
@@ -5191,14 +5191,15 @@ function _dashMetricIcon(key) {
   return "";
 }
 
-// Appends the active window to Avg/Min/Max Study Time's label, e.g. "Avg/day(7)" for a
-// 7-day window vs plain "Avg/day" for all-time — reads the window off the actual studyTime
-// data just rendered (not the pending state), so the label can never claim a window the
-// displayed numbers don't actually reflect.
+// Appends the active window to Study Time's label, e.g. "Avg/day(7)" for a 7-day window
+// vs plain "Avg/day" for all-time — reads the window off the actual studyTime data just
+// rendered (not the pending state), so the label can never claim a window the displayed
+// numbers don't actually reflect. Covers the total ("studyTime") too, not just Avg/Min/Max
+// — the window slicer scopes all four together.
 function _dashMetricLabel(m, studyTime) {
   var label = t(m.shortLabelKey || m.labelKey);
-  var dailyStatKeys = { avgDaily: 1, minDaily: 1, maxDaily: 1 };
-  if (dailyStatKeys[m.key] && studyTime && studyTime.windowDays) {
+  var windowedKeys = { studyTime: 1, avgDaily: 1, minDaily: 1, maxDaily: 1 };
+  if (windowedKeys[m.key] && studyTime && studyTime.windowDays) {
     label += "(" + studyTime.windowDays + ")";
   }
   return label;
@@ -5206,7 +5207,7 @@ function _dashMetricLabel(m, studyTime) {
 
 function _dashMetricHint(key, studyTime, newCardEstimate) {
   if (key === "sessions") return t("stat.sessionsHint");
-  if (key === "avgDaily" || key === "minDaily" || key === "maxDaily") {
+  if (key === "studyTime" || key === "avgDaily" || key === "minDaily" || key === "maxDaily") {
     var st = studyTime || { trackedDays: 0, windowDays: null };
     var base = t("stat.studyTimeTrackedHint", { n: st.trackedDays });
     return st.windowDays ? base + " — " + t("stat.studyTimeWindowHint", { n: st.windowDays }) : base;

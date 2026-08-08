@@ -287,20 +287,12 @@ router.get("/dashboard", requireAuth, (req, res) => {
     }
   }
 
-  // Total studied (headline "Study Time" stat) is always all-time, regardless of the
-  // avg/min/max window below — it's grouped with the streak/lifetime counts, not the
-  // per-day breakdown.
-  const totalMsRow = db.prepare("SELECT SUM(duration_ms) AS total FROM attempts WHERE user_id = ?").get(uid);
-
-  // Avg/Min/Max per study day — windowed if ?days= is given (clamped 7-90, same range as
-  // /analytics), else all-time (the original, backward-compatible default). Grouped by day
-  // so a day with attempts but no tracked duration (made before duration_ms shipped) is
-  // excluded rather than counted as a 0-minute day, which would skew avg/min down and
-  // always win "min."
-  const parsedWindowDays = parseInt(req.query.days, 10);
-  const windowDays = (!isNaN(parsedWindowDays) && parsedWindowDays > 0)
-    ? Math.min(90, Math.max(7, parsedWindowDays))
-    : null;
+  // Study Time (total + Avg/Min/Max per study day) — windowed if ?days= is given (clamped
+  // 7-90, same range as /analytics), else all-time (the original, backward-compatible
+  // default). Grouped by day so a day with attempts but no tracked duration (made before
+  // duration_ms shipped) is excluded rather than counted as a 0-minute day, which would
+  // skew avg/min down and always win "min."
+  //
   // Cutoff is calendar-day-aligned (date(...) >= date('now', '-N days')), not a raw
   // now-minus-N*86400-seconds instant. A seconds-based cutoff can fall mid-day, so the
   // oldest included day would only get the attempts after that instant summed — a
@@ -309,28 +301,27 @@ router.get("/dashboard", requireAuth, (req, res) => {
   // Min(window) appear lower than Min(all-time), which is otherwise impossible since a
   // window is a subset of complete days. Aligning to full calendar days means every
   // counted day is either wholly in or wholly out — never a partial sum.
+  const parsedWindowDays = parseInt(req.query.days, 10);
+  const windowDays = (!isNaN(parsedWindowDays) && parsedWindowDays > 0)
+    ? Math.min(90, Math.max(7, parsedWindowDays))
+    : null;
   const windowClause = windowDays ? "AND date(created_at, 'unixepoch') >= date('now', ?)" : "";
-  const studyTimeStatsRow = windowDays
-    ? db.prepare(`
-        SELECT AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
-        FROM (
-          SELECT SUM(duration_ms) AS ms
-          FROM attempts
-          WHERE user_id = ? ${windowClause}
-          GROUP BY date(created_at, 'unixepoch')
-          HAVING ms IS NOT NULL
-        )
-      `).get(uid, "-" + windowDays + " days")
-    : db.prepare(`
-        SELECT AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
-        FROM (
-          SELECT SUM(duration_ms) AS ms
-          FROM attempts
-          WHERE user_id = ?
-          GROUP BY date(created_at, 'unixepoch')
-          HAVING ms IS NOT NULL
-        )
-      `).get(uid);
+  const windowParams = windowDays ? [uid, "-" + windowDays + " days"] : [uid];
+
+  const totalMsRow = db.prepare(
+    `SELECT SUM(duration_ms) AS total FROM attempts WHERE user_id = ? ${windowClause}`
+  ).get(...windowParams);
+
+  const studyTimeStatsRow = db.prepare(`
+    SELECT AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
+    FROM (
+      SELECT SUM(duration_ms) AS ms
+      FROM attempts
+      WHERE user_id = ? ${windowClause}
+      GROUP BY date(created_at, 'unixepoch')
+      HAVING ms IS NOT NULL
+    )
+  `).get(...windowParams);
 
   res.json({
     summary: {
