@@ -96,7 +96,7 @@ create table classes (
   user_id       text not null references users(id) on delete cascade,
   name          text not null,
   color         text not null default '#2563eb',
-  icon          text not null default '📖',
+  icon          text not null default 'book', -- icon key (see CLASS_ICON_DEFS); legacy rows may still hold an old emoji, resolved via render-time fallback
   sort_order    integer not null default 0,
   created_at    integer not null default (unixepoch()),
   tags          text -- JSON array of strings, added via migration; normalized (trim/lowercase/dedupe/cap 10) server-side
@@ -903,6 +903,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Delete-card button in study/quiz modes | Done | Trash icon in flashcard toolbar and quiz header; confirms then removes card from the active session |
 | Minimalist icon unification | Done | All screens/modals now use a single feather-style inline-SVG icon set (`ICON_*` constants in app.js) |
 | Text-selection no longer flips flashcard | Done | `#fc-scene` click handler checks `window.getSelection()` before flipping, so selecting text to copy/translate doesn't trigger a flip |
+| Class icon picker redesigned as line-art SVGs | Done | 16 `CLASS_ICON_DEFS` feather-style icons, each with its own fixed accent color; legacy-emoji render-time fallback, no DB migration (§5.5 was previously the emoji picker) |
 
 ### 11.2 Pending Features — Priority Order
 

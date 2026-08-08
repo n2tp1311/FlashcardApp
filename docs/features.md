@@ -28,6 +28,7 @@
 
 ## Classes & Lessons
 - Create/edit/delete classes (icon, color)
+- Class icon picker uses 16 minimalist line-art SVG icons (matching the app's feather-style icon system), each with its own fixed accent color for at-a-glance distinguishability; classes created before this redesign (which stored one of the old 16 emoji) render correctly via a render-time legacy-emoji→icon-key fallback map, no DB migration needed
 - Create/edit/delete lessons (term↔def, MCQ, True/False, or Image↔Def format)
 - Bulk import via pipe-delimited text (MCQ: `question | correct | wrong1 [| wrong2 | wrong3 | wrong4]`; T/F: `statement | true` or `statement | false [;; explanation]`)
 - AI prompt guide with copy button; AI generates 2–4 distractors per card; length rule relaxed — options should be comparable but natural phrasing takes priority over exact word-count matching
