@@ -74,7 +74,7 @@ router.post("/", requireAuth, (req, res) => {
   const id = genId();
   db.prepare(
     "INSERT INTO classes (id, user_id, name, color, icon, sort_order, level, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-  ).run(id, req.session.userId, name, color || "#2563eb", icon || "📚", count, normalizeLevel(level, null), JSON.stringify(tags));
+  ).run(id, req.session.userId, name, color || "#2563eb", icon || "book", count, normalizeLevel(level, null), JSON.stringify(tags));
   res.status(201).json(parseClassTags(db.prepare("SELECT * FROM classes WHERE id = ?").get(id)));
 });
 

@@ -228,7 +228,7 @@ body {
   transition: background 0.1s, color 0.1s;
 }
 .sidebar-class-item:hover { background: var(--surface2); color: var(--text); }
-.sidebar-class-icon { flex-shrink: 0; font-size: 1rem; }
+.sidebar-class-icon { flex-shrink: 0; display: inline-flex; }
 
 .setup-filter-hint {
   font-size: 0.78rem;
@@ -434,6 +434,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.screen-title svg { vertical-align: -3px; }
 
 .header-actions {
   display: flex;
@@ -590,7 +591,8 @@ body {
   border-radius: var(--radius) var(--radius) 0 0;
 }
 
-.class-icon { font-size: 1.75rem; margin-bottom: 10px; display: block; }
+.class-icon { margin-bottom: 10px; display: block; }
+.class-icon svg { display: block; }
 
 .class-name {
   font-size: 0.9375rem;
@@ -1003,11 +1005,11 @@ body {
 .icon-picker { display: flex; gap: 6px; flex-wrap: wrap; }
 
 .icon-opt {
-  font-size: 1.375rem;
   cursor: pointer;
   padding: 4px;
   border-radius: 6px;
   border: 2px solid transparent;
+  display: inline-flex;
   transition: border-color var(--transition), background var(--transition);
 }
 
@@ -3046,10 +3048,11 @@ code {
 }
 
 .search-result-icon {
-  font-size: 1.1rem;
   flex-shrink: 0;
   width: 24px;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-result-main {
@@ -3246,10 +3249,11 @@ code {
 }
 
 .class-list-icon {
-  font-size: 1.4rem;
   flex-shrink: 0;
   width: 28px;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .class-list-info {

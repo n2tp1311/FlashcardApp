@@ -34,6 +34,58 @@ var ICON_ARROW_RIGHT  = svgIcon('<line x1="5" y1="12" x2="19" y2="12"/><polyline
 var ICON_LIGHTBULB    = svgIcon('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/>');
 
 /* ============================
+   CLASS ICONS (minimalist line-art, one fixed accent color per icon —
+   keeps classes visually distinguishable on Home without going back to
+   full-color emoji; see docs/decisions.md)
+   ============================ */
+// stroke is a real hex color per icon, not currentColor — svgIcon() hardcodes
+// currentColor for chrome icons, so class icons get their own tiny builder.
+function classSvgIcon(pathInner, color, size) {
+  size = size || 20;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + pathInner + '</svg>';
+}
+
+var CLASS_ICON_DEFS = [
+  { key: "book",           color: "#2563eb", path: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
+  { key: "hash",            color: "#d97706", path: '<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>' },
+  { key: "microscope",      color: "#7c3aed", path: '<path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9.5"/>' },
+  { key: "flask",           color: "#0891b2", path: '<path d="M10 2v7.31"/><path d="M14 9.31V2"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.5 16h13"/>' },
+  { key: "dna",             color: "#db2777", path: '<path d="M7 3c0 6 10 6 10 12"/><path d="M17 21c0-6-10-6-10-12"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="8" y1="17" x2="16" y2="17"/>' },
+  { key: "target",          color: "#dc2626", path: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>' },
+  { key: "lightbulb",       color: "#eab308", path: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/>' },
+  { key: "monitor",         color: "#64748b", path: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>' },
+  { key: "bar-chart",       color: "#16a34a", path: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
+  { key: "globe",           color: "#0ea5e9", path: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>' },
+  { key: "zap",             color: "#f97316", path: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
+  { key: "graduation-cap",  color: "#4f46e5", path: '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>' },
+  { key: "landmark",        color: "#78716c", path: '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 21 8 3 8"/>' },
+  { key: "test-tube",       color: "#059669", path: '<path d="M9 2v17a3 3 0 0 0 6 0V2"/><line x1="7" y1="2" x2="17" y2="2"/><line x1="9" y1="14" x2="15" y2="14"/>' },
+  { key: "triangle-ruler",  color: "#c026d3", path: '<path d="M4 20 13 4h2l5 16z"/><line x1="8" y1="20" x2="8" y2="17"/><line x1="11" y1="20" x2="11" y2="16"/><line x1="14" y1="20" x2="14" y2="15"/>' },
+  { key: "telescope",       color: "#1e3a8a", path: '<path d="M6 19 16 4"/><path d="M6 19 20 8"/><path d="M16 4 20 8"/><path d="M6 19 3 22"/><path d="M6 19 9 22"/><line x1="6" y1="19" x2="6" y2="23"/>' }
+];
+var CLASS_ICON_BY_KEY = Object.create(null);
+CLASS_ICON_DEFS.forEach(function(d) { CLASS_ICON_BY_KEY[d.key] = d; });
+var CLASS_ICON_DEFAULT_KEY = "book";
+// Old classes have icon = a raw emoji from the previous picker; render-time fallback
+// (not a DB migration) resolves those to the matching new key, positionally by the old
+// CLASS_ICONS order, so nobody's existing choice silently reverts to the default.
+var LEGACY_CLASS_ICON_EMOJI_TO_KEY = Object.assign(Object.create(null), {
+  "📚": "book", "🧮": "hash", "🔬": "microscope", "⚗️": "flask",
+  "🧬": "dna", "🎯": "target", "💡": "lightbulb", "🖥️": "monitor",
+  "📊": "bar-chart", "🌍": "globe", "⚡": "zap", "🎓": "graduation-cap",
+  "🏛️": "landmark", "🧪": "test-tube", "📐": "triangle-ruler", "🔭": "telescope"
+});
+function classIconKey(icon) {
+  if (typeof icon === "string" && CLASS_ICON_BY_KEY[icon]) return icon;
+  if (typeof icon === "string" && LEGACY_CLASS_ICON_EMOJI_TO_KEY[icon]) return LEGACY_CLASS_ICON_EMOJI_TO_KEY[icon];
+  return CLASS_ICON_DEFAULT_KEY;
+}
+function classIconHtml(icon, size) {
+  var def = CLASS_ICON_BY_KEY[classIconKey(icon)];
+  return classSvgIcon(def.path, def.color, size);
+}
+
+/* ============================
    I18N (English / Vietnamese)
    TRANSLATIONS is populated screen-by-screen below; t() falls back
    EN -> raw key so a missing entry degrades instead of crashing.
@@ -1919,7 +1971,7 @@ function restoreLastScreen() {
   if (saved.screen === "class" && saved.classId) {
     store.getClass(saved.classId).then(function(cls) {
       state.currentClass = cls;
-      document.getElementById("class-detail-name").textContent = cls.icon + " " + cls.name;
+      document.getElementById("class-detail-name").innerHTML = classIconHtml(cls.icon) + " " + escHtml(cls.name);
       setSelectMode(false);
       renderLessons();
       showScreen("class");
@@ -1992,7 +2044,6 @@ var CLASS_COLORS = [
   "#d97706","#16a34a","#0891b2","#64748b"
 ];
 
-var CLASS_ICONS = ["📚","🧮","🔬","⚗️","🧬","🎯","💡","🖥️","📊","🌍","⚡","🎓","🏛️","🧪","📐","🔭"];
 
 /* ============================
    HOME SCREEN — Class List
@@ -2236,7 +2287,7 @@ function _renderClassGridCard(cls, container) {
   card.dataset.classId = cls.id;
   card.innerHTML =
     '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
-    '<span class="class-icon">' + cls.icon + '</span>' +
+    '<span class="class-icon">' + classIconHtml(cls.icon, 28) + '</span>' +
     '<div class="class-name">' + escHtml(cls.name) + '</div>' +
     '<div class="class-meta" id="cls-meta-' + cls.id + '">' + t("common.loading") + '</div>' +
     (cls.tags && cls.tags.length
@@ -2303,7 +2354,7 @@ function _renderClassListRow(cls, container) {
   row.dataset.classId = cls.id;
   row.innerHTML =
     '<div class="class-list-colorbar" style="background:' + cls.color + '"></div>' +
-    '<span class="class-list-icon">' + cls.icon + '</span>' +
+    '<span class="class-list-icon">' + classIconHtml(cls.icon, 22) + '</span>' +
     '<div class="class-list-info">' +
       '<div class="class-list-name">' + escHtml(cls.name) + '</div>' +
       '<div class="class-list-meta" id="cls-meta-' + cls.id + '">' + t("common.loading") + '</div>' +
@@ -2468,7 +2519,7 @@ function openClass(classId) {
     state.lessonFilter = "all";
     state._lessonAccuracyMap = {};
     var nameEl = document.getElementById("class-detail-name");
-    nameEl.innerHTML = escHtml(cls.icon + " " + cls.name) +
+    nameEl.innerHTML = classIconHtml(cls.icon) + " " + escHtml(cls.name) +
       (cls.archived ? ' <span class="archived-badge">' + t("archive.archived") + '</span>' : "");
     document.getElementById("btn-archive-class").innerHTML = (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + " " + (cls.archived ? t("class.unarchiveClass") : t("class.archiveClass"));
     setSelectMode(false);
@@ -2516,11 +2567,11 @@ function initColorPicker() {
 function initIconPicker() {
   var picker = document.getElementById("icon-picker");
   picker.innerHTML = "";
-  CLASS_ICONS.forEach(function(icon) {
+  CLASS_ICON_DEFS.forEach(function(def) {
     var opt = document.createElement("span");
     opt.className = "icon-opt";
-    opt.textContent = icon;
-    opt.dataset.icon = icon;
+    opt.innerHTML = classSvgIcon(def.path, def.color, 20);
+    opt.dataset.icon = def.key;
     opt.addEventListener("click", function() {
       picker.querySelectorAll(".icon-opt").forEach(function(o) { o.classList.remove("active"); });
       this.classList.add("active");
@@ -2557,7 +2608,7 @@ function openEditClass(classId) {
     var colorSwatch = document.querySelector('[data-color="' + cls.color + '"]');
     if (colorSwatch) colorSwatch.classList.add("active");
     else document.querySelector("#color-picker .color-swatch").classList.add("active");
-    var iconOpt = document.querySelector('[data-icon="' + cls.icon + '"]');
+    var iconOpt = document.querySelector('[data-icon="' + classIconKey(cls.icon) + '"]');
     if (iconOpt) iconOpt.classList.add("active");
     else document.querySelector("#icon-picker .icon-opt").classList.add("active");
     openModal("class");
@@ -2570,7 +2621,7 @@ document.getElementById("btn-save-class").addEventListener("click", function() {
   var active_icon  = document.querySelector("#icon-picker .icon-opt.active");
   if (!name) { alert(t("validate.enterClassName")); return; }
   var color = active_color ? active_color.dataset.color : CLASS_COLORS[0];
-  var icon  = active_icon  ? active_icon.dataset.icon   : CLASS_ICONS[0];
+  var icon  = active_icon  ? active_icon.dataset.icon   : CLASS_ICON_DEFAULT_KEY;
   var levelVal = document.getElementById("class-level-input").value.trim();
   var level = levelVal !== "" ? parseInt(levelVal, 10) : null;
   if (level !== null && isNaN(level)) { alert(t("validate.levelMustBeNumber")); return; }
@@ -6505,7 +6556,7 @@ function renderSidebarClasses(classes) {
     li.className = "sidebar-class-item";
     li.title = cls.name;
     li.innerHTML =
-      '<span class="sidebar-class-icon">' + escHtml(cls.icon || "📚") + '</span>' +
+      '<span class="sidebar-class-icon">' + classIconHtml(cls.icon, 14) + '</span>' +
       '<span class="sidebar-class-name">' + escHtml(cls.name) + '</span>';
     if (cls.due_count > 0) {
       li.innerHTML += '<span class="due-badge" style="font-size:0.65rem;padding:1px 5px">' + cls.due_count + '</span>';
@@ -6937,7 +6988,7 @@ function renderSharedWithMe() {
         card.className = "class-card shared-class-card";
         card.innerHTML =
           '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
-          '<span class="class-icon">' + cls.icon + '</span>' +
+          '<span class="class-icon">' + classIconHtml(cls.icon, 28) + '</span>' +
           '<div class="class-name">' + escHtml(cls.name) + '</div>' +
           '<div class="class-meta">by ' + escHtml(cls.owner_name) + '</div>' +
           '<div class="class-card-actions">' +
@@ -6974,7 +7025,7 @@ function openSharedClassStudy(cls) {
   state.lessonFilter = "all";
   state._lessonAccuracyMap = {};
   state.sharedViewMode = true;
-  document.getElementById("class-detail-name").textContent = cls.icon + " " + cls.name;
+  document.getElementById("class-detail-name").innerHTML = classIconHtml(cls.icon) + " " + escHtml(cls.name);
   renderLessons();
   showScreen("class");
 }
@@ -6992,7 +7043,7 @@ if (shareToken) {
 }
 
 function renderShareScreen(data, token) {
-  document.getElementById("share-class-name").textContent = data.cls.icon + " " + data.cls.name;
+  document.getElementById("share-class-name").innerHTML = classIconHtml(data.cls.icon) + " " + escHtml(data.cls.name);
   document.getElementById("share-owner-label").textContent = t("share.byOwner", { name: data.ownerName });
 
   var lessonList = document.getElementById("share-lesson-list");
@@ -7259,7 +7310,7 @@ function renderSearchResults(results, q) {
     var el = document.createElement("div");
     el.className = "search-result-item";
     el.innerHTML =
-      '<span class="search-result-icon">' + escHtml(cls.icon || "📚") + '</span>' +
+      '<span class="search-result-icon">' + classIconHtml(cls.icon, 14) + '</span>' +
       '<div class="search-result-main">' +
         '<div class="search-result-title">' + highlightMatch(cls.name, q) + '</div>' +
       '</div>' +
@@ -7271,7 +7322,7 @@ function renderSearchResults(results, q) {
     var el = document.createElement("div");
     el.className = "search-result-item";
     el.innerHTML =
-      '<span class="search-result-icon">' + escHtml(lesson.class_icon || "📚") + '</span>' +
+      '<span class="search-result-icon">' + classIconHtml(lesson.class_icon, 14) + '</span>' +
       '<div class="search-result-main">' +
         '<div class="search-result-title">' + highlightMatch(lesson.title, q) + '</div>' +
         '<div class="search-result-breadcrumb">' + escHtml(lesson.class_name) + '</div>' +
@@ -7284,7 +7335,7 @@ function renderSearchResults(results, q) {
     var el = document.createElement("div");
     el.className = "search-result-item";
     el.innerHTML =
-      '<span class="search-result-icon">' + escHtml(card.class_icon || "📚") + '</span>' +
+      '<span class="search-result-icon">' + classIconHtml(card.class_icon, 14) + '</span>' +
       '<div class="search-result-main">' +
         '<div class="search-result-title">' + highlightMatch(card.display_text || "", q) + '</div>' +
         '<div class="search-result-breadcrumb">' +

@@ -41,7 +41,7 @@ router.post("/", requireAuth, (req, res) => {
       idMap[cls.id] = newId;
       db.prepare(
         "INSERT OR IGNORE INTO classes (id, user_id, name, color, icon, sort_order, level, archived, created_at, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "📚", cls.sort_order || 0, cls.level ?? null, cls.archived ? 1 : 0, cls.created_at || Math.floor(Date.now()/1000), cls.tags || null);
+      ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "book", cls.sort_order || 0, cls.level ?? null, cls.archived ? 1 : 0, cls.created_at || Math.floor(Date.now()/1000), cls.tags || null);
     });
 
     lessons.forEach(les => {
