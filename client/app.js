@@ -130,6 +130,7 @@ Object.assign(TRANSLATIONS.en, {
   "sort.nameAZ": "Name (A–Z)",
   "sort.dueCount": "Due count",
   "sort.dateAdded": "Date added",
+  "sort.lastActivity": "Last activity",
   "sort.toggleDirection": "Toggle sort direction",
   "home.tagFilterToggle": "Filter by tag",
   "archive.showArchived": "Show archived classes",
@@ -582,6 +583,7 @@ Object.assign(TRANSLATIONS.vi, {
   "sort.nameAZ": "Tên (A–Z)",
   "sort.dueCount": "Số thẻ cần ôn",
   "sort.dateAdded": "Ngày thêm",
+  "sort.lastActivity": "Hoạt động gần nhất",
   "sort.toggleDirection": "Đổi chiều sắp xếp",
   "home.tagFilterToggle": "Lọc theo tag",
   "archive.showArchived": "Hiện lớp đã lưu trữ",
@@ -2067,6 +2069,8 @@ function sortClasses(classes, key, dir) {
       r = (a.due_count || 0) - (b.due_count || 0);
     } else if (key === "date_added") {
       r = (a.created_at || 0) - (b.created_at || 0);
+    } else if (key === "last_activity") {
+      r = (a.last_activity_at || 0) - (b.last_activity_at || 0);
     } else {
       return 0;
     }

@@ -38,7 +38,8 @@ router.get("/", requireAuth, (req, res) => {
   const uid    = req.session.userId;
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = db.prepare(
-    "SELECT cl.*, CASE WHEN cl.archived = 1 THEN 0 ELSE COALESCE(dc.due_count, 0) END AS due_count " +
+    "SELECT cl.*, CASE WHEN cl.archived = 1 THEN 0 ELSE COALESCE(dc.due_count, 0) END AS due_count, " +
+      "la.last_activity_at AS last_activity_at " +
     "FROM classes cl " +
     "LEFT JOIN (" +
       "SELECT l.class_id, COUNT(*) AS due_count " +
@@ -48,9 +49,17 @@ router.get("/", requireAuth, (req, res) => {
       "WHERE cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
       "GROUP BY l.class_id" +
     ") dc ON dc.class_id = cl.id " +
+    "LEFT JOIN (" +
+      "SELECT l.class_id, MAX(a.created_at) AS last_activity_at " +
+      "FROM attempts a " +
+      "JOIN cards ca ON ca.id = a.card_id " +
+      "JOIN lessons l ON ca.lesson_id = l.id " +
+      "WHERE a.user_id = ? " +
+      "GROUP BY l.class_id" +
+    ") la ON la.class_id = cl.id " +
     "WHERE cl.user_id = ? " +
     "ORDER BY cl.sort_order, cl.created_at"
-  ).all(uid, nowSec, uid);
+  ).all(uid, nowSec, uid, uid);
   res.json(rows.map(parseClassTags));
 });
 
