@@ -2853,9 +2853,15 @@ code {
    ANALYTICS SCREEN
    ============================ */
 
-.heatmap-wrap { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; min-width: max-content; }
-.heatmap-months { display: flex; gap: 3px; margin-bottom: 4px; }
-.heatmap-month-label { width: 16px; font-size: 0.625rem; color: var(--text2); white-space: nowrap; overflow: visible; display: inline-block; }
+.heatmap-wrap { padding: 4px 0; min-width: max-content; }
+.heatmap-body { display: flex; gap: 6px; }
+.heatmap-scroll { display: flex; flex-direction: column; }
+.heatmap-months { display: flex; gap: 3px; margin-bottom: 4px; height: 14px; }
+.heatmap-month-label { width: 16px; font-size: 0.625rem; line-height: 14px; color: var(--text2); white-space: nowrap; overflow: visible; display: inline-block; }
+.heatmap-daylabels { display: flex; flex-direction: column; flex-shrink: 0; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+.heatmap-daylabels-spacer { display: block; height: 14px; margin-bottom: 4px; }
+.heatmap-daylabel-col { display: flex; flex-direction: column; gap: 3px; }
+.heatmap-day-label { width: 24px; height: 13px; font-size: 0.625rem; line-height: 13px; color: var(--text2); text-align: right; }
 .heatmap-grid { display: flex; gap: 3px; }
 .heatmap-col { display: flex; flex-direction: column; gap: 3px; }
 .heatmap-cell { width: 13px; height: 13px; border-radius: 2px; }

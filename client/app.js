@@ -394,6 +394,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.attemptsAbbrev": "{n} att.",
   "dashboard.heatmapCellTooltip": "{date}: {duration} studied ({n} attempt(s))",
   "dashboard.monthAbbrevs": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+  "dashboard.dayAbbrevs": "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
 
   "form.name": "Name",
   "class.namePlaceholder": "e.g. Machine Learning",
@@ -847,6 +848,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.attemptsAbbrev": "{n} lượt",
   "dashboard.heatmapCellTooltip": "{date}: học {duration} ({n} lượt làm)",
   "dashboard.monthAbbrevs": "Th1,Th2,Th3,Th4,Th5,Th6,Th7,Th8,Th9,Th10,Th11,Th12",
+  "dashboard.dayAbbrevs": "CN,T2,T3,T4,T5,T6,T7",
 
   "form.name": "Tên",
   "class.namePlaceholder": "vd: Machine Learning",
@@ -5729,6 +5731,7 @@ function renderHeatmap(rows, wrap, days) {
   }
 
   var MONTHS = t("dashboard.monthAbbrevs").split(",");
+  var DAYS = t("dashboard.dayAbbrevs").split(",");
   var firstDay = cells[0].dayOfWeek;
   var padded = [];
   for (var p = 0; p < firstDay; p++) padded.push(null);
@@ -5773,8 +5776,34 @@ function renderHeatmap(rows, wrap, days) {
     labelRow.appendChild(monthLabel);
   }
 
-  wrap.appendChild(labelRow);
-  wrap.appendChild(grid);
+  // Row labels (Sun..Sat) line up with heatmap-grid's rows so a bright/dark horizontal
+  // band is readable as "I always study on Sundays" instead of needing to count rows.
+  var dayLabels = document.createElement("div");
+  dayLabels.className = "heatmap-daylabels";
+  var daySpacer = document.createElement("span");
+  daySpacer.className = "heatmap-daylabels-spacer";
+  dayLabels.appendChild(daySpacer);
+  var dayLabelCol = document.createElement("div");
+  dayLabelCol.className = "heatmap-daylabel-col";
+  for (var dow = 0; dow < 7; dow++) {
+    var dayLabel = document.createElement("span");
+    dayLabel.className = "heatmap-day-label";
+    dayLabel.textContent = DAYS[dow];
+    dayLabelCol.appendChild(dayLabel);
+  }
+  dayLabels.appendChild(dayLabelCol);
+
+  var scrollArea = document.createElement("div");
+  scrollArea.className = "heatmap-scroll";
+  scrollArea.appendChild(labelRow);
+  scrollArea.appendChild(grid);
+
+  var body = document.createElement("div");
+  body.className = "heatmap-body";
+  body.appendChild(dayLabels);
+  body.appendChild(scrollArea);
+
+  wrap.appendChild(body);
 }
 
 function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
