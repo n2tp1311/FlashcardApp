@@ -159,6 +159,7 @@
 - **Tag filter, collapsed behind a funnel icon**: the tag pill row (one pill per distinct class tag, same filtering behavior as the Level slicer) starts collapsed to just a small filter-icon button, since it can grow to many pills and was crowding the header. Clicking the icon expands/collapses the row; expanded state persists in `fc-home-tag-expanded` (defaults to collapsed for everyone). While collapsed, an active (non-"All") tag still shows as a small label next to the icon, and the icon itself gets a colored tint — so the current filter is never invisible just because the row is collapsed
 - **Accuracy per class**: after classes load, `GET /api/stats/accuracy/classes` fetches correct/total attempt counts; each class card (grid) and class row (list) shows a color-coded accuracy pill — green (≥70%), orange (≥40%), red (<40%); hidden until data arrives
 - List-view class titles wrap up to 2 lines (`-webkit-line-clamp`) instead of truncating to a single line with an ellipsis — long class names (book titles, course names) were getting cut down to just a few characters on narrow/mobile viewports
+- **"Last activity" class sort option**: sorts by the most recent attempt timestamp across any card in the class (`last_activity_at`, server-computed); classes with no attempts yet sort as oldest
 
 ## Class Screen — Lesson Format Filter & Accuracy
 
