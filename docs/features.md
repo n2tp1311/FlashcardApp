@@ -58,6 +58,7 @@
 - Per-card correlated subquery for `last_studied_at` replaced with a single `GROUP BY` aggregate JOIN on the attempts table
 - Added `idx_states_user_due ON card_states(user_id, srs_due_at)` and `idx_attempts_cu_created ON attempts(card_id, user_id, created_at)` indexes for faster SRS queries
 - `GET /api/classes/:classId/lessons`: the single query joining `lessons → cards → attempts` with aggregates forced SQLite to fan every card out across all its attempts before grouping, causing multi-second latency for classes with heavily-attempted lessons. Split into three smaller queries (lessons, then per-lesson `last_modified_at`/`last_interacted_at` batch-loaded and merged in JS) — see `docs/decisions.md` for why the attempts query needs `CROSS JOIN` rather than plain `JOIN`
+- `GET /api/lessons/:lessonId/cards`, `POST /api/cards/by-lessons`, `GET /api/stats/lesson/:id`: same category as the classes/lessons fix above — the `last_studied_at` LEFT JOIN aggregated the requesting user's *entire* attempt history (not just the cards being requested) before joining down. Replaced with a batched `card_id IN (...)` lookup (chunked at 500 IDs to stay under SQLite's bound-variable cap); `/stats/lesson/:id` needed no extra query at all since the existing per-card attempts fetch already had the data — see `docs/decisions.md`
 
 ## Study
 - Flashcard mode (flip, mark known/learning)
