@@ -46,18 +46,30 @@ router.get("/lesson/:id", requireAuth, (req, res) => {
 
   const userId = req.session.userId;
   const cards = db.prepare(
-    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, la.last_studied_at " +
+    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
-    "LEFT JOIN (SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE user_id = ? GROUP BY card_id) la ON la.card_id = cards.id " +
     "WHERE cards.lesson_id = ? " +
     "ORDER BY cards.sort_order, cards.created_at"
-  ).all(userId, userId, req.params.id);
-  const statsMap = Object.fromEntries(
-    getCardsWithStats(cards.map(c => c.id), userId)
-      .map(({ cardId, stats }) => [cardId, stats])
-  );
-  res.json({ cards: cards.map(c => ({ ...c, data: JSON.parse(c.data) })), statsMap });
+  ).all(userId, req.params.id);
+
+  // getCardsWithStats already does a single indexed `card_id IN (...) AND user_id = ?`
+  // pass over attempts (idx_attempts_cu) and computes lastAttemptAt per card along the
+  // way — reuse it instead of a second query. The old last_studied_at column came from a
+  // LEFT JOIN against a per-user GROUP BY subquery (aggregating every attempt the user
+  // has ever made, across every lesson, before joining down to this lesson's cards) and
+  // measured ~24s cold on a real account.
+  const statsMap = {};
+  const lastStudiedMap = {};
+  getCardsWithStats(cards.map(c => c.id), userId).forEach(({ cardId, stats, lastAttemptAt }) => {
+    statsMap[cardId] = stats;
+    lastStudiedMap[cardId] = lastAttemptAt || null;
+  });
+
+  res.json({
+    cards: cards.map(c => ({ ...c, data: JSON.parse(c.data), last_studied_at: lastStudiedMap[c.id] })),
+    statsMap
+  });
 });
 
 // GET /api/stats/class/:id

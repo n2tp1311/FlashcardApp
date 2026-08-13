@@ -58,6 +58,27 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+// Batched instead of a LEFT JOIN against a per-user GROUP BY subquery — that pattern
+// aggregates the user's entire attempt history before joining, and was measured taking
+// ~24s cold on a real account's data instead of the ~1ms an indexed card_id IN (...)
+// lookup takes (idx_attempts_cu / idx_attempts_cu_created cover this exactly).
+// Chunked at 500 IDs per query — /cards/by-lessons can pass an arbitrarily large
+// cardIds array (user-controlled lessonIds selection), and SQLite caps bound
+// variables per statement; the old subquery-based JOIN had no such per-card binding.
+const BATCH_SIZE = 500;
+function batchLastStudiedAt(cardIds, userId) {
+  const map = {};
+  for (let i = 0; i < cardIds.length; i += BATCH_SIZE) {
+    const chunk = cardIds.slice(i, i + BATCH_SIZE);
+    const placeholders = chunk.map(() => "?").join(",");
+    const rows = db.prepare(
+      `SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE card_id IN (${placeholders}) AND user_id = ? GROUP BY card_id`
+    ).all(...chunk, userId);
+    rows.forEach(r => { map[r.card_id] = r.last_studied_at; });
+  }
+  return map;
+}
+
 function ownLesson(lessonId, userId) {
   return db.prepare(
     "SELECT l.id, l.format FROM lessons l JOIN classes c ON l.class_id = c.id WHERE l.id = ? AND c.user_id = ?"
@@ -81,16 +102,18 @@ router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   const userId = req.session.userId;
   const lessonId = req.params.lessonId;
 
-  const rows = db.prepare(
+  const cards = db.prepare(
     "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
     "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
-    "cs.fsrs_learning_steps, cs.fsrs_last_review_at, la.last_studied_at " +
+    "cs.fsrs_learning_steps, cs.fsrs_last_review_at " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
-    "LEFT JOIN (SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE user_id = ? GROUP BY card_id) la ON la.card_id = cards.id " +
     "WHERE cards.lesson_id = ? " +
     "ORDER BY cards.sort_order, cards.created_at"
-  ).all(userId, userId, lessonId);
+  ).all(userId, lessonId);
+
+  const lastStudiedMap = batchLastStudiedAt(cards.map(c => c.id), userId);
+  const rows = cards.map(c => ({ ...c, last_studied_at: lastStudiedMap[c.id] ?? null }));
 
   res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) })));
 });
@@ -111,16 +134,18 @@ router.post("/cards/by-lessons", requireAuth, (req, res) => {
   if (owned.length !== lessonIds.length)
     return res.status(404).json({ error: "Not found" });
 
-  const rows = db.prepare(
+  const cards = db.prepare(
     "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
     "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
-    "cs.fsrs_learning_steps, cs.fsrs_last_review_at, la.last_studied_at " +
+    "cs.fsrs_learning_steps, cs.fsrs_last_review_at " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
-    "LEFT JOIN (SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE user_id = ? GROUP BY card_id) la ON la.card_id = cards.id " +
     `WHERE cards.lesson_id IN (${ph}) ` +
     "ORDER BY cards.lesson_id, cards.sort_order, cards.created_at"
-  ).all(userId, userId, ...lessonIds);
+  ).all(userId, ...lessonIds);
+
+  const lastStudiedMap = batchLastStudiedAt(cards.map(c => c.id), userId);
+  const rows = cards.map(c => ({ ...c, last_studied_at: lastStudiedMap[c.id] ?? null }));
 
   res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) })));
 });
