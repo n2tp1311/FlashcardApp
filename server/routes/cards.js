@@ -66,6 +66,10 @@ function genId() {
 // cardIds array (user-controlled lessonIds selection), and SQLite caps bound
 // variables per statement; the old subquery-based JOIN had no such per-card binding.
 const BATCH_SIZE = 500;
+
+// /cards/seen upserts 2 params per card (card_id, user_id); cap chunk size so a large
+// bulk "mark as seen" call never approaches SQLite's per-statement bound-variable limit.
+const SEEN_BATCH_SIZE = 500;
 function batchLastStudiedAt(cardIds, userId) {
   const map = {};
   for (let i = 0; i < cardIds.length; i += BATCH_SIZE) {
@@ -272,13 +276,24 @@ router.post("/cards/seen", requireAuth, (req, res) => {
   if (owned.length !== cardIds.length)
     return res.status(403).json({ error: "Forbidden" });
 
-  // Batch upsert last_seen_at — does NOT touch known or updated_at
-  const upsert = db.prepare(
-    "INSERT INTO card_states (card_id, user_id, last_seen_at) VALUES (?, ?, unixepoch()) " +
-    "ON CONFLICT(card_id, user_id) DO UPDATE SET last_seen_at = unixepoch()"
-  );
+  // Batch upsert last_seen_at — does NOT touch known or updated_at.
+  // Previously this ran one INSERT...ON CONFLICT per card inside a transaction
+  // (ids.forEach(id => upsert.run(id, userId))), which meant N sequential round-trips
+  // to the WASM SQLite engine. For a few hundred cards that serialized into minutes.
+  // Instead, build a single multi-row VALUES(...) statement so all cards are
+  // upserted in one round-trip. Chunked at SEEN_BATCH_SIZE rows per statement (2 bound
+  // params per row) to stay under SQLite's default bound-variable ceiling.
   const batchUpsert = db.transaction((ids) => {
-    ids.forEach(id => upsert.run(id, userId));
+    for (let i = 0; i < ids.length; i += SEEN_BATCH_SIZE) {
+      const chunk = ids.slice(i, i + SEEN_BATCH_SIZE);
+      const values = chunk.map(() => "(?, ?, unixepoch())").join(", ");
+      const params = [];
+      chunk.forEach(id => { params.push(id, userId); });
+      db.prepare(
+        `INSERT INTO card_states (card_id, user_id, last_seen_at) VALUES ${values} ` +
+        "ON CONFLICT(card_id, user_id) DO UPDATE SET last_seen_at = unixepoch()"
+      ).run(...params);
+    }
   });
   batchUpsert(cardIds);
 
