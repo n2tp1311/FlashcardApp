@@ -904,6 +904,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Minimalist icon unification | Done | All screens/modals now use a single feather-style inline-SVG icon set (`ICON_*` constants in app.js) |
 | Text-selection no longer flips flashcard | Done | `#fc-scene` click handler checks `window.getSelection()` before flipping, so selecting text to copy/translate doesn't trigger a flip |
 | Class icon picker redesigned as line-art SVGs | Done | 16 `CLASS_ICON_DEFS` feather-style icons, each with its own fixed accent color; legacy-emoji render-time fallback, no DB migration (§5.5 was previously the emoji picker) |
+| Scalability audit + Tier 0 reliability | Done | Health check, event-loop watchdog (crash-on-hang so Railway's restart policy engages), per-route rate limiting, request logging. Tier 1 (paginate `GET /api/export`, fix N+1 in public `share.js` view) and Tier 2 (move off single-process synchronous SQLite) identified but not started — not yet justified at current real usage scale |
 
 ### 11.2 Pending Features — Priority Order
 
