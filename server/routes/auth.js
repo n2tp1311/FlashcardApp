@@ -6,7 +6,32 @@ const crypto   = require("crypto");
 const db       = require("../db");
 const { sendPasswordReset } = require("../services/mailer");
 const { requireAuth } = require("../middleware/auth");
+const { rateLimit } = require("../middleware/rateLimit");
 const router   = express.Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  message: "Too many login attempts. Try again in a few minutes."
+});
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 5,
+  message: "Too many accounts created from this network. Try again later."
+});
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 5,
+  message: "Too many password reset requests. Try again later."
+});
+const resetPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 10,
+  message: "Too many attempts. Try again later."
+});
+// Unlike the routes above, a hit here makes two outbound calls to Google (token
+// exchange + userinfo) before it can even fail — an unthrottled loop of junk `code`
+// values is free server-initiated outbound traffic with no cap.
+const googleCallbackLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 20,
+  message: "Too many attempts. Try again later."
+});
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -19,7 +44,7 @@ function setSession(req, user) {
 }
 
 // POST /api/auth/register
-router.post("/register", (req, res) => {
+router.post("/register", registerLimiter, (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password)
     return res.status(400).json({ error: "name, email and password are required" });
@@ -40,7 +65,7 @@ router.post("/register", (req, res) => {
 });
 
 // POST /api/auth/login
-router.post("/login", (req, res) => {
+router.post("/login", loginLimiter, (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
     return res.status(400).json({ error: "email and password are required" });
@@ -69,7 +94,7 @@ router.get("/me", (req, res) => {
 // ── Forgot / Reset Password ───────────────────────────────
 
 // POST /api/auth/forgot-password  { email }
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "email required" });
 
@@ -102,7 +127,7 @@ router.post("/forgot-password", async (req, res) => {
 });
 
 // POST /api/auth/reset-password  { token, password }
-router.post("/reset-password", (req, res) => {
+router.post("/reset-password", resetPasswordLimiter, (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ error: "token and password required" });
   if (password.length < 6)  return res.status(400).json({ error: "Password must be at least 6 characters" });
@@ -146,7 +171,7 @@ router.get("/google", (req, res) => {
 });
 
 // GET /api/auth/google/callback
-router.get("/google/callback", async (req, res) => {
+router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
   const { code, error } = req.query;
   if (error || !code) return res.redirect("/?auth_error=google_cancelled");
 
