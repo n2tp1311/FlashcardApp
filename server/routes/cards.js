@@ -6,6 +6,7 @@ const fs      = require("fs");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { previewIntervals } = require("../fsrs");
+const { forEachBatch } = require("../lib/batch");
 const router  = express.Router();
 
 const UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads");
@@ -62,20 +63,18 @@ function genId() {
 // aggregates the user's entire attempt history before joining, and was measured taking
 // ~24s cold on a real account's data instead of the ~1ms an indexed card_id IN (...)
 // lookup takes (idx_attempts_cu / idx_attempts_cu_created cover this exactly).
-// Chunked at 500 IDs per query — /cards/by-lessons can pass an arbitrarily large
-// cardIds array (user-controlled lessonIds selection), and SQLite caps bound
+// forEachBatch chunks at 500 IDs per query — /cards/by-lessons can pass an arbitrarily
+// large cardIds array (user-controlled lessonIds selection), and SQLite caps bound
 // variables per statement; the old subquery-based JOIN had no such per-card binding.
-const BATCH_SIZE = 500;
 function batchLastStudiedAt(cardIds, userId) {
   const map = {};
-  for (let i = 0; i < cardIds.length; i += BATCH_SIZE) {
-    const chunk = cardIds.slice(i, i + BATCH_SIZE);
+  forEachBatch(cardIds, chunk => {
     const placeholders = chunk.map(() => "?").join(",");
     const rows = db.prepare(
       `SELECT card_id, MAX(created_at) AS last_studied_at FROM attempts WHERE card_id IN (${placeholders}) AND user_id = ? GROUP BY card_id`
     ).all(...chunk, userId);
     rows.forEach(r => { map[r.card_id] = r.last_studied_at; });
-  }
+  });
   return map;
 }
 

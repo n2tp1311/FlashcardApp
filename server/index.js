@@ -1,6 +1,7 @@
 "use strict";
 
 const express              = require("express");
+const compression          = require("compression");
 const session              = require("express-session");
 const SQLiteSessionStore   = require("./sessionStore");
 const path                 = require("path");
@@ -29,6 +30,11 @@ if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
 
 // ── Middleware ────────────────────────────────────────────
 app.use(requestLog);
+// gzip the response body — biggest win on GET /api/export (a full account dump can
+// run several MB as JSON) and the larger class/lesson/card list responses. Runs via
+// zlib's async binding (libuv thread pool), not the main thread, so it doesn't add
+// to the synchronous-blocking risk the rest of this reliability pass is about.
+app.use(compression());
 // Auth bodies are always tiny (email/password/token strings) — capped separately
 // and tightly, since express.json() runs before any route's rate limiter, so on
 // login/register/forgot/reset-password a large body gets fully parsed (a
@@ -78,8 +84,9 @@ app.use("/api",         require("./routes/lessons"));
 app.use("/api",         require("./routes/cards"));
 app.use("/api/attempts",require("./routes/attempts"));
 app.use("/api/stats",   require("./routes/stats"));
-app.use("/api/export",  require("./routes/exportImport"));
-app.use("/api/import",  require("./routes/exportImport"));
+const { exportRouter, importRouter } = require("./routes/exportImport");
+app.use("/api/export",  exportRouter);
+app.use("/api/import",  importRouter);
 app.use("/api/share",   require("./routes/share"));
 app.use("/api/review",  require("./routes/review"));
 app.use("/api/upload",  require("./routes/upload"));

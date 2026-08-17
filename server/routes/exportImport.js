@@ -3,14 +3,31 @@
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
-const router  = express.Router();
+const { rateLimit, byUser } = require("../middleware/rateLimit");
+// Two separate routers, not one mounted at both /api/export and /api/import — a
+// single shared router responds to BOTH verbs at BOTH mount points (GET /api/import
+// would silently run the export handler and consume exportLimiter's quota; POST
+// /api/export would run the import handler under a URL that looks read-only). Kept
+// in one file since both handlers share genId() and the same DB shape.
+const exportRouter = express.Router();
+const importRouter = express.Router();
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+// Each of these does several synchronous whole-table scans (export) or a
+// transaction inserting every row of a full account dump (import) — the queries
+// themselves are already properly scoped by user_id (no N+1/unbounded-aggregation
+// bug to fix here, unlike share.js/cards.js), but neither had any throttling
+// against being hit repeatedly in a loop. Keyed by userId, not IP — both sit behind
+// requireAuth, and IP-keying would let unrelated accounts on the same office/campus
+// NAT exhaust each other's quota.
+const exportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: "Too many export requests. Try again later.", keyFn: byUser });
+const importLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: "Too many import requests. Try again later.", keyFn: byUser });
+
 // GET /api/export
-router.get("/", requireAuth, (req, res) => {
+exportRouter.get("/", requireAuth, exportLimiter, (req, res) => {
   const userId = req.session.userId;
   const classes = db.prepare("SELECT * FROM classes WHERE user_id = ?").all(userId);
   const lessons = db.prepare(
@@ -29,7 +46,7 @@ router.get("/", requireAuth, (req, res) => {
 });
 
 // POST /api/import
-router.post("/", requireAuth, (req, res) => {
+importRouter.post("/", requireAuth, importLimiter, (req, res) => {
   const userId = req.session.userId;
   const { classes = [], lessons = [], cards = [], attempts = [], states = [] } = req.body;
 
@@ -86,4 +103,4 @@ router.post("/", requireAuth, (req, res) => {
   res.json({ ok: true, imported: { classes: classes.length, lessons: lessons.length, cards: cards.length } });
 });
 
-module.exports = router;
+module.exports = { exportRouter, importRouter };
