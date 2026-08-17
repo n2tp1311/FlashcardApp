@@ -939,3 +939,87 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Modal blank-screen on close | `closeAllModals()` scoped to `#modal-overlay .modal`; defensive `.remove("hidden")` added in share/prompt-guide openers |
 | Dev reset token exposed in production | Suppressed when `NODE_ENV === "production"` |
 | SQLite lock file on container restart | Lock file `flashcards.db.lock` removed on server startup |
+
+## 12. Tier 2 Migration Plan: node-sqlite3-wasm → PostgreSQL (not started)
+
+Reference plan for the scalability audit's Tier 2 (§11.1 row "Scalability Tier 1"). **Not scheduled** — see trigger conditions below. Written 2026-08-17 so the design decisions and codebase-specific gotchas aren't lost by the time this is actually picked up.
+
+### 12.1 Why this tier exists
+
+`node-sqlite3-wasm` is synchronous and single-process — the whole DB is loaded into one Node process's memory (`server/db.js`). Every query blocks that process's event loop for its duration, and only one process may ever safely touch `data/flashcards.db` (a second process touching it concurrently caused a documented historical corruption incident). Tiers 0 and 1 made this constraint *safer* (auto-recovery via the event-loop watchdog, rate limiting, fixed N+1 queries, compression) but didn't remove it — a genuinely large synchronous operation still blocks every concurrent user. Tier 2 removes the constraint itself by moving to a real client-server database.
+
+### 12.2 Trigger conditions — don't start until one of these is true
+
+- Watchdog restarts recurring even after Tiers 0/1 are in place
+- Wanting multiple Railway instances for cost/performance reasons
+- Real concurrent-user growth, not hypothetical (real scale as of 2026-08-17: largest single user ~600 attempts, ~4k cards and ~1.4k attempts total across every user)
+
+### 12.3 Phase 1 — Infrastructure setup
+
+- Provision Railway's native Postgres plugin; add `DATABASE_URL` env var
+- `npm install pg` (node-postgres — the standard driver, most battle-tested)
+- Local dev: add a `postgres` service to `docker-compose.yml`, document `DATABASE_URL` for local dev
+- Keep the old `data/flashcards.db` and the whole `node-sqlite3-wasm` code path in git history (not deleted) until cutover is proven stable — cheap rollback insurance
+
+### 12.4 Phase 2 — Schema translation
+
+Porting `server/db.js`'s `CREATE TABLE` block (§3.3 above). Specific decisions, not generic advice:
+
+| SQLite pattern | Postgres approach | Why |
+|---|---|---|
+| `TEXT PRIMARY KEY` (app-generated `genId()`) | Keep as-is | No reason to switch to `SERIAL`/`UUID` — zero ID-remapping risk in the data migration, zero app-code churn |
+| `INTEGER NOT NULL DEFAULT (unixepoch())` | `INTEGER NOT NULL DEFAULT extract(epoch from now())::int` | **Keep unix-seconds-as-integer semantics**, don't switch to `TIMESTAMPTZ` — the app does raw integer comparison/arithmetic on these everywhere (`srs_due_at <= ?`, `Math.floor(Date.now()/1000)`, the Study Time day-window SQL). Switching types would ripple through nearly every route file for no functional gain |
+| `data TEXT NOT NULL` (JSON blob on `cards`) | Keep as `TEXT`, keep manual `JSON.stringify`/`JSON.parse` | Safest for phase 1. `JSONB` is a legitimate *later* enhancement (native querying/indexing into card data), not needed for the migration itself |
+| `INSERT OR IGNORE` | `INSERT ... ON CONFLICT DO NOTHING` | Direct port |
+| `INSERT OR REPLACE` | `INSERT ... ON CONFLICT (col1, col2) DO UPDATE SET ...` | Needs explicit conflict-target columns (SQLite infers from PK; Postgres doesn't) |
+| `ON CONFLICT(card_id, user_id) DO UPDATE SET ...` (already used in `cards.js`'s `/cards/seen` upsert) | Unchanged | SQLite borrowed this syntax from Postgres — ports verbatim |
+| `CREATE INDEX IF NOT EXISTS` | Unchanged | Postgres supports this too |
+| `CHECK (correct IN (0,1))` | Unchanged | Standard SQL |
+
+### 12.5 Phase 3 — Rewrite `server/db.js` (the biggest single piece)
+
+Two things change simultaneously, and both are unavoidable:
+
+**Placeholders**: SQLite's `?` → Postgres's `$1, $2, $3...`. This hits every SQL string in the codebase (dozens, across ~10 route files). Straightforward for fixed-arity queries; the dynamic `IN (...)` pattern used throughout (`cardIds.map(() => "?").join(",")` — in `cards.js`, `share.js`, `classes.js`, `exportImport.js`, `lib/batch.js`) needs a small helper to emit `$1,$2,...,$N` instead.
+
+**Sync → async**: `node-sqlite3-wasm` is synchronous; `pg` is fully async. Every route handler becomes `async (req, res) => {...}`, every `.get()`/`.all()`/`.run()` call gets an `await`. To keep the diff as mechanical as possible, wrap `pg.Pool` behind a shim that preserves today's call shape:
+
+```js
+function prepare(sql) {
+  return {
+    get: async (...args) => (await pool.query(sql, normalizeArgs(args))).rows[0] || null,
+    all: async (...args) => (await pool.query(sql, normalizeArgs(args))).rows,
+    run: async (...args) => { const r = await pool.query(sql, normalizeArgs(args)); return { changes: r.rowCount }; }
+  };
+}
+```
+This keeps `db.prepare(sql).get(...)` recognizable at every call site — only `await` and the enclosing `async` need adding, not a full rewrite of call-site structure.
+
+**`db.transaction()` needs a real redesign, not a shim.** Today it's `db.exec("BEGIN")` / `COMMIT` on a shared synchronous connection (`server/db.js`). With `pg`'s pool, `BEGIN` and the queries inside a transaction must run on the *same checked-out client* (`pool.connect()` → `client.query(...)` → `client.release()`), not the pool directly — `pool.query()` can silently hand different calls to different physical connections. This changes the callback signature for every transaction call site: `cards.js` (bulk card insert), `exportImport.js` (import), `share.js` (`cloneClass`) — three places, all need the queries inside the transaction routed through the checked-out client.
+
+### 12.6 Phase 4 — Route-by-route conversion
+
+All ~10 files under `server/routes/` need: `async` handlers, `await` on every DB call, placeholder ports, transaction call-site updates. No automated test suite exists in this project (per CLAUDE.md's mandated verify workflow), so each file needs the same live-server + curl/Playwright verification discipline used throughout the Tier 0/1 work — do this file-by-file, not as one giant diff, so a mistake is traceable to one file's conversion.
+
+### 12.7 Phase 5 — Session store
+
+`server/sessionStore.js` is hand-rolled against SQLite. Don't hand-roll a Postgres version — use `connect-pg-simple`, an established package. Session-store TTL/expiry semantics are easy to get subtly wrong, and this is a solved problem elsewhere.
+
+### 12.8 Phase 6 — Data migration script
+
+One-time script: read every table from the SQLite file (read-only), insert into Postgres. IDs carry over unchanged (app-generated TEXT, not sequential — no remapping needed, unlike a schema using `SERIAL`). Real data is small (~4k cards, ~1.4k attempts total as of 2026-08-17) so this is fast and low-risk *if done right*: run only during a maintenance window with the app fully stopped (no writes racing the copy), test against a copy of real data first in an isolated environment — same caution already established in this project around anything touching the real DB file (see the near-miss documented from investigating the "new cards = 0" report).
+
+### 12.9 Phase 7 — Cutover & rollback
+
+- Stop the app → run the migration script → point `DATABASE_URL` at Postgres → redeploy → verify
+- Old SQLite file is never modified by any of this — rollback is just reverting the deploy and removing `DATABASE_URL`, no data-loss risk on the rollback path itself
+
+### 12.10 What this unlocks afterward (not part of the migration itself)
+
+- Multiple Railway replicas / real horizontal scaling
+- The "never run a second process against the DB file" caution becomes obsolete
+- Later, optional: `JSONB` for card data, Postgres full-text search replacing `search.js`'s `LIKE`-based scans
+
+### 12.11 Honest effort estimate
+
+Multi-day-to-multi-week for correctness, not a quick change — the placeholder/async conversion alone touches every route file, and with no test suite, every file needs manual live verification after conversion. Right fix *if* Tiers 0/1 stop being enough; real work, not a config flip.
