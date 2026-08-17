@@ -66,6 +66,9 @@
 - Rate limiting (`server/middleware/rateLimit.js`) on login, register, forgot-password, reset-password, and the Google OAuth callback — in-memory per-IP, no external dependency, consistent with the app's existing single-process architecture
 - Request logging to stdout (`server/middleware/requestLog.js`): method, matched **route pattern** (never the raw path/query string — several routes carry secrets directly in the URL), status, duration; requests over 2s are tagged `[SLOW]`
 - Auth POST bodies capped at 10kb (scoped to `/api/auth`, separate from the general 10mb JSON limit) so a large body can't be fully parsed — itself a blocking cost — before a route's rate limiter gets a chance to reject it
+- `share.js`'s `getClassData()` (backing the public `GET /api/share/view/:token`, plus class cloning) batched instead of one query per lesson — same N+1 category as the `cards.js`/`stats.js` fixes, extracted into a shared `server/lib/batch.js` helper on its second occurrence
+- Rate limiting extended to every other heavy/synchronous route: `GET /api/export`, `POST /api/import`, `POST /api/share/clone/:token`, `POST /api/share/clone-invite/:classId` (all keyed by user, not IP — an IP-keyed limiter on an authenticated route lets unrelated accounts on a shared office/campus network exhaust each other's quota), and the public `GET /api/share/view/:token` (IP-keyed, since there's no session to key by; capped well above plausible simultaneous traffic from one shared link)
+- gzip/brotli response compression — biggest win on `GET /api/export`, which can run several MB as JSON for a long-lived account; runs off the main thread (zlib's async binding), so it doesn't reintroduce the blocking risk the rest of this reliability work addresses
 
 ## Study
 - Flashcard mode (flip, mark known/learning)
