@@ -154,6 +154,8 @@ Object.assign(TRANSLATIONS.en, {
   "confirm.deleteClass": "Delete class \"{name}\" and all its lessons and cards?",
 
   "stat.dayStreak": "Day Streak",
+  "stat.streakResetsIn": "Resets in {time}",
+  "stat.streakResetsAtHint": "Your streak day resets at UTC midnight (00:00 UTC), not your local midnight.",
   "stat.classes": "Classes",
   "stat.lessons": "Lessons",
   "stat.cards": "Cards",
@@ -608,6 +610,8 @@ Object.assign(TRANSLATIONS.vi, {
   "confirm.deleteClass": "Xóa lớp \"{name}\" cùng toàn bộ bài học và thẻ ghi nhớ?",
 
   "stat.dayStreak": "Ngày liên tục",
+  "stat.streakResetsIn": "Reset sau {time}",
+  "stat.streakResetsAtHint": "Ngày tính chuỗi học của bạn reset vào lúc 00:00 UTC, không phải nửa đêm giờ địa phương.",
   "stat.classes": "Lớp học",
   "stat.lessons": "Bài học",
   "stat.cards": "Thẻ ghi nhớ",
@@ -5227,11 +5231,32 @@ function statCard(val, label, hint) {
   return '<div class="stat-card"' + titleAttr + '><div class="stat-value">' + val + '</div><div class="stat-label">' + label + '</div></div>';
 }
 
-function formatStudyDuration(ms) {
-  var totalMinutes = Math.round((ms || 0) / 60000);
+function _formatHoursMinutes(totalMinutes) {
   var h = Math.floor(totalMinutes / 60);
   var m = totalMinutes % 60;
   return h > 0 ? (h + "h " + m + "m") : (m + "m");
+}
+
+function formatStudyDuration(ms) {
+  return _formatHoursMinutes(Math.round((ms || 0) / 60000));
+}
+
+// Streak/stats "today" is a UTC calendar date server-side (server/routes/stats.js
+// groups by date(created_at, 'unixepoch'), which has no local-time offset applied).
+// This countdown targets that same UTC midnight so it never disagrees with the
+// moment the streak actually rolls over.
+function _msUntilUtcMidnight() {
+  var now = new Date();
+  var next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0);
+  return Math.max(0, next - now.getTime());
+}
+
+function _formatCountdownDuration(ms) {
+  return _formatHoursMinutes(Math.max(0, Math.ceil(ms / 60000)));
+}
+
+function _streakResetCountdownText() {
+  return t("stat.streakResetsIn", { time: _formatCountdownDuration(_msUntilUtcMidnight()) });
 }
 
 function _dashMetricValue(key, streak, studyTime, summary, newCardEstimate) {
@@ -5304,10 +5329,15 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate) {
   }
 
   var mainHtml = highlighted.map(function(m, i) {
+    var countdownHtml = (m.key === "streak")
+      ? '<div class="dash-hero-countdown" data-countdown="streak" title="' + escHtml(t("stat.streakResetsAtHint")) + '">' +
+          escHtml(_streakResetCountdownText()) + '</div>'
+      : '';
     return (i > 0 ? '<div class="dash-hero-divider"></div>' : '') +
       '<div class="dash-hero-stat">' +
         '<div class="dash-hero-value">' + _dashMetricIcon(m.key) + ' ' + _dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate) + '</div>' +
         '<div class="dash-hero-label">' + escHtml(_dashMetricLabel(m, studyTime)) + '</div>' +
+        countdownHtml +
       '</div>';
   }).join('');
 
@@ -5335,6 +5365,20 @@ function _refreshDashHeroCards() {
     hero.replaceWith(wrap.firstElementChild);
   });
 }
+
+// Keeps any rendered streak countdown(s) fresh. A single interval started once at
+// script load rather than per-render/per-navigation — screens here are shown via
+// CSS class toggling (see getActiveScreen()), not mount/unmount, so there's no
+// teardown hook to pair a start/stop with. Each tick just re-queries the DOM for
+// whatever countdown element(s) currently exist and is a no-op when none are
+// mounted, so it's safe to run indefinitely without ever leaking or duplicating.
+function _updateStreakCountdowns() {
+  var els = document.querySelectorAll('.dash-hero-countdown[data-countdown="streak"]');
+  if (!els.length) return;
+  var text = _streakResetCountdownText();
+  els.forEach(function(el) { el.textContent = text; });
+}
+setInterval(_updateStreakCountdowns, 60000);
 
 function heroSubCard(val, label, hint) {
   var titleAttr = hint ? ' title="' + escHtml(hint) + '"' : "";
