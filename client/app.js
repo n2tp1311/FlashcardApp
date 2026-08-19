@@ -6215,6 +6215,10 @@ Order cards within each lesson basic to advanced:
 - Use specific stems; avoid "Which of the following is true about X?"
 - Avoid grammatical clues in the stem that hint at the correct answer.
 - Avoid negation in the correct answer; test what something is, not what it isn't.
+- Keep stems and options under ~25 words — split a compound condition ("X and Y") into separate cards rather than packing it into one stem.
+- Restate the concept name in the stem instead of pronouns like "it" or "this" — a card must stand alone without the source text in view.
+- Use one term per concept throughout a lesson; do not alternate between synonyms for the same thing across cards.
+- Prefer simple present tense and active voice in stems that describe a mechanism or process.
 - For formulas, ask "Which formula represents X?" with all options as formulas.
 - Distractors must be plausible, grammatically parallel, and drawn from concepts in the source text.
 - Keep options comparable in length — avoid options so much shorter or longer that length itself signals the answer. Natural phrasing takes priority over exact word-count matching.
