@@ -1358,6 +1358,48 @@ code {
   text-align: center;
 }
 
+/* .fc-back is a hardcoded dark theme regardless of the app's light/dark mode (see above),
+   so these use the same hardcoded palette instead of the --surface/--text/--border tokens
+   .fc-type-input uses. */
+.fc-retype-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 10px;
+}
+
+.fc-retype-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.fc-retype-input {
+  width: 100%;
+  padding: 7px 12px;
+  min-height: 34px;
+  border: 1.5px solid #334155;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: #e8e6e1;
+  background: #0f172a;
+  text-align: center;
+  outline: none;
+}
+.fc-retype-input:focus { border-color: var(--primary); }
+.fc-retype-input:disabled { opacity: 0.6; }
+
+.fc-retype-feedback {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.fc-retype-feedback-success { color: #4ade80; }
+.fc-retype-feedback-error { color: #f87171; }
+
 #fc-explanation {
   width: 100%;
   max-width: 600px;

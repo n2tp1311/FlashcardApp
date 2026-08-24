@@ -298,6 +298,10 @@ Object.assign(TRANSLATIONS.en, {
   "study.clickToFlip": "Click to flip",
   "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
+  "study.retypeLabel": "Type the answer to continue",
+  "study.retypePlaceholder": "Type the answer...",
+  "study.retypeMismatch": "Not quite — try again.",
+  "study.retypeCorrect": "Correct!",
   "study.speakP": "Speak (P)",
   "study.speakFront": "Speak front",
   "study.speakBack": "Speak back",
@@ -754,6 +758,10 @@ Object.assign(TRANSLATIONS.vi, {
   "study.clickToFlip": "Nhấn để lật thẻ",
   "study.typeYourGuessPlaceholder": "Nhập câu trả lời...",
   "study.yourGuess": "Bạn đã trả lời: {text}",
+  "study.retypeLabel": "Nhập lại đáp án để tiếp tục",
+  "study.retypePlaceholder": "Nhập đáp án...",
+  "study.retypeMismatch": "Chưa đúng — thử lại nhé.",
+  "study.retypeCorrect": "Chính xác!",
   "study.speakP": "Đọc (P)",
   "study.speakFront": "Đọc mặt trước",
   "study.speakBack": "Đọc mặt sau",
@@ -1841,6 +1849,11 @@ var state = {
   // Whether to show the type-before-flip input this session — set by startStudy() from
   // the chosen mode ("flashcard-write" vs plain "flashcard"), not a persisted preference.
   typeToCompare: false,
+  // True while a forced-retype drill (Learning/Hard in Flashcard & Write mode) is pending —
+  // reset defensively on every renderFlashcard() call, not just on success/exit, so it can
+  // never leak between cards or sessions.
+  fcForcedRetype: false,
+  fcRetypeAdvanceDelay: 0,
   dashMetricConfig: Object.assign({}, DEFAULT_DASH_METRIC_CONFIG),
   _dashHeroData: null,
 
@@ -4430,6 +4443,21 @@ function setMarkButtonsEnabled(enabled) {
   });
 }
 
+// Locks out everything but Exit (btn-fc-back, deliberately excluded below) while a
+// forced-retype drill is pending, so the user can't skip the reinforcement step via
+// Prev/Next/Shuffle/Edit/Delete/re-grading. Reaching Exit requires a mouse/tap during the
+// drill — the per-screen keyboard shortcuts (1-4, arrows, Escape, etc.) are already inert
+// while any <input> is focused (isInputFocused()), same as for the pre-existing
+// type-before-flip scratchpad input. The app-wide Ctrl/Cmd+K search shortcut is a documented
+// exception to that (it works from inside any text field everywhere in the app, not just
+// here) and can still navigate away — unchanged, pre-existing behavior, out of scope here.
+function setFlashcardNavLocked(locked) {
+  ["btn-fc-prev", "btn-fc-next", "btn-fc-shuffle", "btn-fc-edit-card", "btn-fc-delete-card",
+   "btn-fc-learning", "btn-fc-hard", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
+    document.getElementById(id).disabled = locked;
+  });
+}
+
 function renderFlashcard() {
   var cards = state.studyCards;
   var i     = state.studyIndex;
@@ -4438,6 +4466,20 @@ function renderFlashcard() {
 
   state.studyCardShownAt = Date.now();
   document.getElementById("fc-notdue-hint").classList.add("hidden");
+
+  // Defensive reset of the forced-retype drill, unconditionally — not just on success/exit —
+  // so it can never leak nav-lock state into the next card or a future session. Must run
+  // BEFORE setMarkButtonsEnabled(false) below: setFlashcardNavLocked(false) re-enables the
+  // same four grading buttons, so the "must flip before grading" disable needs to apply last.
+  state.fcForcedRetype = false;
+  setFlashcardNavLocked(false);
+  document.getElementById("fc-retype-wrap").classList.add("hidden");
+  var retypeInput = document.getElementById("fc-retype-input");
+  retypeInput.value = "";
+  retypeInput.disabled = false;
+  var retypeFeedback = document.getElementById("fc-retype-feedback");
+  retypeFeedback.textContent = "";
+  retypeFeedback.classList.add("hidden");
 
   // Grading buttons stay disabled until the card's been flipped at least once this card —
   // otherwise a grade can be submitted on pure guesswork, without ever seeing the answer.
@@ -4606,6 +4648,7 @@ function renderFcDots() {
     }
     (function(idx) {
       dot.addEventListener("click", function() {
+        if (state.fcForcedRetype) return; // don't let the drill be skipped by jumping cards
         state.studyIndex = idx;
         renderFlashcard();
       });
@@ -4615,6 +4658,8 @@ function renderFcDots() {
 }
 
 document.getElementById("fc-scene").addEventListener("click", function() {
+  // Forced-retype drill pending — don't let the user flip away from the reinforcement step.
+  if (state.fcForcedRetype) return;
   // A click still fires after a text-selection drag (mousedown+mouseup on the
   // same element) — skip the flip so selecting text to copy/translate doesn't flip the card.
   var sel = window.getSelection();
@@ -4654,6 +4699,17 @@ document.getElementById("fc-type-input").addEventListener("keydown", function(e)
   }
 });
 
+document.getElementById("fc-retype-input").addEventListener("click", function(e) {
+  e.stopPropagation(); // mirrors #fc-type-input: don't let a click into the input bubble to #fc-scene and flip
+});
+document.getElementById("fc-retype-input").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    e.stopPropagation();
+    submitForcedRetype();
+  }
+});
+
 document.getElementById("btn-fc-audio-front").addEventListener("click", function(e) {
   e.stopPropagation();
   speakText(state.studyFrontText);
@@ -4668,16 +4724,7 @@ document.getElementById("btn-fc-prev").addEventListener("click", function() {
   if (state.studyIndex > 0) { state.studyIndex--; renderFlashcard(); }
 });
 
-document.getElementById("btn-fc-next").addEventListener("click", function() {
-  if (state.studyIndex < state.studyCards.length - 1) {
-    state.studyIndex++;
-    renderFlashcard();
-  } else {
-    // Finished — show the session summary rather than jumping straight back (an early
-    // Exit via btn-fc-back skips this, since bailing out mid-session isn't "completing" it).
-    showFlashcardSummary();
-  }
-});
+document.getElementById("btn-fc-next").addEventListener("click", advanceFlashcard);
 
 document.getElementById("btn-fc-shuffle").addEventListener("click", function() {
   state.studyCards = shuffle(state.studyCards);
@@ -4710,7 +4757,87 @@ document.getElementById("btn-fc-delete-card").addEventListener("click", function
 });
 
 
-function markCard(known, grade) {
+function normalizeAnswerText(str) {
+  return (str || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+// Same delimiter pattern as splitLatex() — the retype drill compares against the raw,
+// unrendered answer string, which would show the user rendered math but ask them to type
+// back its $...$ source, so skip the drill entirely rather than trap them on an unwinnable card.
+var LATEX_DELIMITER_RE = /\$\$[\s\S]+?\$\$|\$(?!\$)[\s\S]+?(?<!\$)\$/;
+function containsLatex(str) {
+  return LATEX_DELIMITER_RE.test(str || "");
+}
+
+// Finished — show the session summary rather than jumping straight back (an early Exit via
+// btn-fc-back skips this, since bailing out mid-session isn't "completing" it). Shared by
+// btn-fc-next and both auto-advance paths out of markCard() (immediate, and after a
+// successful forced retype).
+function advanceFlashcard() {
+  if (state.studyIndex < state.studyCards.length - 1) {
+    state.studyIndex++;
+    renderFlashcard();
+  } else {
+    showFlashcardSummary();
+  }
+}
+
+function scheduleFlashcardAdvance(delay) {
+  state.fcAdvanceTimer = setTimeout(advanceFlashcard, delay);
+}
+
+function beginForcedRetype(advanceDelay) {
+  // Malformed/empty card data, or LaTeX source the user can't be expected to retype
+  // (renderFlashcard shows it rendered, not as raw markup) — don't block on either.
+  if (!normalizeAnswerText(state.studyBackText) || containsLatex(state.studyBackText)) {
+    scheduleFlashcardAdvance(advanceDelay);
+    return;
+  }
+  state.fcForcedRetype = true;
+  state.fcRetypeAdvanceDelay = advanceDelay;
+  setFlashcardNavLocked(true);
+  var wrap = document.getElementById("fc-retype-wrap");
+  var input = document.getElementById("fc-retype-input");
+  var feedback = document.getElementById("fc-retype-feedback");
+  input.value = "";
+  input.disabled = false;
+  feedback.textContent = "";
+  feedback.classList.add("hidden");
+  wrap.classList.remove("hidden");
+  input.focus();
+}
+
+function submitForcedRetype() {
+  if (!state.fcForcedRetype) return; // guard against double-submit / stray events
+  var input = document.getElementById("fc-retype-input");
+  var feedback = document.getElementById("fc-retype-feedback");
+  var typed = normalizeAnswerText(input.value);
+  var expected = normalizeAnswerText(state.studyBackText);
+  if (typed && typed === expected) {
+    state.fcForcedRetype = false;
+    setFlashcardNavLocked(false);
+    // setFlashcardNavLocked(false) unconditionally re-enables Prev, but renderFlashcard()
+    // disables it specifically on the first card (nothing to go back to) — restore that.
+    document.getElementById("btn-fc-prev").disabled = state.studyIndex === 0;
+    // Re-lock grading only (Prev/Next/Shuffle/Edit/Delete stay unlocked): this card was
+    // already graded once, and the advance timer below is already queued — without this,
+    // clicking a grade button again during the countdown would record a duplicate attempt
+    // and queue a second, overlapping advance timer.
+    setMarkButtonsEnabled(false);
+    input.disabled = true; // belt-and-suspenders: disabled inputs don't get further keydowns
+    feedback.textContent = t("study.retypeCorrect");
+    feedback.className = "fc-retype-feedback fc-retype-feedback-success";
+    feedback.classList.remove("hidden");
+    scheduleFlashcardAdvance(state.fcRetypeAdvanceDelay);
+  } else {
+    feedback.textContent = t("study.retypeMismatch");
+    feedback.className = "fc-retype-feedback fc-retype-feedback-error";
+    feedback.classList.remove("hidden");
+    input.select();
+  }
+}
+
+function markCard(known, grade, forceRetype) {
   var card = state.studyCards[state.studyIndex];
   if (!card) return;
   state.studyKnownMap[card.id] = known;
@@ -4741,18 +4868,17 @@ function markCard(known, grade) {
   // sitting there waiting for a manual Finish click — the button stays as a fallback for
   // a last card the user navigated to without grading (skipped).
   var advanceDelay = stillNotDue ? 1200 : 400;
-  state.fcAdvanceTimer = setTimeout(function() {
-    if (state.studyIndex < state.studyCards.length - 1) {
-      state.studyIndex++;
-      renderFlashcard();
-    } else {
-      showFlashcardSummary();
-    }
-  }, advanceDelay);
+  // In Flashcard & Write mode, Learning/Hard triggers a forced retype of the answer before
+  // advancing — the two grades signaling the card didn't stick, so it's worth reinforcing.
+  if (forceRetype && state.typeToCompare) {
+    beginForcedRetype(advanceDelay);
+  } else {
+    scheduleFlashcardAdvance(advanceDelay);
+  }
 }
 
-document.getElementById("btn-fc-learning").addEventListener("click", function() { markCard(false); });
-document.getElementById("btn-fc-hard").addEventListener("click", function()     { markCard(true, "hard"); });
+document.getElementById("btn-fc-learning").addEventListener("click", function() { markCard(false, null, true); });
+document.getElementById("btn-fc-hard").addEventListener("click", function()     { markCard(true, "hard", true); });
 document.getElementById("btn-fc-known").addEventListener("click", function()    { markCard(true);  });
 document.getElementById("btn-fc-easy").addEventListener("click", function()     { markCard(true, "easy"); });
 
@@ -7904,6 +8030,9 @@ window.addEventListener("popstate", function() {
       if (Math.abs(dx) < 8) return;
       if (Math.abs(dy) > Math.abs(dx)) return;
       if (!state.studyHasFlippedCard) return;
+      // Forced-retype drill pending — don't let swipe-to-grade fire the (now-disabled)
+      // grading buttons and fly the card off mid-drill.
+      if (state.fcForcedRetype) return;
       fcDragging = true;
     }
     fcDx = dx;
