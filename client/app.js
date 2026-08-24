@@ -302,6 +302,8 @@ Object.assign(TRANSLATIONS.en, {
   "study.retypePlaceholder": "Type the answer...",
   "study.retypeMismatch": "Not quite — try again.",
   "study.retypeCorrect": "Correct!",
+  "study.latexConfirmLabel": "Review the answer above, then continue when you've got it",
+  "study.latexContinue": "I recalled it — Continue",
   "study.speakP": "Speak (P)",
   "study.speakFront": "Speak front",
   "study.speakBack": "Speak back",
@@ -762,6 +764,8 @@ Object.assign(TRANSLATIONS.vi, {
   "study.retypePlaceholder": "Nhập đáp án...",
   "study.retypeMismatch": "Chưa đúng — thử lại nhé.",
   "study.retypeCorrect": "Chính xác!",
+  "study.latexConfirmLabel": "Xem lại đáp án ở trên, rồi tiếp tục khi bạn đã nhớ",
+  "study.latexContinue": "Tôi đã nhớ — Tiếp tục",
   "study.speakP": "Đọc (P)",
   "study.speakFront": "Đọc mặt trước",
   "study.speakBack": "Đọc mặt sau",
@@ -4474,6 +4478,7 @@ function renderFlashcard() {
   state.fcForcedRetype = false;
   setFlashcardNavLocked(false);
   document.getElementById("fc-retype-wrap").classList.add("hidden");
+  document.getElementById("fc-latex-confirm-wrap").classList.add("hidden");
   var retypeInput = document.getElementById("fc-retype-input");
   retypeInput.value = "";
   retypeInput.disabled = false;
@@ -4710,6 +4715,25 @@ document.getElementById("fc-retype-input").addEventListener("keydown", function(
   }
 });
 
+document.getElementById("btn-fc-latex-continue").addEventListener("click", function(e) {
+  // stopPropagation matters here: confirmLatexRetype() clears state.fcForcedRetype
+  // synchronously, so without this the same click would still bubble to #fc-scene and pass
+  // its (now-false) guard, flipping the card back on the same click that just confirmed it.
+  e.stopPropagation();
+  confirmLatexRetype();
+});
+document.getElementById("btn-fc-latex-continue").addEventListener("keydown", function(e) {
+  // Without this, Enter/Space on this focused button would first hit the global keydown
+  // handler (isInputFocused() only exempts INPUT/TEXTAREA/SELECT, not BUTTON) — which
+  // preventDefaults the native button activation and routes to #fc-scene's flip instead,
+  // itself a no-op while the drill is active, leaving keyboard users with no way to continue.
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    e.stopPropagation();
+    confirmLatexRetype();
+  }
+});
+
 document.getElementById("btn-fc-audio-front").addEventListener("click", function(e) {
   e.stopPropagation();
   speakText(state.studyFrontText);
@@ -4787,15 +4811,22 @@ function scheduleFlashcardAdvance(delay) {
 }
 
 function beginForcedRetype(advanceDelay) {
-  // Malformed/empty card data, or LaTeX source the user can't be expected to retype
-  // (renderFlashcard shows it rendered, not as raw markup) — don't block on either.
-  if (!normalizeAnswerText(state.studyBackText) || containsLatex(state.studyBackText)) {
+  // Malformed/empty card data — nothing meaningful to retype or confirm; don't block on it.
+  if (!normalizeAnswerText(state.studyBackText)) {
     scheduleFlashcardAdvance(advanceDelay);
     return;
   }
   state.fcForcedRetype = true;
   state.fcRetypeAdvanceDelay = advanceDelay;
   setFlashcardNavLocked(true);
+  if (containsLatex(state.studyBackText)) {
+    // LaTeX source can't be typed back blind — renderFlashcard shows it rendered via KaTeX,
+    // not as raw $...$ markup — so a manual confirm swaps in for the typed check, still
+    // gating the advance the same way a correct retype would.
+    document.getElementById("fc-latex-confirm-wrap").classList.remove("hidden");
+    document.getElementById("btn-fc-latex-continue").focus();
+    return;
+  }
   var wrap = document.getElementById("fc-retype-wrap");
   var input = document.getElementById("fc-retype-input");
   var feedback = document.getElementById("fc-retype-feedback");
@@ -4807,6 +4838,21 @@ function beginForcedRetype(advanceDelay) {
   input.focus();
 }
 
+// Shared by a successful retype and the LaTeX manual-confirm button: re-lock grading only
+// (Prev/Next/Shuffle/Edit/Delete stay unlocked — this card was already graded once), restore
+// Prev's correct first-card state (setFlashcardNavLocked(false) re-enables it unconditionally,
+// but renderFlashcard() disables it specifically on the first card), and queue the advance
+// that was deferred when the drill began. Re-locking grading matters because the advance timer
+// below is already queued — without it, clicking a grade button again during the countdown
+// would record a duplicate attempt and queue a second, overlapping advance timer.
+function completeForcedRetype() {
+  state.fcForcedRetype = false;
+  setFlashcardNavLocked(false);
+  document.getElementById("btn-fc-prev").disabled = state.studyIndex === 0;
+  setMarkButtonsEnabled(false);
+  scheduleFlashcardAdvance(state.fcRetypeAdvanceDelay);
+}
+
 function submitForcedRetype() {
   if (!state.fcForcedRetype) return; // guard against double-submit / stray events
   var input = document.getElementById("fc-retype-input");
@@ -4814,27 +4860,23 @@ function submitForcedRetype() {
   var typed = normalizeAnswerText(input.value);
   var expected = normalizeAnswerText(state.studyBackText);
   if (typed && typed === expected) {
-    state.fcForcedRetype = false;
-    setFlashcardNavLocked(false);
-    // setFlashcardNavLocked(false) unconditionally re-enables Prev, but renderFlashcard()
-    // disables it specifically on the first card (nothing to go back to) — restore that.
-    document.getElementById("btn-fc-prev").disabled = state.studyIndex === 0;
-    // Re-lock grading only (Prev/Next/Shuffle/Edit/Delete stay unlocked): this card was
-    // already graded once, and the advance timer below is already queued — without this,
-    // clicking a grade button again during the countdown would record a duplicate attempt
-    // and queue a second, overlapping advance timer.
-    setMarkButtonsEnabled(false);
     input.disabled = true; // belt-and-suspenders: disabled inputs don't get further keydowns
     feedback.textContent = t("study.retypeCorrect");
     feedback.className = "fc-retype-feedback fc-retype-feedback-success";
     feedback.classList.remove("hidden");
-    scheduleFlashcardAdvance(state.fcRetypeAdvanceDelay);
+    completeForcedRetype();
   } else {
     feedback.textContent = t("study.retypeMismatch");
     feedback.className = "fc-retype-feedback fc-retype-feedback-error";
     feedback.classList.remove("hidden");
     input.select();
   }
+}
+
+function confirmLatexRetype() {
+  if (!state.fcForcedRetype) return; // guard against double-click / stray events
+  document.getElementById("fc-latex-confirm-wrap").classList.add("hidden");
+  completeForcedRetype();
 }
 
 function markCard(known, grade, forceRetype) {

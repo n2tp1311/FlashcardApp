@@ -261,7 +261,7 @@ User selects:
 - Difficulty badge on each card (Easy/Medium/Hard/New + correct/total)
 - Edit card without leaving the study session: pencil icon opens the same edit modal as the lesson card list, pre-filled with the on-screen card's data; saving patches the in-progress session array and re-renders immediately
 - Optional "Type answer before flipping" (Preferences toggle, off by default): text input on the card front, echoed as "Your answer: ..." above the back content on flip for self-comparison — cosmetic only, doesn't touch grading/attempts/SRS
-- Flashcard & Write mode only: grading a card ✗ Still learning or ↩ Hard forces a correct retype of the answer (trim/case/whitespace-insensitive match) on the back face before auto-advance — nav/re-grading/swipe locked for the drill, Exit excepted; skipped for LaTeX-bearing or empty answers
+- Flashcard & Write mode only: grading a card ✗ Still learning or ↩ Hard forces a correct retype of the answer (trim/case/whitespace-insensitive match) on the back face before auto-advance — nav/re-grading/swipe locked for the drill, Exit excepted; skipped entirely only for empty answers. LaTeX-bearing answers get a manual "I recalled it — Continue" confirm instead of the typed check (raw `$...$` source isn't fair to retype against the rendered formula), keyboard-activatable and still gating the advance
 
 ### 5.4 Quiz Mode
 
@@ -907,7 +907,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Class icon picker redesigned as line-art SVGs | Done | 16 `CLASS_ICON_DEFS` feather-style icons, each with its own fixed accent color; legacy-emoji render-time fallback, no DB migration (§5.5 was previously the emoji picker) |
 | Scalability audit + Tier 0 reliability | Done | Health check, event-loop watchdog (crash-on-hang so Railway's restart policy engages), per-route rate limiting, request logging |
 | Scalability Tier 1 | Done | Fixed N+1 in public `share.js` class view (extracted shared `server/lib/batch.js`); rate-limited export/import/clone endpoints; gzip/brotli compression. Tier 2 (move off single-process synchronous SQLite, the only path to real horizontal scaling) identified but not started — not yet justified at current real usage scale |
-| Forced retype on Learning/Hard in Flashcard & Write mode | Done | Correct retype required (trim/case/whitespace-insensitive) before auto-advance; nav/re-grading/swipe locked, Exit excepted; skips LaTeX-bearing/empty answers. §5.3 |
+| Forced retype on Learning/Hard in Flashcard & Write mode | Done | Correct retype required (trim/case/whitespace-insensitive) before auto-advance; nav/re-grading/swipe locked, Exit excepted; empty answers skip it, LaTeX answers get a manual confirm instead of the typed check. §5.3 |
 
 ### 11.2 Pending Features — Priority Order
 
