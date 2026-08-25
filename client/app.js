@@ -302,6 +302,7 @@ Object.assign(TRANSLATIONS.en, {
   "study.retypePlaceholder": "Type the answer...",
   "study.retypeMismatch": "Not quite — try again.",
   "study.retypeCorrect": "Correct!",
+  "study.retypeCloseEnough": "Close enough!",
   "study.latexConfirmLabel": "Review the answer above, then continue when you've got it",
   "study.latexContinue": "I recalled it — Continue",
   "study.speakP": "Speak (P)",
@@ -764,6 +765,7 @@ Object.assign(TRANSLATIONS.vi, {
   "study.retypePlaceholder": "Nhập đáp án...",
   "study.retypeMismatch": "Chưa đúng — thử lại nhé.",
   "study.retypeCorrect": "Chính xác!",
+  "study.retypeCloseEnough": "Gần đúng, chấp nhận!",
   "study.latexConfirmLabel": "Xem lại đáp án ở trên, rồi tiếp tục khi bạn đã nhớ",
   "study.latexContinue": "Tôi đã nhớ — Tiếp tục",
   "study.speakP": "Đọc (P)",
@@ -4782,7 +4784,94 @@ document.getElementById("btn-fc-delete-card").addEventListener("click", function
 
 
 function normalizeAnswerText(str) {
-  return (str || "").trim().toLowerCase().replace(/\s+/g, " ");
+  // NFC first: an IME/OS input path can emit a decomposed form (e.g. some Vietnamese/macOS
+  // dead-key sequences produce "e" + a combining accent as two code points) even when the
+  // stored card text is precomposed — without unifying to one form first, two code-point
+  // arrays that are visually and semantically identical can come out different lengths,
+  // which the fuzzy-match code-point comparison below relies on being consistent.
+  return (str || "").normalize("NFC").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+// Splits by Unicode code point rather than UTF-16 code unit — a plain .length/charCodeAt
+// walk would see each half of a surrogate pair (any emoji or astral character) as its own
+// unit, letting two unrelated emoji that happen to share one half measure as 1 edit apart.
+function toCodePoints(str) {
+  return Array.from(str);
+}
+
+// Checks whether two code-point arrays differ by at most one edit — a dropped, added, or
+// substituted character, or one adjacent transposition (swap) — without a general
+// Levenshtein/DP matrix: the only threshold this feature ever checks is "within 1 edit" (see
+// fuzzyMatchType below — a wider tolerance for longer answers was tried and reverted, see
+// docs/decisions.md), so the standard O(n) two-pointer/single-pass check for exactly that
+// fixed question is enough. No quadratic blowup is possible regardless of input length —
+// unlike an earlier version of this code, there's no need for any length cap: a huge pasted
+// string just runs one O(n) scan and returns false. Character comparison is plain === (not
+// accent-folding) deliberately — see fuzzyMatchType below.
+function isWithinOneEdit(a, b) {
+  var m = a.length, n = b.length;
+  if (Math.abs(m - n) > 1) return false;
+  if (m === n) {
+    var diffCount = 0;
+    var firstDiffIndex = -1;
+    for (var i = 0; i < m; i++) {
+      if (a[i] !== b[i]) {
+        diffCount++;
+        if (diffCount === 1) {
+          firstDiffIndex = i;
+        } else if (diffCount === 2) {
+          var isTransposition = i === firstDiffIndex + 1 &&
+            a[firstDiffIndex] === b[i] && a[i] === b[firstDiffIndex];
+          if (!isTransposition) return false;
+        } else {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  var longer = m > n ? a : b;
+  var shorter = m > n ? b : a;
+  var i = 0, j = 0, usedSkip = false;
+  while (i < longer.length && j < shorter.length) {
+    if (longer[i] === shorter[j]) {
+      i++; j++;
+    } else {
+      if (usedSkip) return false;
+      usedSkip = true;
+      i++;
+    }
+  }
+  return true;
+}
+
+// Tolerance kicks in only once the TRUE answer (expectedCP, not whatever the user typed) is
+// long enough that one edit is a small fraction of it, not most of the word — a short answer
+// still needs to be exact.
+var MIN_LENGTH_FOR_EDIT_TOLERANCE = 4;
+
+// Deliberately does NOT treat accented/unaccented letter pairs as free via a locale collator
+// (e.g. Intl.Collator sensitivity:"base") — tried and reverted in code review: verified that
+// with no explicit locale, Intl.Collator({sensitivity:"base"}).compare("do", "đo") returns 0,
+// silently folding đ and d as equivalent. Those are separate letters in the Vietnamese
+// alphabet (along with ă/â/ê/ô/ơ/ư), not a base letter and its accented form — this app ships
+// a Vietnamese translation, so that folding would silently accept a different Vietnamese word
+// as correct. Plain === means an accent difference just costs 1 edit like any other typo,
+// governed by the same tolerance as everything else — see docs/decisions.md for the full
+// iteration (including why a per-language collator locale isn't a fix: no per-card language
+// metadata exists to pick one). Known, accepted limit either way (unrelated to this specific
+// choice): a same-length wrong word exactly one edit from the correct one (e.g. "horse" vs
+// "house") is indistinguishable from a real typo and will also pass.
+//
+// Returns "exact"/"fuzzy"/null so callers needing different feedback for the two success
+// cases don't have to re-derive typed === expected themselves.
+function fuzzyMatchType(typed, expected) {
+  if (!typed) return null;
+  if (typed === expected) return "exact";
+  var expectedCP = toCodePoints(expected);
+  if (expectedCP.length < MIN_LENGTH_FOR_EDIT_TOLERANCE) return null;
+  var typedCP = toCodePoints(typed);
+  return isWithinOneEdit(typedCP, expectedCP) ? "fuzzy" : null;
 }
 
 // Same delimiter pattern as splitLatex() — the retype drill compares against the raw,
@@ -4859,9 +4948,10 @@ function submitForcedRetype() {
   var feedback = document.getElementById("fc-retype-feedback");
   var typed = normalizeAnswerText(input.value);
   var expected = normalizeAnswerText(state.studyBackText);
-  if (typed && typed === expected) {
+  var matchType = fuzzyMatchType(typed, expected);
+  if (matchType) {
     input.disabled = true; // belt-and-suspenders: disabled inputs don't get further keydowns
-    feedback.textContent = t("study.retypeCorrect");
+    feedback.textContent = t(matchType === "exact" ? "study.retypeCorrect" : "study.retypeCloseEnough");
     feedback.className = "fc-retype-feedback fc-retype-feedback-success";
     feedback.classList.remove("hidden");
     completeForcedRetype();
