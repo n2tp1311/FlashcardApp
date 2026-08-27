@@ -15,6 +15,16 @@ function svgIcon(pathInner, size) {
   return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + pathInner + '</svg>';
 }
 
+// Reused by every "bar fills in to show a percentage" widget (study/quiz progress, class/
+// lesson mini progress, dashboard/stats/analytics fill bars — ~15 call sites) instead of each
+// hand-building its own "scaleX(" + ... + ")" string. Takes a raw 0-1 scale factor, not a
+// 0-100 percentage — callers with a percentage pass pct/100, since some (e.g. the flashcard/
+// quiz progress bars) already have the 0-1 fraction on hand and dividing a percentage back
+// down would be a pointless round-trip.
+function scaleXStyle(scale) {
+  return "scaleX(" + scale + ")";
+}
+
 var ICON_EDIT     = svgIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>');
 var ICON_DELETE   = svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>');
 var ICON_ARCHIVE  = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>');
@@ -2325,7 +2335,7 @@ function _renderClassGridCard(cls, container) {
     (cls.due_count > 0 ? '<span class="due-badge class-due-badge">' + t("count.due", { n: cls.due_count }) + '</span>' : '') +
     '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
     '<div class="progress-mini-wrap" id="cls-prog-wrap-' + cls.id + '" style="display:none">' +
-      '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="width:0%;background:' + cls.color + '"></div></div>' +
+      '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="transform:scaleX(0);background:' + cls.color + '"></div></div>' +
       '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
     '</div>' +
     '<div class="class-card-actions">' +
@@ -2366,7 +2376,7 @@ function _renderClassGridCard(cls, container) {
     if (!wrap) return;
     var pct = Math.round(p.known / p.total * 100);
     wrap.style.display = "";
-    fill.style.width = pct + "%";
+    fill.style.transform = scaleXStyle(pct / 100);
     text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
     text.title = t("class.knownTooltip");
   });
@@ -2391,7 +2401,7 @@ function _renderClassListRow(cls, container) {
         ? '<div class="class-tags">' + cls.tags.map(function(tg) { return '<span class="class-tag-chip">' + escHtml(tg) + '</span>'; }).join('') + '</div>'
         : '') +
       '<div class="progress-mini-wrap" id="cls-prog-wrap-' + cls.id + '" style="display:none">' +
-        '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="width:0%;background:' + cls.color + '"></div></div>' +
+        '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="transform:scaleX(0);background:' + cls.color + '"></div></div>' +
         '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
       '</div>' +
     '</div>' +
@@ -2441,7 +2451,7 @@ function _renderClassListRow(cls, container) {
     if (!wrap) return;
     var pct = Math.round(p.known / p.total * 100);
     wrap.style.display = "";
-    fill.style.width = pct + "%";
+    fill.style.transform = scaleXStyle(pct / 100);
     text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
     text.title = t("class.knownTooltip");
   });
@@ -2830,7 +2840,7 @@ function _renderLessonItems(lessons, accMap) {
           '<div class="lesson-meta" id="les-meta-' + lesson.id + '">' + t("common.loading") + '</div>' +
           (reviewLabel ? '<div class="lesson-due-label' + (isDue ? " is-due" : "") + '">' + reviewLabel + '</div>' : '') +
           '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
-            '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="width:0%"></div></div>' +
+            '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="transform:scaleX(0)"></div></div>' +
             '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +
           '</div>' +
         '</div>' +
@@ -2873,7 +2883,7 @@ function _renderLessonItems(lessons, accMap) {
         if (!wrap) return;
         var pct = Math.round(p.known / p.total * 100);
         wrap.style.display = "";
-        fill.style.width = pct + "%";
+        fill.style.transform = scaleXStyle(pct / 100);
         text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
         text.title = t("class.knownTooltip");
       });
@@ -4464,6 +4474,19 @@ function setFlashcardNavLocked(locked) {
   });
 }
 
+// Instantly (no animation) clears #fc-scene's inline transform left over from a swipe
+// gesture's drag/fly-off/cancel (see initSwipeGestures) — shared by renderFlashcard() and
+// beginForcedRetype(), the only two places that need the card visible/centered again after a
+// swipe grade. Unconditional (no "is there anything to reset" check): a transition/transform
+// toggle is a harmless no-op when there's nothing pending, and branching on it is what
+// previously let the two call sites' copies quietly drift out of sync with each other.
+function resetFlownOffScene(fcSceneEl) {
+  fcSceneEl.style.transition = "none";
+  fcSceneEl.style.transform = "";
+  void fcSceneEl.offsetHeight; // force reflow so transition:none takes effect before it's cleared
+  fcSceneEl.style.transition = "";
+}
+
 function renderFlashcard() {
   var cards = state.studyCards;
   var i     = state.studyIndex;
@@ -4512,7 +4535,7 @@ function renderFlashcard() {
 
   // Progress
   document.getElementById("fc-progress-text").textContent = (i + 1) + " / " + cards.length;
-  document.getElementById("fc-progress-fill").style.width = ((i + 1) / cards.length * 100) + "%";
+  document.getElementById("fc-progress-fill").style.transform = scaleXStyle((i + 1) / cards.length);
 
   // Lesson label (multi-lesson sessions)
   setStudyLessonLabel("fc-lesson-label", card);
@@ -4522,13 +4545,20 @@ function renderFlashcard() {
   // otherwise animate the un-flip over 500ms with the NEW card's content already swapped
   // in below, briefly revealing its answer mid-rotation. Temporarily disabling the
   // transition snaps it to front-facing immediately; the deliberate flip animation (user
-  // clicking/tapping the card) is untouched since that's a separate code path.
+  // clicking/tapping the card) is untouched since that's a separate code path. Order matters:
+  // the class removal (the actual un-flip) must happen while the transition is still
+  // disabled, restoring the transition only afterward — doing it the other way around (reflow
+  // first, restore, then remove the class) would un-flip under the now-active 0.5s transition.
   state.studyFlipped = false;
   var fcCardEl = document.getElementById("fc-card");
   fcCardEl.style.transition = "none";
   fcCardEl.classList.remove("flipped");
   void fcCardEl.offsetHeight; // force reflow so transition:none takes effect before it's cleared
   fcCardEl.style.transition = "";
+  // Swipe-to-grade leaves #fc-scene translated off-screen after its fly-off animation (see
+  // initSwipeGestures) — reset that here too, so the just-graded card never snaps back to
+  // center and flashes stale content before this render's new content is in place.
+  resetFlownOffScene(document.getElementById("fc-scene"));
 
   // Content
   var frontEl = document.getElementById("fc-front-content");
@@ -4900,6 +4930,14 @@ function scheduleFlashcardAdvance(delay) {
 }
 
 function beginForcedRetype(advanceDelay) {
+  // A swipe-graded card leaves #fc-scene translated off-screen after its fly-off animation
+  // (see initSwipeGestures) — this is the other of the two moments (alongside
+  // renderFlashcard()) that need the card visible again, since the retype/confirm UI the
+  // user must interact with next lives inside #fc-scene, as a sibling of .fc-card. Reset
+  // unconditionally, before any branching below, so it's never skipped on any path out of
+  // this function — including a swipe-graded card with malformed/empty back text, which
+  // would otherwise sit off-screen for the whole advanceDelay wait below.
+  resetFlownOffScene(document.getElementById("fc-scene"));
   // Malformed/empty card data — nothing meaningful to retype or confirm; don't block on it.
   if (!normalizeAnswerText(state.studyBackText)) {
     scheduleFlashcardAdvance(advanceDelay);
@@ -5087,7 +5125,7 @@ function renderQuizCard() {
   if (!priorResult) state.quizCardShownAt = Date.now();
 
   document.getElementById("quiz-progress-text").textContent = (i + 1) + " / " + total;
-  document.getElementById("quiz-progress-fill").style.width = ((i + 1) / total * 100) + "%";
+  document.getElementById("quiz-progress-fill").style.transform = scaleXStyle((i + 1) / total);
   document.getElementById("quiz-score-display").textContent = state.quizScore + " / " + state.quizResults.length;
 
   // Lesson label (multi-lesson sessions)
@@ -5650,7 +5688,7 @@ function diffBar(name, count, total, color) {
   var pct = total > 0 ? (count / total * 100) : 0;
   return '<div class="diff-bar-row">' +
     '<span class="diff-bar-name">' + name + '</span>' +
-    '<div class="diff-bar-track"><div class="diff-bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
+    '<div class="diff-bar-track"><div class="diff-bar-fill" style="transform:' + scaleXStyle(pct / 100) + ';background:' + color + '"></div></div>' +
     '<span class="diff-bar-count">' + count + '</span>' +
   '</div>';
 }
@@ -5843,7 +5881,7 @@ function renderDashboard() {
     document.getElementById("dash-accuracy-wrap").innerHTML =
       '<div class="dash-accuracy-label">' + accuracyLabel + '</div>' +
       '<div class="dash-accuracy-bar">' +
-        '<div class="dash-accuracy-fill" style="width:' + accPct + '%"></div>' +
+        '<div class="dash-accuracy-fill" style="transform:' + scaleXStyle(accPct / 100) + '"></div>' +
       '</div>' +
       '<div id="dash-source-pills-wrap">' + renderAccuracyBySourcePills(analytics.accuracyBySource) + '</div>';
 
@@ -6135,7 +6173,7 @@ function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
     rowEl.className = "trend-row";
     rowEl.innerHTML =
       '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
       '<span class="trend-count">' + countLabel + '</span>';
     wrap.appendChild(rowEl);
   });
@@ -6167,7 +6205,7 @@ function renderNewCardsTrend(rows, wrap, maxWeeksAgo) {
     rowEl.className = "trend-row";
     rowEl.innerHTML =
       '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
       '<span class="trend-count">' + week.cnt + '</span>';
     wrap.appendChild(rowEl);
   });
@@ -6215,7 +6253,7 @@ function renderSrsDistribution(rows, wrap) {
     rowEl.className = "trend-row";
     rowEl.innerHTML =
       '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill srs-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill srs-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
       '<span class="trend-count">' + r.cnt + '</span>';
     wrap.appendChild(rowEl);
   });
@@ -6250,7 +6288,7 @@ function renderFutureDue(data, wrap) {
     var label = b.n === 0 ? t("time.today") : t("time.inDays", { n: b.n });
     rowEl.innerHTML =
       '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
       '<span class="trend-count">' + b.cnt + '</span>';
     wrap.appendChild(rowEl);
   });
@@ -6301,7 +6339,7 @@ function renderAccuracyTrend(rows, wrap, maxWeeksAgo) {
     rowEl.className = "trend-row";
     rowEl.innerHTML =
       '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
       '<span class="trend-count">' + (week.total > 0 ? week.correct + "/" + week.total : "—") + '</span>';
     wrap.appendChild(rowEl);
   });
@@ -6329,7 +6367,7 @@ function renderLessonBreakdown(rows, wrap) {
       '<div class="analytics-lesson-stats">' +
         '<span class="analytics-lesson-accuracy ' + accClass + '">' + accuracy + '%</span>' +
         '<div class="analytics-retention-bar">' +
-          '<div class="analytics-retention-fill" style="width:' + accuracy + '%;background:' + barColor + '"></div>' +
+          '<div class="analytics-retention-fill" style="transform:' + scaleXStyle(accuracy / 100) + ';background:' + barColor + '"></div>' +
         '</div>' +
         '<span class="analytics-lesson-attempts">' + t("dashboard.attemptsAbbrev", { n: lesson.total_attempts }) + '</span>' +
       '</div>';
@@ -8114,6 +8152,12 @@ window.addEventListener("popstate", function() {
 (function initSwipeGestures() {
   var SWIPE_THRESHOLD = 75;
   var MAX_ROT = 18;
+  // Shared "scene returns to its resting transform" motion — used for both the
+  // text-selection-interrupt cancel and the under-threshold release snap-back, so the two
+  // conceptually similar moments (drag released without a grade) share one feel instead of
+  // two different curves/durations. Deliberately NOT reused for the fly-off exit below —
+  // that's a distinct "leaving" motion, not a "returning to rest" one.
+  var SCENE_SNAP_TRANSITION = "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)";
 
   // ─── 1. Flashcard: right = known, left = learning ─────────────────────
   var scene = document.getElementById("fc-scene");
@@ -8151,7 +8195,7 @@ window.addEventListener("popstate", function() {
         fcDx = 0;
         knownHint.style.opacity = 0;
         learnHint.style.opacity = 0;
-        scene.style.transition = "transform 0.2s ease-out";
+        scene.style.transition = SCENE_SNAP_TRANSITION;
         scene.style.transform = "";
       }
       return;
@@ -8191,21 +8235,23 @@ window.addEventListener("popstate", function() {
     if (dx > SWIPE_THRESHOLD) {
       scene.style.transition = "transform 0.25s ease-out";
       scene.style.transform = "translateX(" + (window.innerWidth + 100) + "px) rotate(" + MAX_ROT + "deg)";
+      // Deliberately don't snap the scene back to center here — it'd show the just-graded,
+      // still-flipped card at center for however long markCard()'s auto-advance takes (up to
+      // 1200ms), flashing stale content before the real next card is ready. Leaving it flown
+      // off-screen (invisible) until renderFlashcard() or beginForcedRetype() resets it —
+      // whichever "this card's UI should be visible again" moment actually comes next —
+      // means the timing of those two things no longer has to be reconciled with this one.
       setTimeout(function() {
-        scene.style.transition = "none";
-        scene.style.transform = "";
         document.getElementById("btn-fc-known").click();
       }, 250);
     } else if (dx < -SWIPE_THRESHOLD) {
       scene.style.transition = "transform 0.25s ease-out";
       scene.style.transform = "translateX(-" + (window.innerWidth + 100) + "px) rotate(-" + MAX_ROT + "deg)";
       setTimeout(function() {
-        scene.style.transition = "none";
-        scene.style.transform = "";
         document.getElementById("btn-fc-learning").click();
       }, 250);
     } else {
-      scene.style.transition = "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)";
+      scene.style.transition = SCENE_SNAP_TRANSITION;
       scene.style.transform = "";
     }
   });

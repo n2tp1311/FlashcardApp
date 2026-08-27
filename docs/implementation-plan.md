@@ -908,6 +908,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Scalability audit + Tier 0 reliability | Done | Health check, event-loop watchdog (crash-on-hang so Railway's restart policy engages), per-route rate limiting, request logging |
 | Scalability Tier 1 | Done | Fixed N+1 in public `share.js` class view (extracted shared `server/lib/batch.js`); rate-limited export/import/clone endpoints; gzip/brotli compression. Tier 2 (move off single-process synchronous SQLite, the only path to real horizontal scaling) identified but not started — not yet justified at current real usage scale |
 | Forced retype on Learning/Hard in Flashcard & Write mode | Done | Fuzzy (1-edit-distance) retype required before auto-advance; nav/re-grading/swipe locked, Exit excepted; empty answers skip it, LaTeX answers get a manual confirm instead of the typed check. §5.3 |
+| App-wide animation smoothness sweep | Done | Screen/modal/dropdown fade-in via `@starting-style`; 6 progress-bar widgets unified onto `transform:scaleX()` + one shared duration/easing; `prefers-reduced-motion` support; swipe-to-grade stale-content-flash bug fixed. See `docs/decisions.md` |
 
 ### 11.2 Pending Features — Priority Order
 

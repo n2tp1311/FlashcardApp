@@ -32,6 +32,13 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
   --transition: 0.15s ease;
+  /* Shared by every "bar fills in to show a percentage" widget (study progress, class/lesson
+     mini progress, dashboard/stats/analytics fill bars) so they read as one consistent motion
+     instead of each having picked its own duration — same curve as .fc-card's flip. One
+     combined value, matching --transition's own single-token shape above (not split into
+     separate duration/easing custom properties), since every consumer here plugs it into a
+     `transition:` shorthand exactly like --transition already is throughout this file. */
+  --bar-fill-transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ==============================
@@ -107,9 +114,25 @@ body {
   min-height: 100vh;
   flex-direction: column;
   padding: env(safe-area-inset-top, 0px) 16px max(80px, calc(60px + env(safe-area-inset-bottom, 0px)));
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
 }
 
 .screen.active { display: flex; }
+
+/* Every navigation in the app (class/lesson/study/dashboard, Back, sidebar, edge-swipe-back,
+   browser Back) was previously an instant hard cut — showScreen() just toggles this class
+   synchronously, with no call-site changes needed for this. @starting-style fires the instant
+   display flips from none to flex while a .screen.active selector with a transition matches,
+   decorating that same-tick display change with a fade/slide rather than delaying it — so
+   anything that depends on the screen already being laid out/focusable immediately after
+   showScreen() returns (e.g. renderFlashcard()'s .focus() call) is unaffected. Unsupported
+   browsers (anything before ~2024) just keep today's exact instant-cut behavior — pure
+   progressive enhancement, no fallback branch needed. */
+@starting-style {
+  .screen.active { opacity: 0; transform: translateY(6px); }
+}
 
 /* ── Home screen: sidebar layout ─────────────────────────── */
 .screen-with-sidebar {
@@ -874,6 +897,8 @@ body {
   justify-content: center;
   z-index: 1000;
   padding: 16px;
+  opacity: 1;
+  transition: opacity 0.18s ease-out;
 }
 
 .modal {
@@ -886,6 +911,21 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+}
+
+/* Layered on top of .hidden (display:none !important) rather than replacing it — every modal
+   (generic overlay, search, share, prompt-guide, keymap — 5 independent overlay roots, all
+   sharing these two classes) and every dropdown menu opens by removing .hidden, unchanged.
+   @starting-style fires the instant display flips from none due to .hidden coming off, same
+   same-tick timing as before (so a .focus() call right after removing .hidden still works),
+   just decorated with a fade/scale-in. Close is intentionally left instant, unanimated — see
+   docs/decisions.md for why. Unsupported browsers keep today's exact instant-cut behavior. */
+@starting-style {
+  .modal-overlay:not(.hidden) { opacity: 0; }
+  .modal:not(.hidden) { opacity: 0; transform: scale(0.96) translateY(8px); }
 }
 
 .modal-header {
@@ -1226,10 +1266,12 @@ code {
 }
 
 .progress-fill {
+  width: 100%;
   height: 100%;
   background: var(--primary);
   border-radius: 2px;
-  transition: width 0.3s ease;
+  transform-origin: left;
+  transition: transform var(--bar-fill-transition);
 }
 
 .fc-toolbar {
@@ -1249,6 +1291,7 @@ code {
   cursor: pointer;
   touch-action: pan-y;
   position: relative;
+  will-change: transform;
 }
 
 .fc-swipe-hint {
@@ -1284,6 +1327,7 @@ code {
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .fc-card.flipped { transform: rotateY(180deg); }
@@ -1681,6 +1725,16 @@ code {
   padding: 12px 16px;
   color: var(--text);
   line-height: 1.6;
+  /* Fresh element every render (created via createElement, never reused/toggled in place),
+     so a plain animation — not a state-change transition — fires automatically the instant
+     it's inserted, no [open]-attribute wiring needed. Only covers the open direction; native
+     <details> closing can't be CSS-animated without JS-driven height interpolation, deferred
+     as lower-value for this low-traffic element. */
+  animation: exp-fade-in 0.2s ease-out;
+}
+@keyframes exp-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Recognition-cap hint (quiz) */
@@ -1973,7 +2027,7 @@ code {
   overflow: hidden;
 }
 
-.diff-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.diff-bar-fill { width: 100%; height: 100%; border-radius: 4px; transform-origin: left; transition: transform var(--bar-fill-transition); }
 .diff-bar-count { font-size: 0.75rem; color: var(--text2); min-width: 30px; text-align: right; }
 
 .stats-card-item {
@@ -2025,10 +2079,12 @@ code {
 }
 
 .progress-mini-fill {
+  width: 100%;
   height: 100%;
   background: var(--success);
   border-radius: 3px;
-  transition: width 0.5s ease;
+  transform-origin: left;
+  transition: transform var(--bar-fill-transition);
 }
 
 .progress-mini-text {
@@ -2220,6 +2276,12 @@ code {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+}
+@starting-style {
+  .dropdown-menu:not(.hidden) { opacity: 0; transform: translateY(-4px); }
 }
 
 .dropdown-menu-right { right: 0; left: auto; }
@@ -2672,10 +2734,12 @@ code {
 }
 
 .dash-accuracy-fill {
+  width: 100%;
   height: 100%;
   background: #16a34a;
   border-radius: 5px;
-  transition: width 0.6s ease;
+  transform-origin: left;
+  transition: transform var(--bar-fill-transition);
 }
 
 .dash-lesson-list {
@@ -2917,7 +2981,7 @@ code {
 .trend-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .trend-label { font-size: 0.75rem; color: var(--text2); width: 80px; flex-shrink: 0; text-align: right; }
 .trend-bar-track { flex: 1; height: 18px; background: var(--surface2, var(--border)); border-radius: 4px; overflow: hidden; }
-.trend-bar-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease; }
+.trend-bar-fill { width: 100%; height: 100%; background: var(--primary); border-radius: 4px; transform-origin: left; transition: transform var(--bar-fill-transition); }
 .trend-count { font-size: 0.75rem; color: var(--text2); min-width: 36px; text-align: right; }
 .srs-bar-fill { background: #10b981; }
 .srs-total-note { font-size: 0.75rem; color: var(--text2); margin-top: 8px; text-align: right; }
@@ -3002,7 +3066,7 @@ code {
 .acc-mid  { color: #d97706; }
 .acc-bad  { color: #dc2626; }
 .analytics-retention-bar { width: 80px; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
-.analytics-retention-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.analytics-retention-fill { width: 100%; height: 100%; border-radius: 4px; transform-origin: left; transition: transform var(--bar-fill-transition); }
 .analytics-lesson-attempts { font-size: 0.75rem; color: var(--text2); min-width: 44px; text-align: right; }
 .dash-empty-note { font-size: 0.875rem; color: var(--text2); padding: 16px 0; text-align: center; }
 
@@ -3392,3 +3456,18 @@ code {
 .lesson-acc-pill.acc-high { background: rgba(22,163,74,0.12); color: #16a34a; border-color: rgba(22,163,74,0.25); }
 .lesson-acc-pill.acc-mid  { background: rgba(217,119,6,0.12); color: #d97706; border-color: rgba(217,119,6,0.25); }
 .lesson-acc-pill.acc-low  { background: rgba(220,38,38,0.12); color: #dc2626; border-color: rgba(220,38,38,0.25); }
+
+/* ============================
+   REDUCED MOTION
+   ============================ */
+/* !important here beats even inline styles set from JS (e.g. the swipe-gesture code's
+   element.style.transition = "..." strings) regardless of specificity, so this one block
+   covers every transition/animation in the app, CSS- and JS-driven alike. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
