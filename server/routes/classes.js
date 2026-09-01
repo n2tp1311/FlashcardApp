@@ -3,7 +3,40 @@
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
+const { rateLimit, byUser } = require("../middleware/rateLimit");
+const classifier = require("../services/classifier");
 const router  = express.Router();
+
+// Money-costing endpoint (calls the Anthropic API) — capped well above normal usage (nobody
+// legitimately re-suggests tags for the same class more than a few times) but low enough to
+// bound worst-case spend from one compromised/abusive account.
+const suggestTagsLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 15,
+  message: "Too many tag suggestion requests. Try again later.",
+  keyFn: byUser
+});
+
+// Caps both the number of cards read and each card's contribution — a class with hundreds of
+// cards or one card with a huge pasted definition shouldn't blow up the request's token cost.
+const MAX_CARDS_FOR_SUGGESTION = 60;
+const MAX_CHARS_PER_FIELD = 300;
+
+function truncate(str) {
+  if (!str) return "";
+  return str.length > MAX_CHARS_PER_FIELD ? str.slice(0, MAX_CHARS_PER_FIELD) + "…" : str;
+}
+
+// A third independent copy of the per-format field list, alongside cards.js's validation
+// and stats.js's CSV export — each needs different fields (this one keeps both sides of the
+// card, not just the front, since tag suggestion benefits from the answer/definition too),
+// so there's no single shared helper to reuse here, just the same four format strings.
+function extractCardText(format, data) {
+  if (format === "term-def") return truncate(data.term) + ": " + truncate(data.def);
+  if (format === "mcq") return truncate(data.question) + " — " + truncate(data.correct);
+  if (format === "true-false") return truncate(data.statement);
+  if (format === "image-def") return truncate(data.def);
+  return "";
+}
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -118,6 +151,43 @@ router.delete("/:id", requireAuth, (req, res) => {
   if (!cls) return res.status(404).json({ error: "Not found" });
   db.prepare("DELETE FROM classes WHERE id = ?").run(req.params.id);
   res.status(204).end();
+});
+
+// POST /api/classes/:id/suggest-tags
+router.post("/:id/suggest-tags", requireAuth, suggestTagsLimiter, async (req, res) => {
+  const cls = db.prepare("SELECT id FROM classes WHERE id = ? AND user_id = ?")
+    .get(req.params.id, req.session.userId);
+  if (!cls) return res.status(404).json({ error: "Not found" });
+
+  const cards = db.prepare(
+    "SELECT ca.format, ca.data FROM cards ca JOIN lessons l ON ca.lesson_id = l.id " +
+    "WHERE l.class_id = ? ORDER BY l.sort_order, ca.sort_order LIMIT ?"
+  ).all(req.params.id, MAX_CARDS_FOR_SUGGESTION);
+
+  const cardTexts = cards
+    .map(c => {
+      // A card whose data fails to parse has nothing usable to extract — skip it outright
+      // rather than falling back to {}, which extractCardText would turn into a non-empty
+      // placeholder string (e.g. ": " for term-def) that .filter(Boolean) wouldn't catch,
+      // silently feeding the model garbage instead of just excluding the card.
+      try { return extractCardText(c.format, JSON.parse(c.data)); } catch (_) { return ""; }
+    })
+    .filter(Boolean);
+
+  try {
+    const tags = await classifier.suggestTags(cardTexts);
+    // The model is prompted for lowercase/hyphenated/short tags but nothing enforces that on
+    // its response — route it through the same normalizeTags() the manual-entry path already
+    // uses (trim/lowercase/dedupe/cap at 10) rather than trusting external API output verbatim.
+    res.json({ tags: normalizeTags(tags) });
+  } catch (err) {
+    if (err.code === "no_content")
+      return res.status(400).json({ error: "This class has no cards to analyze yet" });
+    if (err.code === "not_configured")
+      return res.status(501).json({ error: "AI tag suggestions aren't configured on this server" });
+    console.error("[classifier] suggestTags failed:", err);
+    res.status(502).json({ error: "AI tag suggestion failed — try again" });
+  }
 });
 
 module.exports = router;

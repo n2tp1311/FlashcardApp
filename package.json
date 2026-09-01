@@ -8,6 +8,7 @@
     "dev": "nodemon server/index.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.123.0",
     "bcryptjs": "^2.4.3",
     "compression": "^1.8.1",
     "express": "^4.18.2",
@@ -18,7 +19,8 @@
     "nodemailer": "^9.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "ts-fsrs": "^5.4.1"
+    "ts-fsrs": "^5.4.1",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.0",

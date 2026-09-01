@@ -519,6 +519,8 @@ Object.assign(TRANSLATIONS.en, {
   "class.tags": "Tags",
   "class.tagsPlaceholder": "e.g. linear-algebra, exam-prep",
   "class.tagsHint": "Comma-separated",
+  "class.suggestTags": "Suggest tags",
+  "class.suggestingTags": "Suggesting…",
   "lesson.hintImageDef": "Image on front, text definition on back. Cards added one at a time (no bulk import).",
   "validate.enterClassName": "Please enter a class name.",
   "validate.enterLessonTitle": "Please enter a lesson title.",
@@ -554,6 +556,7 @@ Object.assign(TRANSLATIONS.en, {
   "validate.fileTooLarge": "File exceeds 5 MB limit.",
   "error.uploadFailed": "Upload failed",
   "error.uploadFailedWithMessage": "Upload failed: {message}",
+  "error.aiSuggestFailedWithMessage": "Couldn't suggest tags: {message}",
   "study.noCardsMatchFilter": "No cards match the selected filter.",
   "common.copied": "Copied!",
   "promptGuide.copyPrompt": "Copy Prompt",
@@ -983,6 +986,8 @@ Object.assign(TRANSLATIONS.vi, {
   "class.tags": "Nhãn",
   "class.tagsPlaceholder": "vd: đại-số-tuyến-tính, ôn-thi",
   "class.tagsHint": "Cách nhau bằng dấu phẩy",
+  "class.suggestTags": "Gợi ý thẻ",
+  "class.suggestingTags": "Đang gợi ý…",
   "validate.enterClassName": "Vui lòng nhập tên lớp.",
   "validate.enterLessonTitle": "Vui lòng nhập tiêu đề bài học.",
   "validate.fillTermDef": "Vui lòng nhập cả thuật ngữ và định nghĩa.",
@@ -1017,6 +1022,7 @@ Object.assign(TRANSLATIONS.vi, {
   "validate.fileTooLarge": "Tệp vượt quá giới hạn 5 MB.",
   "error.uploadFailed": "Tải lên thất bại",
   "error.uploadFailedWithMessage": "Tải lên thất bại: {message}",
+  "error.aiSuggestFailedWithMessage": "Không thể gợi ý thẻ: {message}",
   "study.noCardsMatchFilter": "Không có thẻ nào khớp với bộ lọc đã chọn.",
   "common.copied": "Đã sao chép!",
   "promptGuide.copyPrompt": "Sao chép Prompt",
@@ -1853,6 +1859,11 @@ var state = {
   currentLesson: null,
   editingClassId: null,
   editingLessonId: null,
+  // True while a suggest-tags request is in flight (any class — only one modal is ever open
+  // at a time) — guards against stacking a second concurrent request. The separate
+  // requestedClassId closure variable in btn-suggest-tags's click handler (not global state)
+  // is what catches a stale response landing in a since-switched-to class's tags input.
+  suggestTagsPending: false,
   editingCardId: null,
   tfAnswer: null,
   deleteCallback: null,
@@ -2630,6 +2641,9 @@ function openNewClass() {
   // Default selections
   document.querySelector("#color-picker .color-swatch").classList.add("active");
   document.querySelector("#icon-picker .icon-opt").classList.add("active");
+  // Suggest-tags reads the class's existing cards, so it's meaningless for a class that
+  // doesn't exist yet (no id to query, no cards to have written any).
+  document.getElementById("btn-suggest-tags").classList.add("hidden");
   openModal("class");
   document.getElementById("class-name-input").focus();
 }
@@ -2650,9 +2664,51 @@ function openEditClass(classId) {
     var iconOpt = document.querySelector('[data-icon="' + classIconKey(cls.icon) + '"]');
     if (iconOpt) iconOpt.classList.add("active");
     else document.querySelector("#icon-picker .icon-opt").classList.add("active");
+    // Local/offline mode has no server to call, and a server without ANTHROPIC_API_KEY
+    // configured can't fulfill the request either — hide rather than show a button that
+    // always errors.
+    document.getElementById("btn-suggest-tags").classList.toggle("hidden", !(IS_SERVER && window.APP_CONFIG.aiSuggestEnabled));
+    // The click handler's guard blocks a second request while ANY class's suggestion is
+    // pending (not just this one), so the button must reflect that globally too — otherwise
+    // it'd show enabled on a freshly-opened class while a click silently no-ops.
+    setSuggestBtnState(state.suggestTagsPending);
     openModal("class");
   });
 }
+
+function setSuggestBtnState(pending) {
+  var btn = document.getElementById("btn-suggest-tags");
+  btn.disabled = pending;
+  btn.textContent = t(pending ? "class.suggestingTags" : "class.suggestTags");
+}
+
+document.getElementById("btn-suggest-tags").addEventListener("click", function() {
+  if (!state.editingClassId || state.suggestTagsPending) return;
+  var requestedClassId = state.editingClassId; // closeModal()/openEditClass() don't cancel this request
+  state.suggestTagsPending = true;
+  setSuggestBtnState(true);
+  store.suggestClassTags(requestedClassId).then(function(res) {
+    // If the user closed this modal and opened a different class's editor while the
+    // request was in flight, #class-tags-input now belongs to that other class — applying
+    // this response would silently merge one class's suggested tags into another's. Only
+    // guards the tag-merging/error-alert side effects, not the button reset below — the
+    // button tracks the global pending flag (only one modal is open at a time), so it must
+    // always be re-enabled once that flag clears, regardless of which class is now showing.
+    if (state.editingClassId !== requestedClassId) return;
+    var input = document.getElementById("class-tags-input");
+    // Merge with whatever's already typed rather than overwrite it — normalizeTagsArray
+    // dedupes case-insensitively, so re-running this (or suggesting over hand-typed tags)
+    // never produces duplicate pills once saved.
+    var existing = parseTagsInput(input.value);
+    input.value = normalizeTagsArray(existing.concat(res.tags || [])).join(", ");
+  }).catch(function(err) {
+    if (state.editingClassId === requestedClassId)
+      alert(t("error.aiSuggestFailedWithMessage", { message: err.message }));
+  }).finally(function() {
+    state.suggestTagsPending = false;
+    setSuggestBtnState(false);
+  });
+});
 
 document.getElementById("btn-save-class").addEventListener("click", function() {
   var name  = document.getElementById("class-name-input").value.trim();
@@ -6692,6 +6748,7 @@ var SQLiteAdapter = (function() {
     createClass: function(f)    { return req("POST",   "/classes", f); },
     updateClass: function(id,f) { return req("PUT",    "/classes/" + id, f); },
     deleteClass: function(id)   { return req("DELETE", "/classes/" + id); },
+    suggestClassTags: function(id) { return req("POST", "/classes/" + id + "/suggest-tags"); },
 
     getLessons:   function(classId) { return req("GET",    "/classes/" + classId + "/lessons"); },
     createLesson: function(f)       { return req("POST",   "/classes/" + f.classId + "/lessons", { title: f.title, format: f.format }); },

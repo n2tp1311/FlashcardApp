@@ -10,6 +10,7 @@ const db                   = require("./db");
 const { requestLog }             = require("./middleware/requestLog");
 const { startEventLoopWatchdog } = require("./middleware/watchdog");
 const { rateLimit }              = require("./middleware/rateLimit");
+const env                        = require("./config/env");
 
 const app    = express();
 // Railway terminates connections at its edge proxy — without this, req.ip is the
@@ -108,7 +109,8 @@ function serveApp(res, config) {
 function baseConfig(req) {
   return {
     mode: "server",
-    googleEnabled: !!process.env.GOOGLE_CLIENT_ID,
+    googleEnabled: !!env.GOOGLE_CLIENT_ID,
+    aiSuggestEnabled: !!env.ANTHROPIC_API_KEY,
     user: req.session.userId
       ? { id: req.session.userId, name: req.session.userName, email: req.session.userEmail }
       : null
@@ -121,8 +123,14 @@ app.get("/", (req, res) => serveApp(res, baseConfig(req)));
 app.get("/share/:token", (req, res) =>
   serveApp(res, { ...baseConfig(req), shareToken: req.params.token }));
 
+// googleEnabled/user are deliberately forced off here regardless of baseConfig — this page
+// is reached unauthenticated (a password-reset email link), and Google-OAuth accounts have
+// no password to reset in the first place. aiSuggestEnabled has no such reason to differ
+// (it doesn't gate anything reachable from this page), so it still comes from baseConfig —
+// otherwise a client that never does a full navigation away from here after resetting would
+// be stuck with a stale "AI suggest" flag for the rest of that page load.
 app.get("/reset-password", (req, res) =>
-  serveApp(res, { mode: "server", googleEnabled: false, user: null, resetToken: req.query.token || null }));
+  serveApp(res, { ...baseConfig(req), googleEnabled: false, user: null, resetToken: req.query.token || null }));
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 

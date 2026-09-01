@@ -13,4 +13,5 @@ module.exports = {
   SMTP_USER: process.env.SMTP_USER || null,
   SMTP_PASS: process.env.SMTP_PASS || null,
   SMTP_FROM: process.env.SMTP_FROM || null,
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || null,
 };

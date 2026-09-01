@@ -668,6 +668,10 @@
       <label class="form-label" data-i18n="class.tags">Tags</label>
       <input type="text" id="class-tags-input" class="form-input" placeholder="linear-algebra, exam-prep" data-i18n-placeholder="class.tagsPlaceholder">
       <p class="form-hint" data-i18n="class.tagsHint">Comma-separated</p>
+      <!-- No data-i18n: text toggles between idle/busy via JS while a request may be in
+           flight, same as #modal-class-title's dynamic New/Edit title — a static data-i18n
+           binding would fight that and snap back to the idle label on a language switch. -->
+      <button type="button" class="btn btn-sm btn-outline hidden" id="btn-suggest-tags">Suggest tags</button>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="class" id="btn-cancel-class" data-i18n="common.cancel">Cancel</button>
