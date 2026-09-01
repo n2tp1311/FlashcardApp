@@ -7965,10 +7965,16 @@ document.addEventListener("keydown", function(e) {
     if (e.key === "ArrowLeft")  document.getElementById("btn-fc-prev").click();
     else if (e.key === "ArrowRight") document.getElementById("btn-fc-next").click();
     else if (e.key === " " || e.key === "Enter") { e.preventDefault(); document.getElementById("fc-scene").click(); }
-    else if (e.key === "1") document.getElementById("btn-fc-learning").click();
-    else if (e.key === "2") document.getElementById("btn-fc-hard").click();
-    else if (e.key === "3") document.getElementById("btn-fc-known").click();
-    else if (e.key === "4") document.getElementById("btn-fc-easy").click();
+    // preventDefault matters here specifically for Learning/Hard: grading those in Flashcard &
+    // Write mode synchronously focuses #fc-retype-input (markCard -> beginForcedRetype ->
+    // input.focus()) within this same keydown's dispatch, before the browser's own default
+    // keydown handling runs — without it, the digit that triggered the shortcut gets typed
+    // into the just-focused retype box as its default action. Applied to all four grading
+    // keys for consistency, though only 1/2 can currently reach a focused input this way.
+    else if (e.key === "1") { e.preventDefault(); document.getElementById("btn-fc-learning").click(); }
+    else if (e.key === "2") { e.preventDefault(); document.getElementById("btn-fc-hard").click(); }
+    else if (e.key === "3") { e.preventDefault(); document.getElementById("btn-fc-known").click(); }
+    else if (e.key === "4") { e.preventDefault(); document.getElementById("btn-fc-easy").click(); }
     else if (e.key === "s" || e.key === "S") document.getElementById("btn-fc-shuffle").click();
     else if (e.key === "p" || e.key === "P") speakText(state.studyFlipped ? state.studyBackText : state.studyFrontText);
     else if (e.key === "Escape") document.getElementById("btn-fc-back").click();
