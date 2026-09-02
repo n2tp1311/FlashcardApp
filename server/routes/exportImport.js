@@ -4,6 +4,7 @@ const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { rateLimit, byUser } = require("../middleware/rateLimit");
+const { forEachBatch } = require("../lib/batch");
 // Two separate routers, not one mounted at both /api/export and /api/import — a
 // single shared router responds to BOTH verbs at BOTH mount points (GET /api/import
 // would silently run the export handler and consume exportLimiter's quota; POST
@@ -25,6 +26,11 @@ function genId() {
 // NAT exhaust each other's quota.
 const exportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: "Too many export requests. Try again later.", keyFn: byUser });
 const importLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: "Too many import requests. Try again later.", keyFn: byUser });
+// Separate bucket from exportLimiter above: a per-class/per-lesson export is a much lighter,
+// much more frequently-clicked operation than a full-account backup (e.g. exporting several
+// lessons one at a time in a session is a normal workflow) — sharing one 10/hour bucket would
+// let that routine usage lock a user out of the unrelated full-backup endpoint for an hour.
+const flashcardExportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: "Too many flashcard export requests. Try again later.", keyFn: byUser });
 
 // GET /api/export
 exportRouter.get("/", requireAuth, exportLimiter, (req, res) => {
@@ -43,6 +49,171 @@ exportRouter.get("/", requireAuth, exportLimiter, (req, res) => {
   const states   = db.prepare("SELECT * FROM card_states WHERE user_id = ?").all(userId);
 
   res.json({ classes, lessons, cards, attempts, states, exportedAt: Date.now() });
+});
+
+// A user-controlled string (class name, lesson title) lands directly in the
+// Content-Disposition header below — CR/LF/quotes could break out of the quoted filename
+// value or inject an extra header, so those are stripped outright (not just escaped), on
+// top of the usual filesystem-reserved characters.
+function sanitizeFilename(str) {
+  const cleaned = String(str || "")
+    .replace(/[\r\n"]/g, "")
+    .replace(/[\\/:*?<>|]/g, "-")
+    .trim();
+  // Array.from splits by Unicode code point, not UTF-16 code unit — a plain .slice(0, 80)
+  // can cut a surrogate pair in half (e.g. mid-emoji), leaving a malformed string that later
+  // throws a URIError out of encodeURIComponent in contentDispositionHeader below.
+  const truncated = Array.from(cleaned).slice(0, 80).join("");
+  return truncated || "export";
+}
+
+// res.setHeader() throws synchronously (crashing the request as an uncaught 500) on any
+// non-Latin1 byte in a plain `filename="..."` value — a real, common case here, not a
+// theoretical one: this app ships full Vietnamese translations, and class/lesson names have
+// no ASCII-only restriction anywhere. RFC 6266's two-part form fixes this: an ASCII-safe
+// `filename=` fallback (non-ASCII characters replaced, so it's always header-safe) for
+// clients that don't understand the extended form, plus a UTF-8 percent-encoded `filename*=`
+// that every modern browser prefers and displays correctly.
+// encodeURIComponent leaves *, ', (, ) unescaped, but RFC 5987's attr-char set excludes all
+// four — a class named e.g. "Teacher's Notes" would produce a technically-invalid filename*=
+// value (browsers tolerate it in practice, but it's cheap to just be correct).
+function encodeRFC5987(str) {
+  return encodeURIComponent(str).replace(/['()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+}
+
+function contentDispositionHeader(filename) {
+  const asciiFallback = filename.replace(/[^\x20-\x7E]/g, "_");
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeRFC5987(filename)}`;
+}
+
+// GET /api/export/flashcards?lessonId=X | ?classId=X | ?classIds=a,b,c
+// Exactly one of the three scoping params is required. Unlike GET /api/export above (a full
+// account backup, paired with POST /api/import), this exports card CONTENT only — no
+// attempts/SRS state — for a human-readable, portable snapshot: internal ids/timestamps/
+// sort_order are omitted, just the fields a person would actually want in an exported file.
+exportRouter.get("/flashcards", requireAuth, flashcardExportLimiter, (req, res) => {
+  const userId = req.session.userId;
+  // Query params can arrive as arrays (?classId=1&classId=2, repeated keys) — only a single
+  // string value is ever valid here, so coerce defensively rather than let a non-string
+  // reach better-sqlite3's bind param (which throws an uncaught TypeError, not a clean 400).
+  // Also trims to "": an empty string is falsy in the branches below but was previously still
+  // counted as "provided", letting a request like ?classId= silently fall through to the
+  // classIds branch instead of hitting the validation error.
+  const lessonId = typeof req.query.lessonId === "string" ? req.query.lessonId.trim() : "";
+  const classId  = typeof req.query.classId  === "string" ? req.query.classId.trim()  : "";
+  const classIds = typeof req.query.classIds === "string" ? req.query.classIds.trim() : "";
+  const paramCount = [lessonId, classId, classIds].filter(Boolean).length;
+  if (paramCount !== 1)
+    return res.status(400).json({ error: "Provide exactly one of lessonId, classId, or classIds" });
+
+  let classRows;
+  let onlyLessonId = null; // set for the lessonId scope, to filter that one class down to one lesson
+  let filenameSource; // captured directly in each branch below, where the name is plainly available
+  let omittedCount = 0; // classIds scope only: requested ids that didn't resolve to a class
+
+  if (lessonId) {
+    const lesson = db.prepare(
+      "SELECT l.class_id AS class_id, l.title AS title FROM lessons l JOIN classes c ON l.class_id = c.id WHERE l.id = ? AND c.user_id = ?"
+    ).get(lessonId, userId);
+    if (!lesson) return res.status(404).json({ error: "Not found" });
+    classRows = db.prepare("SELECT * FROM classes WHERE id = ?").all(lesson.class_id);
+    onlyLessonId = lessonId;
+    filenameSource = lesson.title || "lesson";
+  } else if (classId) {
+    classRows = db.prepare("SELECT * FROM classes WHERE id = ? AND user_id = ?").all(classId, userId);
+    if (classRows.length === 0) return res.status(404).json({ error: "Not found" });
+    filenameSource = classRows[0].name || "class";
+  } else {
+    // Deduped so a repeated id (e.g. "1,1,2") doesn't get counted twice below and produce a
+    // false-positive "omitted" count — IN(...) only ever returns one row per matching id
+    // regardless of how many times it's repeated in the list, so the raw count would be wrong.
+    const ids = Array.from(new Set(classIds.split(",").map(s => s.trim()).filter(Boolean)));
+    if (ids.length === 0) return res.status(400).json({ error: "classIds must be a non-empty comma-separated list" });
+    classRows = [];
+    forEachBatch(ids, chunk => {
+      const placeholders = chunk.map(() => "?").join(",");
+      classRows.push(...db.prepare(
+        `SELECT * FROM classes WHERE user_id = ? AND id IN (${placeholders})`
+      ).all(userId, ...chunk));
+    });
+    if (classRows.length === 0) return res.status(404).json({ error: "Not found" });
+    omittedCount = ids.length - classRows.length;
+    filenameSource = "flashcards-export";
+  }
+
+  // Batched the same way GET /api/export above does — one query for every scoped class's
+  // lessons, one for every one of those lessons' cards, instead of a query per class/lesson
+  // in a nested map (the classIds scope especially can span many classes at once).
+  const classIdList = classRows.map(c => c.id);
+  const lessonsByClass = {};
+  const allLessonIds = [];
+  forEachBatch(classIdList, chunk => {
+    const placeholders = chunk.map(() => "?").join(",");
+    db.prepare(`SELECT * FROM lessons WHERE class_id IN (${placeholders}) ORDER BY class_id, sort_order`)
+      .all(...chunk)
+      .forEach(l => {
+        if (onlyLessonId && l.id !== onlyLessonId) return;
+        (lessonsByClass[l.class_id] = lessonsByClass[l.class_id] || []).push(l);
+        allLessonIds.push(l.id);
+      });
+  });
+
+  const cardsByLesson = {};
+  forEachBatch(allLessonIds, chunk => {
+    const placeholders = chunk.map(() => "?").join(",");
+    db.prepare(`SELECT * FROM cards WHERE lesson_id IN (${placeholders}) ORDER BY lesson_id, sort_order`)
+      .all(...chunk)
+      .forEach(c => { (cardsByLesson[c.lesson_id] = cardsByLesson[c.lesson_id] || []).push(c); });
+  });
+
+  const exportedClasses = classRows.map(cls => {
+    const lessons = lessonsByClass[cls.id] || [];
+    const exportedLessons = lessons.map(lesson => {
+      const cards = cardsByLesson[lesson.id] || [];
+      const exportedCards = cards.map(c => {
+        let data;
+        try {
+          data = JSON.parse(c.data);
+        } catch (err) {
+          // Don't fail the whole export over one corrupted row (unlike GET /api/export
+          // above, which has no guard here and would 500 the entire account backup) — but
+          // don't silently produce an empty-looking card with no trace either. Logged, not
+          // surfaced to the client: this is a signal for an operator to go investigate the
+          // row, not something the requesting user can act on.
+          console.error(`[export] card ${c.id} has unparseable data, exporting as empty:`, err.message);
+          data = {};
+        }
+        return { format: c.format, data };
+      });
+      return { title: lesson.title, format: lesson.format, cards: exportedCards };
+    });
+    let tags = [];
+    if (cls.tags) {
+      // Same reasoning as card.data above: POST /api/import writes req.body classes[].tags
+      // straight through with no JSON validation, so a hand-edited or legacy backup file
+      // could leave a non-JSON value in this column — degrade to an empty tag list for this
+      // one class rather than 500ing the whole export over it.
+      try { tags = JSON.parse(cls.tags); } catch (err) {
+        console.error(`[export] class ${cls.id} has unparseable tags, exporting as empty:`, err.message);
+      }
+    }
+    return {
+      name: cls.name, color: cls.color, icon: cls.icon, level: cls.level,
+      tags: tags,
+      lessons: exportedLessons
+    };
+  });
+
+  const filename = sanitizeFilename(filenameSource) + ".json";
+
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Content-Disposition", contentDispositionHeader(filename));
+  const body = { exportedAt: Date.now(), classes: exportedClasses };
+  // classIds is the one scope where a requested id can silently fail to resolve (deleted in
+  // another tab, belongs to another user, typo'd in the URL) — surface that instead of quietly
+  // exporting fewer classes than asked for with no trace.
+  if (omittedCount > 0) body.omittedCount = omittedCount;
+  res.json(body);
 });
 
 // POST /api/import

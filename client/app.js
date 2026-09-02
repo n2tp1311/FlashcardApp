@@ -217,6 +217,7 @@ Object.assign(TRANSLATIONS.en, {
   "common.moreOptions": "More options",
   "common.stats": "Stats",
   "common.share": "Share",
+  "common.export": "Export",
   "common.zeroSelected": "0 selected",
   "common.nSelected": "{n} selected",
   "common.deleteSelected": "Delete selected",
@@ -683,6 +684,7 @@ Object.assign(TRANSLATIONS.vi, {
   "common.moreOptions": "Thêm tùy chọn",
   "common.stats": "Thống kê",
   "common.share": "Chia sẻ",
+  "common.export": "Xuất dữ liệu",
   "common.zeroSelected": "Đã chọn 0",
   "common.nSelected": "Đã chọn {n}",
   "common.deleteSelected": "Xóa mục đã chọn",
@@ -2748,6 +2750,60 @@ document.getElementById("btn-class-stats").addEventListener("click", function() 
   if (state.currentClass) openStats("class", state.currentClass.id, state.currentClass.name);
 });
 
+// Triggers a browser download for a GET endpoint that can fail (auth/rate-limit/validation/
+// ownership) — a plain `window.location.href = url` navigation (the pattern the pre-existing
+// CSV export uses) would navigate the whole SPA away to a bare JSON error body on any non-2xx
+// response, with no way back except a reload. Fetching first and only building a download
+// link on success keeps the app intact and surfaces a normal error alert instead.
+//
+// Guarded globally (one flag for every caller, not per-URL) rather than per button: it's
+// simple and the realistic failure mode is the same button double-clicked, or a user firing
+// off export A then immediately export B before A's browser save dialog even appears — either
+// way, one download in flight at a time is enough, matching how state.suggestTagsPending
+// guards the (also single-modal-at-a-time) AI-suggest button elsewhere in this file.
+var downloadInFlight = false;
+function downloadFromApi(url) {
+  if (downloadInFlight) return;
+  downloadInFlight = true;
+  fetch(url, { credentials: "same-origin" }).then(function(r) {
+    if (r.status === 401) { showAuthScreen(); return null; }
+    if (!r.ok) {
+      return r.json().then(function(data) {
+        throw new Error(data.error || ("Request failed (" + r.status + ")"));
+      });
+    }
+    // Prefer the RFC 6266 filename*=UTF-8''... form — the server sends this specifically to
+    // carry non-ASCII names (e.g. Vietnamese class/lesson titles) correctly; the plain
+    // filename="..." alongside it is a deliberately mangled ASCII-safe fallback for clients
+    // that don't understand the extended form, and this download (a Blob + <a download>, not
+    // an HTTP navigation) never even sends the header to a client that wouldn't — it's read
+    // right here, so there's no reason to settle for the fallback.
+    var disposition = r.headers.get("Content-Disposition") || "";
+    var utf8Match = /filename\*=UTF-8''([^;]+)/.exec(disposition);
+    var asciiMatch = /filename="([^"]+)"/.exec(disposition);
+    var filename = utf8Match ? decodeURIComponent(utf8Match[1]) : (asciiMatch ? asciiMatch[1] : "export");
+    return r.blob().then(function(blob) {
+      var blobUrl = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(blobUrl);
+    });
+  }).catch(function(err) {
+    alert(err.message);
+  }).finally(function() {
+    downloadInFlight = false;
+  });
+}
+
+document.getElementById("btn-export-class").addEventListener("click", function() {
+  if (!state.currentClass) return;
+  downloadFromApi("/api/export/flashcards?classId=" + encodeURIComponent(state.currentClass.id));
+});
+
 /* ============================
    LESSON LIST
    ============================ */
@@ -3084,6 +3140,8 @@ function updateHomeSelectBar() {
   if (countEl) countEl.textContent = t("home.classesSelectedCount", { n: n });
   var studyBtn = document.getElementById("btn-study-classes");
   if (studyBtn) studyBtn.disabled = n === 0;
+  var exportBtn = document.getElementById("btn-export-classes");
+  if (exportBtn) exportBtn.disabled = n === 0;
   var total = document.querySelectorAll("#class-list [data-class-id]").length;
   var allCheck = document.getElementById("select-all-classes");
   if (allCheck) allCheck.checked = total > 0 && n === total;
@@ -3137,6 +3195,12 @@ document.getElementById("btn-study-classes").addEventListener("click", function(
         title: t("home.classesSelectedCount", { n: n })
       });
     });
+});
+
+document.getElementById("btn-export-classes").addEventListener("click", function() {
+  var ids = state.selectedClassIds.slice();
+  if (ids.length === 0) return;
+  downloadFromApi("/api/export/flashcards?classIds=" + encodeURIComponent(ids.join(",")));
 });
 
 function setCardSelectMode(on) {
@@ -3536,6 +3600,11 @@ document.getElementById("btn-lesson-back").addEventListener("click", function() 
 
 document.getElementById("btn-edit-lesson").addEventListener("click", function() {
   if (state.currentLesson) openEditLesson(state.currentLesson.id);
+});
+
+document.getElementById("btn-export-lesson").addEventListener("click", function() {
+  if (!state.currentLesson) return;
+  downloadFromApi("/api/export/flashcards?lessonId=" + encodeURIComponent(state.currentLesson.id));
 });
 
 document.getElementById("btn-lesson-stats").addEventListener("click", function() {
@@ -7397,6 +7466,14 @@ if (IS_SERVER && !currentUser) {
 } else {
   initUserNav();
   if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
+  // Export hits a server route (GET /api/export/flashcards) with no local/offline
+  // equivalent — hidden outright rather than shown-then-erroring, same treatment as the
+  // image-def format pill and other server-only affordances.
+  if (!IS_SERVER) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes"].forEach(function(id) {
+      document.getElementById(id).classList.add("hidden");
+    });
+  }
   renderSharedWithMe();
   restoreLastScreen();
 }
