@@ -342,7 +342,7 @@ body {
 .home-header .nav-search-bar { flex: 1; }
 .home-header #user-nav { display: flex; align-items: center; gap: 8px; }
 
-.home-select-btn {
+.home-select-btn, .home-import-btn {
   font-size: 0.8125rem;
   font-weight: 500;
   flex-shrink: 0;

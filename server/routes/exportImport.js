@@ -31,6 +31,39 @@ const importLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: "T
 // lessons one at a time in a session is a normal workflow) — sharing one 10/hour bucket would
 // let that routine usage lock a user out of the unrelated full-backup endpoint for an hour.
 const flashcardExportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: "Too many flashcard export requests. Try again later.", keyFn: byUser });
+const flashcardImportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: "Too many flashcard import requests. Try again later.", keyFn: byUser });
+
+const VALID_LESSON_FORMATS = ["term-def", "mcq", "true-false", "image-def"];
+
+// Same per-format checks as POST /api/lessons/:lessonId/cards and its /bulk sibling in
+// cards.js (not shared via import — cards.js doesn't export them, and this is the only other
+// call site) — mcq needs question/correct/1-4 distractors, image-def needs an existing
+// /uploads/ path + text def, true-false needs a statement + "true"/"false" correct value.
+// term-def has no per-format check here either, matching those two existing routes.
+function validateCardForImport(format, data) {
+  if (format === "mcq") {
+    if (!data || !data.question || !data.correct || !Array.isArray(data.distractors) ||
+        data.distractors.length < 1 || data.distractors.length > 4)
+      return "mcq requires question, correct, and 1–4 distractors";
+    if (data.explanation !== undefined && (typeof data.explanation !== "string" || !data.explanation.trim()))
+      return "explanation must be a non-empty string if provided";
+  }
+  if (format === "image-def") {
+    if (!data || !data.imageUrl || typeof data.imageUrl !== "string" || !data.imageUrl.startsWith("/uploads/"))
+      return "image-def requires imageUrl starting with /uploads/";
+    if (!data.def || typeof data.def !== "string" || !data.def.trim())
+      return "image-def requires def (text definition)";
+  }
+  if (format === "true-false") {
+    if (!data || !data.statement || typeof data.statement !== "string" || !data.statement.trim())
+      return "true-false requires statement";
+    if (data.correct !== "true" && data.correct !== "false")
+      return 'true-false requires correct to be "true" or "false"';
+    if (data.explanation !== undefined && (typeof data.explanation !== "string" || !data.explanation.trim()))
+      return "true-false explanation must be a non-empty string if provided";
+  }
+  return null;
+}
 
 // GET /api/export
 exportRouter.get("/", requireAuth, exportLimiter, (req, res) => {
@@ -272,6 +305,97 @@ importRouter.post("/", requireAuth, importLimiter, (req, res) => {
   })();
 
   res.json({ ok: true, imported: { classes: classes.length, lessons: lessons.length, cards: cards.length } });
+});
+
+// POST /api/import/flashcards — the counterpart to GET /api/export/flashcards above. Takes
+// that id-less, human-readable { classes: [{ name, ..., lessons: [{ title, ..., cards: [...] }] }] }
+// shape (NOT the flat id-bearing rows POST /api/import expects — that route can't read this
+// file) and always creates brand-new classes/lessons/cards, appended after whatever the user
+// already has. No merge-into-existing-class option: every import is purely additive, so there's
+// no risk of an import overwriting or colliding with existing data.
+importRouter.post("/flashcards", requireAuth, flashcardImportLimiter, (req, res) => {
+  const userId = req.session.userId;
+  const classes = req.body.classes;
+  if (!Array.isArray(classes) || classes.length === 0)
+    return res.status(400).json({ error: "classes array required" });
+
+  // Validate everything up front, before writing anything — a bad card buried in the 5th
+  // class of a large import should fail the whole request, not leave 4 classes imported and
+  // a silent gap where the 5th should be. `lessons`/`cards` are required to already BE arrays
+  // (not defaulted via `|| []`) so that picking the wrong file — e.g. the full-account backup
+  // from GET /api/export, whose classes have no `lessons` key at all — fails fast with a clear
+  // error instead of silently importing a pile of empty classes.
+  for (let i = 0; i < classes.length; i++) {
+    const cls = classes[i];
+    if (!cls || typeof cls.name !== "string" || !cls.name.trim())
+      return res.status(400).json({ error: "class " + i + ": name required" });
+    if (!Array.isArray(cls.lessons))
+      return res.status(400).json({ error: "class " + i + ": lessons must be an array" });
+    for (let j = 0; j < cls.lessons.length; j++) {
+      const lesson = cls.lessons[j];
+      if (!lesson || typeof lesson.title !== "string" || !lesson.title.trim())
+        return res.status(400).json({ error: "class " + i + " lesson " + j + ": title required" });
+      if (!VALID_LESSON_FORMATS.includes(lesson.format))
+        return res.status(400).json({ error: "class " + i + " lesson " + j + ": format must be term-def, mcq, true-false, or image-def" });
+      if (!Array.isArray(lesson.cards))
+        return res.status(400).json({ error: "class " + i + " lesson " + j + ": cards must be an array" });
+      for (let k = 0; k < lesson.cards.length; k++) {
+        const card = lesson.cards[k];
+        if (!card || !VALID_LESSON_FORMATS.includes(card.format))
+          return res.status(400).json({ error: "class " + i + " lesson " + j + " card " + k + ": format must be term-def, mcq, true-false, or image-def" });
+        const cardErr = validateCardForImport(card.format, card.data);
+        if (cardErr) return res.status(400).json({ error: "class " + i + " lesson " + j + " card " + k + ": " + cardErr });
+      }
+    }
+  }
+
+  const startingClassOrder = db.prepare("SELECT COUNT(*) as n FROM classes WHERE user_id = ?").get(userId).n;
+  let importedLessons = 0;
+  let importedCards = 0;
+
+  db.transaction(() => {
+    classes.forEach((cls, i) => {
+      const classId = genId();
+      // Same shape as classes.js's normalizeLevel/normalizeTags (not exported from there, so
+      // reimplemented here — the import file is hand-editable, so these fields need the same
+      // sanitization as the manual-entry path, not just the "trust our own export" assumption).
+      const levelNum = Number(cls.level);
+      const level = cls.level === null || cls.level === undefined || isNaN(levelNum) ? null : levelNum;
+      const tagSeen = [];
+      (Array.isArray(cls.tags) ? cls.tags : []).forEach(tag => {
+        if (typeof tag !== "string") return;
+        const norm = tag.trim().toLowerCase();
+        if (norm && !tagSeen.includes(norm)) tagSeen.push(norm);
+      });
+      const tags = tagSeen.slice(0, 10);
+      // Constrained to a plain hex color (not the free-form string classes.js's own POST/PUT
+      // accept) because this value is later interpolated into innerHTML unescaped on the
+      // client (class-card rendering) — an import file is the easiest way to get an
+      // attacker-controlled string into that field, since it can be shared between users
+      // as a normal-looking "flashcard deck" file.
+      const color = typeof cls.color === "string" && /^#[0-9a-fA-F]{3,8}$/.test(cls.color) ? cls.color : "#2563eb";
+      db.prepare(
+        "INSERT INTO classes (id, user_id, name, color, icon, sort_order, level, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      ).run(classId, userId, cls.name.trim(), color, cls.icon || "book", startingClassOrder + i, level, JSON.stringify(tags));
+
+      cls.lessons.forEach((lesson, j) => {
+        const lessonId = genId();
+        db.prepare(
+          "INSERT INTO lessons (id, class_id, title, format, sort_order) VALUES (?, ?, ?, ?, ?)"
+        ).run(lessonId, classId, lesson.title.trim(), lesson.format, j);
+        importedLessons++;
+
+        lesson.cards.forEach((card, k) => {
+          db.prepare(
+            "INSERT INTO cards (id, lesson_id, format, data, sort_order) VALUES (?, ?, ?, ?, ?)"
+          ).run(genId(), lessonId, card.format, JSON.stringify(card.data || {}), k);
+          importedCards++;
+        });
+      });
+    });
+  })();
+
+  res.status(201).json({ ok: true, imported: { classes: classes.length, lessons: importedLessons, cards: importedCards } });
 });
 
 module.exports = { exportRouter, importRouter };

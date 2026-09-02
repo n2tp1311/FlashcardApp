@@ -218,6 +218,8 @@ Object.assign(TRANSLATIONS.en, {
   "common.stats": "Stats",
   "common.share": "Share",
   "common.export": "Export",
+  "import.invalidJson": "That file isn't valid JSON.",
+  "import.success": "Imported {classes} class(es), {lessons} lesson(s), {cards} card(s).",
   "common.zeroSelected": "0 selected",
   "common.nSelected": "{n} selected",
   "common.deleteSelected": "Delete selected",
@@ -685,6 +687,8 @@ Object.assign(TRANSLATIONS.vi, {
   "common.stats": "Thống kê",
   "common.share": "Chia sẻ",
   "common.export": "Xuất dữ liệu",
+  "import.invalidJson": "Tệp này không phải JSON hợp lệ.",
+  "import.success": "Đã nhập {classes} lớp, {lessons} bài học, {cards} thẻ ghi nhớ.",
   "common.zeroSelected": "Đã chọn 0",
   "common.nSelected": "Đã chọn {n}",
   "common.deleteSelected": "Xóa mục đã chọn",
@@ -2802,6 +2806,38 @@ function downloadFromApi(url) {
 document.getElementById("btn-export-class").addEventListener("click", function() {
   if (!state.currentClass) return;
   downloadFromApi("/api/export/flashcards?classId=" + encodeURIComponent(state.currentClass.id));
+});
+
+// Counterpart to downloadFromApi: reads a previously-exported flashcards JSON file and posts
+// it to POST /api/import/flashcards, which always creates brand-new classes (no merge option —
+// see docs/decisions.md). Same in-flight guard pattern as downloadFromApi, for the same reason
+// (double-picking a file, or picking while a prior import is still in flight).
+var importInFlight = false;
+document.getElementById("btn-import-flashcards").addEventListener("click", function() {
+  if (importInFlight) return;
+  document.getElementById("import-flashcards-input").click();
+});
+document.getElementById("import-flashcards-input").addEventListener("change", function(e) {
+  var file = e.target.files[0];
+  e.target.value = ""; // allow re-selecting the same file back-to-back
+  if (!file) return;
+  importInFlight = true;
+  file.text().then(function(text) {
+    var parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      throw new Error(t("import.invalidJson"));
+    }
+    return store.importFlashcards({ classes: parsed && parsed.classes });
+  }).then(function(result) {
+    renderHome();
+    alert(t("import.success", { classes: result.imported.classes, lessons: result.imported.lessons, cards: result.imported.cards }));
+  }).catch(function(err) {
+    alert(err.message);
+  }).finally(function() {
+    importInFlight = false;
+  });
 });
 
 /* ============================
@@ -6818,6 +6854,7 @@ var SQLiteAdapter = (function() {
     updateClass: function(id,f) { return req("PUT",    "/classes/" + id, f); },
     deleteClass: function(id)   { return req("DELETE", "/classes/" + id); },
     suggestClassTags: function(id) { return req("POST", "/classes/" + id + "/suggest-tags"); },
+    importFlashcards: function(payload) { return req("POST", "/import/flashcards", payload); },
 
     getLessons:   function(classId) { return req("GET",    "/classes/" + classId + "/lessons"); },
     createLesson: function(f)       { return req("POST",   "/classes/" + f.classId + "/lessons", { title: f.title, format: f.format }); },
@@ -7466,11 +7503,12 @@ if (IS_SERVER && !currentUser) {
 } else {
   initUserNav();
   if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
-  // Export hits a server route (GET /api/export/flashcards) with no local/offline
-  // equivalent — hidden outright rather than shown-then-erroring, same treatment as the
-  // image-def format pill and other server-only affordances.
+  // Export/import both hit server routes (GET /api/export/flashcards, POST
+  // /api/import/flashcards) with no local/offline equivalent — hidden outright rather than
+  // shown-then-erroring, same treatment as the image-def format pill and other server-only
+  // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }
