@@ -342,7 +342,15 @@ body {
 .home-header .nav-search-bar { flex: 1; }
 .home-header #user-nav { display: flex; align-items: center; gap: 8px; }
 
-.home-select-btn, .home-import-btn {
+.home-select-btn {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.home-import-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.8125rem;
   font-weight: 500;
   flex-shrink: 0;
@@ -359,7 +367,11 @@ body {
   font-weight: 600;
   color: #fff;
 }
-@media (max-width: 500px) { .home-new-class-label { display: none; } }
+/* Collapse to icon-only, same breakpoint as New Class, so a 3rd header button doesn't
+   crowd the search bar out on narrow viewports. */
+@media (max-width: 500px) {
+  .home-new-class-label, .home-import-label { display: none; }
+}
 
 /* "Lớp của bạn" section heading above the class grid */
 .home-section-title {
