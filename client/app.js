@@ -312,6 +312,7 @@ Object.assign(TRANSLATIONS.en, {
   "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
   "study.retypeLabel": "Type the answer to continue",
+  "study.retypeRequiredHint": "Type (or confirm) the answer above to continue",
   "study.retypePlaceholder": "Type the answer...",
   "study.retypeMismatch": "Not quite — try again.",
   "study.retypeCorrect": "Correct!",
@@ -781,6 +782,7 @@ Object.assign(TRANSLATIONS.vi, {
   "study.typeYourGuessPlaceholder": "Nhập câu trả lời...",
   "study.yourGuess": "Bạn đã trả lời: {text}",
   "study.retypeLabel": "Nhập lại đáp án để tiếp tục",
+  "study.retypeRequiredHint": "Nhập (hoặc xác nhận) đáp án ở trên để tiếp tục",
   "study.retypePlaceholder": "Nhập đáp án...",
   "study.retypeMismatch": "Chưa đúng — thử lại nhé.",
   "study.retypeCorrect": "Chính xác!",
@@ -4663,6 +4665,7 @@ function renderFlashcard() {
   // same four grading buttons, so the "must flip before grading" disable needs to apply last.
   state.fcForcedRetype = false;
   setFlashcardNavLocked(false);
+  document.getElementById("btn-fc-next").title = "";
   document.getElementById("fc-retype-wrap").classList.add("hidden");
   document.getElementById("fc-latex-confirm-wrap").classList.add("hidden");
   var retypeInput = document.getElementById("fc-retype-input");
@@ -5107,12 +5110,27 @@ function beginForcedRetype(advanceDelay) {
   state.fcForcedRetype = true;
   state.fcRetypeAdvanceDelay = advanceDelay;
   setFlashcardNavLocked(true);
+  // A disabled button gives no reason why on its own — a hover tooltip explaining it (desktop)
+  // complements the scrollIntoView calls below (mobile/short viewports) so "Next is locked"
+  // doesn't read as the app being stuck. Cleared in renderFlashcard()/completeForcedRetype().
+  document.getElementById("btn-fc-next").title = t("study.retypeRequiredHint");
   if (containsLatex(state.studyBackText)) {
     // LaTeX source can't be typed back blind — renderFlashcard shows it rendered via KaTeX,
     // not as raw $...$ markup — so a manual confirm swaps in for the typed check, still
     // gating the advance the same way a correct retype would.
-    document.getElementById("fc-latex-confirm-wrap").classList.remove("hidden");
-    document.getElementById("btn-fc-latex-continue").focus();
+    var latexWrap = document.getElementById("fc-latex-confirm-wrap");
+    latexWrap.classList.remove("hidden");
+    // .focus() alone is not a reliable "scroll this into view" guarantee — a focused element
+    // inside a 3D-transformed, backface-hidden face (.fc-back, mid- or just-post-flip) is a
+    // documented WebKit trouble spot elsewhere in this file (see docs/decisions.md's Safari
+    // face-bleed-through entry) — without an explicit scroll, a user on a short viewport can
+    // end up with every grading/nav button correctly locked but no visible reason why, reading
+    // as "the app just froze" rather than "type/confirm the answer to continue."
+    latexWrap.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    // preventScroll: a plain .focus() right after scrollIntoView's smooth animation starts
+    // triggers the browser's OWN focus-scroll too, which jumps instantly and cancels the
+    // smooth one mid-flight — most visible on exactly the short mobile viewports this is for.
+    document.getElementById("btn-fc-latex-continue").focus({ preventScroll: true });
     return;
   }
   var wrap = document.getElementById("fc-retype-wrap");
@@ -5123,7 +5141,8 @@ function beginForcedRetype(advanceDelay) {
   feedback.textContent = "";
   feedback.classList.add("hidden");
   wrap.classList.remove("hidden");
-  input.focus();
+  wrap.scrollIntoView({ block: "nearest", behavior: "smooth" }); // see comment above
+  input.focus({ preventScroll: true }); // see comment above
 }
 
 // Shared by a successful retype and the LaTeX manual-confirm button: re-lock grading only
@@ -5136,6 +5155,7 @@ function beginForcedRetype(advanceDelay) {
 function completeForcedRetype() {
   state.fcForcedRetype = false;
   setFlashcardNavLocked(false);
+  document.getElementById("btn-fc-next").title = "";
   document.getElementById("btn-fc-prev").disabled = state.studyIndex === 0;
   setMarkButtonsEnabled(false);
   scheduleFlashcardAdvance(state.fcRetypeAdvanceDelay);
