@@ -1252,13 +1252,27 @@ code {
 .manage-presets-list { display: flex; flex-direction: column; gap: 6px; }
 .manage-preset-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--surface);
 }
+.manage-preset-row-top { display: flex; align-items: center; gap: 8px; }
+.manage-preset-row-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  /* Aligns under .manage-preset-name above: 18px num + 8px gap + 20px reorder column + 8px gap */
+  padding-left: 54px;
+}
+/* min-width:0 overrides a flex item's default min-width:auto (content-width) — without it,
+   text-overflow:ellipsis never actually truncates no matter how long the summary text gets. */
+.manage-preset-summary { flex: 1; min-width: 0; font-size: 0.75rem; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.manage-preset-update { flex-shrink: 0; font-size: 0.75rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px; }
+.manage-preset-update svg { width: 12px; height: 12px; }
 .manage-preset-num {
   flex-shrink: 0;
   width: 18px;

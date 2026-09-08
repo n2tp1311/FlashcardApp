@@ -280,6 +280,8 @@ Object.assign(TRANSLATIONS.en, {
   "setup.moveDown": "Move down",
   "setup.renamePreset": "Rename",
   "setup.updatePresetHint": "Update to current setup",
+  "setup.presetUpdated": "Updated!",
+  "setup.interleaved": "Interleaved",
 
   "count.cardsDueForReview": "{n} card(s) due for review",
   "lesson.nextReviewIn": "Next review in {time}",
@@ -757,6 +759,8 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.moveDown": "Di chuyển xuống",
   "setup.renamePreset": "Đổi tên",
   "setup.updatePresetHint": "Cập nhật theo lựa chọn hiện tại",
+  "setup.presetUpdated": "Đã cập nhật!",
+  "setup.interleaved": "Xen kẽ",
 
   "count.cardsDueForReview": "{n} thẻ đến hạn ôn tập",
   "lesson.nextReviewIn": "Ôn tập tiếp theo sau {time}",
@@ -4350,22 +4354,58 @@ document.getElementById("btn-setup-confirm-preset").addEventListener("click", fu
    MANAGE PRESETS (reorder / rename / update-to-current)
    ============================ */
 
+// Short display labels for a preset's saved values, nested under one object (rather than three
+// separate top-level vars) to keep this feature's lookup tables from adding to the module's
+// already-large set of globals. Distinct from FILTER_HINT_KEYS/MODE_HINT_KEYS below (those are
+// full descriptive sentences for the setup screen's hint text, not compact enough here).
+var PRESET_LABEL_KEYS = {
+  filter: { all: "setup.allCards", due: "setup.dueOnly", needsRecall: "setup.needsRecall", learning: "setup.stillLearning" },
+  mode: { flashcard: "setup.flashcards", "flashcard-write": "setup.flashcardWrite", quiz: "setup.quiz" },
+  order: { "in-order": "setup.inOrder", shuffle: "common.shuffle", interleaved: "setup.interleaved" }
+};
+function presetLabel(kind, value) {
+  var key = PRESET_LABEL_KEYS[kind][value];
+  return key ? t(key) : value;
+}
+
+// "Update to current setup" has no visible effect on the row otherwise — reorder/rename/
+// delete are all self-evidently visible (the row moves/renames/disappears), but overwriting
+// count/filter/mode/order previously changed nothing a user could see without hovering a
+// tooltip. This summary line is both the "what does this preset currently hold" context AND
+// the after-the-fact confirmation that an update actually took effect.
+function formatPresetSummary(preset) {
+  var count = preset.count === "all" ? t("setup.all") : preset.count;
+  return [count, presetLabel("filter", preset.filter), presetLabel("mode", preset.mode), presetLabel("order", preset.order)].join(" · ");
+}
+
+// A function, not a cached string — it's re-read at render time AND at the flash-feedback
+// revert (below), and both need the label re-evaluated fresh against the active language, not
+// frozen at whatever language was active when the script first loaded.
+function manageUpdateBtnDefaultHtml() {
+  return ICON_SAVE + " " + t("setup.updatePresetHint");
+}
+
 function renderManagePresetsList() {
   var list = document.getElementById("manage-presets-list");
   var presets = state.studyPresets;
   document.getElementById("manage-presets-empty").classList.toggle("hidden", presets.length > 0);
   list.innerHTML = presets.map(function(preset, i) {
     return '<div class="manage-preset-row">' +
-      '<span class="manage-preset-num">' + (i + 1) + '</span>' +
-      '<div class="manage-preset-reorder">' +
-        '<button class="icon-btn manage-preset-up" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("setup.moveUp")) + '" aria-label="' + escHtml(t("setup.moveUp")) + '"' + (i === 0 ? " disabled" : "") + '>' + ICON_CHEVRON_UP + '</button>' +
-        '<button class="icon-btn manage-preset-down" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("setup.moveDown")) + '" aria-label="' + escHtml(t("setup.moveDown")) + '"' + (i === presets.length - 1 ? " disabled" : "") + '>' + ICON_CHEVRON_DOWN + '</button>' +
+      '<div class="manage-preset-row-top">' +
+        '<span class="manage-preset-num">' + (i + 1) + '</span>' +
+        '<div class="manage-preset-reorder">' +
+          '<button class="icon-btn manage-preset-up" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("setup.moveUp")) + '" aria-label="' + escHtml(t("setup.moveUp")) + '"' + (i === 0 ? " disabled" : "") + '>' + ICON_CHEVRON_UP + '</button>' +
+          '<button class="icon-btn manage-preset-down" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("setup.moveDown")) + '" aria-label="' + escHtml(t("setup.moveDown")) + '"' + (i === presets.length - 1 ? " disabled" : "") + '>' + ICON_CHEVRON_DOWN + '</button>' +
+        '</div>' +
+        '<span class="manage-preset-name">' + escHtml(preset.name) + '</span>' +
+        '<input type="text" class="manage-preset-name-input hidden" data-preset-id="' + escHtml(preset.id) + '" maxlength="40" value="' + escHtml(preset.name) + '">' +
+        '<button class="icon-btn manage-preset-rename" title="' + escHtml(t("setup.renamePreset")) + '" aria-label="' + escHtml(t("setup.renamePreset")) + '">' + ICON_EDIT + '</button>' +
+        '<button class="icon-btn danger manage-preset-delete" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("common.delete")) + '" aria-label="' + escHtml(t("common.delete")) + '">' + ICON_DELETE + '</button>' +
       '</div>' +
-      '<span class="manage-preset-name">' + escHtml(preset.name) + '</span>' +
-      '<input type="text" class="manage-preset-name-input hidden" data-preset-id="' + escHtml(preset.id) + '" maxlength="40" value="' + escHtml(preset.name) + '">' +
-      '<button class="icon-btn manage-preset-rename" title="' + escHtml(t("setup.renamePreset")) + '" aria-label="' + escHtml(t("setup.renamePreset")) + '">' + ICON_EDIT + '</button>' +
-      '<button class="icon-btn manage-preset-update" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("setup.updatePresetHint")) + '" aria-label="' + escHtml(t("setup.updatePresetHint")) + '">' + ICON_SAVE + '</button>' +
-      '<button class="icon-btn danger manage-preset-delete" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("common.delete")) + '" aria-label="' + escHtml(t("common.delete")) + '">' + ICON_DELETE + '</button>' +
+      '<div class="manage-preset-row-bottom">' +
+        '<span class="manage-preset-summary">' + escHtml(formatPresetSummary(preset)) + '</span>' +
+        '<button class="btn btn-sm btn-ghost manage-preset-update" data-preset-id="' + escHtml(preset.id) + '">' + manageUpdateBtnDefaultHtml() + '</button>' +
+      '</div>' +
     '</div>';
   }).join("");
 }
@@ -4442,11 +4482,12 @@ document.getElementById("manage-presets-list").addEventListener("click", functio
     preset.mode = document.querySelector("#setup-mode .pill.active").dataset.value;
     preset.order = orderEl ? orderEl.dataset.value : "in-order";
     savePresetsToServer();
-    // Nothing else in this row's rendered content reflects count/filter/mode/order, so unlike
-    // rename/reorder/delete (all visibly self-evident), this action needs its own feedback —
-    // same brief icon-swap pattern already used for "Copy Prompt" elsewhere in this file.
-    updateBtn.innerHTML = ICON_CHECK;
-    setTimeout(function() { updateBtn.innerHTML = ICON_SAVE; }, 1500);
+    // The summary line is the real feedback (it now visibly shows the new values) — the
+    // button's own text briefly confirming "Updated" on top of that (same pattern as "Copy
+    // Prompt" elsewhere in this file) covers the case where the values happened to already
+    // match, when the summary line wouldn't visibly change at all.
+    updateBtn.closest(".manage-preset-row-bottom").querySelector(".manage-preset-summary").textContent = formatPresetSummary(preset);
+    flashButtonFeedback(updateBtn, ICON_CHECK + " " + t("setup.presetUpdated"), manageUpdateBtnDefaultHtml(), 1500);
     return;
   }
 
@@ -6918,11 +6959,19 @@ document.getElementById("modal-prompt-guide").addEventListener("click", function
   if (e.target === this) this.classList.add("hidden");
 });
 
+// Shared by every "flash a confirmation on this button, then revert" moment (copy prompt,
+// copy share link, update preset) — three independent copies of this exact shape had drifted
+// (one used textContent for the revert instead of innerHTML, delays ranged 1500-2000ms)
+// before being collapsed into this one place.
+function flashButtonFeedback(btn, flashHtml, revertHtml, delayMs) {
+  btn.innerHTML = flashHtml;
+  setTimeout(function() { btn.innerHTML = revertHtml; }, delayMs);
+}
+
 document.getElementById("btn-copy-prompt").addEventListener("click", function() {
   navigator.clipboard.writeText(AI_EXTRACTION_PROMPT).then(function() {
     var btn = document.getElementById("btn-copy-prompt");
-    btn.innerHTML = ICON_CHECK + " " + t("common.copied");
-    setTimeout(function() { btn.innerHTML = ICON_COPY + " " + t("promptGuide.copyPrompt"); }, 2000);
+    flashButtonFeedback(btn, ICON_CHECK + " " + t("common.copied"), ICON_COPY + " " + t("promptGuide.copyPrompt"), 2000);
   });
 });
 
@@ -7874,8 +7923,7 @@ document.getElementById("btn-copy-share-link").addEventListener("click", functio
   var input = document.getElementById("share-link-input");
   navigator.clipboard.writeText(input.value).then(function() {
     var btn = document.getElementById("btn-copy-share-link");
-    btn.innerHTML = ICON_CHECK + " " + t("common.copied");
-    setTimeout(function() { btn.textContent = t("common.copy"); }, 2000);
+    flashButtonFeedback(btn, ICON_CHECK + " " + t("common.copied"), t("common.copy"), 2000);
   });
 });
 
