@@ -386,7 +386,10 @@
   <div class="setup-container">
     <p id="setup-scope-label" class="setup-scope hidden"></p>
     <div class="setup-section" id="setup-presets-section">
-      <label class="setup-label" data-i18n="setup.presets">Presets</label>
+      <div class="setup-label-row">
+        <label class="setup-label" data-i18n="setup.presets">Presets</label>
+        <button class="icon-btn" id="btn-manage-presets" title="Manage presets" aria-label="Manage presets" data-i18n-title="setup.managePresets" data-i18n-aria="setup.managePresets"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      </div>
       <div id="setup-presets-list" class="setup-presets-list"></div>
       <div class="setup-preset-save-row">
         <input type="text" id="setup-preset-name-input" class="setup-preset-name-input hidden" maxlength="40" data-i18n-placeholder="setup.presetNamePlaceholder" placeholder="Preset name">
@@ -858,6 +861,20 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   </div>
 
   <!-- Delete Confirm Modal -->
+  <div id="modal-manage-presets" class="modal hidden">
+    <div class="modal-header">
+      <h3 data-i18n="setup.managePresetsTitle">Manage Presets</h3>
+      <button class="modal-close" data-modal="manage-presets" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div id="manage-presets-list" class="manage-presets-list"></div>
+      <p id="manage-presets-empty" class="manage-presets-empty hidden" data-i18n="setup.noPresetsYet">No presets saved yet.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" data-modal="manage-presets" data-i18n="common.close">Close</button>
+    </div>
+  </div>
+
   <div id="modal-delete" class="modal hidden">
     <div class="modal-header">
       <h3 data-i18n="delete.confirmTitle">Confirm Delete</h3>

@@ -273,6 +273,13 @@ Object.assign(TRANSLATIONS.en, {
   "setup.presetNamePlaceholder": "Preset name",
   "setup.savePreset": "+ Save current as preset",
   "setup.deletePresetConfirm": "Delete preset \"{name}\"?",
+  "setup.managePresets": "Manage presets",
+  "setup.managePresetsTitle": "Manage Presets",
+  "setup.noPresetsYet": "No presets saved yet.",
+  "setup.moveUp": "Move up",
+  "setup.moveDown": "Move down",
+  "setup.renamePreset": "Rename",
+  "setup.updatePresetHint": "Update to current setup",
 
   "count.cardsDueForReview": "{n} card(s) due for review",
   "lesson.nextReviewIn": "Next review in {time}",
@@ -743,6 +750,13 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.presetNamePlaceholder": "Tên bộ lọc",
   "setup.savePreset": "+ Lưu lựa chọn hiện tại",
   "setup.deletePresetConfirm": "Xóa bộ lọc \"{name}\"?",
+  "setup.managePresets": "Quản lý bộ lọc",
+  "setup.managePresetsTitle": "Quản lý bộ lọc đã lưu",
+  "setup.noPresetsYet": "Chưa có bộ lọc nào được lưu.",
+  "setup.moveUp": "Di chuyển lên",
+  "setup.moveDown": "Di chuyển xuống",
+  "setup.renamePreset": "Đổi tên",
+  "setup.updatePresetHint": "Cập nhật theo lựa chọn hiện tại",
 
   "count.cardsDueForReview": "{n} thẻ đến hạn ôn tập",
   "lesson.nextReviewIn": "Ôn tập tiếp theo sau {time}",
@@ -4330,6 +4344,137 @@ document.getElementById("btn-setup-confirm-preset").addEventListener("click", fu
   savePresetsToServer();
   renderSetupPresets();
   resetSetupPresetSaveRow();
+});
+
+/* ============================
+   MANAGE PRESETS (reorder / rename / update-to-current)
+   ============================ */
+
+function renderManagePresetsList() {
+  var list = document.getElementById("manage-presets-list");
+  var presets = state.studyPresets;
+  document.getElementById("manage-presets-empty").classList.toggle("hidden", presets.length > 0);
+  list.innerHTML = presets.map(function(preset, i) {
+    return '<div class="manage-preset-row">' +
+      '<span class="manage-preset-num">' + (i + 1) + '</span>' +
+      '<div class="manage-preset-reorder">' +
+        '<button class="icon-btn manage-preset-up" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("setup.moveUp")) + '" aria-label="' + escHtml(t("setup.moveUp")) + '"' + (i === 0 ? " disabled" : "") + '>' + ICON_CHEVRON_UP + '</button>' +
+        '<button class="icon-btn manage-preset-down" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("setup.moveDown")) + '" aria-label="' + escHtml(t("setup.moveDown")) + '"' + (i === presets.length - 1 ? " disabled" : "") + '>' + ICON_CHEVRON_DOWN + '</button>' +
+      '</div>' +
+      '<span class="manage-preset-name">' + escHtml(preset.name) + '</span>' +
+      '<input type="text" class="manage-preset-name-input hidden" data-preset-id="' + escHtml(preset.id) + '" maxlength="40" value="' + escHtml(preset.name) + '">' +
+      '<button class="icon-btn manage-preset-rename" title="' + escHtml(t("setup.renamePreset")) + '" aria-label="' + escHtml(t("setup.renamePreset")) + '">' + ICON_EDIT + '</button>' +
+      '<button class="icon-btn manage-preset-update" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("setup.updatePresetHint")) + '" aria-label="' + escHtml(t("setup.updatePresetHint")) + '">' + ICON_SAVE + '</button>' +
+      '<button class="icon-btn danger manage-preset-delete" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("common.delete")) + '" aria-label="' + escHtml(t("common.delete")) + '">' + ICON_DELETE + '</button>' +
+    '</div>';
+  }).join("");
+}
+
+document.getElementById("btn-manage-presets").addEventListener("click", function() {
+  renderManagePresetsList();
+  openModal("manage-presets");
+});
+
+function movePreset(presetId, direction) {
+  var idx = state.studyPresets.findIndex(function(p) { return p.id === presetId; });
+  var newIdx = idx + direction;
+  if (idx === -1 || newIdx < 0 || newIdx >= state.studyPresets.length) return;
+  var tmp = state.studyPresets[idx];
+  state.studyPresets[idx] = state.studyPresets[newIdx];
+  state.studyPresets[newIdx] = tmp;
+  savePresetsToServer();
+  renderManagePresetsList();
+  renderSetupPresets();
+}
+
+// Rename commits on focusout (covers Enter-via-blur, Tab, and click-away in one place) rather
+// than a separate confirm button — the input row already reads as "editing," and firing on
+// blur matches how the existing preset-name field elsewhere just gets typed into directly.
+//
+// Deliberately does NOT call renderManagePresetsList() — a full re-render replaces the list's
+// innerHTML, which detaches every button in it, including whatever the user is mid-click on:
+// clicking a DIFFERENT row's Update/Delete/move button while this input is still focused blurs
+// it first (mousedown fires before click), and if that blur's handler re-rendered the list out
+// from under the click, the click event would arrive at a now-detached node and never bubble to
+// the delegated listener below — silently swallowing that click. Updating just this one row's
+// two elements in place keeps every other button's identity intact across the commit.
+function commitPresetRename(inputEl) {
+  var presetId = inputEl.dataset.presetId;
+  var preset = state.studyPresets.filter(function(p) { return p.id === presetId; })[0];
+  if (!preset) return;
+  var trimmed = inputEl.value.trim();
+  if (trimmed && trimmed !== preset.name) {
+    preset.name = trimmed;
+    savePresetsToServer();
+    renderSetupPresets(); // a different list, on a different screen — safe to fully re-render
+  }
+  var row = inputEl.closest(".manage-preset-row");
+  row.querySelector(".manage-preset-name").textContent = preset.name;
+  inputEl.value = preset.name;
+  inputEl.classList.add("hidden");
+  row.querySelector(".manage-preset-name").classList.remove("hidden");
+}
+
+document.getElementById("manage-presets-list").addEventListener("click", function(e) {
+  var upBtn = e.target.closest(".manage-preset-up");
+  if (upBtn) { movePreset(upBtn.dataset.presetId, -1); return; }
+  var downBtn = e.target.closest(".manage-preset-down");
+  if (downBtn) { movePreset(downBtn.dataset.presetId, 1); return; }
+
+  var renameBtn = e.target.closest(".manage-preset-rename");
+  if (renameBtn) {
+    var row = renameBtn.closest(".manage-preset-row");
+    row.querySelector(".manage-preset-name").classList.add("hidden");
+    var input = row.querySelector(".manage-preset-name-input");
+    input.classList.remove("hidden");
+    input.focus();
+    input.select();
+    return;
+  }
+
+  var updateBtn = e.target.closest(".manage-preset-update");
+  if (updateBtn) {
+    var preset = state.studyPresets.filter(function(p) { return p.id === updateBtn.dataset.presetId; })[0];
+    if (!preset) return;
+    var orderEl = document.querySelector("#setup-order .pill.active");
+    preset.count = document.querySelector("#setup-count .pill.active").dataset.value;
+    preset.filter = document.querySelector("#setup-filter .pill.active").dataset.value;
+    preset.mode = document.querySelector("#setup-mode .pill.active").dataset.value;
+    preset.order = orderEl ? orderEl.dataset.value : "in-order";
+    savePresetsToServer();
+    // Nothing else in this row's rendered content reflects count/filter/mode/order, so unlike
+    // rename/reorder/delete (all visibly self-evident), this action needs its own feedback —
+    // same brief icon-swap pattern already used for "Copy Prompt" elsewhere in this file.
+    updateBtn.innerHTML = ICON_CHECK;
+    setTimeout(function() { updateBtn.innerHTML = ICON_SAVE; }, 1500);
+    return;
+  }
+
+  var deleteBtn = e.target.closest(".manage-preset-delete");
+  if (deleteBtn) {
+    var presetId = deleteBtn.dataset.presetId;
+    var toDelete = state.studyPresets.filter(function(p) { return p.id === presetId; })[0];
+    if (!toDelete) return;
+    confirmDelete(t("setup.deletePresetConfirm", { name: toDelete.name }), function() {
+      state.studyPresets = state.studyPresets.filter(function(p) { return p.id !== presetId; });
+      savePresetsToServer();
+      renderManagePresetsList();
+      renderSetupPresets();
+    });
+  }
+});
+
+document.getElementById("manage-presets-list").addEventListener("keydown", function(e) {
+  if (e.target.classList.contains("manage-preset-name-input") && e.key === "Enter") {
+    e.preventDefault();
+    e.target.blur(); // triggers the focusout handler below, which commits
+  }
+});
+
+document.getElementById("manage-presets-list").addEventListener("focusout", function(e) {
+  if (e.target.classList.contains("manage-preset-name-input")) {
+    commitPresetRename(e.target);
+  }
 });
 
 // Pill group click handlers
