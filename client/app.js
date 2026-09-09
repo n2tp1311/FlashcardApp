@@ -488,6 +488,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.title": "Keyboard Shortcuts",
   "keymap.sectionGlobal": "Global",
   "keymap.search": "Search",
+  "keymap.saveCardModal": "Save (Add/Edit Card)",
   "keymap.toggleHelp": "Toggle this help",
   "keymap.goHome": "Go to Home",
   "keymap.closeGoBack": "Close / Go back",
@@ -967,6 +968,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.title": "Phím tắt",
   "keymap.sectionGlobal": "Toàn cục",
   "keymap.search": "Tìm kiếm",
+  "keymap.saveCardModal": "Lưu (Thêm/Sửa thẻ)",
   "keymap.toggleHelp": "Bật/tắt trợ giúp này",
   "keymap.goHome": "Về trang chủ",
   "keymap.closeGoBack": "Đóng / Quay lại",
@@ -8222,6 +8224,16 @@ function moveFocus(selector, dir) {
   next.focus();
 }
 
+// The 4 card-format modals (Add and Edit Card both reuse these, retitled) — their term/def/etc.
+// fields are <textarea>s, where plain Enter has to stay a newline (a LaTeX answer can be
+// multi-line), so saving needs an explicit modifier rather than plain Enter.
+var CARD_SAVE_MODALS = [
+  { modal: "modal-card-termdef",  btn: "btn-save-card-termdef" },
+  { modal: "modal-card-mcq",      btn: "btn-save-card-mcq" },
+  { modal: "modal-card-tf",       btn: "btn-save-card-tf" },
+  { modal: "modal-card-imagedef", btn: "btn-save-card-imagedef" }
+];
+
 document.addEventListener("keydown", function(e) {
   var screen = getActiveScreen();
   if (!screen) return;
@@ -8231,6 +8243,21 @@ document.addEventListener("keydown", function(e) {
     e.preventDefault();
     openSearchModal();
     return;
+  }
+
+  // Ctrl/Cmd+Enter → save, from inside any Add/Edit Card modal's fields. Checked before the
+  // isInputFocused()/anyModalOpen guard below (which exists specifically to block *other*
+  // shortcuts while typing) since this one is meant to fire from inside a focused textarea.
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    var openCardModal = CARD_SAVE_MODALS.filter(function(m) {
+      var el = document.getElementById(m.modal);
+      return el && !el.classList.contains("hidden");
+    })[0];
+    if (openCardModal) {
+      e.preventDefault();
+      document.getElementById(openCardModal.btn).click();
+      return;
+    }
   }
 
   // Escape closes any open modal (search first, then keymap, then overlay, then share/prompt-guide)

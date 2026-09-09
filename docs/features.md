@@ -141,7 +141,7 @@
 - `N`/`B`/`E` shortcuts (new class/lesson/card, edit class) now call `e.preventDefault()` before opening their modal — previously the keystroke that triggered the shortcut also landed in the modal's now-focused text input
 - Native browser Back is trapped in-app: a single-URL SPA has no router, so a real Back press used to leave the app entirely; a `pushState`/`popstate` listener now re-arms on every pop and either closes the topmost open modal or clicks the current screen's own back button instead
 - Quiz: `1`–`5` select option, `Esc` back; Recall: `Enter` reveal, `1`/`2`/`3` grade, `Esc` back
-- Global: `H` go home, `?` toggle keymap modal, `Esc` close any open modal
+- Global: `H` go home, `?` toggle keymap modal, `Esc` close any open modal, `Ctrl/⌘+Enter` save from inside the Add/Edit Card modal (all 4 card formats) — plain `Enter` stays a newline in the term/def/etc. textareas since a LaTeX answer can be multi-line
 - `?` key shortcut modal lists all bindings; `⌨` header button also opens it
 - `[key]` hints injected next to button labels on desktop; hidden on mobile (`≤600px`)
 - Escape works for any modal (overlay forms, share, prompt guide, keymap)
