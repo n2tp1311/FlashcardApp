@@ -19,6 +19,7 @@ const MAX_ID_LEN = 128;
 const MAX_TEXT_LEN = 20000;
 const MAX_LINK_CARDS = 2000;
 const MAX_ADD_CARDS = 500;
+const MAX_CONVERT_CARDS = 500;
 const MAX_TITLE_LEN = 200;
 const EVENT_TYPES = ["updated", "deleted", "restored", "split"];
 
@@ -264,7 +265,8 @@ router.get("/classes", (req, res) => {
 });
 
 // GET /api/integrations/knowledge/classes/:id/cards
-// Card rows are term-def only: linking, anchoring and `updated` events all require it.
+// Every card is returned: term-def rows carry term/def, other formats carry their raw
+// `data` so KnowledgeApp can rewrite them as term-def (see /convert-cards).
 // `position` replaces sort_order, which repeats and so means nothing on its own.
 router.get("/classes/:id/cards", (req, res) => {
   const cls = ownClass(req.userId, req.params.id);
@@ -287,16 +289,21 @@ router.get("/classes/:id/cards", (req, res) => {
   rows.forEach(r => {
     const position = positions.get(r.lesson_id) || 0;
     positions.set(r.lesson_id, position + 1);
-    if (r.format !== "term-def") return;
     let data;
     try { data = JSON.parse(r.data); } catch (_) { return; }
-    if (typeof data.term !== "string" || typeof data.def !== "string") return;
-    cards.push({
-      id: r.id, lesson_id: r.lesson_id, position, term: data.term, def: data.def,
+    const card = {
+      id: r.id, lesson_id: r.lesson_id, position, format: r.format,
       external_id: r.external_id, upstream_change: r.upstream_change,
       studied: r.srs_due_at != null || (r.fsrs_reps || 0) > 0,
       known: r.known == null ? null : r.known === 1
-    });
+    };
+    if (r.format === "term-def") {
+      if (typeof data.term !== "string" || typeof data.def !== "string") return;
+      card.term = data.term; card.def = data.def;
+    } else {
+      card.data = data;
+    }
+    cards.push(card);
   });
 
   res.json({ class: { id: cls.id, name: cls.name, archived: !!cls.archived }, lessons, cards });
@@ -346,6 +353,76 @@ router.post("/link-cards", (req, res) => {
     res.json({ results, ...counts });
   } catch (e) {
     console.error("[integrations] link-cards failed:", e.message);
+    res.status(500).json({ error: "internal error" });
+  }
+});
+
+// POST /api/integrations/knowledge/convert-cards  { cards: [{card_id, term, def}] }
+// Rewrites mcq / true-false cards as term-def in place. The card id is kept, so card_states,
+// attempts and the FSRS schedule stay exactly as they were — deliberately not made due:
+// the user chose to keep the current schedule. The original {format, data} goes to
+// converted_from (first conversion only) so it can be undone. A lesson whose cards are all
+// term-def afterwards becomes a term-def lesson.
+router.post("/convert-cards", (req, res) => {
+  const items = req.body && req.body.cards;
+  if (!Array.isArray(items) || items.length < 1 || items.length > MAX_CONVERT_CARDS)
+    return res.status(400).json({ error: "cards must be an array of 1-" + MAX_CONVERT_CARDS });
+  for (let i = 0; i < items.length; i++) {
+    const c = items[i];
+    if (!c || !isId(c.card_id) || !isText(c.term) || !isText(c.def))
+      return res.status(400).json({ error: "card " + i + ": card_id, term and def required" });
+  }
+
+  try {
+    const owned = new Map();
+    forEachBatch([...new Set(items.map(c => c.card_id))], chunk => {
+      db.prepare(
+        "SELECT cards.id, cards.lesson_id, cards.format, cards.data, cards.converted_from FROM cards " +
+        "JOIN lessons ON cards.lesson_id = lessons.id JOIN classes ON lessons.class_id = classes.id " +
+        "WHERE classes.user_id = ? AND cards.id IN (" + chunk.map(() => "?").join(",") + ")"
+      ).all(req.userId, ...chunk).forEach(r => owned.set(r.id, r));
+    });
+
+    const counts = { converted: 0, already: 0, not_found: 0, invalid: 0 };
+    const results = [];
+    const touched = new Set();
+    const lessonsConverted = [];
+    db.transaction(() => {
+      items.forEach(c => {
+        const card = owned.get(c.card_id);
+        const term = c.term.trim(), def = c.def.trim();
+        let out;
+        if (!card) out = { status: "not_found" };
+        else if (card.format === "term-def") {
+          let d; try { d = JSON.parse(card.data); } catch (_) { d = {}; }
+          out = (typeof d.term === "string" && d.term.trim() === term && typeof d.def === "string" && d.def.trim() === def)
+            ? { status: "already" }
+            : { status: "invalid", error: "card is already term-def; send an updated event to change its text" };
+        } else if (card.format === "image-def") {
+          out = { status: "invalid", error: "image-def cards are not converted: the image would be lost" };
+        } else {
+          db.prepare("UPDATE cards SET format = 'term-def', data = ?, converted_from = COALESCE(converted_from, ?) WHERE id = ?")
+            .run(JSON.stringify({ term, def }), JSON.stringify({ format: card.format, data: JSON.parse(card.data) }), card.id);
+          card.format = "term-def";
+          card.data = JSON.stringify({ term, def });
+          touched.add(card.lesson_id);
+          out = { status: "converted" };
+        }
+        counts[out.status]++;
+        results.push({ card_id: c.card_id, ...out });
+      });
+
+      touched.forEach(lessonId => {
+        const left = db.prepare("SELECT COUNT(*) AS n FROM cards WHERE lesson_id = ? AND format != 'term-def'").get(lessonId).n;
+        if (left === 0) {
+          const changed = db.prepare("UPDATE lessons SET format = 'term-def' WHERE id = ? AND format != 'term-def'").run(lessonId);
+          if (changed.changes) lessonsConverted.push(lessonId);
+        }
+      });
+    })();
+    res.json({ results, lessons_converted: lessonsConverted, ...counts });
+  } catch (e) {
+    console.error("[integrations] convert-cards failed:", e.message);
     res.status(500).json({ error: "internal error" });
   }
 });

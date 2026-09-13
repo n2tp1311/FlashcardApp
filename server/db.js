@@ -310,6 +310,10 @@ try { db.exec("ALTER TABLE cards ADD COLUMN upstream_change TEXT"); } catch (_) 
 try { db.exec("ALTER TABLE cards ADD COLUMN upstream_changed_at INTEGER"); } catch (_) {}
 try { db.exec("ALTER TABLE cards ADD COLUMN upstream_prev_data TEXT"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_external ON cards(external_id)"); } catch (_) {}
+// JSON {format, data} of a card before KnowledgeApp converted it to term-def; kept so the
+// conversion can be undone. Separate from upstream_prev_data, which only ever holds term-def
+// content tied to an "updated" flag.
+try { db.exec("ALTER TABLE cards ADD COLUMN converted_from TEXT"); } catch (_) {}
 
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.

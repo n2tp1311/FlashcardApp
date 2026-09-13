@@ -279,13 +279,14 @@ importRouter.post("/", requireAuth, importLimiter, (req, res) => {
       idMap[card.id] = newId;
       const lessonId = idMap[card.lesson_id] || card.lesson_id;
       db.prepare(
-        "INSERT OR IGNORE INTO cards (id, lesson_id, format, data, sort_order, created_at, external_id, upstream_change, upstream_changed_at, upstream_prev_data) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT OR IGNORE INTO cards (id, lesson_id, format, data, sort_order, created_at, external_id, upstream_change, upstream_changed_at, upstream_prev_data, converted_from) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
       ).run(newId, lessonId, card.format, JSON.stringify(card.data), card.sort_order || 0, card.created_at || Math.floor(Date.now()/1000),
             typeof card.external_id === "string" ? card.external_id.slice(0, 128) : null,
             card.upstream_change === "updated" || card.upstream_change === "deleted" ? card.upstream_change : null,
             Number.isInteger(card.upstream_changed_at) ? card.upstream_changed_at : null,
-            typeof card.upstream_prev_data === "string" ? card.upstream_prev_data : null);
+            typeof card.upstream_prev_data === "string" ? card.upstream_prev_data : null,
+            typeof card.converted_from === "string" ? card.converted_from : null);
     });
 
     attempts.forEach(att => {
