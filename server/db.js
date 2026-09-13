@@ -63,7 +63,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS attempts (
     id         TEXT PRIMARY KEY,
-    card_id    TEXT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    card_id    TEXT NOT NULL,
     user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     correct    INTEGER NOT NULL CHECK (correct IN (0,1)),
     source     TEXT NOT NULL CHECK (source IN ('quiz','flashcard','recall')),
@@ -129,7 +129,13 @@ try { db.exec("CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY K
 
 function runMigration(name, fn) {
   try {
-    if (db.prepare("SELECT 1 FROM schema_migrations WHERE name = ?").get(name)) return;
+    // Finalize explicitly (bypassing the db.prepare shim below): an unfinalized statement left
+    // open by an already-applied migration's check makes a later DROP TABLE fail with
+    // "database table is locked", silently skipping table-rebuild migrations.
+    const check = Database.prototype.prepare.call(db, "SELECT 1 FROM schema_migrations WHERE name = ?");
+    let applied;
+    try { applied = check.get(name); } finally { check.finalize(); }
+    if (applied) return;
     fn();
     db.prepare("INSERT OR IGNORE INTO schema_migrations (name) VALUES (?)").run(name);
   } catch (_) {
@@ -143,7 +149,7 @@ runMigration("attempts_recall_source", function() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS attempts_v2 (
       id         TEXT PRIMARY KEY,
-      card_id    TEXT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+      card_id    TEXT NOT NULL,
       user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       correct    INTEGER NOT NULL CHECK (correct IN (0,1)),
       source     TEXT NOT NULL CHECK (source IN ('quiz','flashcard','recall')),
@@ -225,6 +231,46 @@ try { db.exec("ALTER TABLE attempts ADD COLUMN duration_ms INTEGER"); } catch (_
 // Migration: persist the client-submitted self-grade (easy/hard) on each attempt —
 // previously received in the request body and used to compute srs_step, then discarded
 try { db.exec("ALTER TABLE attempts ADD COLUMN grade TEXT"); } catch (_) {}
+
+// Migration: drop the attempts.card_id -> cards FK so deleting a card/lesson/class frees the
+// card storage but keeps study history (study time, heatmap, streak, accuracy). Orphaned
+// attempts keep their original card_id (ids are never reused) so per-card groupings like
+// new-cards-per-week stay accurate. Own BEGIN/ROLLBACK because runMigration swallows errors
+// and a failure after DROP TABLE would otherwise lose every attempt.
+runMigration("attempts_drop_card_fk", function() {
+  db.exec("PRAGMA foreign_keys = OFF");
+  try {
+    db.exec("BEGIN");
+    db.exec(`
+      DROP TABLE IF EXISTS attempts_v3;
+      CREATE TABLE attempts_v3 (
+        id          TEXT PRIMARY KEY,
+        card_id     TEXT NOT NULL,
+        user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        correct     INTEGER NOT NULL CHECK (correct IN (0,1)),
+        source      TEXT NOT NULL CHECK (source IN ('quiz','flashcard','recall')),
+        created_at  INTEGER NOT NULL DEFAULT (unixepoch()),
+        duration_ms INTEGER,
+        grade       TEXT
+      );
+      INSERT INTO attempts_v3 (id, card_id, user_id, correct, source, created_at, duration_ms, grade)
+        SELECT id, card_id, user_id, correct, source, created_at, duration_ms, grade FROM attempts;
+      DROP TABLE attempts;
+      ALTER TABLE attempts_v3 RENAME TO attempts;
+      CREATE INDEX IF NOT EXISTS idx_attempts_card         ON attempts(card_id);
+      CREATE INDEX IF NOT EXISTS idx_attempts_user         ON attempts(user_id);
+      CREATE INDEX IF NOT EXISTS idx_attempts_cu           ON attempts(card_id, user_id);
+      CREATE INDEX IF NOT EXISTS idx_attempts_cu_created   ON attempts(card_id, user_id, created_at);
+      CREATE INDEX IF NOT EXISTS idx_attempts_user_created ON attempts(user_id, created_at);
+    `);
+    db.exec("COMMIT");
+  } catch (e) {
+    try { db.exec("ROLLBACK"); } catch (_) {}
+    throw e;
+  } finally {
+    db.exec("PRAGMA foreign_keys = ON");
+  }
+});
 
 // Migration: free-text tags on classes, stored as a JSON array string
 try { db.exec("ALTER TABLE classes ADD COLUMN tags TEXT"); } catch (_) {}
