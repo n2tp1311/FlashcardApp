@@ -243,7 +243,7 @@ All text fields support **inline LaTeX** (`$...$`) and **display LaTeX** (`$$...
 User selects:
 1. Lesson(s): single, multiple, or entire class
 2. Card count: 10 / 25 / 50 / All
-3. Filter: All / Due Only / Needs Recall (`last_correct_source === "quiz" AND due` — only ever confirmed via quiz recognition, not active recall; auto-switches Mode to Flashcard) / Still Learning
+3. Filter: All / Due Only / Needs Recall (`last_correct_source === "quiz" AND due` — only ever confirmed via quiz recognition, not active recall; auto-switches Mode to Flashcard) / Still Learning / Updated (server mode only: cards KnowledgeApp changed that haven't been reviewed since — see §5.13)
 4. Direction (Format A only): Term → Def or Def → Term
 5. Mode: Flashcards, Flashcard & Write (types an answer before flipping, forced on for the session — was a Preferences toggle, now its own mode), or Quiz — hint line under the mode picker explains the recall-vs-recognition tradeoff (§5.4's SRS cap)
 6. Live match-count ("N card(s) match this filter") shown before Start Studying, recomputed as the Filter pill changes; zero-match state styled as a warning
@@ -349,6 +349,19 @@ Not a separate screen — it renders inside `#screen-dashboard` (`renderDashboar
 | Export | Download last 90 days of attempt data as CSV (date, hour, class, lesson, card_front, mode, result, duration_sec) |
 
 Data from the existing `attempts` table plus one new column, `duration_ms` (nullable INTEGER, client-timed, server-clamped to 5 minutes) — no other schema changes.
+
+### 5.13 KnowledgeApp Sync (server mode only)
+
+| Aspect | Spec |
+|---|---|
+| Auth | Personal API token (`fca_…`, 256-bit), created/revoked in Preferences, shown once; only its SHA-256 is stored (`api_tokens`). Max 10 per user. Integration routes mounted before the session middleware and set `req.userId` |
+| Link | `cards.external_id` (`<store_uuid>:<unit_id>` from KnowledgeApp). Set by `POST /api/import/flashcards` (`card.external_id`), by `/link` backfill (exact trimmed term+def, ambiguous texts skipped), preserved by flashcard export and full backup, not copied on share clone |
+| `updated` / `restored` | Rewrites term-def `term`/`def` on every card of the user with that external id; sets `upstream_change='updated'`, keeps the first pre-change data in `upstream_prev_data`; reviewed cards become due now (`srs_due_at = now`), FSRS stability/difficulty untouched; never-reviewed cards stay new. Same text (trimmed) → noop; text back to original → flag cleared |
+| `deleted` | `upstream_change='deleted'`; card, content and schedule untouched |
+| `split` | New cards inserted right after the anchor in its lesson, unflagged; cards whose external id already exists in the lesson are skipped (replay-safe) |
+| Response | Per-event `applied / noop / not_found / invalid / error`; a failed event holds later events for the same card in that request |
+| Flag clears | Answering the card (only `updated`), editing its content, or "Mark reviewed" (`POST /api/cards/:id/acknowledge-update`, any flag) |
+| UI | Pill + "Show previous" + "Mark reviewed" in the lesson card list; badge on the flashcard front; "Updated" study-setup filter |
 
 ### 5.7 LaTeX Rendering
 
@@ -716,6 +729,12 @@ GET    /api/stats/lesson/:id        GET    /api/stats/class/:id
 GET    /api/stats/hardest?scope=&limit=
 PUT    /api/card-states/:cardId
 GET    /api/export                  POST   /api/import
+POST   /api/cards/:id/acknowledge-update
+GET    /api/tokens                  POST   /api/tokens        DELETE /api/tokens/:id
+# Bearer API token, no session:
+GET    /api/integrations/knowledge/ping
+POST   /api/integrations/knowledge/events
+POST   /api/integrations/knowledge/link
 ```
 
 ### 6.3 Server File Structure
@@ -911,6 +930,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | App-wide animation smoothness sweep | Done | Screen/modal/dropdown fade-in via `@starting-style`; 6 progress-bar widgets unified onto `transform:scaleX()` + one shared duration/easing; `prefers-reduced-motion` support; swipe-to-grade stale-content-flash bug fixed. See `docs/decisions.md` |
 | AI "Suggest tags" (`server/services/classifier.js`, first AI-API-backed feature) | Done | `POST /api/classes/:id/suggest-tags`, `claude-opus-5` via `messages.parse()` + `zodOutputFormat`; rate-limited, capped input, 45s timeout. Requires `ANTHROPIC_API_KEY`; not available in local/offline mode. **Live API call unverified in this environment (no API key available) — every other path (config gating, auth errors, timeout, UI busy-state, error handling) verified against a real request with an invalid key.** See `docs/decisions.md` |
 | Export flashcard content by lesson/class/multi-class (server mode only) | Done | `GET /api/export/flashcards?lessonId=\|classId=\|classIds=a,b,c` (`server/routes/exportImport.js`), separate route + rate limiter (30/hr/user) from the pre-existing full-account `GET /api/export` (10/hr/user); RFC 6266 `Content-Disposition`, client-side Blob download (`downloadFromApi()` in app.js). Buttons: lesson ⋮ menu, class ⋮ menu, Home multi-select bar. Verified end-to-end via Playwright (all 3 entry points, Unicode filenames, `IS_SERVER` gating). See `docs/decisions.md` |
+| KnowledgeApp sync: receive card changes, flag for review (server mode only) | Done | §5.13. `server/routes/integrations.js`, `server/routes/apiTokens.js`, `server/middleware/apiToken.js`. Verified via a 28-check API script (token auth/revoke, no session created, update/replay/second-update/split/deleted/restored/not_found/invalid, SRS due-now with stability kept, flag clearing paths, link backfill incl. ambiguity and trailing whitespace, export round-trip) and Playwright (pill, previous toggle, mark reviewed, study badge, Updated filter, token create/copy/revoke) |
 | Import flashcard content from an exported file (server mode only) | Done | `POST /api/import/flashcards` (`server/routes/exportImport.js`), own rate limiter (30/hr/user); Home header "Import" button opens a file picker, always creates new class(es) (no merge option); whole-file validation before any write, level/tags/color re-sanitized server-side (not trusted from the file) to close a stored-XSS path through the class-card color field. Verified end-to-end via curl (round-trip, all validation-error paths, wrong-file-format rejection, atomicity) and Playwright (file picker → success alert → class list refresh; invalid-JSON error path). See `docs/decisions.md` |
 
 ### 11.2 Pending Features — Priority Order
