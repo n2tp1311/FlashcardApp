@@ -43,5 +43,6 @@ function rateLimit({ windowMs, max, message, keyFn }) {
 // Shared keyFn for routes behind requireAuth — kept here (not redefined per route
 // file) so a future change to the session shape only needs updating in one place.
 const byUser = req => req.session.userId;
+const byApiUser = req => req.userId;
 
-module.exports = { rateLimit, byUser };
+module.exports = { rateLimit, byUser, byApiUser };

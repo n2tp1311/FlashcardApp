@@ -36,6 +36,13 @@ router.post("/", requireAuth, (req, res) => {
   ).get(cardId, userId);
   if (!card) return res.status(404).json({ error: "Card not found" });
 
+  // Answering an upstream-updated card is reviewing it. Only 'updated' — a "removed from
+  // source" notice needs an explicit acknowledgement, not just another answer.
+  db.prepare(
+    "UPDATE cards SET upstream_change = NULL, upstream_changed_at = NULL, upstream_prev_data = NULL " +
+    "WHERE id = ? AND upstream_change = 'updated'"
+  ).run(cardId);
+
   db.prepare(
     "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade) VALUES (?, ?, ?, ?, ?, ?, ?)"
   ).run(genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null);

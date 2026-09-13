@@ -235,8 +235,20 @@ router.put("/cards/:id", requireAuth, (req, res) => {
       sort_order ?? existing.sort_order,
       req.params.id
     );
+  if (data)
+    db.prepare("UPDATE cards SET upstream_change = NULL, upstream_changed_at = NULL, upstream_prev_data = NULL WHERE id = ?")
+      .run(req.params.id);
   const updated = db.prepare("SELECT * FROM cards WHERE id = ?").get(req.params.id);
   res.json({ ...updated, data: JSON.parse(updated.data) });
+});
+
+// POST /api/cards/:id/acknowledge-update
+router.post("/cards/:id/acknowledge-update", requireAuth, (req, res) => {
+  if (!ownCard(req.params.id, req.session.userId))
+    return res.status(404).json({ error: "Not found" });
+  db.prepare("UPDATE cards SET upstream_change = NULL, upstream_changed_at = NULL, upstream_prev_data = NULL WHERE id = ?")
+    .run(req.params.id);
+  res.json({ ok: true });
 });
 
 // DELETE /api/cards/:id

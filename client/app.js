@@ -115,6 +115,25 @@ Object.assign(TRANSLATIONS.en, {
   "pref.testSpeed": "Test speed",
   "pref.maxReviewsPerDay": "Max reviews per day",
   "pref.noLimit": "No limit",
+  "pref.apiTokens": "API tokens",
+  "pref.apiTokensHint": "Lets KnowledgeApp send card updates to your account.",
+  "pref.tokenName": "Token name",
+  "pref.createToken": "Create token",
+  "pref.tokenCopyOnce": "Copy this token now — it won't be shown again.",
+  "pref.copy": "Copy",
+  "pref.copied": "Copied",
+  "pref.revoke": "Revoke",
+  "pref.lastUsed": "Last used {date}",
+  "pref.neverUsed": "Never used",
+  "pref.noTokens": "No tokens",
+  "upstream.updated": "Updated — needs review",
+  "upstream.deleted": "Removed from source",
+  "upstream.showPrevious": "Show previous",
+  "upstream.hidePrevious": "Hide previous",
+  "upstream.previous": "Previous",
+  "upstream.markReviewed": "Mark reviewed",
+  "setup.updated": "Updated",
+  "setup.hintUpdated": "Cards KnowledgeApp changed since you last reviewed them",
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
@@ -595,6 +614,25 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.testSpeed": "Nghe thử tốc độ",
   "pref.maxReviewsPerDay": "Số review tối đa mỗi ngày",
   "pref.noLimit": "Không giới hạn",
+  "pref.apiTokens": "Mã API",
+  "pref.apiTokensHint": "Cho phép KnowledgeApp gửi cập nhật thẻ vào tài khoản của bạn.",
+  "pref.tokenName": "Tên mã",
+  "pref.createToken": "Tạo mã",
+  "pref.tokenCopyOnce": "Hãy sao chép mã này ngay — mã sẽ không hiển thị lại.",
+  "pref.copy": "Sao chép",
+  "pref.copied": "Đã sao chép",
+  "pref.revoke": "Thu hồi",
+  "pref.lastUsed": "Dùng lần cuối {date}",
+  "pref.neverUsed": "Chưa dùng",
+  "pref.noTokens": "Chưa có mã",
+  "upstream.updated": "Đã cập nhật — cần xem lại",
+  "upstream.deleted": "Đã bị xoá ở nguồn",
+  "upstream.showPrevious": "Xem bản trước",
+  "upstream.hidePrevious": "Ẩn bản trước",
+  "upstream.previous": "Bản trước",
+  "upstream.markReviewed": "Đánh dấu đã xem",
+  "setup.updated": "Đã cập nhật",
+  "setup.hintUpdated": "Thẻ KnowledgeApp đã thay đổi kể từ lần bạn xem lại gần nhất",
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
@@ -3511,6 +3549,62 @@ function openLesson(lessonId) {
   saveScreenState("lesson", state.currentClass && state.currentClass.id, lessonId);
 }
 
+function renderUpstreamNotice(card) {
+  var wrap = document.createElement("div");
+  wrap.className = "card-upstream";
+
+  var pill = document.createElement("span");
+  pill.className = "upstream-pill " + card.upstream_change;
+  pill.textContent = t("upstream." + card.upstream_change);
+  wrap.appendChild(pill);
+
+  var prev = null;
+  if (card.upstream_prev_data) {
+    try { prev = JSON.parse(card.upstream_prev_data); } catch (_) {}
+  }
+  var prevBox = null;
+  if (prev) {
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "link-btn";
+    toggle.textContent = t("upstream.showPrevious");
+    prevBox = document.createElement("div");
+    prevBox.className = "card-prev hidden";
+    var prevLabel = document.createElement("div");
+    prevLabel.className = "card-prev-label";
+    prevLabel.textContent = t("upstream.previous");
+    var prevTerm = document.createElement("div");
+    prevTerm.className = "card-term";
+    var prevDef = document.createElement("div");
+    prevDef.className = "card-def";
+    renderLatex(prev.term || "", prevTerm);
+    renderLatex(prev.def || "", prevDef);
+    prevBox.appendChild(prevLabel);
+    prevBox.appendChild(prevTerm);
+    prevBox.appendChild(prevDef);
+    toggle.addEventListener("click", function(e) {
+      e.stopPropagation();
+      var hidden = prevBox.classList.toggle("hidden");
+      toggle.textContent = t(hidden ? "upstream.showPrevious" : "upstream.hidePrevious");
+    });
+    wrap.appendChild(toggle);
+  }
+
+  var ack = document.createElement("button");
+  ack.type = "button";
+  ack.className = "link-btn";
+  ack.textContent = t("upstream.markReviewed");
+  ack.addEventListener("click", function(e) {
+    e.stopPropagation();
+    ack.disabled = true;
+    store.acknowledgeCardUpdate(card.id).then(renderCards, function() { ack.disabled = false; });
+  });
+  wrap.appendChild(ack);
+
+  if (prevBox) wrap.appendChild(prevBox);
+  return wrap;
+}
+
 function renderCards() {
   if (!state.currentLesson) return;
   var lessonId = state.currentLesson.id;
@@ -3611,6 +3705,7 @@ function renderCards() {
           tsDiv.appendChild(span);
         });
         contentEl.appendChild(tsDiv);
+        if (card.upstream_change) contentEl.appendChild(renderUpstreamNotice(card));
       }
 
       if (state.cardSelectMode) {
@@ -4361,7 +4456,7 @@ document.getElementById("btn-setup-confirm-preset").addEventListener("click", fu
 // already-large set of globals. Distinct from FILTER_HINT_KEYS/MODE_HINT_KEYS below (those are
 // full descriptive sentences for the setup screen's hint text, not compact enough here).
 var PRESET_LABEL_KEYS = {
-  filter: { all: "setup.allCards", due: "setup.dueOnly", needsRecall: "setup.needsRecall", learning: "setup.stillLearning" },
+  filter: { all: "setup.allCards", due: "setup.dueOnly", needsRecall: "setup.needsRecall", learning: "setup.stillLearning", updated: "setup.updated" },
   mode: { flashcard: "setup.flashcards", "flashcard-write": "setup.flashcardWrite", quiz: "setup.quiz" },
   order: { "in-order": "setup.inOrder", shuffle: "common.shuffle", interleaved: "setup.interleaved" }
 };
@@ -4525,7 +4620,8 @@ var FILTER_HINT_KEYS = {
   all:         "setup.hintAll",
   due:         "setup.hintDue",
   needsRecall: "setup.hintNeedsRecall",
-  learning:    "setup.hintLearning"
+  learning:    "setup.hintLearning",
+  updated:     "setup.hintUpdated"
 };
 
 var MODE_HINT_KEYS = {
@@ -4700,6 +4796,8 @@ function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday) {
     return applyReviewCap(needsRecall, reviewsToday);
   } else if (filter === "learning") {
     return cards.filter(function(c) { return knownMap[c.id] !== true; });
+  } else if (filter === "updated") {
+    return cards.filter(function(c) { return !!c.upstream_change; });
   }
   return cards;
 }
@@ -4985,6 +5083,10 @@ function renderFlashcard() {
   badge.className = "fc-difficulty-badge badge-" + (stats.total === 0 ? "new" : stats.level);
   badge.textContent = stats.total === 0 ? t("difficulty.new") :
     difficultyLabel(stats.level) + " · " + stats.correct + "/" + stats.total;
+
+  var upstreamBadge = document.getElementById("fc-upstream-badge");
+  upstreamBadge.className = "fc-upstream-badge upstream-pill " + (card.upstream_change || "") + (card.upstream_change ? "" : " hidden");
+  upstreamBadge.textContent = card.upstream_change ? t("upstream." + card.upstream_change) : "";
 
   // Dots
   renderFcDots();
@@ -5382,6 +5484,7 @@ function markCard(known, grade, forceRetype) {
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known);
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
+  if (card.upstream_change === "updated") card.upstream_change = null;
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
   if (grade) attemptFields.grade = grade;
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
@@ -5596,6 +5699,7 @@ function answerQuiz(selectedIdx) {
   var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, capped: false, notDue: false };
   state.quizResults.push(resultEntry);
 
+  if (card.upstream_change === "updated") card.upstream_change = null;
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
   if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
   store.recordAttempt(quizAttemptFields).then(function(res) {
@@ -7139,6 +7243,11 @@ var SQLiteAdapter = (function() {
     getClassAccuracy: function() { return req("GET", "/stats/accuracy/classes"); },
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
 
+    acknowledgeCardUpdate: function(id) { return req("POST", "/cards/" + id + "/acknowledge-update"); },
+    listApiTokens:  function()     { return req("GET",    "/tokens"); },
+    createApiToken: function(name) { return req("POST",   "/tokens", { name: name }); },
+    revokeApiToken: function(id)   { return req("DELETE", "/tokens/" + id); },
+
     markCardsSeen: function(cardIds) {
       if (!cardIds || !cardIds.length) return Promise.resolve();
       return req("POST", "/cards/seen", { cardIds: cardIds });
@@ -7536,7 +7645,78 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-tts-test").disabled = !ttsSupported;
   document.getElementById("pref-max-reviews").value =
     (state.maxReviewsPerDay === null || state.maxReviewsPerDay === undefined) ? "" : state.maxReviewsPerDay;
+  if (IS_SERVER) {
+    document.getElementById("pref-token-reveal").classList.add("hidden");
+    document.getElementById("pref-token-value").value = "";
+    renderApiTokens();
+  }
   openModal("preferences");
+});
+
+// Token create/revoke take effect immediately rather than on Save — a created token
+// already exists server-side, so tying it to the modal's Cancel would be misleading.
+function renderApiTokens() {
+  var list = document.getElementById("pref-token-list");
+  store.listApiTokens().then(function(tokens) {
+    list.innerHTML = "";
+    if (!tokens.length) {
+      var none = document.createElement("li");
+      none.className = "pref-token-empty";
+      none.textContent = t("pref.noTokens");
+      list.appendChild(none);
+      return;
+    }
+    tokens.forEach(function(tok) {
+      var li = document.createElement("li");
+      li.className = "pref-token-item";
+      var info = document.createElement("span");
+      info.className = "pref-token-info";
+      info.textContent = tok.name + " · " + tok.prefix + "… · " +
+        (tok.last_used_at ? t("pref.lastUsed", { date: relativeTime(tok.last_used_at) }) : t("pref.neverUsed"));
+      var revoke = document.createElement("button");
+      revoke.type = "button";
+      revoke.className = "btn btn-sm btn-ghost btn-toolbar-danger";
+      revoke.textContent = t("pref.revoke");
+      revoke.addEventListener("click", function() {
+        revoke.disabled = true;
+        store.revokeApiToken(tok.id).then(renderApiTokens, function(err) {
+          revoke.disabled = false;
+          alert(err.message);
+        });
+      });
+      li.appendChild(info);
+      li.appendChild(revoke);
+      list.appendChild(li);
+    });
+  }).catch(function(err) { list.textContent = err.message; });
+}
+
+document.getElementById("pref-token-create").addEventListener("click", function() {
+  var btn = this;
+  var nameEl = document.getElementById("pref-token-name");
+  btn.disabled = true;
+  store.createApiToken(nameEl.value).then(function(tok) {
+    btn.disabled = false;
+    nameEl.value = "";
+    document.getElementById("pref-token-value").value = tok.token;
+    document.getElementById("pref-token-copy").textContent = t("pref.copy");
+    document.getElementById("pref-token-reveal").classList.remove("hidden");
+    renderApiTokens();
+  }, function(err) {
+    btn.disabled = false;
+    alert(err.message);
+  });
+});
+
+document.getElementById("pref-token-copy").addEventListener("click", function() {
+  var btn = this;
+  var input = document.getElementById("pref-token-value");
+  var done = function() { btn.textContent = t("pref.copied"); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(input.value).then(done, function() { input.select(); });
+  } else {
+    input.select();
+  }
 });
 
 document.getElementById("pref-lang-en").addEventListener("click", function() {
@@ -7724,7 +7904,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }

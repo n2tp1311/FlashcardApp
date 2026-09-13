@@ -66,6 +66,9 @@ app.get("/health", healthLimiter, (req, res) => {
   }
 });
 
+// Mounted before the session middleware: token-authenticated, so it must never create a session.
+app.use("/api/integrations/knowledge", require("./routes/integrations"));
+
 app.use(session({
   store: new SQLiteSessionStore(),
   secret: process.env.SESSION_SECRET || "fc-dev-secret-change-in-prod",
@@ -92,6 +95,7 @@ app.use("/api/share",   require("./routes/share"));
 app.use("/api/review",  require("./routes/review"));
 app.use("/api/upload",  require("./routes/upload"));
 app.use("/api/search",  require("./routes/search"));
+app.use("/api/tokens",  require("./routes/apiTokens"));
 app.use("/uploads",     require("express").static(UPLOADS, { index: false }));
 
 // ── Helper: inject APP_CONFIG and serve index.html ───────

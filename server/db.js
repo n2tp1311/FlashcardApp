@@ -289,6 +289,28 @@ try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_learning_steps INTEGER NO
 try { db.exec("ALTER TABLE card_states ADD COLUMN fsrs_last_review_at INTEGER"); } catch (_) {}
 try { db.exec("ALTER TABLE card_states ADD COLUMN last_correct_source TEXT"); } catch (_) {}
 
+// KnowledgeApp sync: personal API tokens (only a SHA-256 hash is stored) and per-card
+// upstream link + "changed upstream, needs review" flag. upstream_change is NULL,
+// 'updated' or 'deleted'; upstream_prev_data keeps the card's data from before the first
+// unacknowledged upstream change so the user can compare.
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS api_tokens (
+    id           TEXT PRIMARY KEY,
+    user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name         TEXT NOT NULL,
+    token_hash   TEXT UNIQUE NOT NULL,
+    prefix       TEXT NOT NULL,
+    created_at   INTEGER NOT NULL DEFAULT (unixepoch()),
+    last_used_at INTEGER
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_api_tokens_user ON api_tokens(user_id)"); } catch (_) {}
+try { db.exec("ALTER TABLE cards ADD COLUMN external_id TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE cards ADD COLUMN upstream_change TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE cards ADD COLUMN upstream_changed_at INTEGER"); } catch (_) {}
+try { db.exec("ALTER TABLE cards ADD COLUMN upstream_prev_data TEXT"); } catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_external ON cards(external_id)"); } catch (_) {}
+
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
 const _prepare = db.prepare.bind(db);

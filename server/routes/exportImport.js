@@ -216,7 +216,7 @@ exportRouter.get("/flashcards", requireAuth, flashcardExportLimiter, (req, res) 
           console.error(`[export] card ${c.id} has unparseable data, exporting as empty:`, err.message);
           data = {};
         }
-        return { format: c.format, data };
+        return c.external_id ? { format: c.format, data, external_id: c.external_id } : { format: c.format, data };
       });
       return { title: lesson.title, format: lesson.format, cards: exportedCards };
     });
@@ -279,8 +279,13 @@ importRouter.post("/", requireAuth, importLimiter, (req, res) => {
       idMap[card.id] = newId;
       const lessonId = idMap[card.lesson_id] || card.lesson_id;
       db.prepare(
-        "INSERT OR IGNORE INTO cards (id, lesson_id, format, data, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-      ).run(newId, lessonId, card.format, JSON.stringify(card.data), card.sort_order || 0, card.created_at || Math.floor(Date.now()/1000));
+        "INSERT OR IGNORE INTO cards (id, lesson_id, format, data, sort_order, created_at, external_id, upstream_change, upstream_changed_at, upstream_prev_data) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ).run(newId, lessonId, card.format, JSON.stringify(card.data), card.sort_order || 0, card.created_at || Math.floor(Date.now()/1000),
+            typeof card.external_id === "string" ? card.external_id.slice(0, 128) : null,
+            card.upstream_change === "updated" || card.upstream_change === "deleted" ? card.upstream_change : null,
+            Number.isInteger(card.upstream_changed_at) ? card.upstream_changed_at : null,
+            typeof card.upstream_prev_data === "string" ? card.upstream_prev_data : null);
     });
 
     attempts.forEach(att => {
@@ -345,6 +350,9 @@ importRouter.post("/flashcards", requireAuth, flashcardImportLimiter, (req, res)
           return res.status(400).json({ error: "class " + i + " lesson " + j + " card " + k + ": format must be term-def, mcq, true-false, or image-def" });
         const cardErr = validateCardForImport(card.format, card.data);
         if (cardErr) return res.status(400).json({ error: "class " + i + " lesson " + j + " card " + k + ": " + cardErr });
+        if (card.external_id !== undefined &&
+            (typeof card.external_id !== "string" || !card.external_id || card.external_id.length > 128))
+          return res.status(400).json({ error: "class " + i + " lesson " + j + " card " + k + ": external_id must be a non-empty string of at most 128 characters" });
       }
     }
   }
@@ -387,8 +395,8 @@ importRouter.post("/flashcards", requireAuth, flashcardImportLimiter, (req, res)
 
         lesson.cards.forEach((card, k) => {
           db.prepare(
-            "INSERT INTO cards (id, lesson_id, format, data, sort_order) VALUES (?, ?, ?, ?, ?)"
-          ).run(genId(), lessonId, card.format, JSON.stringify(card.data || {}), k);
+            "INSERT INTO cards (id, lesson_id, format, data, sort_order, external_id) VALUES (?, ?, ?, ?, ?, ?)"
+          ).run(genId(), lessonId, card.format, JSON.stringify(card.data || {}), k, card.external_id || null);
           importedCards++;
         });
       });
