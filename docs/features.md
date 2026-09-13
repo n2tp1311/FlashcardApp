@@ -155,6 +155,7 @@
 - A split in KnowledgeApp adds the new cards right after the original in the same lesson
 - KnowledgeApp can merge its cards into classes you built yourself, without losing progress: it reads your class, links cards that mean the same thing to its own (so later changes flow in), and adds the cards you don't have yet — right after a related card, or into a new lesson of that class. KnowledgeApp shows you a preview before anything is written
 - A new lesson added this way appears first under the default "date added" lesson sort
+- KnowledgeApp can turn multiple-choice and true/false cards into term-def cards, keeping each card's study history and schedule exactly as they were; the original question is kept so the conversion can be undone
 - "Removed from source" never deletes your card — it stays studyable until you delete it yourself
 - "Updated" filter in Study Setup to review just the flagged cards; the flashcard shows an "Updated" badge while studying
 - API tokens in Preferences: create a named token (shown once, copy button), see when each was last used, revoke any time

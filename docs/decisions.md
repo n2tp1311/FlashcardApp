@@ -12,7 +12,9 @@ User has classes built outside KnowledgeApp (Deep Learning, The Art of War, Why 
 
 **One transaction per add request.** The adds are one batch the user approved from a preview, and a half-applied batch would leave a class the preview did not describe; an unexpected error rolls it all back, and a retry is safe because existing external ids come back `exists`. A new lesson is created only when a card actually goes into it, so a full replay creates nothing.
 
-**Term-def only on read.** Non-term-def lessons are listed with a count so KnowledgeApp can say they exist, but their cards are not returned: `updated` ignores other formats. No pagination — a 1000-card class is well under a megabyte, and the 10 MB limit applies to request bodies.
+**Term-def only on read — reversed the same day.** The read first returned term-def cards only, reasoning that nothing else could be linked or updated. The user's real classes turned out to be almost entirely mcq and true-false (Deep Learning 742 cards, 0 term-def), so the reconcile could not even see them. Every card is now returned, with raw `data` for other formats.
+
+**Convert in place, keep the schedule.** The user no longer studies multiple-choice and asked for everything as term-def, with progress kept and the schedule left exactly as it is. Progress is keyed by card id, so rewriting `format` and `data` on the same row keeps `card_states` and attempts intact. Making converted cards due now was offered — FSRS stability was earned recognising an answer among options, which overstates free recall — and declined by the user; the endpoint does not touch `card_states` at all. The original goes to a new `converted_from` column rather than `upstream_prev_data`: that column only ever holds term-def content behind an "updated" flag, and a later `updated` event reads it as the card's previous text. Rewriting term/def from a question needs judgement (a false true/false statement has to be turned around), so the text is written by KnowledgeApp's model and reviewed in a preview; FlashcardApp only applies it.
 
 ## 2026-09-09 — Study Setup presets: reorder + rename + "update to current"
 
