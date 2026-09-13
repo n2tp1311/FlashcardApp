@@ -122,7 +122,7 @@ create table cards (
 
 create table attempts (
   id            text primary key,
-  card_id       text not null references cards(id) on delete cascade,
+  card_id       text not null, -- no FK: attempts outlive deleted cards so study history is kept
   user_id       text not null references users(id) on delete cascade,
   correct       integer not null check (correct in (0, 1)),
   source        text not null check (source in ('quiz', 'flashcard')),
@@ -945,6 +945,8 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Modal blank-screen on close | `closeAllModals()` scoped to `#modal-overlay .modal`; defensive `.remove("hidden")` added in share/prompt-guide openers |
 | Dev reset token exposed in production | Suppressed when `NODE_ENV === "production"` |
 | SQLite lock file on container restart | Lock file `flashcards.db.lock` removed on server startup |
+| Deleting a card/lesson/class erased its study time & stats | `attempts.card_id` FK to `cards` dropped (migration `attempts_drop_card_fk`); card storage is freed, attempt history stays |
+| Table-rebuild migrations silently skipped ("database table is locked") | `runMigration`'s already-applied check left its statement unfinalized; now finalized explicitly |
 
 ## 12. Tier 2 Migration Plan: node-sqlite3-wasm → PostgreSQL (not started)
 
