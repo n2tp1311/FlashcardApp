@@ -1,3 +1,19 @@
+## 2026-09-14 — KnowledgeApp reconcile: link by card id, add into existing lessons
+
+User has classes built outside KnowledgeApp (Deep Learning, The Art of War, Why We Sleep…) and wanted KnowledgeApp's cards merged into them — matching cards improved, missing ones added — without losing study progress. The existing integration could only rewrite cards it already knew (`updated`) and link by exact term+def text (`/link`), which hand-made cards essentially never match; it could not read a class or add a card to one.
+
+**Matching lives in KnowledgeApp, not here.** Deciding that "Dropout" and "Dropout — randomly zeroes activations during training" are the same card needs embeddings and a model judgement, which KnowledgeApp already has. FlashcardApp only exposes the primitives: read, link a chosen card, add a card. KnowledgeApp produces a dry-run report first, so nothing is written to a class the user has not reviewed.
+
+**Link sets `external_id` and nothing else.** Progress lives in `card_states` keyed by card id, and the card id never changes, so linking cannot touch it. A card that already carries a *different* external id is reported as `conflict` with the current id rather than overwritten: silently re-pointing a link would route one unit's future edits onto a card that was never its own.
+
+**Dedupe on add is per class, not per user.** `updated`/`deleted` events already apply to every card with that external id across all the user's classes, so two linked copies in two classes is a supported state. Per-user dedupe would block that; per-class matches split's per-lesson dedupe. Spotting cross-class duplicates is the dry run's job — it reads every class's external ids.
+
+**Dense renumber instead of shift — and it fixed split too.** `sort_order` is COUNT-based, so after a delete two cards in a lesson can share one. Shifting everything `> anchor.sort_order` leaves a card *tied* with the anchor but created later sorting before the inserted cards. Reproduced on the existing split handler: a lesson A | C | D with C and D tied, split on C, gave A | C | D | C — facet. Inserting now rewrites the lesson 0..n-1 in display order with new cards after their anchors (A | C | C — facet | D). Safe: nothing uses `sort_order` as identity — lists, clones and exports order by it, states and attempts key on card id, and the server client never sends it.
+
+**One transaction per add request.** The adds are one batch the user approved from a preview, and a half-applied batch would leave a class the preview did not describe; an unexpected error rolls it all back, and a retry is safe because existing external ids come back `exists`. A new lesson is created only when a card actually goes into it, so a full replay creates nothing.
+
+**Term-def only on read.** Non-term-def lessons are listed with a count so KnowledgeApp can say they exist, but their cards are not returned: `updated` ignores other formats. No pagination — a 1000-card class is well under a megabyte, and the 10 MB limit applies to request bodies.
+
 ## 2026-09-09 — Study Setup presets: reorder + rename + "update to current"
 
 User wanted to reorder saved presets (their array order is also their 1-9 keyboard-shortcut order) and update an existing one, rather than only create-then-delete-and-recreate.
