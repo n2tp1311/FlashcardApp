@@ -1,3 +1,13 @@
+## 2026-09-14 — Deleting a linked card tells KnowledgeApp
+
+The user asked whether deleting a card in FlashcardApp, because it was meaningless, would reach KnowledgeApp. It would not, and worse: the row vanished without a trace, so KnowledgeApp's next Sync saw a unit with no card and added it straight back.
+
+**A tombstone per deleted linked card, read by cursor.** `DELETE /api/cards/:id` writes `external_card_deletions` in the same transaction as the delete, only when the card has an `external_id`. KnowledgeApp reads `GET /deletions?since=` and keeps the cursor itself, so the endpoint stays read-only and a lost response is simply read again; no acknowledgement round trip is needed.
+
+**Only single-card deletes count.** Deleting a card one by one is a verdict on that card. Deleting a lesson or a whole class more often means "I'm not studying this now", and treating it as rejection would delete a book's knowledge upstream. Cascaded card deletes therefore write nothing. Bulk "Delete selected" on cards calls the single-card route per id, so it counts, which is intended.
+
+**KnowledgeApp removes the unit, restorably** (chosen by the user over only "never add it back"): the card was judged not worth studying, and keeping it in the book's export would contradict that. It is a recorded deletion there, so it can be restored, and a restored unit is added again by the next Sync.
+
 ## 2026-09-14 — Long-press to multi-select on touch screens
 
 Multi-select already existed for classes, lessons and cards, but on phones the Select button sits behind the ⋮ menu (home) or is easy to miss, and long-press is the gesture people reach for. Long-press now enters the list's existing select mode with the pressed item selected; nothing about the select bar or bulk actions changed.

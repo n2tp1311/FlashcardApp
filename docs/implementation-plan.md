@@ -362,6 +362,7 @@ Data from the existing `attempts` table plus one new column, `duration_ms` (null
 | Read (reconcile) | `GET /classes` → classes with `lessons`, `cards`, `term_def_cards`, `linked_cards`. `GET /classes/:id/cards` → lessons (`format`, `position`, `card_count`) and every card (`position`, `format`, `external_id`, `upstream_change`, `studied` = `srs_due_at` set or `fsrs_reps > 0`, `known`; term-def rows add `term`/`def`, other formats add raw `data`). 404 for a class not owned. No pagination: a 1000-card class is well under a megabyte |
 | Convert (reconcile) | `POST /convert-cards {cards:[{card_id, term, def}]}` (≤500) rewrites mcq / true-false cards as term-def on the same card id: `card_states`, attempts and the FSRS schedule untouched, not made due, no flag. Original `{format, data}` kept in `cards.converted_from` (first conversion only; carried by full backup). A lesson becomes term-def once all its cards are. Statuses `converted / already / invalid (term-def with other text, image-def) / not_found` |
 | Progress (fetch) | Each card from `GET /classes/:id/cards` carries `progress: {state, stability, difficulty, reps, lapses, last_review_at, due_at, retrievability}`. Retrievability is computed by the live `ts-fsrs` scheduler (`get_retrievability`) at request time, so the consumer never copies FSRS parameters |
+| Deletions | Deleting a single card that carries an `external_id` writes a tombstone to `external_card_deletions` in the same transaction. Deleting a lesson or class writes none. `GET /deletions?since=<id>` → tombstones after the cursor, oldest first, 1000 per page with `more`; KnowledgeApp keeps the cursor and removes the unit behind each card |
 | Create class | `POST /classes {name, color?, icon?}` → 201 with the new class. Always creates; KnowledgeApp calls it only for a book with no class mapped and refuses when a class of that name already exists |
 | Link cards (reconcile) | `POST /link-cards {links:[{card_id, external_id}]}` (≤2000) → per link `linked / already / conflict (+current_external_id) / not_found / invalid`. Sets `external_id` only where it is NULL; never overwrites a different link; progress, content and flags untouched |
 | Add cards (reconcile) | `POST /add-cards {class_id, cards:[{external_id, term, def, lesson_id? \| after_card_id? \| new_lesson_title?}]}` (≤500) → per card `added / exists / not_found / invalid` plus `lessons:[{id,title,created}]`. One transaction per request. An `external_id` already in the class is `exists` (dedupe per class, not per user). Target lesson must be term-def and in the class. A new lesson is created lazily (only when a card goes in) and reused by exact title, appended with `MAX(sort_order)+1`. Malformed request → 400, nothing written |
@@ -746,6 +747,7 @@ POST   /api/integrations/knowledge/events
 POST   /api/integrations/knowledge/link
 GET    /api/integrations/knowledge/classes
 POST   /api/integrations/knowledge/classes
+GET    /api/integrations/knowledge/deletions
 GET    /api/integrations/knowledge/classes/:id/cards
 POST   /api/integrations/knowledge/convert-cards
 POST   /api/integrations/knowledge/link-cards
