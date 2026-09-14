@@ -115,8 +115,12 @@ body {
   flex-direction: column;
   padding: env(safe-area-inset-top, 0px) 16px max(80px, calc(60px + env(safe-area-inset-bottom, 0px)));
   opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  /* `translate`, not `transform`: a transform other than none makes this element the
+     containing block for its position:fixed children, which pinned the study-setup footer
+     and the mobile sidebar to the (page-tall) screen box instead of the viewport. The
+     steady state below is none, so that only holds for the 0.18s of the transition. */
+  translate: none;
+  transition: opacity 0.18s ease-out, translate 0.18s ease-out;
 }
 
 .screen.active { display: flex; }
@@ -131,7 +135,7 @@ body {
    browsers (anything before ~2024) just keep today's exact instant-cut behavior — pure
    progressive enhancement, no fallback branch needed. */
 @starting-style {
-  .screen.active { opacity: 0; transform: translateY(6px); }
+  .screen.active { opacity: 0; translate: 0 6px; }
 }
 
 /* ── Home screen: sidebar layout ─────────────────────────── */
