@@ -267,6 +267,7 @@
 - Minimum 2-character query before any search fires; Escape and click-outside close the modal
 
 ## Mobile PWA & Swipe Gestures
+- Long-press a class, lesson or card (half a second) to start multi-select with that item already selected; ordinary taps then add or remove items, and the usual select bar (select all, study, export, delete) appears. A press that moves — a scroll — does not select, and the tap that ends the press never opens the item. Touch screens only; with a mouse, use "☑ Select" or `X`
 - PWA icons: `apple-touch-icon.png` (180px, full-bleed for iOS), `icon-192.png`, `icon-512.png` generated from logo SVG via Playwright at build time
 - `manifest.json` with `display: standalone`, `theme_color: #4338ca`, `background_color: #1a1744`
 - Meta tags: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `theme-color`, `apple-touch-icon`

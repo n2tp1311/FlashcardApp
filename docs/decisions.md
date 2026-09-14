@@ -1,3 +1,15 @@
+## 2026-09-14 — Long-press to multi-select on touch screens
+
+Multi-select already existed for classes, lessons and cards, but on phones the Select button sits behind the ⋮ menu (home) or is easy to miss, and long-press is the gesture people reach for. Long-press now enters the list's existing select mode with the pressed item selected; nothing about the select bar or bulk actions changed.
+
+**500ms, 10px of slop, touch only.** Movement beyond 10px is a scroll and cancels the press, which also keeps it clear of pull-to-refresh and the edge swipes. Only touch events drive it, so desktop behaviour is untouched and mouse users keep ☑ Select and `X`.
+
+**The trailing click is swallowed at the document, not on the pressed element.** The first version suppressed the click on the element that was pressed. Verification caught it failing on cards: entering card select mode re-renders the list to add checkboxes, so the click that ends the press lands on a new element that knows nothing about the press, and toggled the card straight back off. Holding the flag on the document works whatever the DOM did in between. Every new touchstart clears it, because iOS often sends no click after a long press, and a stale flag would otherwise swallow the next ordinary tap — a case the verification checks explicitly.
+
+**iOS callout and text selection are turned off on list items, on touch screens only** (`hover: none` and `pointer: coarse`). Without it the OS's own long-press (copy/look up) claims the gesture before the timer does. The cost is that list text cannot be selected for copying on a phone; the edit dialog still shows it.
+
+**Verification used synthetic touch events** (an Event carrying a `touches` array) rather than real Touch objects, since the two engines do not let a test construct those uniformly; the handler reads only `touches.length` and `clientX/Y`. Run in WebKit and Chromium because earlier iOS-only layout bugs showed up in WebKit alone.
+
 ## 2026-09-14 — KnowledgeApp reconcile: link by card id, add into existing lessons
 
 User has classes built outside KnowledgeApp (Deep Learning, The Art of War, Why We Sleep…) and wanted KnowledgeApp's cards merged into them — matching cards improved, missing ones added — without losing study progress. The existing integration could only rewrite cards it already knew (`updated`) and link by exact term+def text (`/link`), which hand-made cards essentially never match; it could not read a class or add a card to one.
