@@ -264,6 +264,24 @@ router.get("/classes", (req, res) => {
   res.json({ classes: rows.map(r => ({ ...r, archived: !!r.archived })) });
 });
 
+// POST /api/integrations/knowledge/classes  { name, color?, icon? }
+// Lets KnowledgeApp create the class for a book that has none, so "sync this book" works
+// without a manual import. Always creates: KnowledgeApp keeps the book → class mapping and
+// only calls this when it has none, and refuses on its side when a class of that name
+// already exists (that class is the user's and should be reconciled, not duplicated).
+router.post("/classes", (req, res) => {
+  const body = req.body || {};
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  if (!name || name.length > MAX_TITLE_LEN) return res.status(400).json({ error: "name must be 1-" + MAX_TITLE_LEN + " chars" });
+  const color = typeof body.color === "string" && /^#[0-9a-fA-F]{3,8}$/.test(body.color) ? body.color : "#2563eb";
+  const icon = typeof body.icon === "string" && body.icon.length <= 40 ? body.icon : "book";
+  const count = db.prepare("SELECT COUNT(*) AS n FROM classes WHERE user_id = ?").get(req.userId).n;
+  const id = genId();
+  db.prepare("INSERT INTO classes (id, user_id, name, color, icon, sort_order, tags) VALUES (?, ?, ?, ?, ?, ?, '[]')")
+    .run(id, req.userId, name, color, icon, count);
+  res.status(201).json({ id, name, archived: false, lessons: 0, cards: 0, term_def_cards: 0, linked_cards: 0 });
+});
+
 // GET /api/integrations/knowledge/classes/:id/cards
 // Every card is returned: term-def rows carry term/def, other formats carry their raw
 // `data` so KnowledgeApp can rewrite them as term-def (see /convert-cards).
