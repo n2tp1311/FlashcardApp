@@ -158,6 +158,8 @@
 - KnowledgeApp can turn multiple-choice and true/false cards into term-def cards, keeping each card's study history and schedule exactly as they were; the original question is kept so the conversion can be undone
 - "Removed from source" never deletes your card — it stays studyable until you delete it yourself
 - "Updated" filter in Study Setup to review just the flagged cards; the flashcard shows an "Updated" badge while studying
+- "Changes from KnowledgeApp" review screen (sidebar item with a count badge, plus a home banner — both hidden when nothing is flagged): total / updated / removed counts, All / Updated / Removed filters, cards grouped by class › lesson, previous vs current side by side with word-level highlighting of what was removed and added (fields containing LaTeX are rendered instead, with the changed side outlined), and per card Mark reviewed / Open in lesson / Edit / Delete (Delete only for removed-from-source cards)
+- Bulk actions on the review screen: "Mark all shown as reviewed" (respects the current filter) and "Study updated cards" (opens Study Setup over the affected lessons with the Updated filter preselected, and returns to the review screen afterwards)
 - API tokens in Preferences: create a named token (shown once, copy button), see when each was last used, revoke any time
 - Cards imported from a `ka export` file are linked automatically; cards imported before linking existed are matched once by exact term + definition (`ka sync --link`)
 

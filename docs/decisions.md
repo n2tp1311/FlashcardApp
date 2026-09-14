@@ -765,3 +765,9 @@ Found while verifying: `runMigration`'s already-applied check (`db.prepare(...).
 - **Upstream delete only flags.** The user's card, schedule and history belong to them; answering doesn't clear this flag (unlike `updated`) so the notice isn't lost by studying.
 - **Idempotency from current state, not an event log.** Same text → noop, split card already in lesson → skipped, deleted-already → noop. KnowledgeApp retries whole batches whose response it never saw; a processed-event table would have been one more thing to grow and prune.
 - **Backfill by exact trimmed term+def, skipping ambiguous texts.** Fuzzy matching could link a card to the wrong unit, and a wrong link means a later update silently overwrites an unrelated card.
+
+## 2026-09-14 — KnowledgeApp review screen: count from /api/classes, no word diff through LaTeX
+- **Badge count piggybacks on `GET /api/classes`** (`upstream_count` per class) instead of a separate count endpoint: `renderHome()` already fetches that list every time home renders, so the sidebar badge and home banner cost one extra `GROUP BY` subquery and no extra request.
+- **Archived classes are included** in the list and the count, unlike due counts: a card whose content changed under you still needs a look even if its class is shelved.
+- **Word diff is skipped for fields containing LaTeX.** Highlighting spans can't be threaded through KaTeX output, and diffing the raw source would show `\|x\|_2`-style noise to someone who never sees the source. Such fields render normally with the current side outlined; plain-text fields get a token-level LCS diff (capped at 250k cells, beyond which the whole field is marked changed rather than blocking the main thread).
+- **"Deleted" cards can still have previous content** (updated, then removed before review), so the comparison is driven by whether `prev_data` exists, not by the change type.
