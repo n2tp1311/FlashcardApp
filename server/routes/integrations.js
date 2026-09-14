@@ -8,6 +8,7 @@
 const express = require("express");
 const db      = require("../db");
 const { forEachBatch } = require("../lib/batch");
+const { scheduler, cardFromState } = require("../fsrs");
 const { requireApiToken } = require("../middleware/apiToken");
 const { rateLimit, byApiUser } = require("../middleware/rateLimit");
 const router  = express.Router();
@@ -296,7 +297,8 @@ router.get("/classes/:id/cards", (req, res) => {
   ).all(cls.id).map((l, i) => ({ id: l.id, title: l.title, format: l.format, position: i, card_count: l.card_count }));
 
   const rows = db.prepare(
-    "SELECT ca.id, ca.lesson_id, ca.format, ca.data, ca.external_id, ca.upstream_change, cs.known, cs.srs_due_at, cs.fsrs_reps " +
+    "SELECT ca.id, ca.lesson_id, ca.format, ca.data, ca.external_id, ca.upstream_change, cs.known, cs.srs_due_at, cs.fsrs_reps, " +
+    "cs.fsrs_state, cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_lapses, cs.fsrs_last_review_at " +
     "FROM cards ca JOIN lessons l ON ca.lesson_id = l.id " +
     "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
     "WHERE l.class_id = ? ORDER BY l.sort_order, l.created_at, ca.sort_order, ca.created_at, ca.rowid"
@@ -304,6 +306,7 @@ router.get("/classes/:id/cards", (req, res) => {
 
   const positions = new Map();
   const cards = [];
+  const nowDate = new Date();
   rows.forEach(r => {
     const position = positions.get(r.lesson_id) || 0;
     positions.set(r.lesson_id, position + 1);
@@ -313,7 +316,25 @@ router.get("/classes/:id/cards", (req, res) => {
       id: r.id, lesson_id: r.lesson_id, position, format: r.format,
       external_id: r.external_id, upstream_change: r.upstream_change,
       studied: r.srs_due_at != null || (r.fsrs_reps || 0) > 0,
-      known: r.known == null ? null : r.known === 1
+      known: r.known == null ? null : r.known === 1,
+      // Learning progress, read by KnowledgeApp's Fetch to measure how much of a book the
+      // learner has actually taken in. Raw FSRS values; the interpretation lives there.
+      progress: {
+        state: r.fsrs_state == null ? null : r.fsrs_state,          // 0 new, 1 learning, 2 review, 3 relearning
+        stability: r.fsrs_stability == null ? null : r.fsrs_stability,   // days
+        difficulty: r.fsrs_difficulty == null ? null : r.fsrs_difficulty,
+        reps: r.fsrs_reps || 0,
+        lapses: r.fsrs_lapses || 0,
+        last_review_at: r.fsrs_last_review_at || null,              // unix seconds
+        due_at: r.srs_due_at || null,
+        // Probability of recall right now, from the same scheduler that sets the due dates,
+        // so KnowledgeApp never has to copy FSRS parameters that could drift.
+        retrievability: r.fsrs_stability == null || !r.fsrs_last_review_at ? null
+          : Number(scheduler.get_retrievability(cardFromState({
+              fsrs_stability: r.fsrs_stability, fsrs_difficulty: r.fsrs_difficulty, fsrs_state: r.fsrs_state,
+              fsrs_reps: r.fsrs_reps, fsrs_lapses: r.fsrs_lapses, fsrs_last_review_at: r.fsrs_last_review_at,
+              srs_due_at: r.srs_due_at }, nowDate), nowDate, false).toFixed(4))
+      }
     };
     if (r.format === "term-def") {
       if (typeof data.term !== "string" || typeof data.def !== "string") return;
