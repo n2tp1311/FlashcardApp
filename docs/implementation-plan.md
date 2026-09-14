@@ -709,6 +709,17 @@ Text in math:     $\text{MSE} = \text{Bias}^2 + \text{Var}$
 
 ---
 
+### 5.14 Haptic Feedback (Android)
+
+| Aspect | Spec |
+|---|---|
+| Helper | `haptic(name)` in app.js — returns early unless `state.haptics` and `navigator.vibrate`; `try/catch` around the call (per-OEM Android implementations, user-activation rule) |
+| Patterns | `tick` 10 · `select` 18 · `success` 24 · `warn` 30 · `error` [12,70,12] · `danger` [24,50,24] · `complete` [18,60,18,60,36] |
+| Hooks | flip, prev/next/shuffle/dot-jump, `markCard`, swipe arm + cancel, forced-retype begin/match/mismatch, LaTeX confirm, `answerQuiz` (correct vs wrong), quiz nav, session summary + quiz results, long-press select, edge-swipe back, search-modal swipe-close, pull-to-refresh commit, delete confirmation |
+| Not hooked | `advanceFlashcard` (auto-fires on a timer), render functions, modal open/close (called programmatically), per-keystroke and `touchmove`/`touchstart` handlers |
+| Preference | `preferences.haptics`, boolean, default true, synced per account; no server change needed (the prefs PUT merges arbitrary keys) |
+| Platform | Android only — iOS exposes no Vibration API; desktop no-ops. Hint line under the toggle when `navigator.vibrate` is missing |
+
 ## 6. Server Architecture (Phase 2+)
 
 ### 6.1 Tech Stack
@@ -947,6 +958,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | App-wide animation smoothness sweep | Done | Screen/modal/dropdown fade-in via `@starting-style`; 6 progress-bar widgets unified onto `transform:scaleX()` + one shared duration/easing; `prefers-reduced-motion` support; swipe-to-grade stale-content-flash bug fixed. See `docs/decisions.md` |
 | AI "Suggest tags" (`server/services/classifier.js`, first AI-API-backed feature) | Done | `POST /api/classes/:id/suggest-tags`, `claude-opus-5` via `messages.parse()` + `zodOutputFormat`; rate-limited, capped input, 45s timeout. Requires `ANTHROPIC_API_KEY`; not available in local/offline mode. **Live API call unverified in this environment (no API key available) — every other path (config gating, auth errors, timeout, UI busy-state, error handling) verified against a real request with an invalid key.** See `docs/decisions.md` |
 | Export flashcard content by lesson/class/multi-class (server mode only) | Done | `GET /api/export/flashcards?lessonId=\|classId=\|classIds=a,b,c` (`server/routes/exportImport.js`), separate route + rate limiter (30/hr/user) from the pre-existing full-account `GET /api/export` (10/hr/user); RFC 6266 `Content-Disposition`, client-side Blob download (`downloadFromApi()` in app.js). Buttons: lesson ⋮ menu, class ⋮ menu, Home multi-select bar. Verified end-to-end via Playwright (all 3 entry points, Unicode filenames, `IS_SERVER` gating). See `docs/decisions.md` |
+| Haptic feedback (Android) | Done | §5.14. Seven-pattern vocabulary through one helper; per-account preference, on by default. Verified with 23 checks in a disposable worktree by recording `navigator.vibrate` calls (each pattern per hook, swipe latch one-shot, session-end gating, preference off/reload, and a context with the API deleted) |
 | KnowledgeApp changes review screen (server mode only) | Done | §5.13 "Review screen". Verified with 31 checks in a disposable worktree: API counts/order/prev_data, `upstream_count`, bulk-ack 400/403 with nothing changed; Playwright banner + badge, grouping, word diff, LaTeX outline, XSS term rendered as text, filters, mark reviewed, edit, study → Updated filter → back, delete, mark all → empty, Esc, 375px stacking, VI strings |
 | KnowledgeApp sync: receive card changes, flag for review (server mode only) | Done | §5.13. `server/routes/integrations.js`, `server/routes/apiTokens.js`, `server/middleware/apiToken.js`. Verified via a 28-check API script (token auth/revoke, no session created, update/replay/second-update/split/deleted/restored/not_found/invalid, SRS due-now with stability kept, flag clearing paths, link backfill incl. ambiguity and trailing whitespace, export round-trip) and Playwright (pill, previous toggle, mark reviewed, study badge, Updated filter, token create/copy/revoke) |
 | KnowledgeApp reconcile: read classes/cards, link by card id, add cards into existing lessons (server mode only) | Done | §5.13. `server/routes/integrations.js`. Verified in a throwaway worktree via a 31-check API script (cross-user 404s on read/link/add, link statuses and replay, `updated` event on a card linked through link-cards, anchored/tail/new-lesson placement, lazy lesson creation and title reuse, replay adds nothing, malformed request writes nothing, studied card keeps id and progress) and a tie reproduction: a split after an anchor whose sort_order was tied landed after the tied card on the old code (A | C | D | C — facet) and right after the anchor on the new (A | C | C — facet | D) |
