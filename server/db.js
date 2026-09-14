@@ -314,6 +314,19 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_external ON cards(external_i
 // conversion can be undone. Separate from upstream_prev_data, which only ever holds term-def
 // content tied to an "updated" flag.
 try { db.exec("ALTER TABLE cards ADD COLUMN converted_from TEXT"); } catch (_) {}
+// A linked card (external_id set) the learner deleted one by one: KnowledgeApp reads these so
+// the unit behind it is removed there too and never synced back. Only single-card deletes
+// write one -- deleting a lesson or class is "stop studying this", not "this card is wrong".
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS external_card_deletions (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    external_id TEXT NOT NULL,
+    card_id     TEXT NOT NULL,
+    deleted_at  INTEGER NOT NULL DEFAULT (unixepoch())
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_ext_deletions_user ON external_card_deletions(user_id, id)"); } catch (_) {}
 
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.

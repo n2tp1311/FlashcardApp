@@ -314,11 +314,17 @@ router.post("/cards/acknowledge-updates", requireAuth, (req, res) => {
 router.delete("/cards/:id", requireAuth, (req, res) => {
   if (!ownCard(req.params.id, req.session.userId))
     return res.status(404).json({ error: "Not found" });
-  const toDelete = db.prepare("SELECT format, data FROM cards WHERE id = ?").get(req.params.id);
+  const toDelete = db.prepare("SELECT format, data, external_id FROM cards WHERE id = ?").get(req.params.id);
   if (toDelete && toDelete.format === "image-def") {
     try { unlinkUpload(JSON.parse(toDelete.data).imageUrl); } catch (_) {}
   }
-  db.prepare("DELETE FROM cards WHERE id = ?").run(req.params.id);
+  db.transaction(() => {
+    if (toDelete && toDelete.external_id) {
+      db.prepare("INSERT INTO external_card_deletions (user_id, external_id, card_id) VALUES (?, ?, ?)")
+        .run(req.session.userId, toDelete.external_id, req.params.id);
+    }
+    db.prepare("DELETE FROM cards WHERE id = ?").run(req.params.id);
+  })();
   res.status(204).end();
 });
 

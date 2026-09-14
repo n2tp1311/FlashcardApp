@@ -348,6 +348,18 @@ router.get("/classes/:id/cards", (req, res) => {
   res.json({ class: { id: cls.id, name: cls.name, archived: !!cls.archived }, lessons, cards });
 });
 
+// GET /api/integrations/knowledge/deletions?since=<id>
+// Linked cards the learner deleted, oldest first, after the cursor KnowledgeApp last saw.
+// Read-only: KnowledgeApp keeps the cursor, so a response lost in transit is simply re-read.
+router.get("/deletions", (req, res) => {
+  const since = Number.parseInt(req.query.since, 10);
+  const rows = db.prepare(
+    "SELECT id, external_id, card_id, deleted_at FROM external_card_deletions " +
+    "WHERE user_id = ? AND id > ? ORDER BY id LIMIT 1000"
+  ).all(req.userId, Number.isFinite(since) && since > 0 ? since : 0);
+  res.json({ deletions: rows, more: rows.length === 1000 });
+});
+
 // POST /api/integrations/knowledge/link-cards  { links: [{card_id, external_id}] }
 // Links cards KnowledgeApp matched by meaning, where /link can only match exact text.
 // Never overwrites a different link; touches nothing but external_id.
