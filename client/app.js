@@ -132,6 +132,21 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.hidePrevious": "Hide previous",
   "upstream.previous": "Previous",
   "upstream.markReviewed": "Mark reviewed",
+  "upstream.navTitle": "KnowledgeApp changes",
+  "upstream.screenTitle": "Changes from KnowledgeApp",
+  "upstream.bannerText": "{n} card(s) changed by KnowledgeApp",
+  "upstream.review": "Review",
+  "upstream.summary": "{total} card(s) need review · {updated} updated · {deleted} removed",
+  "upstream.empty": "No cards changed by KnowledgeApp.",
+  "upstream.noneInFilter": "No cards in this filter.",
+  "upstream.filterAll": "All",
+  "upstream.filterUpdated": "Updated",
+  "upstream.filterDeleted": "Removed",
+  "upstream.current": "Current",
+  "upstream.openInLesson": "Open in lesson",
+  "upstream.markAllShown": "Mark all shown as reviewed",
+  "upstream.confirmAckAll": "Mark {n} card(s) as reviewed?",
+  "upstream.studyUpdated": "Study updated cards",
   "setup.updated": "Updated",
   "setup.hintUpdated": "Cards KnowledgeApp changed since you last reviewed them",
 
@@ -631,6 +646,21 @@ Object.assign(TRANSLATIONS.vi, {
   "upstream.hidePrevious": "Ẩn bản trước",
   "upstream.previous": "Bản trước",
   "upstream.markReviewed": "Đánh dấu đã xem",
+  "upstream.navTitle": "Thay đổi từ KnowledgeApp",
+  "upstream.screenTitle": "Thay đổi từ KnowledgeApp",
+  "upstream.bannerText": "{n} thẻ đã bị KnowledgeApp thay đổi",
+  "upstream.review": "Xem lại",
+  "upstream.summary": "{total} thẻ cần xem lại · {updated} đã cập nhật · {deleted} đã xoá ở nguồn",
+  "upstream.empty": "Không có thẻ nào bị KnowledgeApp thay đổi.",
+  "upstream.noneInFilter": "Không có thẻ nào trong bộ lọc này.",
+  "upstream.filterAll": "Tất cả",
+  "upstream.filterUpdated": "Đã cập nhật",
+  "upstream.filterDeleted": "Đã xoá ở nguồn",
+  "upstream.current": "Hiện tại",
+  "upstream.openInLesson": "Mở trong bài học",
+  "upstream.markAllShown": "Đánh dấu tất cả đang hiện là đã xem",
+  "upstream.confirmAckAll": "Đánh dấu {n} thẻ là đã xem?",
+  "upstream.studyUpdated": "Học các thẻ đã cập nhật",
   "setup.updated": "Đã cập nhật",
   "setup.hintUpdated": "Thẻ KnowledgeApp đã thay đổi kể từ lần bạn xem lại gần nhất",
 
@@ -2212,6 +2242,7 @@ function renderHome() {
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
     renderSidebarClasses(classes.filter(function(c) { return !c.archived; }));
+    renderUpstreamIndicators(classes);
     classes = sortClasses(classes, state.currentClassSort, state.currentClassSortDir);
     document.getElementById("class-sort-select").value = state.currentClassSort;
     document.getElementById("class-sort-dir").innerHTML = state.currentClassSortDir === "desc" ? ICON_CHEVRON_DOWN : ICON_CHEVRON_UP;
@@ -3549,6 +3580,276 @@ function openLesson(lessonId) {
   saveScreenState("lesson", state.currentClass && state.currentClass.id, lessonId);
 }
 
+/* ---- KnowledgeApp changes review screen ---- */
+
+function renderUpstreamIndicators(classes) {
+  var n = IS_SERVER ? classes.reduce(function(sum, c) { return sum + (c.upstream_count || 0); }, 0) : 0;
+  var badge = document.getElementById("sidebar-upstream-badge");
+  var banner = document.getElementById("home-upstream-banner");
+  badge.textContent = n;
+  badge.classList.toggle("hidden", n === 0);
+  document.getElementById("home-upstream-banner-text").textContent = t("upstream.bannerText", { n: n });
+  banner.classList.toggle("hidden", n === 0);
+}
+
+function openUpstreamScreen() {
+  state.upstreamFilter = "all";
+  setPillGroup("upstream-filter", "all");
+  showScreen("upstream");
+  renderUpstream();
+}
+
+function renderUpstream() {
+  var loading = document.getElementById("upstream-loading");
+  loading.classList.remove("hidden");
+  store.getUpstreamChanges().then(function(res) {
+    state.upstreamData = res;
+    loading.classList.add("hidden");
+    var empty = res.count.total === 0;
+    var emptyEl = document.getElementById("upstream-empty");
+    emptyEl.querySelector("p").textContent = t("upstream.empty");
+    emptyEl.classList.toggle("hidden", !empty);
+    document.getElementById("upstream-body").classList.toggle("hidden", empty);
+    if (!empty) renderUpstreamList();
+  }).catch(function(err) {
+    loading.classList.add("hidden");
+    document.getElementById("upstream-body").classList.add("hidden");
+    var emptyEl = document.getElementById("upstream-empty");
+    emptyEl.classList.remove("hidden");
+    emptyEl.querySelector("p").textContent = err.message;
+  });
+}
+
+function upstreamFilteredCards() {
+  var f = state.upstreamFilter || "all";
+  return state.upstreamData.cards.filter(function(c) { return f === "all" || c.upstream_change === f; });
+}
+
+function renderUpstreamList() {
+  var count = state.upstreamData.count;
+  document.getElementById("upstream-summary").textContent =
+    t("upstream.summary", { total: count.total, updated: count.updated, deleted: count.deleted });
+  var cards = upstreamFilteredCards();
+  var list = document.getElementById("upstream-list");
+  list.innerHTML = "";
+  var groups = [];
+  var byLesson = {};
+  cards.forEach(function(card) {
+    if (!byLesson[card.lesson_id]) {
+      byLesson[card.lesson_id] = [];
+      groups.push(byLesson[card.lesson_id]);
+    }
+    byLesson[card.lesson_id].push(card);
+  });
+  groups.forEach(function(group) {
+    var first = group[0];
+    var header = document.createElement("button");
+    header.type = "button";
+    header.className = "upstream-group-header";
+    header.textContent = first.class_name + " › " + first.lesson_title + " (" + group.length + ")";
+    header.addEventListener("click", function() { openLessonFromAnywhere(first.class_id, first.lesson_id); });
+    list.appendChild(header);
+    group.forEach(function(card) { list.appendChild(renderUpstreamItem(card)); });
+  });
+  if (!cards.length) {
+    var none = document.createElement("p");
+    none.className = "upstream-summary";
+    none.textContent = t("upstream.noneInFilter");
+    list.appendChild(none);
+  }
+  document.getElementById("btn-upstream-ack-all").disabled = cards.length === 0;
+  document.getElementById("btn-upstream-study").disabled =
+    !cards.some(function(c) { return c.upstream_change === "updated"; });
+}
+
+function upstreamFields(card) {
+  if (card.format === "term-def") return ["term", "def"];
+  var keys = [];
+  [card.data || {}, card.prev_data || {}].forEach(function(obj) {
+    Object.keys(obj).forEach(function(k) {
+      if (k !== "imageUrl" && keys.indexOf(k) === -1) keys.push(k);
+    });
+  });
+  return keys;
+}
+
+function upstreamFieldText(obj, key) {
+  if (!obj || obj[key] == null) return "";
+  return typeof obj[key] === "string" ? obj[key] : JSON.stringify(obj[key]);
+}
+
+function renderUpstreamItem(card) {
+  var item = document.createElement("div");
+  item.className = "upstream-item";
+
+  var top = document.createElement("div");
+  top.className = "upstream-item-top";
+  var pill = document.createElement("span");
+  pill.className = "upstream-pill " + card.upstream_change;
+  pill.textContent = t("upstream." + card.upstream_change);
+  var time = document.createElement("span");
+  time.className = "upstream-time";
+  time.textContent = relativeTime(card.upstream_changed_at);
+  top.appendChild(pill);
+  top.appendChild(time);
+  item.appendChild(top);
+
+  var compare = document.createElement("div");
+  compare.className = "upstream-compare" + (card.prev_data ? "" : " single");
+  var prevCol = null;
+  if (card.prev_data) {
+    prevCol = document.createElement("div");
+    prevCol.className = "upstream-col prev";
+    prevCol.innerHTML = '<div class="upstream-col-label"></div>';
+    prevCol.firstChild.textContent = t("upstream.previous");
+    compare.appendChild(prevCol);
+  }
+  var currCol = document.createElement("div");
+  currCol.className = "upstream-col curr";
+  currCol.innerHTML = '<div class="upstream-col-label"></div>';
+  currCol.firstChild.textContent = t("upstream.current");
+  compare.appendChild(currCol);
+
+  upstreamFields(card).forEach(function(key, i) {
+    var cls = i === 0 ? "upstream-field card-term" : "upstream-field card-def";
+    var currEl = document.createElement("div");
+    currEl.className = cls;
+    currCol.appendChild(currEl);
+    var curr = upstreamFieldText(card.data, key);
+    if (!prevCol) { renderLatex(curr, currEl); return; }
+    var prevEl = document.createElement("div");
+    prevEl.className = cls;
+    prevCol.appendChild(prevEl);
+    renderUpstreamField(upstreamFieldText(card.prev_data, key), curr, prevEl, currEl);
+  });
+  item.appendChild(compare);
+
+  var actions = document.createElement("div");
+  actions.className = "upstream-actions";
+  function action(labelKey, onClick) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "link-btn";
+    b.textContent = t(labelKey);
+    b.addEventListener("click", function() { onClick(b); });
+    actions.appendChild(b);
+  }
+  action("upstream.markReviewed", function(b) {
+    b.disabled = true;
+    store.acknowledgeCardUpdate(card.id).then(renderUpstream, function() { b.disabled = false; });
+  });
+  action("upstream.openInLesson", function() { openLessonFromAnywhere(card.class_id, card.lesson_id); });
+  if (card.format === "term-def") {
+    action("common.edit", function() {
+      openEditCard(card.id, { id: card.id, lesson_id: card.lesson_id, format: card.format, data: card.data });
+    });
+  }
+  if (card.upstream_change === "deleted") {
+    action("common.delete", function() {
+      confirmDelete(t("confirm.deleteCard"), function() {
+        store.deleteCard(card.id, card.lesson_id).then(renderUpstream);
+      });
+    });
+  }
+  item.appendChild(actions);
+  return item;
+}
+
+function hasLatex(text) {
+  return splitLatex(text).some(function(p) { return p.type !== "text"; });
+}
+
+// A word diff can't be drawn through rendered math, so a field with LaTeX on either side is
+// shown rendered, with the current side outlined when it changed.
+function renderUpstreamField(prev, curr, prevEl, currEl) {
+  if (hasLatex(prev) || hasLatex(curr)) {
+    renderLatex(prev, prevEl);
+    renderLatex(curr, currEl);
+    if (prev !== curr) currEl.classList.add("changed");
+    return;
+  }
+  var d = diffWords(prev, curr);
+  prevEl.innerHTML = d.prev;
+  currEl.innerHTML = d.curr;
+}
+
+var DIFF_MAX_CELLS = 250000;
+
+function diffWords(a, b) {
+  var x = a.split(/(\s+)/).filter(function(s) { return s !== ""; });
+  var y = b.split(/(\s+)/).filter(function(s) { return s !== ""; });
+  function mark(tok, tag) {
+    return /^\s+$/.test(tok) ? escHtml(tok) : "<" + tag + ' class="diff-' + tag + '">' + escHtml(tok) + "</" + tag + ">";
+  }
+  if (x.length * y.length > DIFF_MAX_CELLS) {
+    return { prev: x.map(function(s) { return mark(s, "del"); }).join(""),
+             curr: y.map(function(s) { return mark(s, "ins"); }).join("") };
+  }
+  var n = x.length, m = y.length;
+  var lcs = [];
+  for (var i = 0; i <= n; i++) lcs.push(new Uint16Array(m + 1));
+  for (i = n - 1; i >= 0; i--) {
+    for (var j = m - 1; j >= 0; j--) {
+      lcs[i][j] = x[i] === y[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+    }
+  }
+  var prev = [], curr = [];
+  i = 0; j = 0;
+  while (i < n && j < m) {
+    if (x[i] === y[j]) { prev.push(escHtml(x[i])); curr.push(escHtml(y[j])); i++; j++; }
+    else if (lcs[i + 1][j] >= lcs[i][j + 1]) { prev.push(mark(x[i], "del")); i++; }
+    else { curr.push(mark(y[j], "ins")); j++; }
+  }
+  for (; i < n; i++) prev.push(mark(x[i], "del"));
+  for (; j < m; j++) curr.push(mark(y[j], "ins"));
+  return { prev: prev.join(""), curr: curr.join("") };
+}
+
+document.getElementById("btn-upstream-back").addEventListener("click", function() {
+  renderHome();
+  showScreen("home");
+});
+
+document.getElementById("btn-upstream-banner-review").addEventListener("click", openUpstreamScreen);
+
+document.getElementById("upstream-filter").addEventListener("click", function(e) {
+  var pill = e.target.closest(".pill");
+  if (!pill || !state.upstreamData) return;
+  state.upstreamFilter = pill.dataset.value;
+  setPillGroup("upstream-filter", state.upstreamFilter);
+  renderUpstreamList();
+});
+
+document.getElementById("btn-upstream-ack-all").addEventListener("click", function() {
+  var btn = this;
+  var ids = upstreamFilteredCards().map(function(c) { return c.id; });
+  if (!ids.length || !confirm(t("upstream.confirmAckAll", { n: ids.length }))) return;
+  btn.disabled = true;
+  store.acknowledgeCardUpdates(ids).then(renderUpstream, function(err) {
+    btn.disabled = false;
+    alert(err.message);
+  });
+});
+
+document.getElementById("btn-upstream-study").addEventListener("click", function() {
+  var seen = {};
+  var lessons = [];
+  upstreamFilteredCards().forEach(function(c) {
+    if (c.upstream_change !== "updated" || seen[c.lesson_id]) return;
+    seen[c.lesson_id] = true;
+    lessons.push({ id: c.lesson_id, title: c.lesson_title, class_id: c.class_id });
+  });
+  if (!lessons.length) return;
+  openSetup({
+    lessonIds: lessons.map(function(l) { return l.id; }),
+    lessons: lessons,
+    returnScreen: "upstream",
+    title: t("upstream.screenTitle")
+  });
+  // openSetup resets the filter to "all"; clicking the pill runs the normal hint + match-count path.
+  document.querySelector('#setup-filter .pill[data-value="updated"]').click();
+});
+
 function renderUpstreamNotice(card) {
   var wrap = document.createElement("div");
   wrap.className = "card-upstream";
@@ -4003,6 +4304,7 @@ document.getElementById("btn-save-card-termdef").addEventListener("click", funct
     closeModal("card-termdef");
     if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
     renderCards();
+    if (getActiveScreen() === "upstream") renderUpstream();
   });
 });
 
@@ -4666,6 +4968,7 @@ function returnFromStudy() {
   var target = state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson";
   showScreen(target);
   if (target === "home") renderHome();
+  else if (target === "upstream") renderUpstream();
   else renderLessons();
 }
 
@@ -7244,6 +7547,8 @@ var SQLiteAdapter = (function() {
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
 
     acknowledgeCardUpdate: function(id) { return req("POST", "/cards/" + id + "/acknowledge-update"); },
+    acknowledgeCardUpdates: function(ids) { return req("POST", "/cards/acknowledge-updates", { cardIds: ids }); },
+    getUpstreamChanges: function() { return req("GET", "/upstream-changes"); },
     listApiTokens:  function()     { return req("GET",    "/tokens"); },
     createApiToken: function(name) { return req("POST",   "/tokens", { name: name }); },
     revokeApiToken: function(id)   { return req("DELETE", "/tokens/" + id); },
@@ -7400,6 +7705,7 @@ function initUserNav() {
   document.getElementById("btn-dashboard").classList.remove("hidden");
   // Sidebar items
   document.getElementById("sidebar-dashboard-link").classList.remove("hidden");
+  document.getElementById("sidebar-upstream-link").classList.remove("hidden");
   document.getElementById("sidebar-select-link").classList.remove("hidden");
   document.getElementById("sidebar-classes-label").classList.remove("hidden");
   document.getElementById("sidebar-btn-new-class").classList.remove("hidden");
@@ -7455,6 +7761,10 @@ function closeSidebar() {
   document.getElementById("sidebar-dashboard-link").addEventListener("click", function() {
     closeSidebar();
     document.getElementById("btn-dashboard").click();
+  });
+  document.getElementById("sidebar-upstream-link").addEventListener("click", function() {
+    closeSidebar();
+    openUpstreamScreen();
   });
   document.getElementById("sidebar-select-link").addEventListener("click", function() {
     closeSidebar();
@@ -7904,7 +8214,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "sidebar-upstream-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }
@@ -8305,16 +8615,19 @@ function selectSearchResult(type, data) {
     openClass(data.id);
     return;
   }
-  var targetClassId  = data.class_id;
-  var targetLessonId = type === "lesson" ? data.id : data.lesson_id;
-  store.getClass(targetClassId).then(function(cls) {
+  openLessonFromAnywhere(data.class_id, type === "lesson" ? data.id : data.lesson_id);
+}
+
+// openLesson() only works once the class and its lesson list are in state.
+function openLessonFromAnywhere(classId, lessonId) {
+  store.getClass(classId).then(function(cls) {
     if (!cls) return;
     state.currentClass = cls;
     state.lessonFilter = "all";
     state._lessonAccuracyMap = {};
-    store.getLessons(targetClassId).then(function(lessons) {
+    store.getLessons(classId).then(function(lessons) {
       state.currentClassLessons = lessons;
-      openLesson(targetLessonId);
+      openLesson(lessonId);
     });
   });
 }
@@ -8596,6 +8909,9 @@ document.addEventListener("keydown", function(e) {
   else if (screen === "dashboard") {
     if (e.key === "Escape") document.getElementById("btn-dashboard-back").click();
   }
+  else if (screen === "upstream") {
+    if (e.key === "Escape") document.getElementById("btn-upstream-back").click();
+  }
 
 });
 
@@ -8617,6 +8933,7 @@ function injectKeyHints() {
     ["btn-summary-back",   "[Esc]"],
     ["btn-stats-back",     "[Esc]"],
     ["btn-dashboard-back", "[Esc]"],
+    ["btn-upstream-back",  "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
     ["btn-fc-learning",    "[1]"],
     ["btn-fc-hard",        "[2]"],
@@ -8654,6 +8971,7 @@ var SCREEN_BACK_BTN = {
   results:   "btn-results-back",
   stats:     "btn-stats-back",
   dashboard: "btn-dashboard-back",
+  upstream:  "btn-upstream-back",
   "flashcard-summary": "btn-summary-back"
 };
 
@@ -8905,7 +9223,8 @@ window.addEventListener("popstate", function() {
         "lesson": "btn-lesson-back",
         "quiz": "btn-quiz-back",
         "stats": "btn-stats-back",
-        "dashboard": "btn-dashboard-back"
+        "dashboard": "btn-dashboard-back",
+        "upstream": "btn-upstream-back"
       };
       var btn = backMap[screen];
       if (btn) {

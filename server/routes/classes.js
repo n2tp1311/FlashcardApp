@@ -72,7 +72,7 @@ router.get("/", requireAuth, (req, res) => {
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = db.prepare(
     "SELECT cl.*, CASE WHEN cl.archived = 1 THEN 0 ELSE COALESCE(dc.due_count, 0) END AS due_count, " +
-      "la.last_activity_at AS last_activity_at " +
+      "la.last_activity_at AS last_activity_at, COALESCE(uc.upstream_count, 0) AS upstream_count " +
     "FROM classes cl " +
     "LEFT JOIN (" +
       "SELECT l.class_id, COUNT(*) AS due_count " +
@@ -90,6 +90,13 @@ router.get("/", requireAuth, (req, res) => {
       "WHERE a.user_id = ? " +
       "GROUP BY l.class_id" +
     ") la ON la.class_id = cl.id " +
+    "LEFT JOIN (" +
+      "SELECT l.class_id, COUNT(*) AS upstream_count " +
+      "FROM cards ca " +
+      "JOIN lessons l ON ca.lesson_id = l.id " +
+      "WHERE ca.upstream_change IS NOT NULL " +
+      "GROUP BY l.class_id" +
+    ") uc ON uc.class_id = cl.id " +
     "WHERE cl.user_id = ? " +
     "ORDER BY cl.sort_order, cl.created_at"
   ).all(uid, nowSec, uid, uid);

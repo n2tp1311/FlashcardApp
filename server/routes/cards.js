@@ -251,6 +251,65 @@ router.post("/cards/:id/acknowledge-update", requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+// GET /api/upstream-changes — every card KnowledgeApp changed that the user hasn't reviewed.
+// Archived classes included: a flagged card still needs a look even if its class is shelved.
+router.get("/upstream-changes", requireAuth, (req, res) => {
+  const uid = req.session.userId;
+  const rows = db.prepare(
+    "SELECT ca.id, ca.lesson_id, ca.format, ca.data, ca.upstream_prev_data, ca.upstream_change, " +
+    "ca.upstream_changed_at, l.title AS lesson_title, l.class_id, c.name AS class_name, " +
+    "c.icon AS class_icon, cs.srs_due_at " +
+    "FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id " +
+    "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
+    "WHERE c.user_id = ? AND ca.upstream_change IS NOT NULL " +
+    "ORDER BY ca.upstream_changed_at DESC, ca.id"
+  ).all(uid, uid);
+  const count = { updated: 0, deleted: 0, total: rows.length };
+  const cards = rows.map(r => {
+    count[r.upstream_change] = (count[r.upstream_change] || 0) + 1;
+    let data = {};
+    let prev = null;
+    try { data = JSON.parse(r.data); } catch (_) {}
+    if (r.upstream_prev_data) { try { prev = JSON.parse(r.upstream_prev_data); } catch (_) {} }
+    const { upstream_prev_data, ...rest } = r;
+    return { ...rest, data, prev_data: prev };
+  });
+  res.json({ count, cards });
+});
+
+const MAX_ACK_IDS = 1000;
+
+// POST /api/cards/acknowledge-updates  { cardIds: [...] }
+router.post("/cards/acknowledge-updates", requireAuth, (req, res) => {
+  const { cardIds } = req.body || {};
+  if (!Array.isArray(cardIds) || cardIds.length === 0 || cardIds.length > MAX_ACK_IDS ||
+      !cardIds.every(id => typeof id === "string"))
+    return res.status(400).json({ error: "cardIds must be an array of 1-" + MAX_ACK_IDS + " card ids" });
+  const ids = [...new Set(cardIds)];
+  const userId = req.session.userId;
+
+  let owned = 0;
+  forEachBatch(ids, chunk => {
+    owned += db.prepare(
+      "SELECT COUNT(*) AS n FROM cards " +
+      "JOIN lessons ON cards.lesson_id = lessons.id " +
+      "JOIN classes ON lessons.class_id = classes.id " +
+      `WHERE cards.id IN (${chunk.map(() => "?").join(",")}) AND classes.user_id = ?`
+    ).get(...chunk, userId).n;
+  });
+  if (owned !== ids.length) return res.status(403).json({ error: "Forbidden" });
+
+  db.transaction(() => {
+    forEachBatch(ids, chunk => {
+      db.prepare(
+        "UPDATE cards SET upstream_change = NULL, upstream_changed_at = NULL, upstream_prev_data = NULL " +
+        `WHERE id IN (${chunk.map(() => "?").join(",")})`
+      ).run(...chunk);
+    });
+  })();
+  res.json({ ok: true, count: ids.length });
+});
+
 // DELETE /api/cards/:id
 router.delete("/cards/:id", requireAuth, (req, res) => {
   if (!ownCard(req.params.id, req.session.userId))
