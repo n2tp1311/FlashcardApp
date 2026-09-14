@@ -2451,6 +2451,7 @@ function _renderClassGridCard(cls, container) {
       '<button class="icon-btn" title="' + t("common.edit") + '" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
       '<button class="icon-btn danger" title="' + t("common.delete") + '" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
     '</div>';
+  onLongPress(card, function() { longPressSelectClass(cls.id); });
   card.addEventListener("click", function(e) {
     if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive]")) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
@@ -2523,6 +2524,7 @@ function _renderClassListRow(cls, container) {
           '<button class="icon-btn danger" title="' + t("common.delete") + '" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
         '</div>') +
     '</div>';
+  onLongPress(row, function() { longPressSelectClass(cls.id); });
   row.addEventListener("click", function(e) {
     if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive]")) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
@@ -3092,6 +3094,10 @@ function _renderLessonItems(lessons, accMap) {
               '<button class="icon-btn" title="' + t("common.edit") + '" data-les-edit="' + lesson.id + '">' + ICON_EDIT + '</button>' +
               '<button class="icon-btn danger" title="' + t("common.delete") + '" data-les-del="' + lesson.id + '">' + ICON_DELETE + '</button>' +
             '</div>');
+      onLongPress(item, function() {
+        if (!state.selectMode) setSelectMode(true);
+        if (state.selectedLessonIds.indexOf(lesson.id) === -1) toggleLessonSelection(lesson.id);
+      });
       item.addEventListener("click", function(e) {
         if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
         if (e.target.closest("[data-les-edit],[data-les-del]")) return;
@@ -3159,6 +3165,54 @@ function _applyLessonAccuracy(accMap) {
 /* ============================
    MULTI-LESSON SELECTION
    ============================ */
+
+// Long-press a class, lesson or card to start selecting. On phones the Select button sits
+// behind the ⋮ menu (or is hidden), and long-press is the gesture people already expect.
+// Touch only: mouse users keep the Select button and the X shortcut.
+var LONG_PRESS_MS = 500;
+var LONG_PRESS_SLOP_PX = 10;   // more movement than this is a scroll, not a press
+
+// Swallows the click that ends a long-press. Kept on the document, not on the pressed
+// element: a card long-press re-renders the list to show checkboxes, so the click lands
+// on a brand-new element that knows nothing of the press -- and toggled the card straight
+// back off. Every new touch clears it, so a press that produced no click (iOS often sends
+// none) cannot swallow the next ordinary tap.
+var longPressSwallowClick = false;
+document.addEventListener("touchstart", function() { longPressSwallowClick = false; }, { capture: true, passive: true });
+document.addEventListener("click", function(e) {
+  if (!longPressSwallowClick) return;
+  longPressSwallowClick = false;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+}, true);
+
+function onLongPress(el, handler) {
+  var timer = null, startX = 0, startY = 0, fired = false;
+  function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+  el.addEventListener("touchstart", function(e) {
+    cancel();
+    fired = false;
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    timer = setTimeout(function() {
+      timer = null;
+      fired = true;
+      longPressSwallowClick = true;
+      if (navigator.vibrate) navigator.vibrate(12);
+      handler();
+    }, LONG_PRESS_MS);
+  }, { passive: true });
+  el.addEventListener("touchmove", function(e) {
+    if (!timer) return;
+    var tch = e.touches[0];
+    if (Math.abs(tch.clientX - startX) > LONG_PRESS_SLOP_PX || Math.abs(tch.clientY - startY) > LONG_PRESS_SLOP_PX) cancel();
+  }, { passive: true });
+  el.addEventListener("touchend", cancel);
+  el.addEventListener("touchcancel", cancel);
+  // Android opens a context menu on long-press; the press is ours.
+  el.addEventListener("contextmenu", function(e) { if (fired || timer) e.preventDefault(); });
+}
 
 function setSelectMode(on) {
   state.selectMode = on;
@@ -3245,6 +3299,11 @@ function setHomeSelectMode(on) {
   });
 
   updateHomeSelectBar();
+}
+
+function longPressSelectClass(classId) {
+  if (!state.homeSelectMode) setHomeSelectMode(true);
+  if (state.selectedClassIds.indexOf(classId) === -1) toggleClassSelection(classId);
 }
 
 function toggleClassSelection(classId) {
@@ -4009,6 +4068,18 @@ function renderCards() {
         if (card.upstream_change) contentEl.appendChild(renderUpstreamNotice(card));
       }
 
+      onLongPress(item, function() {
+        if (state.cardSelectMode) {
+          if (state.selectedCardIds.indexOf(card.id) === -1) toggleCardSelection(card.id);
+          return;
+        }
+        // Card items are built differently in select mode (checkbox, no edit/delete), so
+        // entering it re-renders -- with this card already selected.
+        setCardSelectMode(true);
+        state.selectedCardIds = [card.id];
+        updateCardSelectBar();
+        renderCards();
+      });
       if (state.cardSelectMode) {
         item.addEventListener("click", function(e) {
           if (e.target.tagName === "INPUT") return;

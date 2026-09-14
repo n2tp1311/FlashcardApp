@@ -3580,3 +3580,13 @@ code {
 .upstream-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
 #sidebar-upstream-badge { margin-left: auto; }
 @media (max-width: 600px) { .upstream-compare { grid-template-columns: 1fr; } }
+
+/* Long-press to select (onLongPress in app.js): on touch screens, stop iOS's callout and
+   text selection from claiming the press before the 500ms timer does. */
+@media (hover: none) and (pointer: coarse) {
+  .class-card, .class-list-row, .lesson-item, .card-item {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
