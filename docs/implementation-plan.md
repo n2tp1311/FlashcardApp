@@ -984,6 +984,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Modal blank-screen on close | `closeAllModals()` scoped to `#modal-overlay .modal`; defensive `.remove("hidden")` added in share/prompt-guide openers |
 | Dev reset token exposed in production | Suppressed when `NODE_ENV === "production"` |
 | SQLite lock file on container restart | Lock file `flashcards.db.lock` removed on server startup |
+| "Start Studying" below the fold on mobile (and the sidebar drawer scrolling with the page) | `.screen`'s entry transition moved from `transform: translateY(0)` to `translate`, whose steady state is `none` — a transform makes the element the containing block for its `position: fixed` children |
 | Deleting a card/lesson/class erased its study time & stats | `attempts.card_id` FK to `cards` dropped (migration `attempts_drop_card_fk`); card storage is freed, attempt history stays |
 | Table-rebuild migrations silently skipped ("database table is locked") | `runMigration`'s already-applied check left its statement unfinalized; now finalized explicitly |
 
