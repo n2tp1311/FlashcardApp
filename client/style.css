@@ -3594,3 +3594,6 @@ code {
     user-select: none;
   }
 }
+
+/* .pref-row's 16px bottom margin would leave a hint floating below its own toggle */
+.pref-row + .pref-hint { margin-top: -12px; }

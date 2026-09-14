@@ -110,6 +110,8 @@ Object.assign(TRANSLATIONS.en, {
   "pref.title": "Preferences",
   "pref.textSize": "Text size",
   "pref.darkMode": "Dark mode",
+  "pref.haptics": "Vibration feedback",
+  "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
   "pref.language": "Language",
   "pref.speed": "Speed",
   "pref.testSpeed": "Test speed",
@@ -624,6 +626,8 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.title": "Tùy chọn",
   "pref.textSize": "Cỡ chữ",
   "pref.darkMode": "Chế độ tối",
+  "pref.haptics": "Phản hồi rung",
+  "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
   "pref.language": "Ngôn ngữ",
   "pref.speed": "Tốc độ",
   "pref.testSpeed": "Nghe thử tốc độ",
@@ -2022,6 +2026,7 @@ var state = {
 
   // User preferences (loaded from server after login)
   darkMode: false,
+  haptics: true,
   fontScale: 1,
   ttsRate: 0.9,
   language: (function() {
@@ -3199,7 +3204,7 @@ function onLongPress(el, handler) {
       timer = null;
       fired = true;
       longPressSwallowClick = true;
-      if (navigator.vibrate) navigator.vibrate(12);
+      haptic("select");
       handler();
     }, LONG_PRESS_MS);
   }, { passive: true });
@@ -4612,6 +4617,7 @@ function confirmDelete(msg, cb) {
 }
 
 document.getElementById("btn-confirm-delete").addEventListener("click", function() {
+  haptic("danger");
   closeModal("delete");
   if (state.deleteCallback) { state.deleteCallback(); state.deleteCallback = null; }
 });
@@ -5046,6 +5052,7 @@ function returnFromStudy() {
 // Shown when a flashcard session finishes normally (not on early Exit) — how many cards
 // were graded, the new-vs-review split, and a status breakdown, all from state.studySessionLog.
 function showFlashcardSummary() {
+  haptic("complete");
   var log = state.studySessionLog || {};
   var gradedIds = Object.keys(log);
   var total = gradedIds.length;
@@ -5514,6 +5521,7 @@ function renderFcDots() {
     (function(idx) {
       dot.addEventListener("click", function() {
         if (state.fcForcedRetype) return; // don't let the drill be skipped by jumping cards
+        haptic("tick");
         state.studyIndex = idx;
         renderFlashcard();
       });
@@ -5529,6 +5537,7 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   // same element) — skip the flip so selecting text to copy/translate doesn't flip the card.
   var sel = window.getSelection();
   if (sel && sel.toString().length > 0) return;
+  haptic("tick");
   state.studyFlipped = !state.studyFlipped;
   document.getElementById("fc-card").classList.toggle("flipped", state.studyFlipped);
   if (state.studyFlipped && !state.studyHasFlippedCard) {
@@ -5605,12 +5614,18 @@ document.getElementById("btn-fc-audio-back").addEventListener("click", function(
 });
 
 document.getElementById("btn-fc-prev").addEventListener("click", function() {
-  if (state.studyIndex > 0) { state.studyIndex--; renderFlashcard(); }
+  if (state.studyIndex > 0) { haptic("tick"); state.studyIndex--; renderFlashcard(); }
 });
 
-document.getElementById("btn-fc-next").addEventListener("click", advanceFlashcard);
+// Not inside advanceFlashcard(): the auto-advance timer calls it too, which would add a
+// second buzz right after every grade.
+document.getElementById("btn-fc-next").addEventListener("click", function() {
+  haptic("tick");
+  advanceFlashcard();
+});
 
 document.getElementById("btn-fc-shuffle").addEventListener("click", function() {
+  haptic("tick");
   state.studyCards = shuffle(state.studyCards);
   state.studyIndex = 0;
   renderFlashcard();
@@ -5771,6 +5786,7 @@ function beginForcedRetype(advanceDelay) {
     scheduleFlashcardAdvance(advanceDelay);
     return;
   }
+  haptic("warn");
   state.fcForcedRetype = true;
   state.fcRetypeAdvanceDelay = advanceDelay;
   setFlashcardNavLocked(true);
@@ -5833,12 +5849,14 @@ function submitForcedRetype() {
   var expected = normalizeAnswerText(state.studyBackText);
   var matchType = fuzzyMatchType(typed, expected);
   if (matchType) {
+    haptic("success");
     input.disabled = true; // belt-and-suspenders: disabled inputs don't get further keydowns
     feedback.textContent = t(matchType === "exact" ? "study.retypeCorrect" : "study.retypeCloseEnough");
     feedback.className = "fc-retype-feedback fc-retype-feedback-success";
     feedback.classList.remove("hidden");
     completeForcedRetype();
   } else {
+    haptic("error");
     feedback.textContent = t("study.retypeMismatch");
     feedback.className = "fc-retype-feedback fc-retype-feedback-error";
     feedback.classList.remove("hidden");
@@ -5848,6 +5866,7 @@ function submitForcedRetype() {
 
 function confirmLatexRetype() {
   if (!state.fcForcedRetype) return; // guard against double-click / stray events
+  haptic("success");
   document.getElementById("fc-latex-confirm-wrap").classList.add("hidden");
   completeForcedRetype();
 }
@@ -5855,6 +5874,7 @@ function confirmLatexRetype() {
 function markCard(known, grade, forceRetype) {
   var card = state.studyCards[state.studyIndex];
   if (!card) return;
+  haptic("select");
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known);
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
@@ -5911,6 +5931,7 @@ function startQuiz() {
   state.quizIndex  = 0;
   state.quizScore  = 0;
   state.quizResults = [];
+  state.quizCompleteBuzzed = false;
   renderQuizCard();
   showScreen("quiz");
 }
@@ -6066,6 +6087,7 @@ function answerQuiz(selectedIdx) {
   var selectedVal = opts[selectedIdx];
   var isCorrect   = selectedVal === correct;
 
+  haptic(isCorrect ? "success" : "error");
   if (isCorrect) state.quizScore++;
 
   // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
@@ -6132,6 +6154,7 @@ function answerQuiz(selectedIdx) {
       nextBtn.style.marginTop = "8px";
       nextBtn.innerHTML = t("study.next") + " " + ICON_ARROW_RIGHT;
       nextBtn.addEventListener("click", function() {
+        haptic("tick");
         state.quizIndex++;
         renderQuizCard();
       });
@@ -6142,11 +6165,13 @@ function answerQuiz(selectedIdx) {
 
 
 document.getElementById("btn-quiz-back").addEventListener("click", function() {
+  haptic("tick");
   returnFromStudy();
 });
 
 document.getElementById("btn-quiz-prev").addEventListener("click", function() {
   if (state.quizIndex === 0) return;
+  haptic("tick");
   state.quizIndex--;
   renderQuizCard();
 });
@@ -6154,6 +6179,7 @@ document.getElementById("btn-quiz-prev").addEventListener("click", function() {
 document.getElementById("btn-quiz-review-next").addEventListener("click", function() {
   var card = state.quizCards[state.quizIndex];
   if (!card || !findQuizResult(card)) return;
+  haptic("tick");
   state.quizIndex++;
   renderQuizCard();
 });
@@ -6191,6 +6217,13 @@ document.getElementById("btn-quiz-delete-card").addEventListener("click", functi
    ============================ */
 
 function showQuizResults() {
+  // renderQuizCard() lands here whenever the index runs past the end — including after the
+  // last card is deleted, or Next from the last review card — so the session-over buzz is
+  // gated on every card actually having been answered, and fires once per session.
+  if (!state.quizCompleteBuzzed && state.quizResults.length === state.quizCards.length) {
+    state.quizCompleteBuzzed = true;
+    haptic("complete");
+  }
   var score  = state.quizScore;
   var total  = state.quizCards.length;
   var pct    = total > 0 ? Math.round(score / total * 100) : 0;
@@ -7499,6 +7532,27 @@ function escHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+var HAPTIC_PATTERNS = {
+  tick:     10,
+  select:   18,
+  success:  24,
+  warn:     30,
+  error:    [12, 70, 12],
+  danger:   [24, 50, 24],
+  complete: [18, 60, 18, 60, 36]
+};
+
+// Android only in practice: iOS Safari exposes no Vibration API at all, and desktop browsers
+// that do expose it have no vibrator — both end up a no-op, so no pointer/mobile gate on top.
+function haptic(name) {
+  if (!state.haptics || !navigator.vibrate) return;
+  var pattern = HAPTIC_PATTERNS[name];
+  if (!pattern) return;
+  // Spec'd to return false rather than throw, but it fronts per-OEM Android implementations
+  // and a user-activation rule — feedback must never break the interaction that caused it.
+  try { navigator.vibrate(pattern); } catch (_) {}
+}
+
 function relativeTime(unixSec) {
   if (!unixSec) return t("time.never");
   var diff = Math.floor(Date.now() / 1000) - unixSec;
@@ -7728,6 +7782,9 @@ function applyFontScale(scale) {
 function applyPrefs(prefs) {
   if (typeof prefs.darkMode === "boolean") {
     applyDarkMode(prefs.darkMode);
+  }
+  if (typeof prefs.haptics === "boolean") {
+    state.haptics = prefs.haptics;
   }
   if (typeof prefs.fontScale === "number") {
     applyFontScale(prefs.fontScale);
@@ -8016,6 +8073,8 @@ function prefRateLabel(rate) {
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
   document.getElementById("pref-dark-mode").checked = state.darkMode;
+  document.getElementById("pref-haptics").checked = state.haptics;
+  document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
   prefFontLabel();
   prefRateLabel(state.ttsRate);
   document.getElementById("pref-lang-en").classList.toggle("active", state.language !== "vi");
@@ -8116,6 +8175,14 @@ document.getElementById("pref-dark-mode").addEventListener("change", function() 
   applyDarkMode(this.checked);
 });
 
+// Sample buzz only — unlike dark mode, this preview deliberately doesn't write state:
+// vibration is invisible, so a preview left behind by Cancel would silently disagree with
+// the saved setting.
+document.getElementById("pref-haptics").addEventListener("change", function() {
+  if (!this.checked || !navigator.vibrate) return;
+  try { navigator.vibrate(HAPTIC_PATTERNS.select); } catch (_) {}
+});
+
 document.getElementById("pref-font-decrease").addEventListener("click", function() {
   applyFontScale(state.fontScale - FONT_SCALE_STEP);
   prefFontLabel();
@@ -8141,6 +8208,8 @@ document.getElementById("pref-tts-test").addEventListener("click", function() {
 
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
   var dark = document.getElementById("pref-dark-mode").checked;
+  var haptics = document.getElementById("pref-haptics").checked;
+  state.haptics = haptics;
   applyDarkMode(dark);
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
   state.ttsRate = rate;
@@ -8151,7 +8220,7 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
   var maxReviews = maxReviewsRaw === "" ? null : Math.max(0, parseInt(maxReviewsRaw, 10) || 0);
   state.maxReviewsPerDay = maxReviews;
-  var prefs = { darkMode: dark, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews };
+  var prefs = { darkMode: dark, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
@@ -9118,6 +9187,7 @@ window.addEventListener("popstate", function() {
     pulling = false;
     ind.style.transition = "";
     if (lastDy >= THRESHOLD) {
+      haptic("tick");
       busy = true;
       setHeight(56);
       circle.style.transform = "";
@@ -9148,7 +9218,7 @@ window.addEventListener("popstate", function() {
 
   // ─── 1. Flashcard: right = known, left = learning ─────────────────────
   var scene = document.getElementById("fc-scene");
-  var fcStartX, fcStartY, fcDragging = false, fcDx = 0;
+  var fcStartX, fcStartY, fcDragging = false, fcDx = 0, fcArmed = false;
 
   var knownHint = document.createElement("div");
   knownHint.className = "fc-swipe-hint fc-swipe-known";
@@ -9168,6 +9238,7 @@ window.addEventListener("popstate", function() {
     fcStartY = e.touches[0].clientY;
     fcDragging = false;
     fcDx = 0;
+    fcArmed = false;
   }, { passive: true });
 
   scene.addEventListener("touchmove", function(e) {
@@ -9202,6 +9273,11 @@ window.addEventListener("popstate", function() {
     var rot = (dx / (window.innerWidth * 0.5)) * MAX_ROT;
     scene.style.transition = "none";
     scene.style.transform = "translateX(" + dx + "px) rotate(" + rot + "deg)";
+    // One-shot per gesture: tracking the boundary itself would buzz repeatedly on jitter.
+    if (!fcArmed && Math.abs(dx) > SWIPE_THRESHOLD) {
+      fcArmed = true;
+      haptic("tick");
+    }
     var pct = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
     if (dx > 0) {
       knownHint.style.opacity = pct;
@@ -9238,6 +9314,7 @@ window.addEventListener("popstate", function() {
         document.getElementById("btn-fc-learning").click();
       }, 250);
     } else {
+      if (fcArmed) haptic("tick"); // armed, then pulled back: the grade was cancelled
       scene.style.transition = SCENE_SNAP_TRANSITION;
       scene.style.transform = "";
     }
@@ -9286,6 +9363,7 @@ window.addEventListener("popstate", function() {
     if (dx > EDGE_THRESHOLD && Math.abs(dy) < dx * 0.6) {
       var screen = getActiveScreen();
       if (screen === "home") {
+        haptic("tick");
         openSidebar();
         return;
       }
@@ -9300,7 +9378,7 @@ window.addEventListener("popstate", function() {
       var btn = backMap[screen];
       if (btn) {
         var el = document.getElementById(btn);
-        if (el) el.click();
+        if (el) { haptic("tick"); el.click(); }
       }
     }
   }, { passive: true });
@@ -9313,7 +9391,7 @@ window.addEventListener("popstate", function() {
       modalStartY = e.touches[0].clientY;
     }, { passive: true });
     modal.addEventListener("touchend", function(e) {
-      if (e.changedTouches[0].clientY - modalStartY > 80) closeSearchModal();
+      if (e.changedTouches[0].clientY - modalStartY > 80) { haptic("tick"); closeSearchModal(); }
     }, { passive: true });
   }
 }());
