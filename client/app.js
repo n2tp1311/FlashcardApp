@@ -505,6 +505,7 @@ Object.assign(TRANSLATIONS.en, {
   "bulkImport.title": "Bulk Import Lessons & Cards",
   "common.import": "Import",
   "delete.confirmTitle": "Confirm Delete",
+  "confirm.archiveTitle": "Confirm Archive",
   "delete.areYouSure": "Are you sure?",
   "share.signInHint": "Sign in or create an account to save this class to your library.",
   "share.signInRegister": "Sign In / Register",
@@ -1023,6 +1024,7 @@ Object.assign(TRANSLATIONS.vi, {
   "bulkImport.title": "Nhập hàng loạt bài học & thẻ",
   "common.import": "Nhập",
   "delete.confirmTitle": "Xác nhận xóa",
+  "confirm.archiveTitle": "Xác nhận lưu trữ",
   "delete.areYouSure": "Bạn có chắc chắn không?",
   "share.signInHint": "Đăng nhập hoặc tạo tài khoản để lưu lớp này vào thư viện của bạn.",
   "share.signInRegister": "Đăng nhập / Đăng ký",
@@ -3403,11 +3405,11 @@ document.getElementById("btn-export-classes").addEventListener("click", function
 document.getElementById("btn-archive-classes").addEventListener("click", function() {
   var ids = state.selectedClassIds.slice();
   if (ids.length === 0) return;
-  confirmDelete(t("confirm.archiveClasses", { n: ids.length }), function() {
+  confirmAction(t("confirm.archiveClasses", { n: ids.length }), function() {
     Promise.all(ids.map(function(id) { return store.updateClass(id, { archived: 1 }); }))
       .then(function() { setHomeSelectMode(false); renderHome(); })
       .catch(function() { alert(t("alert.archiveClassesFailed")); });
-  });
+  }, "archive");
 });
 
 function setCardSelectMode(on) {
@@ -4626,10 +4628,26 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
    DELETE CONFIRM
    ============================ */
 
-function confirmDelete(msg, cb) {
+function confirmAction(msg, cb, actionKey) {
+  var titleKey = actionKey === "archive" ? "confirm.archiveTitle" : "delete.confirmTitle";
+  var buttonKey = actionKey === "archive" ? "common.archive" : "common.delete";
+  var title = document.getElementById("delete-confirm-title");
+  var button = document.getElementById("btn-confirm-delete");
+  if (title) {
+    title.setAttribute("data-i18n", titleKey);
+    title.textContent = t(titleKey);
+  }
+  if (button) {
+    button.setAttribute("data-i18n", buttonKey);
+    button.textContent = t(buttonKey);
+  }
   document.getElementById("delete-confirm-text").textContent = msg;
   state.deleteCallback = cb;
   openModal("delete");
+}
+
+function confirmDelete(msg, cb) {
+  confirmAction(msg, cb, "delete");
 }
 
 document.getElementById("btn-confirm-delete").addEventListener("click", function() {
