@@ -198,6 +198,8 @@ Object.assign(TRANSLATIONS.en, {
   "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
   "class.accuracyTooltip": "Accuracy across all recorded attempts (Flashcard + Quiz)",
   "confirm.deleteClass": "Delete class \"{name}\" and all its lessons and cards? Your study history and stats are kept.",
+  "confirm.archiveClasses": "Archive {n} selected class(es)?",
+  "alert.archiveClassesFailed": "Some classes could not be archived. Your selection is still active.",
 
   "stat.dayStreak": "Day Streak",
   "stat.streakResetsIn": "Resets in {time}",
@@ -714,6 +716,8 @@ Object.assign(TRANSLATIONS.vi, {
   "class.knownTooltip": "Số thẻ bạn đã tự đánh dấu \"Đã thuộc\" trong chế độ Thẻ ghi nhớ",
   "class.accuracyTooltip": "Độ chính xác trên toàn bộ lượt trả lời đã ghi nhận (Thẻ ghi nhớ + Trắc nghiệm)",
   "confirm.deleteClass": "Xóa lớp \"{name}\" cùng toàn bộ bài học và thẻ ghi nhớ? Lịch sử và thống kê học tập vẫn được giữ lại.",
+  "confirm.archiveClasses": "Lưu trữ {n} lớp đã chọn?",
+  "alert.archiveClassesFailed": "Không thể lưu trữ một số lớp. Các lựa chọn của bạn vẫn được giữ lại.",
 
   "stat.dayStreak": "Ngày liên tục",
   "stat.streakResetsIn": "Reset sau {time}",
@@ -3333,6 +3337,8 @@ function updateHomeSelectBar() {
   if (studyBtn) studyBtn.disabled = n === 0;
   var exportBtn = document.getElementById("btn-export-classes");
   if (exportBtn) exportBtn.disabled = n === 0;
+  var archiveBtn = document.getElementById("btn-archive-classes");
+  if (archiveBtn) archiveBtn.disabled = n === 0;
   var total = document.querySelectorAll("#class-list [data-class-id]").length;
   var allCheck = document.getElementById("select-all-classes");
   if (allCheck) allCheck.checked = total > 0 && n === total;
@@ -3392,6 +3398,16 @@ document.getElementById("btn-export-classes").addEventListener("click", function
   var ids = state.selectedClassIds.slice();
   if (ids.length === 0) return;
   downloadFromApi("/api/export/flashcards?classIds=" + encodeURIComponent(ids.join(",")));
+});
+
+document.getElementById("btn-archive-classes").addEventListener("click", function() {
+  var ids = state.selectedClassIds.slice();
+  if (ids.length === 0) return;
+  confirmDelete(t("confirm.archiveClasses", { n: ids.length }), function() {
+    Promise.all(ids.map(function(id) { return store.updateClass(id, { archived: 1 }); }))
+      .then(function() { setHomeSelectMode(false); renderHome(); })
+      .catch(function() { alert(t("alert.archiveClassesFailed")); });
+  });
 });
 
 function setCardSelectMode(on) {
