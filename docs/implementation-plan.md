@@ -321,6 +321,8 @@ Every user action reachable from the keyboard. Extends existing shortcuts to cov
 
 A `?` modal lists all shortcuts. Desktop buttons show `[key]` hints.
 
+On Home, the existing class multi-select bar also offers Archive for the selected classes; it confirms the count, reuses the authenticated class-update operation for each selection, and clears the selection only after all updates succeed.
+
 ### 5.11 FSRS Scheduling
 
 Upgrade per-card SRS from fixed step intervals to FSRS-4.5 — achieves 20–30% fewer reviews for the same retention target. Pure algorithm swap; quiz flow and UI unchanged.
@@ -946,7 +948,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Session persistence (SQLiteSessionStore) | Done | Replaced MemoryStore; survives Railway restarts |
 | Screen state restoration on refresh | Done | `fc-last-screen` localStorage key; restores class/lesson |
 | Bulk delete lessons + cards | Done | Select mode with checkboxes, select-all, delete |
-| Archive classes | Done | Excluded from dashboard/due aggregation; still browsable/studyable on demand |
+| Archive classes | Done | Single-class and multi-selected Home actions; excluded from dashboard/due aggregation; still browsable/studyable on demand |
 | UI language toggle (English/Vietnamese) | Done | Preferences modal; custom `t()`/`applyI18n()` i18n system, `data-i18n*` attributes, persisted via `/api/auth/preferences` + localStorage |
 | Delete-card button in study/quiz modes | Done | Trash icon in flashcard toolbar and quiz header; confirms then removes card from the active session |
 | Minimalist icon unification | Done | All screens/modals now use a single feather-style inline-SVG icon set (`ICON_*` constants in app.js) |

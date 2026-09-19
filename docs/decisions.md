@@ -1,3 +1,7 @@
+## 2026-09-19 — Multi-class archive reuses the existing class update route
+
+Home's multi-select Archive action sends one authenticated `PUT /api/classes/:id` update per selected class instead of adding a new bulk endpoint. This keeps ownership checks and archive semantics in one server path; `Promise.all` refreshes only after every update succeeds and preserves the selection when any request fails.
+
 ## 2026-09-14 — Deleting a linked card tells KnowledgeApp
 
 The user asked whether deleting a card in FlashcardApp, because it was meaningless, would reach KnowledgeApp. It would not, and worse: the row vanished without a trace, so KnowledgeApp's next Sync saw a unit with no card and added it straight back.
