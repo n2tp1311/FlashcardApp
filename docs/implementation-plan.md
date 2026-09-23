@@ -895,7 +895,7 @@ POST /api/import  { classes, lessons, cards, history, known }
 
 ---
 
-## 11. Current Build Status (as of 2026-07-24)
+## 11. Current Build Status (as of 2026-09-24)
 
 ### 11.1 Completed Features
 
@@ -924,8 +924,9 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | SRS interval preview wraps to its own line in the grading button | Done | Was inline after the label, widening the button past narrow viewports; now `flex-wrap`+`flex-basis:100%` so it adds height, not width — re-enabled on mobile |
 | "Dữ liệu & Độ chính xác" UX audit batch (7 findings) | Done | Long-text overflow-wrap, tooltips on Sessions/known%/accuracy%, not-due-answer hint (Flashcard + Quiz), class level shown in meta line, "No data yet" vs bare "0%" |
 | "Ma sát & Tốc độ thao tác" UX audit batch (4 findings) | Done | Live match-count preview on Study Setup (shared prefetch, no extra round-trip), grading blocked until card flipped (buttons/keys/swipe), Dark Mode live-preview toggle in Preferences, `D` shortcut for Delete Selected (Class + Lesson) |
-| "So sánh đối thủ" UX audit batch (2 of 8 findings) | Done | Removed orphaned duplicate "Analytics" nav (dead buttons/handlers left over from an unfinished sidebar migration); saveable Study Setup presets (name + reapply/delete a Count/Filter/Mode/Order combo, server-persisted). Remaining 6 findings (SRS algorithm customization, Anki `.apkg` import/export, new study modes, deeper analytics, tags/subdecks, richer card types) deferred — each is its own multi-week scoping decision, not a batch fix |
-| Future Due forecast chart | Done | One narrow slice of the deferred "shallow analytics" finding: `GET /api/stats/future-due`, 14-day-ahead due-count bar chart on Dashboard, independent of the period pills. Retention curve, per-card history, ease/button distribution, review-time stats still not built |
+| "So sánh đối thủ" UX audit batch (2 of 8 findings) | Done | Removed orphaned duplicate "Analytics" nav (dead buttons/handlers left over from an unfinished sidebar migration); saveable Study Setup presets (name + reapply/delete a Count/Filter/Mode/Order combo, server-persisted). Remaining findings (SRS algorithm customization, Anki `.apkg` import/export, new study modes, tags/subdecks, richer card types) deferred — each is its own multi-week scoping decision, not a batch fix; deeper analytics shipped separately (see §11.1) |
+| Future Due forecast chart | Done | `GET /api/stats/future-due`, 14-day-ahead due-count bar chart on Dashboard, independent of the period pills |
+| Deeper study analytics | Done | Dashboard adds weekly observed accuracy (retention proxy, not FSRS prediction), mode-aware grade distribution, weekly average tracked review duration, and current-card chronological attempt history. Windowed charts reuse `/api/stats/analytics`; per-card history uses ownership-checked `/api/stats/card-history/:cardId` |
 | Max reviews per day cap | Done | One narrow slice of the deferred "no SRS algorithm customization" finding: `GET /api/stats/reviews-today` + Preferences field caps Due Only/Needs Recall session size, most-overdue first; badges stay uncapped. Learning-steps customization, ease, graduating interval, FSRS still not built |
 | Class (course) tags + filter | Done | One narrow slice of the deferred "flat organization, no tags/nested folders" finding: free-text tags (JSON column on `classes`, normalized), tag chips on class cards, a Home filter slicer composing with the Level filter, Global Search match. Briefly built at the lesson level first, moved to classes per feedback. Nested subdecks/hierarchy still not built; cross-lesson custom study already covered by existing multi-select + saveable presets |
 | Edit card from Flashcard/Quiz study screens | Done | Pencil icon opens the existing edit modal pre-filled; saves patch the in-progress session in place |
