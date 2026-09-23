@@ -417,6 +417,15 @@ Object.assign(TRANSLATIONS.en, {
   "stats.difficultyBreakdown": "Difficulty Breakdown",
   "stats.accuracyTrend": "Accuracy Trend",
   "stats.noAttemptedCards": "No attempted cards yet.",
+  "stats.reviewHistory": "Review history",
+  "stats.historyOlderOmitted": "Showing the latest {n} attempts; older history is omitted.",
+  "stats.notApplicable": "Not applicable",
+  "stats.noReviewHistory": "No review history yet.",
+  "stats.correct": "Correct",
+  "stats.incorrect": "Incorrect",
+  "stats.mode.quiz": "Quiz",
+  "stats.mode.flashcard": "Flashcard",
+  "stats.mode.recall": "Recall",
   "card.imagePlaceholder": "[image]",
   "stats.correctOutOfPct": "{correct} / {total} correct ({pct}%)",
 
@@ -431,6 +440,9 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.days60": "60 days",
   "dashboard.days90": "90 days",
   "dashboard.weeklyTrend": "Weekly Study Trend",
+  "dashboard.retentionTrend": "Retention Over Time (Observed Accuracy)",
+  "dashboard.gradeDistribution": "Review Grade Distribution",
+  "dashboard.reviewTimeTrend": "Average Review Time",
   "dashboard.newCardsTrend": "New Cards Trend",
   "dashboard.periodNote": "Applies to the charts in this section only — the summary card above is all-time, except Study Time which has its own window control.",
   "dashboard.srsDistribution": "Memory Interval Distribution",
@@ -461,6 +473,15 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.futureDue": "Upcoming Reviews (Next {n} Days)",
   "dashboard.noCardsDueSoon": "No cards due in the next {n} days.",
   "dashboard.noStudyData": "No study data yet.",
+  "dashboard.noReviewGrades": "No graded review data yet.",
+  "dashboard.noReviewTime": "No tracked review times yet.",
+  "dashboard.gradeAgain": "Again / incorrect",
+  "dashboard.gradeHard": "Hard",
+  "dashboard.gradeMedium": "Good",
+  "dashboard.gradeEasy": "Easy",
+  "dashboard.gradeQuiz": "Quiz",
+  "dashboard.gradeUngraded": "Ungraded",
+  "dashboard.avgReviewDuration": "{duration} avg · {n} reviews",
   "dashboard.attemptsAbbrev": "{n} att.",
   "dashboard.heatmapCellTooltip": "{date}: {duration} studied ({n} attempt(s))",
   "dashboard.monthAbbrevs": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
@@ -936,6 +957,15 @@ Object.assign(TRANSLATIONS.vi, {
   "stats.difficultyBreakdown": "Phân bố độ khó",
   "stats.accuracyTrend": "Xu hướng độ chính xác",
   "stats.noAttemptedCards": "Chưa có thẻ nào được làm.",
+  "stats.reviewHistory": "Lịch sử ôn tập",
+  "stats.historyOlderOmitted": "Đang hiển thị {n} lượt gần nhất; lịch sử cũ hơn đã được ẩn.",
+  "stats.notApplicable": "Không áp dụng",
+  "stats.noReviewHistory": "Chưa có lịch sử ôn tập.",
+  "stats.correct": "Đúng",
+  "stats.incorrect": "Sai",
+  "stats.mode.quiz": "Trắc nghiệm",
+  "stats.mode.flashcard": "Thẻ ghi nhớ",
+  "stats.mode.recall": "Gợi nhớ",
   "card.imagePlaceholder": "[hình ảnh]",
   "stats.correctOutOfPct": "{correct} / {total} đúng ({pct}%)",
 
@@ -950,6 +980,9 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.days60": "60 ngày",
   "dashboard.days90": "90 ngày",
   "dashboard.weeklyTrend": "Xu hướng học theo tuần",
+  "dashboard.retentionTrend": "Khả năng ghi nhớ theo thời gian (độ chính xác quan sát)",
+  "dashboard.gradeDistribution": "Phân bố mức đánh giá ôn tập",
+  "dashboard.reviewTimeTrend": "Thời gian ôn tập trung bình",
   "dashboard.newCardsTrend": "Xu hướng thẻ mới",
   "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — thẻ tổng quan phía trên tính toàn thời gian, riêng Thời gian học có bộ chọn khoảng thời gian riêng.",
   "dashboard.srsDistribution": "Phân bố khoảng ghi nhớ",
@@ -980,6 +1013,15 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.futureDue": "Sắp đến hạn ôn ({n} ngày tới)",
   "dashboard.noCardsDueSoon": "Không có thẻ nào đến hạn trong {n} ngày tới.",
   "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
+  "dashboard.noReviewGrades": "Chưa có dữ liệu đánh giá ôn tập.",
+  "dashboard.noReviewTime": "Chưa có dữ liệu thời gian ôn tập.",
+  "dashboard.gradeAgain": "Làm lại / sai",
+  "dashboard.gradeHard": "Khó",
+  "dashboard.gradeMedium": "Tốt",
+  "dashboard.gradeEasy": "Dễ",
+  "dashboard.gradeQuiz": "Trắc nghiệm",
+  "dashboard.gradeUngraded": "Chưa đánh giá",
+  "dashboard.avgReviewDuration": "TB {duration} · {n} lượt ôn",
   "dashboard.attemptsAbbrev": "{n} lượt",
   "dashboard.heatmapCellTooltip": "{date}: học {duration} ({n} lượt làm)",
   "dashboard.monthAbbrevs": "Th1,Th2,Th3,Th4,Th5,Th6,Th7,Th8,Th9,Th10,Th11,Th12",
@@ -6331,6 +6373,12 @@ document.getElementById("btn-results-back").addEventListener("click", function()
    ============================ */
 
 function openStats(type, id, title) {
+  cardHistoryRequestId++;
+  statsListRequestId++;
+  var historyPanel = document.getElementById("stats-history-panel");
+  if (historyPanel) historyPanel.remove();
+  resetStatsPanel(document.getElementById("stats-hardest"));
+  resetStatsPanel(document.getElementById("stats-all"));
   document.getElementById("stats-title").textContent = t("stats.titlePrefix", { title: title });
   // Reset tabs
   document.querySelectorAll(".tab").forEach(function(t) { t.classList.toggle("active", t.dataset.tab === "overview"); });
@@ -6607,31 +6655,48 @@ function diffBar(name, count, total, color) {
   '</div>';
 }
 
+function setStatsPanelContent(panel, html) {
+  var historyPanel = document.getElementById("stats-history-panel");
+  var keepHistory = historyPanel && historyPanel.parentElement === panel;
+  if (keepHistory) historyPanel.remove();
+  panel.innerHTML = html;
+  if (keepHistory) panel.insertBefore(historyPanel, panel.firstChild);
+}
+
+function resetStatsPanel(panel) {
+  setStatsPanelContent(panel, "");
+}
+
+var statsListRequestId = 0;
 function renderStatsHardest(type, id) {
   var panel = document.getElementById("stats-hardest");
+  var requestId = statsListRequestId;
   var scope = { type: type, id: id };
   store.getHardestCards({ scope: scope, limit: 30 }).then(function(items) {
+    if (requestId !== statsListRequestId) return;
     if (items.length === 0) {
-      panel.innerHTML = '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>';
+      setStatsPanelContent(panel, '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>');
       return;
     }
-    panel.innerHTML = "";
+    resetStatsPanel(panel);
     items.forEach(function(item) { panel.appendChild(buildStatsCardEl(item.card, item.stats)); });
   });
 }
 
 function renderStatsAll(type, id) {
   var panel = document.getElementById("stats-all");
+  var requestId = statsListRequestId;
 
   if (IS_SERVER) {
     // Chronological (most-recently-attempted first) — distinct from the Hardest Cards
     // tab's difficulty sort, which this tab used to silently reuse.
     store.getHardestCards({ scope: { type: type, id: id }, limit: 9999, sort: "recent" }).then(function(items) {
+      if (requestId !== statsListRequestId) return;
       if (items.length === 0) {
-        panel.innerHTML = '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>';
+        setStatsPanelContent(panel, '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>');
         return;
       }
-      panel.innerHTML = "";
+      resetStatsPanel(panel);
       items.forEach(function(item) { panel.appendChild(buildStatsCardEl(item.card, item.stats)); });
     });
     return;
@@ -6646,14 +6711,15 @@ function renderStatsAll(type, id) {
 
   var allAttempts = JSON.parse(localStorage.getItem("fc-attempts") || "[]");
   cardsPromise.then(function(cards) {
+    if (requestId !== statsListRequestId) return;
     var attempted = cards.filter(function(c) {
       return allAttempts.some(function(a) { return a.card_id === c.id; });
     });
     if (attempted.length === 0) {
-      panel.innerHTML = '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>';
+      setStatsPanelContent(panel, '<div class="empty-state"><p>' + t("stats.noAttemptedCards") + '</p></div>');
       return;
     }
-    panel.innerHTML = "";
+    resetStatsPanel(panel);
     attempted.forEach(function(card) {
       var ca = allAttempts.filter(function(a) { return a.card_id === card.id; });
       var stats = computeStats(ca);
@@ -6698,7 +6764,83 @@ function buildStatsCardEl(card, stats) {
     pct: (stats.total > 0 ? Math.round(stats.correct / stats.total * 100) : 0)
   });
   item.appendChild(acc);
+  if (IS_SERVER && card.id) {
+    var historyBtn = document.createElement("button");
+    historyBtn.type = "button";
+    historyBtn.className = "btn btn-sm btn-ghost stats-history-btn";
+    historyBtn.textContent = t("stats.reviewHistory");
+    var cardId = card.id;
+    historyBtn.addEventListener("click", function() { renderCardHistory(cardId); });
+    item.appendChild(historyBtn);
+  }
   return item;
+}
+
+var cardHistoryRequestId = 0;
+function renderCardHistory(cardId) {
+  var panel = document.getElementById("stats-hardest").classList.contains("active")
+    ? document.getElementById("stats-hardest") : document.getElementById("stats-all");
+  var requestId = ++cardHistoryRequestId;
+  var historyPanel = document.getElementById("stats-history-panel");
+  if (!historyPanel) {
+    historyPanel = document.createElement("div");
+    historyPanel.id = "stats-history-panel";
+    historyPanel.className = "stats-history-panel";
+  }
+  if (historyPanel.parentElement !== panel) panel.insertBefore(historyPanel, panel.firstChild);
+  historyPanel.textContent = t("common.loadingEllipsis");
+  store.getCardHistory(cardId).then(function(result) {
+    if (requestId !== cardHistoryRequestId) return;
+    var card = result.card;
+    var promptEl = document.createElement("div");
+    promptEl.className = "stats-card-q";
+    var data = typeof card.data === "string" ? JSON.parse(card.data) : card.data;
+    if (card.format === "term-def") renderLatex(data.term, promptEl);
+    else if (card.format === "true-false") renderLatex(data.statement, promptEl);
+    else if (card.format === "image-def") promptEl.textContent = t("card.imagePlaceholder");
+    else renderLatex(data.question || "", promptEl);
+    historyPanel.innerHTML = "";
+    var heading = document.createElement("div");
+    heading.className = "stats-history-heading";
+    heading.textContent = t("stats.reviewHistory");
+    historyPanel.appendChild(heading);
+    historyPanel.appendChild(promptEl);
+    if (result.hasMore) {
+      var omitted = document.createElement("div");
+      omitted.className = "dash-empty-note";
+      omitted.textContent = t("stats.historyOlderOmitted", { n: result.attempts.length });
+      historyPanel.appendChild(omitted);
+    }
+    if (!result.attempts.length) {
+      var empty = document.createElement("div");
+      empty.className = "dash-empty-note";
+      empty.textContent = t("stats.noReviewHistory");
+      historyPanel.appendChild(empty);
+      return;
+    }
+    var list = document.createElement("div");
+    list.className = "stats-history-list";
+    result.attempts.slice().reverse().forEach(function(attempt) {
+      var row = document.createElement("div");
+      row.className = "stats-history-row";
+      var date = new Date(attempt.created_at * 1000);
+      var grade = attempt.grade === "hard" ? t("dashboard.gradeHard")
+        : attempt.grade === "medium" ? t("dashboard.gradeMedium")
+        : attempt.grade === "easy" ? t("dashboard.gradeEasy")
+        : attempt.grade == null && attempt.source !== "quiz" ? (attempt.correct ? "—" : t("dashboard.gradeAgain"))
+        : attempt.grade == null ? t("stats.notApplicable")
+        : t("dashboard.gradeUngraded");
+      var duration = attempt.duration_ms == null ? "—" : attempt.duration_ms < 60000
+        ? Math.round(attempt.duration_ms / 1000) + "s" : formatStudyDuration(attempt.duration_ms);
+      row.textContent = date.toLocaleString() + " · " +
+        (attempt.correct ? t("stats.correct") : t("stats.incorrect")) + " · " +
+        t("stats.mode." + attempt.source) + " · " + grade + " · " + duration;
+      list.appendChild(row);
+    });
+    historyPanel.appendChild(list);
+  }).catch(function() {
+    if (requestId === cardHistoryRequestId) historyPanel.textContent = t("common.networkError");
+  });
 }
 
 // Stats tab switching
@@ -6760,7 +6902,13 @@ function openDueReview(lessonId, classId) {
   });
 }
 
+var dashboardAnalyticsRequestId = 0;
+var dashboardPeriodRequestId = 0;
 function renderDashboard() {
+  dashboardAnalyticsRequestId++;
+  dashboardPeriodRequestId++;
+  var requestId = dashboardAnalyticsRequestId;
+  var periodRequestId = dashboardPeriodRequestId;
   var loadEl  = document.getElementById("dash-loading");
   var errEl   = document.getElementById("dash-error");
   loadEl.classList.remove("hidden");
@@ -6768,7 +6916,7 @@ function renderDashboard() {
   var exportBtn = document.getElementById("btn-dashboard-export");
   if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
-   "dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-lesson-wrap",
+   "dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-retention-wrap","dash-grade-wrap","dash-reviewtime-wrap","dash-lesson-wrap",
    "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
@@ -6776,6 +6924,8 @@ function renderDashboard() {
   // Isolated .catch so a new-card-estimate failure can't blank out the rest of the dashboard.
   var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
   Promise.all([store.getDashboard(state.studyTimeWindowDays), store.getAnalytics(state.dashPeriod), store.getSrsDistribution(state.dashPeriod), store.getFutureDue(), newCardEstimatePromise]).then(function(results) {
+    if (requestId !== dashboardAnalyticsRequestId) return;
+    if (periodRequestId !== dashboardPeriodRequestId) { renderDashboard(); return; }
     var d = results[0], analytics = results[1], srs = results[2], futureDue = results[3], newCardEstimate = results[4];
     var days = analytics.days || state.dashPeriod || 60;
     var heatmapTitle = document.getElementById("dash-heatmap-title");
@@ -6797,7 +6947,7 @@ function renderDashboard() {
       '<div class="dash-accuracy-bar">' +
         '<div class="dash-accuracy-fill" style="transform:' + scaleXStyle(accPct / 100) + '"></div>' +
       '</div>' +
-      '<div id="dash-source-pills-wrap">' + renderAccuracyBySourcePills(analytics.accuracyBySource) + '</div>';
+      '<div id="dash-source-pills-wrap">' + (periodRequestId === dashboardPeriodRequestId ? renderAccuracyBySourcePills(analytics.accuracyBySource) : '') + '</div>';
 
     // Difficulty breakdown
     var db_ = d.diffBreakdown;
@@ -6813,6 +6963,9 @@ function renderDashboard() {
     renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
     renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), Math.ceil(days / 7));
     renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
+    renderRetentionTrend(analytics.retentionTrend, document.getElementById("dash-retention-wrap"), Math.ceil(days / 7));
+    renderGradeDistribution(analytics.gradeDistribution, document.getElementById("dash-grade-wrap"));
+    renderReviewTimeTrend(analytics.reviewTimeTrend, document.getElementById("dash-reviewtime-wrap"), Math.ceil(days / 7));
     var futureDueTitle = document.getElementById("dash-future-due-title");
     if (futureDueTitle) futureDueTitle.textContent = t("dashboard.futureDue", { n: futureDue.windowDays });
     renderFutureDue(futureDue, document.getElementById("dash-future-due-wrap"));
@@ -6879,6 +7032,8 @@ function renderDashboard() {
     }
 
   }).catch(function() {
+    if (requestId !== dashboardAnalyticsRequestId) return;
+    if (periodRequestId !== dashboardPeriodRequestId) { renderDashboard(); return; }
     loadEl.classList.add("hidden");
     errEl.classList.remove("hidden");
   });
@@ -6905,6 +7060,8 @@ document.getElementById("btn-dashboard-inline").addEventListener("click", functi
 });
 
 document.getElementById("btn-dashboard-back").addEventListener("click", function() {
+  dashboardAnalyticsRequestId++;
+  dashboardPeriodRequestId++;
   showScreen("home");
 });
 
@@ -6921,24 +7078,36 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     var btn = e.target.closest(".pill");
     if (!btn) return;
     state.dashPeriod = parseInt(btn.dataset.period, 10);
+    var requestId = ++dashboardPeriodRequestId;
     try { localStorage.setItem("fc-dash-period", state.dashPeriod); } catch (_) {}
     updatePills();
     document.getElementById("dash-heatmap-wrap").innerHTML = "";
     document.getElementById("dash-trend-wrap").innerHTML = "";
     document.getElementById("dash-newcards-trend-wrap").innerHTML = "";
     document.getElementById("dash-srs-wrap").innerHTML = "";
+    document.getElementById("dash-retention-wrap").innerHTML = "";
+    document.getElementById("dash-grade-wrap").innerHTML = "";
+    document.getElementById("dash-reviewtime-wrap").innerHTML = "";
     document.getElementById("dash-lesson-wrap").innerHTML = "";
     document.getElementById("dash-struggle-list").innerHTML = "";
     store.getSrsDistribution(state.dashPeriod).then(function(srs) {
+      if (requestId !== dashboardPeriodRequestId) return;
       renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
+    }).catch(function() {
+      if (requestId !== dashboardPeriodRequestId) return;
+      document.getElementById("dash-srs-wrap").textContent = t("common.networkError");
     });
     store.getAnalytics(state.dashPeriod).then(function(analytics) {
+      if (requestId !== dashboardPeriodRequestId) return;
       var days = analytics.days || state.dashPeriod;
       var heatmapTitle = document.getElementById("dash-heatmap-title");
       if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
       renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
       renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
       renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), Math.ceil(days / 7));
+      renderRetentionTrend(analytics.retentionTrend, document.getElementById("dash-retention-wrap"), Math.ceil(days / 7));
+      renderGradeDistribution(analytics.gradeDistribution, document.getElementById("dash-grade-wrap"));
+      renderReviewTimeTrend(analytics.reviewTimeTrend, document.getElementById("dash-reviewtime-wrap"), Math.ceil(days / 7));
       renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
       var pillsWrap = document.getElementById("dash-source-pills-wrap");
@@ -6953,9 +7122,89 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
       strugList.innerHTML = strugglingLessons.length
         ? strugglingLessons.map(function(l) { return dashLessonRow(l, "struggle"); }).join("")
         : '<div class="dash-empty-note">' + t("dashboard.noStrugglingLessons") + '</div>';
+    }).catch(function() {
+      if (requestId !== dashboardPeriodRequestId) return;
+      ["dash-heatmap-wrap", "dash-trend-wrap", "dash-newcards-trend-wrap", "dash-retention-wrap", "dash-grade-wrap", "dash-reviewtime-wrap", "dash-lesson-wrap", "dash-struggle-list"].forEach(function(id) {
+        document.getElementById(id).textContent = t("common.networkError");
+      });
     });
   });
 }());
+
+function renderRetentionTrend(rows, wrap, maxWeeksAgo) {
+  if (!wrap) return;
+  renderAccuracyTrend(rows || [], wrap, maxWeeksAgo);
+}
+
+function renderGradeDistribution(rows, wrap) {
+  if (!wrap) return;
+  var counts = {};
+  (rows || []).forEach(function(r) {
+    var key;
+    if (r.source === "quiz") {
+      key = r.correct ? "quiz:correct" : "quiz:incorrect";
+    } else if (!r.correct) {
+      key = "again";
+    } else if (r.grade === "hard" || r.grade === "medium" || r.grade === "easy") {
+      key = r.grade;
+    } else {
+      key = "ungraded";
+    }
+    counts[key] = (counts[key] || 0) + r.cnt;
+  });
+  var keys = ["again", "hard", "medium", "easy"];
+  Object.keys(counts).filter(function(k) { return k.indexOf("quiz:") === 0 || k === "ungraded"; }).sort().forEach(function(k) { keys.push(k); });
+  var total = keys.reduce(function(sum, key) { return sum + (counts[key] || 0); }, 0);
+  if (!total) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noReviewGrades") + '</div>';
+    return;
+  }
+  wrap.innerHTML = "";
+  keys.forEach(function(key) {
+    var cnt = counts[key] || 0;
+    if (!cnt) return;
+    var label = key === "again" ? t("dashboard.gradeAgain")
+      : key === "hard" ? t("dashboard.gradeHard")
+      : key === "medium" ? t("dashboard.gradeMedium")
+      : key === "easy" ? t("dashboard.gradeEasy")
+      : key === "ungraded" ? t("dashboard.gradeUngraded")
+      : t("dashboard.gradeQuiz") + " · " + (key.slice(5) === "correct" ? t("stats.correct") : t("stats.incorrect"));
+    var rowEl = document.createElement("div");
+    rowEl.className = "trend-row";
+    rowEl.innerHTML = '<span class="trend-label">' + escHtml(label) + '</span>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(cnt / total) + '"></div></div>' +
+      '<span class="trend-count">' + cnt + '</span>';
+    wrap.appendChild(rowEl);
+  });
+}
+
+function renderReviewTimeTrend(rows, wrap, maxWeeksAgo) {
+  if (!wrap) return;
+  var map = {};
+  (rows || []).forEach(function(r) { map[r.weeks_ago] = r; });
+  var weeks = [];
+  for (var w = maxWeeksAgo; w >= 0; w--) weeks.push({ weeksAgo: w, row: map[w] || null });
+  if (!weeks.some(function(week) { return week.row && week.row.samples > 0; })) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noReviewTime") + '</div>';
+    return;
+  }
+  var max = weeks.reduce(function(m, week) { return Math.max(m, week.row ? week.row.avg_ms || 0 : 0); }, 1);
+  wrap.innerHTML = "";
+  weeks.forEach(function(week) {
+    var row = week.row;
+    var label = week.weeksAgo === 0 ? t("dashboard.thisWeek")
+      : week.weeksAgo === 1 ? t("dashboard.lastWeek")
+      : t("time.weeksAgo", { n: week.weeksAgo });
+    var avgSec = row ? Math.round(row.avg_ms / 1000) : 0;
+    var avgLabel = avgSec < 60 ? avgSec + "s" : formatStudyDuration(avgSec * 1000);
+    var rowEl = document.createElement("div");
+    rowEl.className = "trend-row";
+    rowEl.innerHTML = '<span class="trend-label">' + escHtml(label) + '</span>' +
+      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(row ? row.avg_ms / max : 0) + '"></div></div>' +
+      '<span class="trend-count">' + (row ? escHtml(t("dashboard.avgReviewDuration", { duration: avgLabel, n: row.samples })) : "—") + '</span>';
+    wrap.appendChild(rowEl);
+  });
+}
 
 function renderHeatmap(rows, wrap, days) {
   if (!days) days = 60;
@@ -7697,6 +7946,7 @@ var SQLiteAdapter = (function() {
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
     getDashboard: function(days) { return req("GET", "/stats/dashboard" + (days ? "?days=" + days : "")); },
     getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
+    getCardHistory: function(cardId) { return req("GET", "/stats/card-history/" + encodeURIComponent(cardId)); },
     getSrsDistribution: function(days) { return req("GET", "/stats/srs-distribution" + (days ? "?days=" + days : "")); },
     getFutureDue: function() { return req("GET", "/stats/future-due"); },
     getReviewsToday: function() { return req("GET", "/stats/reviews-today"); },

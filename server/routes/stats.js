@@ -418,6 +418,29 @@ router.get("/analytics", requireAuth, function(req, res) {
   var accuracyBySource = {};
   accuracyBySourceRows.forEach(function(r) { accuracyBySource[r.source] = { total: r.total, correct: r.correct || 0 }; });
 
+  // Retention is represented as observed weekly accuracy, not predicted FSRS recall.
+  // The client zero-fills missing weeks using the same window as the study-volume trend.
+  var retentionTrend = weeklyRows.map(function(r) {
+    return { weeks_ago: r.weeks_ago, total: r.cnt, correct: r.correct || 0 };
+  });
+  var gradeDistribution = db.prepare(
+    "SELECT source, grade, correct, COUNT(*) AS cnt FROM attempts " +
+    "WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
+    "GROUP BY source, grade, correct ORDER BY source, grade"
+  ).all(uid, secs);
+
+  // Only attempts with measured duration contribute. Older attempts and quiz sessions
+  // without timing data are excluded rather than treated as zero-second reviews.
+  var reviewTimeWeeklyRows = db.prepare(
+    "SELECT CAST((strftime('%s','now') - created_at) / 604800 AS INTEGER) AS weeks_ago, " +
+    "COUNT(duration_ms) AS samples, AVG(duration_ms) AS avg_ms " +
+    "FROM attempts WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
+    "AND duration_ms IS NOT NULL GROUP BY weeks_ago"
+  ).all(uid, secs);
+
+  // Card history is fetched on demand by /card-history/:cardId; avoid shipping every
+  // attempt row with each dashboard request.
+
   // Struggling lessons — windowed (was lifetime on /dashboard; a lesson shouldn't stay
   // flagged long after the user actually fixed it) and requires >=3 attempted cards so
   // one bad card early on doesn't flag an otherwise-fine lesson.
@@ -454,12 +477,36 @@ router.get("/analytics", requireAuth, function(req, res) {
   res.json({
     heatmap: heatmapRows,
     weeklyTrend: weeklyRows,
+    retentionTrend: retentionTrend,
+    gradeDistribution: gradeDistribution,
+    reviewTimeTrend: reviewTimeWeeklyRows,
     newCardsWeeklyTrend: newCardsWeeklyRows,
     lessonBreakdown: lessonRows,
     accuracyBySource: accuracyBySource,
     strugglingLessons: strugglingLessons,
     days: days
   });
+});
+
+router.get("/card-history/:cardId", requireAuth, function(req, res) {
+  var uid = req.session.userId;
+  var card = db.prepare(
+    "SELECT c.id, c.format, c.data FROM cards c " +
+    "JOIN lessons l ON l.id=c.lesson_id " +
+    "JOIN classes cl ON cl.id=l.class_id " +
+    "WHERE c.id=? AND cl.user_id=?"
+  ).get(req.params.cardId, uid);
+  if (!card) return res.status(404).json({ error: "Not found" });
+
+  var attemptLimit = 500;
+  var attempts = db.prepare(
+    "SELECT created_at, correct, source, grade, duration_ms FROM attempts " +
+    "WHERE card_id=? AND user_id=? ORDER BY created_at DESC, id DESC LIMIT ?"
+  ).all(card.id, uid, attemptLimit + 1);
+  var hasMore = attempts.length > attemptLimit;
+  if (hasMore) attempts.pop();
+  attempts.reverse();
+  res.json({ card: card, attempts: attempts, hasMore: hasMore });
 });
 
 router.get("/accuracy/classes", requireAuth, function(req, res) {

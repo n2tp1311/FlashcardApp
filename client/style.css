@@ -2131,6 +2131,11 @@ code {
 .diff-pill.new { background: var(--surface2); color: var(--text2); }
 
 .stats-accuracy { font-size: 0.75rem; color: var(--text2); margin-top: 4px; }
+.stats-history-btn { margin-top: 8px; }
+.stats-history-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; }
+.stats-history-heading { font-size: 0.875rem; font-weight: 700; margin-bottom: 8px; }
+.stats-history-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.stats-history-row { font-size: 0.75rem; color: var(--text2); padding: 7px 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
 
 /* ============================
    MINI PROGRESS BARS
