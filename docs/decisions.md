@@ -308,7 +308,7 @@ Built via the full Explore → Plan → Implement → verify workflow. `_pickVoi
 
 **2026-09-24 ranking refinement**: within the already language-matched pool, prefer voices advertising an enhanced/natural quality tier even when their locale is a regional variant (for example `en-GB` over a basic `en-US`), then exact-region and provider fallbacks. This is still fully automatic and adds no picker or preference. Voice names are best-effort metadata, not an objective guarantee of naturalness; the platform's installed voices remain decisive.
 
-**Verification for refinement**: assert the regional enhanced-vs-exact-region ordering, keep language-pool matching ahead of quality labels, and verify existing fallback/cache behavior with stubbed voice lists. Subjective playback comparisons remain manual and platform-dependent.
+**Verification for refinement**: assert the regional enhanced-vs-exact-region ordering, keep language-pool matching ahead of quality labels, and verify existing fallback/cache behavior with stubbed voice lists. Subjective playback comparisons remain manual and platform-dependent. The ad hoc Node VM check passed the quality-tier regional preference, language-pool priority, English fallback, empty-list handling, and cache refresh behavior; `node --check client/app.js` and `git diff --check` also passed. Browser/device playback was not manually evaluated in this environment.
 
 ## 2026-08-06 — Replace fixed-step SRS ladder with FSRS
 
