@@ -722,6 +722,10 @@ Text in math:     $\text{MSE} = \text{Bias}^2 + \text{Var}$
 | Preference | `preferences.haptics`, boolean, default true, synced per account; no server change needed (the prefs PUT merges arbitrary keys) |
 | Platform | Android only — iOS exposes no Vibration API; desktop no-ops. Hint line under the toggle when `navigator.vibrate` is missing |
 
+### 5.15 First-run tutorial (server mode)
+
+Authenticated accounts see a short EN/VI tutorial once after saved preferences load. It introduces classes and lessons, adding cards, studying, and checking review progress. Skip, Finish, close, Escape, and backdrop dismissal all save `tutorialCompleted` in the existing per-account preferences JSON; localStorage provides a user-namespaced fallback if the preference write fails. Preferences can replay the tour without clearing completion. No setup choices, feature gating, or database migration.
+
 ## 6. Server Architecture (Phase 2+)
 
 ### 6.1 Tech Stack

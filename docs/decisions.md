@@ -1,3 +1,7 @@
+## 2026-09-24 — First-run tutorial is once-per-account and replayable
+
+The tutorial is an introduction, not a setup wizard: it never blocks normal app use and can be skipped or dismissed at any step. Store `tutorialCompleted` in the existing preferences JSON so the once-only decision follows an account across devices without schema work; also mark it in a user-namespaced localStorage fallback immediately so a failed preference request does not prompt again on every refresh. Preferences replays the same four steps but does not reset or unset completion. We defer marking the account complete until the user dismisses or finishes, avoiding lost onboarding when a first-run modal was merely presented but never seen.
+
 ## 2026-09-19 — Multi-class archive reuses the existing class update route
 
 Home's multi-select Archive action sends one authenticated `PUT /api/classes/:id` update per selected class instead of adding a new bulk endpoint. This keeps ownership checks and archive semantics in one server path; `Promise.all` refreshes only after every update succeeds and preserves the selection when any request fails.
