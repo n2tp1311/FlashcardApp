@@ -366,6 +366,7 @@ Data from the existing `attempts` table plus one new column, `duration_ms` (null
 | Progress (fetch) | Each card from `GET /classes/:id/cards` carries `progress: {state, stability, difficulty, reps, lapses, last_review_at, due_at, retrievability}`. Retrievability is computed by the live `ts-fsrs` scheduler (`get_retrievability`) at request time, so the consumer never copies FSRS parameters |
 | Deletions | Deleting a single card that carries an `external_id` writes a tombstone to `external_card_deletions` in the same transaction. Deleting a lesson or class writes none. `GET /deletions?since=<id>` → tombstones after the cursor, oldest first, 1000 per page with `more`; KnowledgeApp keeps the cursor and removes the unit behind each card |
 | Create class | `POST /classes {name, color?, icon?}` → 201 with the new class. Always creates; KnowledgeApp calls it only for a book with no class mapped and refuses when a class of that name already exists |
+| Rename lesson | `PUT /lessons/:id {title}` trims and validates a 1–200 character title, scoped to a lesson in the token owner's class; updates only `lessons.title` so lesson/card IDs and learner progress remain unchanged; retrying the same title is safe |
 | Link cards (reconcile) | `POST /link-cards {links:[{card_id, external_id}]}` (≤2000) → per link `linked / already / conflict (+current_external_id) / not_found / invalid`. Sets `external_id` only where it is NULL; never overwrites a different link; progress, content and flags untouched |
 | Add cards (reconcile) | `POST /add-cards {class_id, cards:[{external_id, term, def, lesson_id? \| after_card_id? \| new_lesson_title?}]}` (≤500) → per card `added / exists / not_found / invalid` plus `lessons:[{id,title,created}]`. One transaction per request. An `external_id` already in the class is `exists` (dedupe per class, not per user). Target lesson must be term-def and in the class. A new lesson is created lazily (only when a card goes in) and reused by exact title, appended with `MAX(sort_order)+1`. Malformed request → 400, nothing written |
 | Ordering | Any insert after an anchor (add-cards, split) rewrites the lesson's `sort_order` densely 0..n-1 in display order (`sort_order, created_at, rowid`), with new cards after their anchors in input order and unanchored cards at the end |
@@ -764,6 +765,7 @@ POST   /api/integrations/knowledge/events
 POST   /api/integrations/knowledge/link
 GET    /api/integrations/knowledge/classes
 POST   /api/integrations/knowledge/classes
+PUT    /api/integrations/knowledge/lessons/:id
 GET    /api/integrations/knowledge/deletions
 GET    /api/integrations/knowledge/classes/:id/cards
 POST   /api/integrations/knowledge/convert-cards

@@ -166,6 +166,7 @@
 - KnowledgeApp's Fetch button reads your study progress back, so it can show how much of each book you have actually learned
 - KnowledgeApp's Sync button publishes a book straight into your account: it creates the class the first time, then adds the book's new cards on later syncs
 - KnowledgeApp can turn multiple-choice and true/false cards into term-def cards, keeping each card's study history and schedule exactly as they were; the original question is kept so the conversion can be undone
+- KnowledgeApp can rename a lesson in place by lesson ID through its existing integration token, preserving the lesson/card IDs and all learner progress
 - "Removed from source" never deletes your card — it stays studyable until you delete it yourself
 - "Updated" filter in Study Setup to review just the flagged cards; the flashcard shows an "Updated" badge while studying
 - "Changes from KnowledgeApp" review screen (sidebar item with a count badge, plus a home banner — both hidden when nothing is flagged): total / updated / removed counts, All / Updated / Removed filters, cards grouped by class › lesson, previous vs current side by side with word-level highlighting of what was removed and added (fields containing LaTeX are rendered instead, with the changed side outlined), and per card Mark reviewed / Open in lesson / Edit / Delete (Delete only for removed-from-source cards)
