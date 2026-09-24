@@ -3650,6 +3650,11 @@ document.getElementById("lesson-format-picker").addEventListener("click", functi
 });
 
 function openNewLesson() {
+  document.getElementById("lesson-format-picker").querySelectorAll(".pill").forEach(function(p) {
+    p.disabled = false;
+    p.style.pointerEvents = "";
+    p.style.opacity = "";
+  });
   state.editingLessonId = null;
   document.getElementById("modal-lesson-title").textContent = t("lesson.newLesson");
   document.getElementById("lesson-title-input").value = "";
