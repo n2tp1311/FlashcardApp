@@ -688,6 +688,10 @@
         <label class="form-label" data-i18n="pref.maxReviewsPerDay">Max reviews per day</label>
         <input type="number" id="pref-max-reviews" class="form-input" min="0" step="10" style="width:100px" placeholder="No limit" data-i18n-placeholder="pref.noLimit">
       </div>
+      <div class="pref-row">
+        <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
+        <button type="button" class="btn btn-sm btn-ghost" id="btn-replay-tutorial" data-i18n="tutorial.replay">Show tutorial</button>
+      </div>
       <div class="pref-tokens" id="pref-api-tokens">
         <label class="form-label" data-i18n="pref.apiTokens">API tokens</label>
         <p class="pref-hint" data-i18n="pref.apiTokensHint">Lets KnowledgeApp send card updates to your account.</p>
@@ -708,6 +712,26 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="preferences" data-i18n="common.cancel">Cancel</button>
       <button class="btn btn-primary" id="btn-save-preferences" data-i18n="common.save">Save</button>
+    </div>
+  </div>
+
+  <!-- First-run Tutorial Modal -->
+  <div id="modal-tutorial" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+    <div class="modal-header">
+      <h3 id="tutorial-title" data-i18n="tutorial.title">Quick tour</h3>
+      <button class="modal-close" data-modal="tutorial" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body tutorial-body">
+      <div class="tutorial-progress" id="tutorial-progress" aria-live="polite"></div>
+      <h4 id="tutorial-step-title"></h4>
+      <p id="tutorial-step-description"></p>
+    </div>
+    <div class="modal-footer tutorial-footer">
+      <button type="button" class="btn btn-ghost" id="tutorial-skip" data-i18n="tutorial.skip">Skip</button>
+      <div class="tutorial-nav">
+        <button type="button" class="btn btn-ghost" id="tutorial-back" data-i18n="tutorial.back">Back</button>
+        <button type="button" class="btn btn-primary" id="tutorial-next" data-i18n="tutorial.next">Next</button>
+      </div>
     </div>
   </div>
 

@@ -108,6 +108,22 @@ Object.assign(TRANSLATIONS.en, {
   "common.cancel": "Cancel",
   "common.save": "Save",
   "pref.title": "Preferences",
+  "tutorial.title": "Quick tour",
+  "tutorial.preferenceLabel": "Getting started",
+  "tutorial.replay": "Show tutorial",
+  "tutorial.skip": "Skip",
+  "tutorial.back": "Back",
+  "tutorial.next": "Next",
+  "tutorial.finish": "Finish",
+  "tutorial.stepCount": "Step {step} of {total}",
+  "tutorial.step1Title": "Organize your subjects",
+  "tutorial.step1Body": "Create a class for a subject, then open it to add lessons. You can also start with a shared class.",
+  "tutorial.step2Title": "Add what you want to learn",
+  "tutorial.step2Body": "Inside a lesson, add cards one by one or paste many at once. Choose the format that fits your material.",
+  "tutorial.step3Title": "Study your cards",
+  "tutorial.step3Body": "Open a lesson and choose Study. Flip cards to recall answers, or use Quiz to practice recognition.",
+  "tutorial.step4Title": "Keep your progress",
+  "tutorial.step4Body": "Mark how well you remembered each card. Spaced repetition schedules reviews, and Stats shows your progress.",
   "pref.textSize": "Text size",
   "pref.darkMode": "Dark mode",
   "pref.haptics": "Vibration feedback",
@@ -648,6 +664,22 @@ Object.assign(TRANSLATIONS.vi, {
   "common.cancel": "Hủy",
   "common.save": "Lưu",
   "pref.title": "Tùy chọn",
+  "tutorial.title": "Hướng dẫn nhanh",
+  "tutorial.preferenceLabel": "Bắt đầu sử dụng",
+  "tutorial.replay": "Xem hướng dẫn",
+  "tutorial.skip": "Bỏ qua",
+  "tutorial.back": "Trước",
+  "tutorial.next": "Tiếp",
+  "tutorial.finish": "Hoàn tất",
+  "tutorial.stepCount": "Bước {step}/{total}",
+  "tutorial.step1Title": "Sắp xếp các môn học",
+  "tutorial.step1Body": "Tạo một lớp cho môn học, sau đó mở lớp để thêm bài học. Bạn cũng có thể bắt đầu từ một lớp được chia sẻ.",
+  "tutorial.step2Title": "Thêm nội dung cần học",
+  "tutorial.step2Body": "Trong bài học, thêm từng thẻ hoặc dán nhiều thẻ cùng lúc. Chọn định dạng phù hợp với tài liệu của bạn.",
+  "tutorial.step3Title": "Học với thẻ ghi nhớ",
+  "tutorial.step3Body": "Mở bài học và chọn Học. Lật thẻ để tự nhớ đáp án hoặc dùng Trắc nghiệm để luyện nhận diện.",
+  "tutorial.step4Title": "Theo dõi tiến độ",
+  "tutorial.step4Body": "Đánh giá mức độ nhớ của bạn. Hệ thống sẽ lên lịch ôn tập, còn mục Thống kê giúp bạn xem tiến độ.",
   "pref.textSize": "Cỡ chữ",
   "pref.darkMode": "Chế độ tối",
   "pref.haptics": "Phản hồi rung",
@@ -2206,7 +2238,10 @@ function openModal(id) {
 }
 
 function closeModal(id) {
-  document.getElementById("modal-" + id).classList.add("hidden");
+  var modal = document.getElementById("modal-" + id);
+  if (!modal) return;
+  if (id === "tutorial" && !modal.classList.contains("hidden")) markTutorialSeen();
+  modal.classList.add("hidden");
   var anyOpen = Array.from(document.querySelectorAll("#modal-overlay .modal")).some(function(m) {
     return !m.classList.contains("hidden");
   });
@@ -2214,6 +2249,8 @@ function closeModal(id) {
 }
 
 function closeAllModals() {
+  var tutorial = document.getElementById("modal-tutorial");
+  if (tutorial && !tutorial.classList.contains("hidden")) markTutorialSeen();
   document.querySelectorAll("#modal-overlay .modal").forEach(function(m) { m.classList.add("hidden"); });
   document.getElementById("modal-overlay").classList.add("hidden");
 }
@@ -8046,6 +8083,7 @@ function applyLanguage(lang) {
   state.language = (lang === "vi") ? "vi" : "en";
   document.documentElement.setAttribute("lang", state.language);
   applyI18n();
+  if (typeof renderTutorialStep === "function" && !document.getElementById("modal-tutorial").classList.contains("hidden")) renderTutorialStep();
   // Static chrome updates everywhere via applyI18n(); refresh the most
   // commonly-visible dynamic list (home) so it doesn't show stale text
   // until the next navigation re-renders it anyway.
@@ -8089,6 +8127,99 @@ function applyPrefs(prefs) {
   }
 }
 
+var _tutorialSteps = [
+  { title: "tutorial.step1Title", body: "tutorial.step1Body" },
+  { title: "tutorial.step2Title", body: "tutorial.step2Body" },
+  { title: "tutorial.step3Title", body: "tutorial.step3Body" },
+  { title: "tutorial.step4Title", body: "tutorial.step4Body" }
+];
+var _tutorialStep = 0;
+
+function tutorialFallbackKey() {
+  return "fc-tutorial-seen-" + (currentUser && currentUser.id ? currentUser.id : "");
+}
+
+function tutorialWasSeenLocally() {
+  if (!currentUser || !currentUser.id) return false;
+  try { return localStorage.getItem(tutorialFallbackKey()) === "1"; } catch (_) { return false; }
+}
+
+function markTutorialSeen() {
+  if (!IS_SERVER || !currentUser) return;
+  try { localStorage.setItem(tutorialFallbackKey(), "1"); } catch (_) {}
+  var prefs = {};
+  try { prefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}"); } catch (_) {}
+  prefs.tutorialCompleted = true;
+  try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
+  return fetch("/api/auth/preferences", {
+    method: "PUT",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tutorialCompleted: true })
+  }).then(function(r) {
+    if (!r.ok) return;
+    try { localStorage.removeItem(tutorialFallbackKey()); } catch (_) {}
+  }).catch(function() {});
+}
+
+function renderTutorialStep() {
+  var step = _tutorialSteps[_tutorialStep];
+  document.getElementById("tutorial-progress").textContent = t("tutorial.stepCount", {
+    step: _tutorialStep + 1, total: _tutorialSteps.length
+  });
+  document.getElementById("tutorial-step-title").textContent = t(step.title);
+  document.getElementById("tutorial-step-description").textContent = t(step.body);
+  document.getElementById("tutorial-back").disabled = _tutorialStep === 0;
+  var next = document.getElementById("tutorial-next");
+  next.textContent = t(_tutorialStep === _tutorialSteps.length - 1 ? "tutorial.finish" : "tutorial.next");
+  next.setAttribute("data-i18n", _tutorialStep === _tutorialSteps.length - 1 ? "tutorial.finish" : "tutorial.next");
+}
+
+function openTutorial() {
+  _tutorialStep = 0;
+  renderTutorialStep();
+  openModal("tutorial");
+  document.getElementById("tutorial-next").focus();
+}
+
+function closeTutorial() {
+  closeModal("tutorial");
+}
+
+document.getElementById("tutorial-back").addEventListener("click", function() {
+  if (_tutorialStep <= 0) return;
+  _tutorialStep--;
+  renderTutorialStep();
+});
+document.getElementById("tutorial-next").addEventListener("click", function() {
+  if (_tutorialStep >= _tutorialSteps.length - 1) { closeTutorial(); return; }
+  _tutorialStep++;
+  renderTutorialStep();
+});
+document.getElementById("tutorial-skip").addEventListener("click", closeTutorial);
+document.getElementById("btn-replay-tutorial").addEventListener("click", function() {
+  closeModal("preferences");
+  openTutorial();
+});
+
+document.getElementById("modal-tutorial").addEventListener("click", function(e) {
+  if (e.target === this) closeTutorial();
+});
+
+function maybeShowFirstRunTutorial(prefs) {
+  var cachedPrefs = {};
+  try { cachedPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}"); } catch (_) {}
+  if (!IS_SERVER || !currentUser || !prefs || prefs.tutorialCompleted === true || cachedPrefs.tutorialCompleted === true || tutorialWasSeenLocally()) return;
+  setTimeout(function() {
+    if (!currentUser || (window.APP_CONFIG && window.APP_CONFIG.shareToken) || tutorialWasSeenLocally()) return;
+    if (fcAnyOverlayOpen()) {
+      setTimeout(function() { maybeShowFirstRunTutorial(prefs); }, 500);
+      return;
+    }
+    openTutorial();
+  }, 150);
+}
+
 function loadUserPreferences() {
   if (!IS_SERVER) return;
   // Apply cached prefs immediately so openSetup() sees the right value even before the fetch resolves
@@ -8097,12 +8228,18 @@ function loadUserPreferences() {
     if (cached) applyPrefs(JSON.parse(cached));
   } catch (_) {}
   fetch("/api/auth/preferences", { credentials: "same-origin" })
-    .then(function(r) { return r.ok ? r.json() : {}; })
+    .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error("Preferences unavailable")); })
     .then(function(prefs) {
       applyPrefs(prefs);
       try { localStorage.setItem("fc-preferences", JSON.stringify(prefs)); } catch (_) {}
+      if (prefs.tutorialCompleted === true && currentUser && currentUser.id) {
+        try { localStorage.removeItem(tutorialFallbackKey()); } catch (_) {}
+      }
+      maybeShowFirstRunTutorial(prefs);
     })
-    .catch(function() {});
+    .catch(function() {
+      if (!tutorialWasSeenLocally()) maybeShowFirstRunTutorial({});
+    });
 }
 
 function initUserNav() {

@@ -967,6 +967,19 @@ body {
 
 .modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
 
+.tutorial-body { min-height: 190px; justify-content: center; }
+.tutorial-progress { color: var(--text2); font-size: 0.8125rem; }
+.tutorial-body h4 { font-size: 1.15rem; }
+.tutorial-body p { color: var(--text2); line-height: 1.7; }
+.tutorial-footer { justify-content: space-between; align-items: center; }
+.tutorial-nav { display: flex; gap: 8px; }
+.tutorial-nav .btn:disabled { opacity: 0.45; cursor: default; }
+@media (max-width: 420px) {
+  .tutorial-footer { padding-inline: 12px; }
+  .tutorial-nav { gap: 4px; }
+  .tutorial-footer .btn { padding-inline: 10px; }
+}
+
 .modal-footer {
   padding: 14px 20px 18px;
   border-top: 1px solid var(--border);
