@@ -283,6 +283,20 @@ router.post("/classes", (req, res) => {
   res.status(201).json({ id, name, archived: false, lessons: 0, cards: 0, term_def_cards: 0, linked_cards: 0 });
 });
 
+// PUT /api/integrations/knowledge/lessons/:id { title }
+// Changes the title in place so card ids and learner progress remain untouched.
+router.put("/lessons/:id", (req, res) => {
+  const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
+  if (!title || Array.from(title).length > MAX_TITLE_LEN)
+    return res.status(400).json({ error: "title must be 1-" + MAX_TITLE_LEN + " chars" });
+  const lesson = db.prepare(
+    "SELECT l.id FROM lessons l JOIN classes c ON l.class_id = c.id WHERE l.id = ? AND c.user_id = ?"
+  ).get(req.params.id, req.userId);
+  if (!lesson) return res.status(404).json({ error: "Not found" });
+  db.prepare("UPDATE lessons SET title = ? WHERE id = ?").run(title, lesson.id);
+  res.json({ id: lesson.id, title });
+});
+
 // GET /api/integrations/knowledge/classes/:id/cards
 // Every card is returned: term-def rows carry term/def, other formats carry their raw
 // `data` so KnowledgeApp can rewrite them as term-def (see /convert-cards).
