@@ -1340,9 +1340,7 @@ function _refreshVoices() {
   _ttsVoiceCache = {};
 }
 
-// Picks the most realistic available voice for the given language: language-matched pool
-// first (falling back to English, then to whatever exists, rather than silence), ranked
-// Google > other quality-tier engines > exact-region match > first available.
+// Prefer a voice advertised as enhanced while keeping language matching ahead of voice name.
 function _pickVoice(langHint) {
   var lang = langHint === "vi" ? "vi" : "en";
   if (_ttsVoiceCache[lang]) return _ttsVoiceCache[lang];
@@ -1358,9 +1356,10 @@ function _pickVoice(langHint) {
   if (!pool.length) pool = _ttsVoices;
 
   var voice =
+    pool.find(function(v) { return QUALITY_VOICE_RE.test(v.name); }) ||
     pool.find(function(v) { return /google/i.test(v.name) && v.lang === cfg.primaryLang; }) ||
-    pool.find(function(v) { return QUALITY_VOICE_RE.test(v.name) && v.lang === cfg.primaryLang; }) ||
     pool.find(function(v) { return v.lang === cfg.primaryLang; }) ||
+    pool.find(function(v) { return /google/i.test(v.name); }) ||
     pool[0];
 
   _ttsVoiceCache[lang] = voice;
