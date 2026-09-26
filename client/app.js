@@ -125,7 +125,7 @@ Object.assign(TRANSLATIONS.en, {
   "tutorial.step4Title": "Keep your progress",
   "tutorial.step4Body": "Mark how well you remembered each card. Spaced repetition schedules reviews, and Stats shows your progress.",
   "tutorial.step5Title": "Save new English words",
-  "tutorial.step5Body": "While studying in server mode, select a word or phrase on either side of a card and choose Save as English word. In KnowledgeApp, choose Fetch words to use your configured OpenRouter model for a definition and example, then save it to English Vocabulary.",
+  "tutorial.step5Body": "While studying in server mode, select a word or phrase on either side of a card and choose Save as English word. Open Vocabulary in FlashcardApp to add or remove pending words. In KnowledgeApp, choose Fetch words to create definitions and examples.",
   "pref.textSize": "Text size",
   "pref.darkMode": "Dark mode",
   "pref.haptics": "Vibration feedback",
@@ -167,6 +167,24 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.markAllShown": "Mark all shown as reviewed",
   "upstream.confirmAckAll": "Mark {n} card(s) as reviewed?",
   "upstream.studyUpdated": "Study updated cards",
+  "vocabulary.nav": "Vocabulary",
+  "vocabulary.screenTitle": "Vocabulary inbox",
+  "vocabulary.subtitle": "Review saved words before fetching them in KnowledgeApp.",
+  "vocabulary.loading": "Loading vocabulary queue…",
+  "vocabulary.noPending": "No words waiting for KnowledgeApp.",
+  "vocabulary.pendingCount": "{n} word(s) waiting for KnowledgeApp",
+  "vocabulary.add": "Add word",
+  "vocabulary.addTitle": "Add a word to the queue",
+  "vocabulary.wordLabel": "Word or phrase",
+  "vocabulary.wordPlaceholder": "e.g. resilient",
+  "vocabulary.contextLabel": "Context (optional)",
+  "vocabulary.contextPlaceholder": "Sentence or note to clarify the meaning",
+  "vocabulary.source": "From {class} › {lesson}",
+  "vocabulary.deleteConfirm": "Remove ‘{word}’ from the pending vocabulary queue?",
+  "vocabulary.enterWord": "Enter a word or phrase.",
+  "vocabulary.addError": "Couldn't add the word: {message}",
+  "vocabulary.deleteError": "Couldn't remove the word: {message}",
+  "vocabulary.alreadyFetched": "This word has already been fetched by KnowledgeApp.",
   "setup.updated": "Updated",
   "setup.hintUpdated": "Cards KnowledgeApp changed since you last reviewed them",
 
@@ -694,7 +712,7 @@ Object.assign(TRANSLATIONS.vi, {
   "tutorial.step4Title": "Theo dõi tiến độ",
   "tutorial.step4Body": "Đánh giá mức độ nhớ của bạn. Hệ thống sẽ lên lịch ôn tập, còn mục Thống kê giúp bạn xem tiến độ.",
   "tutorial.step5Title": "Lưu từ tiếng Anh mới",
-  "tutorial.step5Body": "Khi học ở chế độ máy chủ, chọn một từ hoặc cụm từ ở một trong hai mặt thẻ rồi chọn Lưu làm từ vựng tiếng Anh. Trong KnowledgeApp, chọn Fetch words để dùng mô hình OpenRouter đã cấu hình tạo định nghĩa và câu ví dụ, sau đó lưu vào mục English Vocabulary.",
+  "tutorial.step5Body": "Khi học ở chế độ máy chủ, chọn một từ hoặc cụm từ ở một trong hai mặt thẻ rồi chọn Lưu làm từ vựng tiếng Anh. Mở mục Từ vựng trong FlashcardApp để thêm hoặc xoá từ đang chờ. Trong KnowledgeApp, chọn Fetch words để tạo định nghĩa và câu ví dụ.",
   "pref.textSize": "Cỡ chữ",
   "pref.darkMode": "Chế độ tối",
   "pref.haptics": "Phản hồi rung",
@@ -736,6 +754,24 @@ Object.assign(TRANSLATIONS.vi, {
   "upstream.markAllShown": "Đánh dấu tất cả đang hiện là đã xem",
   "upstream.confirmAckAll": "Đánh dấu {n} thẻ là đã xem?",
   "upstream.studyUpdated": "Học các thẻ đã cập nhật",
+  "vocabulary.nav": "Từ vựng",
+  "vocabulary.screenTitle": "Hàng chờ từ vựng",
+  "vocabulary.subtitle": "Xem lại các từ đã lưu trước khi KnowledgeApp tải chúng.",
+  "vocabulary.loading": "Đang tải hàng chờ từ vựng…",
+  "vocabulary.noPending": "Không có từ nào đang chờ KnowledgeApp.",
+  "vocabulary.pendingCount": "{n} từ đang chờ KnowledgeApp",
+  "vocabulary.add": "Thêm từ",
+  "vocabulary.addTitle": "Thêm từ vào hàng chờ",
+  "vocabulary.wordLabel": "Từ hoặc cụm từ",
+  "vocabulary.wordPlaceholder": "vd: resilient",
+  "vocabulary.contextLabel": "Ngữ cảnh (không bắt buộc)",
+  "vocabulary.contextPlaceholder": "Câu hoặc ghi chú giúp làm rõ nghĩa",
+  "vocabulary.source": "Từ {class} › {lesson}",
+  "vocabulary.deleteConfirm": "Xóa ‘{word}’ khỏi hàng chờ từ vựng?",
+  "vocabulary.enterWord": "Hãy nhập một từ hoặc cụm từ.",
+  "vocabulary.addError": "Không thể thêm từ: {message}",
+  "vocabulary.deleteError": "Không thể xóa từ: {message}",
+  "vocabulary.alreadyFetched": "Từ này đã được KnowledgeApp tải.",
   "setup.updated": "Đã cập nhật",
   "setup.hintUpdated": "Thẻ KnowledgeApp đã thay đổi kể từ lần bạn xem lại gần nhất",
 
@@ -2062,6 +2098,7 @@ var store = LocalStorageAdapter;
 var state = {
   currentClass: null,
   currentLesson: null,
+  vocabularyRequests: [],
   editingClassId: null,
   editingLessonId: null,
   // True while a suggest-tags request is in flight (any class — only one modal is ever open
@@ -3797,6 +3834,132 @@ function openUpstreamScreen() {
   renderUpstream();
 }
 
+function openVocabularyScreen() {
+  showScreen("vocabulary");
+  refreshVocabularyQueue(true);
+}
+
+function updateVocabularyBadge(count) {
+  var badge = document.getElementById("sidebar-vocabulary-badge");
+  badge.textContent = count;
+  badge.classList.toggle("hidden", count === 0);
+  badge.setAttribute("aria-label", t("vocabulary.pendingCount", { n: count }));
+}
+
+function refreshVocabularyQueue(showLoading) {
+  var loading = document.getElementById("vocabulary-loading");
+  var error = document.getElementById("vocabulary-error");
+  if (showLoading) {
+    loading.classList.remove("hidden");
+    error.classList.add("hidden");
+    document.getElementById("vocabulary-empty").classList.add("hidden");
+    document.getElementById("vocabulary-list").innerHTML = "";
+  }
+  return store.getVocabularyRequests().then(function(result) {
+    state.vocabularyRequests = result.requests || [];
+    updateVocabularyBadge(state.vocabularyRequests.length);
+    renderVocabularyQueue();
+  }).catch(function(err) {
+    if (!showLoading) return;
+    loading.classList.add("hidden");
+    error.querySelector("p").textContent = err.message;
+    error.classList.remove("hidden");
+  });
+}
+
+function renderVocabularyQueue() {
+  document.getElementById("vocabulary-loading").classList.add("hidden");
+  document.getElementById("vocabulary-error").classList.add("hidden");
+  var list = document.getElementById("vocabulary-list");
+  list.innerHTML = "";
+  var requests = state.vocabularyRequests || [];
+  document.getElementById("vocabulary-empty").classList.toggle("hidden", requests.length !== 0);
+  requests.forEach(function(request) {
+    var item = document.createElement("article");
+    item.className = "vocabulary-request";
+
+    var content = document.createElement("div");
+    content.className = "vocabulary-request-content";
+    var word = document.createElement("h3");
+    word.className = "vocabulary-request-word";
+    word.textContent = request.selected_text;
+    content.appendChild(word);
+    if (request.context_text) {
+      var context = document.createElement("p");
+      context.className = "vocabulary-request-context";
+      context.textContent = request.context_text;
+      content.appendChild(context);
+    }
+    if (request.source_class_name || request.source_lesson_title) {
+      var source = document.createElement("p");
+      source.className = "vocabulary-request-source";
+      source.textContent = t("vocabulary.source", {
+        class: request.source_class_name || "",
+        lesson: request.source_lesson_title || ""
+      });
+      content.appendChild(source);
+    }
+
+    var remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "btn btn-sm btn-danger vocabulary-request-delete";
+    remove.setAttribute("data-i18n", "common.delete");
+    remove.textContent = t("common.delete");
+    remove.addEventListener("click", function() {
+      confirmDelete(t("vocabulary.deleteConfirm", { word: request.selected_text }), function() {
+        remove.disabled = true;
+        store.deleteVocabularyRequest(request.id).then(function() {
+          return refreshVocabularyQueue(true);
+        }).catch(function(err) {
+          remove.disabled = false;
+          var message = err.message === "This word has already been fetched"
+            ? t("vocabulary.alreadyFetched")
+            : t("vocabulary.deleteError", { message: err.message });
+          alert(message);
+          if (err.message === "This word has already been fetched") refreshVocabularyQueue(true);
+        });
+      });
+    });
+
+    item.appendChild(content);
+    item.appendChild(remove);
+    list.appendChild(item);
+  });
+}
+
+function openAddVocabularyModal() {
+  document.getElementById("vocabulary-add-word").value = "";
+  document.getElementById("vocabulary-add-context").value = "";
+  document.getElementById("vocabulary-add-error").classList.add("hidden");
+  openModal("vocabulary-add");
+  document.getElementById("vocabulary-add-word").focus();
+}
+
+function addVocabularyRequest() {
+  var wordInput = document.getElementById("vocabulary-add-word");
+  var contextInput = document.getElementById("vocabulary-add-context");
+  var error = document.getElementById("vocabulary-add-error");
+  var word = wordInput.value.trim();
+  if (!word) {
+    error.textContent = t("vocabulary.enterWord");
+    error.classList.remove("hidden");
+    wordInput.focus();
+    return;
+  }
+
+  var button = document.getElementById("btn-vocabulary-add-save");
+  button.disabled = true;
+  store.saveVocabulary({ selected_text: word, context_text: contextInput.value.trim() }).then(function() {
+    closeModal("vocabulary-add");
+    return refreshVocabularyQueue(true);
+  }).catch(function(err) {
+    error.textContent = t("vocabulary.addError", { message: err.message });
+    error.classList.remove("hidden");
+  }).then(function() {
+    button.disabled = false;
+  });
+}
+
 function renderUpstream() {
   var loading = document.getElementById("upstream-loading");
   loading.classList.remove("hidden");
@@ -4007,6 +4170,13 @@ document.getElementById("btn-upstream-back").addEventListener("click", function(
   renderHome();
   showScreen("home");
 });
+
+document.getElementById("btn-vocabulary-back").addEventListener("click", function() {
+  renderHome();
+  showScreen("home");
+});
+document.getElementById("btn-vocabulary-add").addEventListener("click", openAddVocabularyModal);
+document.getElementById("btn-vocabulary-add-save").addEventListener("click", addVocabularyRequest);
 
 document.getElementById("btn-upstream-banner-review").addEventListener("click", openUpstreamScreen);
 
@@ -5521,6 +5691,7 @@ function saveSelectedVocabularyWord() {
     vocabularySelectionText = "";
     button.disabled = true;
     button.textContent = t("study.wordQueued");
+    refreshVocabularyQueue(false);
   }).catch(function() {
     button.disabled = false;
     button.textContent = t("study.wordSaveFailed");
@@ -8104,6 +8275,8 @@ var SQLiteAdapter = (function() {
     suggestClassTags: function(id) { return req("POST", "/classes/" + id + "/suggest-tags"); },
     translateText: function(text, language) { return req("POST", "/translation", { text: text, language: language }); },
     saveVocabulary: function(payload) { return req("POST", "/vocabulary", payload); },
+    getVocabularyRequests: function() { return req("GET", "/vocabulary"); },
+    deleteVocabularyRequest: function(id) { return req("DELETE", "/vocabulary/" + encodeURIComponent(id)); },
     importFlashcards: function(payload) { return req("POST", "/import/flashcards", payload); },
 
     getLessons:   function(classId) { return req("GET",    "/classes/" + classId + "/lessons"); },
@@ -8440,6 +8613,7 @@ function initUserNav() {
   // Sidebar items
   document.getElementById("sidebar-dashboard-link").classList.remove("hidden");
   document.getElementById("sidebar-upstream-link").classList.remove("hidden");
+  document.getElementById("sidebar-vocabulary-link").classList.remove("hidden");
   document.getElementById("sidebar-select-link").classList.remove("hidden");
   document.getElementById("sidebar-classes-label").classList.remove("hidden");
   document.getElementById("sidebar-btn-new-class").classList.remove("hidden");
@@ -8450,6 +8624,7 @@ function initUserNav() {
     linkBtn.classList.add("hidden");
   }
   loadUserPreferences();
+  refreshVocabularyQueue(false);
 }
 
 function renderSidebarClasses(classes) {
@@ -8499,6 +8674,10 @@ function closeSidebar() {
   document.getElementById("sidebar-upstream-link").addEventListener("click", function() {
     closeSidebar();
     openUpstreamScreen();
+  });
+  document.getElementById("sidebar-vocabulary-link").addEventListener("click", function() {
+    closeSidebar();
+    openVocabularyScreen();
   });
   document.getElementById("sidebar-select-link").addEventListener("click", function() {
     closeSidebar();
@@ -8960,7 +9139,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "sidebar-upstream-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "sidebar-upstream-link", "sidebar-vocabulary-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }
@@ -9675,6 +9854,9 @@ document.addEventListener("keydown", function(e) {
   else if (screen === "upstream") {
     if (e.key === "Escape") document.getElementById("btn-upstream-back").click();
   }
+  else if (screen === "vocabulary") {
+    if (e.key === "Escape") document.getElementById("btn-vocabulary-back").click();
+  }
 
 });
 
@@ -9697,6 +9879,7 @@ function injectKeyHints() {
     ["btn-stats-back",     "[Esc]"],
     ["btn-dashboard-back", "[Esc]"],
     ["btn-upstream-back",  "[Esc]"],
+    ["btn-vocabulary-back", "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
     ["btn-fc-learning",    "[1]"],
     ["btn-fc-hard",        "[2]"],
@@ -9735,6 +9918,7 @@ var SCREEN_BACK_BTN = {
   stats:     "btn-stats-back",
   dashboard: "btn-dashboard-back",
   upstream:  "btn-upstream-back",
+  vocabulary: "btn-vocabulary-back",
   "flashcard-summary": "btn-summary-back"
 };
 
@@ -9996,7 +10180,8 @@ window.addEventListener("popstate", function() {
         "quiz": "btn-quiz-back",
         "stats": "btn-stats-back",
         "dashboard": "btn-dashboard-back",
-        "upstream": "btn-upstream-back"
+        "upstream": "btn-upstream-back",
+        "vocabulary": "btn-vocabulary-back"
       };
       var btn = backMap[screen];
       if (btn) {

@@ -107,6 +107,11 @@
         <span data-i18n="upstream.navTitle">KnowledgeApp changes</span>
         <span id="sidebar-upstream-badge" class="due-badge hidden"></span>
       </li>
+      <li class="sidebar-nav-item hidden" id="sidebar-vocabulary-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span data-i18n="vocabulary.nav">Vocabulary</span>
+        <span id="sidebar-vocabulary-badge" class="due-badge hidden"></span>
+      </li>
       <li class="sidebar-nav-item hidden" id="sidebar-select-link">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span data-i18n="nav.selectClasses">Chọn lớp</span>
@@ -238,7 +243,21 @@
   </div><!-- /.home-main -->
 </div>
 
-<!-- ===== SCREEN: Dashboard ===== -->
+<!-- ===== SCREEN: Vocabulary Inbox ===== -->
+<div id="screen-vocabulary" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-vocabulary-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+    <h2 class="screen-title" data-i18n="vocabulary.screenTitle">Vocabulary inbox</h2>
+    <button type="button" class="btn btn-primary btn-sm" id="btn-vocabulary-add" data-i18n="vocabulary.add">Add word</button>
+  </header>
+  <p class="vocabulary-page-intro" data-i18n="vocabulary.subtitle">Review saved words before fetching them in KnowledgeApp.</p>
+  <div id="vocabulary-loading" class="empty-state"><p data-i18n="vocabulary.loading">Loading vocabulary queue…</p></div>
+  <div id="vocabulary-error" class="empty-state hidden"><p></p></div>
+  <div id="vocabulary-empty" class="empty-state hidden"><p data-i18n="vocabulary.noPending">No words waiting for KnowledgeApp.</p></div>
+  <div id="vocabulary-list" class="vocabulary-list"></div>
+</div>
+
+<!-- ===== SCREEN: KnowledgeApp Changes Review ===== -->
 <div id="screen-upstream" class="screen">
   <header class="app-header">
     <button class="btn btn-ghost back-btn" id="btn-upstream-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
@@ -261,6 +280,7 @@
   </div>
 </div>
 
+<!-- ===== SCREEN: Dashboard ===== -->
 <div id="screen-dashboard" class="screen">
   <header class="app-header">
     <button class="btn btn-ghost back-btn" id="btn-dashboard-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
@@ -716,6 +736,24 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="preferences" data-i18n="common.cancel">Cancel</button>
       <button class="btn btn-primary" id="btn-save-preferences" data-i18n="common.save">Save</button>
+    </div>
+  </div>
+
+  <div id="modal-vocabulary-add" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="vocabulary-add-title">
+    <div class="modal-header">
+      <h3 id="vocabulary-add-title" data-i18n="vocabulary.addTitle">Add a word to the queue</h3>
+      <button class="modal-close" data-modal="vocabulary-add" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div id="vocabulary-add-error" class="auth-error hidden"></div>
+      <label class="form-label" for="vocabulary-add-word" data-i18n="vocabulary.wordLabel">Word or phrase</label>
+      <textarea id="vocabulary-add-word" class="form-textarea" rows="2" maxlength="1000" placeholder="e.g. resilient" data-i18n-placeholder="vocabulary.wordPlaceholder"></textarea>
+      <label class="form-label" for="vocabulary-add-context" data-i18n="vocabulary.contextLabel">Context (optional)</label>
+      <textarea id="vocabulary-add-context" class="form-textarea" rows="3" maxlength="4000" placeholder="Sentence or note to clarify the meaning" data-i18n-placeholder="vocabulary.contextPlaceholder"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="vocabulary-add" data-i18n="common.cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-vocabulary-add-save" data-i18n="vocabulary.add">Add word</button>
     </div>
   </div>
 
