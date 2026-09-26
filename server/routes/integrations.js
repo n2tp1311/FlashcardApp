@@ -153,6 +153,37 @@ function ownClass(userId, classId) {
   return db.prepare("SELECT id, name, archived FROM classes WHERE id = ? AND user_id = ?").get(classId, userId);
 }
 
+function ensureVocabularyLesson(userId) {
+  const rows = db.prepare("SELECT id, name, archived FROM classes WHERE user_id = ? ORDER BY created_at, id").all(userId);
+  let cls = rows.find(row => row.name === "English Vocabulary" && !row.archived);
+  if (!cls) {
+    const names = new Set(rows.map(row => row.name));
+    let name = "English Vocabulary", suffix = 2;
+    while (names.has(name)) name = "English Vocabulary (" + suffix++ + ")";
+    const id = genId();
+    const order = db.prepare("SELECT COUNT(*) AS n FROM classes WHERE user_id = ?").get(userId).n;
+    db.prepare("INSERT INTO classes (id, user_id, name, color, icon, sort_order) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(id, userId, name, "#0f766e", "book", order);
+    cls = { id, name };
+  }
+
+  const lessons = db.prepare("SELECT id, title, format FROM lessons WHERE class_id = ? ORDER BY sort_order, created_at")
+    .all(cls.id);
+  let lesson = lessons.find(row => row.title === "Saved Words" && row.format === "term-def");
+  if (!lesson) {
+    const titles = new Set(lessons.map(row => row.title));
+    let title = "Saved Words", suffix = 2;
+    while (titles.has(title)) title = "Saved Words (" + suffix++ + ")";
+    const id = genId();
+    const order = db.prepare("SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM lessons WHERE class_id = ?")
+      .get(cls.id).n;
+    db.prepare("INSERT INTO lessons (id, class_id, title, format, sort_order) VALUES (?, ?, ?, 'term-def', ?)")
+      .run(id, cls.id, title, order);
+    lesson = { id, title, format: "term-def" };
+  }
+  return { class: cls, lesson };
+}
+
 // GET /api/integrations/knowledge/ping — lets KnowledgeApp check its token
 router.get("/ping", (req, res) => {
   const user = db.prepare("SELECT email FROM users WHERE id = ?").get(req.userId);
@@ -614,6 +645,63 @@ router.post("/add-cards", (req, res) => {
     res.json({ results, lessons: lessonsOut, ...counts });
   } catch (e) {
     console.error("[integrations] add-cards failed:", e.message);
+    res.status(500).json({ error: "internal error" });
+  }
+});
+
+// GET /api/integrations/knowledge/vocabulary — saved words waiting for enrichment.
+router.get("/vocabulary", (req, res) => {
+  const rawLimit = req.query.limit == null ? "20" : req.query.limit;
+  const limit = Number(rawLimit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100)
+    return res.status(400).json({ error: "limit must be an integer from 1 to 100" });
+
+  const requests = db.prepare(
+    "SELECT id, selected_text, context_text, source_class_name, source_lesson_title, created_at " +
+    "FROM vocabulary_requests WHERE user_id = ? AND status = 'pending' " +
+    "ORDER BY created_at, id LIMIT ?"
+  ).all(req.userId, limit);
+  res.json({ requests });
+});
+
+// POST /api/integrations/knowledge/vocabulary/:id/complete — add the enriched word to its deck.
+router.post("/vocabulary/:id/complete", (req, res) => {
+  const body = req.body || {};
+  const fields = [
+    ["term", 200],
+    ["definition", 2000],
+    ["example", 1000],
+  ];
+  for (const [key, max] of fields) {
+    if (typeof body[key] !== "string" || !body[key].trim() || body[key].trim().length > max)
+      return res.status(400).json({ error: key + " must be a non-empty string of at most " + max + " characters" });
+  }
+
+  try {
+    const result = db.transaction(() => {
+      const request = db.prepare(
+        "SELECT id, status, card_id FROM vocabulary_requests WHERE id = ? AND user_id = ?"
+      ).get(req.params.id, req.userId);
+      if (!request) return { status: "not_found" };
+      if (request.status === "completed") return { status: "already", card_id: request.card_id };
+
+      const { class: cls, lesson } = ensureVocabularyLesson(req.userId);
+      const order = db.prepare("SELECT COUNT(*) AS n FROM cards WHERE lesson_id = ?").get(lesson.id).n;
+      const cardId = genId();
+      const definition = body.definition.trim() + "\n\nExample: " + body.example.trim();
+      db.prepare("INSERT INTO cards (id, lesson_id, format, data, sort_order) VALUES (?, ?, 'term-def', ?, ?)")
+        .run(cardId, lesson.id, JSON.stringify({ term: body.term.trim(), def: definition }), order);
+      db.prepare(
+        "UPDATE vocabulary_requests SET status = 'completed', card_id = ?, completed_at = unixepoch() " +
+        "WHERE id = ? AND user_id = ? AND status = 'pending'"
+      ).run(cardId, request.id, req.userId);
+      return { status: "completed", card_id: cardId, class_id: cls.id, lesson_id: lesson.id };
+    })();
+
+    if (result.status === "not_found") return res.status(404).json({ error: "Vocabulary request not found" });
+    res.json(result);
+  } catch (e) {
+    console.error("[integrations] vocabulary completion failed:", e.message);
     res.status(500).json({ error: "internal error" });
   }
 });

@@ -392,6 +392,10 @@ Object.assign(TRANSLATIONS.en, {
   "study.translationEmpty": "There is no text on this side to translate.",
   "study.translationResult": "Translation",
   "keymap.translate": "Translate visible side into your preferred language",
+  "study.saveWord": "Save as English word",
+  "study.savingWord": "Saving word…",
+  "study.wordQueued": "Saved — fetch in KnowledgeApp",
+  "study.wordSaveFailed": "Couldn't save the word. Try again.",
   "study.prev": "Prev",
   "study.stillLearningHint": "Still Learning (1)",
   "study.learning": "Learning",
@@ -955,6 +959,10 @@ Object.assign(TRANSLATIONS.vi, {
   "study.translationEmpty": "Mặt này không có văn bản để dịch.",
   "study.translationResult": "Bản dịch",
   "keymap.translate": "Dịch mặt đang xem sang ngôn ngữ ưu tiên",
+  "study.saveWord": "Lưu làm từ vựng tiếng Anh",
+  "study.savingWord": "Đang lưu từ…",
+  "study.wordQueued": "Đã lưu — hãy Fetch trong KnowledgeApp",
+  "study.wordSaveFailed": "Không thể lưu từ. Vui lòng thử lại.",
   "study.prev": "Trước",
   "study.stillLearningHint": "Đang học (1)",
   "study.learning": "Đang học",
@@ -2193,6 +2201,7 @@ var state = {
 function showScreen(id) {
   if (id !== "flashcard" && document.getElementById("screen-flashcard").classList.contains("active")) {
     clearFlashcardTranslation();
+    hideVocabularySelectionAction(true);
   }
   document.querySelectorAll(".screen").forEach(function(s) { s.classList.remove("active"); });
   var el = document.getElementById("screen-" + id);
@@ -5455,6 +5464,73 @@ function resetFlownOffScene(fcSceneEl) {
   fcSceneEl.style.transition = "";
 }
 
+var vocabularySelectionText = "";
+var vocabularySavePending = false;
+
+function hideVocabularySelectionAction(clearText) {
+  var action = document.getElementById("fc-selection-action");
+  if (action) action.classList.add("hidden");
+  if (clearText) vocabularySelectionText = "";
+}
+
+function updateVocabularySelectionAction() {
+  var screen = document.getElementById("screen-flashcard");
+  var selection = window.getSelection();
+  if (!IS_SERVER || !screen.classList.contains("active") || !selection || !selection.rangeCount) {
+    hideVocabularySelectionAction(true);
+    return;
+  }
+
+  var content = document.getElementById(state.studyFlipped ? "fc-back-content" : "fc-front-content");
+  var text = selection.toString().trim();
+  if (!text || text.length > 1000 || !content.contains(selection.anchorNode) || !content.contains(selection.focusNode)) {
+    hideVocabularySelectionAction(true);
+    return;
+  }
+
+  vocabularySelectionText = text;
+  var action = document.getElementById("fc-selection-action");
+  var button = document.getElementById("btn-save-selected-word");
+  if (!vocabularySavePending) {
+    button.disabled = false;
+    button.textContent = t("study.saveWord");
+  }
+  action.classList.remove("hidden");
+}
+
+function saveSelectedVocabularyWord() {
+  if (vocabularySavePending || !vocabularySelectionText) return;
+  var card = state.studyCards[state.studyIndex];
+  if (!card) return;
+
+  var button = document.getElementById("btn-save-selected-word");
+  var selectedText = vocabularySelectionText;
+  var contextText = (state.studyFlipped ? state.studyBackText : state.studyFrontText).slice(0, 4000);
+  vocabularySavePending = true;
+  button.disabled = true;
+  button.textContent = t("study.savingWord");
+  store.saveVocabulary({
+    selected_text: selectedText,
+    context_text: contextText,
+    source_card_id: card.id
+  }).then(function() {
+    vocabularySelectionText = "";
+    button.disabled = true;
+    button.textContent = t("study.wordQueued");
+  }).catch(function() {
+    button.disabled = false;
+    button.textContent = t("study.wordSaveFailed");
+  }).then(function() {
+    vocabularySavePending = false;
+  });
+}
+
+document.addEventListener("selectionchange", updateVocabularySelectionAction);
+document.getElementById("btn-save-selected-word").addEventListener("mousedown", function(e) {
+  e.preventDefault();
+});
+document.getElementById("btn-save-selected-word").addEventListener("click", saveSelectedVocabularyWord);
+
 function clearFlashcardTranslation() {
   state.translationRequestId++;
   state.translationPending = false;
@@ -5524,6 +5600,7 @@ function translateVisibleFlashcardSide() {
 }
 
 function renderFlashcard() {
+  hideVocabularySelectionAction(true);
   clearFlashcardTranslation();
   var cards = state.studyCards;
   var i     = state.studyIndex;
@@ -5746,6 +5823,7 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   var sel = window.getSelection();
   if (sel && sel.toString().length > 0) return;
   haptic("tick");
+  hideVocabularySelectionAction(true);
   clearFlashcardTranslation();
   state.studyFlipped = !state.studyFlipped;
   document.getElementById("fc-card").classList.toggle("flipped", state.studyFlipped);
@@ -8021,6 +8099,7 @@ var SQLiteAdapter = (function() {
     deleteClass: function(id)   { return req("DELETE", "/classes/" + id); },
     suggestClassTags: function(id) { return req("POST", "/classes/" + id + "/suggest-tags"); },
     translateText: function(text, language) { return req("POST", "/translation", { text: text, language: language }); },
+    saveVocabulary: function(payload) { return req("POST", "/vocabulary", payload); },
     importFlashcards: function(payload) { return req("POST", "/import/flashcards", payload); },
 
     getLessons:   function(classId) { return req("GET",    "/classes/" + classId + "/lessons"); },

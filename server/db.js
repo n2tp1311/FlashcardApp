@@ -328,6 +328,24 @@ try {
 } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_ext_deletions_user ON external_card_deletions(user_id, id)"); } catch (_) {}
 
+// Selected English terms waiting for KnowledgeApp to add a definition and example.
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS vocabulary_requests (
+    id                 TEXT PRIMARY KEY,
+    user_id            TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    selected_text      TEXT NOT NULL,
+    context_text       TEXT NOT NULL,
+    source_card_id     TEXT,
+    source_class_name  TEXT,
+    source_lesson_title TEXT,
+    status             TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','completed')),
+    card_id            TEXT,
+    created_at         INTEGER NOT NULL DEFAULT (unixepoch()),
+    completed_at       INTEGER
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_vocabulary_requests_user_status ON vocabulary_requests(user_id, status, created_at)"); } catch (_) {}
+
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
 const _prepare = db.prepare.bind(db);

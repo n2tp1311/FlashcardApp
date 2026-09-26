@@ -1525,6 +1525,13 @@ code {
 .fc-retype-feedback-success { color: #4ade80; }
 .fc-retype-feedback-error { color: #f87171; }
 
+.fc-selection-action {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 10px auto 0;
+}
+
 .fc-translation {
   width: 100%;
   max-width: 600px;
