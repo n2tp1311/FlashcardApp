@@ -96,6 +96,7 @@ app.use("/api/review",  require("./routes/review"));
 app.use("/api/upload",  require("./routes/upload"));
 app.use("/api/search",  require("./routes/search"));
 app.use("/api/tokens",  require("./routes/apiTokens"));
+app.use("/api/translation", require("./routes/translation"));
 app.use("/uploads",     require("express").static(UPLOADS, { index: false }));
 
 // ── Helper: inject APP_CONFIG and serve index.html ───────

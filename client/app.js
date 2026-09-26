@@ -385,6 +385,13 @@ Object.assign(TRANSLATIONS.en, {
   "study.speakP": "Speak (P)",
   "study.speakFront": "Speak front",
   "study.speakBack": "Speak back",
+  "study.translate": "Translate visible side (Alt+T)",
+  "study.translating": "Translating…",
+  "study.translationUnavailable": "Translation is available in server mode only.",
+  "study.translationFailed": "Couldn't translate this side. Try again.",
+  "study.translationEmpty": "There is no text on this side to translate.",
+  "study.translationResult": "Translation",
+  "keymap.translate": "Translate visible side into your preferred language",
   "study.prev": "Prev",
   "study.stillLearningHint": "Still Learning (1)",
   "study.learning": "Learning",
@@ -941,6 +948,13 @@ Object.assign(TRANSLATIONS.vi, {
   "study.speakP": "Đọc (P)",
   "study.speakFront": "Đọc mặt trước",
   "study.speakBack": "Đọc mặt sau",
+  "study.translate": "Dịch mặt đang xem (Alt+T)",
+  "study.translating": "Đang dịch…",
+  "study.translationUnavailable": "Chỉ có thể dịch khi dùng chế độ máy chủ.",
+  "study.translationFailed": "Không thể dịch mặt này. Vui lòng thử lại.",
+  "study.translationEmpty": "Mặt này không có văn bản để dịch.",
+  "study.translationResult": "Bản dịch",
+  "keymap.translate": "Dịch mặt đang xem sang ngôn ngữ ưu tiên",
   "study.prev": "Trước",
   "study.stillLearningHint": "Đang học (1)",
   "study.learning": "Đang học",
@@ -2069,9 +2083,12 @@ var state = {
   studyMode: "flashcard",
   studyFlipped: false,
   studyHasFlippedCard: false,
+  studyCardGraded: false,
   studyKnownMap: {},
   studyFrontText: "",
   studyBackText: "",
+  translationRequestId: 0,
+  translationPending: false,
 
   // Quiz
   quizCards: [],
@@ -2174,6 +2191,9 @@ var state = {
    ============================ */
 
 function showScreen(id) {
+  if (id !== "flashcard" && document.getElementById("screen-flashcard").classList.contains("active")) {
+    clearFlashcardTranslation();
+  }
   document.querySelectorAll(".screen").forEach(function(s) { s.classList.remove("active"); });
   var el = document.getElementById("screen-" + id);
   if (el) { el.classList.add("active"); window.scrollTo(0, 0); }
@@ -5159,6 +5179,7 @@ var MODE_HINT_KEYS = {
 
 // Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
 function returnFromStudy() {
+  clearFlashcardTranslation();
   var target = state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson";
   showScreen(target);
   if (target === "home") renderHome();
@@ -5434,7 +5455,76 @@ function resetFlownOffScene(fcSceneEl) {
   fcSceneEl.style.transition = "";
 }
 
+function clearFlashcardTranslation() {
+  state.translationRequestId++;
+  state.translationPending = false;
+  var el = document.getElementById("fc-translation");
+  if (el) {
+    el.textContent = "";
+    el.removeAttribute("aria-label");
+    el.classList.add("hidden");
+    el.classList.remove("is-error", "is-pending");
+  }
+}
+
+function translateVisibleFlashcardSide() {
+  var card = state.studyCards[state.studyIndex];
+  if (!card || state.translationPending) return;
+  var text = state.studyFlipped ? state.studyBackText : state.studyFrontText;
+  var targetLanguage = state.language;
+  var el = document.getElementById("fc-translation");
+  if (!text || !text.trim()) {
+    clearFlashcardTranslation();
+    el.textContent = t("study.translationEmpty");
+    el.setAttribute("aria-label", el.textContent);
+    el.classList.remove("hidden", "is-pending");
+    el.classList.add("is-error");
+    return;
+  }
+  if (!IS_SERVER) {
+    clearFlashcardTranslation();
+    el.textContent = t("study.translationUnavailable");
+    el.setAttribute("aria-label", el.textContent);
+    el.classList.remove("hidden", "is-pending");
+    el.classList.add("is-error");
+    return;
+  }
+
+  var requestId = ++state.translationRequestId;
+  var snapshot = { cardId: card.id, index: state.studyIndex, flipped: state.studyFlipped, text: text, language: targetLanguage };
+  state.translationPending = true;
+  el.textContent = t("study.translating");
+  el.setAttribute("aria-label", el.textContent);
+  el.classList.remove("hidden", "is-error");
+  el.classList.add("is-pending");
+
+  store.translateText(text, targetLanguage).then(function(result) {
+    if (requestId !== state.translationRequestId) return;
+    var current = state.studyCards[state.studyIndex];
+    if (!current || current.id !== snapshot.cardId || state.studyIndex !== snapshot.index ||
+        state.studyFlipped !== snapshot.flipped || state.language !== snapshot.language ||
+        (state.studyFlipped ? state.studyBackText : state.studyFrontText) !== snapshot.text ||
+        !document.getElementById("screen-flashcard").classList.contains("active")) return;
+    state.translationPending = false;
+    el.textContent = t("study.translationResult") + ": " + result.translation;
+    el.setAttribute("aria-label", el.textContent);
+    el.classList.remove("is-pending", "is-error");
+  }).catch(function() {
+    if (requestId !== state.translationRequestId) return;
+    state.translationPending = false;
+    var current = state.studyCards[state.studyIndex];
+    if (!current || current.id !== snapshot.cardId || state.studyIndex !== snapshot.index ||
+        state.studyFlipped !== snapshot.flipped || state.language !== snapshot.language ||
+        (state.studyFlipped ? state.studyBackText : state.studyFrontText) !== snapshot.text ||
+        !document.getElementById("screen-flashcard").classList.contains("active")) return;
+    el.textContent = t("study.translationFailed");
+    el.classList.remove("is-pending");
+    el.classList.add("is-error");
+  });
+}
+
 function renderFlashcard() {
+  clearFlashcardTranslation();
   var cards = state.studyCards;
   var i     = state.studyIndex;
   var card  = cards[i];
@@ -5462,6 +5552,7 @@ function renderFlashcard() {
   // Grading buttons stay disabled until the card's been flipped at least once this card —
   // otherwise a grade can be submitted on pure guesswork, without ever seeing the answer.
   state.studyHasFlippedCard = false;
+  state.studyCardGraded = false;
   setMarkButtonsEnabled(false);
 
   // Optional "type before flip" scratchpad, on for the whole session in Flashcard & Write
@@ -5655,6 +5746,7 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   var sel = window.getSelection();
   if (sel && sel.toString().length > 0) return;
   haptic("tick");
+  clearFlashcardTranslation();
   state.studyFlipped = !state.studyFlipped;
   document.getElementById("fc-card").classList.toggle("flipped", state.studyFlipped);
   if (state.studyFlipped && !state.studyHasFlippedCard) {
@@ -5990,7 +6082,9 @@ function confirmLatexRetype() {
 
 function markCard(known, grade, forceRetype) {
   var card = state.studyCards[state.studyIndex];
-  if (!card) return;
+  if (!card || state.studyCardGraded) return;
+  state.studyCardGraded = true;
+  setMarkButtonsEnabled(false);
   haptic("select");
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known);
@@ -7926,6 +8020,7 @@ var SQLiteAdapter = (function() {
     updateClass: function(id,f) { return req("PUT",    "/classes/" + id, f); },
     deleteClass: function(id)   { return req("DELETE", "/classes/" + id); },
     suggestClassTags: function(id) { return req("POST", "/classes/" + id + "/suggest-tags"); },
+    translateText: function(text, language) { return req("POST", "/translation", { text: text, language: language }); },
     importFlashcards: function(payload) { return req("POST", "/import/flashcards", payload); },
 
     getLessons:   function(classId) { return req("GET",    "/classes/" + classId + "/lessons"); },
@@ -8085,7 +8180,9 @@ function applyDarkMode(enabled) {
 }
 
 function applyLanguage(lang) {
+  var previousLanguage = state.language;
   state.language = (lang === "vi") ? "vi" : "en";
+  if (previousLanguage && previousLanguage !== state.language) clearFlashcardTranslation();
   document.documentElement.setAttribute("lang", state.language);
   applyI18n();
   if (typeof renderTutorialStep === "function" && !document.getElementById("modal-tutorial").classList.contains("hidden")) renderTutorialStep();
@@ -9324,6 +9421,19 @@ document.addEventListener("keydown", function(e) {
     return;
   }
 
+  // Alt+T is explicit so it remains available in Flashcard & Write while its answer input has focus.
+  var flashcardModalOpen = !document.getElementById("modal-keymap").classList.contains("hidden") ||
+    !document.getElementById("modal-overlay").classList.contains("hidden") ||
+    !document.getElementById("modal-share").classList.contains("hidden") ||
+    !document.getElementById("modal-prompt-guide").classList.contains("hidden") ||
+    !document.getElementById("modal-search").classList.contains("hidden");
+  if (screen === "flashcard" && e.altKey && !e.ctrlKey && !e.metaKey && !e.repeat && !e.isComposing &&
+      (e.key === "t" || e.key === "T") && !flashcardModalOpen) {
+    e.preventDefault();
+    translateVisibleFlashcardSide();
+    return;
+  }
+
   // Block all other shortcuts when any overlay modal is open or focus is in a text field
   var anyModalOpen = !document.getElementById("modal-overlay").classList.contains("hidden") ||
     !document.getElementById("modal-share").classList.contains("hidden") ||
@@ -9446,6 +9556,10 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "3") { e.preventDefault(); document.getElementById("btn-fc-known").click(); }
     else if (e.key === "4") { e.preventDefault(); document.getElementById("btn-fc-easy").click(); }
     else if (e.key === "s" || e.key === "S") document.getElementById("btn-fc-shuffle").click();
+    else if ((e.key === "t" || e.key === "T") && !e.repeat && !e.altKey && !e.ctrlKey && !e.metaKey && !e.isComposing) {
+      e.preventDefault();
+      translateVisibleFlashcardSide();
+    }
     else if (e.key === "p" || e.key === "P") speakText(state.studyFlipped ? state.studyBackText : state.studyFrontText);
     else if (e.key === "Escape") document.getElementById("btn-fc-back").click();
   }
