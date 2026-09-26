@@ -124,6 +124,8 @@ Object.assign(TRANSLATIONS.en, {
   "tutorial.step3Body": "Open a lesson and choose Study. Flip cards to recall answers, or use Quiz to practice recognition.",
   "tutorial.step4Title": "Keep your progress",
   "tutorial.step4Body": "Mark how well you remembered each card. Spaced repetition schedules reviews, and Stats shows your progress.",
+  "tutorial.step5Title": "Save new English words",
+  "tutorial.step5Body": "While studying in server mode, select a word or phrase on either side of a card and choose Save as English word. In KnowledgeApp, choose Fetch words to use your configured OpenRouter model for a definition and example, then save it to English Vocabulary.",
   "pref.textSize": "Text size",
   "pref.darkMode": "Dark mode",
   "pref.haptics": "Vibration feedback",
@@ -691,6 +693,8 @@ Object.assign(TRANSLATIONS.vi, {
   "tutorial.step3Body": "Mở bài học và chọn Học. Lật thẻ để tự nhớ đáp án hoặc dùng Trắc nghiệm để luyện nhận diện.",
   "tutorial.step4Title": "Theo dõi tiến độ",
   "tutorial.step4Body": "Đánh giá mức độ nhớ của bạn. Hệ thống sẽ lên lịch ôn tập, còn mục Thống kê giúp bạn xem tiến độ.",
+  "tutorial.step5Title": "Lưu từ tiếng Anh mới",
+  "tutorial.step5Body": "Khi học ở chế độ máy chủ, chọn một từ hoặc cụm từ ở một trong hai mặt thẻ rồi chọn Lưu làm từ vựng tiếng Anh. Trong KnowledgeApp, chọn Fetch words để dùng mô hình OpenRouter đã cấu hình tạo định nghĩa và câu ví dụ, sau đó lưu vào mục English Vocabulary.",
   "pref.textSize": "Cỡ chữ",
   "pref.darkMode": "Chế độ tối",
   "pref.haptics": "Phản hồi rung",
@@ -5688,7 +5692,7 @@ function renderFlashcard() {
     state.studyFrontText = front || "";
     state.studyBackText  = back  || "";
     frontEl.innerHTML = "";
-    renderLatex(front, frontEl);
+    renderVocabularyTerm(front, frontEl, renderLatex);
     renderLatex(back,  backEl);
     frontAudioBtn.style.visibility = "";
   } else if (card.format === "true-false") {
@@ -8312,7 +8316,8 @@ var _tutorialSteps = [
   { title: "tutorial.step1Title", body: "tutorial.step1Body" },
   { title: "tutorial.step2Title", body: "tutorial.step2Body" },
   { title: "tutorial.step3Title", body: "tutorial.step3Body" },
-  { title: "tutorial.step4Title", body: "tutorial.step4Body" }
+  { title: "tutorial.step4Title", body: "tutorial.step4Body" },
+  { title: "tutorial.step5Title", body: "tutorial.step5Body" }
 ];
 var _tutorialStep = 0;
 

@@ -1453,6 +1453,18 @@ code {
 }
 
 .fc-back .fc-content { color: #e8e6e1; }
+.fc-vocabulary-headword {
+  font-size: 1.2em;
+  font-weight: 650;
+  line-height: 1.25;
+}
+.fc-vocabulary-ipa {
+  margin-top: 0.4em;
+  color: var(--muted);
+  font-size: 0.75em;
+  font-weight: 400;
+  line-height: 1.35;
+}
 /* .fc-back's background is hardcoded dark regardless of the app's light/dark theme
    (matches .fc-content above), so its child text needs its own override too rather
    than the theme-variable muted color .fc-your-guess uses everywhere else. */
