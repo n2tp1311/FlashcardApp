@@ -10,6 +10,11 @@
     return headword && ipa ? { headword: headword, ipa: ipa } : null;
   }
 
+  function getVocabularySpeechText(term) {
+    var parts = splitVocabularyTerm(term);
+    return parts ? parts.headword : term;
+  }
+
   function renderVocabularyTerm(term, element, renderText) {
     var parts = splitVocabularyTerm(term);
     if (!parts) {
@@ -34,7 +39,12 @@
   }
 
   root.renderVocabularyTerm = renderVocabularyTerm;
+  root.getVocabularySpeechText = getVocabularySpeechText;
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { splitVocabularyTerm: splitVocabularyTerm, renderVocabularyTerm: renderVocabularyTerm };
+    module.exports = {
+      splitVocabularyTerm: splitVocabularyTerm,
+      renderVocabularyTerm: renderVocabularyTerm,
+      getVocabularySpeechText: getVocabularySpeechText
+    };
   }
 })(typeof window !== "undefined" ? window : globalThis);

@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { after, before, test } = require("node:test");
 const path = require("node:path");
 const { chromium } = require("playwright");
+const { getVocabularySpeechText } = require("../client/vocabulary-term");
 
 let browser;
 
@@ -48,6 +49,7 @@ test("separates a trailing IPA for display and preserves the stored term", async
   assert.equal(result.ipa, "/rɪˈzɪliənt/");
   assert.ok(parseFloat(result.headwordSize) > parseFloat(result.ipaSize));
   assert.equal(result.storedTerm, "resilient /rɪˈzɪliənt/");
+  assert.equal(getVocabularySpeechText(result.storedTerm), "resilient");
 });
 
 test("keeps terms without trailing IPA in their existing plain display", async function() {
@@ -58,4 +60,5 @@ test("keeps terms without trailing IPA in their existing plain display", async f
   assert.equal(result.headword, null);
   assert.equal(result.ipa, null);
   assert.equal(result.storedTerm, "resilient");
+  assert.equal(getVocabularySpeechText(result.storedTerm), "resilient");
 });

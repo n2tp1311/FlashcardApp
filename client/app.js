@@ -1495,6 +1495,15 @@ function speakText(text) {
   speakWith(clean, state.ttsRate);
 }
 
+function speakStudyFront() {
+  var card = state.studyCards[state.studyIndex];
+  var text = state.studyFrontText;
+  if (card && card.format === "term-def" && window.getVocabularySpeechText) {
+    text = window.getVocabularySpeechText(text);
+  }
+  speakText(text);
+}
+
 function setStudyLessonLabel(elId, card) {
   var el = document.getElementById(elId);
   if (!el) return;
@@ -6067,7 +6076,7 @@ document.getElementById("btn-fc-latex-continue").addEventListener("keydown", fun
 
 document.getElementById("btn-fc-audio-front").addEventListener("click", function(e) {
   e.stopPropagation();
-  speakText(state.studyFrontText);
+  speakStudyFront();
 });
 
 document.getElementById("btn-fc-audio-back").addEventListener("click", function(e) {
@@ -9823,7 +9832,10 @@ document.addEventListener("keydown", function(e) {
       e.preventDefault();
       translateVisibleFlashcardSide();
     }
-    else if (e.key === "p" || e.key === "P") speakText(state.studyFlipped ? state.studyBackText : state.studyFrontText);
+    else if (e.key === "p" || e.key === "P") {
+      if (state.studyFlipped) speakText(state.studyBackText);
+      else speakStudyFront();
+    }
     else if (e.key === "Escape") document.getElementById("btn-fc-back").click();
   }
 
