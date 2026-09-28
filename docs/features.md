@@ -9,6 +9,7 @@
 - Remaining gaps closed from the 10-agent UX audit: card-select-toolbar counter (`"N selected"`), the Generate Link / Invite-by-Name-or-Email share modal headings, and the True/False result badge (`"✓ True"`/`"✓ False"`) now go through `t()` instead of hardcoded English
 
 ## UI / Design
+- Logo is a hand of three flashcards whose front card carries three linked ideas (`client/logo.svg`, regenerated `icon-192/512.png` and `apple-touch-icon.png`); it shares its dark tile and colours with the KnowledgeApp logo (a book with ideas rising from it), so the sibling apps read as a pair
 - All emoji UI-chrome icons (buttons, headers, dropdown items, empty-state illustrations, sort-direction/kebab/close controls) replaced with a single minimalist SVG icon set (feather-style: `stroke="currentColor"`, `stroke-width="2"`, rounded caps) for visual consistency across the whole app
 - `svgIcon()` + `ICON_*` constants in `client/app.js` provide reusable icons for dynamically-generated list rows (class/lesson/card edit/delete/archive buttons); static screens/modals in `client/index.html` inline the same paths directly
 - User-chosen content icons are explicitly out of scope and untouched: `CLASS_ICONS` (the emoji picker for personalizing a class) and any place a class's own `cls.icon` is displayed
