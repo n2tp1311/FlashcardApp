@@ -4,7 +4,7 @@
   "description": "Ứng dụng học thẻ thông minh với lặp lại ngắt quãng",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1744",
+  "background_color": "#16150f",
   "theme_color": "#4338ca",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
