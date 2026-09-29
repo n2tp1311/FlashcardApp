@@ -167,6 +167,8 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.markAllShown": "Mark all shown as reviewed",
   "upstream.confirmAckAll": "Mark {n} card(s) as reviewed?",
   "upstream.studyUpdated": "Study updated cards",
+  "upstream.markedOne": "“{name}” marked as reviewed.",
+  "upstream.markedMany": "{n} cards marked as reviewed: {names}",
   "vocabulary.nav": "Vocabulary",
   "vocabulary.screenTitle": "Vocabulary inbox",
   "vocabulary.subtitle": "Review saved words before fetching them in KnowledgeApp.",
@@ -754,6 +756,8 @@ Object.assign(TRANSLATIONS.vi, {
   "upstream.markAllShown": "Đánh dấu tất cả đang hiện là đã xem",
   "upstream.confirmAckAll": "Đánh dấu {n} thẻ là đã xem?",
   "upstream.studyUpdated": "Học các thẻ đã cập nhật",
+  "upstream.markedOne": "Đã đánh dấu “{name}” là đã xem.",
+  "upstream.markedMany": "Đã đánh dấu {n} thẻ là đã xem: {names}",
   "vocabulary.nav": "Từ vựng",
   "vocabulary.screenTitle": "Hàng chờ từ vựng",
   "vocabulary.subtitle": "Xem lại các từ đã lưu trước khi KnowledgeApp tải chúng.",
@@ -3839,6 +3843,7 @@ function renderUpstreamIndicators(classes) {
 function openUpstreamScreen() {
   state.upstreamFilter = "all";
   setPillGroup("upstream-filter", "all");
+  document.getElementById("upstream-status").classList.add("hidden");
   showScreen("upstream");
   renderUpstream();
 }
@@ -4048,6 +4053,22 @@ function upstreamFieldText(obj, key) {
   return typeof obj[key] === "string" ? obj[key] : JSON.stringify(obj[key]);
 }
 
+function upstreamConceptName(card) {
+  var key = upstreamFields(card)[0];
+  var name = (upstreamFieldText(card.data, key) || upstreamFieldText(card.prev_data, key)).replace(/\s+/g, " ").trim();
+  return name.length > 60 ? name.slice(0, 59) + "…" : name;
+}
+
+function showUpstreamStatus(cards) {
+  var names = cards.map(upstreamConceptName);
+  var text = cards.length === 1
+    ? t("upstream.markedOne", { name: names[0] })
+    : t("upstream.markedMany", { n: cards.length, names: names.slice(0, 5).join(", ") + (names.length > 5 ? ", …" : "") });
+  var el = document.getElementById("upstream-status");
+  el.textContent = text;
+  el.classList.remove("hidden");
+}
+
 function renderUpstreamItem(card) {
   var item = document.createElement("div");
   item.className = "upstream-item";
@@ -4106,7 +4127,10 @@ function renderUpstreamItem(card) {
   }
   action("upstream.markReviewed", function(b) {
     b.disabled = true;
-    store.acknowledgeCardUpdate(card.id).then(renderUpstream, function() { b.disabled = false; });
+    store.acknowledgeCardUpdate(card.id).then(function() {
+      showUpstreamStatus([card]);
+      renderUpstream();
+    }, function() { b.disabled = false; });
   });
   action("upstream.openInLesson", function() { openLessonFromAnywhere(card.class_id, card.lesson_id); });
   if (card.format === "term-def") {
@@ -4199,10 +4223,14 @@ document.getElementById("upstream-filter").addEventListener("click", function(e)
 
 document.getElementById("btn-upstream-ack-all").addEventListener("click", function() {
   var btn = this;
-  var ids = upstreamFilteredCards().map(function(c) { return c.id; });
+  var cards = upstreamFilteredCards();
+  var ids = cards.map(function(c) { return c.id; });
   if (!ids.length || !confirm(t("upstream.confirmAckAll", { n: ids.length }))) return;
   btn.disabled = true;
-  store.acknowledgeCardUpdates(ids).then(renderUpstream, function(err) {
+  store.acknowledgeCardUpdates(ids).then(function() {
+    showUpstreamStatus(cards);
+    renderUpstream();
+  }, function(err) {
     btn.disabled = false;
     alert(err.message);
   });

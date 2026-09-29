@@ -3616,6 +3616,7 @@ code {
 /* KnowledgeApp changes review screen */
 .upstream-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; margin: 0 0 12px; background: var(--primary-light); color: var(--text); border-radius: 8px; font-size: 0.875rem; }
 .upstream-summary { color: var(--text2); font-size: 0.875rem; margin: 8px 0; }
+.upstream-status { padding: 8px 12px; margin: 8px 0; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: 0.875rem; overflow-wrap: anywhere; }
 .upstream-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
 .upstream-toolbar .pill-group { margin-right: auto; }
 .upstream-group-header { display: block; width: 100%; text-align: left; background: none; border: none; padding: 0; margin: 16px 0 6px; font-weight: 600; font-size: 0.8125rem; color: var(--text2); cursor: pointer; }
