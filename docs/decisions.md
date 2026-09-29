@@ -832,3 +832,9 @@ The UX review found that a grade made on flaky mobile data was silently dropped 
 ## 2026-09-30 — Preferences Cancel reverts previews instead of switching to instant-apply
 Dark mode and text size preview live, but closing Preferences without Save left them applied, and the next Save of anything persisted them. One UX reviewer proposed dropping Save/Cancel for iOS-style instant apply; we kept the modal model and snapshot the two previewed values on open, restoring them on every non-Save close. Smaller change, and the other settings (language, vibration, max reviews, quiz toggle) keep their explicit-Save behaviour.
 
+## 2026-09-30 — iPhone study loop: leave confirmation instead of a summary, and when the quiz waits
+- **Esc / browser Back mid-session confirms rather than showing the summary or results.** The 2026-08-09 decision says an early exit isn't finishing, and quiz results mid-session divide by every card (3 right out of 20 reads 15%). A confirm dialog reuses the existing modal, treats flashcard and quiz alike, and still lets the Exit button leave in one tap. Browser Back is included because the iPhone edge swipe is the realistic accidental exit; `H` is simply ignored during a session.
+- **The quiz waits after a wrong answer or when there's an explanation.** A flat 1.2s left no time to find the right option or open the explanation; a correct answer with nothing to read still flows on its own, which keeps quick quizzes quick.
+- **Grade row is `position: sticky`, not `fixed`.** It stays in normal flow, so its height (one row, or 2×2 at large text / narrow widths) needs no matching padding elsewhere. The 2×2 switch is a container query in `rem`, because `rem` in a media query ignores the root font size that the text size preference changes.
+- **Quick-quiz entry points share `startDueQuiz()`,** so the Dashboard's due rows now respect Max reviews per day like the lesson button does (it had been missed when the cap was added).
+
