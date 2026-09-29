@@ -2262,8 +2262,8 @@ var state = {
 function showScreen(id) {
   if (id !== "flashcard" && document.getElementById("screen-flashcard").classList.contains("active")) {
     clearFlashcardTranslation();
-    hideVocabularySelectionAction(true);
   }
+  hideVocabularySelectionAction(true);
   document.querySelectorAll(".screen").forEach(function(s) { s.classList.remove("active"); });
   var el = document.getElementById("screen-" + id);
   if (el) { el.classList.add("active"); window.scrollTo(0, 0); }
@@ -5683,32 +5683,70 @@ function resetFlownOffScene(fcSceneEl) {
 }
 
 var vocabularySelectionText = "";
+var vocabularySelection = null;
 var vocabularySavePending = false;
 
 function hideVocabularySelectionAction(clearText) {
-  var action = document.getElementById("fc-selection-action");
-  if (action) action.classList.add("hidden");
-  if (clearText) vocabularySelectionText = "";
+  ["fc-selection-action", "quiz-selection-action"].forEach(function(id) {
+    var action = document.getElementById(id);
+    if (action) action.classList.add("hidden");
+  });
+  if (clearText) {
+    vocabularySelectionText = "";
+    vocabularySelection = null;
+  }
+}
+
+// Where a selection may be saved from on the active study screen, with the card and the
+// source text sent as context.
+function vocabularySelectionTargets() {
+  if (document.getElementById("screen-flashcard").classList.contains("active")) {
+    return [{
+      root: document.getElementById(state.studyFlipped ? "fc-back-content" : "fc-front-content"),
+      card: state.studyCards[state.studyIndex],
+      context: state.studyFlipped ? state.studyBackText : state.studyFrontText,
+      actionId: "fc-selection-action",
+      buttonId: "btn-save-selected-word"
+    }];
+  }
+  if (document.getElementById("screen-quiz").classList.contains("active")) {
+    var card = state.quizCards[state.quizIndex];
+    if (!card) return [];
+    var data = card.data || {};
+    var explanation = document.querySelector("#quiz-explanation .explanation-body");
+    return [
+      { root: document.getElementById("quiz-question"), context: data.question || data.statement || data.term || "" },
+      { root: explanation, context: data.explanation || "" }
+    ].filter(function(target) { return target.root; }).map(function(target) {
+      target.card = card;
+      target.actionId = "quiz-selection-action";
+      target.buttonId = "btn-quiz-save-selected-word";
+      return target;
+    });
+  }
+  return [];
 }
 
 function updateVocabularySelectionAction() {
-  var screen = document.getElementById("screen-flashcard");
   var selection = window.getSelection();
-  if (!IS_SERVER || !screen.classList.contains("active") || !selection || !selection.rangeCount) {
+  if (!IS_SERVER || !selection || !selection.rangeCount) {
     hideVocabularySelectionAction(true);
     return;
   }
 
-  var content = document.getElementById(state.studyFlipped ? "fc-back-content" : "fc-front-content");
   var text = selection.toString().trim();
-  if (!text || text.length > 1000 || !content.contains(selection.anchorNode) || !content.contains(selection.focusNode)) {
+  var target = vocabularySelectionTargets().filter(function(t) {
+    return t.root.contains(selection.anchorNode) && t.root.contains(selection.focusNode);
+  })[0];
+  if (!text || text.length > 1000 || !target || !target.card) {
     hideVocabularySelectionAction(true);
     return;
   }
 
   vocabularySelectionText = text;
-  var action = document.getElementById("fc-selection-action");
-  var button = document.getElementById("btn-save-selected-word");
+  vocabularySelection = target;
+  var action = document.getElementById(target.actionId);
+  var button = document.getElementById(target.buttonId);
   if (!vocabularySavePending) {
     button.disabled = false;
     button.textContent = t("study.saveWord");
@@ -5717,13 +5755,11 @@ function updateVocabularySelectionAction() {
 }
 
 function saveSelectedVocabularyWord() {
-  if (vocabularySavePending || !vocabularySelectionText) return;
-  var card = state.studyCards[state.studyIndex];
-  if (!card) return;
-
-  var button = document.getElementById("btn-save-selected-word");
+  if (vocabularySavePending || !vocabularySelectionText || !vocabularySelection) return;
+  var card = vocabularySelection.card;
+  var button = document.getElementById(vocabularySelection.buttonId);
   var selectedText = vocabularySelectionText;
-  var contextText = (state.studyFlipped ? state.studyBackText : state.studyFrontText).slice(0, 4000);
+  var contextText = String(vocabularySelection.context || "").slice(0, 4000);
   vocabularySavePending = true;
   button.disabled = true;
   button.textContent = t("study.savingWord");
@@ -5745,10 +5781,13 @@ function saveSelectedVocabularyWord() {
 }
 
 document.addEventListener("selectionchange", updateVocabularySelectionAction);
-document.getElementById("btn-save-selected-word").addEventListener("mousedown", function(e) {
-  e.preventDefault();
+["btn-save-selected-word", "btn-quiz-save-selected-word"].forEach(function(id) {
+  var button = document.getElementById(id);
+  button.addEventListener("mousedown", function(e) {
+    e.preventDefault();
+  });
+  button.addEventListener("click", saveSelectedVocabularyWord);
 });
-document.getElementById("btn-save-selected-word").addEventListener("click", saveSelectedVocabularyWord);
 
 function clearFlashcardTranslation() {
   state.translationRequestId++;
@@ -6491,6 +6530,7 @@ function renderQuizCard() {
   if (prevCap) prevCap.remove();
   var prevNotDue = document.getElementById("quiz-notdue-hint");
   if (prevNotDue) prevNotDue.remove();
+  hideVocabularySelectionAction(true);
 
   if (i >= total) { showQuizResults(); return; }
 
