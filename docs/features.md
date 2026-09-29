@@ -82,6 +82,8 @@
 - Auth POST bodies capped at 10kb (scoped to `/api/auth`, separate from the general 10mb JSON limit) so a large body can't be fully parsed — itself a blocking cost — before a route's rate limiter gets a chance to reject it
 - `share.js`'s `getClassData()` (backing the public `GET /api/share/view/:token`, plus class cloning) batched instead of one query per lesson — same N+1 category as the `cards.js`/`stats.js` fixes, extracted into a shared `server/lib/batch.js` helper on its second occurrence
 - Rate limiting extended to every other heavy/synchronous route: `GET /api/export`, `POST /api/import`, `POST /api/share/clone/:token`, `POST /api/share/clone-invite/:classId` (all keyed by user, not IP — an IP-keyed limiter on an authenticated route lets unrelated accounts on a shared office/campus network exhaust each other's quota), and the public `GET /api/share/view/:token` (IP-keyed, since there's no session to key by; capped well above plausible simultaneous traffic from one shared link)
+- Answers survive a bad connection: a grade, quiz answer or known-state write that can't reach the server (offline, 15s timeout, 408/429/5xx gateway errors, expired session, or a non-JSON 200 from a captive portal) is kept in `localStorage["fc-pending-writes:<userId>"]` and replayed in order on reconnect, at login, and before the next answer. A toast says answers are being kept, and another says how many synced. Each attempt carries a `clientId`; `POST /api/attempts` skips one it has already recorded and writes the attempt plus its schedule in a single transaction. A repeated plain 500 drops the write after 5 tries so it can't block the queue
+- Save buttons (class, lesson, the four card formats, bulk add) disable and read "Saving…" while the request runs, so a double tap or Ctrl/Cmd+Enter can't create duplicates; a failed save shows a toast and keeps the modal and its input open
 - gzip/brotli response compression — biggest win on `GET /api/export`, which can run several MB as JSON for a long-lived account; runs off the main thread (zlib's async binding), so it doesn't reintroduce the blocking risk the rest of this reliability work addresses
 
 ## Study
@@ -118,7 +120,7 @@
 - "Due Only" filter to quiz only SRS-due cards
 - Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons — guarantees strict alternation via round-robin across lesson groups (each group independently weighted-shuffled), rather than relying on chance the way "Shuffle" does
 - Account preferences: "⚙ Preferences" in the user dropdown; saves dark mode and font scale to the server and caches in localStorage
-- Dark Mode toggle in Preferences previews live (theme changes immediately on toggle, before Save) — matches the existing live-preview behavior of font scale and TTS rate in the same modal
+- Dark Mode toggle in Preferences previews live (theme changes immediately on toggle, before Save) — matches the existing live-preview behavior of font scale and TTS rate in the same modal. Closing Preferences any way other than Save (Esc, backdrop, ×, Show tutorial) puts dark mode and text size back to what they were when it opened
 - Flashcard flip only triggers on a plain click — a click that ends an active text selection (e.g. dragging to select text for copy/translate) is ignored, checked via `window.getSelection().toString()`
 - Delete-card button (🗑) in both flashcard toolbar and quiz header removes the currently shown card immediately (with the standard confirm dialog) and advances to the next card; deleting the last remaining card exits back to the lesson/class screen
 - Lesson sort: "Sort by" dropdown on the class screen; options are Date added (newest first), Last studied, Last card added, Due count; choice persisted in localStorage per browser
@@ -183,7 +185,7 @@
 - Cards imported from a `ka export` file are linked automatically; cards imported before linking existed are matched once by exact term + definition (`ka sync --link`)
 
 ## Share
-- Public share link (anyone can study or clone)
+- Public share link (anyone can study or clone). `index.html` references its assets by absolute path — it is also served at `/share/<token>`, where a relative `app.js` would resolve to the share route itself (`tests/index-assets.test.js` guards this)
 - Invite by username/email (shows in "Shared with me")
 - Clone shared/invited class into own account
 
