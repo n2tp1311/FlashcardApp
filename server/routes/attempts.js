@@ -67,9 +67,12 @@ router.post("/", requireAuth, (req, res) => {
   // Quiz recognition can't earn as long an interval as an equivalent flashcard/recall
   // answer, by construction of the Hard-vs-Good rating mapping in ../fsrs.js — surfaced to
   // the client under the old field name so no client-side changes are needed for this signal.
-  const capped = source === "quiz" && !!correct;
+  // A graded quiz answer comes from the "quiz answers count as Know It" preference, so it
+  // isn't capped and is recorded as a flashcard-strength answer to keep it out of Needs Recall.
+  const capped = source === "quiz" && !!correct && !grade;
 
-  const lastCorrectSource = correct ? source : ((stateRow && stateRow.last_correct_source) || null);
+  const correctSource = source === "quiz" && grade ? "flashcard" : source;
+  const lastCorrectSource = correct ? correctSource : ((stateRow && stateRow.last_correct_source) || null);
 
   db.prepare(
     "INSERT INTO card_states (card_id, user_id, srs_due_at, fsrs_stability, fsrs_difficulty, " +

@@ -130,6 +130,8 @@ Object.assign(TRANSLATIONS.en, {
   "pref.darkMode": "Dark mode",
   "pref.haptics": "Vibration feedback",
   "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
+  "pref.quizCountsAsKnown": "Quiz answers count as Know It",
+  "pref.quizCountsAsKnownHint": "A correct quiz answer counts as Know It (marks the card known and schedules it like a flashcard); a wrong answer counts as Still Learning. Off: cards only make progress through flashcards.",
   "pref.language": "Language",
   "pref.speed": "Speed",
   "pref.testSpeed": "Test speed",
@@ -339,6 +341,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
   "setup.hintFlashcardWriteMode": "Type your answer before flipping, then flip to compare — an extra production step on top of recall.",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
+  "setup.hintQuizModeKnown": "Faster — with your preference on, a correct answer counts as Know It and a wrong one as Still Learning.",
   "setup.newCardEstimateLabel": "New cards recommended today",
   "dashboard.newCardsShortLabel": "New Cards",
   "setup.newCardEstimateDefaultNote": "Default estimate — not personalized yet. Keep studying and this will adapt to your pace.",
@@ -719,6 +722,8 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.darkMode": "Chế độ tối",
   "pref.haptics": "Phản hồi rung",
   "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
+  "pref.quizCountsAsKnown": "Trả lời quiz được tính là Đã thuộc",
+  "pref.quizCountsAsKnownHint": "Trả lời đúng trong quiz được tính là Đã thuộc (đánh dấu thẻ đã thuộc và xếp lịch ôn như Thẻ ghi nhớ); trả lời sai được tính là Đang học. Tắt: thẻ chỉ tiến bộ qua chế độ Thẻ ghi nhớ.",
   "pref.language": "Ngôn ngữ",
   "pref.speed": "Tốc độ",
   "pref.testSpeed": "Nghe thử tốc độ",
@@ -928,6 +933,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
   "setup.hintFlashcardWriteMode": "Gõ đáp án trước khi lật thẻ, rồi lật để so sánh — thêm một bước viết ra bên cạnh việc nhớ lại.",
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
+  "setup.hintQuizModeKnown": "Nhanh hơn — với tùy chọn đang bật, trả lời đúng được tính là Đã thuộc, trả lời sai được tính là Đang học.",
   "setup.newCardEstimateLabel": "Số thẻ mới nên học hôm nay",
   "dashboard.newCardsShortLabel": "Thẻ mới",
   "setup.newCardEstimateDefaultNote": "Ước tính mặc định — chưa được cá nhân hóa. Học thêm để hệ thống điều chỉnh theo nhịp độ của bạn.",
@@ -2185,6 +2191,7 @@ var state = {
   // User preferences (loaded from server after login)
   darkMode: false,
   haptics: true,
+  quizCountsAsKnown: false,
   fontScale: 1,
   ttsRate: 0.9,
   language: (function() {
@@ -5101,7 +5108,7 @@ function applyStudyPreset(preset) {
   var filterKey = FILTER_HINT_KEYS[preset.filter];
   if (filterHint) filterHint.textContent = filterKey ? t(filterKey) : "";
   var modeHint = document.getElementById("setup-mode-hint");
-  var modeKey = MODE_HINT_KEYS[mode];
+  var modeKey = mode === "quiz" && state.quizCountsAsKnown ? "setup.hintQuizModeKnown" : MODE_HINT_KEYS[mode];
   if (modeHint) modeHint.textContent = modeKey ? t(modeKey) : "";
 
   var thisRequestId = state.setupRequestId;
@@ -5391,7 +5398,7 @@ var MODE_HINT_KEYS = {
     }
     if (groupId === "setup-mode") {
       var modeHint = document.getElementById("setup-mode-hint");
-      var modeKey = MODE_HINT_KEYS[pill.dataset.value];
+      var modeKey = pill.dataset.value === "quiz" && state.quizCountsAsKnown ? "setup.hintQuizModeKnown" : MODE_HINT_KEYS[pill.dataset.value];
       if (modeHint) modeHint.textContent = modeKey ? t(modeKey) : "";
     }
   });
@@ -6598,6 +6605,10 @@ function answerQuiz(selectedIdx) {
 
   if (card.upstream_change === "updated") card.upstream_change = null;
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
+  if (state.quizCountsAsKnown) {
+    if (isCorrect) quizAttemptFields.grade = "medium";
+    store.setCardKnown(card.id, isCorrect);
+  }
   if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
   store.recordAttempt(quizAttemptFields).then(function(res) {
     if (res && res.capped) {
@@ -8526,6 +8537,9 @@ function applyPrefs(prefs) {
   if (typeof prefs.maxReviewsPerDay === "number") {
     state.maxReviewsPerDay = prefs.maxReviewsPerDay;
   }
+  if (typeof prefs.quizCountsAsKnown === "boolean") {
+    state.quizCountsAsKnown = prefs.quizCountsAsKnown;
+  }
   if (prefs.dashMetricConfig && typeof prefs.dashMetricConfig === "object") {
     state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, prefs.dashMetricConfig);
   }
@@ -8905,6 +8919,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   closeAllDropdowns();
   document.getElementById("pref-dark-mode").checked = state.darkMode;
   document.getElementById("pref-haptics").checked = state.haptics;
+  document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
   document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
   prefFontLabel();
   prefRateLabel(state.ttsRate);
@@ -9041,6 +9056,8 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   var dark = document.getElementById("pref-dark-mode").checked;
   var haptics = document.getElementById("pref-haptics").checked;
   state.haptics = haptics;
+  var quizCountsAsKnown = document.getElementById("pref-quiz-known").checked;
+  state.quizCountsAsKnown = quizCountsAsKnown;
   applyDarkMode(dark);
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
   state.ttsRate = rate;
@@ -9051,7 +9068,7 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
   var maxReviews = maxReviewsRaw === "" ? null : Math.max(0, parseInt(maxReviewsRaw, 10) || 0);
   state.maxReviewsPerDay = maxReviews;
-  var prefs = { darkMode: dark, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews };
+  var prefs = { darkMode: dark, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
