@@ -107,6 +107,10 @@ Object.assign(TRANSLATIONS.en, {
   "common.close": "Close",
   "common.cancel": "Cancel",
   "common.save": "Save",
+  "common.saving": "Saving…",
+  "toast.saveFailed": "Couldn't save: {message}",
+  "toast.offlineQueued": "You're offline. Your answers are kept on this device and will sync when you reconnect.",
+  "toast.synced": "{n} saved answer(s) synced.",
   "pref.title": "Preferences",
   "tutorial.title": "Quick tour",
   "tutorial.preferenceLabel": "Getting started",
@@ -699,6 +703,10 @@ Object.assign(TRANSLATIONS.vi, {
   "common.close": "Đóng",
   "common.cancel": "Hủy",
   "common.save": "Lưu",
+  "common.saving": "Đang lưu…",
+  "toast.saveFailed": "Không lưu được: {message}",
+  "toast.offlineQueued": "Bạn đang ngoại tuyến. Câu trả lời được giữ trên thiết bị này và sẽ đồng bộ khi có kết nối lại.",
+  "toast.synced": "Đã đồng bộ {n} câu trả lời đã lưu.",
   "pref.title": "Tùy chọn",
   "tutorial.title": "Hướng dẫn nhanh",
   "tutorial.preferenceLabel": "Bắt đầu sử dụng",
@@ -2322,6 +2330,31 @@ function restoreLastScreen() {
    MODAL HELPERS
    ============================ */
 
+var toastTimer = null;
+
+function showToast(message, kind) {
+  var el = document.getElementById("toast");
+  el.textContent = message;
+  el.classList.toggle("error", kind === "error");
+  el.classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.add("hidden"); }, 4000);
+}
+
+// Disables a save button while its request is in flight, so a double tap or Ctrl/Cmd+Enter
+// can't create the same record twice, and reports a failed save instead of doing nothing.
+function withBusy(btn, run) {
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = t("common.saving");
+  Promise.resolve().then(run).catch(function(err) {
+    showToast(t("toast.saveFailed", { message: err.message }), "error");
+  }).then(function() {
+    btn.disabled = false;
+    btn.textContent = t(btn.getAttribute("data-i18n"));
+  });
+}
+
 function openModal(id) {
   document.getElementById("modal-overlay").classList.remove("hidden");
   document.getElementById("modal-" + id).classList.remove("hidden");
@@ -2331,6 +2364,7 @@ function closeModal(id) {
   var modal = document.getElementById("modal-" + id);
   if (!modal) return;
   if (id === "tutorial" && !modal.classList.contains("hidden")) markTutorialSeen();
+  if (id === "preferences") revertPrefsPreview();
   modal.classList.add("hidden");
   var anyOpen = Array.from(document.querySelectorAll("#modal-overlay .modal")).some(function(m) {
     return !m.classList.contains("hidden");
@@ -2341,6 +2375,7 @@ function closeModal(id) {
 function closeAllModals() {
   var tutorial = document.getElementById("modal-tutorial");
   if (tutorial && !tutorial.classList.contains("hidden")) markTutorialSeen();
+  revertPrefsPreview();
   document.querySelectorAll("#modal-overlay .modal").forEach(function(m) { m.classList.add("hidden"); });
   document.getElementById("modal-overlay").classList.add("hidden");
 }
@@ -2999,15 +3034,17 @@ document.getElementById("btn-save-class").addEventListener("click", function() {
   var level = levelVal !== "" ? parseInt(levelVal, 10) : null;
   if (level !== null && isNaN(level)) { alert(t("validate.levelMustBeNumber")); return; }
   var tags = parseTagsInput(document.getElementById("class-tags-input").value);
-  var p;
-  if (state.editingClassId) {
-    p = store.updateClass(state.editingClassId, { name: name, color: color, icon: icon, level: level, tags: tags });
-  } else {
-    p = store.createClass({ name: name, color: color, icon: icon, level: level, tags: tags });
-  }
-  p.then(function() {
-    closeModal("class");
-    renderHome();
+  withBusy(this, function() {
+    var p;
+    if (state.editingClassId) {
+      p = store.updateClass(state.editingClassId, { name: name, color: color, icon: icon, level: level, tags: tags });
+    } else {
+      p = store.createClass({ name: name, color: color, icon: icon, level: level, tags: tags });
+    }
+    return p.then(function() {
+      closeModal("class");
+      renderHome();
+    });
   });
 });
 
@@ -3800,15 +3837,17 @@ document.getElementById("btn-save-lesson").addEventListener("click", function() 
     p.style.pointerEvents = "";
     p.style.opacity = "";
   });
-  var p;
-  if (state.editingLessonId) {
-    p = store.updateLesson(state.editingLessonId, { title: title });
-  } else {
-    p = store.createLesson({ classId: state.currentClass.id, title: title, format: format });
-  }
-  p.then(function() {
-    closeModal("lesson");
-    renderLessons();
+  withBusy(this, function() {
+    var p;
+    if (state.editingLessonId) {
+      p = store.updateLesson(state.editingLessonId, { title: title });
+    } else {
+      p = store.createLesson({ classId: state.currentClass.id, title: title, format: format });
+    }
+    return p.then(function() {
+      closeModal("lesson");
+      renderLessons();
+    });
   });
 });
 
@@ -4718,17 +4757,21 @@ document.getElementById("btn-save-card-termdef").addEventListener("click", funct
   var def  = document.getElementById("card-def-input").value.trim();
   if (!term || !def) { alert(t("validate.fillTermDef")); return; }
   var data = { term: term, def: def };
-  var p;
-  if (state.editingCardId) {
-    p = store.updateCard(state.editingCardId, state.editingCardLessonId, { data: data });
-  } else {
-    p = store.createCard({ lessonId: state.currentLesson.id, format: "term-def", data: data });
-  }
-  p.then(function() {
-    closeModal("card-termdef");
-    if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
-    renderCards();
-    if (getActiveScreen() === "upstream") renderUpstream();
+  var editingId = state.editingCardId;
+  var editingLessonId = state.editingCardLessonId;
+  withBusy(this, function() {
+    var p;
+    if (editingId) {
+      p = store.updateCard(editingId, editingLessonId, { data: data });
+    } else {
+      p = store.createCard({ lessonId: state.currentLesson.id, format: "term-def", data: data });
+    }
+    return p.then(function() {
+      closeModal("card-termdef");
+      if (editingId) syncEditedCardIntoStudySession(editingId, data);
+      renderCards();
+      if (getActiveScreen() === "upstream") renderUpstream();
+    });
   });
 });
 
@@ -4745,16 +4788,20 @@ document.getElementById("btn-save-card-mcq").addEventListener("click", function(
   var explanation = document.getElementById("card-explanation-input").value.trim();
   var data = { question: q, correct: c, distractors: distractors };
   if (explanation) data.explanation = explanation;
-  var p;
-  if (state.editingCardId) {
-    p = store.updateCard(state.editingCardId, state.editingCardLessonId, { data: data });
-  } else {
-    p = store.createCard({ lessonId: state.currentLesson.id, format: "mcq", data: data });
-  }
-  p.then(function() {
-    closeModal("card-mcq");
-    if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
-    renderCards();
+  var editingId = state.editingCardId;
+  var editingLessonId = state.editingCardLessonId;
+  withBusy(this, function() {
+    var p;
+    if (editingId) {
+      p = store.updateCard(editingId, editingLessonId, { data: data });
+    } else {
+      p = store.createCard({ lessonId: state.currentLesson.id, format: "mcq", data: data });
+    }
+    return p.then(function() {
+      closeModal("card-mcq");
+      if (editingId) syncEditedCardIntoStudySession(editingId, data);
+      renderCards();
+    });
   });
 });
 
@@ -4784,13 +4831,17 @@ document.getElementById("btn-save-card-tf").addEventListener("click", function()
   var explanation = document.getElementById("card-tf-explanation-input").value.trim();
   var data = { statement: statement, correct: state.tfAnswer };
   if (explanation) data.explanation = explanation;
-  var p = state.editingCardId
-    ? store.updateCard(state.editingCardId, state.editingCardLessonId, { data: data })
-    : store.createCard({ lessonId: state.currentLesson.id, format: "true-false", data: data });
-  p.then(function() {
-    closeModal("card-tf");
-    if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
-    renderCards();
+  var editingId = state.editingCardId;
+  var editingLessonId = state.editingCardLessonId;
+  withBusy(this, function() {
+    var p = editingId
+      ? store.updateCard(editingId, editingLessonId, { data: data })
+      : store.createCard({ lessonId: state.currentLesson.id, format: "true-false", data: data });
+    return p.then(function() {
+      closeModal("card-tf");
+      if (editingId) syncEditedCardIntoStudySession(editingId, data);
+      renderCards();
+    });
   });
 });
 
@@ -4859,13 +4910,17 @@ document.getElementById("btn-save-card-imagedef").addEventListener("click", func
   var def = document.getElementById("card-imagedef-input").value.trim();
   if (!def) { alert(t("validate.enterDefinition")); return; }
   var data = { imageUrl: stagedImageUrl, def: def };
-  var p = state.editingCardId
-    ? store.updateCard(state.editingCardId, state.editingCardLessonId, { data: data })
-    : store.createCard({ lessonId: state.currentLesson.id, format: "image-def", data: data });
-  p.then(function() {
-    closeModal("card-imagedef");
-    if (state.editingCardId) syncEditedCardIntoStudySession(state.editingCardId, data);
-    renderCards();
+  var editingId = state.editingCardId;
+  var editingLessonId = state.editingCardLessonId;
+  withBusy(this, function() {
+    var p = editingId
+      ? store.updateCard(editingId, editingLessonId, { data: data })
+      : store.createCard({ lessonId: state.currentLesson.id, format: "image-def", data: data });
+    return p.then(function() {
+      closeModal("card-imagedef");
+      if (editingId) syncEditedCardIntoStudySession(editingId, data);
+      renderCards();
+    });
   });
 });
 
@@ -4948,9 +5003,11 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
   var withLesson = cards.map(function(c) {
     return { lessonId: state.currentLesson.id, format: c.format, data: c.data };
   });
-  store.createCards(withLesson).then(function() {
-    closeModal("bulk");
-    renderCards();
+  withBusy(this, function() {
+    return store.createCards(withLesson).then(function() {
+      closeModal("bulk");
+      renderCards();
+    });
   });
 });
 
@@ -6432,7 +6489,7 @@ function markCard(known, grade, forceRetype) {
   setMarkButtonsEnabled(false);
   haptic("select");
   state.studyKnownMap[card.id] = known;
-  store.setCardKnown(card.id, known);
+  store.setCardKnown(card.id, known).catch(function() {});
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
   if (card.upstream_change === "updated") card.upstream_change = null;
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
@@ -6442,6 +6499,8 @@ function markCard(known, grade, forceRetype) {
     if (res && res.srs_due_at != null) {
       card.srs_due_at = res.srs_due_at;
     }
+  }).catch(function(err) {
+    showToast(t("toast.saveFailed", { message: err.message }), "error");
   });
   renderFcDots();
 
@@ -6654,7 +6713,7 @@ function answerQuiz(selectedIdx) {
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
   if (state.quizCountsAsKnown) {
     if (isCorrect) quizAttemptFields.grade = "medium";
-    store.setCardKnown(card.id, isCorrect);
+    store.setCardKnown(card.id, isCorrect).catch(function() {});
   }
   if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
   store.recordAttempt(quizAttemptFields).then(function(res) {
@@ -6666,7 +6725,9 @@ function answerQuiz(selectedIdx) {
       resultEntry.notDue = true;
       if (state.quizCards[state.quizIndex] === card) showQuizHint("quiz-notdue-hint", "study.notDueHint");
     }
-  }).catch(function() { /* fire-and-forget on network error, same resilience as before */ });
+  }).catch(function(err) {
+    showToast(t("toast.saveFailed", { message: err.message }), "error");
+  });
 
   // Visual feedback. Answered options become plain blocks: text inside a <button> can't be
   // drag-selected, and selecting a word to save as vocabulary is useful once the answer is known.
@@ -8353,20 +8414,138 @@ function futureRelativeTime(unixSec) {
 var SQLiteAdapter = (function() {
   var BASE = "/api";
 
-  function req(method, path, body) {
+  function req(method, path, body, timeoutMs) {
     var opts = { method: method, credentials: "same-origin", headers: {} };
     if (body !== undefined) {
       opts.headers["Content-Type"] = "application/json";
       opts.body = JSON.stringify(body);
     }
+    if (timeoutMs) {
+      var controller = new AbortController();
+      opts.signal = controller.signal;
+      setTimeout(function() { controller.abort(); }, timeoutMs);
+    }
     return fetch(BASE + path, opts).then(function(r) {
-      if (r.status === 401) { showAuthScreen(); return Promise.reject(new Error("Unauthorized")); }
+      if (r.status === 401) {
+        showAuthScreen();
+        var authErr = new Error("Unauthorized");
+        authErr.status = 401;
+        return Promise.reject(authErr);
+      }
       if (r.status === 204) return null;
-      return r.json().then(function(data) {
-        if (!r.ok) return Promise.reject(new Error(data.error || ("API error " + r.status)));
+      // A proxy error page (e.g. a 502) is HTML, not JSON — keep the status. A 200 that isn't
+      // JSON (a captive portal) still fails, so it can't pass for a saved write.
+      return r.json().catch(function(parseErr) {
+        if (r.ok) throw parseErr;
+        return {};
+      }).then(function(data) {
+        if (!r.ok) {
+          var err = new Error(data.error || ("API error " + r.status));
+          err.status = r.status;
+          return Promise.reject(err);
+        }
         return data;
       });
     });
+  }
+
+  // Answers and known-state writes that couldn't reach the server (offline, a dropped
+  // connection, a gateway error, an expired session) are kept per user in localStorage and
+  // replayed in order — otherwise a grade on flaky mobile data is silently lost and the SRS
+  // schedule drifts. Every such write goes through one promise chain so a replay and a new
+  // answer can never interleave. Replayed answers are scheduled at replay time.
+  var writeChain = Promise.resolve();
+  var offlineNotified = false;
+  // A hung request would otherwise hold every later answer in memory only, lost on reload.
+  var WRITE_TIMEOUT_MS = 15000;
+  // A 500 is usually a brief server hiccup, but one that repeats must not block the queue.
+  var MAX_SERVER_ERROR_TRIES = 5;
+
+  function pendingKey() {
+    return "fc-pending-writes:" + (currentUser && currentUser.id ? currentUser.id : "");
+  }
+
+  function readPending(key) {
+    try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (_) { return []; }
+  }
+
+  function keepForRetry(err) {
+    return !err.status || [401, 408, 429, 500, 502, 503, 504].indexOf(err.status) !== -1;
+  }
+
+  function enqueue(key, item) {
+    var list = readPending(key);
+    list.push(item);
+    localStorage.setItem(key, JSON.stringify(list));
+    if (!offlineNotified) {
+      offlineNotified = true;
+      showToast(t("toast.offlineQueued"));
+    }
+    return { queued: true };
+  }
+
+  // Sends queued writes oldest first; resolves true once the queue is empty, false if it
+  // stopped at a write that should be retried later.
+  function drain(key, synced, processed) {
+    synced = synced || 0;
+    processed = processed || 0;
+    var list = readPending(key);
+    if (!list.length) {
+      if (processed) offlineNotified = false;
+      if (synced) showToast(t("toast.synced", { n: synced }));
+      return Promise.resolve(true);
+    }
+    var item = list[0];
+    return req(item.method, item.path, item.body, WRITE_TIMEOUT_MS).then(function() { return "sent"; }, function(err) {
+      if (!keepForRetry(err)) return "dropped";
+      if (err.status !== 500) return "keep";
+      item.serverErrors = (item.serverErrors || 0) + 1;
+      return item.serverErrors >= MAX_SERVER_ERROR_TRIES ? "dropped" : "retry-later";
+    }).then(function(outcome) {
+      var current = readPending(key);
+      var isHead = current.length && current[0].body && item.body &&
+        JSON.stringify(current[0].path) === JSON.stringify(item.path) &&
+        JSON.stringify(current[0].body) === JSON.stringify(item.body);
+      if (outcome === "keep") return false;
+      if (outcome === "retry-later") {
+        if (isHead) {
+          current[0].serverErrors = item.serverErrors;
+          try { localStorage.setItem(key, JSON.stringify(current)); } catch (_) {}
+        }
+        return false;
+      }
+      if (isHead) {
+        current.shift();
+        try { localStorage.setItem(key, JSON.stringify(current)); } catch (_) {}
+      }
+      return drain(key, synced + (outcome === "sent" && item.path === "/attempts" ? 1 : 0), processed + 1);
+    });
+  }
+
+  function queuedWrite(item) {
+    // Chosen now: a 401 signs the user out (currentUser = null) before the failure comes back.
+    var key = pendingKey();
+    var run = writeChain.then(function() { return drain(key); }).then(function(emptied) {
+      if (!emptied) return enqueue(key, item);
+      return req(item.method, item.path, item.body, WRITE_TIMEOUT_MS).catch(function(err) {
+        if (keepForRetry(err)) return enqueue(key, item);
+        throw err;
+      });
+    });
+    writeChain = run.catch(function() {});
+    return run;
+  }
+
+  function flushPending() {
+    if (!currentUser) return;
+    var key = pendingKey();
+    writeChain = writeChain.then(function() { return drain(key); }).catch(function() {});
+  }
+
+  function newClientId() {
+    var id = "";
+    while (id.length < 20) id += Math.random().toString(36).slice(2);
+    return "c" + id.slice(0, 20);
   }
 
   return {
@@ -8408,11 +8587,12 @@ var SQLiteAdapter = (function() {
     deleteCard: function(id)               { return req("DELETE", "/cards/" + id); },
 
     recordAttempt: function(f) {
-      var body = { cardId: f.cardId, correct: f.correct, source: f.source };
+      var body = { cardId: f.cardId, correct: f.correct, source: f.source, clientId: newClientId() };
       if (f.grade) body.grade = f.grade;
       if (f.durationMs != null) body.durationMs = f.durationMs;
-      return req("POST", "/attempts", body);
+      return queuedWrite({ method: "POST", path: "/attempts", body: body });
     },
+    flushPending: flushPending,
     getCardStats: function() { return Promise.resolve({ total: 0, correct: 0, blended: 0, level: "new" }); },
     getDifficultyMap: function(cardIds) {
       return req("POST", "/stats/difficulty-map", { cardIds: cardIds });
@@ -8432,7 +8612,7 @@ var SQLiteAdapter = (function() {
     },
 
     setCardKnown: function(cardId, known) {
-      return req("PUT", "/cards/states/" + cardId, { known: known });
+      return queuedWrite({ method: "PUT", path: "/cards/states/" + cardId, body: { known: known } });
     },
     getKnownMap: function(lessonId) {
       return req("GET", "/lessons/" + lessonId + "/states");
@@ -8740,6 +8920,7 @@ function initUserNav() {
   }
   loadUserPreferences();
   refreshVocabularyQueue(false);
+  SQLiteAdapter.flushPending();
 }
 
 function renderSidebarClasses(classes) {
@@ -8970,8 +9151,20 @@ function prefRateLabel(rate) {
   el.dataset.rate = rate;
 }
 
+// Dark mode and text size preview live while Preferences is open; closing it any way other
+// than Save puts back what was there when it opened.
+var prefsSnapshot = null;
+
+function revertPrefsPreview() {
+  if (!prefsSnapshot) return;
+  applyDarkMode(prefsSnapshot.darkMode);
+  applyFontScale(prefsSnapshot.fontScale);
+  prefsSnapshot = null;
+}
+
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
+  prefsSnapshot = { darkMode: state.darkMode, fontScale: state.fontScale };
   document.getElementById("pref-dark-mode").checked = state.darkMode;
   document.getElementById("pref-haptics").checked = state.haptics;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
@@ -9108,6 +9301,7 @@ document.getElementById("pref-tts-test").addEventListener("click", function() {
 });
 
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
+  prefsSnapshot = null;
   var dark = document.getElementById("pref-dark-mode").checked;
   var haptics = document.getElementById("pref-haptics").checked;
   state.haptics = haptics;
@@ -9243,6 +9437,7 @@ document.getElementById("btn-save-dash-metrics").addEventListener("click", funct
 
 // Choose adapter
 var store = IS_SERVER ? SQLiteAdapter : LocalStorageAdapter;
+if (IS_SERVER) window.addEventListener("online", SQLiteAdapter.flushPending);
 
 document.documentElement.setAttribute("lang", state.language);
 applyI18n();

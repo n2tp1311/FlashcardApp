@@ -21,9 +21,11 @@ function clampDuration(durationMs) {
 
 // POST /api/attempts
 router.post("/", requireAuth, (req, res) => {
-  const { cardId, correct, source, grade, durationMs } = req.body;
+  const { cardId, correct, source, grade, durationMs, clientId } = req.body;
   if (!cardId || correct === undefined || !source)
     return res.status(400).json({ error: "cardId, correct, source required" });
+  if (clientId !== undefined && (typeof clientId !== "string" || !/^c[a-z0-9]{20}$/.test(clientId)))
+    return res.status(400).json({ error: "clientId must be 'c' followed by 20 lowercase letters or digits" });
 
   const userId = req.session.userId;
 
@@ -36,57 +38,68 @@ router.post("/", requireAuth, (req, res) => {
   ).get(cardId, userId);
   if (!card) return res.status(404).json({ error: "Card not found" });
 
-  // Answering an upstream-updated card is reviewing it. Only 'updated' — a "removed from
-  // source" notice needs an explicit acknowledgement, not just another answer.
-  db.prepare(
-    "UPDATE cards SET upstream_change = NULL, upstream_changed_at = NULL, upstream_prev_data = NULL " +
-    "WHERE id = ? AND upstream_change = 'updated'"
-  ).run(cardId);
+  // The client resends an answer it couldn't confirm (offline, dropped response) under the same
+  // clientId; one the server already recorded must not be scheduled a second time.
+  if (clientId && db.prepare("SELECT 1 FROM attempts WHERE id = ? AND user_id = ?").get(clientId, userId))
+    return res.status(200).json({ ok: true, duplicate: true });
 
-  db.prepare(
-    "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  ).run(genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null);
+  // One transaction, so a failure part-way can't leave an attempt row whose schedule update
+  // never happened — a resend would then be skipped as a duplicate.
+  const result = db.transaction(() => {
+    // Answering an upstream-updated card is reviewing it. Only 'updated' — a "removed from
+    // source" notice needs an explicit acknowledgement, not just another answer.
+    db.prepare(
+      "UPDATE cards SET upstream_change = NULL, upstream_changed_at = NULL, upstream_prev_data = NULL " +
+      "WHERE id = ? AND upstream_change = 'updated'"
+    ).run(cardId);
 
-  const stateRow = db.prepare(
-    "SELECT srs_due_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_reps, fsrs_lapses, " +
-    "fsrs_learning_steps, fsrs_last_review_at, last_correct_source FROM card_states WHERE card_id = ? AND user_id = ?"
-  ).get(cardId, userId);
-  const now = Math.floor(Date.now() / 1000);
-  const nowDate = new Date(now * 1000);
+    db.prepare(
+      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).run(clientId || genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null);
 
-  // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
-  if (stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now) {
-    return res.status(201).json({ ok: true, srs_due_at: stateRow.srs_due_at, capped: false, notDue: true });
-  }
+    const stateRow = db.prepare(
+      "SELECT srs_due_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_reps, fsrs_lapses, " +
+      "fsrs_learning_steps, fsrs_last_review_at, last_correct_source FROM card_states WHERE card_id = ? AND user_id = ?"
+    ).get(cardId, userId);
+    const now = Math.floor(Date.now() / 1000);
+    const nowDate = new Date(now * 1000);
 
-  const rating = ratingFor(correct, grade, source);
-  const fsrsCard = cardFromState(stateRow, nowDate);
-  const nextCard = scheduler.next(fsrsCard, nowDate, rating).card;
-  const dueAt = Math.floor(nextCard.due.getTime() / 1000);
+    // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
+    if (stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now) {
+      return { ok: true, srs_due_at: stateRow.srs_due_at, capped: false, notDue: true };
+    }
 
-  // Quiz recognition can't earn as long an interval as an equivalent flashcard/recall
-  // answer, by construction of the Hard-vs-Good rating mapping in ../fsrs.js — surfaced to
-  // the client under the old field name so no client-side changes are needed for this signal.
-  // A graded quiz answer comes from the "quiz answers count as Know It" preference, so it
-  // isn't capped and is recorded as a flashcard-strength answer to keep it out of Needs Recall.
-  const capped = source === "quiz" && !!correct && !grade;
+    const rating = ratingFor(correct, grade, source);
+    const fsrsCard = cardFromState(stateRow, nowDate);
+    const nextCard = scheduler.next(fsrsCard, nowDate, rating).card;
+    const dueAt = Math.floor(nextCard.due.getTime() / 1000);
 
-  const correctSource = source === "quiz" && grade ? "flashcard" : source;
-  const lastCorrectSource = correct ? correctSource : ((stateRow && stateRow.last_correct_source) || null);
+    // Quiz recognition can't earn as long an interval as an equivalent flashcard/recall
+    // answer, by construction of the Hard-vs-Good rating mapping in ../fsrs.js — surfaced to
+    // the client under the old field name so no client-side changes are needed for this signal.
+    // A graded quiz answer comes from the "quiz answers count as Know It" preference, so it
+    // isn't capped and is recorded as a flashcard-strength answer to keep it out of Needs Recall.
+    const capped = source === "quiz" && !!correct && !grade;
 
-  db.prepare(
-    "INSERT INTO card_states (card_id, user_id, srs_due_at, fsrs_stability, fsrs_difficulty, " +
-    "fsrs_state, fsrs_reps, fsrs_lapses, fsrs_learning_steps, fsrs_last_review_at, last_correct_source) " +
-    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-    "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_due_at = excluded.srs_due_at, " +
-    "fsrs_stability = excluded.fsrs_stability, fsrs_difficulty = excluded.fsrs_difficulty, " +
-    "fsrs_state = excluded.fsrs_state, fsrs_reps = excluded.fsrs_reps, fsrs_lapses = excluded.fsrs_lapses, " +
-    "fsrs_learning_steps = excluded.fsrs_learning_steps, fsrs_last_review_at = excluded.fsrs_last_review_at, " +
-    "last_correct_source = excluded.last_correct_source"
-  ).run(cardId, userId, dueAt, nextCard.stability, nextCard.difficulty, nextCard.state,
-        nextCard.reps, nextCard.lapses, nextCard.learning_steps, now, lastCorrectSource);
+    const correctSource = source === "quiz" && grade ? "flashcard" : source;
+    const lastCorrectSource = correct ? correctSource : ((stateRow && stateRow.last_correct_source) || null);
 
-  res.status(201).json({ ok: true, srs_due_at: dueAt, capped: capped, notDue: false });
+    db.prepare(
+      "INSERT INTO card_states (card_id, user_id, srs_due_at, fsrs_stability, fsrs_difficulty, " +
+      "fsrs_state, fsrs_reps, fsrs_lapses, fsrs_learning_steps, fsrs_last_review_at, last_correct_source) " +
+      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+      "ON CONFLICT(card_id, user_id) DO UPDATE SET srs_due_at = excluded.srs_due_at, " +
+      "fsrs_stability = excluded.fsrs_stability, fsrs_difficulty = excluded.fsrs_difficulty, " +
+      "fsrs_state = excluded.fsrs_state, fsrs_reps = excluded.fsrs_reps, fsrs_lapses = excluded.fsrs_lapses, " +
+      "fsrs_learning_steps = excluded.fsrs_learning_steps, fsrs_last_review_at = excluded.fsrs_last_review_at, " +
+      "last_correct_source = excluded.last_correct_source"
+    ).run(cardId, userId, dueAt, nextCard.stability, nextCard.difficulty, nextCard.state,
+          nextCard.reps, nextCard.lapses, nextCard.learning_steps, now, lastCorrectSource);
+
+    return { ok: true, srs_due_at: dueAt, capped: capped, notDue: false };
+  })();
+
+  res.status(201).json(result);
 });
 
 module.exports = router;
