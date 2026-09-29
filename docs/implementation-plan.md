@@ -270,6 +270,7 @@ User selects:
 - Space/Enter to advance after answering
 - Results: score ring, percentage, grade, retry/change/back
 - SRS recognition cap: a quiz-correct answer is rated FSRS "Hard" rather than "Good" (`server/fsrs.js`), which always yields a shorter next interval than an equivalent flashcard-mode recall, by construction of the algorithm — no clamp arithmetic needed. Inline hint on the quiz screen when this triggers; aggregate count on the Results screen
+- Opt-out of the cap: the "Quiz answers count as Know It" preference (`quizCountsAsKnown`, off by default) makes the client send `grade: "medium"` on a correct quiz answer and set `known` on every quiz answer; the server skips `capped` for graded quiz answers and records their `last_correct_source` as `flashcard`
 
 ### 5.5 History & Difficulty
 
@@ -919,6 +920,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Quiz mode (MCQ) | Done | Auto-generated distractors, keyboard 1-4 |
 | Quiz answer review (Prev/Next through answered questions) | Done | Read-only replay of the original shuffle/answer; delete-card still allowed while reviewing |
 | SRS recognition-vs-recall cap | Done | Quiz-correct rated FSRS "Hard" instead of "Good" — always yields a shorter interval than an equivalent Flashcard-correct, by construction. `server/fsrs.js` |
+| "Quiz answers count as Know It" preference | Done | Opt-in toggle in Preferences: correct quiz = Know It (Good + known), wrong = Still Learning (Again + not known) |
 | Manual difficulty grading in Flashcard mode | Done | Optional ⚡ Confident button/key 4 sends `grade: "easy"` (FSRS Easy); ↩ Hard button/key 2 sends `grade: "hard"` (FSRS Hard — recalled but effortful, a weaker success not a lapse). `grade` is persisted on `attempts`. Labeled "Confident" (not "Easy") to avoid colliding with the difficulty-tier badge system |
 | SRS interval preview on grading buttons | Done | Shows resulting interval per button (e.g. "· 4h"), precomputed server-side from the live FSRS scheduler; suppressed on not-yet-due cards since grading them doesn't move the schedule |
 | 10-agent UX audit fix batch | Done | i18n gaps (select toolbar, share modal, T/F badge), N/B/E keyboard leak into modal inputs, Esc exits Flashcard, browser-Back trapped in-app, mobile touch targets, dark-mode quiz-answer contrast, dashboard period-scope note |
