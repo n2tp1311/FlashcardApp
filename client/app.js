@@ -5714,10 +5714,15 @@ function vocabularySelectionTargets() {
     if (!card) return [];
     var data = card.data || {};
     var explanation = document.querySelector("#quiz-explanation .explanation-body");
-    return [
-      { root: document.getElementById("quiz-question"), context: data.question || data.statement || data.term || "" },
+    var question = data.question || data.statement || data.term || "";
+    var targets = [
+      { root: document.getElementById("quiz-question"), context: question },
       { root: explanation, context: data.explanation || "" }
-    ].filter(function(target) { return target.root; }).map(function(target) {
+    ];
+    document.querySelectorAll("#quiz-options .quiz-opt.answered .opt-text").forEach(function(el) {
+      targets.push({ root: el, context: question + "\n" + el.textContent });
+    });
+    return targets.filter(function(target) { return target.root; }).map(function(target) {
       target.card = card;
       target.actionId = "quiz-selection-action";
       target.buttonId = "btn-quiz-save-selected-word";
@@ -5745,6 +5750,10 @@ function updateVocabularySelectionAction() {
 
   vocabularySelectionText = text;
   vocabularySelection = target;
+  if (target.actionId === "quiz-selection-action" && state.quizAdvanceTimer) {
+    clearTimeout(state.quizAdvanceTimer);
+    showQuizNextButton();
+  }
   var action = document.getElementById(target.actionId);
   var button = document.getElementById(target.buttonId);
   if (!vocabularySavePending) {
@@ -6521,6 +6530,7 @@ function renderQuizCard() {
   // Cancel any pending auto-advance from the previous answer — otherwise it fires
   // later against whatever card the user has since navigated to via Prev/Next/delete.
   clearTimeout(state.quizAdvanceTimer);
+  state.quizAdvanceTimer = null;
 
   var prevExp = document.getElementById("quiz-explanation");
   if (prevExp) prevExp.remove();
@@ -6575,16 +6585,13 @@ function renderQuizCard() {
   optsEl.innerHTML = "";
   optsEl.classList.toggle("tf-mode", card.format === "true-false");
   opts.forEach(function(opt, idx) {
-    var btn = document.createElement("button");
+    var btn = document.createElement(priorResult ? "div" : "button");
     btn.className = "quiz-opt";
     btn.innerHTML = '<span class="opt-num">' + (idx + 1) + '</span><span class="opt-text"></span>';
     var textEl = btn.querySelector(".opt-text");
     renderLatex(opt, textEl);
     if (priorResult) {
-      btn.disabled = true;
-      if (opt === priorResult.correctVal) btn.classList.add("correct");
-      else if (idx === priorResult.selectedIdx) btn.classList.add("wrong");
-      else btn.classList.add("dimmed");
+      btn.classList.add("answered", quizOptionResultClass(opt, idx, priorResult.correctVal, priorResult.selectedIdx));
     } else {
       btn.addEventListener("click", function() { answerQuiz(idx); });
     }
@@ -6661,18 +6668,15 @@ function answerQuiz(selectedIdx) {
     }
   }).catch(function() { /* fire-and-forget on network error, same resilience as before */ });
 
-  // Visual feedback
+  // Visual feedback. Answered options become plain blocks: text inside a <button> can't be
+  // drag-selected, and selecting a word to save as vocabulary is useful once the answer is known.
   var optsEl = document.getElementById("quiz-options");
   var btns = optsEl.querySelectorAll(".quiz-opt");
   btns.forEach(function(btn, idx) {
-    btn.disabled = true;
-    if (opts[idx] === correct) {
-      btn.classList.add("correct");
-    } else if (idx === selectedIdx) {
-      btn.classList.add("wrong");
-    } else {
-      btn.classList.add("dimmed");
-    }
+    var block = document.createElement("div");
+    block.className = "quiz-opt answered " + quizOptionResultClass(opts[idx], idx, correct, selectedIdx);
+    while (btn.firstChild) block.appendChild(btn.firstChild);
+    btn.replaceWith(block);
   });
 
   document.getElementById("quiz-score-display").textContent =
@@ -6699,20 +6703,31 @@ function answerQuiz(selectedIdx) {
     expEl.addEventListener("toggle", function() {
       if (!expEl.open) return;
       clearTimeout(advanceTimer);
-      if (document.getElementById("quiz-next-btn")) return;
-      var nextBtn = document.createElement("button");
-      nextBtn.id = "quiz-next-btn";
-      nextBtn.className = "btn btn-primary btn-full";
-      nextBtn.style.marginTop = "8px";
-      nextBtn.innerHTML = t("study.next") + " " + ICON_ARROW_RIGHT;
-      nextBtn.addEventListener("click", function() {
-        haptic("tick");
-        state.quizIndex++;
-        renderQuizCard();
-      });
-      expEl.after(nextBtn);
+      showQuizNextButton();
     });
   }
+}
+
+function quizOptionResultClass(opt, idx, correctVal, selectedIdx) {
+  if (opt === correctVal) return "correct";
+  return idx === selectedIdx ? "wrong" : "dimmed";
+}
+
+// Replaces the post-answer auto-advance with a manual Next, for when the user stops to read
+// the explanation or select a word.
+function showQuizNextButton() {
+  if (document.getElementById("quiz-next-btn")) return;
+  var nextBtn = document.createElement("button");
+  nextBtn.id = "quiz-next-btn";
+  nextBtn.className = "btn btn-primary btn-full";
+  nextBtn.style.marginTop = "8px";
+  nextBtn.innerHTML = t("study.next") + " " + ICON_ARROW_RIGHT;
+  nextBtn.addEventListener("click", function() {
+    haptic("tick");
+    state.quizIndex++;
+    renderQuizCard();
+  });
+  (document.getElementById("quiz-explanation") || document.getElementById("quiz-options")).after(nextBtn);
 }
 
 

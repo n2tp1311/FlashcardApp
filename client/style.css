@@ -1766,7 +1766,7 @@ code {
   line-height: 1.5;
 }
 
-.quiz-opt:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-light); }
+.quiz-opt:hover:not(:disabled):not(.answered) { border-color: var(--primary); background: var(--primary-light); }
 
 .quiz-opt .opt-num {
   font-size: 0.75rem;
@@ -1793,6 +1793,7 @@ code {
 /* Keep answered options legible — the UA disabled-button style dims text to an unreadable
    ~30% opacity, which is invisible on the correct/wrong tint (esp. in dark mode). */
 .quiz-opt:disabled { cursor: default; color: var(--text); }
+.quiz-opt.answered { cursor: text; }
 
 /* True/False quiz layout */
 .quiz-options.tf-mode { flex-direction: row; gap: 12px; }
