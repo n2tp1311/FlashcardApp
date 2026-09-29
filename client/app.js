@@ -316,7 +316,7 @@ Object.assign(TRANSLATIONS.en, {
   "lesson.editLesson": "Edit Lesson",
   "lesson.addCard": "+ Add Card",
   "lesson.bulkAdd": "+ Bulk Add",
-  "lesson.reviewDueZero": "Review 0 due",
+  "lesson.reviewDueZero": "Quick quiz · 0 due",
   "lesson.emptyCards": "No cards yet. Add cards to start studying.",
   "sort.lastStudied": "Last studied",
   "sort.lastCardAdded": "Last card added",
@@ -606,7 +606,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.search": "Search",
   "keymap.saveCardModal": "Save (Add/Edit Card)",
   "keymap.toggleHelp": "Toggle this help",
-  "keymap.goHome": "Go to Home",
+  "keymap.goHome": "Go to Home (not while studying)",
   "keymap.closeGoBack": "Close / Go back",
   "keymap.navigateClasses": "Navigate classes",
   "keymap.openClassToggle": "Open class / toggle selection",
@@ -626,7 +626,6 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.flipCard": "Flip card",
   "keymap.pronounce": "Pronounce",
   "keymap.selectOption": "Select option",
-  "keymap.backToSetup": "Back to setup",
   "keymap.sectionResultsEtc": "Results / Stats / Dashboard / Analytics",
   "keymap.retryResultsOnly": "Retry (Results only)",
   "keymap.toggleSelectMode": "Toggle select mode",
@@ -679,7 +678,12 @@ Object.assign(TRANSLATIONS.en, {
   "confirm.deleteSelectedCards": "Delete {n} card(s)? Your study history and stats are kept.",
   "confirm.deleteSelectedLessons": "Delete {n} lesson(s) and all their cards? Your study history and stats are kept.",
   "card.imageAlt": "Card image",
-  "study.reviewDue": "Review {n} due",
+  "study.reviewDue": "Quick quiz · {n} due",
+  "study.reviewDueTitle": "Multiple-choice quiz on the cards due now (respects Max reviews per day)",
+  "confirm.leaveTitle": "Leave this session?",
+  "confirm.leaveSession": "You've answered {n} so far, and those are saved. Leave now?",
+  "keymap.quizNext": "Next question (after answering)",
+  "keymap.exitStudy": "Exit (asks first mid-session)",
   "mcq.wrongAnswerPlaceholder": "Wrong answer",
   "mcq.removeWrongAnswer": "Remove wrong answer",
   "validate.imageUploadRequiresServer": "Image upload requires server mode.",
@@ -912,7 +916,7 @@ Object.assign(TRANSLATIONS.vi, {
   "lesson.editLesson": "Sửa bài học",
   "lesson.addCard": "+ Thêm thẻ",
   "lesson.bulkAdd": "+ Thêm hàng loạt",
-  "lesson.reviewDueZero": "Ôn tập 0 thẻ",
+  "lesson.reviewDueZero": "Trắc nghiệm nhanh · 0 thẻ đến hạn",
   "lesson.emptyCards": "Chưa có thẻ nào. Thêm thẻ để bắt đầu học.",
   "sort.lastStudied": "Học gần nhất",
   "sort.lastCardAdded": "Thẻ thêm gần nhất",
@@ -1202,7 +1206,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.search": "Tìm kiếm",
   "keymap.saveCardModal": "Lưu (Thêm/Sửa thẻ)",
   "keymap.toggleHelp": "Bật/tắt trợ giúp này",
-  "keymap.goHome": "Về trang chủ",
+  "keymap.goHome": "Về trang chủ (trừ khi đang học)",
   "keymap.closeGoBack": "Đóng / Quay lại",
   "keymap.navigateClasses": "Di chuyển giữa các lớp",
   "keymap.openClassToggle": "Mở lớp / chọn",
@@ -1222,7 +1226,6 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.flipCard": "Lật thẻ",
   "keymap.pronounce": "Phát âm",
   "keymap.selectOption": "Chọn đáp án",
-  "keymap.backToSetup": "Về thiết lập",
   "keymap.sectionResultsEtc": "Kết quả / Thống kê / Bảng điều khiển / Phân tích",
   "keymap.retryResultsOnly": "Làm lại (chỉ ở Kết quả)",
   "keymap.toggleSelectMode": "Bật/tắt chế độ chọn",
@@ -1275,7 +1278,12 @@ Object.assign(TRANSLATIONS.vi, {
   "confirm.deleteSelectedCards": "Xóa {n} thẻ? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "confirm.deleteSelectedLessons": "Xóa {n} bài học cùng toàn bộ thẻ ghi nhớ? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "card.imageAlt": "Hình ảnh thẻ",
-  "study.reviewDue": "Ôn {n} thẻ đến hạn",
+  "study.reviewDue": "Trắc nghiệm nhanh · {n} thẻ đến hạn",
+  "study.reviewDueTitle": "Trắc nghiệm các thẻ đang đến hạn (theo giới hạn ôn mỗi ngày)",
+  "confirm.leaveTitle": "Rời phiên học?",
+  "confirm.leaveSession": "Bạn đã trả lời {n} thẻ và kết quả đã được lưu. Rời phiên ngay?",
+  "keymap.quizNext": "Câu tiếp theo (sau khi trả lời)",
+  "keymap.exitStudy": "Thoát (hỏi lại nếu đang học dở)",
   "mcq.wrongAnswerPlaceholder": "Đáp án sai",
   "mcq.removeWrongAnswer": "Xóa đáp án sai",
   "validate.imageUploadRequiresServer": "Tải ảnh lên yêu cầu chế độ server.",
@@ -4539,30 +4547,31 @@ document.getElementById("btn-review-due").addEventListener("click", function() {
     return c.srs_due_at && c.srs_due_at <= nowSec;
   });
   if (!dueCards.length) { alert(t("alert.noCardsDue")); return; }
-  // This button bypasses Study Setup entirely, so it needs its own fresh reviews-today fetch
-  // to apply the same daily cap Study Setup's Due Only/Needs Recall filters respect.
-  var hasCap = IS_SERVER && state.maxReviewsPerDay !== null && state.maxReviewsPerDay !== undefined;
-  var capPromise = hasCap ? store.getReviewsToday() : Promise.resolve({ count: 0 });
-  capPromise.then(function(r) {
-    var capped = applyReviewCap(dueCards, r.count);
-    if (!capped.length) { alert(t("alert.dailyReviewCapReached")); return; }
-    state.studyScope = {
-      lessonIds: [state.currentLesson.id],
-      lessons: [state.currentLesson],
-      returnScreen: "lesson",
-      title: state.currentLesson.title
-    };
-    state.studyMode = "quiz";
-    state.quizCards  = shuffle(capped);
-    state.quizIndex  = 0;
-    state.quizScore  = 0;
-    state.quizResults = [];
-    store.markCardsSeen(capped.map(function(c) { return c.id; }));
-    startQuiz();
-  }).catch(function() {
+  startDueQuiz(state.currentLesson, dueCards).catch(function() {
     alert(t("setup.loadFailed"));
   });
 });
+
+// The lesson's quick-quiz button and the Dashboard's due rows bypass Study Setup entirely, so
+// they need their own fresh reviews-today fetch to apply the same daily cap Setup respects.
+function startDueQuiz(lesson, dueCards) {
+  var hasCap = IS_SERVER && state.maxReviewsPerDay !== null && state.maxReviewsPerDay !== undefined;
+  var capPromise = hasCap ? store.getReviewsToday() : Promise.resolve({ count: 0 });
+  return capPromise.then(function(r) {
+    var capped = applyReviewCap(dueCards, r.count);
+    if (!capped.length) { alert(t("alert.dailyReviewCapReached")); return; }
+    state.studyScope = {
+      lessonIds: [lesson.id],
+      lessons: [lesson],
+      returnScreen: "lesson",
+      title: lesson.title
+    };
+    state.studyMode = "quiz";
+    state.quizCards = shuffle(capped);
+    store.markCardsSeen(capped.map(function(c) { return c.id; }));
+    startQuiz();
+  });
+}
 
 /* ============================
    CARD FORM MODALS
@@ -5016,8 +5025,10 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
    ============================ */
 
 function confirmAction(msg, cb, actionKey) {
-  var titleKey = actionKey === "archive" ? "confirm.archiveTitle" : "delete.confirmTitle";
-  var buttonKey = actionKey === "archive" ? "common.archive" : "common.delete";
+  var keys = { archive: ["confirm.archiveTitle", "common.archive"], leave: ["confirm.leaveTitle", "study.exit"] }[actionKey]
+    || ["delete.confirmTitle", "common.delete"];
+  var titleKey = keys[0];
+  var buttonKey = keys[1];
   var title = document.getElementById("delete-confirm-title");
   var button = document.getElementById("btn-confirm-delete");
   if (title) {
@@ -5461,8 +5472,21 @@ var MODE_HINT_KEYS = {
   });
 });
 
+// Leaving mid-session by keyboard or browser Back asks first; the Exit button stays a
+// one-tap escape hatch. The session summary is deliberately not shown for an early exit.
+function confirmLeaveStudy(leave) {
+  var quiz = getActiveScreen() === "quiz";
+  var log = state.studySessionLog || {};
+  var done = quiz ? state.quizResults.length : state.studyCards.filter(function(c) { return log[c.id]; }).length;
+  var total = quiz ? state.quizCards.length : state.studyCards.length;
+  if (!done || done >= total) { leave(); return; }
+  confirmAction(t("confirm.leaveSession", { n: done }), leave, "leave");
+}
+
 // Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
 function returnFromStudy() {
+  clearTimeout(state.fcAdvanceTimer);
+  clearTimeout(state.quizAdvanceTimer);
   clearFlashcardTranslation();
   var target = state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson";
   showScreen(target);
@@ -6014,7 +6038,7 @@ function renderFlashcard() {
     frontEl.innerHTML = "";
     renderVocabularyTerm(front, frontEl, renderLatex);
     renderLatex(back,  backEl);
-    frontAudioBtn.style.visibility = "";
+    frontAudioBtn.parentNode.style.visibility = "";
   } else if (card.format === "true-false") {
     front = card.data.statement;
     back  = card.data.correct === "true" ? t("common.true") : t("common.false");
@@ -6024,7 +6048,7 @@ function renderFlashcard() {
     renderLatex(front, frontEl);
     backEl.innerHTML = "";
     backEl.textContent = back;
-    frontAudioBtn.style.visibility = "";
+    frontAudioBtn.parentNode.style.visibility = "";
   } else if (card.format === "image-def") {
     state.studyFrontText = "";
     state.studyBackText  = card.data.def || "";
@@ -6037,7 +6061,7 @@ function renderFlashcard() {
     fcImg.style.objectFit = "contain";
     frontEl.appendChild(fcImg);
     renderLatex(card.data.def, backEl);
-    frontAudioBtn.style.visibility = "hidden";
+    frontAudioBtn.parentNode.style.visibility = "hidden";
   } else {
     front = card.data.question;
     back  = card.data.correct;
@@ -6046,7 +6070,7 @@ function renderFlashcard() {
     frontEl.innerHTML = "";
     renderLatex(front, frontEl);
     renderLatex(back,  backEl);
-    frontAudioBtn.style.visibility = "";
+    frontAudioBtn.parentNode.style.visibility = "";
   }
 
   var expContainer = document.getElementById("fc-explanation");
@@ -6092,10 +6116,10 @@ function renderFlashcard() {
   // untouched regardless of grade (same server-side early-return), so showing a preview
   // there would promise a bump that doesn't actually happen.
   var stillNotDue = card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000);
-  document.getElementById("fc-int-learning").textContent = stillNotDue ? "" : "· " + formatFsrsDuration(card.fsrs_preview_again);
-  document.getElementById("fc-int-hard").textContent = stillNotDue ? "" : "· " + formatFsrsDuration(card.fsrs_preview_hard);
-  document.getElementById("fc-int-known").textContent = stillNotDue ? "" : "· " + formatFsrsDuration(card.fsrs_preview_good);
-  document.getElementById("fc-int-easy").textContent = stillNotDue ? "" : "· " + formatFsrsDuration(card.fsrs_preview_easy);
+  document.getElementById("fc-int-learning").textContent = stillNotDue ? "" : formatFsrsDuration(card.fsrs_preview_again);
+  document.getElementById("fc-int-hard").textContent = stillNotDue ? "" : formatFsrsDuration(card.fsrs_preview_hard);
+  document.getElementById("fc-int-known").textContent = stillNotDue ? "" : formatFsrsDuration(card.fsrs_preview_good);
+  document.getElementById("fc-int-easy").textContent = stillNotDue ? "" : formatFsrsDuration(card.fsrs_preview_easy);
 
   // Prev/Next
   document.getElementById("btn-fc-prev").disabled = i === 0;
@@ -6743,12 +6767,8 @@ function answerQuiz(selectedIdx) {
   document.getElementById("quiz-score-display").textContent =
     state.quizScore + " / " + state.quizResults.length;
 
-  var advanceTimer = state.quizAdvanceTimer = setTimeout(function() {
-    state.quizIndex++;
-    renderQuizCard();
-  }, 1200);
-
-  if ((card.format === "mcq" || card.format === "true-false") && card.data.explanation) {
+  var hasExplanation = (card.format === "mcq" || card.format === "true-false") && !!card.data.explanation;
+  if (hasExplanation) {
     var expEl  = document.createElement("details");
     expEl.id   = "quiz-explanation";
     expEl.className = "explanation-panel";
@@ -6760,12 +6780,17 @@ function answerQuiz(selectedIdx) {
     expEl.appendChild(sumEl);
     expEl.appendChild(bodyEl);
     document.getElementById("quiz-options").after(expEl);
+  }
 
-    expEl.addEventListener("toggle", function() {
-      if (!expEl.open) return;
-      clearTimeout(advanceTimer);
-      showQuizNextButton();
-    });
+  // Only a correct answer with nothing to read moves on by itself; after a wrong answer or with
+  // an explanation, the user needs time to see the right option, so they press Next.
+  if (isCorrect && !hasExplanation) {
+    state.quizAdvanceTimer = setTimeout(function() {
+      state.quizIndex++;
+      renderQuizCard();
+    }, 1200);
+  } else {
+    showQuizNextButton();
   }
 }
 
@@ -7422,33 +7447,21 @@ document.getElementById("btn-stats-back").addEventListener("click", function() {
    ============================ */
 
 function openDueReview(lessonId, classId) {
-  store.getClass(classId).then(function(cls) {
+  return store.getClass(classId).then(function(cls) {
     if (!cls) return;
     state.currentClass = cls;
-    store.getLessons(classId).then(function(lessons) {
+    return store.getLessons(classId).then(function(lessons) {
       state.currentClassLessons = lessons;
       var lesson = lessons.find(function(l) { return l.id === lessonId; });
       if (!lesson) return;
       state.currentLesson = lesson;
       document.getElementById("lesson-detail-title").textContent = lesson.title;
-      store.getCards(lessonId).then(function(cards) {
+      return store.getCards(lessonId).then(function(cards) {
         state.currentLessonCards = cards;
         var nowSec = Math.floor(Date.now() / 1000);
         var dueCards = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec; });
         if (!dueCards.length) { renderCards(); showScreen("lesson"); return; }
-        state.studyScope = {
-          lessonIds: [lessonId],
-          lessons: [lesson],
-          returnScreen: "lesson",
-          title: lesson.title
-        };
-        state.studyMode = "quiz";
-        state.quizCards  = shuffle(dueCards);
-        state.quizIndex  = 0;
-        state.quizScore  = 0;
-        state.quizResults = [];
-        store.markCardsSeen(dueCards.map(function(c) { return c.id; }));
-        startQuiz();
+        return startDueQuiz(lesson, dueCards);
       });
     });
   });
@@ -7557,10 +7570,20 @@ function renderDashboard() {
         group.lessons.forEach(function(l) {
           var row = document.createElement("div");
           row.className = "dash-lesson-row dash-lesson-clickable dash-lesson-sub";
+          row.title = t("study.reviewDueTitle");
           row.innerHTML =
             '<span class="dash-lesson-title">' + escHtml(l.title) + '</span>' +
-            '<span class="due-badge">' + t("count.due", { n: l.dueCount }) + '</span>';
-          row.addEventListener("click", function() { openDueReview(l.id, l.class_id); });
+            '<span class="due-badge">' + t("count.due", { n: l.dueCount }) + '</span>' +
+            '<span class="dash-row-action">' + escHtml(t("setup.quiz")) + '</span>';
+          row.addEventListener("click", function() {
+            if (row.classList.contains("is-loading")) return;
+            row.classList.add("is-loading");
+            openDueReview(l.id, l.class_id).catch(function() {
+              alert(t("setup.loadFailed"));
+            }).then(function() {
+              row.classList.remove("is-loading");
+            });
+          });
           dueList.appendChild(row);
         });
       });
@@ -8677,7 +8700,15 @@ function registerDropdown(btnId, menuId) {
     e.stopPropagation();
     var open = !menu.classList.contains("hidden");
     closeAllDropdowns();
-    if (!open) menu.classList.remove("hidden");
+    if (open) return;
+    menu.classList.remove("hidden");
+    // Menus hang right-aligned from their button; on a phone the header wraps its actions to
+    // the left edge, which pushes the menu off-screen, so flip it to left-aligned there.
+    menu.style.left = menu.style.right = "";
+    if (menu.getBoundingClientRect().left < 8) {
+      menu.style.left = "0";
+      menu.style.right = "auto";
+    }
   });
 }
 
@@ -9438,6 +9469,15 @@ document.getElementById("btn-save-dash-metrics").addEventListener("click", funct
 // Choose adapter
 var store = IS_SERVER ? SQLiteAdapter : LocalStorageAdapter;
 if (IS_SERVER) window.addEventListener("online", SQLiteAdapter.flushPending);
+["btn-fc-translate-front", "btn-fc-translate-back"].forEach(function(id) {
+  var button = document.getElementById(id);
+  button.classList.toggle("hidden", !(IS_SERVER && window.APP_CONFIG.translationEnabled));
+  button.addEventListener("click", function(e) {
+    // The card itself flips (and clears the translation) on click.
+    e.stopPropagation();
+    translateVisibleFlashcardSide();
+  });
+});
 
 document.documentElement.setAttribute("lang", state.language);
 applyI18n();
@@ -10025,8 +10065,8 @@ document.addEventListener("keydown", function(e) {
     return;
   }
 
-  // Global: H = home (any screen)
-  if (e.key === "h" || e.key === "H") {
+  // Global: H = home (any screen except mid-study, where a stray key would end the session)
+  if ((e.key === "h" || e.key === "H") && screen !== "flashcard" && screen !== "quiz") {
     renderHome();
     showScreen("home");
     saveScreenState("home");
@@ -10120,7 +10160,8 @@ document.addEventListener("keydown", function(e) {
   else if (screen === "flashcard") {
     if (e.key === "ArrowLeft")  document.getElementById("btn-fc-prev").click();
     else if (e.key === "ArrowRight") document.getElementById("btn-fc-next").click();
-    else if (e.key === " " || e.key === "Enter") { e.preventDefault(); document.getElementById("fc-scene").click(); }
+    // A focused speak/translate button on the card handles Enter/Space itself.
+    else if ((e.key === " " || e.key === "Enter") && !e.target.closest(".fc-face-actions")) { e.preventDefault(); document.getElementById("fc-scene").click(); }
     // preventDefault matters here specifically for Learning/Hard: grading those in Flashcard &
     // Write mode synchronously focuses #fc-retype-input (markCard -> beginForcedRetype ->
     // input.focus()) within this same keydown's dispatch, before the browser's own default
@@ -10140,13 +10181,20 @@ document.addEventListener("keydown", function(e) {
       if (state.studyFlipped) speakText(state.studyBackText);
       else speakStudyFront();
     }
-    else if (e.key === "Escape") document.getElementById("btn-fc-back").click();
+    else if (e.key === "Escape") confirmLeaveStudy(function() { document.getElementById("btn-fc-back").click(); });
   }
 
   else if (screen === "quiz") {
     var num = parseInt(e.key, 10);
+    var quizNextBtn = document.getElementById("quiz-next-btn");
     if (num >= 1 && num <= 5 && num <= state.quizOptions.length) answerQuiz(num - 1);
-    else if (e.key === "Escape") returnFromStudy();
+    // A focused button or explanation summary handles Enter/Space itself.
+    else if ((e.key === "Enter" || e.key === " ") && quizNextBtn && !e.target.closest("button, summary, a") &&
+             document.getElementById("modal-keymap").classList.contains("hidden")) {
+      e.preventDefault();
+      quizNextBtn.click();
+    }
+    else if (e.key === "Escape") confirmLeaveStudy(returnFromStudy);
     else if (e.key === "ArrowLeft") document.getElementById("btn-quiz-prev").click();
     else if (e.key === "ArrowRight") document.getElementById("btn-quiz-review-next").click();
   }
@@ -10260,9 +10308,14 @@ history.pushState({ fc: true }, "");
 window.addEventListener("popstate", function() {
   history.pushState({ fc: true }, "");  // re-arm so the next Back is also trapped
   if (fcAnyOverlayOpen()) { fcCloseTopModal(); return; }
-  var backId = SCREEN_BACK_BTN[getActiveScreen()];
-  if (backId) { var b = document.getElementById(backId); if (b) b.click(); }
+  var screen = getActiveScreen();
+  var backId = SCREEN_BACK_BTN[screen];
+  var b = backId && document.getElementById(backId);
   // On home/auth (no back button) there's nothing to go back to in-app — stay put.
+  if (!b) return;
+  // iPhone's edge swipe is the easy way to leave a session by accident.
+  if (screen === "flashcard" || screen === "quiz") confirmLeaveStudy(function() { b.click(); });
+  else b.click();
 });
 
 /* ============================

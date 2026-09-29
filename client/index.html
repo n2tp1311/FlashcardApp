@@ -428,7 +428,7 @@
           <button class="dropdown-item" id="btn-bulk-add" data-i18n="lesson.bulkAdd">+ Bulk Add</button>
         </div>
       </div>
-      <button class="btn btn-warning btn-sm hidden" id="btn-review-due" data-i18n="lesson.reviewDueZero">Review 0 due</button>
+      <button class="btn btn-warning btn-sm hidden" id="btn-review-due" data-i18n="lesson.reviewDueZero" data-i18n-title="study.reviewDueTitle" title="Multiple-choice quiz on the cards due now (respects Max reviews per day)">Quick quiz · 0 due</button>
       <button class="btn btn-primary" id="btn-study-lesson" data-i18n="common.study">Study</button>
     </div>
   </header>
@@ -525,7 +525,10 @@
   <div class="fc-scene" id="fc-scene">
     <div class="fc-card" id="fc-card">
       <div class="fc-front">
-        <button class="btn-audio" id="btn-fc-audio-front" title="Speak (P)" aria-label="Speak front" data-i18n-title="study.speakP" data-i18n-aria="study.speakFront"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+        <div class="fc-face-actions">
+          <button class="btn-audio" id="btn-fc-audio-front" title="Speak (P)" aria-label="Speak front" data-i18n-title="study.speakP" data-i18n-aria="study.speakFront"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+          <button class="btn-audio fc-translate-btn hidden" id="btn-fc-translate-front" title="Translate visible side (Alt+T)" aria-label="Translate visible side (Alt+T)" data-i18n-title="study.translate" data-i18n-aria="study.translate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></button>
+        </div>
         <div class="fc-difficulty-badge" id="fc-diff-badge"></div>
         <div class="fc-upstream-badge upstream-pill hidden" id="fc-upstream-badge"></div>
         <div class="fc-content" id="fc-front-content"></div>
@@ -533,7 +536,10 @@
         <div class="fc-hint" data-i18n="study.clickToFlip">Click to flip</div>
       </div>
       <div class="fc-back">
-        <button class="btn-audio" id="btn-fc-audio-back" title="Speak (P)" aria-label="Speak back" data-i18n-title="study.speakP" data-i18n-aria="study.speakBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+        <div class="fc-face-actions">
+          <button class="btn-audio" id="btn-fc-audio-back" title="Speak (P)" aria-label="Speak back" data-i18n-title="study.speakP" data-i18n-aria="study.speakBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+          <button class="btn-audio fc-translate-btn hidden" id="btn-fc-translate-back" title="Translate visible side (Alt+T)" aria-label="Translate visible side (Alt+T)" data-i18n-title="study.translate" data-i18n-aria="study.translate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></button>
+        </div>
         <div class="fc-your-guess hidden" id="fc-your-guess"></div>
         <div class="fc-content" id="fc-back-content"></div>
         <div class="fc-retype-wrap hidden" id="fc-retype-wrap">
@@ -1126,7 +1132,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">Ctrl/⌘</kbd><kbd class="kbd">K</kbd><span data-i18n="keymap.search">Search</span></div>
         <div class="keymap-row"><kbd class="kbd">Ctrl/⌘</kbd><kbd class="kbd">Enter</kbd><span data-i18n="keymap.saveCardModal">Save (Add/Edit Card)</span></div>
         <div class="keymap-row"><kbd class="kbd">?</kbd><span data-i18n="keymap.toggleHelp">Toggle this help</span></div>
-        <div class="keymap-row"><kbd class="kbd">H</kbd><span data-i18n="keymap.goHome">Go to Home</span></div>
+        <div class="keymap-row"><kbd class="kbd">H</kbd><span data-i18n="keymap.goHome">Go to Home (not while studying)</span></div>
         <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="keymap.closeGoBack">Close / Go back</span></div>
       </div>
       <div class="keymap-section">
@@ -1172,18 +1178,20 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd><span data-i18n="keymap.prevNext">Prev / Next</span></div>
         <div class="keymap-row"><kbd class="kbd">Space</kbd><span data-i18n="keymap.flipCard">Flip card</span></div>
         <div class="keymap-row"><kbd class="kbd">1</kbd><span data-i18n="study.learning">Still Learning</span></div>
-        <div class="keymap-row"><kbd class="kbd">2</kbd><span data-i18n="study.knowIt">Know It</span></div>
-        <div class="keymap-row"><kbd class="kbd">3</kbd><span data-i18n="study.confident">Confident</span></div>
+        <div class="keymap-row"><kbd class="kbd">2</kbd><span data-i18n="study.hard">Hard</span></div>
+        <div class="keymap-row"><kbd class="kbd">3</kbd><span data-i18n="study.knowIt">Know It</span></div>
+        <div class="keymap-row"><kbd class="kbd">4</kbd><span data-i18n="study.confident">Confident</span></div>
         <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="common.shuffle">Shuffle</span></div>
         <div class="keymap-row"><kbd class="kbd">P</kbd><span data-i18n="keymap.pronounce">Pronounce</span></div>
         <div class="keymap-row"><kbd class="kbd">Alt</kbd>+<kbd class="kbd">T</kbd><span data-i18n="keymap.translate">Translate visible side into your preferred language</span></div>
-        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="study.exit">Exit</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="keymap.exitStudy">Exit (asks first mid-session)</span></div>
       </div>
       <div class="keymap-section">
         <div class="keymap-section-title" data-i18n="setup.quiz">Quiz</div>
         <div class="keymap-row"><kbd class="kbd">1</kbd>–<kbd class="kbd">5</kbd><span data-i18n="keymap.selectOption">Select option</span></div>
         <div class="keymap-row"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd><span data-i18n="keymap.reviewPrevNext">Review prev / next answered question</span></div>
-        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="keymap.backToSetup">Back to setup</span></div>
+        <div class="keymap-row"><kbd class="kbd">Enter</kbd> <kbd class="kbd">Space</kbd><span data-i18n="keymap.quizNext">Next question (after answering)</span></div>
+        <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="keymap.exitStudy">Exit (asks first mid-session)</span></div>
       </div>
       <div class="keymap-section">
         <div class="keymap-section-title" data-i18n="keymap.sectionResultsEtc">Results / Stats / Dashboard / Analytics</div>

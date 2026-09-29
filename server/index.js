@@ -117,6 +117,7 @@ function baseConfig(req) {
     mode: "server",
     googleEnabled: !!env.GOOGLE_CLIENT_ID,
     aiSuggestEnabled: !!env.ANTHROPIC_API_KEY,
+    translationEnabled: !!env.ANTHROPIC_API_KEY,
     user: req.session.userId
       ? { id: req.session.userId, name: req.session.userName, email: req.session.userEmail }
       : null
