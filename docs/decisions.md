@@ -838,3 +838,8 @@ Dark mode and text size preview live, but closing Preferences without Save left 
 - **Grade row is `position: sticky`, not `fixed`.** It stays in normal flow, so its height (one row, or 2×2 at large text / narrow widths) needs no matching padding elsewhere. The 2×2 switch is a container query in `rem`, because `rem` in a media query ignores the root font size that the text size preference changes.
 - **Quick-quiz entry points share `startDueQuiz()`,** so the Dashboard's due rows now respect Max reviews per day like the lesson button does (it had been missed when the cap was added).
 
+## 2026-09-30 — Theme: a three-way setting, and legacy `darkMode: false` means "not chosen"
+The UX review found the OS dark setting ignored (only the search bar followed it) and white text on the dark theme's pale accents at 1.95–2.5:1.
+- **Contrast: darker fills, not dark text.** White text stays white in both themes and the grade colours keep their meaning; the dark theme uses GitHub-dark's own button fills (`--*-fill`), with hovers going darker so they stay ≥4.5:1. The pale accents remain for text, borders and bars, where they already read well.
+- **Light / Dark / Match device instead of a dark toggle.** A boolean can't express "follow the phone", and there'd be no way back to it once saved. Every Preferences save used to write `darkMode`, almost always `false`, so a stored `false` can't be told apart from a real choice; only `darkMode: true` is honoured as one, and everyone else starts on Match device. A user who deliberately chose light on a dark phone sees dark once and can pick Light again.
+
