@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
   <link rel="stylesheet" href="/style.css">
-  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");if(_p.darkMode)document.documentElement.setAttribute("data-theme","dark");if(_p.fontScale)document.documentElement.style.setProperty("--font-scale",_p.fontScale);}catch(_){}</script>
+  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");var _t=_p.theme||(_p.darkMode===true?"dark":"system");if(_t==="dark"||(_t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.setAttribute("data-theme","dark");document.querySelector('meta[name="theme-color"]').content="#0d1117";}if(_p.fontScale)document.documentElement.style.setProperty("--font-scale",_p.fontScale);}catch(_){}</script>
 </head>
 <body>
 
@@ -688,11 +688,12 @@
         </div>
       </div>
       <div class="pref-row">
-        <label class="form-label" for="pref-dark-mode" data-i18n="pref.darkMode">Dark mode</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="pref-dark-mode">
-          <span class="toggle-track"></span>
-        </label>
+        <label class="form-label" data-i18n="pref.theme">Theme</label>
+        <div class="font-scale-row" id="pref-theme">
+          <button type="button" class="pill" data-value="light" data-i18n="pref.themeLight">Light</button>
+          <button type="button" class="pill" data-value="dark" data-i18n="pref.themeDark">Dark</button>
+          <button type="button" class="pill" data-value="system" data-i18n="pref.themeSystem">Match device</button>
+        </div>
       </div>
       <div class="pref-row">
         <label class="form-label" for="pref-haptics" data-i18n="pref.haptics">Vibration feedback</label>

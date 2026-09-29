@@ -131,7 +131,10 @@ Object.assign(TRANSLATIONS.en, {
   "tutorial.step5Title": "Save new English words",
   "tutorial.step5Body": "While studying in server mode, select a word or phrase on either side of a card, or in a quiz question, explanation or answer option once you have answered, and choose Save as English word. Open Vocabulary in FlashcardApp to add or remove pending words. In KnowledgeApp, choose Fetch words to create definitions and examples.",
   "pref.textSize": "Text size",
-  "pref.darkMode": "Dark mode",
+  "pref.theme": "Theme",
+  "pref.themeLight": "Light",
+  "pref.themeDark": "Dark",
+  "pref.themeSystem": "Match device",
   "pref.haptics": "Vibration feedback",
   "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
   "pref.quizCountsAsKnown": "Quiz answers count as Know It",
@@ -731,7 +734,10 @@ Object.assign(TRANSLATIONS.vi, {
   "tutorial.step5Title": "Lưu từ tiếng Anh mới",
   "tutorial.step5Body": "Khi học ở chế độ máy chủ, chọn một từ hoặc cụm từ ở một trong hai mặt thẻ, hoặc trong câu hỏi, phần giải thích hay đáp án Trắc nghiệm sau khi đã trả lời, rồi chọn Lưu làm từ vựng tiếng Anh. Mở mục Từ vựng trong FlashcardApp để thêm hoặc xoá từ đang chờ. Trong KnowledgeApp, chọn Fetch words để tạo định nghĩa và câu ví dụ.",
   "pref.textSize": "Cỡ chữ",
-  "pref.darkMode": "Chế độ tối",
+  "pref.theme": "Giao diện",
+  "pref.themeLight": "Sáng",
+  "pref.themeDark": "Tối",
+  "pref.themeSystem": "Theo thiết bị",
   "pref.haptics": "Phản hồi rung",
   "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
   "pref.quizCountsAsKnown": "Trả lời quiz được tính là Đã thuộc",
@@ -8756,6 +8762,7 @@ function showAuthScreen() {
 function applyDarkMode(enabled) {
   state.darkMode = !!enabled;
   document.documentElement.setAttribute("data-theme", state.darkMode ? "dark" : "light");
+  document.querySelector('meta[name="theme-color"]').content = state.darkMode ? "#0d1117" : "#4338ca";
 }
 
 function applyLanguage(lang) {
@@ -8781,10 +8788,27 @@ function applyFontScale(scale) {
   document.documentElement.style.setProperty("--font-scale", scale);
 }
 
+// theme is "light", "dark" or "system" (follow the phone/OS). Older accounts only have the
+// darkMode boolean, and every Preferences save used to write it, so a stored false doesn't
+// mean the user chose light; only true is read as a choice.
+var systemDark = window.matchMedia("(prefers-color-scheme: dark)");
+
+function themeFromPrefs(prefs) {
+  if (prefs.theme === "light" || prefs.theme === "dark" || prefs.theme === "system") return prefs.theme;
+  return prefs.darkMode === true ? "dark" : "system";
+}
+
+function applyThemePref(theme) {
+  state.themePref = theme;
+  applyDarkMode(theme === "dark" || (theme === "system" && systemDark.matches));
+}
+
+systemDark.addEventListener("change", function() {
+  if (state.themePref === "system") applyDarkMode(systemDark.matches);
+});
+
 function applyPrefs(prefs) {
-  if (typeof prefs.darkMode === "boolean") {
-    applyDarkMode(prefs.darkMode);
-  }
+  applyThemePref(themeFromPrefs(prefs));
   if (typeof prefs.haptics === "boolean") {
     state.haptics = prefs.haptics;
   }
@@ -9188,15 +9212,15 @@ var prefsSnapshot = null;
 
 function revertPrefsPreview() {
   if (!prefsSnapshot) return;
-  applyDarkMode(prefsSnapshot.darkMode);
+  applyThemePref(prefsSnapshot.theme);
   applyFontScale(prefsSnapshot.fontScale);
   prefsSnapshot = null;
 }
 
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
-  prefsSnapshot = { darkMode: state.darkMode, fontScale: state.fontScale };
-  document.getElementById("pref-dark-mode").checked = state.darkMode;
+  prefsSnapshot = { theme: state.themePref, fontScale: state.fontScale };
+  setPillGroup("pref-theme", state.themePref);
   document.getElementById("pref-haptics").checked = state.haptics;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
   document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
@@ -9293,11 +9317,12 @@ document.getElementById("pref-lang-vi").addEventListener("click", function() {
   document.getElementById("pref-lang-en").classList.remove("active");
 });
 
-// Live preview, same as font-scale/TTS-rate below — applyDarkMode() is already instant
-// with no re-render side effect, so this just closes the gap where toggling did nothing
-// until Save. Not persisted until Save, consistent with those two settings.
-document.getElementById("pref-dark-mode").addEventListener("change", function() {
-  applyDarkMode(this.checked);
+// Live preview, same as font-scale/TTS-rate below; not persisted until Save.
+document.getElementById("pref-theme").addEventListener("click", function(e) {
+  var pill = e.target.closest(".pill");
+  if (!pill) return;
+  setPillGroup("pref-theme", pill.dataset.value);
+  applyThemePref(pill.dataset.value);
 });
 
 // Sample buzz only — unlike dark mode, this preview deliberately doesn't write state:
@@ -9333,12 +9358,11 @@ document.getElementById("pref-tts-test").addEventListener("click", function() {
 
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
   prefsSnapshot = null;
-  var dark = document.getElementById("pref-dark-mode").checked;
+  var theme = state.themePref;
   var haptics = document.getElementById("pref-haptics").checked;
   state.haptics = haptics;
   var quizCountsAsKnown = document.getElementById("pref-quiz-known").checked;
   state.quizCountsAsKnown = quizCountsAsKnown;
-  applyDarkMode(dark);
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
   state.ttsRate = rate;
   var lang = document.getElementById("pref-lang-vi").classList.contains("active") ? "vi" : "en";
@@ -9348,7 +9372,7 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
   var maxReviews = maxReviewsRaw === "" ? null : Math.max(0, parseInt(maxReviewsRaw, 10) || 0);
   state.maxReviewsPerDay = maxReviews;
-  var prefs = { darkMode: dark, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
+  var prefs = { theme: theme, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
@@ -9481,6 +9505,7 @@ if (IS_SERVER) window.addEventListener("online", SQLiteAdapter.flushPending);
 
 document.documentElement.setAttribute("lang", state.language);
 applyI18n();
+try { applyThemePref(themeFromPrefs(JSON.parse(localStorage.getItem("fc-preferences") || "{}"))); } catch (_) { applyThemePref("system"); }
 
 if (IS_SERVER && !currentUser) {
   showScreen("auth");
