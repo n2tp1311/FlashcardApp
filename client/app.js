@@ -8385,7 +8385,16 @@ var SQLiteAdapter = (function() {
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
 
     acknowledgeCardUpdate: function(id) { return req("POST", "/cards/" + id + "/acknowledge-update"); },
-    acknowledgeCardUpdates: function(ids) { return req("POST", "/cards/acknowledge-updates", { cardIds: ids }); },
+    // The server caps each request at 1000 ids, so larger selections go in sequential batches.
+    acknowledgeCardUpdates: function(ids) {
+      var p = Promise.resolve();
+      for (var i = 0; i < ids.length; i += 1000) {
+        (function(chunk) {
+          p = p.then(function() { return req("POST", "/cards/acknowledge-updates", { cardIds: chunk }); });
+        })(ids.slice(i, i + 1000));
+      }
+      return p;
+    },
     getUpstreamChanges: function() { return req("GET", "/upstream-changes"); },
     listApiTokens:  function()     { return req("GET",    "/tokens"); },
     createApiToken: function(name) { return req("POST",   "/tokens", { name: name }); },
