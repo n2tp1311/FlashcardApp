@@ -110,7 +110,8 @@ Object.assign(TRANSLATIONS.en, {
   "common.saving": "Saving…",
   "toast.saveFailed": "Couldn't save: {message}",
   "toast.offlineQueued": "You're offline. Your answers are kept on this device and will sync when you reconnect.",
-  "toast.synced": "{n} saved answer(s) synced.",
+  "toast.synced": "{n} saved answers synced.",
+  "toast.synced_one": "{n} saved answer synced.",
   "pref.title": "Preferences",
   "tutorial.title": "Quick tour",
   "tutorial.preferenceLabel": "Getting started",
@@ -163,9 +164,11 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.markReviewed": "Mark reviewed",
   "upstream.navTitle": "KnowledgeApp changes",
   "upstream.screenTitle": "Changes from KnowledgeApp",
-  "upstream.bannerText": "{n} card(s) changed by KnowledgeApp",
+  "upstream.bannerText": "{n} cards changed by KnowledgeApp",
+  "upstream.bannerText_one": "{n} card changed by KnowledgeApp",
   "upstream.review": "Review",
-  "upstream.summary": "{total} card(s) need review · {updated} updated · {deleted} removed",
+  "upstream.summary": "{n} cards need review · {updated} updated · {deleted} removed",
+  "upstream.summary_one": "{n} card needs review · {updated} updated · {deleted} removed",
   "upstream.empty": "No cards changed by KnowledgeApp.",
   "upstream.noneInFilter": "No cards in this filter.",
   "upstream.filterAll": "All",
@@ -174,7 +177,8 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.current": "Current",
   "upstream.openInLesson": "Open in lesson",
   "upstream.markAllShown": "Mark all shown as reviewed",
-  "upstream.confirmAckAll": "Mark {n} card(s) as reviewed?",
+  "upstream.confirmAckAll": "Mark {n} cards as reviewed?",
+  "upstream.confirmAckAll_one": "Mark {n} card as reviewed?",
   "upstream.studyUpdated": "Study updated cards",
   "upstream.markedOne": "“{name}” marked as reviewed.",
   "upstream.markedMany": "{n} cards marked as reviewed: {names}",
@@ -183,7 +187,8 @@ Object.assign(TRANSLATIONS.en, {
   "vocabulary.subtitle": "Review saved words before fetching them in KnowledgeApp.",
   "vocabulary.loading": "Loading vocabulary queue…",
   "vocabulary.noPending": "No words waiting for KnowledgeApp.",
-  "vocabulary.pendingCount": "{n} word(s) waiting for KnowledgeApp",
+  "vocabulary.pendingCount": "{n} words waiting for KnowledgeApp",
+  "vocabulary.pendingCount_one": "{n} word waiting for KnowledgeApp",
   "vocabulary.add": "Add word",
   "vocabulary.addTitle": "Add a word to the queue",
   "vocabulary.wordLabel": "Word or phrase",
@@ -216,7 +221,8 @@ Object.assign(TRANSLATIONS.en, {
   "user.linkGoogle": "Link Google Account",
   "user.signOut": "Sign Out",
   "home.selectClasses": "Select Classes",
-  "home.classesSelectedCount": "{n} class(es) selected",
+  "home.classesSelectedCount": "{n} classes selected",
+  "home.classesSelectedCount_one": "{n} class selected",
   "home.emptyDefault": "No classes yet. Create your first class to get started.",
   "sort.sortBy": "Sort by",
   "sort.level": "Level",
@@ -239,13 +245,15 @@ Object.assign(TRANSLATIONS.en, {
   "common.delete": "Delete",
   "home.emptyArchived": "No archived classes.",
   "count.due": "{n} due",
-  "count.lessons": "{n} lesson(s)",
+  "count.lessons": "{n} lessons",
+  "count.lessons_one": "{n} lesson",
   "count.knownProgress": "{known} / {total} known ({pct}%)",
   "class.levelMeta": "Lv {level} · {lessons}",
   "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
   "class.accuracyTooltip": "Accuracy across all recorded attempts (Flashcard + Quiz)",
   "confirm.deleteClass": "Delete class \"{name}\" and all its lessons and cards? Your study history and stats are kept.",
-  "confirm.archiveClasses": "Archive {n} selected class(es)?",
+  "confirm.archiveClasses": "Archive {n} selected classes?",
+  "confirm.archiveClasses_one": "Archive {n} selected class?",
   "alert.archiveClassesFailed": "Some classes could not be archived. Your selection is still active.",
 
   "stat.dayStreak": "Day Streak",
@@ -260,7 +268,8 @@ Object.assign(TRANSLATIONS.en, {
   "stat.avgDailyLabel": "Avg/day",
   "stat.minDailyLabel": "Min",
   "stat.maxDailyLabel": "Max",
-  "stat.studyTimeTrackedHint": "Based on the {n} day(s) with tracked study time — days studied before time tracking shipped aren't counted here",
+  "stat.studyTimeTrackedHint": "Based on the {n} days with tracked study time — days studied before time tracking shipped aren't counted here",
+  "stat.studyTimeTrackedHint_one": "Based on the {n} day with tracked study time — days studied before time tracking shipped aren't counted here",
   "stat.studyTimeWindowHint": "last {n} days",
   "stat.allTime": "All time",
   "dashboard.heatmapTitle": "{n}-Day Study Heatmap",
@@ -304,7 +313,9 @@ Object.assign(TRANSLATIONS.en, {
   "common.share": "Share",
   "common.export": "Export",
   "import.invalidJson": "That file isn't valid JSON.",
-  "import.success": "Imported {classes} class(es), {lessons} lesson(s), {cards} card(s).",
+  "import.success": "Imported {classes}, {lessons}, {cards}.",
+  "count.classes": "{n} classes",
+  "count.classes_one": "{n} class",
   "common.zeroSelected": "0 selected",
   "common.nSelected": "{n} selected",
   "common.deleteSelected": "Delete selected",
@@ -338,7 +349,8 @@ Object.assign(TRANSLATIONS.en, {
   "setup.cardOrder": "Card Order",
   "setup.inOrder": "In Order",
   "setup.startStudying": "Start Studying",
-  "setup.matchCount": "{n} card(s) match this filter",
+  "setup.matchCount": "{n} cards match this filter",
+  "setup.matchCount_one": "{n} card matches this filter",
   "setup.loadFailed": "Couldn't load cards — try again.",
   "setup.studyingTogether": "Studying {n} lessons together",
   "setup.hintAll": "Study all cards",
@@ -369,30 +381,41 @@ Object.assign(TRANSLATIONS.en, {
   "setup.presetUpdated": "Updated!",
   "setup.interleaved": "Interleaved",
 
-  "count.cardsDueForReview": "{n} card(s) due for review",
+  "count.cardsDueForReview": "{n} cards due for review",
+
+  "count.cardsDueForReview_one": "{n} card due for review",
   "lesson.nextReviewIn": "Next review in {time}",
   "format.termDef": "Term↔Def",
   "format.mcq": "MCQ",
   "format.trueFalse": "True/False",
   "format.imageDef": "Image↔Def",
-  "count.cards": "{n} card(s)",
+  "count.cards": "{n} cards",
+  "count.cards_one": "{n} card",
   "confirm.deleteLesson": "Delete lesson \"{title}\" and all its cards? Your study history and stats are kept.",
   "alert.noCardsDue": "No cards are due for review right now.",
   "alert.dailyReviewCapReached": "You've hit your daily review cap — come back tomorrow!",
   "bulk.andMore": "... and {n} more",
-  "bulk.summary": "{lessons} lesson(s), {cards} card(s) total",
+  "bulk.summary": "{lessons}, {cards} total",
   "class.unarchiveClass": "Unarchive Class",
 
   "time.never": "never",
   "time.justNow": "just now",
-  "time.minutesAgo": "{n}m ago",
+  "time.minutesAgo": "{n} min ago",
   "time.hoursAgo": "{n}h ago",
   "time.daysAgo": "{n}d ago",
   "time.weeksAgo": "{n}w ago",
   "time.notScheduled": "not scheduled",
   "time.now": "now",
   "time.today": "Today",
-  "time.inMinutes": "in {n}m",
+  "time.inMinutes": "in {n} min",
+  "unit.s": "{n}s",
+  "unit.min": "{n} min",
+  "unit.lessThanMin": "<1 min",
+  "unit.h": "{n}h",
+  "unit.hMin": "{h}h {m}m",
+  "unit.d": "{n}d",
+  "unit.mo": "{n} mo",
+  "unit.y": "{n} yr",
   "time.inHours": "in {n}h",
   "time.inDays": "in {n}d",
   "card.lastSeen": "Last seen",
@@ -446,7 +469,8 @@ Object.assign(TRANSLATIONS.en, {
   "summary.cardsStudied": "cards studied",
   "summary.new": "New",
   "summary.review": "Review",
-  "summary.skippedNote": "{n} card(s) skipped (not graded)",
+  "summary.skippedNote": "{n} cards skipped (not graded)",
+  "summary.skippedNote_one": "{n} card skipped (not graded)",
   "summary.reviewAction": "Review",
 
   "confirm.deleteCard": "Delete this card? Your study history and stats are kept.",
@@ -457,7 +481,8 @@ Object.assign(TRANSLATIONS.en, {
   "results.hintGreat": "Great job! Cards scheduled for spaced repetition.",
   "results.hintOk": "Cards scheduled — focus on the ones you missed.",
   "results.hintKeepPracticing": "Keep practicing — missed cards are due again soon.",
-  "results.cappedNote": "{n} card(s) need a Flashcard-mode recall to move to a longer review interval.",
+  "results.cappedNote": "{n} cards need a Flashcard-mode recall to move to a longer review interval.",
+  "results.cappedNote_one": "{n} card needs a Flashcard-mode recall to move to a longer review interval.",
 
   "difficulty.new": "New",
   "difficulty.easy": "Easy",
@@ -527,7 +552,8 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.thisWeek": "This week",
   "dashboard.lastWeek": "Last week",
   "dashboard.noCardsInSrs": "No cards in SRS yet.",
-  "dashboard.cardsInSrs": "{n} card(s) in SRS",
+  "dashboard.cardsInSrs": "{n} cards in SRS",
+  "dashboard.cardsInSrs_one": "{n} card in SRS",
   "srsBucket.learning": "Learning",
   "dashboard.futureDue": "Upcoming Reviews (Next {n} Days)",
   "dashboard.noCardsDueSoon": "No cards due in the next {n} days.",
@@ -542,7 +568,8 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.gradeUngraded": "Ungraded",
   "dashboard.avgReviewDuration": "{duration} avg · {n} reviews",
   "dashboard.attemptsAbbrev": "{n} att.",
-  "dashboard.heatmapCellTooltip": "{date}: {duration} studied ({n} attempt(s))",
+  "dashboard.heatmapCellTooltip": "{date}: {duration} studied ({n} attempts)",
+  "dashboard.heatmapCellTooltip_one": "{date}: {duration} studied ({n} attempt)",
   "dashboard.monthAbbrevs": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
   "dashboard.dayAbbrevs": "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
 
@@ -678,8 +705,10 @@ Object.assign(TRANSLATIONS.en, {
   "common.lessonSingular": "Lesson",
   "common.cardSingular": "Card",
   "share.byOwner": "by {name}",
-  "confirm.deleteSelectedCards": "Delete {n} card(s)? Your study history and stats are kept.",
-  "confirm.deleteSelectedLessons": "Delete {n} lesson(s) and all their cards? Your study history and stats are kept.",
+  "confirm.deleteSelectedCards": "Delete {n} cards? Your study history and stats are kept.",
+  "confirm.deleteSelectedCards_one": "Delete {n} card? Your study history and stats are kept.",
+  "confirm.deleteSelectedLessons": "Delete {n} lessons and all their cards? Your study history and stats are kept.",
+  "confirm.deleteSelectedLessons_one": "Delete {n} lesson and all its cards? Your study history and stats are kept.",
   "card.imageAlt": "Card image",
   "study.reviewDue": "Quick quiz · {n} due",
   "study.reviewDueTitle": "Multiple-choice quiz on the cards due now (respects Max reviews per day)",
@@ -771,7 +800,7 @@ Object.assign(TRANSLATIONS.vi, {
   "upstream.screenTitle": "Thay đổi từ KnowledgeApp",
   "upstream.bannerText": "{n} thẻ đã bị KnowledgeApp thay đổi",
   "upstream.review": "Xem lại",
-  "upstream.summary": "{total} thẻ cần xem lại · {updated} đã cập nhật · {deleted} đã xoá ở nguồn",
+  "upstream.summary": "{n} thẻ cần xem lại · {updated} đã cập nhật · {deleted} đã xoá ở nguồn",
   "upstream.empty": "Không có thẻ nào bị KnowledgeApp thay đổi.",
   "upstream.noneInFilter": "Không có thẻ nào trong bộ lọc này.",
   "upstream.filterAll": "Tất cả",
@@ -910,7 +939,8 @@ Object.assign(TRANSLATIONS.vi, {
   "common.share": "Chia sẻ",
   "common.export": "Xuất dữ liệu",
   "import.invalidJson": "Tệp này không phải JSON hợp lệ.",
-  "import.success": "Đã nhập {classes} lớp, {lessons} bài học, {cards} thẻ ghi nhớ.",
+  "import.success": "Đã nhập {classes}, {lessons}, {cards}.",
+  "count.classes": "{n} lớp",
   "common.zeroSelected": "Đã chọn 0",
   "common.nSelected": "Đã chọn {n}",
   "common.deleteSelected": "Xóa mục đã chọn",
@@ -986,7 +1016,7 @@ Object.assign(TRANSLATIONS.vi, {
   "alert.noCardsDue": "Hiện chưa có thẻ nào đến hạn ôn tập.",
   "alert.dailyReviewCapReached": "Bạn đã đạt giới hạn review hôm nay — quay lại vào ngày mai nhé!",
   "bulk.andMore": "... và {n} thẻ nữa",
-  "bulk.summary": "{lessons} bài học, tổng {cards} thẻ",
+  "bulk.summary": "{lessons}, tổng {cards}",
   "class.unarchiveClass": "Bỏ lưu trữ lớp",
 
   "time.never": "chưa bao giờ",
@@ -999,6 +1029,14 @@ Object.assign(TRANSLATIONS.vi, {
   "time.now": "ngay bây giờ",
   "time.today": "Hôm nay",
   "time.inMinutes": "còn {n} phút",
+  "unit.s": "{n} giây",
+  "unit.min": "{n} phút",
+  "unit.lessThanMin": "<1 phút",
+  "unit.h": "{n} giờ",
+  "unit.hMin": "{h} giờ {m} phút",
+  "unit.d": "{n} ngày",
+  "unit.mo": "{n} tháng",
+  "unit.y": "{n} năm",
   "time.inHours": "còn {n} giờ",
   "time.inDays": "còn {n} ngày",
   "card.lastSeen": "Lần xem gần nhất",
@@ -1319,7 +1357,8 @@ Object.assign(TRANSLATIONS.vi, {
 function t(key, vars) {
   var lang = (typeof state !== "undefined" && state.language) || "en";
   var dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
-  var str = dict[key];
+  // English plurals: a "key_one" variant is used when n is 1. Vietnamese has no plural forms.
+  var str = vars && vars.n === 1 && dict[key + "_one"] !== undefined ? dict[key + "_one"] : dict[key];
   if (str === undefined) str = TRANSLATIONS.en[key];
   if (str === undefined) return key;
   if (vars) {
@@ -3246,7 +3285,7 @@ document.getElementById("import-flashcards-input").addEventListener("change", fu
     return store.importFlashcards({ classes: parsed && parsed.classes });
   }).then(function(result) {
     renderHome();
-    alert(t("import.success", { classes: result.imported.classes, lessons: result.imported.lessons, cards: result.imported.cards }));
+    alert(t("import.success", { classes: t("count.classes", { n: result.imported.classes }), lessons: t("count.lessons", { n: result.imported.lessons }), cards: t("count.cards", { n: result.imported.cards }) }));
   }).catch(function(err) {
     alert(err.message);
   }).finally(function() {
@@ -3379,9 +3418,9 @@ function _renderLessonItems(lessons, accMap) {
         reviewLabel = t("count.cardsDueForReview", { n: dueCount });
       } else if (nextReviewAt) {
         var secsLeft = nextReviewAt - now;
-        var reviewLabel2 = secsLeft < 3600 ? Math.ceil(secsLeft / 60) + "m"
-          : secsLeft < 86400 ? Math.ceil(secsLeft / 3600) + "h"
-          : Math.ceil(secsLeft / 86400) + "d";
+        var reviewLabel2 = secsLeft < 3600 ? t("unit.min", { n: Math.ceil(secsLeft / 60) })
+          : secsLeft < 86400 ? t("unit.h", { n: Math.ceil(secsLeft / 3600) })
+          : t("unit.d", { n: Math.ceil(secsLeft / 86400) });
         reviewLabel = t("lesson.nextReviewIn", { time: reviewLabel2 });
       }
 
@@ -4154,7 +4193,7 @@ function upstreamFilteredCards() {
 function renderUpstreamList() {
   var count = state.upstreamData.count;
   document.getElementById("upstream-summary").textContent =
-    t("upstream.summary", { total: count.total, updated: count.updated, deleted: count.deleted });
+    t("upstream.summary", { n: count.total, updated: count.updated, deleted: count.deleted });
   var cards = upstreamFilteredCards();
   var list = document.getElementById("upstream-list");
   list.innerHTML = "";
@@ -7176,10 +7215,14 @@ function statCard(val, label, hint) {
 function _formatHoursMinutes(totalMinutes) {
   var h = Math.floor(totalMinutes / 60);
   var m = totalMinutes % 60;
-  return h > 0 ? (h + "h " + m + "m") : (m + "m");
+  if (!h) return t("unit.min", { n: m });
+  return m ? t("unit.hMin", { h: h, m: m }) : t("unit.h", { n: h });
 }
 
+// Under a minute shows seconds, so a short study day doesn't read as "0 min".
 function formatStudyDuration(ms) {
+  var sec = Math.round((ms || 0) / 1000);
+  if (sec > 0 && sec < 60) return t("unit.s", { n: sec });
   return _formatHoursMinutes(Math.round((ms || 0) / 60000));
 }
 
@@ -7515,7 +7558,7 @@ function renderCardHistory(cardId) {
         : attempt.grade == null ? t("stats.notApplicable")
         : t("dashboard.gradeUngraded");
       var duration = attempt.duration_ms == null ? "—" : attempt.duration_ms < 60000
-        ? Math.round(attempt.duration_ms / 1000) + "s" : formatStudyDuration(attempt.duration_ms);
+        ? t("unit.s", { n: Math.round(attempt.duration_ms / 1000) }) : formatStudyDuration(attempt.duration_ms);
       row.textContent = date.toLocaleString() + " · " +
         (attempt.correct ? t("stats.correct") : t("stats.incorrect")) + " · " +
         t("stats.mode." + attempt.source) + " · " + grade + " · " + duration;
@@ -7878,7 +7921,7 @@ function renderReviewTimeTrend(rows, wrap, maxWeeksAgo) {
       : week.weeksAgo === 1 ? t("dashboard.lastWeek")
       : t("time.weeksAgo", { n: week.weeksAgo });
     var avgSec = row ? Math.round(row.avg_ms / 1000) : 0;
-    var avgLabel = avgSec < 60 ? avgSec + "s" : formatStudyDuration(avgSec * 1000);
+    var avgLabel = avgSec < 60 ? t("unit.s", { n: avgSec }) : formatStudyDuration(avgSec * 1000);
     var rowEl = document.createElement("div");
     rowEl.className = "trend-row";
     rowEl.innerHTML = '<span class="trend-label">' + escHtml(label) + '</span>' +
@@ -8057,18 +8100,16 @@ function renderNewCardsTrend(rows, wrap, maxWeeksAgo) {
 }
 
 // Generic seconds → short duration string, replacing the old fixed-step lookup table now
-// that FSRS produces a continuous interval rather than an index into a fixed ladder. English
-// abbreviations regardless of locale, matching the old SRS_STEP_LABELS convention (never
-// translated either).
+// that FSRS produces a continuous interval rather than an index into a fixed ladder.
 function formatFsrsDuration(seconds) {
   if (seconds == null) return "";
-  if (seconds < 60) return "<1m";
-  if (seconds < 3600) return Math.round(seconds / 60) + "m";
-  if (seconds < 86400) return Math.round(seconds / 3600) + "h";
+  if (seconds < 60) return t("unit.lessThanMin");
+  if (seconds < 3600) return t("unit.min", { n: Math.round(seconds / 60) });
+  if (seconds < 86400) return t("unit.h", { n: Math.round(seconds / 3600) });
   var days = Math.round(seconds / 86400);
-  if (days < 30) return days + "d";
-  if (days < 365) return Math.round(days / 30) + "mo";
-  return Math.round(days / 365) + "yr";
+  if (days < 30) return t("unit.d", { n: days });
+  if (days < 365) return t("unit.mo", { n: Math.round(days / 30) });
+  return t("unit.y", { n: Math.round(days / 365) });
 }
 
 // Same perceptual bucket boundaries the old step ladder used, so the distribution chart's
@@ -8077,8 +8118,8 @@ function formatFsrsDuration(seconds) {
 var FSRS_BUCKET_ORDER = ["learning","b_10m","b_1h","b_4h","b_1d","b_3d","b_7d","b_21d","b_42d","b_84d","b_168d","b_336d","b_1yr"];
 var FSRS_BUCKET_LABELS = {
   learning: null, // resolved via t("srsBucket.learning") at render time (locale-aware)
-  b_10m: "10m", b_1h: "1h", b_4h: "4h", b_1d: "1d", b_3d: "3d", b_7d: "7d",
-  b_21d: "21d", b_42d: "42d", b_84d: "84d", b_168d: "168d", b_336d: "336d", b_1yr: "1yr"
+  b_10m: ["min", 10], b_1h: ["h", 1], b_4h: ["h", 4], b_1d: ["d", 1], b_3d: ["d", 3], b_7d: ["d", 7],
+  b_21d: ["d", 21], b_42d: ["d", 42], b_84d: ["d", 84], b_168d: ["d", 168], b_336d: ["d", 336], b_1yr: ["y", 1]
 };
 
 function renderSrsDistribution(rows, wrap) {
@@ -8093,7 +8134,8 @@ function renderSrsDistribution(rows, wrap) {
   var total = sorted.reduce(function(s, r) { return s + r.cnt; }, 0);
   sorted.forEach(function(r) {
     var pct = Math.round(r.cnt / max * 100);
-    var label = r.bucket === "learning" ? t("srsBucket.learning") : (FSRS_BUCKET_LABELS[r.bucket] || r.bucket);
+    var unit = FSRS_BUCKET_LABELS[r.bucket];
+    var label = r.bucket === "learning" ? t("srsBucket.learning") : unit ? t("unit." + unit[0], { n: unit[1] }) : r.bucket;
     var rowEl = document.createElement("div");
     rowEl.className = "trend-row";
     rowEl.innerHTML =
@@ -8304,7 +8346,7 @@ function renderBulkImportPreview(raw) {
   var total = sections.reduce(function(n, s) { return n + s.cards.length; }, 0);
   var summary = document.createElement("div");
   summary.className = "bulk-preview-count";
-  summary.textContent = t("bulk.summary", { lessons: sections.length, cards: total });
+  summary.textContent = t("bulk.summary", { lessons: t("count.lessons", { n: sections.length }), cards: t("count.cards", { n: total }) });
   preview.insertBefore(summary, preview.firstChild);
 }
 
