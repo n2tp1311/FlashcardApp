@@ -328,3 +328,12 @@
 ## Recall Mode (removed)
 - Recall mode was removed; historical attempt records with `source='recall'` are preserved in the DB
 - The Overall Accuracy source-pill breakdown no longer surfaces a "Recall" pill even when an account has legacy `source='recall'` attempts (initially it did, to preserve visibility into old data — reversed per user feedback that recall isn't a mode anymore and shouldn't appear as one); those attempts still count toward the aggregate accuracy number and total, just not their own pill
+
+## Correctness fixes (UX review batch 4)
+- Upcoming reviews (future-due) counts cards already due or overdue under Today and excludes archived classes, matching the Due for Review count; the Today label's tooltip says so
+- "Suggested new cards" label for the new-card recommendation tile; the streak reset countdown is hidden at 0
+- Back from Stats returns to the screen it was opened from (Dashboard keeps its period and scroll)
+- Search ignores late replies for older text, reports failures instead of "No results", keeps keys typed right after Ctrl/Cmd+K, and Enter opens the first result
+- The Updated filter and "Study updated cards" include only updated cards, not ones removed from KnowledgeApp; the KnowledgeApp badge counts down as changes are reviewed or studied
+- Pull-to-refresh only starts on the bare Home screen (not under a dialog or the sidebar)
+

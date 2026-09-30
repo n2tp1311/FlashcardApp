@@ -854,3 +854,6 @@ Server messages are English, and the Vietnamese UI showed them verbatim ("Invali
 - **Trade-off with 2026-09-02:** each rate limiter's distinct wording (so users could tell which quota was hit) now shows in the app as one translated "Too many requests" message. The toast appears next to the action that triggered it, which supplies that context; API and curl clients still get the distinct text.
 - **No native dialogs remain.** Validation shows under the field (`showFieldError`), everything else is a toast or the app's confirm dialog, so automated checks should read `#toast`/`.field-error` rather than listen for `dialog` events.
 
+## 2026-09-30 — Upcoming reviews includes overdue cards (revises 2026-07-24)
+The future-due chart counted only cards due strictly after now, so with a backlog the Dashboard read "No cards due in the next 14 days" next to "Due for Review 28". Cards already due or overdue now fall into Today, and archived classes are excluded so Today agrees with Due for Review, which already excluded them. A big backlog makes the Today bar dwarf the rest; that's the honest picture.
+
