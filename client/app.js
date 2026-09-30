@@ -716,6 +716,17 @@ Object.assign(TRANSLATIONS.en, {
   "confirm.discardTitle": "Discard changes?",
   "confirm.discardChanges": "Your changes haven't been saved.",
   "confirm.discard": "Discard",
+  "confirm.reviewTitle": "Mark as reviewed?",
+  "validate.noLessonsFound": "No valid lessons found. Start each lesson with a # heading.",
+  "bulk.noValidCards": "No valid cards found. Check the format.",
+  "toast.archived": "Archived \"{name}\".",
+  "toast.unarchived": "Unarchived \"{name}\".",
+  "toast.archivedMany": "Archived {n} classes.",
+  "toast.archivedMany_one": "Archived {n} class.",
+  "toast.cardsAdded": "{n} cards added.",
+  "toast.cardsAdded_one": "{n} card added.",
+  "toast.lessonsImported": "Added {lessons} and {cards}.",
+  "toast.signingOut": "Signing out…",
   "confirm.leaveSession": "You've answered {n} so far, and those are saved. Leave now?",
   "keymap.quizNext": "Next question (after answering)",
   "keymap.exitStudy": "Exit (asks first mid-session)",
@@ -1331,6 +1342,15 @@ Object.assign(TRANSLATIONS.vi, {
   "confirm.discardTitle": "Bỏ thay đổi?",
   "confirm.discardChanges": "Các thay đổi của bạn chưa được lưu.",
   "confirm.discard": "Bỏ thay đổi",
+  "confirm.reviewTitle": "Đánh dấu đã xem?",
+  "validate.noLessonsFound": "Không tìm thấy bài học hợp lệ. Hãy bắt đầu mỗi bài học bằng một dòng tiêu đề #.",
+  "bulk.noValidCards": "Không tìm thấy thẻ hợp lệ. Hãy kiểm tra định dạng.",
+  "toast.archived": "Đã lưu trữ \"{name}\".",
+  "toast.unarchived": "Đã bỏ lưu trữ \"{name}\".",
+  "toast.archivedMany": "Đã lưu trữ {n} lớp.",
+  "toast.cardsAdded": "Đã thêm {n} thẻ.",
+  "toast.lessonsImported": "Đã thêm {lessons} và {cards}.",
+  "toast.signingOut": "Đang đăng xuất…",
   "confirm.leaveSession": "Bạn đã trả lời {n} thẻ và kết quả đã được lưu. Rời phiên ngay?",
   "keymap.quizNext": "Câu tiếp theo (sau khi trả lời)",
   "keymap.exitStudy": "Thoát (hỏi lại nếu đang học dở)",
@@ -2400,6 +2420,27 @@ function showToast(message, kind) {
   toastTimer = setTimeout(function() { el.classList.add("hidden"); }, 4000);
 }
 
+// A validation message under its field, focused so the user lands on what to fix.
+function showFieldError(field, message) {
+  var err = document.getElementById(field.id + "-error") || document.createElement("p");
+  err.id = field.id + "-error";
+  err.className = "field-error";
+  err.textContent = message;
+  if (!err.isConnected) field.after(err);
+  field.setAttribute("aria-invalid", "true");
+  field.setAttribute("aria-describedby", err.id);
+  var target = field.matches("input, textarea, select, button") ? field : field.querySelector("input, textarea, button");
+  if (target) target.focus();
+}
+
+function clearFieldErrors(root) {
+  root.querySelectorAll(".field-error").forEach(function(el) { el.remove(); });
+  root.querySelectorAll("[aria-invalid]").forEach(function(el) {
+    el.removeAttribute("aria-invalid");
+    el.removeAttribute("aria-describedby");
+  });
+}
+
 // Disables a save button while its request is in flight, so a double tap or Ctrl/Cmd+Enter
 // can't create the same record twice, and reports a failed save instead of doing nothing.
 function withBusy(btn, run) {
@@ -2460,6 +2501,7 @@ function openModal(id) {
     modalStack.push({ id: id, opener: document.activeElement,
       snapshot: DIRTY_GUARDED.indexOf(id) !== -1 ? modalFormState(modal) : null });
   }
+  clearFieldErrors(modal);
   document.getElementById("modal-overlay").classList.remove("hidden");
   modal.classList.remove("hidden");
   syncInert();
@@ -2514,6 +2556,16 @@ function hideLayer(el) {
 
 document.getElementById("modal-overlay").addEventListener("click", function(e) {
   if (e.target === this) requestCloseTopModal(true);
+});
+
+// Typing in a field clears its validation message.
+document.getElementById("modal-overlay").addEventListener("input", function(e) {
+  var field = e.target.closest("[aria-invalid]");
+  if (!field) return;
+  var err = document.getElementById(field.id + "-error");
+  if (err) err.remove();
+  field.removeAttribute("aria-invalid");
+  field.removeAttribute("aria-describedby");
 });
 
 // Enter in a single-line field submits the dialog like a native form. Textareas keep Enter for
@@ -2775,7 +2827,13 @@ function _renderClassItems(classes) {
 }
 
 function toggleClassArchived(cls) {
-  return store.updateClass(cls.id, { archived: cls.archived ? 0 : 1 }).then(renderHome);
+  var archiving = !cls.archived;
+  return store.updateClass(cls.id, { archived: archiving ? 1 : 0 }).then(function() {
+    showToast(t(archiving ? "toast.archived" : "toast.unarchived", { name: cls.name }));
+    return renderHome();
+  }, function(err) {
+    showToast(t("toast.saveFailed", { message: err.message }), "error");
+  });
 }
 
 // "Level" is the default class-sort criterion but was never shown anywhere on the card
@@ -3160,7 +3218,7 @@ document.getElementById("btn-suggest-tags").addEventListener("click", function()
     input.value = normalizeTagsArray(existing.concat(res.tags || [])).join(", ");
   }).catch(function(err) {
     if (state.editingClassId === requestedClassId)
-      alert(t("error.aiSuggestFailedWithMessage", { message: err.message }));
+      showToast(t("error.aiSuggestFailedWithMessage", { message: err.message }), "error");
   }).finally(function() {
     state.suggestTagsPending = false;
     setSuggestBtnState(false);
@@ -3171,12 +3229,14 @@ document.getElementById("btn-save-class").addEventListener("click", function() {
   var name  = document.getElementById("class-name-input").value.trim();
   var active_color = document.querySelector("#color-picker .color-swatch.active");
   var active_icon  = document.querySelector("#icon-picker .icon-opt.active");
-  if (!name) { alert(t("validate.enterClassName")); return; }
+  var nameInput = document.getElementById("class-name-input");
+  clearFieldErrors(document.getElementById("modal-class"));
+  if (!name) { showFieldError(nameInput, t("validate.enterClassName")); return; }
   var color = active_color ? active_color.dataset.color : CLASS_COLORS[0];
   var icon  = active_icon  ? active_icon.dataset.icon   : CLASS_ICON_DEFAULT_KEY;
   var levelVal = document.getElementById("class-level-input").value.trim();
   var level = levelVal !== "" ? parseInt(levelVal, 10) : null;
-  if (level !== null && isNaN(level)) { alert(t("validate.levelMustBeNumber")); return; }
+  if (level !== null && isNaN(level)) { showFieldError(document.getElementById("class-level-input"), t("validate.levelMustBeNumber")); return; }
   var tags = parseTagsInput(document.getElementById("class-tags-input").value);
   withBusy(this, function() {
     var p;
@@ -3250,7 +3310,7 @@ function downloadFromApi(url) {
       URL.revokeObjectURL(blobUrl);
     });
   }).catch(function(err) {
-    alert(err.message);
+    showToast(err.message, "error");
   }).finally(function() {
     downloadInFlight = false;
   });
@@ -3285,9 +3345,9 @@ document.getElementById("import-flashcards-input").addEventListener("change", fu
     return store.importFlashcards({ classes: parsed && parsed.classes });
   }).then(function(result) {
     renderHome();
-    alert(t("import.success", { classes: t("count.classes", { n: result.imported.classes }), lessons: t("count.lessons", { n: result.imported.lessons }), cards: t("count.cards", { n: result.imported.cards }) }));
+    showToast(t("import.success", { classes: t("count.classes", { n: result.imported.classes }), lessons: t("count.lessons", { n: result.imported.lessons }), cards: t("count.cards", { n: result.imported.cards }) }));
   }).catch(function(err) {
-    alert(err.message);
+    showToast(err.message, "error");
   }).finally(function() {
     importInFlight = false;
   });
@@ -3730,7 +3790,7 @@ document.getElementById("btn-study-classes").addEventListener("click", function(
     .then(function(lessonArrays) {
       var allLessons = lessonArrays.reduce(function(acc, arr) { return acc.concat(arr); }, []);
       if (allLessons.length === 0) {
-        alert(t("alert.noLessonsInSelectedClasses"));
+        showToast(t("alert.noLessonsInSelectedClasses"));
         return;
       }
       var lessonIds = allLessons.map(function(l) { return l.id; });
@@ -3756,8 +3816,12 @@ document.getElementById("btn-archive-classes").addEventListener("click", functio
   if (ids.length === 0) return;
   confirmAction(t("confirm.archiveClasses", { n: ids.length }), function() {
     Promise.all(ids.map(function(id) { return store.updateClass(id, { archived: 1 }); }))
-      .then(function() { setHomeSelectMode(false); renderHome(); })
-      .catch(function() { alert(t("alert.archiveClassesFailed")); });
+      .then(function() {
+        setHomeSelectMode(false);
+        renderHome();
+        showToast(t("toast.archivedMany", { n: ids.length }));
+      })
+      .catch(function() { showToast(t("alert.archiveClassesFailed"), "error"); });
   }, "archive");
 });
 
@@ -3972,7 +4036,7 @@ function parseTagsInput(value) {
 
 document.getElementById("btn-save-lesson").addEventListener("click", function() {
   var title = document.getElementById("lesson-title-input").value.trim();
-  if (!title) { alert(t("validate.enterLessonTitle")); return; }
+  if (!title) { showFieldError(document.getElementById("lesson-title-input"), t("validate.enterLessonTitle")); return; }
   var activePill = document.querySelector("#lesson-format-picker .pill.active");
   var format = activePill ? activePill.dataset.value : "term-def";
   // Re-enable pills after submit
@@ -4119,7 +4183,7 @@ function renderVocabularyQueue() {
           var message = err.message === "This word has already been fetched"
             ? t("vocabulary.alreadyFetched")
             : t("vocabulary.deleteError", { message: err.message });
-          alert(message);
+          showToast(message, "error");
           if (err.message === "This word has already been fetched") refreshVocabularyQueue(true);
         });
       });
@@ -4415,16 +4479,22 @@ document.getElementById("btn-upstream-ack-all").addEventListener("click", functi
   var btn = this;
   var cards = upstreamFilteredCards();
   var ids = cards.map(function(c) { return c.id; });
-  if (!ids.length || !confirm(t("upstream.confirmAckAll", { n: ids.length }))) return;
+  if (!ids.length) return;
+  confirmAction(t("upstream.confirmAckAll", { n: ids.length }), function() {
+    ackAllShown(btn, cards, ids);
+  }, "review");
+});
+
+function ackAllShown(btn, cards, ids) {
   btn.disabled = true;
   store.acknowledgeCardUpdates(ids).then(function() {
     showUpstreamStatus(cards);
     renderUpstream();
   }, function(err) {
     btn.disabled = false;
-    alert(err.message);
+    showToast(err.message, "error");
   });
-});
+}
 
 document.getElementById("btn-upstream-study").addEventListener("click", function() {
   var seen = {};
@@ -4682,9 +4752,9 @@ document.getElementById("btn-review-due").addEventListener("click", function() {
   var dueCards = (state.currentLessonCards || []).filter(function(c) {
     return c.srs_due_at && c.srs_due_at <= nowSec;
   });
-  if (!dueCards.length) { alert(t("alert.noCardsDue")); return; }
+  if (!dueCards.length) { showToast(t("alert.noCardsDue")); return; }
   startDueQuiz(state.currentLesson, dueCards).catch(function() {
-    alert(t("setup.loadFailed"));
+    showToast(t("setup.loadFailed"), "error");
   });
 });
 
@@ -4695,7 +4765,7 @@ function startDueQuiz(lesson, dueCards) {
   var capPromise = hasCap ? store.getReviewsToday() : Promise.resolve({ count: 0 });
   return capPromise.then(function(r) {
     var capped = applyReviewCap(dueCards, r.count);
-    if (!capped.length) { alert(t("alert.dailyReviewCapReached")); return; }
+    if (!capped.length) { showToast(t("alert.dailyReviewCapReached")); return; }
     state.studyScope = {
       lessonIds: [lesson.id],
       lessons: [lesson],
@@ -4900,7 +4970,7 @@ function syncEditedCardIntoStudySession(cardId, data) {
 document.getElementById("btn-save-card-termdef").addEventListener("click", function() {
   var term = document.getElementById("card-term-input").value.trim();
   var def  = document.getElementById("card-def-input").value.trim();
-  if (!term || !def) { alert(t("validate.fillTermDef")); return; }
+  if (!term || !def) { showFieldError(document.getElementById(term ? "card-def-input" : "card-term-input"), t("validate.fillTermDef")); return; }
   var data = { term: term, def: def };
   var editingId = state.editingCardId;
   var editingLessonId = state.editingCardLessonId;
@@ -4927,7 +4997,8 @@ document.getElementById("btn-save-card-mcq").addEventListener("click", function(
     document.getElementById("mcq-distractor-list").querySelectorAll("input")
   ).map(function(i) { return i.value.trim(); }).filter(Boolean);
   if (!q || !c || distractors.length === 0 || distractors.length > 4) {
-    alert(t("validate.fillMcq"));
+    var emptyMcq = !q ? "card-q-input" : !c ? "card-correct-input" : "mcq-distractor-list";
+    showFieldError(document.getElementById(emptyMcq), t("validate.fillMcq"));
     return;
   }
   var explanation = document.getElementById("card-explanation-input").value.trim();
@@ -4971,8 +5042,8 @@ document.getElementById("card-tf-statement-input").addEventListener("input", fun
 
 document.getElementById("btn-save-card-tf").addEventListener("click", function() {
   var statement = document.getElementById("card-tf-statement-input").value.trim();
-  if (!statement) { alert(t("validate.enterStatement")); return; }
-  if (!state.tfAnswer) { alert(t("validate.selectTrueFalse")); return; }
+  if (!statement) { showFieldError(document.getElementById("card-tf-statement-input"), t("validate.enterStatement")); return; }
+  if (!state.tfAnswer) { showFieldError(document.getElementById("tf-answer-picker"), t("validate.selectTrueFalse")); return; }
   var explanation = document.getElementById("card-tf-explanation-input").value.trim();
   var data = { statement: statement, correct: state.tfAnswer };
   if (explanation) data.explanation = explanation;
@@ -5008,14 +5079,14 @@ document.getElementById("card-image-drop").addEventListener("click", function(e)
 
 function handleImageFile(file) {
   if (!file) return;
-  if (!IS_SERVER) { alert(t("validate.imageUploadRequiresServer")); return; }
+  if (!IS_SERVER) { showFieldError(document.getElementById("card-image-drop"), t("validate.imageUploadRequiresServer")); return; }
   var ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];
   if (ALLOWED.indexOf(file.type) === -1) {
-    alert(t("validate.unsupportedFileType"));
+    showFieldError(document.getElementById("card-image-drop"), t("validate.unsupportedFileType"));
     return;
   }
   if (file.size > 5 * 1024 * 1024) {
-    alert(t("validate.fileTooLarge"));
+    showFieldError(document.getElementById("card-image-drop"), t("validate.fileTooLarge"));
     return;
   }
   var reader = new FileReader();
@@ -5034,7 +5105,7 @@ function handleImageFile(file) {
   fetch("/api/upload", { method: "POST", credentials: "same-origin", body: formData })
     .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error || t("error.uploadFailed")); return d; }); })
     .then(function(d) { if (uploadSeq === mySeq) stagedImageUrl = d.url; })
-    .catch(function(err) { if (uploadSeq === mySeq) { alert(t("error.uploadFailedWithMessage", { message: err.message })); stagedImageUrl = previousUrl; } });
+    .catch(function(err) { if (uploadSeq === mySeq) { showToast(t("error.uploadFailedWithMessage", { message: err.message }), "error"); stagedImageUrl = previousUrl; } });
 }
 
 document.getElementById("card-image-input").addEventListener("change", function() {
@@ -5051,9 +5122,9 @@ dropZone.addEventListener("drop", function(e) {
 });
 
 document.getElementById("btn-save-card-imagedef").addEventListener("click", function() {
-  if (!stagedImageUrl) { alert(t("validate.chooseImageFirst")); return; }
+  if (!stagedImageUrl) { showFieldError(document.getElementById("card-image-drop"), t("validate.chooseImageFirst")); return; }
   var def = document.getElementById("card-imagedef-input").value.trim();
-  if (!def) { alert(t("validate.enterDefinition")); return; }
+  if (!def) { showFieldError(document.getElementById("card-imagedef-input"), t("validate.enterDefinition")); return; }
   var data = { imageUrl: stagedImageUrl, def: def };
   var editingId = state.editingCardId;
   var editingLessonId = state.editingCardLessonId;
@@ -5141,7 +5212,7 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
   var cards  = format === "term-def" ? parseBulkTermDef(raw) : format === "true-false" ? parseBulkTF(raw) : parseBulkMCQ(raw);
   var errEl  = document.getElementById("bulk-error");
   if (cards.length === 0) {
-    if (errEl) { errEl.textContent = "No valid cards found. Check the format."; errEl.classList.remove("hidden"); }
+    if (errEl) { errEl.textContent = t("bulk.noValidCards"); errEl.classList.remove("hidden"); }
     return;
   }
   if (errEl) errEl.classList.add("hidden");
@@ -5152,6 +5223,7 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
     return store.createCards(withLesson).then(function() {
       closeModal("bulk");
       renderCards();
+      showToast(t("toast.cardsAdded", { n: withLesson.length }));
     });
   });
 });
@@ -5162,7 +5234,7 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
 
 function confirmAction(msg, cb, actionKey) {
   var keys = { archive: ["confirm.archiveTitle", "common.archive"], leave: ["confirm.leaveTitle", "study.exit"],
-    discard: ["confirm.discardTitle", "confirm.discard"] }[actionKey]
+    discard: ["confirm.discardTitle", "confirm.discard"], review: ["confirm.reviewTitle", "upstream.markReviewed"] }[actionKey]
     || ["delete.confirmTitle", "common.delete"];
   var titleKey = keys[0];
   var buttonKey = keys[1];
@@ -5826,7 +5898,7 @@ function startStudy(count, filter, mode, order) {
     }
 
     if (filtered.length === 0) {
-      alert(t("study.noCardsMatchFilter"));
+      showToast(t("study.noCardsMatchFilter"));
       return;
     }
 
@@ -7729,7 +7801,7 @@ function renderDashboard() {
             if (row.classList.contains("is-loading")) return;
             row.classList.add("is-loading");
             openDueReview(l.id, l.class_id).catch(function() {
-              alert(t("setup.loadFailed"));
+              showToast(t("setup.loadFailed"), "error");
             }).then(function() {
               row.classList.remove("is-loading");
             });
@@ -8506,11 +8578,12 @@ document.getElementById("btn-bulk-import").addEventListener("click", function() 
 document.getElementById("btn-save-bulk-import").addEventListener("click", function() {
   var raw = document.getElementById("bulk-import-input").value;
   var sections = parseBulkImport(raw);
-  if (sections.length === 0) { alert("No valid lessons found. Start each lesson with a # heading."); return; }
+  if (sections.length === 0) { showFieldError(document.getElementById("bulk-import-input"), t("validate.noLessonsFound")); return; }
 
   var classId = state.currentClass.id;
+  var cardTotal = sections.reduce(function(n, s) { return n + s.cards.length; }, 0);
   // Create lessons sequentially, then their cards
-  sections.reduce(function(chain, section) {
+  withBusy(this, function() { return sections.reduce(function(chain, section) {
     return chain.then(function() {
       return store.createLesson({ classId: classId, title: section.title, format: section.format })
         .then(function(lesson) {
@@ -8524,7 +8597,8 @@ document.getElementById("btn-save-bulk-import").addEventListener("click", functi
   }, Promise.resolve()).then(function() {
     closeModal("bulk-import");
     renderLessons();
-  });
+    showToast(t("toast.lessonsImported", { lessons: t("count.lessons", { n: sections.length }), cards: t("count.cards", { n: cardTotal }) }));
+  }); });
 });
 
 /* ============================
@@ -9334,8 +9408,9 @@ document.getElementById("btn-logout").addEventListener("click", function() {
   closeAllDropdowns();
   try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
   try { localStorage.removeItem("fc-preferences"); } catch (_) {}
+  showToast(t("toast.signingOut"));
   fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" })
-    .then(function() { showAuthScreen(); });
+    .then(function() { showAuthScreen(); }, function() { showToast(t("common.networkError"), "error"); });
 });
 
 function prefFontLabel() {
@@ -9412,7 +9487,7 @@ function renderApiTokens() {
         revoke.disabled = true;
         store.revokeApiToken(tok.id).then(renderApiTokens, function(err) {
           revoke.disabled = false;
-          alert(err.message);
+          showToast(err.message, "error");
         });
       });
       li.appendChild(info);
@@ -9435,7 +9510,7 @@ document.getElementById("pref-token-create").addEventListener("click", function(
     renderApiTokens();
   }, function(err) {
     btn.disabled = false;
-    alert(err.message);
+    showToast(err.message, "error");
   });
 });
 
@@ -9636,6 +9711,10 @@ document.getElementById("btn-save-dash-metrics").addEventListener("click", funct
 // Choose adapter
 var store = IS_SERVER ? SQLiteAdapter : LocalStorageAdapter;
 if (IS_SERVER) window.addEventListener("online", SQLiteAdapter.flushPending);
+try {
+  var flashToast = sessionStorage.getItem("fc-flash-toast");
+  if (flashToast) { sessionStorage.removeItem("fc-flash-toast"); showToast(flashToast); }
+} catch (_) {}
 ["btn-fc-translate-front", "btn-fc-translate-back"].forEach(function(id) {
   var button = document.getElementById(id);
   button.classList.toggle("hidden", !(IS_SERVER && window.APP_CONFIG.translationEnabled));
@@ -9715,7 +9794,7 @@ function cloneInvitedClass(classId, name) {
       if (d.classId) {
         renderHome();
         renderSharedWithMe();
-        alert(t("share.savedToClasses", { name: name }));
+        showToast(t("share.savedToClasses", { name: name }));
       }
     });
 }
@@ -9772,10 +9851,11 @@ function renderShareScreen(data, token) {
         .then(function(r) { return r.json(); })
         .then(function(d) {
           if (d.classId) {
-            alert(t("share.savedToClasses", { name: data.cls.name }));
+            // The toast is shown by the page we navigate to.
+            try { sessionStorage.setItem("fc-flash-toast", t("share.savedToClasses", { name: data.cls.name })); } catch (_) {}
             window.location.href = "/";
           } else {
-            alert(d.error || t("common.failedToSave"));
+            showToast(d.error || t("common.failedToSave"), "error");
           }
         });
     });
