@@ -673,9 +673,9 @@
 <div id="modal-overlay" class="modal-overlay hidden">
 
   <!-- Preferences Modal -->
-  <div id="modal-preferences" class="modal hidden">
+  <div id="modal-preferences" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-preferences-heading">
     <div class="modal-header">
-      <h3 data-i18n="pref.title">Preferences</h3>
+      <h3 id="modal-preferences-heading" data-i18n="pref.title">Preferences</h3>
       <button class="modal-close" data-modal="preferences" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -758,7 +758,7 @@
     </div>
   </div>
 
-  <div id="modal-vocabulary-add" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="vocabulary-add-title">
+  <div id="modal-vocabulary-add" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="vocabulary-add-title">
     <div class="modal-header">
       <h3 id="vocabulary-add-title" data-i18n="vocabulary.addTitle">Add a word to the queue</h3>
       <button class="modal-close" data-modal="vocabulary-add" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg></button>
@@ -777,7 +777,7 @@
   </div>
 
   <!-- First-run Tutorial Modal -->
-  <div id="modal-tutorial" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+  <div id="modal-tutorial" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="tutorial-title">
     <div class="modal-header">
       <h3 id="tutorial-title" data-i18n="tutorial.title">Quick tour</h3>
       <button class="modal-close" data-modal="tutorial" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -797,9 +797,9 @@
   </div>
 
   <!-- Dashboard Metrics Modal -->
-  <div id="modal-dash-metrics" class="modal hidden">
+  <div id="modal-dash-metrics" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-dash-metrics-heading">
     <div class="modal-header">
-      <h3 data-i18n="dashboard.configureMetrics">Customize metrics</h3>
+      <h3 id="modal-dash-metrics-heading" data-i18n="dashboard.configureMetrics">Customize metrics</h3>
       <button class="modal-close" data-modal="dash-metrics" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -817,7 +817,7 @@
   </div>
 
   <!-- Class Form Modal -->
-  <div id="modal-class" class="modal hidden">
+  <div id="modal-class" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-class-title">
     <div class="modal-header">
       <h3 id="modal-class-title">New Class</h3>
       <button class="modal-close" data-modal="class" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -846,7 +846,7 @@
   </div>
 
   <!-- Lesson Form Modal -->
-  <div id="modal-lesson" class="modal hidden">
+  <div id="modal-lesson" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-lesson-title">
     <div class="modal-header">
       <h3 id="modal-lesson-title">New Lesson</h3>
       <button class="modal-close" data-modal="lesson" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -870,7 +870,7 @@
   </div>
 
   <!-- Card Form Modal (Term-Def) -->
-  <div id="modal-card-termdef" class="modal hidden">
+  <div id="modal-card-termdef" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-card-termdef-title">
     <div class="modal-header">
       <h3 id="modal-card-termdef-title">Add Card</h3>
       <button class="modal-close" data-modal="card-termdef" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -892,7 +892,7 @@
   </div>
 
   <!-- Card Form Modal (MCQ) -->
-  <div id="modal-card-mcq" class="modal hidden">
+  <div id="modal-card-mcq" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-card-mcq-title">
     <div class="modal-header">
       <h3 id="modal-card-mcq-title">Add Card</h3>
       <button class="modal-close" data-modal="card-mcq" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -923,7 +923,7 @@
   </div>
 
   <!-- Card Form Modal (True/False) -->
-  <div id="modal-card-tf" class="modal hidden">
+  <div id="modal-card-tf" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-card-tf-title">
     <div class="modal-header">
       <h3 id="modal-card-tf-title">Add Card</h3>
       <button class="modal-close" data-modal="card-tf" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -952,7 +952,7 @@
   </div>
 
   <!-- Card Form Modal (Image-Def) -->
-  <div id="modal-card-imagedef" class="modal hidden">
+  <div id="modal-card-imagedef" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-card-imagedef-title">
     <div class="modal-header">
       <h3 id="modal-card-imagedef-title">Add Card</h3>
       <button class="modal-close" data-modal="card-imagedef" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -975,7 +975,7 @@
   </div>
 
   <!-- Bulk Add Modal -->
-  <div id="modal-bulk" class="modal hidden">
+  <div id="modal-bulk" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-bulk-title">
     <div class="modal-header">
       <h3 id="modal-bulk-title">Bulk Add Cards</h3>
       <button class="modal-close" data-modal="bulk" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -993,9 +993,9 @@
   </div>
 
   <!-- Bulk Lesson+Card Import Modal -->
-  <div id="modal-bulk-import" class="modal hidden">
+  <div id="modal-bulk-import" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-bulk-import-heading">
     <div class="modal-header">
-      <h3 data-i18n="bulkImport.title">Bulk Import Lessons &amp; Cards</h3>
+      <h3 id="modal-bulk-import-heading" data-i18n="bulkImport.title">Bulk Import Lessons &amp; Cards</h3>
       <button class="modal-close" data-modal="bulk-import" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -1016,9 +1016,9 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
   </div>
 
   <!-- Delete Confirm Modal -->
-  <div id="modal-manage-presets" class="modal hidden">
+  <div id="modal-manage-presets" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-manage-presets-heading">
     <div class="modal-header">
-      <h3 data-i18n="setup.managePresetsTitle">Manage Presets</h3>
+      <h3 id="modal-manage-presets-heading" data-i18n="setup.managePresetsTitle">Manage Presets</h3>
       <button class="modal-close" data-modal="manage-presets" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -1030,7 +1030,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
     </div>
   </div>
 
-  <div id="modal-delete" class="modal hidden">
+  <div id="modal-delete" class="modal hidden" role="alertdialog" aria-modal="true" tabindex="-1" aria-labelledby="delete-confirm-title" aria-describedby="delete-confirm-text">
     <div class="modal-header">
       <h3 id="delete-confirm-title" data-i18n="delete.confirmTitle">Confirm Delete</h3>
       <button class="modal-close" data-modal="delete" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -1064,9 +1064,9 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 
 <!-- ===== MODAL: Share Class ===== -->
 <div id="modal-share" class="modal-overlay hidden">
-  <div class="modal share-modal">
+  <div class="modal share-modal" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-share-heading">
     <div class="modal-header">
-      <h3 data-i18n="share.shareClass">Share Class</h3>
+      <h3 id="modal-share-heading" data-i18n="share.shareClass">Share Class</h3>
       <button class="btn btn-ghost btn-sm" id="btn-share-modal-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
 
@@ -1105,9 +1105,9 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 
 <!-- ===== MODAL: AI Prompt Guide ===== -->
 <div id="modal-prompt-guide" class="modal-overlay hidden">
-  <div class="modal prompt-guide-modal">
+  <div class="modal prompt-guide-modal" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-prompt-guide-heading">
     <div class="modal-header">
-      <h3 data-i18n="promptGuide.title">AI Extraction Prompt</h3>
+      <h3 id="modal-prompt-guide-heading" data-i18n="promptGuide.title">AI Extraction Prompt</h3>
       <button class="btn btn-ghost btn-sm" id="btn-prompt-guide-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <p class="prompt-guide-desc" data-i18n="promptGuide.desc">Paste this prompt into any AI (ChatGPT, Claude, Gemini…) followed by your text to generate flashcards.</p>
@@ -1122,9 +1122,9 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 
 <!-- ===== MODAL: Keyboard Shortcuts ===== -->
 <div id="modal-keymap" class="modal-overlay hidden">
-  <div class="modal keymap-modal">
+  <div class="modal keymap-modal" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-keymap-heading">
     <div class="modal-header">
-      <h3 data-i18n="keymap.title">Keyboard Shortcuts</h3>
+      <h3 id="modal-keymap-heading" data-i18n="keymap.title">Keyboard Shortcuts</h3>
       <button class="modal-close" id="btn-keymap-close" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body keymap-body">
@@ -1205,7 +1205,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 
 <!-- ===== MODAL: Global Search ===== -->
 <div id="modal-search" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Search">
-  <div class="modal search-modal">
+  <div class="modal search-modal" tabindex="-1">
     <div class="search-input-wrap">
       <span class="search-icon-prefix" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input type="text" id="search-input" class="search-input"

@@ -937,6 +937,11 @@ body {
   opacity: 1;
   transition: opacity 0.18s ease-out;
 }
+/* A confirm dialog can open over a form; both share one grid cell and the later one in the
+   markup (the confirm) paints on top. */
+#modal-overlay { display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; }
+#modal-overlay > .modal { grid-area: 1 / 1; }
+.modal:focus { outline: none; }
 
 .modal {
   background: var(--surface);

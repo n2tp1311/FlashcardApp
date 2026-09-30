@@ -2369,9 +2369,35 @@ function withBusy(btn, run) {
   });
 }
 
+// Dialogs open in #modal-overlay, oldest first: the confirm dialog can open on top of a form.
+var modalStack = [];
+
+function restoreFocus(el) {
+  if (el && el.isConnected && el.getClientRects().length) el.focus({ preventScroll: true });
+}
+
+// Everything but the top layer is inert, so Tab, taps and screen readers stay inside it.
+// The order matches fcCloseTopModal's precedence.
+function syncInert() {
+  var top = ["modal-search", "modal-keymap", "modal-overlay", "modal-share", "modal-prompt-guide"]
+    .map(function(id) { return document.getElementById(id); })
+    .filter(function(el) { return !el.classList.contains("hidden"); })[0];
+  Array.prototype.forEach.call(document.body.children, function(el) {
+    if (el.id !== "toast" && el.tagName !== "SCRIPT") el.inert = !!top && el !== top;
+  });
+  var topId = modalStack.length ? "modal-" + modalStack[modalStack.length - 1].id : null;
+  document.querySelectorAll("#modal-overlay > .modal").forEach(function(m) { m.inert = m.id !== topId; });
+}
+
 function openModal(id) {
+  var modal = document.getElementById("modal-" + id);
+  if (!modalStack.some(function(e) { return e.id === id; })) modalStack.push({ id: id, opener: document.activeElement });
   document.getElementById("modal-overlay").classList.remove("hidden");
-  document.getElementById("modal-" + id).classList.remove("hidden");
+  modal.classList.remove("hidden");
+  syncInert();
+  // Callers that want a field focused do it right after; focusing the dialog itself doesn't
+  // pop the phone keyboard.
+  (id === "delete" ? modal.querySelector('[data-modal="delete"]') : modal).focus();
 }
 
 function closeModal(id) {
@@ -2379,24 +2405,42 @@ function closeModal(id) {
   if (!modal) return;
   if (id === "tutorial" && !modal.classList.contains("hidden")) markTutorialSeen();
   if (id === "preferences") revertPrefsPreview();
+  // Blur first so a pending edit that commits on focusout (preset rename) still lands.
+  if (modal.contains(document.activeElement)) document.activeElement.blur();
   modal.classList.add("hidden");
-  var anyOpen = Array.from(document.querySelectorAll("#modal-overlay .modal")).some(function(m) {
-    return !m.classList.contains("hidden");
-  });
-  if (!anyOpen) document.getElementById("modal-overlay").classList.add("hidden");
+  var idx = modalStack.findIndex(function(e) { return e.id === id; });
+  var entry = idx === -1 ? null : modalStack.splice(idx, 1)[0];
+  if (!modalStack.length) document.getElementById("modal-overlay").classList.add("hidden");
+  syncInert();
+  if (entry) restoreFocus(entry.opener);
 }
 
-function closeAllModals() {
-  var tutorial = document.getElementById("modal-tutorial");
-  if (tutorial && !tutorial.classList.contains("hidden")) markTutorialSeen();
-  revertPrefsPreview();
-  document.querySelectorAll("#modal-overlay .modal").forEach(function(m) { m.classList.add("hidden"); });
-  document.getElementById("modal-overlay").classList.add("hidden");
+// Esc, browser Back and backdrop taps close only the top dialog. A stray backdrop tap must
+// not dismiss the tutorial (Skip, × and Esc still do).
+function requestCloseTopModal(fromBackdrop) {
+  var top = modalStack[modalStack.length - 1];
+  if (!top) return;
+  if (fromBackdrop && top.id === "tutorial") return;
+  closeModal(top.id);
 }
 
-// Close modal on overlay click
+// Standalone overlays (share, prompt guide, keymap, search) get the same focus handling.
+function showLayer(el) {
+  if (el.classList.contains("hidden")) el._opener = document.activeElement;
+  el.classList.remove("hidden");
+  syncInert();
+  el.querySelector(".modal").focus();
+}
+
+function hideLayer(el) {
+  if (el.classList.contains("hidden")) return;
+  el.classList.add("hidden");
+  syncInert();
+  restoreFocus(el._opener);
+}
+
 document.getElementById("modal-overlay").addEventListener("click", function(e) {
-  if (e.target === this) closeAllModals();
+  if (e.target === this) requestCloseTopModal(true);
 });
 
 // Close buttons
@@ -8325,15 +8369,15 @@ document.getElementById("prompt-guide-text").textContent = AI_EXTRACTION_PROMPT;
 
 document.getElementById("btn-prompt-guide").addEventListener("click", function() {
   document.querySelector("#modal-prompt-guide .modal").classList.remove("hidden");
-  document.getElementById("modal-prompt-guide").classList.remove("hidden");
+  showLayer(document.getElementById("modal-prompt-guide"));
 });
 
 document.getElementById("btn-prompt-guide-close").addEventListener("click", function() {
-  document.getElementById("modal-prompt-guide").classList.add("hidden");
+  hideLayer(document.getElementById("modal-prompt-guide"));
 });
 
 document.getElementById("modal-prompt-guide").addEventListener("click", function(e) {
-  if (e.target === this) this.classList.add("hidden");
+  if (e.target === this) hideLayer(this);
 });
 
 // Shared by every "flash a confirmation on this button, then revert" moment (copy prompt,
@@ -8911,10 +8955,6 @@ document.getElementById("btn-replay-tutorial").addEventListener("click", functio
   openTutorial();
 });
 
-document.getElementById("modal-tutorial").addEventListener("click", function(e) {
-  if (e.target === this) closeTutorial();
-});
-
 function maybeShowFirstRunTutorial(prefs) {
   var cachedPrefs = {};
   try { cachedPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}"); } catch (_) {}
@@ -9358,7 +9398,8 @@ document.getElementById("pref-tts-test").addEventListener("click", function() {
 
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
   prefsSnapshot = null;
-  var theme = state.themePref;
+  var theme = document.querySelector("#pref-theme .pill.active").dataset.value;
+  applyThemePref(theme);
   var haptics = document.getElementById("pref-haptics").checked;
   state.haptics = haptics;
   var quizCountsAsKnown = document.getElementById("pref-quiz-known").checked;
@@ -9666,7 +9707,7 @@ function openShareModal(classId) {
   document.getElementById("share-invite-input").value = "";
   document.getElementById("share-invite-error").classList.add("hidden");
   document.querySelector("#modal-share .modal").classList.remove("hidden");
-  document.getElementById("modal-share").classList.remove("hidden");
+  showLayer(document.getElementById("modal-share"));
 
   // Load existing share link
   loadShareLink(classId);
@@ -9675,7 +9716,7 @@ function openShareModal(classId) {
 }
 
 function closeShareModal() {
-  document.getElementById("modal-share").classList.add("hidden");
+  hideLayer(document.getElementById("modal-share"));
 }
 
 function loadShareLink(classId) {
@@ -9806,7 +9847,7 @@ var _searchResultItems   = [];
 function openSearchModal() {
   var modalEl = document.getElementById("modal-search");
   var inputEl = document.getElementById("search-input");
-  modalEl.classList.remove("hidden");
+  showLayer(modalEl);
   inputEl.value = "";
   _searchActiveIdx   = -1;
   _searchResultItems = [];
@@ -9816,7 +9857,7 @@ function openSearchModal() {
 }
 
 function closeSearchModal() {
-  document.getElementById("modal-search").classList.add("hidden");
+  hideLayer(document.getElementById("modal-search"));
   if (_searchDebounceTimer) { clearTimeout(_searchDebounceTimer); _searchDebounceTimer = null; }
 }
 
@@ -9990,14 +10031,15 @@ function openLessonFromAnywhere(classId, lessonId) {
 
 function toggleKeymapModal() {
   var km = document.getElementById("modal-keymap");
-  km.classList.toggle("hidden");
+  if (km.classList.contains("hidden")) showLayer(km);
+  else hideLayer(km);
 }
 
 document.getElementById("btn-keymap-close").addEventListener("click", function() {
-  document.getElementById("modal-keymap").classList.add("hidden");
+  hideLayer(document.getElementById("modal-keymap"));
 });
 document.getElementById("modal-keymap").addEventListener("click", function(e) {
-  if (e.target === this) this.classList.add("hidden");
+  if (e.target === this) hideLayer(this);
 });
 document.getElementById("btn-show-keymap").addEventListener("click", toggleKeymapModal);
 
@@ -10045,10 +10087,9 @@ document.addEventListener("keydown", function(e) {
   // isInputFocused()/anyModalOpen guard below (which exists specifically to block *other*
   // shortcuts while typing) since this one is meant to fire from inside a focused textarea.
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-    var openCardModal = CARD_SAVE_MODALS.filter(function(m) {
-      var el = document.getElementById(m.modal);
-      return el && !el.classList.contains("hidden");
-    })[0];
+    // Only the top dialog: a confirm open over the editor must not save underneath it.
+    var top = modalStack[modalStack.length - 1];
+    var openCardModal = top && CARD_SAVE_MODALS.filter(function(m) { return m.modal === "modal-" + top.id; })[0];
     if (openCardModal) {
       e.preventDefault();
       document.getElementById(openCardModal.btn).click();
@@ -10320,13 +10361,13 @@ function fcCloseTopModal() {
   var m = document.getElementById("modal-search");
   if (m && !m.classList.contains("hidden")) { closeSearchModal(); return; }
   m = document.getElementById("modal-keymap");
-  if (m && !m.classList.contains("hidden")) { m.classList.add("hidden"); return; }
+  if (m && !m.classList.contains("hidden")) { hideLayer(m); return; }
   m = document.getElementById("modal-overlay");
-  if (m && !m.classList.contains("hidden")) { closeAllModals(); return; }
+  if (m && !m.classList.contains("hidden")) { requestCloseTopModal(); return; }
   m = document.getElementById("modal-share");
   if (m && !m.classList.contains("hidden")) { closeShareModal(); return; }
   m = document.getElementById("modal-prompt-guide");
-  if (m && !m.classList.contains("hidden")) { m.classList.add("hidden"); return; }
+  if (m && !m.classList.contains("hidden")) { hideLayer(m); return; }
 }
 
 history.pushState({ fc: true }, "");
