@@ -145,6 +145,7 @@ Object.assign(TRANSLATIONS.en, {
   "pref.testSpeed": "Test speed",
   "pref.maxReviewsPerDay": "Max reviews per day",
   "pref.noLimit": "No limit",
+  "pref.maxReviewsInvalid": "Enter a whole number (0 or more), or leave it empty for no limit.",
   "pref.apiTokens": "API tokens",
   "pref.apiTokensHint": "Lets KnowledgeApp send card updates to your account.",
   "pref.tokenName": "Token name",
@@ -350,8 +351,9 @@ Object.assign(TRANSLATIONS.en, {
   "setup.cardOrder": "Card Order",
   "setup.inOrder": "In Order",
   "setup.startStudying": "Start Studying",
-  "setup.matchCount": "{n} cards match this filter",
-  "setup.matchCount_one": "{n} card matches this filter",
+  "setup.studyCount": "Study {n} cards",
+  "setup.studyCount_one": "Study {n} card",
+  "setup.studyCountOf": "Study {n} of {total} matching cards",
   "setup.loadFailed": "Couldn't load cards — try again.",
   "setup.studyingTogether": "Studying {n} lessons together",
   "setup.hintAll": "Study all cards",
@@ -698,7 +700,7 @@ Object.assign(TRANSLATIONS.en, {
   "common.failedToSave": "Failed to save",
   "lesson.pickerTermDef": "Term → Definition",
   "lesson.pickerImageDef": "Image → Definition",
-  "bulk.hintTermDef": "One card per line: term | definition\nSupports LaTeX: $\\hat{\\beta}$ or $$\\sum_{i=1}^n x_i$$",
+  "bulk.hintTermDef": "One card per line: term | definition (or paste two spreadsheet columns)\nSupports LaTeX: $\\hat{\\beta}$ or $$\\sum_{i=1}^n x_i$$",
   "bulk.hintTrueFalse": "One card per line: statement | true  or  statement | false [;; explanation]",
   "bulk.hintMcq": "One card per line: question | correct | wrong1 [| wrong2 | wrong3 | wrong4]",
 
@@ -722,6 +724,16 @@ Object.assign(TRANSLATIONS.en, {
   "confirm.reviewTitle": "Mark as reviewed?",
   "validate.noLessonsFound": "No valid lessons found. Start each lesson with a # heading.",
   "bulk.noValidCards": "No valid cards found. Check the format.",
+  "bulk.cardsDetected": "{n} cards detected",
+  "bulk.cardsDetected_one": "{n} card detected",
+  "bulk.linesSkipped": "{n} lines will be skipped:",
+  "bulk.linesSkipped_one": "{n} line will be skipped:",
+  "bulk.lineReason": "Line {n}: {reason}",
+  "bulk.errNoSeparator": "no | or tab between the parts",
+  "bulk.errEmptyPart": "one side is empty",
+  "bulk.errMcqParts": "needs question | correct answer | at least one wrong answer",
+  "bulk.errTfAnswer": "the answer must be true or false",
+  "bulk.errNoLesson": "comes before any # lesson heading",
   "toast.archived": "Archived \"{name}\".",
   "toast.unarchived": "Unarchived \"{name}\".",
   "toast.archivedMany": "Archived {n} classes.",
@@ -814,6 +826,7 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.testSpeed": "Nghe thử tốc độ",
   "pref.maxReviewsPerDay": "Số lượt ôn tối đa mỗi ngày",
   "pref.noLimit": "Không giới hạn",
+  "pref.maxReviewsInvalid": "Nhập số nguyên từ 0 trở lên, hoặc để trống nếu không giới hạn.",
   "pref.apiTokens": "Mã API",
   "pref.apiTokensHint": "Cho phép KnowledgeApp gửi cập nhật thẻ vào tài khoản của bạn.",
   "pref.tokenName": "Tên mã",
@@ -1010,7 +1023,8 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.cardOrder": "Thứ tự thẻ",
   "setup.inOrder": "Theo thứ tự",
   "setup.startStudying": "Bắt đầu học",
-  "setup.matchCount": "{n} thẻ khớp bộ lọc này",
+  "setup.studyCount": "Học {n} thẻ",
+  "setup.studyCountOf": "Học {n}/{total} thẻ khớp bộ lọc",
   "setup.loadFailed": "Không tải được thẻ — thử lại nhé.",
   "setup.studyingTogether": "Đang học {n} bài học cùng lúc",
   "setup.hintAll": "Học tất cả thẻ",
@@ -1052,7 +1066,7 @@ Object.assign(TRANSLATIONS.vi, {
   "confirm.deleteLesson": "Xóa bài học \"{title}\" cùng toàn bộ thẻ ghi nhớ? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "alert.noCardsDue": "Hiện chưa có thẻ nào đến hạn ôn tập.",
   "alert.dailyReviewCapReached": "Bạn đã đạt giới hạn ôn tập hôm nay — quay lại vào ngày mai nhé!",
-  "bulk.andMore": "... và {n} thẻ nữa",
+  "bulk.andMore": "... và {n} mục nữa",
   "bulk.summary": "{lessons}, tổng {cards}",
   "class.unarchiveClass": "Bỏ lưu trữ lớp",
 
@@ -1350,7 +1364,7 @@ Object.assign(TRANSLATIONS.vi, {
   "common.failedToSave": "Lưu thất bại",
   "lesson.pickerTermDef": "Thuật ngữ → Định nghĩa",
   "lesson.pickerImageDef": "Hình ảnh → Định nghĩa",
-  "bulk.hintTermDef": "Mỗi dòng một thẻ: thuật ngữ | định nghĩa\nHỗ trợ LaTeX: $\\hat{\\beta}$ hoặc $$\\sum_{i=1}^n x_i$$",
+  "bulk.hintTermDef": "Mỗi dòng một thẻ: thuật ngữ | định nghĩa (hoặc dán hai cột từ bảng tính)\nHỗ trợ LaTeX: $\\hat{\\beta}$ hoặc $$\\sum_{i=1}^n x_i$$",
   "bulk.hintTrueFalse": "Mỗi dòng một thẻ: câu | true  hoặc  câu | false [;; giải thích]",
   "bulk.hintMcq": "Mỗi dòng một thẻ: câu hỏi | đáp án đúng | sai1 [| sai2 | sai3 | sai4]",
 
@@ -1372,6 +1386,14 @@ Object.assign(TRANSLATIONS.vi, {
   "confirm.reviewTitle": "Đánh dấu đã xem?",
   "validate.noLessonsFound": "Không tìm thấy bài học hợp lệ. Hãy bắt đầu mỗi bài học bằng một dòng tiêu đề #.",
   "bulk.noValidCards": "Không tìm thấy thẻ hợp lệ. Hãy kiểm tra định dạng.",
+  "bulk.cardsDetected": "Nhận diện được {n} thẻ",
+  "bulk.linesSkipped": "Sẽ bỏ qua {n} dòng:",
+  "bulk.lineReason": "Dòng {n}: {reason}",
+  "bulk.errNoSeparator": "thiếu dấu | hoặc tab giữa các phần",
+  "bulk.errEmptyPart": "thiếu một vế",
+  "bulk.errMcqParts": "cần câu hỏi | đáp án đúng | ít nhất một đáp án sai",
+  "bulk.errTfAnswer": "đáp án phải là true hoặc false",
+  "bulk.errNoLesson": "nằm trước mọi tiêu đề # bài học",
   "toast.archived": "Đã lưu trữ \"{name}\".",
   "toast.unarchived": "Đã bỏ lưu trữ \"{name}\".",
   "toast.archivedMany": "Đã lưu trữ {n} lớp.",
@@ -1682,35 +1704,46 @@ function restoreLatexPipes(text) {
   return text.replace(new RegExp(PIPE_PLACEHOLDER, "g"), "|");
 }
 
-function parseBulkTermDef(raw) {
+// A pasted spreadsheet row separates columns with tabs; "|" still wins when a line has one,
+// so LaTeX and existing pastes keep their meaning.
+function splitBulkParts(line) {
+  return line.split(line.indexOf("|") === -1 && line.indexOf("\t") !== -1 ? "\t" : "|");
+}
+
+// Lines the parsers skip are pushed onto `rejected` (when given) with a reason, so the preview
+// can say which lines won't be added instead of silently dropping them.
+function rejectBulkLine(rejected, lineIndex, reasonKey) {
+  if (rejected) rejected.push({ line: lineIndex + 1, reason: t(reasonKey) });
+}
+
+function parseBulkTermDef(raw, rejected) {
   var lines = raw.split("\n");
   var cards = [];
-  lines.forEach(function(line) {
+  lines.forEach(function(line, i) {
     var trimmed = line.trim();
     if (!trimmed) return;
-    var protected_ = protectLatexPipes(trimmed);
-    var parts = protected_.split("|");
-    if (parts.length < 2) return;
+    var parts = splitBulkParts(protectLatexPipes(trimmed));
+    if (parts.length < 2) { rejectBulkLine(rejected, i, "bulk.errNoSeparator"); return; }
     var term = restoreLatexPipes(parts[0].trim());
     var def  = restoreLatexPipes(parts.slice(1).join("|").trim());
     if (term && def) cards.push({ format: "term-def", data: { term: term, def: def } });
+    else rejectBulkLine(rejected, i, "bulk.errEmptyPart");
   });
   return cards;
 }
 
-function parseBulkMCQ(raw) {
+function parseBulkMCQ(raw, rejected) {
   var lines = raw.split("\n");
   var cards = [];
-  lines.forEach(function(line) {
+  lines.forEach(function(line, i) {
     var trimmed = line.trim();
     if (!trimmed) return;
     // Split off optional explanation after ";;"
     var semiIdx     = trimmed.indexOf(";;");
     var mcqPart     = semiIdx >= 0 ? trimmed.slice(0, semiIdx) : trimmed;
     var explanation = semiIdx >= 0 ? trimmed.slice(semiIdx + 2).trim() : null;
-    var protected_ = protectLatexPipes(mcqPart);
-    var parts = protected_.split("|");
-    if (parts.length < 3) return;
+    var parts = splitBulkParts(protectLatexPipes(mcqPart));
+    if (parts.length < 3) { rejectBulkLine(rejected, i, "bulk.errMcqParts"); return; }
     var q           = restoreLatexPipes(parts[0].trim());
     var correct     = restoreLatexPipes(parts[1].trim());
     var distractors = parts.slice(2).map(function(p) { return restoreLatexPipes(p.trim()); }).filter(Boolean);
@@ -1719,26 +1752,28 @@ function parseBulkMCQ(raw) {
       var data = { question: q, correct: correct, distractors: distractors };
       if (explanation) data.explanation = explanation;
       cards.push({ format: "mcq", data: data });
+    } else {
+      rejectBulkLine(rejected, i, "bulk.errMcqParts");
     }
   });
   return cards;
 }
 
-function parseBulkTF(raw) {
+function parseBulkTF(raw, rejected) {
   var lines = raw.split("\n");
   var cards = [];
-  lines.forEach(function(line) {
+  lines.forEach(function(line, i) {
     var trimmed = line.trim();
     if (!trimmed) return;
     var semiIdx = trimmed.indexOf(";;");
     var tfPart = semiIdx >= 0 ? trimmed.slice(0, semiIdx) : trimmed;
     var explanation = semiIdx >= 0 ? trimmed.slice(semiIdx + 2).trim() : null;
-    var protected_ = protectLatexPipes(tfPart);
-    var parts = protected_.split("|");
-    if (parts.length < 2) return;
+    var parts = splitBulkParts(protectLatexPipes(tfPart));
+    if (parts.length < 2) { rejectBulkLine(rejected, i, "bulk.errNoSeparator"); return; }
     var statement = restoreLatexPipes(parts[0].trim());
     var answer = restoreLatexPipes(parts[1].trim()).toLowerCase();
-    if (!statement || (answer !== "true" && answer !== "false")) return;
+    if (!statement) { rejectBulkLine(rejected, i, "bulk.errEmptyPart"); return; }
+    if (answer !== "true" && answer !== "false") { rejectBulkLine(rejected, i, "bulk.errTfAnswer"); return; }
     var data = { statement: statement, correct: answer };
     if (explanation) data.explanation = explanation;
     cards.push({ format: "true-false", data: data });
@@ -2881,6 +2916,19 @@ function _renderClassItems(classes) {
     container.className = "class-grid";
     classes.forEach(function(cls) { _renderClassGridCard(cls, container); });
   }
+  if (state.homeSelectMode) {
+    // Selection follows what's on screen: drop classes the new filter hides.
+    var shown = classes.map(function(c) { return c.id; });
+    state.selectedClassIds = state.selectedClassIds.filter(function(id) { return shown.indexOf(id) !== -1; });
+    _syncClassSelectionUI();
+  }
+}
+
+// Re-sorts, re-filters or switches view using the classes already loaded, so the page doesn't
+// refetch and jump, and select mode survives.
+function _renderHomeClassList() {
+  _renderClassItems(_applyHomeFilter(sortClasses(state.homeClasses, state.currentClassSort, state.currentClassSortDir)));
+  if (state._classAccuracyMap) _applyClassAccuracy(state._classAccuracyMap);
 }
 
 function toggleClassArchived(cls) {
@@ -3070,7 +3118,7 @@ function _applyClassAccuracy(accMap) {
       slicerBar.querySelectorAll(".pill").forEach(function(b) {
         b.classList.toggle("active", b.dataset.filter === state.homeFilter);
       });
-      _renderClassItems(_applyHomeFilter(state.homeClasses));
+      _renderHomeClassList();
     });
   }
 
@@ -3085,7 +3133,7 @@ function _applyClassAccuracy(accMap) {
         b.classList.toggle("active", b.dataset.filter === state.homeTagFilter);
       });
       _syncTagFilterToggleUI();
-      _renderClassItems(_applyHomeFilter(state.homeClasses));
+      _renderHomeClassList();
     });
   }
 
@@ -3117,7 +3165,7 @@ function _applyClassAccuracy(accMap) {
       state.homeView = btn.dataset.view;
       try { localStorage.setItem("fc-home-view", state.homeView); } catch (_) {}
       _updateHomeViewToggle();
-      _renderClassItems(_applyHomeFilter(state.homeClasses));
+      _renderHomeClassList();
     });
   }
 }());
@@ -3125,13 +3173,14 @@ function _applyClassAccuracy(accMap) {
 document.getElementById("class-sort-select").addEventListener("change", function() {
   state.currentClassSort = this.value;
   try { localStorage.setItem("fc-class-sort", this.value); } catch (_) {}
-  renderHome();
+  if (state.homeClasses) _renderHomeClassList(); else renderHome();
 });
 
 document.getElementById("class-sort-dir").addEventListener("click", function() {
   state.currentClassSortDir = state.currentClassSortDir === "asc" ? "desc" : "asc";
   try { localStorage.setItem("fc-class-sort-dir", state.currentClassSortDir); } catch (_) {}
-  renderHome();
+  this.innerHTML = state.currentClassSortDir === "desc" ? ICON_CHEVRON_DOWN : ICON_CHEVRON_UP;
+  if (state.homeClasses) _renderHomeClassList(); else renderHome();
 });
 
 function openClass(classId) {
@@ -3756,25 +3805,32 @@ function setHomeSelectMode(on) {
   if (btn) btn.classList.toggle("active", on);
   var allCheck = document.getElementById("select-all-classes");
   if (allCheck) allCheck.checked = false;
+  _syncClassSelectionUI();
+}
 
+// Checkboxes and the selected state on the rendered class cards, from state.
+function _syncClassSelectionUI() {
+  var on = state.homeSelectMode;
   document.querySelectorAll("#class-list [data-class-id]").forEach(function(card) {
-    card.classList.remove("selected");
+    var selected = on && state.selectedClassIds.indexOf(card.dataset.classId) !== -1;
+    card.classList.toggle("selected", selected);
     var existing = card.querySelector(".lesson-check");
     if (on && !existing) {
-      var check = document.createElement("input");
-      check.type = "checkbox";
-      check.className = "lesson-check";
+      existing = document.createElement("input");
+      existing.type = "checkbox";
+      existing.className = "lesson-check";
       if (card.classList.contains("class-list-row")) {
         var colorbar = card.querySelector(".class-list-colorbar");
-        card.insertBefore(check, colorbar ? colorbar.nextSibling : card.firstChild);
+        card.insertBefore(existing, colorbar ? colorbar.nextSibling : card.firstChild);
       } else {
-        card.insertBefore(check, card.firstChild);
+        card.insertBefore(existing, card.firstChild);
       }
     } else if (!on && existing) {
       existing.remove();
+      existing = null;
     }
+    if (existing) existing.checked = selected;
   });
-
   updateHomeSelectBar();
 }
 
@@ -5223,9 +5279,14 @@ document.getElementById("bulk-input").addEventListener("input", function() {
 
 function renderBulkPreview(raw, format) {
   var preview = document.getElementById("bulk-preview");
-  var cards = format === "term-def" ? parseBulkTermDef(raw) : format === "true-false" ? parseBulkTF(raw) : parseBulkMCQ(raw);
-  if (cards.length === 0) { preview.innerHTML = ""; return; }
-  preview.innerHTML = '<div class="bulk-preview-count">' + cards.length + ' card' + (cards.length !== 1 ? 's' : '') + ' detected</div>';
+  var rejected = [];
+  var cards = format === "term-def" ? parseBulkTermDef(raw, rejected) : format === "true-false" ? parseBulkTF(raw, rejected) : parseBulkMCQ(raw, rejected);
+  preview.innerHTML = "";
+  if (cards.length === 0 && rejected.length === 0) return;
+  var countEl = document.createElement("div");
+  countEl.className = "bulk-preview-count";
+  countEl.textContent = t("bulk.cardsDetected", { n: cards.length });
+  preview.appendChild(countEl);
   cards.slice(0, 5).forEach(function(card) {
     var item = document.createElement("div");
     item.className = "bulk-preview-item";
@@ -5250,9 +5311,32 @@ function renderBulkPreview(raw, format) {
   if (cards.length > 5) {
     var more = document.createElement("div");
     more.className = "bulk-preview-count";
-    more.textContent = "... and " + (cards.length - 5) + " more";
+    more.textContent = t("bulk.andMore", { n: cards.length - 5 });
     preview.appendChild(more);
   }
+  renderBulkRejected(preview, rejected);
+}
+
+// Lists the lines a bulk paste will skip and why, so nothing is dropped silently.
+function renderBulkRejected(container, rejected) {
+  if (!rejected.length) return;
+  var box = document.createElement("div");
+  box.className = "bulk-preview-rejected";
+  var head = document.createElement("div");
+  head.className = "bulk-preview-rejected-head";
+  head.textContent = t("bulk.linesSkipped", { n: rejected.length });
+  box.appendChild(head);
+  rejected.slice(0, 10).forEach(function(r) {
+    var row = document.createElement("div");
+    row.textContent = t("bulk.lineReason", { n: r.line, reason: r.reason });
+    box.appendChild(row);
+  });
+  if (rejected.length > 10) {
+    var more = document.createElement("div");
+    more.textContent = t("bulk.andMore", { n: rejected.length - 10 });
+    box.appendChild(more);
+  }
+  container.appendChild(box);
 }
 
 function openBulkAdd() {
@@ -5352,14 +5436,13 @@ function openSetup(scope) {
   document.getElementById("setup-filter-hint").textContent = t(FILTER_HINT_KEYS.all);
   document.getElementById("setup-mode-hint").textContent = t(MODE_HINT_KEYS.flashcard);
 
-  // Show scope label when studying more than one lesson
+  // Say what's being studied: the lesson's name, or how many lessons together.
   var scopeLabel = document.getElementById("setup-scope-label");
-  if (state.studyScope.lessons.length > 1) {
-    scopeLabel.textContent = t("setup.studyingTogether", { n: state.studyScope.lessons.length });
-    scopeLabel.classList.remove("hidden");
-  } else {
-    scopeLabel.classList.add("hidden");
-  }
+  var scopeLessons = state.studyScope.lessons;
+  scopeLabel.textContent = scopeLessons.length > 1
+    ? t("setup.studyingTogether", { n: scopeLessons.length })
+    : (scopeLessons[0] && scopeLessons[0].title) || "";
+  scopeLabel.classList.toggle("hidden", !scopeLabel.textContent);
 
   // Show Interleaved pill only for multi-lesson sessions; always default to in-order
   var multiLesson = state.studyScope.lessons.length > 1;
@@ -5376,6 +5459,7 @@ function openSetup(scope) {
   // opening Setup never causes more network round-trips than clicking Start alone used to.
   var matchCountEl = document.getElementById("setup-match-count");
   if (matchCountEl) matchCountEl.textContent = "";
+  document.getElementById("btn-start-study").disabled = false;
   var requestId = ++state.setupRequestId;
   var ids = state.studyScope.lessonIds;
   var reviewsTodayPromise = IS_SERVER ? store.getReviewsToday() : Promise.resolve({ count: 0 });
@@ -5400,20 +5484,30 @@ function openSetup(scope) {
       matchCountEl.textContent = t("setup.loadFailed");
       matchCountEl.classList.add("setup-match-count-warn");
     }
-    return { cards: [], knownMap: {}, statsMap: {}, reviewsToday: 0 };
+    return { cards: [], knownMap: {}, statsMap: {}, reviewsToday: 0, loadFailed: true };
   });
 }
 
 function updateSetupMatchCount(data) {
   var countEl = document.getElementById("setup-match-count");
   if (!countEl || !data) return;
+  // Keep saying the load failed; recounting the empty fallback would blame the filter.
+  if (data.loadFailed) {
+    countEl.textContent = t("setup.loadFailed");
+    countEl.classList.add("setup-match-count-warn");
+    return;
+  }
   var filterPill = document.querySelector("#setup-filter .pill.active");
   var filter = filterPill ? filterPill.dataset.value : "all";
   var matched = filterCardsBySetup(data.cards, filter, data.knownMap, data.statsMap, data.reviewsToday);
+  var countPill = document.querySelector("#setup-count .pill.active");
+  var limit = countPill && countPill.dataset.value !== "all" ? parseInt(countPill.dataset.value, 10) : Infinity;
+  var n = Math.min(limit, matched.length);
   countEl.classList.toggle("setup-match-count-warn", matched.length === 0);
-  countEl.textContent = matched.length === 0
-    ? t("study.noCardsMatchFilter")
-    : t("setup.matchCount", { n: matched.length });
+  countEl.textContent = matched.length === 0 ? t("study.noCardsMatchFilter")
+    : n < matched.length ? t("setup.studyCountOf", { n: n, total: matched.length })
+    : t("setup.studyCount", { n: n });
+  document.getElementById("btn-start-study").disabled = matched.length === 0;
 }
 
 function setPillGroup(groupId, value) {
@@ -5745,7 +5839,9 @@ var MODE_HINT_KEYS = {
         var modeHintOnFilterSwitch = document.getElementById("setup-mode-hint");
         if (modeHintOnFilterSwitch) modeHintOnFilterSwitch.textContent = t(MODE_HINT_KEYS.flashcard);
       }
-      // Only the filter pill changes which cards match — count/mode/order don't.
+    }
+    // Filter changes which cards match; Card Count changes how many of them are studied.
+    if (groupId === "setup-filter" || groupId === "setup-count") {
       var thisRequestId = state.setupRequestId;
       state.setupDataPromise.then(function(data) {
         if (thisRequestId === state.setupRequestId) updateSetupMatchCount(data);
@@ -8430,10 +8526,10 @@ document.getElementById("btn-dashboard-export").addEventListener("click", functi
    BULK LESSON + CARD IMPORT
    ============================ */
 
-function parseBulkImport(raw) {
+function parseBulkImport(raw, rejected) {
   var sections = [];
   var current = null;
-  raw.split("\n").forEach(function(line) {
+  raw.split("\n").forEach(function(line, i) {
     var trimmed = line.trim();
     if (!trimmed) return;
     if (trimmed.startsWith("#")) {
@@ -8445,15 +8541,19 @@ function parseBulkImport(raw) {
       current = { title: title, format: format, lines: [] };
       sections.push(current);
     } else if (current) {
-      current.lines.push(trimmed);
+      current.lines.push({ text: trimmed, n: i + 1 });
+    } else {
+      rejectBulkLine(rejected, i, "bulk.errNoLesson");
     }
   });
   return sections.map(function(s) {
-    var cards = s.format === "term-def"
-      ? parseBulkTermDef(s.lines.join("\n"))
-      : s.format === "true-false"
-      ? parseBulkTF(s.lines.join("\n"))
-      : parseBulkMCQ(s.lines.join("\n"));
+    var text = s.lines.map(function(l) { return l.text; }).join("\n");
+    var local = [];
+    var cards = s.format === "term-def" ? parseBulkTermDef(text, local)
+      : s.format === "true-false" ? parseBulkTF(text, local)
+      : parseBulkMCQ(text, local);
+    // The section parser numbers lines within the section; map back to the pasted text.
+    if (rejected) local.forEach(function(r) { rejected.push({ line: s.lines[r.line - 1].n, reason: r.reason }); });
     return { title: s.title, format: s.format, cards: cards };
   }).filter(function(s) { return s.title; });
 }
@@ -8461,8 +8561,9 @@ function parseBulkImport(raw) {
 function renderBulkImportPreview(raw) {
   var preview = document.getElementById("bulk-import-preview");
   preview.innerHTML = "";
-  var sections = parseBulkImport(raw);
-  if (sections.length === 0) return;
+  var rejected = [];
+  var sections = parseBulkImport(raw, rejected);
+  if (sections.length === 0) { renderBulkRejected(preview, rejected); return; }
 
   sections.forEach(function(section) {
     var block = document.createElement("div");
@@ -8505,6 +8606,7 @@ function renderBulkImportPreview(raw) {
   summary.className = "bulk-preview-count";
   summary.textContent = t("bulk.summary", { lessons: t("count.lessons", { n: sections.length }), cards: t("count.cards", { n: total }) });
   preview.insertBefore(summary, preview.firstChild);
+  renderBulkRejected(preview, rejected);
 }
 
 var bulkImportTimer = null;
@@ -9663,6 +9765,14 @@ document.getElementById("pref-tts-test").addEventListener("click", function() {
 });
 
 document.getElementById("btn-save-preferences").addEventListener("click", function() {
+  // Empty = no limit (null); 0 is a real "study nothing today" cap, so anything else that isn't
+  // a whole number is rejected rather than quietly becoming 0.
+  var maxField = document.getElementById("pref-max-reviews");
+  var maxReviewsRaw = maxField.value.trim();
+  if (maxField.validity.badInput || (maxReviewsRaw !== "" && !/^\d+$/.test(maxReviewsRaw))) {
+    showFieldError(maxField, t("pref.maxReviewsInvalid"));
+    return;
+  }
   prefsSnapshot = null;
   var theme = document.querySelector("#pref-theme .pill.active").dataset.value;
   applyThemePref(theme);
@@ -9674,11 +9784,10 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   state.ttsRate = rate;
   var lang = document.getElementById("pref-lang-vi").classList.contains("active") ? "vi" : "en";
   applyLanguage(lang);
-  // Empty field = no limit (null); a typed "0" is a real cap, not "no limit" — must not
-  // collapse to null via a truthy check. Negative input clamped to 0.
-  var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
-  var maxReviews = maxReviewsRaw === "" ? null : Math.max(0, parseInt(maxReviewsRaw, 10) || 0);
+  var maxReviews = maxReviewsRaw === "" ? null : parseInt(maxReviewsRaw, 10);
   state.maxReviewsPerDay = maxReviews;
+  // A changed review cap changes what Study Setup matches (and whether Start is enabled).
+  if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
   var prefs = { theme: theme, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache

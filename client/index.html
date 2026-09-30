@@ -500,9 +500,9 @@
         <button class="pill" id="pill-order-interleaved" data-value="interleaved" style="display:none">Interleaved ✦</button>
       </div>
     </div>
-    <p class="setup-match-count" id="setup-match-count"></p>
   </div>
   <div class="setup-sticky-footer">
+    <p class="setup-match-count" id="setup-match-count" aria-live="polite"></p>
     <button class="btn btn-primary btn-full" id="btn-start-study" data-i18n="setup.startStudying">Start Studying</button>
   </div>
 </div>
@@ -728,8 +728,8 @@
         </div>
       </div>
       <div class="pref-row">
-        <label class="form-label" data-i18n="pref.maxReviewsPerDay">Max reviews per day</label>
-        <input type="number" id="pref-max-reviews" class="form-input" min="0" step="10" style="width:100px" placeholder="No limit" data-i18n-placeholder="pref.noLimit">
+        <label class="form-label" for="pref-max-reviews" data-i18n="pref.maxReviewsPerDay">Max reviews per day</label>
+        <input type="number" id="pref-max-reviews" class="form-input" min="0" step="1" inputmode="numeric" style="width:100px" placeholder="No limit" data-i18n-placeholder="pref.noLimit">
       </div>
       <div class="pref-row">
         <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
