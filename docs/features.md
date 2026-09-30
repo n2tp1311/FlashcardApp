@@ -340,4 +340,7 @@
 - Study Setup's footer shows "Study N of M matching cards" (Card Count and filter), Start is disabled at 0 matches, and the header names the lesson
 - Bulk Add and Bulk Import list skipped lines with a reason; a line with no "|" splits on a tab (spreadsheet paste)
 - Max reviews per day rejects anything but a whole number ≥ 0 with an inline message
+- Preferences → Backup: "Download full backup" (every class, lesson, card, attempt and SRS state) as `flashcards-backup-YYYY-MM-DD.json` via `GET /api/export`. The class Import button recognizes that file and explains it isn't a class export
+- `POST /api/import` only attaches rows to parents imported from the same file, rejects non-array bodies, skips malformed rows, clears KnowledgeApp external ids the user already has, and reports rows actually added
+- Share dialog loads the class's current link from the server (`GET /api/share/link/:classId`), so it survives a reload; "Disable link" is labelled, confirms first, and reports a failed delete
 

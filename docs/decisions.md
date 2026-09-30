@@ -863,3 +863,9 @@ The match count sat below Card Order, off-screen on phones, and ignored Card Cou
 ## 2026-09-30 — Bulk paste: report skipped lines; tab only when a line has no "|"
 Bulk Add silently dropped lines it couldn't parse ("2 cards detected" from 4 pasted), and spreadsheet pastes (tab-separated) were all rejected. Parsers now report each skipped line with a reason and the preview lists them. A tab separates columns only when the line contains no `|`, so existing pastes and LaTeX (`|` inside `$…$`) keep their meaning.
 
+## 2026-09-30 — Full backup: download now, restore later; import can't write into other accounts
+The UX review found no way to get a real backup: the visible Export is content-only by design (2026-09-02), and nothing in the UI called the full `GET /api/export` / `POST /api/import` pair. Download is now in Preferences.
+- **Security fix found while planning.** `POST /api/import` resolved a lesson's class (and a card's lesson, an attempt's or state's card) as `idMap[old] || old`, so an id missing from the file was used as written. Any signed-in user who knew another user's class id could insert lessons into it (reproduced against the pre-fix server). Rows now attach only to parents created from the same file.
+- **Restore isn't in the UI yet.** The import only ever adds: every row gets a new id, so restoring into the account the backup came from duplicates every class and its study history. Whether restore should add copies or replace everything is a product decision, so it's deferred; the class Import button explains that a full backup isn't a class export rather than failing on its shape.
+- **Share link state comes from the server.** The dialog used a per-page cache, so after a reload a class that already had a link showed "Generate Link". The confirm dialog is raised above the share layer with z-index so it paints where the focus handling (`syncInert`) already considers it to be.
+
