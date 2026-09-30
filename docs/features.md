@@ -167,6 +167,7 @@
 - `[key]` hints injected next to button labels on desktop; hidden on mobile (`≤600px`)
 - Escape works for any modal (overlay forms, share, prompt guide, keymap)
 - Dialogs are a stack: Esc, browser Back or a backdrop tap closes only the top one (a confirm opened over a form sits on top of it). Opening a dialog moves focus into it and closing returns focus to what opened it; everything behind the top dialog is `inert`, and every dialog has `role="dialog"`, `aria-modal` and a label. A backdrop tap never dismisses the first-run tutorial
+- Form dialogs ask "Discard changes?" when closed by Esc, browser Back or a backdrop tap with unsaved changes (compared against a snapshot taken on open); Cancel and × never ask. Enter in a single-line field submits the dialog, textareas keep Enter for new lines, and an IME Enter that commits a composed word is ignored. Enter on a focused Study Setup pill selects it (pill groups expose `aria-pressed`)
 - `class-card` and `lesson-item` elements have `tabIndex=-1` + `focus-visible` outline so keyboard focus is always visible
 
 ## KnowledgeApp Sync (server mode only)
