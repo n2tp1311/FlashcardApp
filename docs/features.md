@@ -6,7 +6,8 @@
 - Plurals: `t(key, {n})` uses a `key_one` string when `n` is 1 (English only; Vietnamese has no plural forms), so counts read "1 card" / "2 cards". Durations use translated `unit.*` strings everywhere ("10 min" / "10 phút", "1h 5m" / "1 giờ 5 phút"), and study time under a minute shows seconds
 - Icon-preserving translation: `applyI18n` updates only the last text node of an icon+label button (rather than clobbering `innerHTML`), so inline SVG icons survive a language switch without needing every button label wrapped in a `<span>`
 - Every screen, modal, and dynamically-generated string (search results, share invite list, validation messages and toasts, MCQ distractor fields, relative-time labels, difficulty/format badges) is wired through `t()` — covers the full app, not just static markup
-- Explicitly out of scope: user-authored content (card text, class/lesson names, `cls.icon`), server error strings passed through verbatim, and the AI-extraction-prompt text (instructional copy meant for an external AI tool, not the app's own UI)
+- Server errors a user can cause carry a stable `code` (`invalidCredentials`, `rateLimited`, `cannotInviteSelf`, …) that the client translates via `error.<code>`, falling back to the server's English text for anything else; connection failures read "Network error"
+- Explicitly out of scope: user-authored content (card text, class/lesson names, `cls.icon`), uncoded server error strings passed through verbatim, and the AI-extraction-prompt text (instructional copy meant for an external AI tool, not the app's own UI)
 - Remaining gaps closed from the 10-agent UX audit: card-select-toolbar counter (`"N selected"`), the Generate Link / Invite-by-Name-or-Email share modal headings, and the True/False result badge (`"✓ True"`/`"✓ False"`) now go through `t()` instead of hardcoded English
 
 ## UI / Design
