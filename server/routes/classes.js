@@ -189,11 +189,11 @@ router.post("/:id/suggest-tags", requireAuth, suggestTagsLimiter, async (req, re
     res.json({ tags: normalizeTags(tags) });
   } catch (err) {
     if (err.code === "no_content")
-      return res.status(400).json({ error: "This class has no cards to analyze yet" });
+      return res.status(400).json({ error: "This class has no cards to analyze yet", code: "noCardsToAnalyze" });
     if (err.code === "not_configured")
-      return res.status(501).json({ error: "AI tag suggestions aren't configured on this server" });
+      return res.status(501).json({ error: "AI tag suggestions aren't configured on this server", code: "aiNotConfigured" });
     console.error("[classifier] suggestTags failed:", err);
-    res.status(502).json({ error: "AI tag suggestion failed — try again" });
+    res.status(502).json({ error: "AI tag suggestion failed — try again", code: "aiFailed" });
   }
 });
 

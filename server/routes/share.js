@@ -133,7 +133,7 @@ router.delete("/link/:classId", requireAuth, (req, res) => {
 // GET /api/share/view/:token  — public: get class info by token (no auth required)
 router.get("/view/:token", viewLimiter, (req, res) => {
   const link = db.prepare("SELECT * FROM class_share_links WHERE token = ?").get(req.params.token);
-  if (!link) return res.status(404).json({ error: "Invalid or expired link" });
+  if (!link) return res.status(404).json({ error: "Invalid or expired link", code: "linkInvalid" });
 
   const { cls, lessons, cards } = getClassData(link.class_id);
   const owner = db.prepare("SELECT name FROM users WHERE id = ?").get(cls.user_id);
@@ -146,11 +146,11 @@ router.get("/view/:token", viewLimiter, (req, res) => {
 // POST /api/share/clone/:token  — clone shared class into current user's account
 router.post("/clone/:token", requireAuth, cloneLimiter, (req, res) => {
   const link = db.prepare("SELECT * FROM class_share_links WHERE token = ?").get(req.params.token);
-  if (!link) return res.status(404).json({ error: "Invalid or expired link" });
+  if (!link) return res.status(404).json({ error: "Invalid or expired link", code: "linkInvalid" });
 
   // Prevent owner from cloning their own class
   const cls = db.prepare("SELECT user_id FROM classes WHERE id = ?").get(link.class_id);
-  if (cls.user_id === req.session.userId) return res.status(400).json({ error: "You already own this class" });
+  if (cls.user_id === req.session.userId) return res.status(400).json({ error: "You already own this class", code: "alreadyOwned" });
 
   const newClassId = cloneClass(link.class_id, req.session.userId);
   res.status(201).json({ classId: newClassId });
@@ -169,12 +169,12 @@ router.post("/invite/:classId", requireAuth, (req, res) => {
 
   const target = db.prepare("SELECT id, name, email FROM users WHERE email = ? OR name = ? LIMIT 1")
     .get(query.trim(), query.trim());
-  if (!target) return res.status(404).json({ error: "User not found" });
-  if (target.id === req.session.userId) return res.status(400).json({ error: "Cannot invite yourself" });
+  if (!target) return res.status(404).json({ error: "User not found", code: "userNotFound" });
+  if (target.id === req.session.userId) return res.status(400).json({ error: "Cannot invite yourself", code: "cannotInviteSelf" });
 
   const existing = db.prepare("SELECT id FROM class_invites WHERE class_id = ? AND user_id = ?")
     .get(req.params.classId, target.id);
-  if (existing) return res.status(400).json({ error: "User already has access" });
+  if (existing) return res.status(400).json({ error: "User already has access", code: "alreadyShared" });
 
   db.prepare(
     "INSERT INTO class_invites (id, class_id, user_id, invited_by) VALUES (?, ?, ?, ?)"

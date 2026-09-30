@@ -74,7 +74,7 @@ router.delete("/:id", requireAuth, saveLimiter, (req, res) => {
     "SELECT status FROM vocabulary_requests WHERE id = ? AND user_id = ?"
   ).get(req.params.id, req.session.userId);
   if (!request) return res.status(404).json({ error: "Vocabulary request not found" });
-  res.status(409).json({ error: "This word has already been fetched" });
+  res.status(409).json({ error: "This word has already been fetched", code: "alreadyFetched" });
 });
 
 module.exports = router;

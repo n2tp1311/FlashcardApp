@@ -32,7 +32,7 @@ router.post("/", requireAuth, createLimiter, (req, res) => {
   if (name.length > 60) return res.status(400).json({ error: "name must be at most 60 characters" });
   const count = db.prepare("SELECT COUNT(*) AS n FROM api_tokens WHERE user_id = ?").get(userId).n;
   if (count >= MAX_TOKENS_PER_USER)
-    return res.status(400).json({ error: "Token limit reached — revoke one first" });
+    return res.status(400).json({ error: "Token limit reached — revoke one first", code: "tokenLimit" });
 
   const token = "fca_" + crypto.randomBytes(32).toString("base64url");
   const id = genId();

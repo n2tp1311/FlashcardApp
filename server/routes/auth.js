@@ -47,12 +47,12 @@ function setSession(req, user) {
 router.post("/register", registerLimiter, (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password)
-    return res.status(400).json({ error: "name, email and password are required" });
+    return res.status(400).json({ error: "name, email and password are required", code: "missingFields" });
   if (password.length < 6)
-    return res.status(400).json({ error: "Password must be at least 6 characters" });
+    return res.status(400).json({ error: "Password must be at least 6 characters", code: "passwordTooShort" });
 
   const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email.toLowerCase());
-  if (existing) return res.status(409).json({ error: "Email already registered" });
+  if (existing) return res.status(409).json({ error: "Email already registered", code: "emailTaken" });
 
   const hash = bcrypt.hashSync(password, 10);
   const id   = genId();
@@ -68,13 +68,13 @@ router.post("/register", registerLimiter, (req, res) => {
 router.post("/login", loginLimiter, (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
-    return res.status(400).json({ error: "email and password are required" });
+    return res.status(400).json({ error: "email and password are required", code: "missingFields" });
 
   const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
-  if (!user) return res.status(401).json({ error: "Invalid email or password" });
-  if (!user.password_hash) return res.status(401).json({ error: "This account uses Google sign-in. Use 'Sign in with Google' instead." });
+  if (!user) return res.status(401).json({ error: "Invalid email or password", code: "invalidCredentials" });
+  if (!user.password_hash) return res.status(401).json({ error: "This account uses Google sign-in. Use 'Sign in with Google' instead.", code: "googleAccount" });
   if (!bcrypt.compareSync(password, user.password_hash))
-    return res.status(401).json({ error: "Invalid email or password" });
+    return res.status(401).json({ error: "Invalid email or password", code: "invalidCredentials" });
 
   setSession(req, user);
   res.json({ id: user.id, name: user.name, email: user.email });
@@ -130,13 +130,13 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
 router.post("/reset-password", resetPasswordLimiter, (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ error: "token and password required" });
-  if (password.length < 6)  return res.status(400).json({ error: "Password must be at least 6 characters" });
+  if (password.length < 6)  return res.status(400).json({ error: "Password must be at least 6 characters", code: "passwordTooShort" });
 
   const now = Math.floor(Date.now() / 1000);
   const row = db.prepare(
     "SELECT * FROM password_reset_tokens WHERE token = ? AND used = 0 AND expires_at > ?"
   ).get(token, now);
-  if (!row) return res.status(400).json({ error: "Reset link is invalid or has expired" });
+  if (!row) return res.status(400).json({ error: "Reset link is invalid or has expired", code: "resetInvalid" });
 
   const hash = bcrypt.hashSync(password, 10);
   db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, row.user_id);

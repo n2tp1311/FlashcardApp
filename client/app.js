@@ -727,6 +727,27 @@ Object.assign(TRANSLATIONS.en, {
   "toast.cardsAdded_one": "{n} card added.",
   "toast.lessonsImported": "Added {lessons} and {cards}.",
   "toast.signingOut": "Signing out…",
+  "search.inputPlaceholder": "Search classes, lessons, cards…",
+  "search.queryLabel": "Search query",
+  "search.resultsLabel": "Search results",
+  "error.requestFailed": "Something went wrong ({status}). Try again.",
+  "error.rateLimited": "Too many requests. Try again later.",
+  "error.missingFields": "Please fill in all fields.",
+  "error.passwordTooShort": "Password must be at least 6 characters.",
+  "error.emailTaken": "That email is already registered.",
+  "error.invalidCredentials": "Invalid email or password.",
+  "error.googleAccount": "This account uses Google sign-in. Use \"Sign in with Google\" instead.",
+  "error.resetInvalid": "This reset link is invalid or has expired.",
+  "error.linkInvalid": "This link is invalid or has expired.",
+  "error.alreadyOwned": "You already own this class.",
+  "error.userNotFound": "No user with that name or email.",
+  "error.cannotInviteSelf": "You can't invite yourself.",
+  "error.alreadyShared": "That user already has access.",
+  "error.tokenLimit": "Token limit reached. Revoke one first.",
+  "error.alreadyFetched": "This word has already been fetched.",
+  "error.noCardsToAnalyze": "This class has no cards to analyze yet.",
+  "error.aiNotConfigured": "AI tag suggestions aren't set up on this server.",
+  "error.aiFailed": "AI tag suggestion failed. Try again.",
   "confirm.leaveSession": "You've answered {n} so far, and those are saved. Leave now?",
   "keymap.quizNext": "Next question (after answering)",
   "keymap.exitStudy": "Exit (asks first mid-session)",
@@ -773,7 +794,7 @@ Object.assign(TRANSLATIONS.vi, {
   "tutorial.step3Title": "Học với thẻ ghi nhớ",
   "tutorial.step3Body": "Mở bài học và chọn Học. Lật thẻ để tự nhớ đáp án hoặc dùng Trắc nghiệm để luyện nhận diện.",
   "tutorial.step4Title": "Theo dõi tiến độ",
-  "tutorial.step4Body": "Đánh giá mức độ nhớ của bạn. Hệ thống sẽ lên lịch ôn tập, còn mục Thống kê giúp bạn xem tiến độ. Mặc định chỉ câu trả lời ở chế độ Thẻ ghi nhớ mới được tính vào tiến độ — bật Trả lời quiz được tính là Đã thuộc trong Tùy chọn để tính cả câu trả lời Trắc nghiệm.",
+  "tutorial.step4Body": "Đánh giá mức độ nhớ của bạn. Hệ thống sẽ lên lịch ôn tập, còn mục Thống kê giúp bạn xem tiến độ. Mặc định chỉ câu trả lời ở chế độ Thẻ ghi nhớ mới được tính vào tiến độ — bật Trả lời Trắc nghiệm được tính là Đã thuộc trong Tùy chọn để tính cả câu trả lời Trắc nghiệm.",
   "tutorial.step5Title": "Lưu từ tiếng Anh mới",
   "tutorial.step5Body": "Khi học ở chế độ máy chủ, chọn một từ hoặc cụm từ ở một trong hai mặt thẻ, hoặc trong câu hỏi, phần giải thích hay đáp án Trắc nghiệm sau khi đã trả lời, rồi chọn Lưu làm từ vựng tiếng Anh. Mở mục Từ vựng trong FlashcardApp để thêm hoặc xoá từ đang chờ. Trong KnowledgeApp, chọn Fetch words để tạo định nghĩa và câu ví dụ.",
   "pref.textSize": "Cỡ chữ",
@@ -783,12 +804,12 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.themeSystem": "Theo thiết bị",
   "pref.haptics": "Phản hồi rung",
   "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
-  "pref.quizCountsAsKnown": "Trả lời quiz được tính là Đã thuộc",
-  "pref.quizCountsAsKnownHint": "Trả lời đúng trong quiz được tính là Đã thuộc (đánh dấu thẻ đã thuộc và xếp lịch ôn như Thẻ ghi nhớ); trả lời sai được tính là Đang học. Tắt: thẻ chỉ tiến bộ qua chế độ Thẻ ghi nhớ.",
+  "pref.quizCountsAsKnown": "Trả lời Trắc nghiệm được tính là Đã thuộc",
+  "pref.quizCountsAsKnownHint": "Trả lời đúng khi làm Trắc nghiệm được tính là Đã thuộc (đánh dấu thẻ đã thuộc và xếp lịch ôn như Thẻ ghi nhớ); trả lời sai được tính là Đang học. Tắt: thẻ chỉ tiến bộ qua chế độ Thẻ ghi nhớ.",
   "pref.language": "Ngôn ngữ",
   "pref.speed": "Tốc độ",
   "pref.testSpeed": "Nghe thử tốc độ",
-  "pref.maxReviewsPerDay": "Số review tối đa mỗi ngày",
+  "pref.maxReviewsPerDay": "Số lượt ôn tối đa mỗi ngày",
   "pref.noLimit": "Không giới hạn",
   "pref.apiTokens": "Mã API",
   "pref.apiTokensHint": "Cho phép KnowledgeApp gửi cập nhật thẻ vào tài khoản của bạn.",
@@ -871,7 +892,7 @@ Object.assign(TRANSLATIONS.vi, {
   "sort.dateAdded": "Ngày thêm",
   "sort.lastActivity": "Hoạt động gần nhất",
   "sort.toggleDirection": "Đổi chiều sắp xếp",
-  "home.tagFilterToggle": "Lọc theo tag",
+  "home.tagFilterToggle": "Lọc theo nhãn",
   "archive.showArchived": "Hiện lớp đã lưu trữ",
   "archive.archived": "Đã lưu trữ",
   "view.grid": "Xem dạng lưới",
@@ -895,13 +916,13 @@ Object.assign(TRANSLATIONS.vi, {
   "alert.archiveClassesFailed": "Không thể lưu trữ một số lớp. Các lựa chọn của bạn vẫn được giữ lại.",
 
   "stat.dayStreak": "Ngày liên tục",
-  "stat.streakResetsIn": "Reset sau {time}",
-  "stat.streakResetsAtHint": "Ngày tính chuỗi học của bạn reset vào lúc 00:00 UTC, không phải nửa đêm giờ địa phương.",
+  "stat.streakResetsIn": "Đặt lại sau {time}",
+  "stat.streakResetsAtHint": "Ngày tính chuỗi học của bạn được đặt lại vào lúc 00:00 UTC, không phải nửa đêm giờ địa phương.",
   "stat.classes": "Lớp học",
   "stat.lessons": "Bài học",
   "stat.cards": "Thẻ ghi nhớ",
   "stat.sessions": "Phiên học",
-  "stat.sessionsHint": "Chỉ tính các phiên Quiz đã hoàn thành — học Thẻ ghi nhớ được tính trong Lượt làm.",
+  "stat.sessionsHint": "Chỉ tính các phiên Trắc nghiệm đã hoàn thành — học Thẻ ghi nhớ được tính trong Lượt làm.",
   "stat.attempts": "Lượt làm",
   "stat.avgDailyLabel": "TB/ngày",
   "stat.minDailyLabel": "Thấp nhất",
@@ -990,7 +1011,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.studyingTogether": "Đang học {n} bài học cùng lúc",
   "setup.hintAll": "Học tất cả thẻ",
   "setup.hintDue": "Chỉ thẻ đến hạn ôn tập (SRS)",
-  "setup.hintNeedsRecall": "Thẻ bạn mới chỉ nhận diện đúng trong bài quiz, chưa từng tự nhớ lại — trả lời ở chế độ Thẻ ghi nhớ để xác nhận bạn thực sự thuộc",
+  "setup.hintNeedsRecall": "Thẻ bạn mới chỉ nhận diện đúng trong bài Trắc nghiệm, chưa từng tự nhớ lại — trả lời ở chế độ Thẻ ghi nhớ để xác nhận bạn thực sự thuộc",
   "setup.hintLearning": "Thẻ chưa thuộc / đang học",
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
   "setup.hintFlashcardWriteMode": "Gõ đáp án trước khi lật thẻ, rồi lật để so sánh — thêm một bước viết ra bên cạnh việc nhớ lại.",
@@ -1025,7 +1046,7 @@ Object.assign(TRANSLATIONS.vi, {
   "count.cards": "{n} thẻ",
   "confirm.deleteLesson": "Xóa bài học \"{title}\" cùng toàn bộ thẻ ghi nhớ? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "alert.noCardsDue": "Hiện chưa có thẻ nào đến hạn ôn tập.",
-  "alert.dailyReviewCapReached": "Bạn đã đạt giới hạn review hôm nay — quay lại vào ngày mai nhé!",
+  "alert.dailyReviewCapReached": "Bạn đã đạt giới hạn ôn tập hôm nay — quay lại vào ngày mai nhé!",
   "bulk.andMore": "... và {n} thẻ nữa",
   "bulk.summary": "{lessons}, tổng {cards}",
   "class.unarchiveClass": "Bỏ lưu trữ lớp",
@@ -1278,7 +1299,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.bulkPaste": "Dán hàng loạt",
   "keymap.startStudy": "Bắt đầu học",
   "keymap.sectionSetup": "Thiết lập học",
-  "keymap.selectPreset": "Chọn preset",
+  "keymap.selectPreset": "Chọn bộ lọc đã lưu",
   "keymap.sectionFlashcards": "Thẻ ghi nhớ",
   "keymap.prevNext": "Trước / Tiếp",
   "keymap.flipCard": "Lật thẻ",
@@ -1351,6 +1372,27 @@ Object.assign(TRANSLATIONS.vi, {
   "toast.cardsAdded": "Đã thêm {n} thẻ.",
   "toast.lessonsImported": "Đã thêm {lessons} và {cards}.",
   "toast.signingOut": "Đang đăng xuất…",
+  "search.inputPlaceholder": "Tìm lớp, bài học, thẻ…",
+  "search.queryLabel": "Nội dung tìm kiếm",
+  "search.resultsLabel": "Kết quả tìm kiếm",
+  "error.requestFailed": "Đã xảy ra lỗi ({status}). Hãy thử lại.",
+  "error.rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
+  "error.missingFields": "Vui lòng điền đầy đủ thông tin.",
+  "error.passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự.",
+  "error.emailTaken": "Email này đã được đăng ký.",
+  "error.invalidCredentials": "Email hoặc mật khẩu không đúng.",
+  "error.googleAccount": "Tài khoản này đăng nhập bằng Google. Hãy dùng \"Đăng nhập với Google\".",
+  "error.resetInvalid": "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
+  "error.linkInvalid": "Liên kết không hợp lệ hoặc đã hết hạn.",
+  "error.alreadyOwned": "Bạn đã sở hữu lớp này.",
+  "error.userNotFound": "Không tìm thấy người dùng với tên hoặc email này.",
+  "error.cannotInviteSelf": "Bạn không thể mời chính mình.",
+  "error.alreadyShared": "Người dùng này đã có quyền truy cập.",
+  "error.tokenLimit": "Đã đạt giới hạn token. Hãy thu hồi một token trước.",
+  "error.alreadyFetched": "Từ này đã được lấy về.",
+  "error.noCardsToAnalyze": "Lớp này chưa có thẻ nào để phân tích.",
+  "error.aiNotConfigured": "Máy chủ chưa cấu hình gợi ý nhãn bằng AI.",
+  "error.aiFailed": "Gợi ý nhãn bằng AI thất bại. Hãy thử lại.",
   "confirm.leaveSession": "Bạn đã trả lời {n} thẻ và kết quả đã được lưu. Rời phiên ngay?",
   "keymap.quizNext": "Câu tiếp theo (sau khi trả lời)",
   "keymap.exitStudy": "Thoát (hỏi lại nếu đang học dở)",
@@ -1367,7 +1409,7 @@ Object.assign(TRANSLATIONS.vi, {
   "tts.testPhrase": "Đây là bản kiểm tra tốc độ đọc.",
   "common.releaseToRefresh": "Thả để làm mới",
   "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào.",
-  "quiz.exit": "Thoát bài kiểm tra",
+  "quiz.exit": "Thoát Trắc nghiệm",
   "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
@@ -2420,6 +2462,12 @@ function showToast(message, kind) {
   toastTimer = setTimeout(function() { el.classList.add("hidden"); }, 4000);
 }
 
+// Server errors are English; the ones a user can cause carry a stable code we translate.
+function serverError(body, fallback) {
+  var key = body && body.code ? "error." + body.code : null;
+  return key && TRANSLATIONS.en[key] !== undefined ? t(key) : (body && body.error) || fallback;
+}
+
 // A validation message under its field, focused so the user lands on what to fix.
 function showFieldError(field, message) {
   var err = document.getElementById(field.id + "-error") || document.createElement("p");
@@ -2431,6 +2479,13 @@ function showFieldError(field, message) {
   field.setAttribute("aria-describedby", err.id);
   var target = field.matches("input, textarea, select, button") ? field : field.querySelector("input, textarea, button");
   if (target) target.focus();
+}
+
+function clearFieldError(field) {
+  var err = document.getElementById(field.id + "-error");
+  if (err) err.remove();
+  field.removeAttribute("aria-invalid");
+  field.removeAttribute("aria-describedby");
 }
 
 function clearFieldErrors(root) {
@@ -2561,11 +2616,7 @@ document.getElementById("modal-overlay").addEventListener("click", function(e) {
 // Typing in a field clears its validation message.
 document.getElementById("modal-overlay").addEventListener("input", function(e) {
   var field = e.target.closest("[aria-invalid]");
-  if (!field) return;
-  var err = document.getElementById(field.id + "-error");
-  if (err) err.remove();
-  field.removeAttribute("aria-invalid");
-  field.removeAttribute("aria-describedby");
+  if (field) clearFieldError(field);
 });
 
 // Enter in a single-line field submits the dialog like a native form. Textareas keep Enter for
@@ -3286,7 +3337,7 @@ function downloadFromApi(url) {
     if (r.status === 401) { showAuthScreen(); return null; }
     if (!r.ok) {
       return r.json().then(function(data) {
-        throw new Error(data.error || ("Request failed (" + r.status + ")"));
+        throw new Error(serverError(data, t("error.requestFailed", { status: r.status })));
       });
     }
     // Prefer the RFC 6266 filename*=UTF-8''... form — the server sends this specifically to
@@ -4180,11 +4231,11 @@ function renderVocabularyQueue() {
           return refreshVocabularyQueue(true);
         }).catch(function(err) {
           remove.disabled = false;
-          var message = err.message === "This word has already been fetched"
+          var message = err.code === "alreadyFetched"
             ? t("vocabulary.alreadyFetched")
             : t("vocabulary.deleteError", { message: err.message });
           showToast(message, "error");
-          if (err.message === "This word has already been fetched") refreshVocabularyQueue(true);
+          if (err.code === "alreadyFetched") refreshVocabularyQueue(true);
         });
       });
     });
@@ -5034,6 +5085,7 @@ document.getElementById("tf-answer-picker").addEventListener("click", function(e
   document.querySelectorAll(".tf-answer-btn").forEach(function(b) { b.classList.remove("selected"); });
   btn.classList.add("selected");
   state.tfAnswer = btn.dataset.value;
+  clearFieldError(document.getElementById("tf-answer-picker"));
 });
 
 document.getElementById("card-tf-statement-input").addEventListener("input", function() {
@@ -5089,6 +5141,7 @@ function handleImageFile(file) {
     showFieldError(document.getElementById("card-image-drop"), t("validate.fileTooLarge"));
     return;
   }
+  clearFieldError(document.getElementById("card-image-drop"));
   var reader = new FileReader();
   reader.onload = function(ev) {
     var prev = document.getElementById("card-image-preview");
@@ -5103,7 +5156,7 @@ function handleImageFile(file) {
   var formData = new FormData();
   formData.append("image", file);
   fetch("/api/upload", { method: "POST", credentials: "same-origin", body: formData })
-    .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error || t("error.uploadFailed")); return d; }); })
+    .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(serverError(d, t("error.uploadFailed"))); return d; }); })
     .then(function(d) { if (uploadSeq === mySeq) stagedImageUrl = d.url; })
     .catch(function(err) { if (uploadSeq === mySeq) { showToast(t("error.uploadFailedWithMessage", { message: err.message }), "error"); stagedImageUrl = previousUrl; } });
 }
@@ -8671,7 +8724,10 @@ var SQLiteAdapter = (function() {
       opts.signal = controller.signal;
       setTimeout(function() { controller.abort(); }, timeoutMs);
     }
-    return fetch(BASE + path, opts).then(function(r) {
+    // No status on this error, so the offline queue still treats it as retryable.
+    return fetch(BASE + path, opts).catch(function() {
+      throw new Error(t("common.networkError"));
+    }).then(function(r) {
       if (r.status === 401) {
         showAuthScreen();
         var authErr = new Error("Unauthorized");
@@ -8686,8 +8742,9 @@ var SQLiteAdapter = (function() {
         return {};
       }).then(function(data) {
         if (!r.ok) {
-          var err = new Error(data.error || ("API error " + r.status));
+          var err = new Error(serverError(data, t("error.requestFailed", { status: r.status })));
           err.status = r.status;
+          err.code = data.code;
           return Promise.reject(err);
         }
         return data;
@@ -9289,7 +9346,7 @@ document.getElementById("form-login").addEventListener("submit", function(e) {
     body: JSON.stringify({ email: email, password: password })
   }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
   .then(function(res) {
-    if (!res.ok) { showAuthError("login", res.d.error || t("auth.loginFailed")); return; }
+    if (!res.ok) { showAuthError("login", serverError(res.d, t("auth.loginFailed"))); return; }
     currentUser = res.d;
     initUserNav();
     renderSharedWithMe();
@@ -9310,7 +9367,7 @@ document.getElementById("form-register").addEventListener("submit", function(e) 
     body: JSON.stringify({ name: name, email: email, password: password })
   }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
   .then(function(res) {
-    if (!res.ok) { showAuthError("register", res.d.error || t("auth.registrationFailed")); return; }
+    if (!res.ok) { showAuthError("register", serverError(res.d, t("auth.registrationFailed"))); return; }
     currentUser = res.d;
     initUserNav();
     try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
@@ -9367,7 +9424,7 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
       body: JSON.stringify({ token: resetToken, password: pw })
     }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
     .then(function(res) {
-      if (!res.ok) { showAuthError("reset", res.d.error || t("auth.resetFailed")); return; }
+      if (!res.ok) { showAuthError("reset", serverError(res.d, t("auth.resetFailed"))); return; }
       currentUser = res.d;
       initUserNav();
       try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
@@ -9855,7 +9912,7 @@ function renderShareScreen(data, token) {
             try { sessionStorage.setItem("fc-flash-toast", t("share.savedToClasses", { name: data.cls.name })); } catch (_) {}
             window.location.href = "/";
           } else {
-            showToast(d.error || t("common.failedToSave"), "error");
+            showToast(serverError(d, t("common.failedToSave")), "error");
           }
         });
     });
@@ -10001,7 +10058,7 @@ document.getElementById("btn-send-invite").addEventListener("click", function() 
   }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
   .then(function(res) {
     if (!res.ok) {
-      errEl.textContent = res.d.error || t("share.failedToInvite");
+      errEl.textContent = serverError(res.d, t("share.failedToInvite"));
       errEl.classList.remove("hidden");
       return;
     }

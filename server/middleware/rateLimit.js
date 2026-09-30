@@ -32,7 +32,7 @@ function rateLimit({ windowMs, max, message, keyFn }) {
     const windowStart = now - windowMs;
     const timestamps = (hits.get(key) || []).filter(t => t > windowStart);
     if (timestamps.length >= max) {
-      return res.status(429).json({ error: message || "Too many requests, try again later" });
+      return res.status(429).json({ error: message || "Too many requests, try again later", code: "rateLimited" });
     }
     timestamps.push(now);
     hits.set(key, timestamps);
