@@ -166,6 +166,7 @@
 - `?` key shortcut modal lists all bindings; `⌨` header button also opens it
 - `[key]` hints injected next to button labels on desktop; hidden on mobile (`≤600px`)
 - Escape works for any modal (overlay forms, share, prompt guide, keymap)
+- Dialogs are a stack: Esc, browser Back or a backdrop tap closes only the top one (a confirm opened over a form sits on top of it). Opening a dialog moves focus into it and closing returns focus to what opened it; everything behind the top dialog is `inert`, and every dialog has `role="dialog"`, `aria-modal` and a label. A backdrop tap never dismisses the first-run tutorial
 - `class-card` and `lesson-item` elements have `tabIndex=-1` + `focus-visible` outline so keyboard focus is always visible
 
 ## KnowledgeApp Sync (server mode only)
