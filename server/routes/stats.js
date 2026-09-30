@@ -629,14 +629,20 @@ router.get("/srs-distribution", requireAuth, (req, res) => {
   res.json(rows);
 });
 
-// GET /api/stats/future-due — how many cards become due over the next FUTURE_DUE_WINDOW_DAYS days
+// GET /api/stats/future-due — how many cards are due over the next FUTURE_DUE_WINDOW_DAYS days.
+// Cards already due or overdue count toward today, and archived classes are left out, so the
+// Today bar agrees with the "Due for Review" count instead of reading "nothing due" beside it.
 const FUTURE_DUE_WINDOW_DAYS = 14;
 router.get("/future-due", requireAuth, (req, res) => {
   const rows = db.prepare(
-    "SELECT date(srs_due_at,'unixepoch') AS day, COUNT(*) AS cnt FROM card_states " +
-    "WHERE user_id = ? AND srs_due_at > strftime('%s','now') AND srs_due_at <= strftime('%s','now') + ? " +
+    "SELECT CASE WHEN cs.srs_due_at <= strftime('%s','now') THEN date('now') " +
+    "ELSE date(cs.srs_due_at,'unixepoch') END AS day, COUNT(*) AS cnt " +
+    "FROM card_states cs JOIN cards ca ON ca.id = cs.card_id " +
+    "JOIN lessons l ON l.id = ca.lesson_id JOIN classes c ON c.id = l.class_id " +
+    "WHERE cs.user_id = ? AND c.user_id = ? AND c.archived = 0 " +
+    "AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= strftime('%s','now') + ? " +
     "GROUP BY day"
-  ).all(req.session.userId, FUTURE_DUE_WINDOW_DAYS * 86400);
+  ).all(req.session.userId, req.session.userId, FUTURE_DUE_WINDOW_DAYS * 86400);
   res.json({ days: rows, windowDays: FUTURE_DUE_WINDOW_DAYS });
 });
 

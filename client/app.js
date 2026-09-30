@@ -295,6 +295,7 @@ Object.assign(TRANSLATIONS.en, {
   "auth.backToSignIn": "Back to sign in",
   "auth.loginFailed": "Login failed",
   "common.networkError": "Network error",
+  "common.refreshing": "Refreshing…",
   "auth.registrationFailed": "Registration failed",
   "auth.enterEmail": "Please enter your email",
   "auth.devResetLink": "Dev mode — reset link: {url}",
@@ -362,7 +363,8 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
   "setup.hintQuizModeKnown": "Faster — with your preference on, a correct answer counts as Know It and a wrong one as Still Learning.",
   "setup.newCardEstimateLabel": "New cards recommended today",
-  "dashboard.newCardsShortLabel": "New Cards",
+  "dashboard.newCardsShortLabel": "Suggested new cards",
+  "dashboard.futureDueTodayHint": "Includes cards already due or overdue",
   "setup.newCardEstimateDefaultNote": "Default estimate — not personalized yet. Keep studying and this will adapt to your pace.",
   "setup.newCardEstimateZeroNote": "Your accuracy dipped over the last week — focus on reviewing what you've already started before adding new cards.",
   "setup.newCardEstimatePersonalizedNote": "Based on your study history and recent accuracy.",
@@ -664,6 +666,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.studySelectedSelectMode": "Study selected (select mode)",
   "keymap.deleteSelectedSelectMode": "Delete selected (select mode)",
   "search.noResults": "No results",
+  "search.failed": "Search failed. Check your connection.",
 
   "bulkImport.hint": "Use <strong>#</strong> to start a lesson. Optionally add <code>| mcq</code> after the title for MCQ format (default is term→def).<br>Then list cards below it, one per line.<br><br><strong>Term→Def:</strong> <code>term | definition</code><br><strong>MCQ:</strong> <code>question | correct | wrong1 | wrong2 | wrong3</code><br><strong>MCQ + explanation:</strong> <code>question | correct | wrong1 ;; Why the correct answer is right.</code>",
 
@@ -953,6 +956,7 @@ Object.assign(TRANSLATIONS.vi, {
   "auth.backToSignIn": "Quay lại đăng nhập",
   "auth.loginFailed": "Đăng nhập thất bại",
   "common.networkError": "Lỗi kết nối mạng",
+  "common.refreshing": "Đang làm mới…",
   "auth.registrationFailed": "Đăng ký thất bại",
   "auth.enterEmail": "Vui lòng nhập email của bạn",
   "auth.devResetLink": "Chế độ dev — liên kết đặt lại: {url}",
@@ -1018,7 +1022,8 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "setup.hintQuizModeKnown": "Nhanh hơn — với tùy chọn đang bật, trả lời đúng được tính là Đã thuộc, trả lời sai được tính là Đang học.",
   "setup.newCardEstimateLabel": "Số thẻ mới nên học hôm nay",
-  "dashboard.newCardsShortLabel": "Thẻ mới",
+  "dashboard.newCardsShortLabel": "Thẻ mới gợi ý",
+  "dashboard.futureDueTodayHint": "Bao gồm cả thẻ đã đến hạn hoặc quá hạn",
   "setup.newCardEstimateDefaultNote": "Ước tính mặc định — chưa được cá nhân hóa. Học thêm để hệ thống điều chỉnh theo nhịp độ của bạn.",
   "setup.newCardEstimateZeroNote": "Độ chính xác của bạn giảm trong tuần qua — hãy tập trung ôn lại các thẻ đã học trước khi thêm thẻ mới.",
   "setup.newCardEstimatePersonalizedNote": "Dựa trên lịch sử học tập và độ chính xác gần đây của bạn.",
@@ -1313,6 +1318,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.studySelectedSelectMode": "Học mục đã chọn (chế độ chọn)",
   "keymap.deleteSelectedSelectMode": "Xóa mục đã chọn (chế độ chọn)",
   "search.noResults": "Không có kết quả",
+  "search.failed": "Không tìm được. Hãy kiểm tra kết nối mạng.",
 
   "bulkImport.hint": "Dùng <strong>#</strong> để bắt đầu một bài học. Có thể thêm <code>| mcq</code> sau tiêu đề để dùng định dạng trắc nghiệm (mặc định là thuật ngữ→định nghĩa).<br>Sau đó liệt kê các thẻ bên dưới, mỗi thẻ một dòng.<br><br><strong>Thuật ngữ→Định nghĩa:</strong> <code>thuật ngữ | định nghĩa</code><br><strong>Trắc nghiệm:</strong> <code>câu hỏi | đáp án đúng | sai1 | sai2 | sai3</code><br><strong>Trắc nghiệm + giải thích:</strong> <code>câu hỏi | đáp án đúng | sai1 ;; Vì sao đáp án đúng là đúng.</code>",
 
@@ -4136,7 +4142,13 @@ function openLesson(lessonId) {
 /* ---- KnowledgeApp changes review screen ---- */
 
 function renderUpstreamIndicators(classes) {
-  var n = IS_SERVER ? classes.reduce(function(sum, c) { return sum + (c.upstream_count || 0); }, 0) : 0;
+  setUpstreamCount(IS_SERVER ? classes.reduce(function(sum, c) { return sum + (c.upstream_count || 0); }, 0) : 0);
+}
+
+// The sidebar badge and home banner, kept current as cards are reviewed rather than only when
+// Home re-renders.
+function setUpstreamCount(count) {
+  var n = state.upstreamCount = Math.max(0, count);
   var badge = document.getElementById("sidebar-upstream-badge");
   var banner = document.getElementById("home-upstream-banner");
   badge.textContent = n;
@@ -4284,6 +4296,7 @@ function renderUpstream() {
   loading.classList.remove("hidden");
   store.getUpstreamChanges().then(function(res) {
     state.upstreamData = res;
+    setUpstreamCount(res.count.total);
     loading.classList.add("hidden");
     var empty = res.count.total === 0;
     var emptyEl = document.getElementById("upstream-empty");
@@ -4614,7 +4627,10 @@ function renderUpstreamNotice(card) {
   ack.addEventListener("click", function(e) {
     e.stopPropagation();
     ack.disabled = true;
-    store.acknowledgeCardUpdate(card.id).then(renderCards, function() { ack.disabled = false; });
+    store.acknowledgeCardUpdate(card.id).then(function() {
+      setUpstreamCount((state.upstreamCount || 0) - 1);
+      renderCards();
+    }, function() { ack.disabled = false; });
   });
   wrap.appendChild(ack);
 
@@ -5895,7 +5911,8 @@ function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday) {
   } else if (filter === "learning") {
     return cards.filter(function(c) { return knownMap[c.id] !== true; });
   } else if (filter === "updated") {
-    return cards.filter(function(c) { return !!c.upstream_change; });
+    // Removed-from-source cards need a decision on the review screen, not studying.
+    return cards.filter(function(c) { return c.upstream_change === "updated"; });
   }
   return cards;
 }
@@ -6786,7 +6803,10 @@ function markCard(known, grade, forceRetype) {
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known).catch(function() {});
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
-  if (card.upstream_change === "updated") card.upstream_change = null;
+  if (card.upstream_change === "updated") {
+    card.upstream_change = null;
+    setUpstreamCount((state.upstreamCount || 0) - 1);
+  }
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
   if (grade) attemptFields.grade = grade;
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
@@ -7004,7 +7024,10 @@ function answerQuiz(selectedIdx) {
   var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, capped: false, notDue: false };
   state.quizResults.push(resultEntry);
 
-  if (card.upstream_change === "updated") card.upstream_change = null;
+  if (card.upstream_change === "updated") {
+    card.upstream_change = null;
+    setUpstreamCount((state.upstreamCount || 0) - 1);
+  }
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
   if (state.quizCountsAsKnown) {
     if (isCorrect) quizAttemptFields.grade = "medium";
@@ -7221,6 +7244,9 @@ document.getElementById("btn-results-back").addEventListener("click", function()
    ============================ */
 
 function openStats(type, id, title) {
+  // Back returns to the screen Stats was opened from, at the same scroll position (the
+  // Dashboard keeps its period and charts, since its DOM isn't re-rendered).
+  state.statsFrom = { screen: getActiveScreen(), scrollY: window.scrollY };
   cardHistoryRequestId++;
   statsListRequestId++;
   var historyPanel = document.getElementById("stats-history-panel");
@@ -7439,7 +7465,7 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate) {
   }
 
   var mainHtml = highlighted.map(function(m, i) {
-    var countdownHtml = (m.key === "streak")
+    var countdownHtml = (m.key === "streak" && streak > 0)
       ? '<div class="dash-hero-countdown" data-countdown="streak" title="' + escHtml(t("stat.streakResetsAtHint")) + '">' +
           escHtml(_streakResetCountdownText()) + '</div>'
       : '';
@@ -7707,7 +7733,13 @@ document.querySelectorAll(".tab").forEach(function(tab) {
 });
 
 document.getElementById("btn-stats-back").addEventListener("click", function() {
-  // Go back to wherever we came from — check which screen makes sense
+  var from = state.statsFrom;
+  state.statsFrom = null;
+  if (from && from.screen && from.screen !== "stats") {
+    showScreen(from.screen);
+    window.scrollTo(0, from.scrollY);
+    return;
+  }
   if (state.currentLesson) {
     showScreen("lesson");
   } else if (state.currentClass) {
@@ -8281,9 +8313,8 @@ function renderFutureDue(data, wrap) {
   data.days.forEach(function(r) { map[r.day] = r.cnt; });
   var now = new Date();
   var buckets = [];
-  // Start at 0 (today), not 1 — the server's `srs_due_at > now` window includes cards due
-  // later today, grouped under today's UTC date. Skipping that bucket would silently drop
-  // them, and if today's the only day with due cards, wrongly show the empty state.
+  // Bucket 0 is today: the server groups cards due later today and cards already due or
+  // overdue under today's date.
   for (var i = 0; i <= data.windowDays; i++) {
     var d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + i));
     buckets.push({ n: i, cnt: map[d.toISOString().slice(0, 10)] || 0 });
@@ -8298,8 +8329,9 @@ function renderFutureDue(data, wrap) {
     var rowEl = document.createElement("div");
     rowEl.className = "trend-row";
     var label = b.n === 0 ? t("time.today") : t("time.inDays", { n: b.n });
+    var labelTitle = b.n === 0 ? ' title="' + escHtml(t("dashboard.futureDueTodayHint")) + '"' : "";
     rowEl.innerHTML =
-      '<span class="trend-label">' + escHtml(label) + '</span>' +
+      '<span class="trend-label"' + labelTitle + '>' + escHtml(label) + '</span>' +
       '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
       '<span class="trend-count">' + b.cnt + '</span>';
     wrap.appendChild(rowEl);
@@ -10088,6 +10120,10 @@ function isInputFocused() {
 var _searchDebounceTimer = null;
 var _searchActiveIdx     = -1;
 var _searchResultItems   = [];
+// Each search gets a number so a slow earlier reply can't overwrite newer results, and Enter
+// only opens a result that belongs to the text currently typed.
+var _searchSeq           = 0;
+var _searchRenderedQ     = null;
 
 function openSearchModal() {
   var modalEl = document.getElementById("modal-search");
@@ -10098,10 +10134,15 @@ function openSearchModal() {
   _searchResultItems = [];
   document.getElementById("search-results").innerHTML = "";
   document.getElementById("search-empty").classList.add("hidden");
-  setTimeout(function() { inputEl.focus(); }, 30);
+  _searchSeq++;
+  _searchRenderedQ = null;
+  // Focus now, not after a delay: keys typed right after Ctrl/Cmd+K would otherwise be lost,
+  // and iOS only raises the keyboard for focus inside the tap.
+  inputEl.focus();
 }
 
 function closeSearchModal() {
+  _searchSeq++;
   hideLayer(document.getElementById("modal-search"));
   if (_searchDebounceTimer) { clearTimeout(_searchDebounceTimer); _searchDebounceTimer = null; }
 }
@@ -10123,9 +10164,10 @@ function renderSearchResults(results, q) {
   container.innerHTML = "";
   _searchActiveIdx   = -1;
   _searchResultItems = [];
+  _searchRenderedQ   = q;
 
   var total = results.classes.length + results.lessons.length + results.cards.length;
-  if (total === 0) { emptyEl.classList.remove("hidden"); return; }
+  if (total === 0) { emptyEl.textContent = t("search.noResults"); emptyEl.classList.remove("hidden"); return; }
   emptyEl.classList.add("hidden");
 
   function makeSection(label, items, type, buildRow) {
@@ -10239,14 +10281,27 @@ function openLessonFromAnywhere(classId, lessonId) {
     var q = this.value.trim();
     if (_searchDebounceTimer) { clearTimeout(_searchDebounceTimer); _searchDebounceTimer = null; }
     if (q.length < 2) {
+      _searchSeq++;
       document.getElementById("search-results").innerHTML = "";
       document.getElementById("search-empty").classList.add("hidden");
       _searchResultItems = [];
       _searchActiveIdx   = -1;
       return;
     }
+    var seq = ++_searchSeq;
     _searchDebounceTimer = setTimeout(function() {
-      store.search(q).then(function(results) { renderSearchResults(results, q); }).catch(function() {});
+      store.search(q).then(function(results) {
+        if (seq === _searchSeq) renderSearchResults(results, q);
+      }, function() {
+        if (seq !== _searchSeq) return;
+        var emptyEl = document.getElementById("search-empty");
+        document.getElementById("search-results").innerHTML = "";
+        _searchResultItems = [];
+        _searchActiveIdx   = -1;
+        _searchRenderedQ   = null;
+        emptyEl.textContent = t("search.failed");
+        emptyEl.classList.remove("hidden");
+      });
     }, 200);
   });
 
@@ -10266,10 +10321,13 @@ function openLessonFromAnywhere(classId, lessonId) {
       setSearchActiveIdx(Math.max(_searchActiveIdx - 1, -1));
       return;
     }
-    if (e.key === "Enter" && _searchActiveIdx >= 0 && _searchActiveIdx < _searchResultItems.length) {
-      e.preventDefault();
-      var hit = _searchResultItems[_searchActiveIdx];
-      selectSearchResult(hit.type, hit.data);
+    // Enter opens the highlighted result, or the first one when none is highlighted.
+    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) {
+      var hit = _searchResultItems[Math.max(_searchActiveIdx, 0)];
+      if (hit && _searchRenderedQ === inputEl.value.trim()) {
+        e.preventDefault();
+        selectSearchResult(hit.type, hit.data);
+      }
     }
   });
 }());
@@ -10638,12 +10696,16 @@ window.addEventListener("popstate", function() {
   var circle = ind.querySelector(".ptr-circle");
   var label  = ind.querySelector(".ptr-label");
   var THRESHOLD = 72;
-  var startX = 0, startY = 0, lastDy = 0, pulling = false, busy = false;
+  var startX = 0, startY = 0, lastDy = 0, pulling = false, busy = false, armed = false;
 
   function setHeight(px) { ind.style.height = px + "px"; }
 
+  // Only a pull that starts on the bare Home screen counts: not under an open dialog or the
+  // sidebar, where a downward swipe means something else.
   document.addEventListener("touchstart", function(e) {
-    if (busy || getActiveScreen() !== "home" || window.scrollY > 4) return;
+    armed = !(busy || getActiveScreen() !== "home" || window.scrollY > 4 || fcAnyOverlayOpen() ||
+      document.getElementById("sidebar").classList.contains("sidebar-open"));
+    if (!armed) return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     lastDy = 0;
@@ -10652,7 +10714,7 @@ window.addEventListener("popstate", function() {
   }, { passive: true });
 
   document.addEventListener("touchmove", function(e) {
-    if (busy || getActiveScreen() !== "home") return;
+    if (!armed || busy) return;
     if (window.scrollY > 4) { if (pulling) { setHeight(0); pulling = false; } return; }
     var dy = e.touches[0].clientY - startY;
     if (dy <= 0) { if (pulling) { setHeight(0); pulling = false; } return; }
@@ -10680,7 +10742,7 @@ window.addEventListener("popstate", function() {
       setHeight(56);
       circle.style.transform = "";
       ind.classList.add("ptr-spinning");
-      label.textContent = "Refreshing…";
+      label.textContent = t("common.refreshing");
       renderHome();
       setTimeout(function() {
         setHeight(0);
