@@ -735,6 +735,11 @@
         <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
         <button type="button" class="btn btn-sm btn-ghost" id="btn-replay-tutorial" data-i18n="tutorial.replay">Show tutorial</button>
       </div>
+      <div class="pref-tokens" id="pref-backup" data-no-dirty>
+        <label class="form-label" data-i18n="pref.backup">Backup</label>
+        <p class="pref-hint" data-i18n="pref.backupHint">Everything in your account, including study progress. To share one class, use Export on the class instead.</p>
+        <button type="button" class="btn btn-sm btn-outline" id="btn-download-backup" data-i18n="pref.downloadBackup">Download full backup</button>
+      </div>
       <div class="pref-tokens" id="pref-api-tokens" data-no-dirty>
         <label class="form-label" data-i18n="pref.apiTokens">API tokens</label>
         <p class="pref-hint" data-i18n="pref.apiTokensHint">Lets KnowledgeApp send card updates to your account.</p>
@@ -1077,7 +1082,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <div id="share-link-row" class="share-link-row hidden">
         <input id="share-link-input" class="share-link-input" readonly />
         <button class="btn btn-outline btn-sm" id="btn-copy-share-link" data-i18n="common.copy">Copy</button>
-        <button class="btn btn-danger btn-sm" id="btn-revoke-share-link" title="Disable link" aria-label="Disable link" data-i18n-title="share.disableLink" data-i18n-aria="share.disableLink"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="btn btn-danger btn-sm" id="btn-revoke-share-link" data-i18n="share.disableLink">Disable link</button>
       </div>
       <button class="btn btn-outline" id="btn-generate-share-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6a5 5 0 0 1 0-10h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg> <span data-i18n="share.generateLink">Generate Link</span></button>
     </div>
@@ -1087,7 +1092,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <h4 class="share-section-title" data-i18n="share.inviteByNameEmail">Invite by Name or Email</h4>
       <p class="share-section-desc" data-i18n="share.inviteHint">They'll see this class in their "Shared with me" section.</p>
       <div class="share-invite-row">
-        <input id="share-invite-input" class="input" placeholder="Username or email..." data-i18n-placeholder="share.usernameOrEmail" />
+        <input id="share-invite-input" class="form-input" placeholder="Username or email..." data-i18n-placeholder="share.usernameOrEmail" />
         <button class="btn btn-primary btn-sm" id="btn-send-invite" data-i18n="share.invite">Invite</button>
       </div>
       <div id="share-invite-error" class="share-error hidden"></div>

@@ -106,6 +106,15 @@ function cloneClass(classId, toUserId) {
 
 // ── Share Link ──────────────────────────────────────────────
 
+// GET /api/share/link/:classId  — the class's current share link, if any
+router.get("/link/:classId", requireAuth, (req, res) => {
+  const cls = db.prepare("SELECT id FROM classes WHERE id = ? AND user_id = ?")
+    .get(req.params.classId, req.session.userId);
+  if (!cls) return res.status(404).json({ error: "Not found" });
+  const link = db.prepare("SELECT token FROM class_share_links WHERE class_id = ?").get(req.params.classId);
+  res.json({ token: link ? link.token : null });
+});
+
 // POST /api/share/link/:classId  — generate or return existing share link
 router.post("/link/:classId", requireAuth, (req, res) => {
   const cls = db.prepare("SELECT id FROM classes WHERE id = ? AND user_id = ?")

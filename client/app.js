@@ -742,6 +742,12 @@ Object.assign(TRANSLATIONS.en, {
   "toast.cardsAdded_one": "{n} card added.",
   "toast.lessonsImported": "Added {lessons} and {cards}.",
   "toast.signingOut": "Signing out…",
+  "pref.backup": "Backup",
+  "import.isFullBackup": "That's a full account backup, not a class export. Import here takes class exports (Export on a class or lesson).",
+  "pref.backupHint": "Everything in your account, including study progress. To share one class, use Export on the class instead.",
+  "pref.downloadBackup": "Download full backup",
+  "share.disableLinkTitle": "Disable share link?",
+  "share.disableLinkConfirm": "Anyone with the current link loses access. You can generate a new link later, but it will be a different one.",
   "search.inputPlaceholder": "Search classes, lessons, cards…",
   "search.queryLabel": "Search query",
   "search.resultsLabel": "Search results",
@@ -1400,6 +1406,12 @@ Object.assign(TRANSLATIONS.vi, {
   "toast.cardsAdded": "Đã thêm {n} thẻ.",
   "toast.lessonsImported": "Đã thêm {lessons} và {cards}.",
   "toast.signingOut": "Đang đăng xuất…",
+  "pref.backup": "Sao lưu",
+  "import.isFullBackup": "Đây là bản sao lưu toàn bộ tài khoản, không phải tệp xuất lớp. Nhập ở đây chỉ nhận tệp xuất lớp (Xuất trong lớp hoặc bài học).",
+  "pref.backupHint": "Toàn bộ tài khoản, gồm cả tiến độ học. Muốn chia sẻ một lớp, hãy dùng Xuất trong lớp đó.",
+  "pref.downloadBackup": "Tải bản sao lưu đầy đủ",
+  "share.disableLinkTitle": "Vô hiệu hóa liên kết chia sẻ?",
+  "share.disableLinkConfirm": "Ai có liên kết hiện tại sẽ mất quyền truy cập. Bạn có thể tạo liên kết mới sau, nhưng đó sẽ là liên kết khác.",
   "search.inputPlaceholder": "Tìm lớp, bài học, thẻ…",
   "search.queryLabel": "Nội dung tìm kiếm",
   "search.resultsLabel": "Kết quả tìm kiếm",
@@ -3448,6 +3460,9 @@ document.getElementById("import-flashcards-input").addEventListener("change", fu
     } catch (err) {
       throw new Error(t("import.invalidJson"));
     }
+    // A full backup (flat rows with study progress) isn't a class export; say so rather than
+    // letting the class importer fail on its shape.
+    if (parsed && Array.isArray(parsed.cards) && Array.isArray(parsed.states)) throw new Error(t("import.isFullBackup"));
     return store.importFlashcards({ classes: parsed && parsed.classes });
   }).then(function(result) {
     renderHome();
@@ -5387,7 +5402,8 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
 
 function confirmAction(msg, cb, actionKey) {
   var keys = { archive: ["confirm.archiveTitle", "common.archive"], leave: ["confirm.leaveTitle", "study.exit"],
-    discard: ["confirm.discardTitle", "confirm.discard"], review: ["confirm.reviewTitle", "upstream.markReviewed"] }[actionKey]
+    discard: ["confirm.discardTitle", "confirm.discard"], review: ["confirm.reviewTitle", "upstream.markReviewed"],
+    disableLink: ["share.disableLinkTitle", "share.disableLink"] }[actionKey]
     || ["delete.confirmTitle", "common.delete"];
   var titleKey = keys[0];
   var buttonKey = keys[1];
@@ -9705,6 +9721,10 @@ document.getElementById("pref-token-create").addEventListener("click", function(
   });
 });
 
+document.getElementById("btn-download-backup").addEventListener("click", function() {
+  downloadFromApi("/api/export");
+});
+
 document.getElementById("pref-token-copy").addEventListener("click", function() {
   var btn = this;
   var input = document.getElementById("pref-token-value");
@@ -9937,7 +9957,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "sidebar-upstream-link", "sidebar-vocabulary-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "pref-backup", "sidebar-upstream-link", "sidebar-vocabulary-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }
@@ -10104,14 +10124,17 @@ function loadShareLink(classId) {
   var genBtn   = document.getElementById("btn-generate-share-link");
   var input    = document.getElementById("share-link-input");
 
-  // Check if link already exists by trying to fetch invites (we store token on generate)
-  // We use a local state cache
-  if (window._shareLinkCache && window._shareLinkCache[classId]) {
-    showShareLinkRow(window._shareLinkCache[classId]);
-  } else {
-    linkRow.classList.add("hidden");
-    genBtn.classList.remove("hidden");
-  }
+  linkRow.classList.add("hidden");
+  genBtn.classList.add("hidden");
+  fetch("/api/share/link/" + classId, { credentials: "same-origin" })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (classId !== shareModalClassId) return;
+      if (d.token) showShareLinkRow(d.token);
+      else genBtn.classList.remove("hidden");
+    }, function() {
+      if (classId === shareModalClassId) genBtn.classList.remove("hidden");
+    });
 }
 
 function showShareLinkRow(token) {
@@ -10129,8 +10152,6 @@ document.getElementById("btn-generate-share-link").addEventListener("click", fun
     .then(function(r) { return r.json(); })
     .then(function(d) {
       if (!d.token) return;
-      if (!window._shareLinkCache) window._shareLinkCache = {};
-      window._shareLinkCache[shareModalClassId] = d.token;
       showShareLinkRow(d.token);
     });
 });
@@ -10144,13 +10165,19 @@ document.getElementById("btn-copy-share-link").addEventListener("click", functio
 });
 
 document.getElementById("btn-revoke-share-link").addEventListener("click", function() {
-  if (!shareModalClassId) return;
-  fetch("/api/share/link/" + shareModalClassId, { method: "DELETE", credentials: "same-origin" })
-    .then(function() {
-      if (window._shareLinkCache) delete window._shareLinkCache[shareModalClassId];
-      document.getElementById("share-link-row").classList.add("hidden");
-      document.getElementById("btn-generate-share-link").classList.remove("hidden");
-    });
+  var classId = shareModalClassId;
+  if (!classId) return;
+  confirmAction(t("share.disableLinkConfirm"), function() {
+    fetch("/api/share/link/" + classId, { method: "DELETE", credentials: "same-origin" })
+      .then(function(r) {
+        if (!r.ok) throw new Error(t("error.requestFailed", { status: r.status }));
+        document.getElementById("share-link-row").classList.add("hidden");
+        document.getElementById("btn-generate-share-link").classList.remove("hidden");
+      })
+      .catch(function(err) {
+        showToast(err instanceof TypeError ? t("common.networkError") : err.message, "error");
+      });
+  }, "disableLink");
 });
 
 function loadInviteList(classId) {

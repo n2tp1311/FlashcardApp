@@ -940,6 +940,10 @@ body {
 /* A confirm dialog can open over a form; both share one grid cell and the later one in the
    markup (the confirm) paints on top. */
 #modal-overlay { display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; }
+/* Paint order matches syncInert's notion of "top": a confirm opened from the share dialog sits
+   above it, and search/keyboard help above everything. */
+#modal-overlay { z-index: 1001; }
+#modal-keymap, #modal-search { z-index: 1002; }
 #modal-overlay > .modal { grid-area: 1 / 1; }
 .modal:focus { outline: none; }
 
@@ -2752,7 +2756,7 @@ code {
   align-items: center;
 }
 
-.share-invite-row .input {
+.share-invite-row .form-input {
   flex: 1;
   min-width: 0;
 }
@@ -2825,7 +2829,7 @@ code {
     align-items: stretch;
   }
 
-  .share-invite-row .input {
+  .share-invite-row .form-input {
     width: 100%;
   }
 

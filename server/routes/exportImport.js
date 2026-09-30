@@ -81,6 +81,7 @@ exportRouter.get("/", requireAuth, exportLimiter, (req, res) => {
   const attempts = db.prepare("SELECT * FROM attempts WHERE user_id = ?").all(userId);
   const states   = db.prepare("SELECT * FROM card_states WHERE user_id = ?").all(userId);
 
+  res.setHeader("Content-Disposition", 'attachment; filename="flashcards-backup-' + new Date().toISOString().slice(0, 10) + '.json"');
   res.json({ classes, lessons, cards, attempts, states, exportedAt: Date.now() });
 });
 
@@ -252,45 +253,65 @@ exportRouter.get("/flashcards", requireAuth, flashcardExportLimiter, (req, res) 
 // POST /api/import
 importRouter.post("/", requireAuth, importLimiter, (req, res) => {
   const userId = req.session.userId;
-  const { classes = [], lessons = [], cards = [], attempts = [], states = [] } = req.body;
+  const { classes = [], lessons = [], cards = [], attempts = [], states = [] } = req.body || {};
+  if (![classes, lessons, cards, attempts, states].every(Array.isArray))
+    return res.status(400).json({ error: "Not a full backup file", code: "backupInvalid" });
 
+  // Every row must hang off a parent imported from the same file. Falling back to the id as
+  // written would let a crafted file attach lessons or cards to another user's class.
   const idMap = {}; // old id → new id
+  const imported = { classes: 0, lessons: 0, cards: 0 };
+  const ownedExternalIds = new Set(db.prepare(
+    "SELECT cards.external_id FROM cards JOIN lessons ON cards.lesson_id = lessons.id " +
+    "JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ? AND cards.external_id IS NOT NULL"
+  ).all(userId).map(r => r.external_id));
 
   db.transaction(() => {
     classes.forEach(cls => {
+      if (!cls || typeof cls.name !== "string" || !cls.name.trim()) return;
       const newId = genId();
       idMap[cls.id] = newId;
+      imported.classes++;
       db.prepare(
         "INSERT OR IGNORE INTO classes (id, user_id, name, color, icon, sort_order, level, archived, created_at, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
       ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "book", cls.sort_order || 0, cls.level ?? null, cls.archived ? 1 : 0, cls.created_at || Math.floor(Date.now()/1000), cls.tags || null);
     });
 
     lessons.forEach(les => {
+      const classId = idMap[les.class_id];
+      if (!classId || !VALID_LESSON_FORMATS.includes(les.format) || typeof les.title !== "string" || !les.title.trim()) return;
       const newId = genId();
       idMap[les.id] = newId;
-      const classId = idMap[les.class_id] || les.class_id;
+      imported.lessons++;
       db.prepare(
         "INSERT OR IGNORE INTO lessons (id, class_id, title, format, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)"
       ).run(newId, classId, les.title, les.format, les.sort_order || 0, les.created_at || Math.floor(Date.now()/1000));
     });
 
     cards.forEach(card => {
+      const lessonId = idMap[card.lesson_id];
+      if (!lessonId || !VALID_LESSON_FORMATS.includes(card.format) || !card.data || typeof card.data !== "object") return;
       const newId = genId();
       idMap[card.id] = newId;
-      const lessonId = idMap[card.lesson_id] || card.lesson_id;
+      imported.cards++;
+      // Restoring into the account the backup came from would otherwise leave two cards with
+      // the same KnowledgeApp id, and sync would update one of them at random.
+      const externalId = typeof card.external_id === "string" && !ownedExternalIds.has(card.external_id)
+        ? card.external_id.slice(0, 128) : null;
       db.prepare(
         "INSERT OR IGNORE INTO cards (id, lesson_id, format, data, sort_order, created_at, external_id, upstream_change, upstream_changed_at, upstream_prev_data, converted_from) " +
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
       ).run(newId, lessonId, card.format, JSON.stringify(card.data), card.sort_order || 0, card.created_at || Math.floor(Date.now()/1000),
-            typeof card.external_id === "string" ? card.external_id.slice(0, 128) : null,
-            card.upstream_change === "updated" || card.upstream_change === "deleted" ? card.upstream_change : null,
-            Number.isInteger(card.upstream_changed_at) ? card.upstream_changed_at : null,
-            typeof card.upstream_prev_data === "string" ? card.upstream_prev_data : null,
+            externalId,
+            externalId && (card.upstream_change === "updated" || card.upstream_change === "deleted") ? card.upstream_change : null,
+            externalId && Number.isInteger(card.upstream_changed_at) ? card.upstream_changed_at : null,
+            externalId && typeof card.upstream_prev_data === "string" ? card.upstream_prev_data : null,
             typeof card.converted_from === "string" ? card.converted_from : null);
     });
 
     attempts.forEach(att => {
-      const cardId = idMap[att.card_id] || att.card_id;
+      const cardId = idMap[att.card_id];
+      if (!cardId) return;
       db.prepare(
         "INSERT OR IGNORE INTO attempts (id, card_id, user_id, correct, source, created_at, duration_ms, grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
       ).run(genId(), cardId, userId, att.correct, att.source || "flashcard", att.created_at || Math.floor(Date.now()/1000),
@@ -298,7 +319,8 @@ importRouter.post("/", requireAuth, importLimiter, (req, res) => {
     });
 
     states.forEach(s => {
-      const cardId = idMap[s.card_id] || s.card_id;
+      const cardId = idMap[s.card_id];
+      if (!cardId) return;
       db.prepare(
         "INSERT OR REPLACE INTO card_states (card_id, user_id, known, updated_at, last_seen_at, srs_step, srs_due_at, " +
         "fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_reps, fsrs_lapses, fsrs_learning_steps, fsrs_last_review_at, last_correct_source) " +
@@ -310,7 +332,7 @@ importRouter.post("/", requireAuth, importLimiter, (req, res) => {
     });
   })();
 
-  res.json({ ok: true, imported: { classes: classes.length, lessons: lessons.length, cards: cards.length } });
+  res.json({ ok: true, imported });
 });
 
 // POST /api/import/flashcards — the counterpart to GET /api/export/flashcards above. Takes
