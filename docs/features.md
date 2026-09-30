@@ -336,4 +336,8 @@
 - Search ignores late replies for older text, reports failures instead of "No results", keeps keys typed right after Ctrl/Cmd+K, and Enter opens the first result
 - The Updated filter and "Study updated cards" include only updated cards, not ones removed from KnowledgeApp; the KnowledgeApp badge counts down as changes are reviewed or studied
 - Pull-to-refresh only starts on the bare Home screen (not under a dialog or the sidebar)
+- Home sort, direction, filters and grid/list view re-render the loaded classes in place: no refetch or jump, and select mode keeps its selection
+- Study Setup's footer shows "Study N of M matching cards" (Card Count and filter), Start is disabled at 0 matches, and the header names the lesson
+- Bulk Add and Bulk Import list skipped lines with a reason; a line with no "|" splits on a tab (spreadsheet paste)
+- Max reviews per day rejects anything but a whole number ≥ 0 with an inline message
 

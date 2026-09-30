@@ -857,3 +857,9 @@ Server messages are English, and the Vietnamese UI showed them verbatim ("Invali
 ## 2026-09-30 — Upcoming reviews includes overdue cards (revises 2026-07-24)
 The future-due chart counted only cards due strictly after now, so with a backlog the Dashboard read "No cards due in the next 14 days" next to "Due for Review 28". Cards already due or overdue now fall into Today, and archived classes are excluded so Today agrees with Due for Review, which already excluded them. A big backlog makes the Today bar dwarf the rest; that's the honest picture.
 
+## 2026-09-30 — Setup: Start disabled at 0 matches, count follows Card Count (revises 2026-07-24)
+The match count sat below Card Order, off-screen on phones, and ignored Card Count ("12 match" with 10 selected); Start stayed enabled with nothing to study and answered with a message. The count now sits in the sticky footer as "Study N of M matching cards" and Start is disabled when nothing matches. Because a disabled Start depends on the count being current, saving Preferences (which can change the daily cap) now recounts, reversing the earlier choice to leave it stale until a pill changes.
+
+## 2026-09-30 — Bulk paste: report skipped lines; tab only when a line has no "|"
+Bulk Add silently dropped lines it couldn't parse ("2 cards detected" from 4 pasted), and spreadsheet pastes (tab-separated) were all rejected. Parsers now report each skipped line with a reason and the preview lists them. A tab separates columns only when the line contains no `|`, so existing pastes and LaTeX (`|` inside `$…$`) keep their meaning.
+
