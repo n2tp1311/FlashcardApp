@@ -684,6 +684,9 @@ Object.assign(TRANSLATIONS.en, {
   "study.reviewDue": "Quick quiz · {n} due",
   "study.reviewDueTitle": "Multiple-choice quiz on the cards due now (respects Max reviews per day)",
   "confirm.leaveTitle": "Leave this session?",
+  "confirm.discardTitle": "Discard changes?",
+  "confirm.discardChanges": "Your changes haven't been saved.",
+  "confirm.discard": "Discard",
   "confirm.leaveSession": "You've answered {n} so far, and those are saved. Leave now?",
   "keymap.quizNext": "Next question (after answering)",
   "keymap.exitStudy": "Exit (asks first mid-session)",
@@ -1287,6 +1290,9 @@ Object.assign(TRANSLATIONS.vi, {
   "study.reviewDue": "Trắc nghiệm nhanh · {n} thẻ đến hạn",
   "study.reviewDueTitle": "Trắc nghiệm các thẻ đang đến hạn (theo giới hạn ôn mỗi ngày)",
   "confirm.leaveTitle": "Rời phiên học?",
+  "confirm.discardTitle": "Bỏ thay đổi?",
+  "confirm.discardChanges": "Các thay đổi của bạn chưa được lưu.",
+  "confirm.discard": "Bỏ thay đổi",
   "confirm.leaveSession": "Bạn đã trả lời {n} thẻ và kết quả đã được lưu. Rời phiên ngay?",
   "keymap.quizNext": "Câu tiếp theo (sau khi trả lời)",
   "keymap.exitStudy": "Thoát (hỏi lại nếu đang học dở)",
@@ -2389,9 +2395,32 @@ function syncInert() {
   document.querySelectorAll("#modal-overlay > .modal").forEach(function(m) { m.inert = m.id !== topId; });
 }
 
+// Dialogs whose input would be lost by closing them. Manage Presets isn't here: it applies
+// each change immediately.
+var DIRTY_GUARDED = ["class", "lesson", "card-termdef", "card-mcq", "card-tf", "card-imagedef",
+  "bulk", "bulk-import", "vocabulary-add", "preferences", "dash-metrics"];
+
+// A cheap "did the user change anything": field values, selected pickers, previews, and
+// value labels ([data-dirty-text], e.g. Preferences text size and speed).
+function modalFormState(modal) {
+  var body = modal.querySelector(".modal-body");
+  return Array.from(body.querySelectorAll("input, textarea, select, .active, .selected, img, [data-dirty-text]"))
+    .filter(function(el) { return !el.closest("[data-no-dirty]"); })
+    .map(function(el) {
+      if (el.type === "checkbox") return el.checked;
+      if (el.tagName === "IMG") return el.getAttribute("src") + el.className;
+      if ("value" in el && el.tagName !== "BUTTON") return el.value;
+      return el.textContent + (el.dataset.value || el.dataset.color || el.dataset.icon || "");
+    }).join("\u0000");
+}
+
 function openModal(id) {
   var modal = document.getElementById("modal-" + id);
-  if (!modalStack.some(function(e) { return e.id === id; })) modalStack.push({ id: id, opener: document.activeElement });
+  if (!modalStack.some(function(e) { return e.id === id; })) {
+    // Callers fill the fields before opening, so this is the untouched state.
+    modalStack.push({ id: id, opener: document.activeElement,
+      snapshot: DIRTY_GUARDED.indexOf(id) !== -1 ? modalFormState(modal) : null });
+  }
   document.getElementById("modal-overlay").classList.remove("hidden");
   modal.classList.remove("hidden");
   syncInert();
@@ -2415,12 +2444,17 @@ function closeModal(id) {
   if (entry) restoreFocus(entry.opener);
 }
 
-// Esc, browser Back and backdrop taps close only the top dialog. A stray backdrop tap must
-// not dismiss the tutorial (Skip, × and Esc still do).
+// Esc, browser Back and backdrop taps close only the top dialog, asking first if it holds
+// unsaved changes (Cancel and × are explicit and never ask). A stray backdrop tap must not
+// dismiss the tutorial (Skip, × and Esc still do).
 function requestCloseTopModal(fromBackdrop) {
   var top = modalStack[modalStack.length - 1];
   if (!top) return;
   if (fromBackdrop && top.id === "tutorial") return;
+  if (top.snapshot !== null && top.snapshot !== modalFormState(document.getElementById("modal-" + top.id))) {
+    confirmAction(t("confirm.discardChanges"), function() { closeModal(top.id); }, "discard");
+    return;
+  }
   closeModal(top.id);
 }
 
@@ -2441,6 +2475,19 @@ function hideLayer(el) {
 
 document.getElementById("modal-overlay").addEventListener("click", function(e) {
   if (e.target === this) requestCloseTopModal(true);
+});
+
+// Enter in a single-line field submits the dialog like a native form. Textareas keep Enter for
+// new lines, and an IME Enter that commits a composed word (Vietnamese Telex) must not submit.
+document.getElementById("modal-overlay").addEventListener("keydown", function(e) {
+  if (e.key !== "Enter" || e.isComposing || e.keyCode === 229 || e.defaultPrevented || e.shiftKey || e.ctrlKey || e.metaKey) return;
+  var field = e.target;
+  if (field.tagName !== "INPUT" || field.readOnly || !/^(text|number|email|search)$/.test(field.type)) return;
+  var btn = field.id === "pref-token-name" ? document.getElementById("pref-token-create")
+    : field.closest(".modal").querySelector(".modal-footer .btn-primary:not([data-modal])");
+  if (!btn || btn.disabled) return;
+  e.preventDefault();
+  btn.click();
 });
 
 // Close buttons
@@ -5075,7 +5122,8 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
    ============================ */
 
 function confirmAction(msg, cb, actionKey) {
-  var keys = { archive: ["confirm.archiveTitle", "common.archive"], leave: ["confirm.leaveTitle", "study.exit"] }[actionKey]
+  var keys = { archive: ["confirm.archiveTitle", "common.archive"], leave: ["confirm.leaveTitle", "study.exit"],
+    discard: ["confirm.discardTitle", "confirm.discard"] }[actionKey]
     || ["delete.confirmTitle", "common.delete"];
   var titleKey = keys[0];
   var buttonKey = keys[1];
@@ -5192,6 +5240,7 @@ function setPillGroup(groupId, value) {
   var group = document.getElementById(groupId);
   group.querySelectorAll(".pill").forEach(function(p) {
     p.classList.toggle("active", p.dataset.value === value);
+    p.setAttribute("aria-pressed", String(p.dataset.value === value));
   });
 }
 
@@ -5288,6 +5337,12 @@ document.getElementById("btn-setup-save-preset").addEventListener("click", funct
 
 document.getElementById("btn-setup-cancel-preset").addEventListener("click", function() {
   resetSetupPresetSaveRow();
+});
+
+document.getElementById("setup-preset-name-input").addEventListener("keydown", function(e) {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === "Enter") { e.preventDefault(); document.getElementById("btn-setup-confirm-preset").click(); }
+  else if (e.key === "Escape") { e.preventDefault(); document.getElementById("btn-setup-cancel-preset").click(); }
 });
 
 document.getElementById("btn-setup-confirm-preset").addEventListener("click", function() {
@@ -5495,8 +5550,10 @@ var MODE_HINT_KEYS = {
   document.getElementById(groupId).addEventListener("click", function(e) {
     var pill = e.target.closest(".pill");
     if (!pill) return;
-    this.querySelectorAll(".pill").forEach(function(p) { p.classList.remove("active"); });
-    pill.classList.add("active");
+    setPillGroup(groupId, pill.dataset.value);
+    // A mouse click leaves the pill focused, which would make the next Enter re-select it
+    // instead of starting the session.
+    if (e.detail) pill.blur();
     if (groupId === "setup-filter") {
       var hint = document.getElementById("setup-filter-hint");
       var key = FILTER_HINT_KEYS[pill.dataset.value];
@@ -8847,9 +8904,12 @@ function applyThemePref(theme) {
   applyDarkMode(theme === "dark" || (theme === "system" && systemDark.matches));
 }
 
-systemDark.addEventListener("change", function() {
+function onSystemThemeChange() {
   if (state.themePref === "system") applyDarkMode(systemDark.matches);
-});
+}
+// Safari before 14 only has the older addListener.
+if (systemDark.addEventListener) systemDark.addEventListener("change", onSystemThemeChange);
+else systemDark.addListener(onSystemThemeChange);
 
 function applyPrefs(prefs) {
   applyThemePref(themeFromPrefs(prefs));
@@ -9799,6 +9859,12 @@ function loadInviteList(classId) {
     });
 }
 
+document.getElementById("share-invite-input").addEventListener("keydown", function(e) {
+  if (e.key !== "Enter" || e.isComposing || e.keyCode === 229) return;
+  e.preventDefault();
+  document.getElementById("btn-send-invite").click();
+});
+
 document.getElementById("btn-send-invite").addEventListener("click", function() {
   var query = document.getElementById("share-invite-input").value.trim();
   var errEl = document.getElementById("share-invite-error");
@@ -10212,7 +10278,8 @@ document.addEventListener("keydown", function(e) {
   else if (screen === "setup") {
     // Enter starts the session so the S→Enter path (open setup, then begin) is fully keyboard-driven;
     // preventDefault stops a focused pill's native Enter-click from also firing.
-    if (e.key === "Enter") { e.preventDefault(); document.getElementById("btn-start-study").click(); }
+    // A pill focused with Tab takes Enter as "select this"; Enter anywhere else starts the session.
+    if (e.key === "Enter" && !e.target.closest(".pill")) { e.preventDefault(); document.getElementById("btn-start-study").click(); }
     else if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-setup-back").click(); }
     else {
       var presetNum = parseInt(e.key, 10);

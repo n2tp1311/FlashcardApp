@@ -464,8 +464,8 @@
       </div>
     </div>
     <div class="setup-section">
-      <label class="setup-label" data-i18n="setup.cardCount">Card Count</label>
-      <div class="pill-group" id="setup-count">
+      <label class="setup-label" id="setup-count-label" data-i18n="setup.cardCount">Card Count</label>
+      <div class="pill-group" id="setup-count" role="group" aria-labelledby="setup-count-label">
         <button class="pill" data-value="10">10</button>
         <button class="pill" data-value="25">25</button>
         <button class="pill" data-value="50">50</button>
@@ -473,8 +473,8 @@
       </div>
     </div>
     <div class="setup-section">
-      <label class="setup-label" data-i18n="setup.filter">Filter</label>
-      <div class="pill-group" id="setup-filter">
+      <label class="setup-label" id="setup-filter-label" data-i18n="setup.filter">Filter</label>
+      <div class="pill-group" id="setup-filter" role="group" aria-labelledby="setup-filter-label">
         <button class="pill active" data-value="all" data-i18n="setup.allCards">All Cards</button>
         <button class="pill" data-value="due" data-i18n="setup.dueOnly">Due Only</button>
         <button class="pill" data-value="needsRecall" data-i18n="setup.needsRecall">Needs Recall</button>
@@ -484,8 +484,8 @@
       <p class="setup-filter-hint" id="setup-filter-hint">Study all cards</p>
     </div>
     <div class="setup-section">
-      <label class="setup-label" data-i18n="setup.mode">Mode</label>
-      <div class="pill-group" id="setup-mode">
+      <label class="setup-label" id="setup-mode-label" data-i18n="setup.mode">Mode</label>
+      <div class="pill-group" id="setup-mode" role="group" aria-labelledby="setup-mode-label">
         <button class="pill active" data-value="flashcard" data-i18n="setup.flashcards">Flashcards</button>
         <button class="pill" data-value="flashcard-write" data-i18n="setup.flashcardWrite">Flashcard &amp; Write</button>
         <button class="pill" data-value="quiz" data-i18n="setup.quiz">Quiz</button>
@@ -493,8 +493,8 @@
       <p class="setup-filter-hint" id="setup-mode-hint">Recall it yourself first — the strongest signal for spaced repetition.</p>
     </div>
     <div class="setup-section" id="setup-order-section">
-      <label class="setup-label" data-i18n="setup.cardOrder">Card Order</label>
-      <div class="pill-group" id="setup-order">
+      <label class="setup-label" id="setup-order-label" data-i18n="setup.cardOrder">Card Order</label>
+      <div class="pill-group" id="setup-order" role="group" aria-labelledby="setup-order-label">
         <button class="pill active" data-value="in-order" data-i18n="setup.inOrder">In Order</button>
         <button class="pill" data-value="shuffle" data-i18n="common.shuffle">Shuffle</button>
         <button class="pill" id="pill-order-interleaved" data-value="interleaved" style="display:none">Interleaved ✦</button>
@@ -683,7 +683,7 @@
         <label class="form-label" data-i18n="pref.textSize">Text size</label>
         <div class="font-scale-row">
           <button type="button" class="btn btn-sm btn-ghost" id="pref-font-decrease">A−</button>
-          <span id="pref-font-label" class="tf-pct-label">100%</span>
+          <span id="pref-font-label" data-dirty-text class="tf-pct-label">100%</span>
           <button type="button" class="btn btn-sm btn-ghost" id="pref-font-increase">A+</button>
         </div>
       </div>
@@ -722,7 +722,7 @@
         <label class="form-label" data-i18n="pref.speed">Speed</label>
         <div class="font-scale-row">
           <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-decrease">−</button>
-          <span id="pref-rate-label" class="tf-pct-label">0.9x</span>
+          <span id="pref-rate-label" data-dirty-text class="tf-pct-label">0.9x</span>
           <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-increase">+</button>
           <button type="button" class="btn btn-sm btn-ghost" id="pref-tts-test" title="Test speed" aria-label="Test speed" data-i18n-title="pref.testSpeed" data-i18n-aria="pref.testSpeed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
         </div>
@@ -735,7 +735,7 @@
         <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
         <button type="button" class="btn btn-sm btn-ghost" id="btn-replay-tutorial" data-i18n="tutorial.replay">Show tutorial</button>
       </div>
-      <div class="pref-tokens" id="pref-api-tokens">
+      <div class="pref-tokens" id="pref-api-tokens" data-no-dirty>
         <label class="form-label" data-i18n="pref.apiTokens">API tokens</label>
         <p class="pref-hint" data-i18n="pref.apiTokensHint">Lets KnowledgeApp send card updates to your account.</p>
         <ul class="pref-token-list" id="pref-token-list"></ul>
@@ -766,7 +766,7 @@
     <div class="modal-body">
       <div id="vocabulary-add-error" class="auth-error hidden"></div>
       <label class="form-label" for="vocabulary-add-word" data-i18n="vocabulary.wordLabel">Word or phrase</label>
-      <textarea id="vocabulary-add-word" class="form-textarea" rows="2" maxlength="1000" placeholder="e.g. resilient" data-i18n-placeholder="vocabulary.wordPlaceholder"></textarea>
+      <input type="text" id="vocabulary-add-word" class="form-input" maxlength="1000" autocomplete="off" placeholder="e.g. resilient" data-i18n-placeholder="vocabulary.wordPlaceholder">
       <label class="form-label" for="vocabulary-add-context" data-i18n="vocabulary.contextLabel">Context (optional)</label>
       <textarea id="vocabulary-add-context" class="form-textarea" rows="3" maxlength="4000" placeholder="Sentence or note to clarify the meaning" data-i18n-placeholder="vocabulary.contextPlaceholder"></textarea>
     </div>
