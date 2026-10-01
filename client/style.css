@@ -59,28 +59,29 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* ==============================
-   DARK THEME — KnowledgeApp's warm dark
-   Softened from KnowledgeApp's near-black for long reading. On --surface: text 11.5:1,
-   text2 7:1, primary 7.3:1.
+   DARK THEME — neutral charcoal, warmth only in the accent
+   Warm-tinted greys read as a yellow screen at night, so the surfaces are plain grey and
+   only --primary carries KnowledgeApp's brown. On --surface: text 11.9:1, text2 7:1,
+   primary 6.8:1.
    ============================== */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg:           #1f1d1a;
-  --surface:      #2a2723;
-  --surface2:     #35312c;
-  --border:       #544e46;
-  --text:         #e8e2d7;
-  --text2:        #bab2a5;
-  --text3:        #968e82;
-  --primary:      #e0ad6c;
-  --primary-hover:#ebc08a;
-  --primary-light:#3a2d1c;
+  --bg:           #1c1c1c;
+  --surface:      #262626;
+  --surface2:     #303030;
+  --border:       #4a4a4a;
+  --text:         #e6e4e0;
+  --text2:        #b4b1ab;
+  --text3:        #9a9792;
+  --primary:      #d2a57c;
+  --primary-hover:#ddb895;
+  --primary-light:#36302a;
   --success:      #7cc794;
-  --success-light:#1d2e22;
+  --success-light:#1f2b23;
   --danger:       #f08a84;
-  --danger-light: #3a201d;
-  --warning:      #e0b25a;
-  --warning-light:#3a2f19;
+  --danger-light: #352220;
+  --warning:      #d9b36a;
+  --warning-light:#33302a;
   /* The text colours above are too pale for white text, so fills stay the light theme's
      deep tones. Hover goes darker, not lighter, to stay ≥4.5:1. */
   --primary-fill: #8b5a2b;
@@ -92,9 +93,9 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --warning-fill: #9a6a00;
   --warning-fill-hover: #7d5600;
   /* Lifted off --surface so the flipped card still reads as a separate face. */
-  --card-back: #3a352f;
-  --card-back-border: #5c554c;
-  --card-back-input: #2a2723;
+  --card-back: #363636;
+  --card-back-border: #525252;
+  --card-back-input: #262626;
   --shadow:       0 1px 3px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);
   --shadow-md:    0 4px 6px -1px rgba(0,0,0,.7), 0 2px 4px -1px rgba(0,0,0,.6);
   --shadow-lg:    0 10px 15px -3px rgba(0,0,0,.7), 0 4px 6px -2px rgba(0,0,0,.6);
