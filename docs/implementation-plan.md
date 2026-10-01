@@ -958,7 +958,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Screen state restoration on refresh | Done | `fc-last-screen` localStorage key; restores class/lesson |
 | Bulk delete lessons + cards | Done | Select mode with checkboxes, select-all, delete |
 | Archive classes | Done | Single-class and multi-selected Home actions; excluded from dashboard/due aggregation; still browsable/studyable on demand |
-| Colour themes + soft buttons | Done | Six palettes picked in Preferences (`preferences.palette`, both modes each); tinted buttons instead of deep fills; `tests/palettes.test.js` holds every pair to 4.5:1 |
+| Colour themes + soft buttons | Done | Fifteen palettes (six own, nine from editor schemes) picked in Preferences (`preferences.palette`, both modes each); tinted buttons instead of deep fills; `tests/palettes.test.js` holds every pair to 4.5:1 |
 | UI language toggle (English/Vietnamese) | Done | Preferences modal; custom `t()`/`applyI18n()` i18n system, `data-i18n*` attributes, persisted via `/api/auth/preferences` + localStorage |
 | Delete-card button in study/quiz modes | Done | Trash icon in flashcard toolbar and quiz header; confirms then removes card from the active session |
 | Minimalist icon unification | Done | All screens/modals now use a single feather-style inline-SVG icon set (`ICON_*` constants in app.js) |
