@@ -124,6 +124,7 @@
 - Multi-lesson selection → combined study session; lesson name badge shown above each question/card so the subject is always visible
 - Multi-class quiz: "☑ Select" button (or `X` key) on home screen enters class select mode; check multiple classes and click "Study" to fetch all their lessons and launch a cross-class interleaved session
 - The Home class select bar and the class-screen lesson select bar sit after their list and stick to the bottom of the viewport while scrolling, so Study / Export / Archive / Delete stay in reach anywhere in a long list; at the end of the list the bar settles below the last item instead of covering it
+- All three select bars (Home classes, class-screen lessons, lesson-screen cards) share one layout: a ✕ close button and the bold "N selected" count on the left, Select all on the right, then the actions with the primary one (Study) last. On wide screens it is one line; at 480px and below the actions drop to their own row and split the width equally. Secondary actions (Export, Archive) are neutral so the tinted Study is the strongest button
 - Progressive difficulty: hard cards weighted 3×, medium 2×
 - "Due Only" filter to quiz only SRS-due cards
 - Card order: "In Order" (default, DB insertion order) or "Shuffle" (weighted-difficulty shuffle); "Interleaved ✦" appears additionally for multi-lesson sessions to mix cards across lessons — guarantees strict alternation via round-robin across lesson groups (each group independently weighted-shuffled), rather than relying on chance the way "Shuffle" does

@@ -914,3 +914,7 @@ Side by side with KnowledgeApp, the user found FlashcardApp's paper look out of 
 
 Class colours are user data, so they are desaturated on display with `filter: saturate(var(--class-saturate))` rather than rewritten; a filter also reaches the icon SVGs, whose colours are fixed per icon. The cost is that the swatch in the colour picker is brighter than the stripe it produces. Other palettes keep their own neutrals; they get the 1px borders, the outlined search bar and the muted class colours.
 
+## 2026-10-02 — Select bars follow the contextual action bar pattern
+
+On a phone the Home select bar wrapped into three ragged rows (Select all, Cancel and Export; then Archive and Study; then the count), with Cancel as a text button among the actions and brown-outlined Export/Archive louder than the soft Study. Material's contextual action bar, Adobe Spectrum's action bar and eBay's bulk-editing pattern agree on one shape: close and the selected count first, actions grouped after, at most five. All three of our bars now use it, and phones give the actions their own equal-width row. Cancel became an icon, which costs the word but every one of those systems does the same; it keeps its label as `aria-label` and tooltip. `tests/select-bar.test.js` holds the order, so a new action added to a bar has to go before the primary.
+
