@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
   <link rel="stylesheet" href="/style.css">
-  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");var _t=_p.theme||(_p.darkMode===true?"dark":"system");if(_t==="dark"||(_t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.setAttribute("data-theme","dark");document.querySelector('meta[name="theme-color"]').content="#1c1c1c";}if(_p.fontScale)document.documentElement.style.setProperty("--font-scale",_p.fontScale);}catch(_){}</script>
+  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");var _t=_p.theme||(_p.darkMode===true?"dark":"system");if(_t==="dark"||(_t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.setAttribute("data-theme","dark");document.querySelector('meta[name="theme-color"]').content="#1c1c1c";}if(typeof _p.palette==="string")document.documentElement.setAttribute("data-palette",_p.palette);if(_p.fontScale)document.documentElement.style.setProperty("--font-scale",_p.fontScale);}catch(_){}</script>
 </head>
 <body>
 
@@ -693,6 +693,17 @@
           <button type="button" class="pill" data-value="light" data-i18n="pref.themeLight">Light</button>
           <button type="button" class="pill" data-value="dark" data-i18n="pref.themeDark">Dark</button>
           <button type="button" class="pill" data-value="system" data-i18n="pref.themeSystem">Match device</button>
+        </div>
+      </div>
+      <div class="pref-row pref-row-wrap">
+        <label class="form-label" data-i18n="pref.palette">Colour theme</label>
+        <div class="palette-row" id="pref-palette">
+          <button type="button" class="pill palette-pill" data-value="parchment" data-i18n="pref.palette.parchment">Parchment</button>
+          <button type="button" class="pill palette-pill" data-value="sage" data-i18n="pref.palette.sage">Sage</button>
+          <button type="button" class="pill palette-pill" data-value="slate" data-i18n="pref.palette.slate">Slate</button>
+          <button type="button" class="pill palette-pill" data-value="sepia" data-i18n="pref.palette.sepia">Sepia</button>
+          <button type="button" class="pill palette-pill" data-value="plum" data-i18n="pref.palette.plum">Plum</button>
+          <button type="button" class="pill palette-pill" data-value="harbour" data-i18n="pref.palette.harbour">Harbour</button>
         </div>
       </div>
       <div class="pref-row">

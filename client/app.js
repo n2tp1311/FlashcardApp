@@ -136,6 +136,13 @@ Object.assign(TRANSLATIONS.en, {
   "pref.themeLight": "Light",
   "pref.themeDark": "Dark",
   "pref.themeSystem": "Match device",
+  "pref.palette": "Colour theme",
+  "pref.palette.parchment": "Parchment",
+  "pref.palette.sage": "Sage",
+  "pref.palette.slate": "Slate",
+  "pref.palette.sepia": "Sepia",
+  "pref.palette.plum": "Plum",
+  "pref.palette.harbour": "Harbour",
   "pref.haptics": "Vibration feedback",
   "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
   "pref.quizCountsAsKnown": "Quiz answers count as Know It",
@@ -823,6 +830,13 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.themeLight": "Sáng",
   "pref.themeDark": "Tối",
   "pref.themeSystem": "Theo thiết bị",
+  "pref.palette": "Màu giao diện",
+  "pref.palette.parchment": "Giấy ngà",
+  "pref.palette.sage": "Xanh xô thơm",
+  "pref.palette.slate": "Xám đá",
+  "pref.palette.sepia": "Nâu sepia",
+  "pref.palette.plum": "Tím mận",
+  "pref.palette.harbour": "Xanh cảng biển",
   "pref.haptics": "Phản hồi rung",
   "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
   "pref.quizCountsAsKnown": "Trả lời Trắc nghiệm được tính là Đã thuộc",
@@ -9186,7 +9200,28 @@ function showAuthScreen() {
 function applyDarkMode(enabled) {
   state.darkMode = !!enabled;
   document.documentElement.setAttribute("data-theme", state.darkMode ? "dark" : "light");
-  document.querySelector('meta[name="theme-color"]').content = state.darkMode ? "#1c1c1c" : "#f1ebe0";
+  syncThemeColor();
+}
+
+// The browser bar takes the page background, which now depends on both palette and mode.
+function syncThemeColor() {
+  var bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+  if (bg) document.querySelector('meta[name="theme-color"]').content = bg;
+}
+
+// Palette is independent of light/dark: each one defines both modes in style.css.
+// "parchment" is the default and has no attribute, so an unknown stored value falls back to it.
+var PALETTES = ["parchment", "sage", "slate", "sepia", "plum", "harbour"];
+
+function paletteFromPrefs(prefs) {
+  return PALETTES.indexOf(prefs.palette) >= 0 ? prefs.palette : "parchment";
+}
+
+function applyPalette(palette) {
+  state.palette = PALETTES.indexOf(palette) >= 0 ? palette : "parchment";
+  if (state.palette === "parchment") document.documentElement.removeAttribute("data-palette");
+  else document.documentElement.setAttribute("data-palette", state.palette);
+  syncThemeColor();
 }
 
 function applyLanguage(lang) {
@@ -9235,6 +9270,7 @@ if (systemDark.addEventListener) systemDark.addEventListener("change", onSystemT
 else systemDark.addListener(onSystemThemeChange);
 
 function applyPrefs(prefs) {
+  applyPalette(paletteFromPrefs(prefs));
   applyThemePref(themeFromPrefs(prefs));
   if (typeof prefs.haptics === "boolean") {
     state.haptics = prefs.haptics;
@@ -9637,14 +9673,16 @@ var prefsSnapshot = null;
 function revertPrefsPreview() {
   if (!prefsSnapshot) return;
   applyThemePref(prefsSnapshot.theme);
+  applyPalette(prefsSnapshot.palette);
   applyFontScale(prefsSnapshot.fontScale);
   prefsSnapshot = null;
 }
 
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
-  prefsSnapshot = { theme: state.themePref, fontScale: state.fontScale };
+  prefsSnapshot = { theme: state.themePref, palette: state.palette, fontScale: state.fontScale };
   setPillGroup("pref-theme", state.themePref);
+  setPillGroup("pref-palette", state.palette);
   document.getElementById("pref-haptics").checked = state.haptics;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
   document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
@@ -9753,6 +9791,13 @@ document.getElementById("pref-theme").addEventListener("click", function(e) {
   applyThemePref(pill.dataset.value);
 });
 
+document.getElementById("pref-palette").addEventListener("click", function(e) {
+  var pill = e.target.closest(".pill");
+  if (!pill) return;
+  setPillGroup("pref-palette", pill.dataset.value);
+  applyPalette(pill.dataset.value);
+});
+
 // Sample buzz only — unlike dark mode, this preview deliberately doesn't write state:
 // vibration is invisible, so a preview left behind by Cancel would silently disagree with
 // the saved setting.
@@ -9796,6 +9841,8 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   prefsSnapshot = null;
   var theme = document.querySelector("#pref-theme .pill.active").dataset.value;
   applyThemePref(theme);
+  var palette = document.querySelector("#pref-palette .pill.active").dataset.value;
+  applyPalette(palette);
   var haptics = document.getElementById("pref-haptics").checked;
   state.haptics = haptics;
   var quizCountsAsKnown = document.getElementById("pref-quiz-known").checked;
@@ -9808,7 +9855,7 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   state.maxReviewsPerDay = maxReviews;
   // A changed review cap changes what Study Setup matches (and whether Start is enabled).
   if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
-  var prefs = { theme: theme, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
+  var prefs = { theme: theme, palette: palette, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
@@ -9945,7 +9992,11 @@ try {
 
 document.documentElement.setAttribute("lang", state.language);
 applyI18n();
-try { applyThemePref(themeFromPrefs(JSON.parse(localStorage.getItem("fc-preferences") || "{}"))); } catch (_) { applyThemePref("system"); }
+try {
+  var cachedStartPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
+  applyPalette(paletteFromPrefs(cachedStartPrefs));
+  applyThemePref(themeFromPrefs(cachedStartPrefs));
+} catch (_) { applyPalette("parchment"); applyThemePref("system"); }
 
 if (IS_SERVER && !currentUser) {
   showScreen("auth");
