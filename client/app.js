@@ -9186,7 +9186,7 @@ function showAuthScreen() {
 function applyDarkMode(enabled) {
   state.darkMode = !!enabled;
   document.documentElement.setAttribute("data-theme", state.darkMode ? "dark" : "light");
-  document.querySelector('meta[name="theme-color"]').content = state.darkMode ? "#0d1117" : "#4338ca";
+  document.querySelector('meta[name="theme-color"]').content = state.darkMode ? "#131210" : "#faf9f7";
 }
 
 function applyLanguage(lang) {
