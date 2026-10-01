@@ -889,3 +889,7 @@ The user picked soft buttons and asked for the palettes to be a user choice. Pal
 ## 2026-10-02 — Editor-scheme palettes are adapted, not copied
 
 The user asked for more palettes, with Monkeytype as reference. Its themes are single-mode and tuned for a typing test, where low-contrast "sub" text is a feature; here people read definitions for minutes at a time. So each scheme keeps its hues, the missing mode is derived from them, and any text colour under 4.5:1 is pushed darker or lighter until it passes. Some therefore differ from the originals (Serika light's yellow accent becomes a dark gold, Nord dark's frost lightens). Semantic colours stay shared across palettes; where the shared one fails on a palette's surface, that palette alone overrides it (Nord and Everforest dark lighten `--danger`), and `tests/palettes.test.js` is what found them.
+
+## 2026-10-02 — Dark mode contrast comes from the foreground, not darker surfaces
+
+Asked for more contrast and a neon look in dark mode. Earlier the user had rejected near-black surfaces as too dark, so the surfaces stay and the contrast is added on top: text at 96% lightness, and the accent and semantic colours pushed to 95% saturation. This reverses the 2026-10-02 "softer contrast" choice for dark mode only (light mode keeps it). The cost is more glare from saturated colour in long sessions; the gain is that state (due, wrong, confident) reads at a glance. The transform is applied per palette, so a new palette's dark block has to follow the same rule by hand.
