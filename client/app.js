@@ -137,6 +137,8 @@ Object.assign(TRANSLATIONS.en, {
   "pref.themeDark": "Dark",
   "pref.themeSystem": "Match device",
   "pref.palette": "Colour theme",
+  "pref.highContrast": "High contrast",
+  "pref.highContrastHint": "Dark mode only: brighter text and vivid colours on the page and both sides of the card.",
   "pref.palette.parchment": "Parchment",
   "pref.palette.sage": "Sage",
   "pref.palette.slate": "Slate",
@@ -841,6 +843,8 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.themeDark": "Tối",
   "pref.themeSystem": "Theo thiết bị",
   "pref.palette": "Màu giao diện",
+  "pref.highContrast": "Độ tương phản cao",
+  "pref.highContrastHint": "Chỉ ở chế độ tối: chữ sáng hơn và màu rực hơn trên trang và cả hai mặt thẻ.",
   "pref.palette.parchment": "Giấy ngà",
   "pref.palette.sage": "Xanh xô thơm",
   "pref.palette.slate": "Xám đá",
@@ -2406,6 +2410,7 @@ var state = {
 
   // User preferences (loaded from server after login)
   darkMode: false,
+  highContrast: false,
   haptics: true,
   quizCountsAsKnown: false,
   fontScale: 1,
@@ -9250,6 +9255,15 @@ function applyPalette(palette) {
   syncThemeColor();
 }
 
+// Off by default, following Material/Apple/GitHub: the plain dark theme is muted and the
+// neon set is opt-in. The attribute is harmless in light mode; style.css only reads it
+// alongside data-theme="dark".
+function applyContrast(high) {
+  state.highContrast = high === true;
+  if (state.highContrast) document.documentElement.setAttribute("data-contrast", "high");
+  else document.documentElement.removeAttribute("data-contrast");
+}
+
 function applyLanguage(lang) {
   var previousLanguage = state.language;
   state.language = (lang === "vi") ? "vi" : "en";
@@ -9297,6 +9311,7 @@ else systemDark.addListener(onSystemThemeChange);
 
 function applyPrefs(prefs) {
   applyPalette(paletteFromPrefs(prefs));
+  applyContrast(prefs.highContrast);
   applyThemePref(themeFromPrefs(prefs));
   if (typeof prefs.haptics === "boolean") {
     state.haptics = prefs.haptics;
@@ -9700,14 +9715,16 @@ function revertPrefsPreview() {
   if (!prefsSnapshot) return;
   applyThemePref(prefsSnapshot.theme);
   applyPalette(prefsSnapshot.palette);
+  applyContrast(prefsSnapshot.highContrast);
   applyFontScale(prefsSnapshot.fontScale);
   prefsSnapshot = null;
 }
 
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
-  prefsSnapshot = { theme: state.themePref, palette: state.palette, fontScale: state.fontScale };
+  prefsSnapshot = { theme: state.themePref, palette: state.palette, highContrast: state.highContrast, fontScale: state.fontScale };
   setPillGroup("pref-theme", state.themePref);
+  document.getElementById("pref-contrast").checked = state.highContrast;
   setPillGroup("pref-palette", state.palette);
   document.getElementById("pref-haptics").checked = state.haptics;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
@@ -9824,6 +9841,10 @@ document.getElementById("pref-palette").addEventListener("click", function(e) {
   applyPalette(pill.dataset.value);
 });
 
+document.getElementById("pref-contrast").addEventListener("change", function() {
+  applyContrast(this.checked);
+});
+
 // Sample buzz only — unlike dark mode, this preview deliberately doesn't write state:
 // vibration is invisible, so a preview left behind by Cancel would silently disagree with
 // the saved setting.
@@ -9869,6 +9890,8 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   applyThemePref(theme);
   var palette = document.querySelector("#pref-palette .pill.active").dataset.value;
   applyPalette(palette);
+  var highContrast = document.getElementById("pref-contrast").checked;
+  applyContrast(highContrast);
   var haptics = document.getElementById("pref-haptics").checked;
   state.haptics = haptics;
   var quizCountsAsKnown = document.getElementById("pref-quiz-known").checked;
@@ -9881,7 +9904,7 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   state.maxReviewsPerDay = maxReviews;
   // A changed review cap changes what Study Setup matches (and whether Start is enabled).
   if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
-  var prefs = { theme: theme, palette: palette, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
+  var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.

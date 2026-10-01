@@ -48,18 +48,22 @@ function ratio(a, b) {
 const PALETTES = JSON.parse(app.match(/var PALETTES = (\[[^\]]*\]);/)[1].replace(/'/g, '"'));
 const baseLight = block(":root");
 const baseDark = Object.assign({}, baseLight, block('[data-theme="dark"]'));
+const HC = '[data-contrast="high"]';
+const baseHigh = Object.assign({}, baseDark, block(':root[data-theme="dark"]' + HC));
 
+// "high" is dark mode with Preferences › High contrast on: the palette's dark block, then
+// its high-contrast block on top, which is how the cascade resolves them.
 function tokensFor(palette, mode) {
-  const base = mode === "dark" ? baseDark : baseLight;
+  const base = mode === "high" ? baseHigh : mode === "dark" ? baseDark : baseLight;
   if (palette === "parchment") return resolveSoft(Object.assign({}, base, { "primary-soft": base["primary-light"] }));
-  const sel = ':root[data-palette="' + palette + '"]' + (mode === "dark" ? '[data-theme="dark"]' : ':not([data-theme="dark"])');
-  const t = Object.assign({}, base, block(sel));
+  const sel = ':root[data-palette="' + palette + '"]' + (mode === "light" ? ':not([data-theme="dark"])' : '[data-theme="dark"]');
+  const t = Object.assign({}, base, block(sel), mode === "high" ? block(sel + HC) : {});
   t["primary-soft"] = t["primary-light"];
   return resolveSoft(t);
 }
 
 // Text colours that sit on page surfaces, and the soft-button pairs. Every one must stay
-// readable (WCAG AA 4.5:1) in every palette, in both modes.
+// readable (WCAG AA 4.5:1) in every palette, in every mode.
 const PAIRS = [
   ["text", "surface"], ["text", "bg"], ["text", "surface2"],
   ["text2", "surface"], ["text2", "bg"], ["text2", "surface2"],
@@ -71,7 +75,7 @@ const PAIRS = [
 ];
 
 for (const palette of PALETTES) {
-  for (const mode of ["light", "dark"]) {
+  for (const mode of ["light", "dark", "high"]) {
     test(palette + " " + mode + " keeps every text colour readable", function() {
       const t = tokensFor(palette, mode);
       for (const [fg, bg] of PAIRS) {
@@ -90,5 +94,26 @@ test("Preferences offers exactly the palettes app.js knows", function() {
   assert.deepEqual(offered, PALETTES);
   for (const palette of PALETTES) {
     assert.ok(app.includes('"pref.palette.' + palette + '"'), "missing label for " + palette);
+  }
+});
+
+// High contrast must actually be higher: brighter text on both card faces than plain dark.
+test("High contrast raises text contrast on the card front and back in every palette", function() {
+  for (const palette of PALETTES) {
+    const d = tokensFor(palette, "dark"), h = tokensFor(palette, "high");
+    for (const [fg, bg] of [["text", "surface"], ["text2", "surface"], ["card-back-text", "card-back"], ["card-back-dim", "card-back"], ["primary", "surface"]]) {
+      assert.ok(ratio(h[fg], h[bg]) > ratio(d[fg], d[bg]), palette + ": --" + fg + " is not higher-contrast in high mode");
+    }
+  }
+});
+
+test("High contrast is a saved preference, applied before first paint", function() {
+  assert.ok(html.includes('id="pref-contrast"'), "Preferences lacks the High contrast switch");
+  assert.match(html, /_p\.highContrast===true\)document\.documentElement\.setAttribute\("data-contrast","high"\)/);
+  assert.match(app, /palette: palette, highContrast: highContrast,/, "Save does not persist highContrast");
+  assert.match(app, /applyContrast\(prefs\.highContrast\)/, "applyPrefs ignores highContrast");
+  assert.match(app, /applyContrast\(prefsSnapshot\.highContrast\)/, "Cancel does not revert the preview");
+  for (const key of ["pref.highContrast", "pref.highContrastHint"]) {
+    assert.equal(app.split('"' + key + '"').length - 1, 2, key + " needs an English and a Vietnamese string");
   }
 });

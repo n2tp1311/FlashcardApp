@@ -82,11 +82,12 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* ==============================
-   DARK THEME — neutral charcoal surfaces, bright text, neon accents
-   Warm-tinted greys read as a yellow screen at night, so the surfaces are plain grey. The
-   user asked for more contrast and a neon feel, so in every palette's dark block text is
-   near-white (lightness 96%), and the accent and the semantic colours are saturated to the
-   edge of the gamut. Surfaces stay where they were: darker ones were rejected earlier.
+   DARK THEME — neutral charcoal surfaces, off-white text, muted accents
+   Warm-tinted greys read as a yellow screen at night, so the surfaces are plain grey.
+   Following Material and Apple, text is off-white (lightness ~88%, not 96%) and the accent
+   is held to moderate saturation in every palette's dark block, so long sessions do not
+   glare. The neon set lives on as the High contrast option further down. Surfaces stay
+   where they were: darker ones were rejected earlier.
    ============================== */
 [data-theme="dark"] {
   color-scheme: dark;
@@ -94,17 +95,17 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --surface:      #262626;
   --surface2:     #303030;
   --border:       #4a4a4a;
-  --text:         #f6f5f4;
-  --text2:        #d9d7d4;
-  --text3:        #bab8b5;
-  --primary:      #fbaf6a;
-  --primary-hover:#ffc896;
+  --text:         #e3e0dd;
+  --text2:        #c6c3be;
+  --text3:        #aba9a5;
+  --primary:      #e4b58b;
+  --primary-hover:#efc49a;
   --primary-light:#36302a;
-  --success:      #4ff58c;
+  --success:      #7fd69a;
   --success-light:#1f2b23;
-  --danger:       #ff94a1;
+  --danger:       #f19ca3;
   --danger-light: #352220;
-  --warning:      #ffcf4d;
+  --warning:      #e8c068;
   --warning-light:#33302a;
   /* The text colours above are too pale for white text, so fills stay the light theme's
      deep tones. Hover goes darker, not lighter, to stay ≥4.5:1. */
@@ -120,11 +121,13 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --card-back: #363636;
   --card-back-border: #525252;
   --card-back-input: #262626;
+  --card-back-text: #e5e2de;
+  --card-back-dim: #c4c0ba;
   --soft-mix: 16%;
-  --success-soft-text: #5cff9d;
-  --danger-soft-text: #ffa8b3;
-  --warning-soft-text: #ffd54f;
-  --confident-soft-text: #2dffd2;
+  --success-soft-text: #8fe0a8;
+  --danger-soft-text: #f5aeb4;
+  --warning-soft-text: #ecc976;
+  --confident-soft-text: #6fe0c4;
   --shadow:       0 1px 3px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);
   --shadow-md:    0 4px 6px -1px rgba(0,0,0,.7), 0 2px 4px -1px rgba(0,0,0,.6);
   --shadow-lg:    0 10px 15px -3px rgba(0,0,0,.7), 0 4px 6px -2px rgba(0,0,0,.6);
@@ -148,11 +151,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="sage"][data-theme="dark"] {
   --bg: #1a1d1b; --surface: #232724; --surface2: #2d322e; --border: #454c46;
-  --text: #f4f6f4; --text2: #d5d9d3; --text3: #b6bbb4;
-  --primary: #6afb71; --primary-hover: color-mix(in srgb, #93bd95 82%, #fff); --primary-light: #2b3a2d;
+  --text: #dde3dd; --text2: #c0c6bd; --text3: #a6ada4;
+  --primary: #8be490; --primary-hover: color-mix(in srgb, #8be490 82%, #fff); --primary-light: #2b3a2d;
   --primary-fill: #46694a; --primary-fill-hover: color-mix(in srgb, #46694a 82%, #000);
   --card-back: #303732; --card-back-border: #4d564f; --card-back-input: #232724;
-  --card-back-text: #f7f9f6; --card-back-dim: #d4dad3;
+  --card-back-text: #e1e9dd; --card-back-dim: #bec7bd;
 }
 :root[data-palette="slate"]:not([data-theme="dark"]) {
   --bg: #e8ebef; --surface: #f5f6f8; --surface2: #dde1e7; --border: #c5ccd5;
@@ -164,11 +167,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="slate"][data-theme="dark"] {
   --bg: #191b1f; --surface: #22252a; --surface2: #2c3036; --border: #444a53;
-  --text: #f3f4f6; --text2: #d2d5db; --text3: #b1b7be;
-  --primary: #74abfb; --primary-hover: color-mix(in srgb, #93b1dc 82%, #fff); --primary-light: #273347;
+  --text: #dcdfe5; --text2: #bbc0c9; --text3: #a0a8b0;
+  --primary: #8bafe4; --primary-hover: color-mix(in srgb, #8bafe4 82%, #fff); --primary-light: #273347;
   --primary-fill: #3c5a86; --primary-fill-hover: color-mix(in srgb, #3c5a86 82%, #000);
   --card-back: #2e333b; --card-back-border: #4b525d; --card-back-input: #22252a;
-  --card-back-text: #f5f7f9; --card-back-dim: #d0d5dc;
+  --card-back-text: #dce3ea; --card-back-dim: #b9c0cb;
 }
 :root[data-palette="sepia"]:not([data-theme="dark"]) {
   --bg: #efe3c8; --surface: #f7eed9; --surface2: #e6d8b9; --border: #d2c09b;
@@ -180,11 +183,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="sepia"][data-theme="dark"] {
   --bg: #201c17; --surface: #2a251f; --surface2: #342e27; --border: #4f463b;
-  --text: #f8f6f1; --text2: #ded9ce; --text3: #c1baae;
-  --primary: #fba26a; --primary-hover: color-mix(in srgb, #e09a6e 82%, #fff); --primary-light: #3d2c20;
+  --text: #ebe5d6; --text2: #cec6b6; --text3: #b4ab9d;
+  --primary: #e4ae8b; --primary-hover: color-mix(in srgb, #e4ae8b 82%, #fff); --primary-light: #3d2c20;
   --primary-fill: #9a4a22; --primary-fill-hover: color-mix(in srgb, #9a4a22 82%, #000);
   --card-back: #3a332b; --card-back-border: #574d41; --card-back-input: #2a251f;
-  --card-back-text: #faf8f5; --card-back-dim: #e4dbc9;
+  --card-back-text: #ece5da; --card-back-dim: #d6c9ad;
 }
 :root[data-palette="plum"]:not([data-theme="dark"]) {
   --bg: #ece8ee; --surface: #f7f5f8; --surface2: #e2dde5; --border: #cdc5d2;
@@ -196,11 +199,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="plum"][data-theme="dark"] {
   --bg: #1c1a1e; --surface: #252228; --surface2: #2f2b33; --border: #4a4450;
-  --text: #f5f3f6; --text2: #d7d3da; --text3: #b8b2bd;
-  --primary: #d07bfc; --primary-hover: color-mix(in srgb, #c4a1d6 82%, #fff); --primary-light: #382c40;
+  --text: #e2dce5; --text2: #c3bdc7; --text3: #a9a2af;
+  --primary: #c68be4; --primary-hover: color-mix(in srgb, #c68be4 82%, #fff); --primary-light: #382c40;
   --primary-fill: #6a4a7c; --primary-fill-hover: color-mix(in srgb, #6a4a7c 82%, #000);
   --card-back: #332e38; --card-back-border: #514957; --card-back-input: #252228;
-  --card-back-text: #f8f6f9; --card-back-dim: #d7d2db;
+  --card-back-text: #e5dde9; --card-back-dim: #c3bbc9;
 }
 :root[data-palette="harbour"]:not([data-theme="dark"]) {
   --bg: #e6edee; --surface: #f3f7f7; --surface2: #dae3e4; --border: #bfcdcf;
@@ -212,11 +215,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="harbour"][data-theme="dark"] {
   --bg: #181d1e; --surface: #212829; --surface2: #2a3234; --border: #424d4f;
-  --text: #f3f6f6; --text2: #d2d9da; --text3: #b2bcbd;
-  --primary: #6af0fb; --primary-hover: color-mix(in srgb, #7cc5cb 82%, #fff); --primary-light: #203a3d;
+  --text: #dce5e5; --text2: #bcc6c8; --text3: #a2aeaf;
+  --primary: #8bdde4; --primary-hover: color-mix(in srgb, #8bdde4 82%, #fff); --primary-light: #203a3d;
   --primary-fill: #1f6870; --primary-fill-hover: color-mix(in srgb, #1f6870 82%, #000);
   --card-back: #2b3436; --card-back-border: #475255; --card-back-input: #212829;
-  --card-back-text: #f5f9f9; --card-back-dim: #d1dadc;
+  --card-back-text: #dceaea; --card-back-dim: #b9c7ca;
 }
 /* Palettes after Harbour follow well-known editor schemes (the set Monkeytype also offers).
    Most exist in one mode only; the missing mode is derived from the same hues, and any colour
@@ -231,11 +234,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="serika"][data-theme="dark"] {
   --bg: #323437; --surface: #2c2e31; --surface2: #3a3c3f; --border: #4b4d51;
-  --text: #f6f6f4; --text2: #d7d7d5; --text3: #b8b9b7;
-  --primary: #fbdd6a; --primary-hover: color-mix(in srgb, #e2b714 82%, #fff); --primary-light: #4d472c;
+  --text: #e3e3dd; --text2: #c3c3c0; --text3: #a8aaa7;
+  --primary: #e4d28b; --primary-hover: color-mix(in srgb, #e4d28b 82%, #fff); --primary-light: #4d472c;
   --primary-fill: #896f0c; --primary-fill-hover: color-mix(in srgb, #896f0c 82%, #000);
   --card-back: #38393b; --card-back-border: #545454; --card-back-input: #2c2e31;
-  --card-back-text: #f8f8f6; --card-back-dim: #d7d7d5;
+  --card-back-text: #e6e6df; --card-back-dim: #c3c3c0;
 }
 :root[data-palette="nord"]:not([data-theme="dark"]) {
   --bg: #eceff4; --surface: #f5f7fa; --surface2: #e0e5ee; --border: #cfd6e3;
@@ -247,11 +250,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="nord"][data-theme="dark"] {
   --bg: #2e3440; --surface: #3b4252; --surface2: #434c5e; --border: #4c566a;
-  --text: #f2f4f8; --text2: #cbd3e2; --text3: #acb5c3;
-  --primary: #96e8fc; --primary-hover: color-mix(in srgb, #b2d7e0 82%, #fff); --primary-light: #495969;
+  --text: #d7ddea; --text2: #b0bdd3; --text3: #9aa5b6;
+  --primary: #a0dbe9; --primary-hover: color-mix(in srgb, #a0dbe9 82%, #fff); --primary-light: #495969;
   --primary-fill: #607578; --primary-fill-hover: color-mix(in srgb, #607578 82%, #000);
   --card-back: #474e5d; --card-back-border: #656b78; --card-back-input: #3b4252;
-  --card-back-text: #f5f7f9; --card-back-dim: #cbd3e2;
+  --card-back-text: #dce3ea; --card-back-dim: #bcc7da;
 }
 :root[data-palette="gruvbox"]:not([data-theme="dark"]) {
   --bg: #fbf1c7; --surface: #f9f5d7; --surface2: #ebdbb2; --border: #d5c4a1;
@@ -263,11 +266,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="gruvbox"][data-theme="dark"] {
   --bg: #282828; --surface: #32302f; --surface2: #3c3836; --border: #504945;
-  --text: #f8f6f1; --text2: #e0d9cc; --text3: #c4baab;
-  --primary: #fbd06a; --primary-hover: color-mix(in srgb, #fabd2f 82%, #fff); --primary-light: #56492f;
+  --text: #ebe5d6; --text2: #d1c6b3; --text3: #b7ab99;
+  --primary: #e4ca8b; --primary-hover: color-mix(in srgb, #e4ca8b 82%, #fff); --primary-light: #56492f;
   --primary-fill: #906d1b; --primary-fill-hover: color-mix(in srgb, #906d1b 82%, #000);
   --card-back: #3f3c38; --card-back-border: #5e594e; --card-back-input: #32302f;
-  --card-back-text: #faf9f5; --card-back-dim: #e0d9cc;
+  --card-back-text: #ece9da; --card-back-dim: #d1c6b3;
 }
 :root[data-palette="solarized"]:not([data-theme="dark"]) {
   --bg: #fdf6e3; --surface: #fffbef; --surface2: #eee8d5; --border: #ddd6c1;
@@ -279,11 +282,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="solarized"][data-theme="dark"] {
   --bg: #002b36; --surface: #073642; --surface2: #0d4351; --border: #2a5664;
-  --text: #f8f7f2; --text2: #d3d9d9; --text3: #b3bdbd;
-  --primary: #fbd46a; --primary-hover: color-mix(in srgb, #e0b02c 82%, #fff); --primary-light: #2e4c3e;
+  --text: #eae7d7; --text2: #bdc6c6; --text3: #a2aeae;
+  --primary: #e4cc8b; --primary-hover: color-mix(in srgb, #e4cc8b 82%, #fff); --primary-light: #2e4c3e;
   --primary-fill: #886b1b; --primary-fill-hover: color-mix(in srgb, #886b1b 82%, #000);
   --card-back: #16424c; --card-back-border: #3b5e64; --card-back-input: #073642;
-  --card-back-text: #f9f9f5; --card-back-dim: #d3d9d9;
+  --card-back-text: #eaeadc; --card-back-dim: #bdc6c6;
 }
 :root[data-palette="catppuccin"]:not([data-theme="dark"]) {
   --bg: #eff1f5; --surface: #f7f8fb; --surface2: #e6e9ef; --border: #ccd0da;
@@ -295,11 +298,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="catppuccin"][data-theme="dark"] {
   --bg: #1e1e2e; --surface: #262637; --surface2: #313244; --border: #45475a;
-  --text: #f1f3f8; --text2: #c8cee4; --text3: #a7aec8;
-  --primary: #cba0fd; --primary-hover: color-mix(in srgb, #cba6f7 82%, #fff); --primary-light: #443d5a;
+  --text: #d6dceb; --text2: #adb6d7; --text3: #949dbc;
+  --primary: #c4a4ea; --primary-hover: color-mix(in srgb, #c4a4ea 82%, #fff); --primary-light: #443d5a;
   --primary-fill: #7c6696; --primary-fill-hover: color-mix(in srgb, #7c6696 82%, #000);
   --card-back: #323244; --card-back-border: #4e5064; --card-back-input: #262637;
-  --card-back-text: #f5f6fa; --card-back-dim: #c8cee4;
+  --card-back-text: #daddec; --card-back-dim: #adb6d7;
 }
 :root[data-palette="rosepine"]:not([data-theme="dark"]) {
   --bg: #faf4ed; --surface: #fffaf3; --surface2: #f2e9e1; --border: #dfdad9;
@@ -311,11 +314,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="rosepine"][data-theme="dark"] {
   --bg: #191724; --surface: #1f1d2e; --surface2: #26233a; --border: #403d52;
-  --text: #f2f1f8; --text2: #cfcce0; --text3: #b0adc2;
-  --primary: #fdaca8; --primary-hover: color-mix(in srgb, #ebbcba 82%, #fff); --primary-light: #443a47;
+  --text: #d9d6eb; --text2: #b7b3d1; --text3: #9f9cb5;
+  --primary: #e69793; --primary-hover: color-mix(in srgb, #e69793 82%, #fff); --primary-light: #443a47;
   --primary-fill: #876c6a; --primary-fill-hover: color-mix(in srgb, #876c6a 82%, #000);
   --card-back: #2d2b3c; --card-back-border: #4d4b5d; --card-back-input: #1f1d2e;
-  --card-back-text: #f5f5fa; --card-back-dim: #cfcce0;
+  --card-back-text: #dadaec; --card-back-dim: #b7b3d1;
 }
 :root[data-palette="everforest"]:not([data-theme="dark"]) {
   --bg: #fdf6e3; --surface: #fffbef; --surface2: #f4f0d9; --border: #e0dcc7;
@@ -327,11 +330,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="everforest"][data-theme="dark"] {
   --bg: #2d353b; --surface: #343f44; --surface2: #3d484d; --border: #4f5b58;
-  --text: #f8f6f2; --text2: #d4dad3; --text3: #b3bcb5;
-  --primary: #c6fc77; --primary-hover: color-mix(in srgb, #bed1a2 82%, #fff); --primary-light: #49564f;
+  --text: #eae3d7; --text2: #bec7bd; --text3: #a3aea5;
+  --primary: #c0e48b; --primary-hover: color-mix(in srgb, #c0e48b 82%, #fff); --primary-light: #49564f;
   --primary-fill: #6e775c; --primary-fill-hover: color-mix(in srgb, #6e775c 82%, #000);
   --card-back: #3f484b; --card-back-border: #5a5f5c; --card-back-input: #343f44;
-  --card-back-text: #faf8f5; --card-back-dim: #d4dad3;
+  --card-back-text: #ece5da; --card-back-dim: #bec7bd;
 }
 :root[data-palette="tokyonight"]:not([data-theme="dark"]) {
   --bg: #e1e2e7; --surface: #eef0f5; --surface2: #d5d6db; --border: #c4c8da;
@@ -343,11 +346,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="tokyonight"][data-theme="dark"] {
   --bg: #1a1b26; --surface: #1f2335; --surface2: #292e42; --border: #3b4261;
-  --text: #f1f3f8; --text2: #c8cde4; --text3: #a6abc9;
-  --primary: #7da6fc; --primary-hover: color-mix(in srgb, #82a8f7 82%, #fff); --primary-light: #2f3a58;
+  --text: #d6dceb; --text2: #adb4d7; --text3: #9399be;
+  --primary: #8ba8e4; --primary-hover: color-mix(in srgb, #8ba8e4 82%, #fff); --primary-light: #2f3a58;
   --primary-fill: #5a75aa; --primary-fill-hover: color-mix(in srgb, #5a75aa 82%, #000);
   --card-back: #2a2f42; --card-back-border: #454b62; --card-back-input: #1f2335;
-  --card-back-text: #f5f6fa; --card-back-dim: #c8cde4;
+  --card-back-text: #daddec; --card-back-dim: #adb4d7;
 }
 :root[data-palette="dracula"]:not([data-theme="dark"]) {
   --bg: #fbf9f2; --surface: #ffffff; --surface2: #efede6; --border: #dcd9cf;
@@ -359,14 +362,102 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="dracula"][data-theme="dark"] {
   --bg: #282a36; --surface: #2f3241; --surface2: #383a4a; --border: #4d5066;
-  --text: #f8f8f2; --text2: #d0d2dc; --text3: #a3aacd;
-  --primary: #caa6fd; --primary-hover: color-mix(in srgb, #cbaaf9 82%, #fff); --primary-light: #494362;
+  --text: #eaead7; --text2: #b9bccb; --text3: #8f97c2;
+  --primary: #c9b0ed; --primary-hover: color-mix(in srgb, #c9b0ed 82%, #fff); --primary-light: #494362;
   --primary-fill: #7c6898; --primary-fill-hover: color-mix(in srgb, #7c6898 82%, #000);
   --card-back: #3d404d; --card-back-border: #5f616b; --card-back-input: #2f3241;
-  --card-back-text: #fafaf5; --card-back-dim: #d0d2dc;
+  --card-back-text: #ececda; --card-back-dim: #b9bccb;
 }
 
 /* Heatmap — GitHub's exact contribution graph greens */
+
+/* ==============================
+   HIGH CONTRAST — Preferences › High contrast, dark mode only
+   The neon set: near-white text (lightness 96%) and accents saturated to the edge of the
+   gamut. It was the dark default for a while because the user wanted more contrast, but
+   Material, Apple and GitHub all keep the default dark theme desaturated with off-white
+   text, since saturated colour vibrates on grey and pure white glows for readers with
+   astigmatism, and offer the extra contrast as a separate choice (GitHub's "dark high
+   contrast"). Four attributes, so each block beats its palette's dark block.
+   ============================== */
+:root[data-theme="dark"][data-contrast="high"] {
+  --card-back-text: #f7f5f2; --card-back-dim: #d8d4ce;
+  --text: #f6f5f4; --text2: #d9d7d4; --text3: #bab8b5; --primary: #fbaf6a; --success: #4ff58c;
+  --danger: #ff94a1; --warning: #ffcf4d; --success-soft-text: #5cff9d;
+  --danger-soft-text: #ffa8b3; --warning-soft-text: #ffd54f; --confident-soft-text: #2dffd2;
+  --primary-hover: #ffc896;
+}
+:root[data-palette="sage"][data-theme="dark"][data-contrast="high"] {
+  --text: #f4f6f4; --text2: #d5d9d3; --text3: #b6bbb4; --card-back-text: #f7f9f6;
+  --card-back-dim: #d4dad3; --primary: #6afb71;
+  --primary-hover: color-mix(in srgb, #6afb71 82%, #fff);
+}
+:root[data-palette="slate"][data-theme="dark"][data-contrast="high"] {
+  --text: #f3f4f6; --text2: #d2d5db; --text3: #b1b7be; --card-back-text: #f5f7f9;
+  --card-back-dim: #d0d5dc; --primary: #8cbcff;
+  --primary-hover: color-mix(in srgb, #8cbcff 82%, #fff);
+}
+:root[data-palette="sepia"][data-theme="dark"][data-contrast="high"] {
+  --text: #f8f6f1; --text2: #ded9ce; --text3: #c1baae; --card-back-text: #faf8f5;
+  --card-back-dim: #e4dbc9; --primary: #fcb283;
+  --primary-hover: color-mix(in srgb, #fcb283 82%, #fff);
+}
+:root[data-palette="plum"][data-theme="dark"][data-contrast="high"] {
+  --text: #f5f3f6; --text2: #d7d3da; --text3: #b8b2bd; --card-back-text: #f8f6f9;
+  --card-back-dim: #d7d2db; --primary: #d58afc;
+  --primary-hover: color-mix(in srgb, #d58afc 82%, #fff);
+}
+:root[data-palette="harbour"][data-theme="dark"][data-contrast="high"] {
+  --text: #f3f6f6; --text2: #d2d9da; --text3: #b2bcbd; --card-back-text: #f5f9f9;
+  --card-back-dim: #d1dadc; --primary: #6af0fb;
+  --primary-hover: color-mix(in srgb, #6af0fb 82%, #fff);
+}
+:root[data-palette="serika"][data-theme="dark"][data-contrast="high"] {
+  --text: #f6f6f4; --text2: #d7d7d5; --text3: #b8b9b7; --card-back-text: #f8f8f6;
+  --card-back-dim: #d7d7d5; --primary: #fbdd6a;
+  --primary-hover: color-mix(in srgb, #fbdd6a 82%, #fff);
+}
+:root[data-palette="nord"][data-theme="dark"][data-contrast="high"] {
+  --text: #f2f4f8; --text2: #cbd3e2; --text3: #acb5c3; --card-back-text: #f5f7f9;
+  --card-back-dim: #cbd3e2; --primary: #96e8fc;
+  --primary-hover: color-mix(in srgb, #96e8fc 82%, #fff);
+}
+:root[data-palette="gruvbox"][data-theme="dark"][data-contrast="high"] {
+  --text: #f8f6f1; --text2: #e0d9cc; --text3: #c4baab; --card-back-text: #faf9f5;
+  --card-back-dim: #e0d9cc; --primary: #fbd06a;
+  --primary-hover: color-mix(in srgb, #fbd06a 82%, #fff);
+}
+:root[data-palette="solarized"][data-theme="dark"][data-contrast="high"] {
+  --text: #f8f7f2; --text2: #d3d9d9; --text3: #b3bdbd; --card-back-text: #f9f9f5;
+  --card-back-dim: #d3d9d9; --primary: #fbd46a;
+  --primary-hover: color-mix(in srgb, #fbd46a 82%, #fff);
+}
+:root[data-palette="catppuccin"][data-theme="dark"][data-contrast="high"] {
+  --text: #f1f3f8; --text2: #c8cee4; --text3: #a7aec8; --card-back-text: #f5f6fa;
+  --card-back-dim: #c8cee4; --primary: #d0aafd;
+  --primary-hover: color-mix(in srgb, #d0aafd 82%, #fff);
+}
+:root[data-palette="rosepine"][data-theme="dark"][data-contrast="high"] {
+  --text: #f2f1f8; --text2: #cfcce0; --text3: #b0adc2; --card-back-text: #f5f5fa;
+  --card-back-dim: #cfcce0; --primary: #fdaca8;
+  --primary-hover: color-mix(in srgb, #fdaca8 82%, #fff);
+}
+:root[data-palette="everforest"][data-theme="dark"][data-contrast="high"] {
+  --text: #f8f6f2; --text2: #d4dad3; --text3: #b3bcb5; --card-back-text: #faf8f5;
+  --card-back-dim: #d4dad3; --primary: #c6fc77;
+  --primary-hover: color-mix(in srgb, #c6fc77 82%, #fff);
+}
+:root[data-palette="tokyonight"][data-theme="dark"][data-contrast="high"] {
+  --text: #f1f3f8; --text2: #c8cde4; --text3: #a6abc9; --card-back-text: #f5f6fa;
+  --card-back-dim: #c8cde4; --primary: #8cb0fc;
+  --primary-hover: color-mix(in srgb, #8cb0fc 82%, #fff);
+}
+:root[data-palette="dracula"][data-theme="dark"][data-contrast="high"] {
+  --text: #f8f8f2; --text2: #d0d2dc; --text3: #a3aacd; --card-back-text: #fafaf5;
+  --card-back-dim: #d0d2dc; --primary: #d3b5fd;
+  --primary-hover: color-mix(in srgb, #d3b5fd 82%, #fff);
+}
+
 [data-theme="dark"] .heat-1 { background: #0e4429; }
 [data-theme="dark"] .heat-2 { background: #006d32; }
 [data-theme="dark"] .heat-3 { background: #26a641; }
