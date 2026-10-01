@@ -893,3 +893,7 @@ The user asked for more palettes, with Monkeytype as reference. Its themes are s
 ## 2026-10-02 — Dark mode contrast comes from the foreground, not darker surfaces
 
 Asked for more contrast and a neon look in dark mode. Earlier the user had rejected near-black surfaces as too dark, so the surfaces stay and the contrast is added on top: text at 96% lightness, and the accent and semantic colours pushed to 95% saturation. This reverses the 2026-10-02 "softer contrast" choice for dark mode only (light mode keeps it). The cost is more glare from saturated colour in long sessions; the gain is that state (due, wrong, confident) reads at a glance. The transform is applied per palette, so a new palette's dark block has to follow the same rule by hand.
+
+## 2026-10-02 — An empty Due Only result names the review limit
+
+The user saw "20 due" on Home and "No cards match" in Setup and suspected KnowledgeApp updates had broken due dates. The real cause was Max reviews per day, which caps sessions but not badges (deliberately, as in Anki), and counts every graded attempt today, new cards and quiz answers included. Rather than cap the badges too, which would hide how much is actually due, Setup recomputes the match without the cap and, when that finds cards, explains the limit and where to raise it.
