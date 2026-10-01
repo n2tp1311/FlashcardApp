@@ -877,3 +877,7 @@ The user wanted FlashcardApp as warm as KnowledgeApp. The palette is copied valu
 ## 2026-10-02 — Softer contrast than KnowledgeApp (revises the entry above)
 
 The first pass copied KnowledgeApp's values exactly; the user found light too bright and dark too dark for reading. FlashcardApp is read in long study sessions, where white (#fff) surfaces glare and #131210 next to 15:1 text makes letters halo. Light now uses parchment surfaces and dark a lifted charcoal, so body text lands near 12:1 instead of 15–17:1. The floor is still WCAG AA: every text token is ≥4.5:1 on each surface and tint it sits on, measured with the WCAG luminance formula. The palette no longer matches KnowledgeApp value for value, only in hue.
+
+## 2026-10-02 — Dark mode surfaces are neutral grey
+
+Warm-tinted dark greys (#1f1d1a, #2a2723) looked like a yellow screen to the user: across a whole page, a small hue shift reads as a colour cast. Light mode keeps its parchment tint, where warmth reads as paper; in dark mode the surfaces are plain grey and only `--primary` keeps the brown, so the two themes still feel related without tinting the whole screen.
