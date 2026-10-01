@@ -3992,6 +3992,8 @@ document.getElementById("btn-archive-classes").addEventListener("click", functio
   }, "archive");
 });
 
+var ICON_CLOSE_16 = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
 function setCardSelectMode(on) {
   state.cardSelectMode = on;
   state.selectedCardIds = [];
@@ -4000,12 +4002,16 @@ function setCardSelectMode(on) {
   if (on) {
     toolbar.innerHTML =
       '<div class="select-bar">' +
-        '<label class="select-all-label">' +
-          '<input type="checkbox" id="select-all-cards"> ' + escHtml(t("common.selectAll")) +
-        '</label>' +
-        '<span id="card-select-count" class="select-count">' + escHtml(t("common.zeroSelected")) + '</span>' +
-        '<button class="btn btn-sm btn-ghost" id="btn-card-select-cancel">' + escHtml(t("common.cancel")) + '</button>' +
-        '<button class="btn btn-sm btn-danger" id="btn-delete-selected-cards" disabled>' + escHtml(t("common.deleteSelected")) + '</button>' +
+        '<div class="select-bar-head">' +
+          '<button type="button" class="btn btn-ghost select-bar-close" id="btn-card-select-cancel" title="' + escHtml(t("common.cancel")) + '" aria-label="' + escHtml(t("common.cancel")) + '">' + ICON_CLOSE_16 + '</button>' +
+          '<span id="card-select-count" class="select-count">' + escHtml(t("common.zeroSelected")) + '</span>' +
+          '<label class="select-all-label">' +
+            '<input type="checkbox" id="select-all-cards"> ' + escHtml(t("common.selectAll")) +
+          '</label>' +
+        '</div>' +
+        '<div class="select-bar-actions">' +
+          '<button class="btn btn-sm btn-danger" id="btn-delete-selected-cards" disabled>' + escHtml(t("common.deleteSelected")) + '</button>' +
+        '</div>' +
       '</div>';
     toolbar.style.display = "";
     document.getElementById("btn-card-select-cancel").addEventListener("click", function() {
