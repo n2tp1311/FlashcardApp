@@ -897,3 +897,7 @@ Asked for more contrast and a neon look in dark mode. Earlier the user had rejec
 ## 2026-10-02 — An empty Due Only result names the review limit
 
 The user saw "20 due" on Home and "No cards match" in Setup and suspected KnowledgeApp updates had broken due dates. The real cause was Max reviews per day, which caps sessions but not badges (deliberately, as in Anki), and counts every graded attempt today, new cards and quiz answers included. Rather than cap the badges too, which would hide how much is actually due, Setup recomputes the match without the cap and, when that finds cards, explains the limit and where to raise it.
+
+## 2026-10-02 — Grade tints are mixed from the palette, not fixed
+
+Fixed pastels (pink, cream, sage, mint) clashed with cool palettes: the user's Harbour screenshot showed a warm row under a teal card. The tint is now `color-mix()` of a semantic hue into `--surface`, at a low share, so every palette gets its own version without fifteen hand-picked sets. The colour now lives mostly in the text, which keeps meaning while the backgrounds stay quiet. `tests/palettes.test.js` reproduces the mix to check contrast, so a change to `--soft-mix` or a palette surface is still verified.
