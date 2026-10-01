@@ -212,6 +212,157 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --card-back: #2b3436; --card-back-border: #475255; --card-back-input: #212829;
   --card-back-text: #e6eff0; --card-back-dim: #a5b8bb;
 }
+/* Palettes after Harbour follow well-known editor schemes (the set Monkeytype also offers).
+   Most exist in one mode only; the missing mode is derived from the same hues, and any colour
+   that fell short of 4.5:1 was darkened or lightened until it passed. */
+:root[data-palette="serika"]:not([data-theme="dark"]) {
+  --bg: #e1e1e3; --surface: #ececee; --surface2: #d4d4d7; --border: #c2c3c7;
+  --text: #323437; --text2: #56585c; --text3: #66686c;
+  --primary: #6c5500; --primary-hover: color-mix(in srgb, #6c5500 82%, #000); --primary-light: #dcd8c8;
+  --primary-fill: #6c5500; --primary-fill-hover: color-mix(in srgb, #6c5500 82%, #000);
+  --card-back: #333538; --card-back-border: #4f5151; --card-back-input: #333538;
+  --card-back-text: #d1d0c5; --card-back-dim: #a9aaa6;
+}
+:root[data-palette="serika"][data-theme="dark"] {
+  --bg: #323437; --surface: #2c2e31; --surface2: #3a3c3f; --border: #4b4d51;
+  --text: #d1d0c5; --text2: #a9aaa6; --text3: #8e8f8c;
+  --primary: #e2b714; --primary-hover: color-mix(in srgb, #e2b714 82%, #fff); --primary-light: #4d472c;
+  --primary-fill: #896f0c; --primary-fill-hover: color-mix(in srgb, #896f0c 82%, #000);
+  --card-back: #38393b; --card-back-border: #545454; --card-back-input: #2c2e31;
+  --card-back-text: #d1d0c5; --card-back-dim: #a9aaa6;
+}
+:root[data-palette="nord"]:not([data-theme="dark"]) {
+  --bg: #eceff4; --surface: #f5f7fa; --surface2: #e0e5ee; --border: #cfd6e3;
+  --text: #2e3440; --text2: #4c566a; --text3: #5b6578;
+  --primary: #3b6490; --primary-hover: color-mix(in srgb, #3b6490 82%, #000); --primary-light: #d8e0ea;
+  --primary-fill: #3b6490; --primary-fill-hover: color-mix(in srgb, #3b6490 82%, #000);
+  --card-back: #3f4758; --card-back-border: #5e6574; --card-back-input: #3f4758;
+  --card-back-text: #eceff4; --card-back-dim: #d8dee9;
+}
+:root[data-palette="nord"][data-theme="dark"] {
+  --bg: #2e3440; --surface: #3b4252; --surface2: #434c5e; --border: #4c566a;
+  --text: #eceff4; --text2: #d8dee9; --text3: #aeb6c4;
+  --primary: #b2d7e0; --primary-hover: color-mix(in srgb, #b2d7e0 82%, #fff); --primary-light: #495969;
+  --primary-fill: #607578; --primary-fill-hover: color-mix(in srgb, #607578 82%, #000);
+  --card-back: #474e5d; --card-back-border: #656b78; --card-back-input: #3b4252;
+  --card-back-text: #eceff4; --card-back-dim: #d8dee9;
+  /* The shared dark red is 4.2–4.5:1 on these lighter surfaces. */
+  --danger: #f7a6a0;
+}
+:root[data-palette="gruvbox"]:not([data-theme="dark"]) {
+  --bg: #fbf1c7; --surface: #f9f5d7; --surface2: #ebdbb2; --border: #d5c4a1;
+  --text: #3c3836; --text2: #504945; --text3: #665c54;
+  --primary: #a43703; --primary-hover: color-mix(in srgb, #a43703 82%, #000); --primary-light: #edd7b5;
+  --primary-fill: #a43703; --primary-fill-hover: color-mix(in srgb, #a43703 82%, #000);
+  --card-back: #373432; --card-back-border: #575249; --card-back-input: #373432;
+  --card-back-text: #ebdbb2; --card-back-dim: #bdae93;
+}
+:root[data-palette="gruvbox"][data-theme="dark"] {
+  --bg: #282828; --surface: #32302f; --surface2: #3c3836; --border: #504945;
+  --text: #ebdbb2; --text2: #bdae93; --text3: #a89984;
+  --primary: #fabd2f; --primary-hover: color-mix(in srgb, #fabd2f 82%, #fff); --primary-light: #56492f;
+  --primary-fill: #906d1b; --primary-fill-hover: color-mix(in srgb, #906d1b 82%, #000);
+  --card-back: #3f3c38; --card-back-border: #5e594e; --card-back-input: #32302f;
+  --card-back-text: #ebdbb2; --card-back-dim: #bdae93;
+}
+:root[data-palette="solarized"]:not([data-theme="dark"]) {
+  --bg: #fdf6e3; --surface: #fffbef; --surface2: #eee8d5; --border: #ddd6c1;
+  --text: #073642; --text2: #53676e; --text3: #5f747b;
+  --primary: #1d689e; --primary-hover: color-mix(in srgb, #1d689e 82%, #000); --primary-light: #dbe5e4;
+  --primary-fill: #1d689e; --primary-fill-hover: color-mix(in srgb, #1d689e 82%, #000);
+  --card-back: #0a3c4a; --card-back-border: #315a62; --card-back-input: #0a3c4a;
+  --card-back-text: #e4e0cf; --card-back-dim: #a7b3b3;
+}
+:root[data-palette="solarized"][data-theme="dark"] {
+  --bg: #002b36; --surface: #073642; --surface2: #0d4351; --border: #2a5664;
+  --text: #e4e0cf; --text2: #a7b3b3; --text3: #93a1a1;
+  --primary: #e0b02c; --primary-hover: color-mix(in srgb, #e0b02c 82%, #fff); --primary-light: #2e4c3e;
+  --primary-fill: #886b1b; --primary-fill-hover: color-mix(in srgb, #886b1b 82%, #000);
+  --card-back: #16424c; --card-back-border: #3b5e64; --card-back-input: #073642;
+  --card-back-text: #e4e0cf; --card-back-dim: #a7b3b3;
+}
+:root[data-palette="catppuccin"]:not([data-theme="dark"]) {
+  --bg: #eff1f5; --surface: #f7f8fb; --surface2: #e6e9ef; --border: #ccd0da;
+  --text: #4c4f69; --text2: #5c5f77; --text3: #6c6f85;
+  --primary: #7833d4; --primary-hover: color-mix(in srgb, #7833d4 82%, #000); --primary-light: #e5d9f9;
+  --primary-fill: #7833d4; --primary-fill-hover: color-mix(in srgb, #7833d4 82%, #000);
+  --card-back: #2c2c3e; --card-back-border: #494b5f; --card-back-input: #2c2c3e;
+  --card-back-text: #cdd6f4; --card-back-dim: #bac2de;
+}
+:root[data-palette="catppuccin"][data-theme="dark"] {
+  --bg: #1e1e2e; --surface: #262637; --surface2: #313244; --border: #45475a;
+  --text: #cdd6f4; --text2: #bac2de; --text3: #a6adc8;
+  --primary: #cba6f7; --primary-hover: color-mix(in srgb, #cba6f7 82%, #fff); --primary-light: #443d5a;
+  --primary-fill: #7c6696; --primary-fill-hover: color-mix(in srgb, #7c6696 82%, #000);
+  --card-back: #323244; --card-back-border: #4e5064; --card-back-input: #262637;
+  --card-back-text: #cdd6f4; --card-back-dim: #bac2de;
+}
+:root[data-palette="rosepine"]:not([data-theme="dark"]) {
+  --bg: #faf4ed; --surface: #fffaf3; --surface2: #f2e9e1; --border: #dfdad9;
+  --text: #575279; --text2: #676482; --text3: #797593;
+  --primary: #286983; --primary-hover: color-mix(in srgb, #286983 82%, #000); --primary-light: #dde3e1;
+  --primary-fill: #286983; --primary-fill-hover: color-mix(in srgb, #286983 82%, #000);
+  --card-back: #222034; --card-back-border: #444257; --card-back-input: #222034;
+  --card-back-text: #e0def4; --card-back-dim: #b5b1cf;
+}
+:root[data-palette="rosepine"][data-theme="dark"] {
+  --bg: #191724; --surface: #1f1d2e; --surface2: #26233a; --border: #403d52;
+  --text: #e0def4; --text2: #b5b1cf; --text3: #908caa;
+  --primary: #ebbcba; --primary-hover: color-mix(in srgb, #ebbcba 82%, #fff); --primary-light: #443a47;
+  --primary-fill: #876c6a; --primary-fill-hover: color-mix(in srgb, #876c6a 82%, #000);
+  --card-back: #2d2b3c; --card-back-border: #4d4b5d; --card-back-input: #1f1d2e;
+  --card-back-text: #e0def4; --card-back-dim: #b5b1cf;
+}
+:root[data-palette="everforest"]:not([data-theme="dark"]) {
+  --bg: #fdf6e3; --surface: #fffbef; --surface2: #f4f0d9; --border: #e0dcc7;
+  --text: #4b585f; --text2: #5c6a72; --text3: #6c7a80;
+  --primary: #506c00; --primary-hover: color-mix(in srgb, #506c00 82%, #000); --primary-light: #e5e6c9;
+  --primary-fill: #506c00; --primary-fill-hover: color-mix(in srgb, #506c00 82%, #000);
+  --card-back: #384448; --card-back-border: #545b5a; --card-back-input: #384448;
+  --card-back-text: #d3c6aa; --card-back-dim: #a8b3a6;
+}
+:root[data-palette="everforest"][data-theme="dark"] {
+  --bg: #2d353b; --surface: #343f44; --surface2: #3d484d; --border: #4f5b58;
+  --text: #d3c6aa; --text2: #b2bcb0; --text3: #9da9a0;
+  --primary: #bed1a2; --primary-hover: color-mix(in srgb, #bed1a2 82%, #fff); --primary-light: #49564f;
+  --primary-fill: #6e775c; --primary-fill-hover: color-mix(in srgb, #6e775c 82%, #000);
+  --card-back: #3f484b; --card-back-border: #5a5f5c; --card-back-input: #343f44;
+  --card-back-text: #d3c6aa; --card-back-dim: #b2bcb0;
+  /* The shared dark red is 4.2–4.5:1 on these lighter surfaces. */
+  --danger: #f7a6a0;
+}
+:root[data-palette="tokyonight"]:not([data-theme="dark"]) {
+  --bg: #e1e2e7; --surface: #eef0f5; --surface2: #d5d6db; --border: #c4c8da;
+  --text: #343b58; --text2: #4c5374; --text3: #5a6080;
+  --primary: #2959aa; --primary-hover: color-mix(in srgb, #2959aa 82%, #000); --primary-light: #ced8e9;
+  --primary-fill: #2959aa; --primary-fill-hover: color-mix(in srgb, #2959aa 82%, #000);
+  --card-back: #24283c; --card-back-border: #40455d; --card-back-input: #24283c;
+  --card-back-text: #c0caf5; --card-back-dim: #a9b1d6;
+}
+:root[data-palette="tokyonight"][data-theme="dark"] {
+  --bg: #1a1b26; --surface: #1f2335; --surface2: #292e42; --border: #3b4261;
+  --text: #c0caf5; --text2: #a9b1d6; --text3: #8a90b8;
+  --primary: #82a8f7; --primary-hover: color-mix(in srgb, #82a8f7 82%, #fff); --primary-light: #2f3a58;
+  --primary-fill: #5a75aa; --primary-fill-hover: color-mix(in srgb, #5a75aa 82%, #000);
+  --card-back: #2a2f42; --card-back-border: #454b62; --card-back-input: #1f2335;
+  --card-back-text: #c0caf5; --card-back-dim: #a9b1d6;
+}
+:root[data-palette="dracula"]:not([data-theme="dark"]) {
+  --bg: #fbf9f2; --surface: #ffffff; --surface2: #efede6; --border: #dcd9cf;
+  --text: #1f1f1f; --text2: #4a4a52; --text3: #5a5a63;
+  --primary: #644ac9; --primary-hover: color-mix(in srgb, #644ac9 82%, #000); --primary-light: #e6e2f6;
+  --primary-fill: #644ac9; --primary-fill-hover: color-mix(in srgb, #644ac9 82%, #000);
+  --card-back: #343646; --card-back-border: #575965; --card-back-input: #343646;
+  --card-back-text: #f8f8f2; --card-back-dim: #c6c8d4;
+}
+:root[data-palette="dracula"][data-theme="dark"] {
+  --bg: #282a36; --surface: #2f3241; --surface2: #383a4a; --border: #4d5066;
+  --text: #f8f8f2; --text2: #c6c8d4; --text3: #9aa2c8;
+  --primary: #cbaaf9; --primary-hover: color-mix(in srgb, #cbaaf9 82%, #fff); --primary-light: #494362;
+  --primary-fill: #7c6898; --primary-fill-hover: color-mix(in srgb, #7c6898 82%, #000);
+  --card-back: #3d404d; --card-back-border: #5f616b; --card-back-input: #2f3241;
+  --card-back-text: #f8f8f2; --card-back-dim: #c6c8d4;
+}
 
 /* Heatmap — GitHub's exact contribution graph greens */
 [data-theme="dark"] .heat-1 { background: #0e4429; }
@@ -1486,6 +1637,15 @@ code {
 .palette-pill[data-value="sepia"] { --sw-bg: #efe3c8; --sw-accent: #8f421c; }
 .palette-pill[data-value="plum"] { --sw-bg: #ece8ee; --sw-accent: #6a4a7c; }
 .palette-pill[data-value="harbour"] { --sw-bg: #e6edee; --sw-accent: #1f6870; }
+.palette-pill[data-value="serika"] { --sw-bg: #323437; --sw-accent: #e2b714; }
+.palette-pill[data-value="nord"] { --sw-bg: #2e3440; --sw-accent: #b2d7e0; }
+.palette-pill[data-value="gruvbox"] { --sw-bg: #282828; --sw-accent: #fabd2f; }
+.palette-pill[data-value="solarized"] { --sw-bg: #fdf6e3; --sw-accent: #1d689e; }
+.palette-pill[data-value="catppuccin"] { --sw-bg: #1e1e2e; --sw-accent: #cba6f7; }
+.palette-pill[data-value="rosepine"] { --sw-bg: #191724; --sw-accent: #ebbcba; }
+.palette-pill[data-value="everforest"] { --sw-bg: #2d353b; --sw-accent: #bed1a2; }
+.palette-pill[data-value="tokyonight"] { --sw-bg: #1a1b26; --sw-accent: #82a8f7; }
+.palette-pill[data-value="dracula"] { --sw-bg: #282a36; --sw-accent: #cbaaf9; }
 .font-scale-row .tf-pct-label { font-size: 0.875rem; font-weight: 600; color: var(--primary); min-width: 44px; text-align: center; }
 .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }

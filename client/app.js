@@ -143,6 +143,15 @@ Object.assign(TRANSLATIONS.en, {
   "pref.palette.sepia": "Sepia",
   "pref.palette.plum": "Plum",
   "pref.palette.harbour": "Harbour",
+  "pref.palette.serika": "Serika",
+  "pref.palette.nord": "Nord",
+  "pref.palette.gruvbox": "Gruvbox",
+  "pref.palette.solarized": "Solarized",
+  "pref.palette.catppuccin": "Catppuccin",
+  "pref.palette.rosepine": "Rosé Pine",
+  "pref.palette.everforest": "Everforest",
+  "pref.palette.tokyonight": "Tokyo Night",
+  "pref.palette.dracula": "Dracula",
   "pref.haptics": "Vibration feedback",
   "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
   "pref.quizCountsAsKnown": "Quiz answers count as Know It",
@@ -837,6 +846,15 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.palette.sepia": "Nâu sepia",
   "pref.palette.plum": "Tím mận",
   "pref.palette.harbour": "Xanh cảng biển",
+  "pref.palette.serika": "Serika",
+  "pref.palette.nord": "Nord",
+  "pref.palette.gruvbox": "Gruvbox",
+  "pref.palette.solarized": "Solarized",
+  "pref.palette.catppuccin": "Catppuccin",
+  "pref.palette.rosepine": "Rosé Pine",
+  "pref.palette.everforest": "Everforest",
+  "pref.palette.tokyonight": "Tokyo Night",
+  "pref.palette.dracula": "Dracula",
   "pref.haptics": "Phản hồi rung",
   "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
   "pref.quizCountsAsKnown": "Trả lời Trắc nghiệm được tính là Đã thuộc",
@@ -9211,7 +9229,7 @@ function syncThemeColor() {
 
 // Palette is independent of light/dark: each one defines both modes in style.css.
 // "parchment" is the default and has no attribute, so an unknown stored value falls back to it.
-var PALETTES = ["parchment", "sage", "slate", "sepia", "plum", "harbour"];
+var PALETTES = ["parchment", "sage", "slate", "sepia", "plum", "harbour", "serika", "nord", "gruvbox", "solarized", "catppuccin", "rosepine", "everforest", "tokyonight", "dracula"];
 
 function paletteFromPrefs(prefs) {
   return PALETTES.indexOf(prefs.palette) >= 0 ? prefs.palette : "parchment";
