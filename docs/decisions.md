@@ -881,3 +881,7 @@ The first pass copied KnowledgeApp's values exactly; the user found light too br
 ## 2026-10-02 — Dark mode surfaces are neutral grey
 
 Warm-tinted dark greys (#1f1d1a, #2a2723) looked like a yellow screen to the user: across a whole page, a small hue shift reads as a colour cast. Light mode keeps its parchment tint, where warmth reads as paper; in dark mode the surfaces are plain grey and only `--primary` keeps the brown, so the two themes still feel related without tinting the whole screen.
+
+## 2026-10-02 — Colour themes are a second axis, not more entries in Light/Dark
+
+The user picked soft buttons and asked for the palettes to be a user choice. Palette and mode are separate preferences (`palette`, `theme`) because each palette must work both ways and Match device must keep working whichever palette is chosen; folding them into one list would have needed twelve entries. Palettes override only neutrals, accent and card back, so a red still means wrong in Plum. The CSS selectors carry `:root` plus two attributes so a palette's light block cannot outrank its own dark block. Soft buttons trade some prominence for calm: a tint with coloured text reads lighter than a deep fill, which the user found heavy. Selected pills and count badges stay solid, since there a strong fill is what marks the state. Contrast is now tested rather than checked by hand, because six palettes times two modes is too many pairs to eyeball.
