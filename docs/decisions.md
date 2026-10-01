@@ -869,3 +869,7 @@ The UX review found no way to get a real backup: the visible Export is content-o
 - **Restore isn't in the UI yet.** The import only ever adds: every row gets a new id, so restoring into the account the backup came from duplicates every class and its study history. Whether restore should add copies or replace everything is a product decision, so it's deferred; the class Import button explains that a full backup isn't a class export rather than failing on its shape.
 - **Share link state comes from the server.** The dialog used a per-page cache, so after a reload a class that already had a link showed "Generate Link". The confirm dialog is raised above the share layer with z-index so it paints where the focus handling (`syncInert`) already considers it to be.
 
+
+## 2026-10-02 — Theme follows KnowledgeApp's palette, fills stay deep in dark mode
+
+The user wanted FlashcardApp as warm as KnowledgeApp. The palette is copied value for value from KnowledgeApp's `ui/index.html` tokens rather than approximated, so the sibling apps read as one product. One deliberate difference: KnowledgeApp puts dark ink on its pale dark-mode accent, but FlashcardApp's buttons and pills put white text on `--*-fill`. Rather than touch every white-text rule, dark mode keeps the light theme's deep fills (`#8b5a2b` is 5.8:1 against white), and only the text-role tokens (`--primary`, `--success`, …) go pale. The flashcard back stays a dark face in both themes, now warm (`#2a2622`) instead of slate.
