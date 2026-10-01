@@ -74,10 +74,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* ==============================
-   DARK THEME — neutral charcoal, warmth only in the accent
-   Warm-tinted greys read as a yellow screen at night, so the surfaces are plain grey and
-   only --primary carries KnowledgeApp's brown. On --surface: text 11.9:1, text2 7:1,
-   primary 6.8:1.
+   DARK THEME — neutral charcoal surfaces, bright text, neon accents
+   Warm-tinted greys read as a yellow screen at night, so the surfaces are plain grey. The
+   user asked for more contrast and a neon feel, so in every palette's dark block text is
+   near-white (lightness 96%), and the accent and the semantic colours are saturated to the
+   edge of the gamut. Surfaces stay where they were: darker ones were rejected earlier.
    ============================== */
 [data-theme="dark"] {
   color-scheme: dark;
@@ -85,17 +86,17 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --surface:      #262626;
   --surface2:     #303030;
   --border:       #4a4a4a;
-  --text:         #e6e4e0;
-  --text2:        #b4b1ab;
-  --text3:        #9a9792;
-  --primary:      #d2a57c;
-  --primary-hover:#ddb895;
+  --text:         #f6f5f4;
+  --text2:        #d9d7d4;
+  --text3:        #bab8b5;
+  --primary:      #fbaf6a;
+  --primary-hover:#ffc896;
   --primary-light:#36302a;
-  --success:      #7cc794;
+  --success:      #4ff58c;
   --success-light:#1f2b23;
-  --danger:       #f08a84;
+  --danger:       #ff94a1;
   --danger-light: #352220;
-  --warning:      #d9b36a;
+  --warning:      #ffcf4d;
   --warning-light:#33302a;
   /* The text colours above are too pale for white text, so fills stay the light theme's
      deep tones. Hover goes darker, not lighter, to stay ≥4.5:1. */
@@ -111,14 +112,14 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --card-back: #363636;
   --card-back-border: #525252;
   --card-back-input: #262626;
-  --success-soft: #22332a;
-  --success-soft-text: #8fd3a5;
-  --danger-soft: #3d2523;
-  --danger-soft-text: #f2a29b;
-  --warning-soft: #3a321f;
-  --warning-soft-text: #e5c27a;
-  --confident-soft: #153a30;
-  --confident-soft-text: #7fe6c2;
+  --success-soft: #0f3a22;
+  --success-soft-text: #5cff9d;
+  --danger-soft: #43141f;
+  --danger-soft-text: #ff8094;
+  --warning-soft: #3d2e05;
+  --warning-soft-text: #ffd54f;
+  --confident-soft: #04392f;
+  --confident-soft-text: #2dffd2;
   --shadow:       0 1px 3px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);
   --shadow-md:    0 4px 6px -1px rgba(0,0,0,.7), 0 2px 4px -1px rgba(0,0,0,.6);
   --shadow-lg:    0 10px 15px -3px rgba(0,0,0,.7), 0 4px 6px -2px rgba(0,0,0,.6);
@@ -142,11 +143,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="sage"][data-theme="dark"] {
   --bg: #1a1d1b; --surface: #232724; --surface2: #2d322e; --border: #454c46;
-  --text: #e3e7e1; --text2: #adb5aa; --text3: #939b90;
-  --primary: #93bd95; --primary-hover: color-mix(in srgb, #93bd95 82%, #fff); --primary-light: #2b3a2d;
+  --text: #f4f6f4; --text2: #d5d9d3; --text3: #b6bbb4;
+  --primary: #6afb71; --primary-hover: color-mix(in srgb, #93bd95 82%, #fff); --primary-light: #2b3a2d;
   --primary-fill: #46694a; --primary-fill-hover: color-mix(in srgb, #46694a 82%, #000);
   --card-back: #303732; --card-back-border: #4d564f; --card-back-input: #232724;
-  --card-back-text: #e9eee6; --card-back-dim: #adb8aa;
+  --card-back-text: #f7f9f6; --card-back-dim: #d4dad3;
 }
 :root[data-palette="slate"]:not([data-theme="dark"]) {
   --bg: #e8ebef; --surface: #f5f6f8; --surface2: #dde1e7; --border: #c5ccd5;
@@ -158,11 +159,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="slate"][data-theme="dark"] {
   --bg: #191b1f; --surface: #22252a; --surface2: #2c3036; --border: #444a53;
-  --text: #e2e5ea; --text2: #a9b0ba; --text3: #8f97a2;
-  --primary: #93b1dc; --primary-hover: color-mix(in srgb, #93b1dc 82%, #fff); --primary-light: #273347;
+  --text: #f3f4f6; --text2: #d2d5db; --text3: #b1b7be;
+  --primary: #74abfb; --primary-hover: color-mix(in srgb, #93b1dc 82%, #fff); --primary-light: #273347;
   --primary-fill: #3c5a86; --primary-fill-hover: color-mix(in srgb, #3c5a86 82%, #000);
   --card-back: #2e333b; --card-back-border: #4b525d; --card-back-input: #22252a;
-  --card-back-text: #e8ecf1; --card-back-dim: #aab3c0;
+  --card-back-text: #f5f7f9; --card-back-dim: #d0d5dc;
 }
 :root[data-palette="sepia"]:not([data-theme="dark"]) {
   --bg: #efe3c8; --surface: #f7eed9; --surface2: #e6d8b9; --border: #d2c09b;
@@ -174,11 +175,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="sepia"][data-theme="dark"] {
   --bg: #201c17; --surface: #2a251f; --surface2: #342e27; --border: #4f463b;
-  --text: #e8dfcd; --text2: #b9ad97; --text3: #9c917d;
-  --primary: #e09a6e; --primary-hover: color-mix(in srgb, #e09a6e 82%, #fff); --primary-light: #3d2c20;
+  --text: #f8f6f1; --text2: #ded9ce; --text3: #c1baae;
+  --primary: #fba26a; --primary-hover: color-mix(in srgb, #e09a6e 82%, #fff); --primary-light: #3d2c20;
   --primary-fill: #9a4a22; --primary-fill-hover: color-mix(in srgb, #9a4a22 82%, #000);
   --card-back: #3a332b; --card-back-border: #574d41; --card-back-input: #2a251f;
-  --card-back-text: #f3e9d3; --card-back-dim: #c9b894;
+  --card-back-text: #faf8f5; --card-back-dim: #e4dbc9;
 }
 :root[data-palette="plum"]:not([data-theme="dark"]) {
   --bg: #ece8ee; --surface: #f7f5f8; --surface2: #e2dde5; --border: #cdc5d2;
@@ -190,11 +191,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="plum"][data-theme="dark"] {
   --bg: #1c1a1e; --surface: #252228; --surface2: #2f2b33; --border: #4a4450;
-  --text: #e7e3ea; --text2: #b1a9b7; --text3: #978e9e;
-  --primary: #c4a1d6; --primary-hover: color-mix(in srgb, #c4a1d6 82%, #fff); --primary-light: #382c40;
+  --text: #f5f3f6; --text2: #d7d3da; --text3: #b8b2bd;
+  --primary: #d07bfc; --primary-hover: color-mix(in srgb, #c4a1d6 82%, #fff); --primary-light: #382c40;
   --primary-fill: #6a4a7c; --primary-fill-hover: color-mix(in srgb, #6a4a7c 82%, #000);
   --card-back: #332e38; --card-back-border: #514957; --card-back-input: #252228;
-  --card-back-text: #eee9f0; --card-back-dim: #b7adbd;
+  --card-back-text: #f8f6f9; --card-back-dim: #d7d2db;
 }
 :root[data-palette="harbour"]:not([data-theme="dark"]) {
   --bg: #e6edee; --surface: #f3f7f7; --surface2: #dae3e4; --border: #bfcdcf;
@@ -206,11 +207,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="harbour"][data-theme="dark"] {
   --bg: #181d1e; --surface: #212829; --surface2: #2a3234; --border: #424d4f;
-  --text: #e1e8e9; --text2: #a7b4b6; --text3: #8d9b9d;
-  --primary: #7cc5cb; --primary-hover: color-mix(in srgb, #7cc5cb 82%, #fff); --primary-light: #203a3d;
+  --text: #f3f6f6; --text2: #d2d9da; --text3: #b2bcbd;
+  --primary: #6af0fb; --primary-hover: color-mix(in srgb, #7cc5cb 82%, #fff); --primary-light: #203a3d;
   --primary-fill: #1f6870; --primary-fill-hover: color-mix(in srgb, #1f6870 82%, #000);
   --card-back: #2b3436; --card-back-border: #475255; --card-back-input: #212829;
-  --card-back-text: #e6eff0; --card-back-dim: #a5b8bb;
+  --card-back-text: #f5f9f9; --card-back-dim: #d1dadc;
 }
 /* Palettes after Harbour follow well-known editor schemes (the set Monkeytype also offers).
    Most exist in one mode only; the missing mode is derived from the same hues, and any colour
@@ -225,11 +226,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="serika"][data-theme="dark"] {
   --bg: #323437; --surface: #2c2e31; --surface2: #3a3c3f; --border: #4b4d51;
-  --text: #d1d0c5; --text2: #a9aaa6; --text3: #8e8f8c;
-  --primary: #e2b714; --primary-hover: color-mix(in srgb, #e2b714 82%, #fff); --primary-light: #4d472c;
+  --text: #f6f6f4; --text2: #d7d7d5; --text3: #b8b9b7;
+  --primary: #fbdd6a; --primary-hover: color-mix(in srgb, #e2b714 82%, #fff); --primary-light: #4d472c;
   --primary-fill: #896f0c; --primary-fill-hover: color-mix(in srgb, #896f0c 82%, #000);
   --card-back: #38393b; --card-back-border: #545454; --card-back-input: #2c2e31;
-  --card-back-text: #d1d0c5; --card-back-dim: #a9aaa6;
+  --card-back-text: #f8f8f6; --card-back-dim: #d7d7d5;
 }
 :root[data-palette="nord"]:not([data-theme="dark"]) {
   --bg: #eceff4; --surface: #f5f7fa; --surface2: #e0e5ee; --border: #cfd6e3;
@@ -241,13 +242,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="nord"][data-theme="dark"] {
   --bg: #2e3440; --surface: #3b4252; --surface2: #434c5e; --border: #4c566a;
-  --text: #eceff4; --text2: #d8dee9; --text3: #aeb6c4;
-  --primary: #b2d7e0; --primary-hover: color-mix(in srgb, #b2d7e0 82%, #fff); --primary-light: #495969;
+  --text: #f2f4f8; --text2: #cbd3e2; --text3: #acb5c3;
+  --primary: #96e8fc; --primary-hover: color-mix(in srgb, #b2d7e0 82%, #fff); --primary-light: #495969;
   --primary-fill: #607578; --primary-fill-hover: color-mix(in srgb, #607578 82%, #000);
   --card-back: #474e5d; --card-back-border: #656b78; --card-back-input: #3b4252;
-  --card-back-text: #eceff4; --card-back-dim: #d8dee9;
-  /* The shared dark red is 4.2–4.5:1 on these lighter surfaces. */
-  --danger: #f7a6a0;
+  --card-back-text: #f5f7f9; --card-back-dim: #cbd3e2;
 }
 :root[data-palette="gruvbox"]:not([data-theme="dark"]) {
   --bg: #fbf1c7; --surface: #f9f5d7; --surface2: #ebdbb2; --border: #d5c4a1;
@@ -259,11 +258,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="gruvbox"][data-theme="dark"] {
   --bg: #282828; --surface: #32302f; --surface2: #3c3836; --border: #504945;
-  --text: #ebdbb2; --text2: #bdae93; --text3: #a89984;
-  --primary: #fabd2f; --primary-hover: color-mix(in srgb, #fabd2f 82%, #fff); --primary-light: #56492f;
+  --text: #f8f6f1; --text2: #e0d9cc; --text3: #c4baab;
+  --primary: #fbd06a; --primary-hover: color-mix(in srgb, #fabd2f 82%, #fff); --primary-light: #56492f;
   --primary-fill: #906d1b; --primary-fill-hover: color-mix(in srgb, #906d1b 82%, #000);
   --card-back: #3f3c38; --card-back-border: #5e594e; --card-back-input: #32302f;
-  --card-back-text: #ebdbb2; --card-back-dim: #bdae93;
+  --card-back-text: #faf9f5; --card-back-dim: #e0d9cc;
 }
 :root[data-palette="solarized"]:not([data-theme="dark"]) {
   --bg: #fdf6e3; --surface: #fffbef; --surface2: #eee8d5; --border: #ddd6c1;
@@ -275,11 +274,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="solarized"][data-theme="dark"] {
   --bg: #002b36; --surface: #073642; --surface2: #0d4351; --border: #2a5664;
-  --text: #e4e0cf; --text2: #a7b3b3; --text3: #93a1a1;
-  --primary: #e0b02c; --primary-hover: color-mix(in srgb, #e0b02c 82%, #fff); --primary-light: #2e4c3e;
+  --text: #f8f7f2; --text2: #d3d9d9; --text3: #b3bdbd;
+  --primary: #fbd46a; --primary-hover: color-mix(in srgb, #e0b02c 82%, #fff); --primary-light: #2e4c3e;
   --primary-fill: #886b1b; --primary-fill-hover: color-mix(in srgb, #886b1b 82%, #000);
   --card-back: #16424c; --card-back-border: #3b5e64; --card-back-input: #073642;
-  --card-back-text: #e4e0cf; --card-back-dim: #a7b3b3;
+  --card-back-text: #f9f9f5; --card-back-dim: #d3d9d9;
 }
 :root[data-palette="catppuccin"]:not([data-theme="dark"]) {
   --bg: #eff1f5; --surface: #f7f8fb; --surface2: #e6e9ef; --border: #ccd0da;
@@ -291,11 +290,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="catppuccin"][data-theme="dark"] {
   --bg: #1e1e2e; --surface: #262637; --surface2: #313244; --border: #45475a;
-  --text: #cdd6f4; --text2: #bac2de; --text3: #a6adc8;
-  --primary: #cba6f7; --primary-hover: color-mix(in srgb, #cba6f7 82%, #fff); --primary-light: #443d5a;
+  --text: #f1f3f8; --text2: #c8cee4; --text3: #a7aec8;
+  --primary: #cba0fd; --primary-hover: color-mix(in srgb, #cba6f7 82%, #fff); --primary-light: #443d5a;
   --primary-fill: #7c6696; --primary-fill-hover: color-mix(in srgb, #7c6696 82%, #000);
   --card-back: #323244; --card-back-border: #4e5064; --card-back-input: #262637;
-  --card-back-text: #cdd6f4; --card-back-dim: #bac2de;
+  --card-back-text: #f5f6fa; --card-back-dim: #c8cee4;
 }
 :root[data-palette="rosepine"]:not([data-theme="dark"]) {
   --bg: #faf4ed; --surface: #fffaf3; --surface2: #f2e9e1; --border: #dfdad9;
@@ -307,11 +306,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="rosepine"][data-theme="dark"] {
   --bg: #191724; --surface: #1f1d2e; --surface2: #26233a; --border: #403d52;
-  --text: #e0def4; --text2: #b5b1cf; --text3: #908caa;
-  --primary: #ebbcba; --primary-hover: color-mix(in srgb, #ebbcba 82%, #fff); --primary-light: #443a47;
+  --text: #f2f1f8; --text2: #cfcce0; --text3: #b0adc2;
+  --primary: #fdaca8; --primary-hover: color-mix(in srgb, #ebbcba 82%, #fff); --primary-light: #443a47;
   --primary-fill: #876c6a; --primary-fill-hover: color-mix(in srgb, #876c6a 82%, #000);
   --card-back: #2d2b3c; --card-back-border: #4d4b5d; --card-back-input: #1f1d2e;
-  --card-back-text: #e0def4; --card-back-dim: #b5b1cf;
+  --card-back-text: #f5f5fa; --card-back-dim: #cfcce0;
 }
 :root[data-palette="everforest"]:not([data-theme="dark"]) {
   --bg: #fdf6e3; --surface: #fffbef; --surface2: #f4f0d9; --border: #e0dcc7;
@@ -323,13 +322,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="everforest"][data-theme="dark"] {
   --bg: #2d353b; --surface: #343f44; --surface2: #3d484d; --border: #4f5b58;
-  --text: #d3c6aa; --text2: #b2bcb0; --text3: #9da9a0;
-  --primary: #bed1a2; --primary-hover: color-mix(in srgb, #bed1a2 82%, #fff); --primary-light: #49564f;
+  --text: #f8f6f2; --text2: #d4dad3; --text3: #b3bcb5;
+  --primary: #c6fc77; --primary-hover: color-mix(in srgb, #bed1a2 82%, #fff); --primary-light: #49564f;
   --primary-fill: #6e775c; --primary-fill-hover: color-mix(in srgb, #6e775c 82%, #000);
   --card-back: #3f484b; --card-back-border: #5a5f5c; --card-back-input: #343f44;
-  --card-back-text: #d3c6aa; --card-back-dim: #b2bcb0;
-  /* The shared dark red is 4.2–4.5:1 on these lighter surfaces. */
-  --danger: #f7a6a0;
+  --card-back-text: #faf8f5; --card-back-dim: #d4dad3;
 }
 :root[data-palette="tokyonight"]:not([data-theme="dark"]) {
   --bg: #e1e2e7; --surface: #eef0f5; --surface2: #d5d6db; --border: #c4c8da;
@@ -341,11 +338,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="tokyonight"][data-theme="dark"] {
   --bg: #1a1b26; --surface: #1f2335; --surface2: #292e42; --border: #3b4261;
-  --text: #c0caf5; --text2: #a9b1d6; --text3: #8a90b8;
-  --primary: #82a8f7; --primary-hover: color-mix(in srgb, #82a8f7 82%, #fff); --primary-light: #2f3a58;
+  --text: #f1f3f8; --text2: #c8cde4; --text3: #a6abc9;
+  --primary: #7da6fc; --primary-hover: color-mix(in srgb, #82a8f7 82%, #fff); --primary-light: #2f3a58;
   --primary-fill: #5a75aa; --primary-fill-hover: color-mix(in srgb, #5a75aa 82%, #000);
   --card-back: #2a2f42; --card-back-border: #454b62; --card-back-input: #1f2335;
-  --card-back-text: #c0caf5; --card-back-dim: #a9b1d6;
+  --card-back-text: #f5f6fa; --card-back-dim: #c8cde4;
 }
 :root[data-palette="dracula"]:not([data-theme="dark"]) {
   --bg: #fbf9f2; --surface: #ffffff; --surface2: #efede6; --border: #dcd9cf;
@@ -357,11 +354,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 }
 :root[data-palette="dracula"][data-theme="dark"] {
   --bg: #282a36; --surface: #2f3241; --surface2: #383a4a; --border: #4d5066;
-  --text: #f8f8f2; --text2: #c6c8d4; --text3: #9aa2c8;
-  --primary: #cbaaf9; --primary-hover: color-mix(in srgb, #cbaaf9 82%, #fff); --primary-light: #494362;
+  --text: #f8f8f2; --text2: #d0d2dc; --text3: #a3aacd;
+  --primary: #caa6fd; --primary-hover: color-mix(in srgb, #cbaaf9 82%, #fff); --primary-light: #494362;
   --primary-fill: #7c6898; --primary-fill-hover: color-mix(in srgb, #7c6898 82%, #000);
   --card-back: #3d404d; --card-back-border: #5f616b; --card-back-input: #2f3241;
-  --card-back-text: #f8f8f2; --card-back-dim: #c6c8d4;
+  --card-back-text: #fafaf5; --card-back-dim: #d0d2dc;
 }
 
 /* Heatmap — GitHub's exact contribution graph greens */
