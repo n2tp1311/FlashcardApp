@@ -9,24 +9,27 @@
    in this file scale proportionally. */
 html { font-size: calc(100% * var(--font-scale, 1)); }
 
-/* Cream paper and a brown accent, shared with KnowledgeApp's UI so the two apps read as one. */
+/* KnowledgeApp's stone neutrals and brown accent, so the two apps read as one. Its
+   near-colourless greys are what make it calm: an earlier yellow parchment (#f1ebe0) clashed
+   with the class colours. The page is a shade dimmer than KnowledgeApp's #faf9f7 and the
+   surfaces stop short of #fff, because white read as too bright here. */
 :root {
-  --bg: #f1ebe0;
-  --surface: #f9f5ee;
-  --surface2: #e9e2d5;
-  --border: #d3c9b8;
-  --text: #2a2620;
-  --text2: #5c554b;
-  --text3: #70685c;
-  --primary: #83542a;
-  --primary-hover: #6e4621;
-  --primary-light: #ecdfcc;
+  --bg: #f4f3f0;
+  --surface: #fcfbf9;
+  --surface2: #eeece8;
+  --border: #e0dcd5;
+  --text: #1c1b19;
+  --text2: #57544e;
+  --text3: #6b6862;
+  --primary: #8b5a2b;
+  --primary-hover: #74491f;
+  --primary-light: #f2ebe2;
   --success: #2f6b3f;
-  --success-light: #e3ecdf;
+  --success-light: #e7eee6;
   --danger: #a32c2c;
-  --danger-light: #f5e2dc;
+  --danger-light: #f7e7e3;
   --warning: #805800;
-  --warning-light: #f4e9cf;
+  --warning-light: #f8f0dc;
   /* Fills behind white text (buttons, badges, active pills); each is ≥4.5:1 against #fff. */
   --primary-fill: #8b5a2b;
   --primary-fill-hover: #74491f;
@@ -49,9 +52,9 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
      separate duration/easing custom properties), since every consumer here plugs it into a
      `transition:` shorthand exactly like --transition already is throughout this file. */
   --bar-fill-transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  --card-back: #2f2a25;
+  --card-back: #2a2825;
   --card-back-border: #4a453e;
-  --card-back-input: #24201c;
+  --card-back-input: #22201c;
   --card-back-text: #eeeae3;
   --card-back-dim: #b3ada3;
   /* Soft buttons: a light tint with the colour itself as text, instead of a deep fill under
@@ -63,6 +66,7 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
      cool palette gets cool-leaning reds and greens and the row sits in the theme instead of
      on top of it. The hues are the same in both modes; only the mix amount changes. */
   --soft-mix: 11%;
+  --class-saturate: 0.6;
   --success-hue: #46a758;
   --danger-hue: #e5484d;
   --warning-hue: #e8a317;
@@ -823,8 +827,8 @@ body {
   flex: 1;
   min-width: 0;
   min-height: 44px;
-  background: var(--surface2);
-  border: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 50px;
   padding: 10px 18px;
   cursor: pointer;
@@ -833,7 +837,7 @@ body {
   user-select: none;
   transition: background 0.15s;
 }
-.nav-search-bar:hover { background: var(--border); }
+.nav-search-bar:hover { background: var(--surface2); }
 .nav-search-bar:focus { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .nav-search-icon { flex-shrink: 0; opacity: 0.75; }
@@ -935,7 +939,7 @@ body {
   padding: 6px 14px;
   min-height: 44px;
   border-radius: 20px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text2);
   font-size: 0.8125rem;
@@ -966,7 +970,7 @@ body {
 .class-card {
   background: var(--surface);
   border-radius: var(--radius);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   padding: 20px;
   cursor: pointer;
   transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
@@ -997,6 +1001,12 @@ body {
 }
 
 .class-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* Class colours are fixed, saturated picks (Tailwind 600s) stored per class. Shown at full
+   strength they outshout the neutral page, so wherever a class colour is painted it is
+   desaturated on display; the stored colour is unchanged. */
+.class-card-accent, .class-list-colorbar, .progress-mini-fill[id^="cls-prog-fill-"],
+.class-icon svg, .sidebar-class-icon svg { filter: saturate(var(--class-saturate)); }
 
 .class-card-accent {
   position: absolute;
@@ -1089,7 +1099,7 @@ body {
 
 .lesson-item {
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px 20px;
   display: flex;
@@ -1164,7 +1174,7 @@ body {
   gap: 14px;
   flex-wrap: wrap;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 16px;
   margin: 14px 0;
@@ -1225,7 +1235,7 @@ body {
 
 .card-item {
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 16px;
   display: flex;
@@ -1418,7 +1428,7 @@ body {
   width: 100%;
   padding: 9px 12px;
   min-height: 44px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-family: inherit;
@@ -1433,7 +1443,7 @@ body {
 .form-textarea {
   width: 100%;
   padding: 9px 12px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-family: inherit;
@@ -1504,7 +1514,7 @@ code {
 }
 
 .bi-lesson-block {
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -1616,7 +1626,7 @@ code {
   gap: 4px;
   padding: 4px 4px 4px 12px;
   border-radius: 20px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   background: var(--surface);
   min-height: 36px;
 }
@@ -1655,7 +1665,7 @@ code {
   min-width: 140px;
   padding: 6px 12px;
   border-radius: 20px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   font-size: 0.8125rem;
@@ -1724,7 +1734,7 @@ code {
   background: linear-gradient(135deg, var(--sw-bg) 50%, var(--sw-accent) 50%);
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
 }
-.palette-pill[data-value="parchment"] { --sw-bg: #f1ebe0; --sw-accent: #83542a; }
+.palette-pill[data-value="parchment"] { --sw-bg: #f4f3f0; --sw-accent: #8b5a2b; }
 .palette-pill[data-value="sage"] { --sw-bg: #e9ede6; --sw-accent: #46694a; }
 .palette-pill[data-value="slate"] { --sw-bg: #e8ebef; --sw-accent: #3c5a86; }
 .palette-pill[data-value="sepia"] { --sw-bg: #efe3c8; --sw-accent: #8f421c; }
@@ -1898,7 +1908,7 @@ code {
   margin-top: 16px;
   padding: 9px 12px;
   min-height: 40px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-family: inherit;
@@ -2492,7 +2502,7 @@ code {
 
 .stat-card {
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
   text-align: center;
@@ -2505,7 +2515,7 @@ code {
   position: relative;
   grid-column: 1 / -1;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px 20px;
 }
@@ -2616,7 +2626,7 @@ code {
 
 .stats-card-item {
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 16px;
   margin-bottom: 8px;
@@ -2748,7 +2758,7 @@ code {
 
 .auth-tabs {
   display: flex;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
   width: 100%;
@@ -2824,7 +2834,7 @@ code {
   gap: 10px;
   width: 100%;
   padding: 10px 16px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
@@ -2859,7 +2869,7 @@ code {
   min-width: 180px;
   max-width: calc(100vw - 16px);
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   z-index: 200;
@@ -3344,7 +3354,7 @@ code {
   justify-content: space-between;
   gap: 12px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 14px;
 }
@@ -3417,7 +3427,7 @@ code {
   align-items: center;
   gap: 14px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px 20px;
   margin-bottom: 4px;
@@ -3648,7 +3658,7 @@ code {
   justify-content: space-between;
   gap: 12px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 14px;
   cursor: pointer;
@@ -3855,7 +3865,7 @@ code {
 #btn-tag-filter-toggle {
   width: 34px;
   height: 34px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
   flex-shrink: 0;
@@ -3891,7 +3901,7 @@ code {
    ============================ */
 .view-toggle {
   display: flex;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
@@ -3911,7 +3921,7 @@ code {
 }
 
 .view-toggle-btn + .view-toggle-btn {
-  border-left: 1.5px solid var(--border);
+  border-left: 1px solid var(--border);
 }
 
 .view-toggle-btn.active {
@@ -3933,7 +3943,7 @@ code {
   align-items: center;
   gap: 10px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
   cursor: pointer;
