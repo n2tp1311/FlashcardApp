@@ -873,3 +873,7 @@ The UX review found no way to get a real backup: the visible Export is content-o
 ## 2026-10-02 — Theme follows KnowledgeApp's palette, fills stay deep in dark mode
 
 The user wanted FlashcardApp as warm as KnowledgeApp. The palette is copied value for value from KnowledgeApp's `ui/index.html` tokens rather than approximated, so the sibling apps read as one product. One deliberate difference: KnowledgeApp puts dark ink on its pale dark-mode accent, but FlashcardApp's buttons and pills put white text on `--*-fill`. Rather than touch every white-text rule, dark mode keeps the light theme's deep fills (`#8b5a2b` is 5.8:1 against white), and only the text-role tokens (`--primary`, `--success`, …) go pale. The flashcard back stays a dark face in both themes, now warm (`#2a2622`) instead of slate.
+
+## 2026-10-02 — Softer contrast than KnowledgeApp (revises the entry above)
+
+The first pass copied KnowledgeApp's values exactly; the user found light too bright and dark too dark for reading. FlashcardApp is read in long study sessions, where white (#fff) surfaces glare and #131210 next to 15:1 text makes letters halo. Light now uses parchment surfaces and dark a lifted charcoal, so body text lands near 12:1 instead of 15–17:1. The floor is still WCAG AA: every text token is ≥4.5:1 on each surface and tint it sits on, measured with the WCAG luminance formula. The palette no longer matches KnowledgeApp value for value, only in hue.
