@@ -59,13 +59,21 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
      so it is the most vivid of the four, an emerald brighter than Know It's sage. */
   --primary-soft: var(--primary-light);
   --primary-soft-text: var(--primary);
-  --success-soft: #d9e9d6;
+  /* The tints are mixed into the palette's own --surface rather than fixed pastels, so a
+     cool palette gets cool-leaning reds and greens and the row sits in the theme instead of
+     on top of it. The hues are the same in both modes; only the mix amount changes. */
+  --soft-mix: 11%;
+  --success-hue: #46a758;
+  --danger-hue: #e5484d;
+  --warning-hue: #e8a317;
+  --confident-hue: #12c99b;
+  --success-soft: color-mix(in srgb, var(--success-hue) var(--soft-mix), var(--surface));
   --success-soft-text: #285c35;
-  --danger-soft: #f4dcd8;
+  --danger-soft: color-mix(in srgb, var(--danger-hue) var(--soft-mix), var(--surface));
   --danger-soft-text: #8f2a24;
-  --warning-soft: #f3e5c4;
+  --warning-soft: color-mix(in srgb, var(--warning-hue) var(--soft-mix), var(--surface));
   --warning-soft-text: #6b4a00;
-  --confident-soft: #c4f0dc;
+  --confident-soft: color-mix(in srgb, var(--confident-hue) calc(var(--soft-mix) + 5%), var(--surface));
   --confident-soft-text: #0b5d47;
   accent-color: var(--primary);
 }
@@ -112,13 +120,10 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --card-back: #363636;
   --card-back-border: #525252;
   --card-back-input: #262626;
-  --success-soft: #0f3a22;
+  --soft-mix: 16%;
   --success-soft-text: #5cff9d;
-  --danger-soft: #43141f;
-  --danger-soft-text: #ff8094;
-  --warning-soft: #3d2e05;
+  --danger-soft-text: #ffa8b3;
   --warning-soft-text: #ffd54f;
-  --confident-soft: #04392f;
   --confident-soft-text: #2dffd2;
   --shadow:       0 1px 3px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);
   --shadow-md:    0 4px 6px -1px rgba(0,0,0,.7), 0 2px 4px -1px rgba(0,0,0,.6);
@@ -802,21 +807,21 @@ body {
 .btn-success {
   background: var(--success-soft);
   color: var(--success-soft-text);
-  border-color: color-mix(in srgb, var(--success-soft-text) 25%, transparent);
+  border-color: color-mix(in srgb, var(--success-soft-text) 18%, var(--border));
 }
 .btn-success:hover:not(:disabled) { background: color-mix(in srgb, var(--success-soft) 86%, var(--success-soft-text)); }
 
 .btn-danger {
   background: var(--danger-soft);
   color: var(--danger-soft-text);
-  border-color: color-mix(in srgb, var(--danger-soft-text) 25%, transparent);
+  border-color: color-mix(in srgb, var(--danger-soft-text) 18%, var(--border));
 }
 .btn-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger-soft) 86%, var(--danger-soft-text)); }
 
 .btn-warning {
   background: var(--warning-soft);
   color: var(--warning-soft-text);
-  border-color: color-mix(in srgb, var(--warning-soft-text) 25%, transparent);
+  border-color: color-mix(in srgb, var(--warning-soft-text) 18%, var(--border));
 }
 .btn-warning:hover:not(:disabled) { background: color-mix(in srgb, var(--warning-soft) 86%, var(--warning-soft-text)); }
 
@@ -2040,7 +2045,7 @@ code {
 .btn-mark#btn-fc-easy {
   background: var(--confident-soft);
   color: var(--confident-soft-text);
-  border-color: color-mix(in srgb, var(--confident-soft-text) 25%, transparent);
+  border-color: color-mix(in srgb, var(--confident-soft-text) 22%, var(--border));
 }
 .btn-mark#btn-fc-easy:hover:not(:disabled) { background: color-mix(in srgb, var(--confident-soft) 86%, var(--confident-soft-text)); }
 

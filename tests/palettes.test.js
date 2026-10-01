@@ -13,6 +13,7 @@ function block(selector) {
   const body = css.slice(css.indexOf("{", start) + 1, css.indexOf("}", start));
   const tokens = {};
   for (const m of body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)) tokens[m[1]] = m[2].toLowerCase();
+  for (const m of body.matchAll(/--soft-mix:\s*(\d+)%/g)) tokens["soft-mix"] = Number(m[1]);
   return tokens;
 }
 
@@ -21,6 +22,24 @@ function lum(hex) {
     .map(function(x) { return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 }
+function mixHex(a, b, pct) {
+  const A = [1, 3, 5].map(function(i) { return parseInt(a.slice(i, i + 2), 16); });
+  const B = [1, 3, 5].map(function(i) { return parseInt(b.slice(i, i + 2), 16); });
+  return "#" + A.map(function(x, i) {
+    return Math.round(x * pct / 100 + B[i] * (1 - pct / 100)).toString(16).padStart(2, "0");
+  }).join("");
+}
+
+// The soft tints are color-mix() of a hue into the palette's --surface (see style.css);
+// resolve them here the way the browser does so their text can be checked.
+function resolveSoft(t) {
+  for (const k of ["success", "danger", "warning", "confident"]) {
+    const pct = t["soft-mix"] + (k === "confident" ? 5 : 0);
+    t[k + "-soft"] = mixHex(t[k + "-hue"], t.surface, pct);
+  }
+  return t;
+}
+
 function ratio(a, b) {
   const x = lum(a), y = lum(b);
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
@@ -32,11 +51,11 @@ const baseDark = Object.assign({}, baseLight, block('[data-theme="dark"]'));
 
 function tokensFor(palette, mode) {
   const base = mode === "dark" ? baseDark : baseLight;
-  if (palette === "parchment") return Object.assign({}, base, { "primary-soft": base["primary-light"] });
+  if (palette === "parchment") return resolveSoft(Object.assign({}, base, { "primary-soft": base["primary-light"] }));
   const sel = ':root[data-palette="' + palette + '"]' + (mode === "dark" ? '[data-theme="dark"]' : ':not([data-theme="dark"])');
   const t = Object.assign({}, base, block(sel));
   t["primary-soft"] = t["primary-light"];
-  return t;
+  return resolveSoft(t);
 }
 
 // Text colours that sit on page surfaces, and the soft-button pairs. Every one must stay
