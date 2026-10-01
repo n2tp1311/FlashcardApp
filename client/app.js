@@ -796,6 +796,7 @@ Object.assign(TRANSLATIONS.en, {
   "error.uploadFailedWithMessage": "Upload failed: {message}",
   "error.aiSuggestFailedWithMessage": "Couldn't suggest tags: {message}",
   "study.noCardsMatchFilter": "No cards match the selected filter.",
+  "setup.reviewCapReached": "{due} cards are due, but today's review limit is used up ({done}/{cap}). Raise Max reviews per day in Preferences to keep going.",
   "common.copied": "Copied!",
   "promptGuide.copyPrompt": "Copy Prompt",
   "tts.testPhrase": "This is a test of the speed setting.",
@@ -1476,6 +1477,7 @@ Object.assign(TRANSLATIONS.vi, {
   "error.uploadFailedWithMessage": "Tải lên thất bại: {message}",
   "error.aiSuggestFailedWithMessage": "Không thể gợi ý thẻ: {message}",
   "study.noCardsMatchFilter": "Không có thẻ nào khớp với bộ lọc đã chọn.",
+  "setup.reviewCapReached": "Có {due} thẻ đến hạn, nhưng đã hết lượt ôn hôm nay ({done}/{cap}). Tăng Số lượt ôn tối đa mỗi ngày trong Tùy chọn để học tiếp.",
   "common.copied": "Đã sao chép!",
   "promptGuide.copyPrompt": "Sao chép Prompt",
   "tts.testPhrase": "Đây là bản kiểm tra tốc độ đọc.",
@@ -5552,7 +5554,13 @@ function updateSetupMatchCount(data) {
   var limit = countPill && countPill.dataset.value !== "all" ? parseInt(countPill.dataset.value, 10) : Infinity;
   var n = Math.min(limit, matched.length);
   countEl.classList.toggle("setup-match-count-warn", matched.length === 0);
-  countEl.textContent = matched.length === 0 ? t("study.noCardsMatchFilter")
+  // Due Only and Needs Recall are capped by Max reviews per day, while Home's due badge is
+  // not. Saying "no cards match" next to a "20 due" badge reads as a bug, so name the cap.
+  var uncapped = matched.length === 0 && (filter === "due" || filter === "needsRecall")
+    ? filterCardsBySetup(data.cards, filter, data.knownMap, data.statsMap, data.reviewsToday, true).length : 0;
+  countEl.textContent = uncapped > 0
+    ? t("setup.reviewCapReached", { due: uncapped, done: data.reviewsToday, cap: state.maxReviewsPerDay })
+    : matched.length === 0 ? t("study.noCardsMatchFilter")
     : n < matched.length ? t("setup.studyCountOf", { n: n, total: matched.length })
     : t("setup.studyCount", { n: n });
   document.getElementById("btn-start-study").disabled = matched.length === 0;
@@ -6037,11 +6045,11 @@ function applyReviewCap(dueCards, reviewsToday) {
 
 // Shared between the live match-count preview on Study Setup and startStudy() itself,
 // so the two can never drift out of sync on what counts as a "match".
-function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday) {
+function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday, ignoreCap) {
   if (filter === "due") {
     var nowSec2 = Math.floor(Date.now() / 1000);
     var due = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
-    return applyReviewCap(due, reviewsToday);
+    return ignoreCap ? due : applyReviewCap(due, reviewsToday);
   } else if (filter === "needsRecall") {
     // A card "needs recall" if its most recent correct answer came from quiz recognition,
     // never from actively recalling it in Flashcard/Recall mode — the FSRS-era replacement
@@ -6051,7 +6059,7 @@ function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday) {
     var needsRecall = cards.filter(function(c) {
       return c.last_correct_source === "quiz" && c.srs_due_at && c.srs_due_at <= nowSec3;
     });
-    return applyReviewCap(needsRecall, reviewsToday);
+    return ignoreCap ? needsRecall : applyReviewCap(needsRecall, reviewsToday);
   } else if (filter === "learning") {
     return cards.filter(function(c) { return knownMap[c.id] !== true; });
   } else if (filter === "updated") {
