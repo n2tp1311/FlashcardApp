@@ -11,22 +11,22 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 
 /* Cream paper and a brown accent, shared with KnowledgeApp's UI so the two apps read as one. */
 :root {
-  --bg: #faf9f7;
-  --surface: #ffffff;
-  --surface2: #f3f0ea;
-  --border: #e2ded7;
-  --text: #1c1b19;
-  --text2: #6b6862;
-  --text3: #8a857d;
-  --primary: #8b5a2b;
-  --primary-hover: #74491f;
-  --primary-light: #f5ece1;
+  --bg: #f1ebe0;
+  --surface: #f9f5ee;
+  --surface2: #e9e2d5;
+  --border: #d3c9b8;
+  --text: #2a2620;
+  --text2: #5c554b;
+  --text3: #70685c;
+  --primary: #83542a;
+  --primary-hover: #6e4621;
+  --primary-light: #ecdfcc;
   --success: #2f6b3f;
-  --success-light: #eef5ef;
+  --success-light: #e3ecdf;
   --danger: #a32c2c;
-  --danger-light: #fbeeee;
-  --warning: #8a5f00;
-  --warning-light: #fdf6e3;
+  --danger-light: #f5e2dc;
+  --warning: #805800;
+  --warning-light: #f4e9cf;
   /* Fills behind white text (buttons, badges, active pills); each is ≥4.5:1 against #fff. */
   --primary-fill: #8b5a2b;
   --primary-fill-hover: #74491f;
@@ -49,6 +49,9 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
      separate duration/easing custom properties), since every consumer here plugs it into a
      `transition:` shorthand exactly like --transition already is throughout this file. */
   --bar-fill-transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --card-back: #2f2a25;
+  --card-back-border: #4a453e;
+  --card-back-input: #24201c;
   accent-color: var(--primary);
 }
 
@@ -57,26 +60,27 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 
 /* ==============================
    DARK THEME — KnowledgeApp's warm dark
-   Contrast on --surface: text 15:1, text2 7:1, primary 8:1.
+   Softened from KnowledgeApp's near-black for long reading. On --surface: text 11.5:1,
+   text2 7:1, primary 7.3:1.
    ============================== */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg:           #131210;
-  --surface:      #22201c;
-  --surface2:     #2c2925;
-  --border:       #4a453e;
-  --text:         #eeeae3;
-  --text2:        #b3ada3;
-  --text3:        #8f897f;
+  --bg:           #1f1d1a;
+  --surface:      #2a2723;
+  --surface2:     #35312c;
+  --border:       #544e46;
+  --text:         #e8e2d7;
+  --text2:        #bab2a5;
+  --text3:        #968e82;
   --primary:      #e0ad6c;
   --primary-hover:#ebc08a;
-  --primary-light:#2e2416;
-  --success:      #6cc387;
-  --success-light:#16261b;
-  --danger:       #f07a7a;
-  --danger-light: #2e1716;
+  --primary-light:#3a2d1c;
+  --success:      #7cc794;
+  --success-light:#1d2e22;
+  --danger:       #f08a84;
+  --danger-light: #3a201d;
   --warning:      #e0b25a;
-  --warning-light:#2e2615;
+  --warning-light:#3a2f19;
   /* The text colours above are too pale for white text, so fills stay the light theme's
      deep tones. Hover goes darker, not lighter, to stay ≥4.5:1. */
   --primary-fill: #8b5a2b;
@@ -87,6 +91,10 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --danger-fill-hover: #862222;
   --warning-fill: #9a6a00;
   --warning-fill-hover: #7d5600;
+  /* Lifted off --surface so the flipped card still reads as a separate face. */
+  --card-back: #3a352f;
+  --card-back-border: #5c554c;
+  --card-back-input: #2a2723;
   --shadow:       0 1px 3px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);
   --shadow-md:    0 4px 6px -1px rgba(0,0,0,.7), 0 2px 4px -1px rgba(0,0,0,.6);
   --shadow-lg:    0 10px 15px -3px rgba(0,0,0,.7), 0 4px 6px -2px rgba(0,0,0,.6);
@@ -1466,10 +1474,10 @@ code {
 }
 
 .fc-back {
-  background: #2a2622;
+  background: var(--card-back);
   color: #eeeae3;
   transform: rotateY(180deg);
-  border: 2px solid #4a453e;
+  border: 2px solid var(--card-back-border);
 }
 
 .fc-content {
@@ -1551,12 +1559,12 @@ code {
   width: 100%;
   padding: 7px 12px;
   min-height: 34px;
-  border: 1.5px solid #4a453e;
+  border: 1.5px solid var(--card-back-border);
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
   font-family: inherit;
   color: #eeeae3;
-  background: #1c1a17;
+  background: var(--card-back-input);
   text-align: center;
   outline: none;
 }
