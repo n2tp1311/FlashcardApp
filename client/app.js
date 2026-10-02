@@ -527,6 +527,17 @@ Object.assign(TRANSLATIONS.en, {
   "results.backToLesson": "Back to Lesson",
   "summary.title": "Session Complete",
   "summary.cardsStudied": "cards studied",
+  "done.perfect": "Perfect session!",
+  "done.great": "Great session!",
+  "done.complete": "Session complete",
+  "done.cards": "Cards",
+  "done.questions": "Questions",
+  "done.known": "Known",
+  "done.bestRun": "Best run",
+  "done.time": "Time",
+  "done.streak": "Day streak {from} → {to}",
+  "done.streakMilestone": "{n}-day streak!",
+  "done.goalMet": "Daily goal reached: {n} cards today",
   "summary.new": "New",
   "summary.review": "Review",
   "summary.skippedNote": "{n} cards skipped (not graded)",
@@ -1257,6 +1268,17 @@ Object.assign(TRANSLATIONS.vi, {
   "results.backToLesson": "Về bài học",
   "summary.title": "Hoàn thành phiên học",
   "summary.cardsStudied": "thẻ đã học",
+  "done.perfect": "Phiên học hoàn hảo!",
+  "done.great": "Phiên học tuyệt vời!",
+  "done.complete": "Hoàn thành phiên học",
+  "done.cards": "Thẻ",
+  "done.questions": "Câu hỏi",
+  "done.known": "Đã nhớ",
+  "done.bestRun": "Chuỗi đúng",
+  "done.time": "Thời gian",
+  "done.streak": "Chuỗi ngày học {from} → {to}",
+  "done.streakMilestone": "Chuỗi {n} ngày!",
+  "done.goalMet": "Đã đạt mục tiêu ngày: {n} thẻ hôm nay",
   "summary.new": "Mới",
   "summary.review": "Ôn tập",
   "summary.skippedNote": "{n} thẻ đã bỏ qua (chưa chấm điểm)",
@@ -6022,6 +6044,85 @@ function returnFromStudy() {
   else renderLessons();
 }
 
+/* ============================
+   SESSION COMPLETE
+   ============================ */
+
+// Same clamp as the server's (attempts.js MAX_DURATION_MS): a card left open over lunch
+// should not turn a six-minute session into an hour.
+var SESSION_CARD_MAX_MS = 5 * 60 * 1000;
+var STREAK_MILESTONES = [7, 14, 30, 50, 100, 200, 365, 500, 1000];
+
+// Today's numbers as they were before this session, so the end screen can tell whether this
+// session is what extended the streak or reached the daily goal.
+function beginStudySession() {
+  state.sessionMs = 0;
+  state.sessionTodayAtStart = null;
+  var token = state.sessionToken = {};
+  if (IS_SERVER && store.getToday) {
+    store.getToday().then(function(today) {
+      if (state.sessionToken === token) state.sessionTodayAtStart = today;
+    }).catch(function() {});
+  }
+}
+
+function addSessionTime(ms) {
+  if (typeof ms === "number" && ms > 0) state.sessionMs = (state.sessionMs || 0) + Math.min(ms, SESSION_CARD_MAX_MS);
+}
+
+function formatSessionTime(ms) {
+  var sec = Math.round((ms || 0) / 1000);
+  return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+}
+
+function sessionHeadline(ratio) {
+  return ratio >= 1 ? t("done.perfect") : ratio >= 0.8 ? t("done.great") : t("done.complete");
+}
+
+// What changed today because of this session: the streak ticking up on the day's first
+// session (a milestone gets its own line), and the daily goal being crossed.
+function sessionCheers(before, after, goal) {
+  var lines = [];
+  if (!before || !after) return lines;
+  if (!before.studiedToday && after.studiedToday && after.streak > before.streak) {
+    lines.push(STREAK_MILESTONES.indexOf(after.streak) !== -1
+      ? { kind: "milestone", text: t("done.streakMilestone", { n: after.streak }) }
+      : { kind: "streak", text: t("done.streak", { from: before.streak, to: after.streak }) });
+  }
+  if (goal > 0 && before.count < goal && after.count >= goal) {
+    lines.push({ kind: "goal", text: t("done.goalMet", { n: after.count }) });
+  }
+  return lines;
+}
+
+function renderSessionDone(id, ratio, tiles) {
+  var box = document.getElementById(id);
+  box.innerHTML =
+    '<div class="session-done-title">' + escHtml(sessionHeadline(ratio)) + '</div>' +
+    '<div class="session-tiles">' + tiles.map(function(tile, i) {
+      return '<div class="session-tile tone-' + tile.tone + '" style="animation-delay:' + (i * 90) + 'ms">' +
+        '<div class="session-tile-label">' + escHtml(tile.label) + '</div>' +
+        '<div class="session-tile-value">' + escHtml(String(tile.value)) + '</div>' +
+      '</div>';
+    }).join('') + '</div>' +
+    '<div class="session-cheers" aria-live="polite"></div>';
+  var before = state.sessionTodayAtStart;
+  if (!IS_SERVER || !store.getToday || !before) return;
+  var token = state.sessionToken;
+  // The last answers may still be queued; read today's numbers only once they are written.
+  store.writesSettled().then(function() { return store.getToday(); }).then(function(after) {
+    if (state.sessionToken !== token) return;
+    var lines = sessionCheers(before, after, state.dailyGoal);
+    if (!lines.length) return;
+    box.querySelector(".session-cheers").innerHTML = lines.map(function(l) {
+      return '<div class="session-cheer cheer-' + l.kind + '">' +
+        (l.kind === "goal" ? dailyGoalRing(after.count, state.dailyGoal) : '<span class="session-flame">' + ICON_FLAME + '</span>') +
+        '<span>' + escHtml(l.text) + '</span></div>';
+    }).join('');
+    playSound("combo");
+  }).catch(function() {});
+}
+
 // Shown when a flashcard session finishes normally (not on early Exit) — how many cards
 // were graded, the new-vs-review split, and a status breakdown, all from state.studySessionLog.
 function showFlashcardSummary() {
@@ -6036,7 +6137,12 @@ function showFlashcardSummary() {
     if (state.studySessionNewSet[id]) newCount++;
   });
 
-  document.getElementById("summary-total-count").textContent = total;
+  var knownCount = counts.hard + counts.known + counts.confident;
+  renderSessionDone("summary-done", total > 0 ? knownCount / total : 0, [
+    { label: t("done.cards"), value: total, tone: "gold" },
+    { label: t("done.known"), value: (total ? Math.round(knownCount / total * 100) : 0) + "%", tone: "green" },
+    { label: t("done.time"), value: formatSessionTime(state.sessionMs), tone: "blue" }
+  ]);
   document.getElementById("summary-new-count").textContent = newCount;
   document.getElementById("summary-review-count").textContent = total - newCount;
 
@@ -6249,6 +6355,7 @@ function startStudy(count, filter, mode, order) {
    ============================ */
 
 function startFlashcards() {
+  beginStudySession();
   // Screen must become visible before renderFlashcard() runs — it conditionally calls
   // .focus() on #fc-type-input, which is a silent no-op while still inside a display:none
   // ancestor (only matters at session start; subsequent cards render with the screen
@@ -7064,6 +7171,7 @@ function markCard(known, grade, forceRetype) {
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
   if (grade) attemptFields.grade = grade;
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
+  addSessionTime(attemptFields.durationMs);
   store.recordAttempt(attemptFields).then(function(res) {
     if (res && res.srs_due_at != null) {
       card.srs_due_at = res.srs_due_at;
@@ -7117,6 +7225,8 @@ function startQuiz() {
   state.quizResults = [];
   state.quizCompleteBuzzed = false;
   state.quizStreak = 0;
+  state.quizBestStreak = 0;
+  beginStudySession();
   renderQuizCard();
   showScreen("quiz");
 }
@@ -7273,6 +7383,7 @@ function answerQuiz(selectedIdx) {
   var isCorrect   = selectedVal === correct;
 
   state.quizStreak = isCorrect ? (state.quizStreak || 0) + 1 : 0;
+  state.quizBestStreak = Math.max(state.quizBestStreak || 0, state.quizStreak);
   var cheer = quizEncouragement(isCorrect, state.quizStreak, state.quizResults.length + 1,
     state.quizCards.length, state.quizLastPraise);
   if (cheer.praise) state.quizLastPraise = cheer.praise;
@@ -7295,6 +7406,7 @@ function answerQuiz(selectedIdx) {
     store.setCardKnown(card.id, isCorrect).catch(function() {});
   }
   if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
+  addSessionTime(quizAttemptFields.durationMs);
   store.recordAttempt(quizAttemptFields).then(function(res) {
     if (res && res.capped) {
       resultEntry.capped = true;
@@ -7480,6 +7592,11 @@ function showQuizResults() {
   var pct    = total > 0 ? Math.round(score / total * 100) : 0;
 
   document.getElementById("results-pct").textContent = pct + "%";
+  renderSessionDone("results-done", total > 0 ? score / total : 0, [
+    { label: t("done.questions"), value: total, tone: "gold" },
+    { label: t("done.bestRun"), value: state.quizBestStreak || 0, tone: "green" },
+    { label: t("done.time"), value: formatSessionTime(state.sessionMs), tone: "blue" }
+  ]);
   document.getElementById("results-detail").textContent = t("results.correctOutOf", { score: score, total: total });
 
   var grade;
@@ -9386,6 +9503,8 @@ var SQLiteAdapter = (function() {
     getCardHistory: function(cardId) { return req("GET", "/stats/card-history/" + encodeURIComponent(cardId)); },
     getSrsDistribution: function(days) { return req("GET", "/stats/srs-distribution" + (days ? "?days=" + days : "")); },
     getFutureDue: function() { return req("GET", "/stats/future-due"); },
+    getToday: function() { return req("GET", "/stats/today"); },
+    writesSettled: function() { return writeChain; },
     getReviewsToday: function() { return req("GET", "/stats/reviews-today"); },
     getNewCardEstimate: function() { return req("GET", "/stats/new-card-estimate"); },
     getTrend: function(type, id) { return req("GET", "/stats/trend?scope=" + type + "&id=" + id); },
