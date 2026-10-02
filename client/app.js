@@ -630,13 +630,13 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.days30": "30 days",
   "dashboard.days60": "60 days",
   "dashboard.days90": "90 days",
-  "dashboard.weeklyTrend": "Weekly Study Trend",
-  "dashboard.retentionTrend": "Retention Over Time (Observed Accuracy)",
-  "dashboard.gradeDistribution": "Review Grade Distribution",
-  "dashboard.reviewTimeTrend": "Average Review Time",
-  "dashboard.newCardsTrend": "New Cards Trend",
+  "dashboard.weeklyTrend": "Answers",
+  "dashboard.retentionTrend": "Accuracy",
+  "dashboard.gradeDistribution": "How you answered",
+  "dashboard.reviewTimeTrend": "Answer time",
+  "dashboard.newCardsTrend": "New cards",
   "dashboard.periodNote": "Applies to the charts in this section only — the summary card above is all-time, except Study Time which has its own window control.",
-  "dashboard.srsDistribution": "Memory Interval Distribution",
+  "dashboard.srsDistribution": "Memory intervals",
   "dashboard.studyTime": "Study Time",
   "dashboard.configureMetrics": "Customize metrics",
   "dashboard.configureMetricsHint": "Choose what to show on your summary board. Hiding every study-time number hides that tile.",
@@ -663,6 +663,24 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.cardsInSrs_one": "{n} card in SRS",
   "srsBucket.learning": "Learning",
   "dashboard.futureDue": "Upcoming Reviews (Next {n} Days)",
+  "chart.perWeek": "per week",
+  "chart.thisWeekShort": "This",
+  "chart.lastWeekShort": "Last",
+  "chart.weeksAgoShort": "{n}w",
+  "chart.dayShort": "{n}d",
+  "chart.howYouAnswered": "How you answered",
+  "chart.answersTitle": "{n} answers ({pct}% correct)",
+  "chart.kpiAnswers": "Answers this week",
+  "chart.kpiAccuracy": "Accuracy this week",
+  "chart.kpiNewCards": "New cards this week",
+  "chart.kpiAnswerTime": "Answer time",
+  "chart.kpiDue": "Due in {n} days",
+  "chart.vsLastWeek": "vs last week",
+  "chart.noLastWeek": "nothing last week to compare",
+  "chart.same": "same",
+  "chart.points": "{n} pts",
+  "chart.point": "1 pt",
+  "chart.busiest": "{n} on the busiest day ({when})",
   "dashboard.noCardsDueSoon": "No cards due in the next {n} days.",
   "dashboard.noStudyData": "No study data yet.",
   "dashboard.noReviewGrades": "No graded review data yet.",
@@ -1406,13 +1424,13 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.days30": "30 ngày",
   "dashboard.days60": "60 ngày",
   "dashboard.days90": "90 ngày",
-  "dashboard.weeklyTrend": "Xu hướng học theo tuần",
-  "dashboard.retentionTrend": "Khả năng ghi nhớ theo thời gian (độ chính xác quan sát)",
-  "dashboard.gradeDistribution": "Phân bố mức đánh giá ôn tập",
-  "dashboard.reviewTimeTrend": "Thời gian ôn tập trung bình",
-  "dashboard.newCardsTrend": "Xu hướng thẻ mới",
+  "dashboard.weeklyTrend": "Lượt trả lời",
+  "dashboard.retentionTrend": "Độ chính xác",
+  "dashboard.gradeDistribution": "Cách bạn trả lời",
+  "dashboard.reviewTimeTrend": "Thời gian trả lời",
+  "dashboard.newCardsTrend": "Thẻ mới",
   "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — thẻ tổng quan phía trên tính toàn thời gian, riêng Thời gian học có bộ chọn khoảng thời gian riêng.",
-  "dashboard.srsDistribution": "Phân bố khoảng ghi nhớ",
+  "dashboard.srsDistribution": "Khoảng ghi nhớ",
   "dashboard.studyTime": "Thời gian học",
   "dashboard.configureMetrics": "Tùy chỉnh chỉ số",
   "dashboard.configureMetricsHint": "Chọn những gì hiển thị trên bảng tổng quan. Ẩn mọi số liệu thời gian học sẽ ẩn ô đó.",
@@ -1438,6 +1456,24 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.cardsInSrs": "{n} thẻ trong SRS",
   "srsBucket.learning": "Đang học",
   "dashboard.futureDue": "Sắp đến hạn ôn ({n} ngày tới)",
+  "chart.perWeek": "mỗi tuần",
+  "chart.thisWeekShort": "Nay",
+  "chart.lastWeekShort": "Trước",
+  "chart.weeksAgoShort": "{n}t",
+  "chart.dayShort": "{n}n",
+  "chart.howYouAnswered": "Cách bạn trả lời",
+  "chart.answersTitle": "{n} lượt trả lời ({pct}% đúng)",
+  "chart.kpiAnswers": "Lượt trả lời tuần này",
+  "chart.kpiAccuracy": "Độ chính xác tuần này",
+  "chart.kpiNewCards": "Thẻ mới tuần này",
+  "chart.kpiAnswerTime": "Thời gian trả lời",
+  "chart.kpiDue": "Đến hạn trong {n} ngày",
+  "chart.vsLastWeek": "so với tuần trước",
+  "chart.noLastWeek": "tuần trước không có dữ liệu để so sánh",
+  "chart.same": "như cũ",
+  "chart.points": "{n} điểm",
+  "chart.point": "1 điểm",
+  "chart.busiest": "{n} vào ngày bận nhất ({when})",
   "dashboard.noCardsDueSoon": "Không có thẻ nào đến hạn trong {n} ngày tới.",
   "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
   "dashboard.noReviewGrades": "Chưa có dữ liệu đánh giá ôn tập.",
@@ -8599,7 +8635,7 @@ function renderDashboard() {
   var exportBtn = document.getElementById("btn-dashboard-export");
   if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
-   "dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-retention-wrap","dash-grade-wrap","dash-reviewtime-wrap","dash-lesson-wrap",
+   "dash-chart-kpis","dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-retention-wrap","dash-grade-wrap","dash-reviewtime-wrap","dash-lesson-wrap",
    "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
@@ -8611,8 +8647,6 @@ function renderDashboard() {
     if (periodRequestId !== dashboardPeriodRequestId) { renderDashboard(); return; }
     var d = results[0], analytics = results[1], srs = results[2], futureDue = results[3], newCardEstimate = results[4];
     var days = analytics.days || state.dashPeriod || 60;
-    var heatmapTitle = document.getElementById("dash-heatmap-title");
-    if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
     loadEl.classList.add("hidden");
 
     // Summary stat cards with streak first
@@ -8642,13 +8676,10 @@ function renderDashboard() {
       diffBar(t("difficulty.hard"),   db_.hard,   totalCards, "#dc2626");
 
     // Charts (from analytics)
-    renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
-    renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
-    renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), Math.ceil(days / 7));
+    state.dashFutureDue = futureDue;
+    state.dashSrs = srs;
+    renderStudyCharts(analytics);
     renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
-    renderRetentionTrend(analytics.retentionTrend, document.getElementById("dash-retention-wrap"), Math.ceil(days / 7));
-    renderGradeDistribution(analytics.gradeDistribution, document.getElementById("dash-grade-wrap"));
-    renderReviewTimeTrend(analytics.reviewTimeTrend, document.getElementById("dash-reviewtime-wrap"), Math.ceil(days / 7));
     var futureDueTitle = document.getElementById("dash-future-due-title");
     if (futureDueTitle) futureDueTitle.textContent = t("dashboard.futureDue", { n: futureDue.windowDays });
     renderFutureDue(futureDue, document.getElementById("dash-future-due-wrap"));
@@ -8785,6 +8816,7 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     document.getElementById("dash-struggle-list").innerHTML = "";
     store.getSrsDistribution(state.dashPeriod).then(function(srs) {
       if (requestId !== dashboardPeriodRequestId) return;
+      state.dashSrs = srs;
       renderSrsDistribution(srs, document.getElementById("dash-srs-wrap"));
     }).catch(function() {
       if (requestId !== dashboardPeriodRequestId) return;
@@ -8793,14 +8825,7 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     store.getAnalytics(state.dashPeriod).then(function(analytics) {
       if (requestId !== dashboardPeriodRequestId) return;
       var days = analytics.days || state.dashPeriod;
-      var heatmapTitle = document.getElementById("dash-heatmap-title");
-      if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
-      renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
-      renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), Math.ceil(days / 7));
-      renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), Math.ceil(days / 7));
-      renderRetentionTrend(analytics.retentionTrend, document.getElementById("dash-retention-wrap"), Math.ceil(days / 7));
-      renderGradeDistribution(analytics.gradeDistribution, document.getElementById("dash-grade-wrap"));
-      renderReviewTimeTrend(analytics.reviewTimeTrend, document.getElementById("dash-reviewtime-wrap"), Math.ceil(days / 7));
+      renderStudyCharts(analytics);
       renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
       var pillsWrap = document.getElementById("dash-source-pills-wrap");
@@ -8824,78 +8849,288 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
   });
 }());
 
+// Dashboard accuracy per week, as a line: accuracy is a rate, so a bar's length would claim
+// a quantity. The Stats screen's lesson/class trend keeps renderAccuracyTrend's rows.
 function renderRetentionTrend(rows, wrap, maxWeeksAgo) {
   if (!wrap) return;
-  renderAccuracyTrend(rows || [], wrap, maxWeeksAgo);
+  var map = {};
+  (rows || []).forEach(function(r) { map[r.weeks_ago] = r; });
+  var weeks = chartWeeks(maxWeeksAgo);
+  var pcts = weeks.map(function(w) { var r = map[w]; return r && r.total > 0 ? Math.round((r.correct || 0) / r.total * 100) : null; });
+  var known = pcts.filter(function(p) { return p != null; });
+  if (!known.length) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("stats.noAttemptedCards") + '</div>';
+    return;
+  }
+  var lo = Math.max(0, Math.min(90, Math.floor((Math.min.apply(null, known) - 5) / 10) * 10));
+  wrap.innerHTML = chartLineSvg({
+    width: chartWidth(wrap), labels: weeks.map(chartWeekLabel), values: pcts, min: lo, max: 100, cls: "accuracy",
+    ticks: [lo, (lo + 100) / 2, 100], fmt: function(v) { return Math.round(v) + "%"; },
+    titles: weeks.map(function(w, i) { var r = map[w]; return chartWeekTitle(w) + ": " + (r && r.total > 0 ? pcts[i] + "% (" + r.correct + "/" + r.total + ")" : "—"); })
+  });
 }
 
-function renderGradeDistribution(rows, wrap) {
-  if (!wrap) return;
+// Answers in the window grouped the way the grade split reads: Again first, then the
+// flashcard grades in order, then quiz answers and answers marked known without a grade.
+function gradeSegments(rows) {
   var counts = {};
   (rows || []).forEach(function(r) {
     var key;
-    if (r.source === "quiz") {
-      key = r.correct ? "quiz:correct" : "quiz:incorrect";
-    } else if (!r.correct) {
-      key = "again";
-    } else if (r.grade === "hard" || r.grade === "medium" || r.grade === "easy") {
-      key = r.grade;
-    } else {
-      key = "ungraded";
-    }
+    if (r.source === "quiz") key = r.correct ? "quiz:correct" : "quiz:incorrect";
+    else if (!r.correct) key = "again";
+    else if (r.grade === "hard" || r.grade === "medium" || r.grade === "easy") key = r.grade;
+    else key = "ungraded";
     counts[key] = (counts[key] || 0) + r.cnt;
   });
-  var keys = ["again", "hard", "medium", "easy"];
-  Object.keys(counts).filter(function(k) { return k.indexOf("quiz:") === 0 || k === "ungraded"; }).sort().forEach(function(k) { keys.push(k); });
-  var total = keys.reduce(function(sum, key) { return sum + (counts[key] || 0); }, 0);
-  if (!total) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noReviewGrades") + '</div>';
-    return;
-  }
-  wrap.innerHTML = "";
-  keys.forEach(function(key) {
-    var cnt = counts[key] || 0;
-    if (!cnt) return;
+  return ["again", "hard", "medium", "easy", "quiz:correct", "quiz:incorrect", "ungraded"].filter(function(k) { return counts[k] > 0; }).map(function(key) {
     var label = key === "again" ? t("dashboard.gradeAgain")
       : key === "hard" ? t("dashboard.gradeHard")
       : key === "medium" ? t("dashboard.gradeMedium")
       : key === "easy" ? t("dashboard.gradeEasy")
       : key === "ungraded" ? t("dashboard.gradeUngraded")
       : t("dashboard.gradeQuiz") + " · " + (key.slice(5) === "correct" ? t("stats.correct") : t("stats.incorrect"));
-    var rowEl = document.createElement("div");
-    rowEl.className = "trend-row";
-    rowEl.innerHTML = '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(cnt / total) + '"></div></div>' +
-      '<span class="trend-count">' + cnt + '</span>';
-    wrap.appendChild(rowEl);
+    return { key: key, cls: key.replace(":", "-"), label: label, cnt: counts[key] };
   });
+}
+
+// Bucket 0 is today: the server groups cards due later today and cards already due or
+// overdue under today's date.
+function futureDueBuckets(data) {
+  var map = {};
+  (data.days || []).forEach(function(r) { map[r.day] = r.cnt; });
+  var now = new Date();
+  var buckets = [];
+  for (var i = 0; i <= data.windowDays; i++) {
+    var d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + i));
+    buckets.push({ n: i, cnt: map[d.toISOString().slice(0, 10)] || 0 });
+  }
+  return buckets;
+}
+
+var studyChartResizeTimer = null;
+window.addEventListener("resize", function() {
+  clearTimeout(studyChartResizeTimer);
+  studyChartResizeTimer = setTimeout(function() {
+    var wrap = document.getElementById("dash-trend-wrap");
+    if (!wrap || !wrap.clientWidth || !state.dashAnalytics) return;
+    if (Math.abs(wrap.clientWidth - (state.dashChartWidth || 0)) < 24) return;
+    renderStudyCharts(state.dashAnalytics);
+    if (state.dashSrs) renderSrsDistribution(state.dashSrs, document.getElementById("dash-srs-wrap"));
+    if (state.dashFutureDue) renderFutureDue(state.dashFutureDue, document.getElementById("dash-future-due-wrap"));
+  }, 200);
+});
+
+// ── Study charts: shared drawing ─────────────────────────────────────────────
+// Time runs left to right, oldest first. Each chart is drawn at its container's pixel
+// width (1 SVG unit = 1px) so its 10px labels stay 10px in a quarter-width card and a
+// phone-width one alike; a resize redraws them (see the dashboard's resize handler).
+
+// weeks_ago values for a window, oldest first. A 90-day window reaches back 12 full weeks
+// plus six days, so weeks_ago 13 can never hold an answer and is not drawn.
+function chartWeeks(maxWeeksAgo) {
+  var out = [];
+  for (var w = Math.max(0, maxWeeksAgo); w >= 0; w--) out.push(w);
+  return out;
+}
+
+function chartWeekLabel(weeksAgo) {
+  return weeksAgo === 0 ? t("chart.thisWeekShort") : weeksAgo === 1 ? t("chart.lastWeekShort") : t("chart.weeksAgoShort", { n: weeksAgo });
+}
+
+function chartWeekTitle(weeksAgo) {
+  return weeksAgo === 0 ? t("dashboard.thisWeek") : weeksAgo === 1 ? t("dashboard.lastWeek") : t("time.weeksAgo", { n: weeksAgo });
+}
+
+function chartWidth(wrap) {
+  var w = wrap && wrap.clientWidth;
+  return w > 0 ? w : 300;
+}
+
+// A round top for the y axis with at most four steps of 1, 2, 2.5 or 5 times a power of ten.
+function chartScale(max) {
+  if (!(max > 0)) return { top: 1, step: 1 };
+  var mag = Math.pow(10, Math.floor(Math.log10(max)));
+  var mults = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10];
+  for (var i = 0; i < mults.length; i++) {
+    var step = Math.max(1, mults[i] * mag);
+    if (Math.ceil(max / step) <= 4) return { top: Math.ceil(max / step) * step, step: step };
+  }
+  return { top: Math.ceil(max / (10 * mag)) * 10 * mag, step: 10 * mag };
+}
+
+function chartTick(v) {
+  return v >= 1000 ? (Math.round(v / 100) / 10) + "k" : String(v);
+}
+
+// Which x labels fit: every k-th, always the last, and none crowding the last.
+function chartLabelIndices(n, width) {
+  var fit = Math.max(2, Math.floor(width / 40));
+  var k = Math.max(1, Math.ceil(n / fit));
+  var out = [];
+  for (var i = 0; i < n; i++) {
+    if (i === n - 1 || (i % k === 0 && n - 1 - i >= k)) out.push(i);
+  }
+  return out;
+}
+
+var CHART_PAD = { l: 34, r: 6, t: 8, b: 18 };
+
+function chartXAxis(labels, w, h) {
+  var cw = (w - CHART_PAD.l - CHART_PAD.r) / labels.length;
+  return chartLabelIndices(labels.length, w - CHART_PAD.l).map(function(i) {
+    var x = CHART_PAD.l + cw * i + cw / 2;
+    var anchor = i === labels.length - 1 && labels.length > 1 ? "end" : "middle";
+    if (anchor === "end") x = Math.min(x + cw / 2, w);
+    return '<text class="chart-x" x="' + x.toFixed(1) + '" y="' + (h - 4) + '" text-anchor="' + anchor + '">' + escHtml(labels[i]) + '</text>';
+  }).join('');
+}
+
+function chartColumnsSvg(o) {
+  var w = Math.max(160, Math.round(o.width)), h = o.height || 150;
+  var n = o.values.length, cw = (w - CHART_PAD.l - CHART_PAD.r) / n, bw = Math.max(2, Math.min(cw * 0.66, 28));
+  var scale = chartScale(Math.max.apply(null, o.values.concat([0])));
+  var plotH = h - CHART_PAD.t - CHART_PAD.b;
+  function y(v) { return CHART_PAD.t + plotH * (1 - v / scale.top); }
+  var out = '<svg class="chart-svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img">';
+  for (var tv = 0; tv <= scale.top + 1e-9; tv += scale.step) {
+    out += '<line class="chart-grid" x1="' + CHART_PAD.l + '" x2="' + (w - CHART_PAD.r) + '" y1="' + y(tv).toFixed(1) + '" y2="' + y(tv).toFixed(1) + '"/>' +
+      '<text class="chart-y" x="' + (CHART_PAD.l - 6) + '" y="' + (y(tv) + 3).toFixed(1) + '" text-anchor="end">' + escHtml(chartTick(tv)) + '</text>';
+  }
+  o.values.forEach(function(v, i) {
+    if (!v) return;
+    var bh = plotH * v / scale.top;
+    out += '<rect class="chart-bar chart-bar-' + o.cls + (i === o.hot ? ' is-hot' : '') + '" x="' + (CHART_PAD.l + cw * i + (cw - bw) / 2).toFixed(1) +
+      '" y="' + (h - CHART_PAD.b - bh).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2">' +
+      '<title>' + escHtml(o.titles ? o.titles[i] : o.labels[i] + ": " + v) + '</title></rect>';
+  });
+  return out + chartXAxis(o.labels, w, h) + '</svg>';
+}
+
+// A line through the weeks that have a value; weeks without one leave a gap in the dots
+// and the line runs straight across it.
+function chartLineSvg(o) {
+  var w = Math.max(160, Math.round(o.width)), h = o.height || 150;
+  var n = o.values.length, cw = (w - CHART_PAD.l - CHART_PAD.r) / n, plotH = h - CHART_PAD.t - CHART_PAD.b;
+  function x(i) { return CHART_PAD.l + cw * i + cw / 2; }
+  function y(v) { return CHART_PAD.t + plotH * (1 - (v - o.min) / (o.max - o.min)); }
+  var out = '<svg class="chart-svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img">';
+  o.ticks.forEach(function(tv) {
+    out += '<line class="chart-grid" x1="' + CHART_PAD.l + '" x2="' + (w - CHART_PAD.r) + '" y1="' + y(tv).toFixed(1) + '" y2="' + y(tv).toFixed(1) + '"/>' +
+      '<text class="chart-y" x="' + (CHART_PAD.l - 6) + '" y="' + (y(tv) + 3).toFixed(1) + '" text-anchor="end">' + escHtml(o.fmt(tv)) + '</text>';
+  });
+  var pts = [];
+  o.values.forEach(function(v, i) { if (v != null) pts.push({ x: x(i), y: y(v), i: i }); });
+  if (pts.length) {
+    var d = pts.map(function(p) { return p.x.toFixed(1) + " " + p.y.toFixed(1); }).join(" L");
+    var floor = (h - CHART_PAD.b).toFixed(1);
+    out += '<path class="chart-area chart-area-' + o.cls + '" d="M' + d + ' L' + pts[pts.length - 1].x.toFixed(1) + ' ' + floor + ' L' + pts[0].x.toFixed(1) + ' ' + floor + ' Z"/>' +
+      '<path class="chart-line chart-line-' + o.cls + '" d="M' + d + '"/>';
+    pts.forEach(function(p) {
+      out += '<circle class="chart-dot chart-dot-' + o.cls + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3"><title>' +
+        escHtml(o.titles ? o.titles[p.i] : o.labels[p.i]) + '</title></circle>';
+    });
+  }
+  return out + chartXAxis(o.labels, w, h) + '</svg>';
+}
+
+// The headline row: this week against last week, then what is coming due. "This week" is
+// the last seven days, the same rolling bucket the charts below call This.
+function chartKpisHtml(analytics, futureDue) {
+  function byWeek(rows) { var m = {}; (rows || []).forEach(function(r) { m[r.weeks_ago] = r; }); return m; }
+  var wk = byWeek(analytics && analytics.weeklyTrend), nw = byWeek(analytics && analytics.newCardsWeeklyTrend), tm = byWeek(analytics && analytics.reviewTimeTrend);
+  function delta(now, prev, fmt, tone) {
+    if (prev == null) return escHtml(t("chart.noLastWeek"));
+    var diff = now - prev;
+    var cls = diff === 0 || !tone ? "flat" : diff > 0 ? "up" : "down";
+    var arrow = diff > 0 ? "▲ " : diff < 0 ? "▼ " : "";
+    return '<span class="chart-delta ' + cls + '">' + arrow + escHtml(diff === 0 ? t("chart.same") : fmt(Math.abs(diff))) + '</span> ' + escHtml(t("chart.vsLastWeek"));
+  }
+  function kpi(label, value, sub) {
+    return '<div class="stat-card chart-kpi"><span class="chart-kpi-label">' + escHtml(label) + '</span>' +
+      '<span class="chart-kpi-value">' + escHtml(value) + '</span><span class="chart-kpi-sub">' + sub + '</span></div>';
+  }
+  var a0 = wk[0] ? wk[0].cnt : 0, a1 = wk[1] ? wk[1].cnt : 0;
+  var acc0 = wk[0] && wk[0].cnt ? Math.round((wk[0].correct || 0) / wk[0].cnt * 100) : null;
+  var acc1 = wk[1] && wk[1].cnt ? Math.round((wk[1].correct || 0) / wk[1].cnt * 100) : null;
+  var n0 = nw[0] ? nw[0].cnt : 0, n1 = nw[1] ? nw[1].cnt : 0;
+  var s0 = tm[0] && tm[0].samples ? Math.round(tm[0].avg_ms / 1000) : null;
+  var s1 = tm[1] && tm[1].samples ? Math.round(tm[1].avg_ms / 1000) : null;
+  var out = [
+    // Answers compare as a percentage: 300 more means little against 3,000 and a lot against 100.
+    kpi(t("chart.kpiAnswers"), a0.toLocaleString(), a1 ? delta(Math.round(a0 / a1 * 100), 100, function(d) { return d + "%"; }, true) : delta(0, null)),
+    kpi(t("chart.kpiAccuracy"), acc0 == null ? "—" : acc0 + "%", acc0 != null && acc1 != null ? delta(acc0, acc1, function(d) { return t(d === 1 ? "chart.point" : "chart.points", { n: d }); }, true) : delta(0, null)),
+    kpi(t("chart.kpiNewCards"), n0.toLocaleString(), wk[1] ? delta(n0, n1, function(d) { return d.toLocaleString(); }, false) : delta(0, null)),
+    kpi(t("chart.kpiAnswerTime"), s0 == null ? "—" : t("unit.s", { n: s0 }), s0 != null && s1 != null ? delta(s0, s1, function(d) { return t("unit.s", { n: d }); }, false) : delta(0, null))
+  ];
+  if (futureDue && futureDue.days) {
+    var buckets = futureDueBuckets(futureDue);
+    var total = buckets.reduce(function(s, b) { return s + b.cnt; }, 0);
+    var busiest = buckets.reduce(function(m, b) { return b.cnt > m.cnt ? b : m; }, buckets[0]);
+    out.push(kpi(t("chart.kpiDue", { n: futureDue.windowDays }), total.toLocaleString(),
+      total ? escHtml(t("chart.busiest", { n: busiest.cnt, when: busiest.n === 0 ? t("time.today").toLowerCase() : t("time.inDays", { n: busiest.n }) })) : ''));
+  }
+  return out.join('');
+}
+
+// Everything in Study charts that comes from /analytics, drawn together so the first load
+// and a period change cannot drift apart. The forecast and intervals have their own fetches.
+function renderStudyCharts(analytics) {
+  state.dashAnalytics = analytics;
+  var days = analytics.days || state.dashPeriod || 60;
+  var weeksBack = Math.floor((days - 1) / 7);
+  var heatmapTitle = document.getElementById("dash-heatmap-title");
+  if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
+  renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
+  renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), weeksBack);
+  renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), weeksBack);
+  renderRetentionTrend(analytics.weeklyTrend.map(function(r) { return { weeks_ago: r.weeks_ago, total: r.cnt, correct: r.correct }; }),
+    document.getElementById("dash-retention-wrap"), weeksBack);
+  renderGradeDistribution(analytics.gradeDistribution, document.getElementById("dash-grade-wrap"));
+  renderReviewTimeTrend(analytics.reviewTimeTrend, document.getElementById("dash-reviewtime-wrap"), weeksBack);
+  var kpis = document.getElementById("dash-chart-kpis");
+  if (kpis) kpis.innerHTML = chartKpisHtml(analytics, state.dashFutureDue);
+  var trend = document.getElementById("dash-trend-wrap");
+  state.dashChartWidth = trend ? trend.clientWidth : 0;
+}
+
+function renderGradeDistribution(rows, wrap) {
+  if (!wrap) return;
+  var segs = gradeSegments(rows);
+  var total = segs.reduce(function(sum, s) { return sum + s.cnt; }, 0);
+  if (!total) {
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noReviewGrades") + '</div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="chart-stack" role="img" aria-label="' + escHtml(t("chart.howYouAnswered")) + '">' +
+    segs.map(function(s) {
+      return '<div class="chart-stack-seg grade-' + s.cls + '" style="flex:' + s.cnt + '" title="' + escHtml(s.label + ": " + s.cnt) + '"></div>';
+    }).join('') + '</div>' +
+    '<div class="chart-legend">' + segs.map(function(s) {
+      return '<span><i class="grade-' + s.cls + '"></i>' + escHtml(s.label) + ' · ' + s.cnt.toLocaleString() +
+        ' (' + Math.round(s.cnt / total * 100) + '%)</span>';
+    }).join('') + '</div>';
 }
 
 function renderReviewTimeTrend(rows, wrap, maxWeeksAgo) {
   if (!wrap) return;
   var map = {};
   (rows || []).forEach(function(r) { map[r.weeks_ago] = r; });
-  var weeks = [];
-  for (var w = maxWeeksAgo; w >= 0; w--) weeks.push({ weeksAgo: w, row: map[w] || null });
-  if (!weeks.some(function(week) { return week.row && week.row.samples > 0; })) {
+  var weeks = chartWeeks(maxWeeksAgo);
+  var secs = weeks.map(function(w) { var r = map[w]; return r && r.samples > 0 ? Math.round(r.avg_ms / 1000) : null; });
+  var known = secs.filter(function(s) { return s != null; });
+  if (!known.length) {
     wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noReviewTime") + '</div>';
     return;
   }
-  var max = weeks.reduce(function(m, week) { return Math.max(m, week.row ? week.row.avg_ms || 0 : 0); }, 1);
-  wrap.innerHTML = "";
-  weeks.forEach(function(week) {
-    var row = week.row;
-    var label = week.weeksAgo === 0 ? t("dashboard.thisWeek")
-      : week.weeksAgo === 1 ? t("dashboard.lastWeek")
-      : t("time.weeksAgo", { n: week.weeksAgo });
-    var avgSec = row ? Math.round(row.avg_ms / 1000) : 0;
-    var avgLabel = avgSec < 60 ? t("unit.s", { n: avgSec }) : formatStudyDuration(avgSec * 1000);
-    var rowEl = document.createElement("div");
-    rowEl.className = "trend-row";
-    rowEl.innerHTML = '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(row ? row.avg_ms / max : 0) + '"></div></div>' +
-      '<span class="trend-count">' + (row ? escHtml(t("dashboard.avgReviewDuration", { duration: avgLabel, n: row.samples })) : "—") + '</span>';
-    wrap.appendChild(rowEl);
+  var lo = Math.max(0, Math.floor(Math.min.apply(null, known) / 10) * 10);
+  var hi = Math.ceil(Math.max.apply(null, known) / 10) * 10;
+  if (hi <= lo) hi = lo + 10;
+  wrap.innerHTML = chartLineSvg({
+    width: chartWidth(wrap), labels: weeks.map(chartWeekLabel), values: secs, min: lo, max: hi, cls: "time",
+    ticks: [lo, (lo + hi) / 2, hi], fmt: function(v) { return t("unit.s", { n: Math.round(v) }); },
+    titles: weeks.map(function(w, i) {
+      return chartWeekTitle(w) + ": " + (map[w] && map[w].samples > 0 ? t("dashboard.avgReviewDuration", { duration: t("unit.s", { n: secs[i] }), n: map[w].samples }) : "—");
+    })
   });
 }
 
@@ -8928,78 +9163,34 @@ function renderHeatmap(rows, wrap, days) {
 
   var MONTHS = t("dashboard.monthAbbrevs").split(",");
   var DAYS = t("dashboard.dayAbbrevs").split(",");
-  var firstDay = cells[0].dayOfWeek;
   var padded = [];
-  for (var p = 0; p < firstDay; p++) padded.push(null);
+  for (var p = 0; p < cells[0].dayOfWeek; p++) padded.push(null);
   padded = padded.concat(cells);
   while (padded.length % 7 !== 0) padded.push(null);
-
   var numCols = padded.length / 7;
-  var labelRow = document.createElement("div");
-  labelRow.className = "heatmap-months";
-  var grid = document.createElement("div");
-  grid.className = "heatmap-grid";
-  var lastMonthLabel = null;
 
+  // One grid, day names in the first column, so the cells can grow to fill the card (up to
+  // 22px) and every row label still lines up with its row whatever the cell size.
+  var html = '<div class="heatmap" style="grid-template-columns:auto repeat(' + numCols + ', minmax(0, 22px))"><span></span>';
+  var lastMonth = null;
   for (var col = 0; col < numCols; col++) {
-    var colEl = document.createElement("div");
-    colEl.className = "heatmap-col";
-    var firstRealCell = null;
-    for (var row = 0; row < 7; row++) {
-      var cell = padded[col * 7 + row];
-      var cellEl = document.createElement("div");
-      if (!cell) {
-        cellEl.className = "heatmap-cell heat-empty";
-      } else {
-        cellEl.className = "heatmap-cell " + intensity(cell.cnt);
-        cellEl.title = t("dashboard.heatmapCellTooltip", {
-          date: MONTHS[cell.month] + " " + cell.day,
-          duration: formatStudyDuration(cell.ms),
-          n: cell.cnt
-        });
-        if (!firstRealCell) firstRealCell = cell;
-      }
-      colEl.appendChild(cellEl);
-    }
-    grid.appendChild(colEl);
-
-    var monthLabel = document.createElement("span");
-    monthLabel.className = "heatmap-month-label";
-    if (firstRealCell && firstRealCell.month !== lastMonthLabel) {
-      monthLabel.textContent = MONTHS[firstRealCell.month];
-      lastMonthLabel = firstRealCell.month;
-    }
-    labelRow.appendChild(monthLabel);
+    var first = null;
+    for (var r = 0; r < 7 && !first; r++) first = padded[col * 7 + r];
+    var label = first && first.month !== lastMonth ? MONTHS[first.month] : "";
+    if (first) lastMonth = first.month;
+    html += '<span class="heatmap-month-label">' + escHtml(label) + '</span>';
   }
-
-  // Row labels (Sun..Sat) line up with heatmap-grid's rows so a bright/dark horizontal
-  // band is readable as "I always study on Sundays" instead of needing to count rows.
-  var dayLabels = document.createElement("div");
-  dayLabels.className = "heatmap-daylabels";
-  var daySpacer = document.createElement("span");
-  daySpacer.className = "heatmap-daylabels-spacer";
-  dayLabels.appendChild(daySpacer);
-  var dayLabelCol = document.createElement("div");
-  dayLabelCol.className = "heatmap-daylabel-col";
-  for (var dow = 0; dow < 7; dow++) {
-    var dayLabel = document.createElement("span");
-    dayLabel.className = "heatmap-day-label";
-    dayLabel.textContent = DAYS[dow];
-    dayLabelCol.appendChild(dayLabel);
+  for (var row = 0; row < 7; row++) {
+    html += '<span class="heatmap-day-label">' + (row % 2 ? escHtml(DAYS[row]) : "") + '</span>';
+    for (var c = 0; c < numCols; c++) {
+      var cell = padded[c * 7 + row];
+      html += cell
+        ? '<i class="heatmap-cell ' + intensity(cell.cnt) + '" title="' + escHtml(t("dashboard.heatmapCellTooltip", {
+            date: MONTHS[cell.month] + " " + cell.day, duration: formatStudyDuration(cell.ms), n: cell.cnt })) + '"></i>'
+        : '<i class="heatmap-cell heat-empty"></i>';
+    }
   }
-  dayLabels.appendChild(dayLabelCol);
-
-  var scrollArea = document.createElement("div");
-  scrollArea.className = "heatmap-scroll";
-  scrollArea.appendChild(labelRow);
-  scrollArea.appendChild(grid);
-
-  var body = document.createElement("div");
-  body.className = "heatmap-body";
-  body.appendChild(dayLabels);
-  body.appendChild(scrollArea);
-
-  wrap.appendChild(body);
+  wrap.innerHTML = html + '</div>';
 }
 
 function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
@@ -9009,29 +9200,15 @@ function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
     return;
   }
   var map = {};
-  rows.forEach(function(r) { map[r.weeks_ago] = { cnt: r.cnt, correct: r.correct || 0 }; });
-
-  var max = 0;
-  var weeks = [];
-  for (var w = maxWeeksAgo; w >= 0; w--) {
-    var wk = map[w] || { cnt: 0, correct: 0 };
-    if (wk.cnt > max) max = wk.cnt;
-    weeks.push({ weeksAgo: w, cnt: wk.cnt, correct: wk.correct });
-  }
-
-  weeks.forEach(function(week) {
-    var pct = max > 0 ? Math.round(week.cnt / max * 100) : 0;
-    var label = week.weeksAgo === 0 ? t("dashboard.thisWeek") :
-                week.weeksAgo === 1 ? t("dashboard.lastWeek") :
-                t("time.weeksAgo", { n: week.weeksAgo });
-    var countLabel = week.cnt === 0 ? "0" : week.cnt + " (" + Math.round(week.correct / week.cnt * 100) + "%)";
-    var rowEl = document.createElement("div");
-    rowEl.className = "trend-row";
-    rowEl.innerHTML =
-      '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
-      '<span class="trend-count">' + countLabel + '</span>';
-    wrap.appendChild(rowEl);
+  rows.forEach(function(r) { map[r.weeks_ago] = r; });
+  var weeks = chartWeeks(maxWeeksAgo);
+  wrap.innerHTML = chartColumnsSvg({
+    width: chartWidth(wrap), labels: weeks.map(chartWeekLabel), cls: "answers", hot: weeks.length - 1,
+    values: weeks.map(function(w) { return map[w] ? map[w].cnt : 0; }),
+    titles: weeks.map(function(w) {
+      var r = map[w];
+      return chartWeekTitle(w) + ": " + (r ? t("chart.answersTitle", { n: r.cnt, pct: Math.round((r.correct || 0) / r.cnt * 100) }) : "0");
+    })
   });
 }
 
@@ -9043,27 +9220,11 @@ function renderNewCardsTrend(rows, wrap, maxWeeksAgo) {
   }
   var map = {};
   rows.forEach(function(r) { map[r.weeks_ago] = r.cnt; });
-
-  var max = 0;
-  var weeks = [];
-  for (var w = maxWeeksAgo; w >= 0; w--) {
-    var cnt = map[w] || 0;
-    if (cnt > max) max = cnt;
-    weeks.push({ weeksAgo: w, cnt: cnt });
-  }
-
-  weeks.forEach(function(week) {
-    var pct = max > 0 ? Math.round(week.cnt / max * 100) : 0;
-    var label = week.weeksAgo === 0 ? t("dashboard.thisWeek") :
-                week.weeksAgo === 1 ? t("dashboard.lastWeek") :
-                t("time.weeksAgo", { n: week.weeksAgo });
-    var rowEl = document.createElement("div");
-    rowEl.className = "trend-row";
-    rowEl.innerHTML =
-      '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
-      '<span class="trend-count">' + week.cnt + '</span>';
-    wrap.appendChild(rowEl);
+  var weeks = chartWeeks(maxWeeksAgo);
+  wrap.innerHTML = chartColumnsSvg({
+    width: chartWidth(wrap), labels: weeks.map(chartWeekLabel), cls: "new", hot: weeks.length - 1,
+    values: weeks.map(function(w) { return map[w] || 0; }),
+    titles: weeks.map(function(w) { return chartWeekTitle(w) + ": " + (map[w] || 0); })
   });
 }
 
@@ -9098,54 +9259,29 @@ function renderSrsDistribution(rows, wrap) {
   var sorted = rows.slice().sort(function(a, b) {
     return FSRS_BUCKET_ORDER.indexOf(a.bucket) - FSRS_BUCKET_ORDER.indexOf(b.bucket);
   });
-  var max = sorted.reduce(function(m, r) { return Math.max(m, r.cnt); }, 1);
   var total = sorted.reduce(function(s, r) { return s + r.cnt; }, 0);
-  sorted.forEach(function(r) {
-    var pct = Math.round(r.cnt / max * 100);
+  var labels = sorted.map(function(r) {
     var unit = FSRS_BUCKET_LABELS[r.bucket];
-    var label = r.bucket === "learning" ? t("srsBucket.learning") : unit ? t("unit." + unit[0], { n: unit[1] }) : r.bucket;
-    var rowEl = document.createElement("div");
-    rowEl.className = "trend-row";
-    rowEl.innerHTML =
-      '<span class="trend-label">' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill srs-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
-      '<span class="trend-count">' + r.cnt + '</span>';
-    wrap.appendChild(rowEl);
+    return r.bucket === "learning" ? t("srsBucket.learning") : unit ? t("unit." + unit[0], { n: unit[1] }) : r.bucket;
   });
-  var note = document.createElement("div");
-  note.className = "srs-total-note";
-  note.textContent = t("dashboard.cardsInSrs", { n: total });
-  wrap.appendChild(note);
+  wrap.innerHTML = chartColumnsSvg({
+    width: chartWidth(wrap), labels: labels, cls: "srs", values: sorted.map(function(r) { return r.cnt; }),
+    titles: sorted.map(function(r, i) { return labels[i] + ": " + r.cnt; })
+  }) + '<div class="srs-total-note">' + escHtml(t("dashboard.cardsInSrs", { n: total })) + '</div>';
 }
 
 function renderFutureDue(data, wrap) {
   if (!data || !data.days) return;
-  var map = {};
-  data.days.forEach(function(r) { map[r.day] = r.cnt; });
-  var now = new Date();
-  var buckets = [];
-  // Bucket 0 is today: the server groups cards due later today and cards already due or
-  // overdue under today's date.
-  for (var i = 0; i <= data.windowDays; i++) {
-    var d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + i));
-    buckets.push({ n: i, cnt: map[d.toISOString().slice(0, 10)] || 0 });
-  }
+  var buckets = futureDueBuckets(data);
   if (buckets.every(function(b) { return b.cnt === 0; })) {
     wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noCardsDueSoon", { n: data.windowDays }) + '</div>';
     return;
   }
-  var max = buckets.reduce(function(m, b) { return Math.max(m, b.cnt); }, 1);
-  buckets.forEach(function(b) {
-    var pct = Math.round(b.cnt / max * 100);
-    var rowEl = document.createElement("div");
-    rowEl.className = "trend-row";
-    var label = b.n === 0 ? t("time.today") : t("time.inDays", { n: b.n });
-    var labelTitle = b.n === 0 ? ' title="' + escHtml(t("dashboard.futureDueTodayHint")) + '"' : "";
-    rowEl.innerHTML =
-      '<span class="trend-label"' + labelTitle + '>' + escHtml(label) + '</span>' +
-      '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
-      '<span class="trend-count">' + b.cnt + '</span>';
-    wrap.appendChild(rowEl);
+  wrap.innerHTML = chartColumnsSvg({
+    width: chartWidth(wrap), cls: "due", hot: 0,
+    labels: buckets.map(function(b) { return b.n === 0 ? t("time.today") : t("chart.dayShort", { n: b.n }); }),
+    values: buckets.map(function(b) { return b.cnt; }),
+    titles: buckets.map(function(b) { return (b.n === 0 ? t("dashboard.futureDueTodayHint") : t("time.inDays", { n: b.n })) + ": " + b.cnt; })
   });
 }
 

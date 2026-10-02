@@ -3777,18 +3777,11 @@ code {
    ANALYTICS SCREEN
    ============================ */
 
-.heatmap-wrap { padding: 4px 0; min-width: max-content; }
-.heatmap-body { display: flex; gap: 6px; }
-.heatmap-scroll { display: flex; flex-direction: column; }
-.heatmap-months { display: flex; gap: 3px; margin-bottom: 4px; height: 14px; }
-.heatmap-month-label { width: 16px; font-size: 0.625rem; line-height: 14px; color: var(--text2); white-space: nowrap; overflow: visible; display: inline-block; }
-.heatmap-daylabels { display: flex; flex-direction: column; flex-shrink: 0; position: sticky; left: 0; background: var(--surface); z-index: 1; }
-.heatmap-daylabels-spacer { display: block; height: 14px; margin-bottom: 4px; }
-.heatmap-daylabel-col { display: flex; flex-direction: column; gap: 3px; }
-.heatmap-day-label { width: 24px; height: 13px; font-size: 0.625rem; line-height: 13px; color: var(--text2); text-align: right; }
-.heatmap-grid { display: flex; gap: 3px; }
-.heatmap-col { display: flex; flex-direction: column; gap: 3px; }
-.heatmap-cell { width: 13px; height: 13px; border-radius: 2px; }
+.heatmap-wrap { padding: 4px 0; }
+.heatmap { display: grid; gap: 3px; align-items: center; justify-content: start; }
+.heatmap-month-label { font-size: 0.625rem; line-height: 14px; color: var(--text2); white-space: nowrap; overflow: visible; width: 0; }
+.heatmap-day-label { font-size: 0.625rem; color: var(--text2); text-align: right; padding-right: 4px; }
+.heatmap-cell { display: block; width: 100%; aspect-ratio: 1; border-radius: 3px; }
 .heat-empty { background: transparent; }
 .heat-0 { background: var(--surface2, var(--surface)); border: 1px solid var(--border); }
 .heat-1 { background: #bbf7d0; }
@@ -3831,34 +3824,82 @@ code {
 }
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
 
-.analytics-charts-grid {
-  /* Masonry via CSS multi-column: chart cards vary a lot in natural height (a calendar
-     heatmap vs. a 15-row bar list vs. a single number), so a uniform grid either stretches
-     short cards into big empty boxes or leaves whole cells blank at the end of a row.
-     Columns pack each card into whichever column has room next, eliminating both.
-     2 columns (not 3): with only 4 cards, the browser can only choose between 3 possible
-     break points, so 2 wide columns balance total height far better than 3 narrow ones —
-     verified live, ~80px of leftover height difference vs. ~350px at 3 columns. */
-  columns: 2 320px;
-  column-gap: 16px;
-  margin-bottom: 16px;
-}
-.analytics-chart-card {
-  text-align: left;
-  break-inside: avoid;
-  margin-bottom: 16px;
-}
+/* Study charts: a headline row, four weekly charts in a row, then the heatmap, forecast and
+   intervals, with the grade split across the bottom. A fixed grid replaced the old two-column
+   masonry once every chart turned upright and took about the same height. */
+.chart-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.chart-kpi { display: grid; gap: 2px; text-align: left; padding: 12px 14px; }
+.chart-kpi-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text2); }
+.chart-kpi-value { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+.chart-kpi-sub { font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.chart-delta.up { color: var(--success); }
+.chart-delta.down { color: var(--danger); }
+.chart-delta.flat { color: var(--text); }
+.analytics-charts-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.analytics-charts-grid.is-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.analytics-chart-card { text-align: left; min-width: 0; }
+.analytics-chart-card.is-wide { grid-column: 1 / -1; }
 .analytics-chart-title {
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text2);
-  margin: 0 0 12px;
+  margin: 0 0 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-@media (max-width: 900px) {
-  .analytics-charts-grid { columns: 1; }
+.analytics-chart-sub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text3); }
+@media (max-width: 1200px) {
+  .analytics-charts-grid.is-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@media (max-width: 760px) {
+  .analytics-charts-grid, .analytics-charts-grid.is-four { grid-template-columns: minmax(0, 1fr); }
+}
+.chart-svg { display: block; width: 100%; height: auto; max-width: 100%; overflow: visible; }
+.chart-svg text { font-size: 10px; fill: var(--text2); font-family: inherit; }
+.chart-grid { stroke: var(--border); stroke-width: 1; }
+.chart-bar-answers, .chart-bar-due { fill: color-mix(in srgb, #7c5cc4 45%, var(--surface)); }
+.chart-bar-answers.is-hot, .chart-bar-due.is-hot { fill: #7c5cc4; }
+.chart-bar-new, .chart-bar-srs { fill: color-mix(in srgb, #2f8a52 45%, var(--surface)); }
+.chart-bar-new.is-hot, .chart-bar-srs { fill: #2f8a52; }
+.chart-line { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.chart-line-accuracy { stroke: #a8740a; }
+.chart-dot-accuracy { fill: #a8740a; }
+.chart-area-accuracy { fill: color-mix(in srgb, #a8740a 14%, transparent); }
+.chart-line-time { stroke: #2f5f8f; }
+.chart-dot-time { fill: #2f5f8f; }
+.chart-area-time { fill: color-mix(in srgb, #2f5f8f 14%, transparent); }
+:root[data-theme="dark"] .chart-bar-answers, :root[data-theme="dark"] .chart-bar-due { fill: #5a4a86; }
+:root[data-theme="dark"] .chart-bar-answers.is-hot, :root[data-theme="dark"] .chart-bar-due.is-hot { fill: #b9a2f0; }
+:root[data-theme="dark"] .chart-bar-new, :root[data-theme="dark"] .chart-bar-srs { fill: #2f5a3c; }
+:root[data-theme="dark"] .chart-bar-new.is-hot, :root[data-theme="dark"] .chart-bar-srs { fill: #7fd69a; }
+:root[data-theme="dark"] .chart-line-accuracy { stroke: #e8c068; }
+:root[data-theme="dark"] .chart-dot-accuracy { fill: #e8c068; }
+:root[data-theme="dark"] .chart-area-accuracy { fill: color-mix(in srgb, #e8c068 14%, transparent); }
+:root[data-theme="dark"] .chart-line-time { stroke: #8fb4e0; }
+:root[data-theme="dark"] .chart-dot-time { fill: #8fb4e0; }
+:root[data-theme="dark"] .chart-area-time { fill: color-mix(in srgb, #8fb4e0 14%, transparent); }
+.chart-stack { display: flex; gap: 2px; height: 18px; border-radius: 5px; overflow: hidden; }
+.chart-stack-seg { min-width: 2px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.chart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.grade-again { background: #c0533f; }
+.grade-hard { background: #c99a2e; }
+.grade-medium { background: #3f8f8a; }
+.grade-easy { background: #2f8a52; }
+.grade-quiz-correct { background: #4a7ab0; }
+.grade-quiz-incorrect { background: #8b6cc9; }
+.grade-ungraded { background: #9a958e; }
+:root[data-theme="dark"] .grade-again { background: #ef8a73; }
+:root[data-theme="dark"] .grade-hard { background: #e8c068; }
+:root[data-theme="dark"] .grade-medium { background: #6cc4bd; }
+:root[data-theme="dark"] .grade-easy { background: #7fd69a; }
+:root[data-theme="dark"] .grade-quiz-correct { background: #8fb4e0; }
+:root[data-theme="dark"] .grade-quiz-incorrect { background: #b9a2f0; }
+:root[data-theme="dark"] .grade-ungraded { background: #77736e; }
 
 .analytics-lesson-list { display: flex; flex-direction: column; gap: 8px; }
 .analytics-lesson-row {

@@ -311,38 +311,41 @@
     <button class="pill" data-period="90" data-i18n="dashboard.days90">90 days</button>
   </div>
   <p class="dash-period-note" data-i18n="dashboard.periodNote">Applies to the charts in this section only — the stats above are all-time.</p>
-  <div class="analytics-charts-grid">
-    <div class="stat-card analytics-chart-card" style="overflow-x:auto">
-      <h3 class="analytics-chart-title" id="dash-heatmap-title">60-Day Study Heatmap</h3>
-      <div id="dash-heatmap-wrap" class="heatmap-wrap"></div>
-    </div>
+  <div id="dash-chart-kpis" class="chart-kpis"></div>
+  <div class="analytics-charts-grid is-four">
     <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title" data-i18n="dashboard.weeklyTrend">Weekly Study Trend</h3>
+      <h3 class="analytics-chart-title"><span data-i18n="dashboard.weeklyTrend">Answers</span><span class="analytics-chart-sub" data-i18n="chart.perWeek">per week</span></h3>
       <div id="dash-trend-wrap"></div>
     </div>
     <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title" data-i18n="dashboard.newCardsTrend">New Cards Trend</h3>
+      <h3 class="analytics-chart-title"><span data-i18n="dashboard.retentionTrend">Accuracy</span><span class="analytics-chart-sub" data-i18n="chart.perWeek">per week</span></h3>
+      <div id="dash-retention-wrap"></div>
+    </div>
+    <div class="stat-card analytics-chart-card">
+      <h3 class="analytics-chart-title"><span data-i18n="dashboard.newCardsTrend">New cards</span><span class="analytics-chart-sub" data-i18n="chart.perWeek">per week</span></h3>
       <div id="dash-newcards-trend-wrap"></div>
     </div>
     <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title" data-i18n="dashboard.srsDistribution">SRS Interval Distribution</h3>
-      <div id="dash-srs-wrap"></div>
+      <h3 class="analytics-chart-title"><span data-i18n="dashboard.reviewTimeTrend">Answer time</span><span class="analytics-chart-sub" data-i18n="chart.perWeek">per week</span></h3>
+      <div id="dash-reviewtime-wrap"></div>
+    </div>
+  </div>
+  <div class="analytics-charts-grid">
+    <div class="stat-card analytics-chart-card">
+      <h3 class="analytics-chart-title" id="dash-heatmap-title">60-Day Study Heatmap</h3>
+      <div id="dash-heatmap-wrap" class="heatmap-wrap"></div>
     </div>
     <div class="stat-card analytics-chart-card">
       <h3 class="analytics-chart-title" id="dash-future-due-title">Upcoming Reviews</h3>
       <div id="dash-future-due-wrap"></div>
     </div>
     <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title" data-i18n="dashboard.retentionTrend">Retention Over Time</h3>
-      <div id="dash-retention-wrap"></div>
+      <h3 class="analytics-chart-title"><span data-i18n="dashboard.srsDistribution">Memory intervals</span></h3>
+      <div id="dash-srs-wrap"></div>
     </div>
-    <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title" data-i18n="dashboard.gradeDistribution">Review Grade Distribution</h3>
+    <div class="stat-card analytics-chart-card is-wide">
+      <h3 class="analytics-chart-title"><span data-i18n="dashboard.gradeDistribution">How you answered</span></h3>
       <div id="dash-grade-wrap"></div>
-    </div>
-    <div class="stat-card analytics-chart-card">
-      <h3 class="analytics-chart-title" data-i18n="dashboard.reviewTimeTrend">Average Review Time</h3>
-      <div id="dash-reviewtime-wrap"></div>
     </div>
   </div>
 
