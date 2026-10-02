@@ -13,6 +13,17 @@ function genId() {
 
 const MAX_DURATION_MS = 5 * 60 * 1000;
 
+// "Due zero" needs to know that a day ended with nothing due, which no table remembers, so the
+// answer that empties the due list writes it down. Today is the UTC day every stat uses.
+function recordDueZero(userId) {
+  const due = db.prepare(
+    "SELECT 1 FROM card_states cs JOIN cards ca ON ca.id = cs.card_id JOIN lessons l ON l.id = ca.lesson_id " +
+    "JOIN classes c ON c.id = l.class_id WHERE cs.user_id = ? AND c.user_id = ? AND c.archived = 0 " +
+    "AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= strftime('%s','now') LIMIT 1"
+  ).get(userId, userId);
+  if (!due) db.prepare("INSERT OR IGNORE INTO study_events (user_id, kind, ref) VALUES (?, 'due_zero', date('now'))").run(userId);
+}
+
 // A backgrounded/idle tab can leave a card "shown" for hours — clamp instead of trusting
 // the raw client timestamp delta, so a single outlier can't blow up a "time studied" total.
 function clampDuration(durationMs) {
@@ -22,7 +33,7 @@ function clampDuration(durationMs) {
 
 // POST /api/attempts
 router.post("/", requireAuth, (req, res) => {
-  const { cardId, correct, source, grade, durationMs, clientId } = req.body;
+  const { cardId, correct, source, grade, durationMs, clientId, typed } = req.body;
   if (!cardId || correct === undefined || !source)
     return res.status(400).json({ error: "cardId, correct, source required" });
   if (clientId !== undefined && (typeof clientId !== "string" || !/^c[a-z0-9]{20}$/.test(clientId)))
@@ -62,9 +73,9 @@ router.post("/", requireAuth, (req, res) => {
     const notDue = !!(stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now);
 
     db.prepare(
-      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade, prev_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade, prev_state, typed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     ).run(clientId || genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null,
-          snapshotState(stateRow, notDue));
+          snapshotState(stateRow, notDue), typed === true ? 1 : null);
 
     // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
     if (notDue) {
@@ -101,6 +112,7 @@ router.post("/", requireAuth, (req, res) => {
     return { ok: true, srs_due_at: dueAt, capped: capped, notDue: false };
   })();
 
+  recordDueZero(userId);
   res.status(201).json(result);
 });
 

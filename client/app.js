@@ -229,6 +229,98 @@ Object.assign(TRANSLATIONS.en, {
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
+  "ach.nav": "Achievements",
+  "ach.filterAll": "All",
+  "ach.earnedCount": "{n} of {total} earned",
+  "ach.earnedOn": "Earned {date}",
+  "ach.wasEarned": "was earned",
+  "ach.waiting": "{n} waiting",
+  "ach.notYet": "Not yet",
+  "ach.goalOff": "Daily goal is off",
+  "ach.next": "Next: {name} · {tier}",
+  "ach.allLink": "All achievements →",
+  "ach.allEarned": "Every achievement earned.",
+  "ach.keepGoing": "Keep studying to start the next one.",
+  "ach.tier1": "bronze",
+  "ach.tier2": "silver",
+  "ach.tier3": "gold",
+  "ach.earnedLine": "{name} earned",
+  "ach.earnedTierLine": "{name} · {tier}, {threshold}",
+  "ach.newCount": "{n} new",
+  "ach.loadFailed": "Couldn't load achievements.",
+  "ach.progress": "{cur} / {target} {unit}",
+  "ach.progressPct": "{cur}% of {target}%",
+  "ach.count": "{n} {unit}",
+  "ach.unit.days": "days",
+  "ach.unit.lessons": "lessons",
+  "ach.unit.cards": "cards",
+  "ach.unit.words": "words",
+  "ach.unit.typed": "typed",
+  "ach.unit.hours": "hours",
+  "ach.unit.fixes": "fixes",
+  "ach.unit.weeks": "weeks",
+  "ach.unit.reviews": "reviews",
+  "ach.unit.min": "min",
+  "ach.unit.classes": "classes",
+  "ach.group.showingUp": "Showing up",
+  "ach.group.mastery": "Mastery",
+  "ach.group.effort": "Effort",
+  "ach.group.method": "How you study",
+  "ach.group.curiosity": "Curiosity",
+  "ach.dayStreak.name": "Day streak",
+  "ach.dayStreak.desc": "Study on consecutive days. Your best streak counts.",
+  "ach.daysStudied.name": "Days studied",
+  "ach.daysStudied.desc": "Every day you studied, in total.",
+  "ach.goalKeeper.name": "Goal keeper",
+  "ach.goalKeeper.desc": "Reach your daily goal on consecutive days.",
+  "ach.aboveAverage.name": "Above your average",
+  "ach.aboveAverage.desc": "Study longer than your 30-day average, day after day.",
+  "ach.comeback.name": "Comeback",
+  "ach.comeback.desc": "Come back after a week or more away, then study three days running.",
+  "ach.steadyRhythm.name": "Steady rhythm",
+  "ach.steadyRhythm.desc": "Study five days a week, four weeks in a row.",
+  "ach.dueZero.name": "Due zero",
+  "ach.dueZero.desc": "Clear every due card, on consecutive days.",
+  "ach.classMastered.name": "Class mastered",
+  "ach.classMastered.desc": "Every card in a class mastered: due 21 days or more out.",
+  "ach.lessonMastered.name": "Lesson mastered",
+  "ach.lessonMastered.desc": "Lessons with every card mastered.",
+  "ach.longTermCards.name": "Cards in long-term memory",
+  "ach.longTermCards.desc": "Cards mastered: due 21 days or more out.",
+  "ach.longMemory.name": "Long memory",
+  "ach.longMemory.desc": "90% right over your last 50 reviews of cards unseen for a month.",
+  "ach.vocabInUse.name": "Vocabulary in use",
+  "ach.vocabInUse.desc": "Words you saved, now mastered.",
+  "ach.toughOne.name": "Tough one tamed",
+  "ach.toughOne.desc": "Cards marked Learning three times, later answered Confident.",
+  "ach.leechCleared.name": "Leech cleared",
+  "ach.leechCleared.desc": "A card forgotten eight times, back in review.",
+  "ach.recallCleared.name": "Recall cleared",
+  "ach.recallCleared.desc": "Needs Recall emptied: no card known only from quizzes is due.",
+  "ach.writer.name": "Writer",
+  "ach.writer.desc": "Answers typed in Write mode.",
+  "ach.deepSession.name": "Deep session",
+  "ach.deepSession.desc": "One session of 25 minutes or more, with no break over 10 minutes.",
+  "ach.hoursStudied.name": "Hours studied",
+  "ach.hoursStudied.desc": "Time spent answering cards.",
+  "ach.recallFirst.name": "Recall over recognition",
+  "ach.recallFirst.desc": "A week of 30+ answers, 70% of them flashcards rather than quizzes.",
+  "ach.mixedPractice.name": "Mixed practice",
+  "ach.mixedPractice.desc": "One session that mixes three or more classes.",
+  "ach.secondLook.name": "Second look",
+  "ach.secondLook.desc": "Go back to a quiz question you got wrong.",
+  "ach.cardFixer.name": "Card fixer",
+  "ach.cardFixer.desc": "Edit a card while studying it.",
+  "ach.wordCollector.name": "Word collector",
+  "ach.wordCollector.desc": "Words saved to your vocabulary inbox.",
+  "ach.explorer.name": "Explorer",
+  "ach.explorer.desc": "Study three or more classes in one week.",
+  "ach.builder.name": "Builder",
+  "ach.builder.desc": "Cards you made yourself.",
+  "ach.fromTheBook.name": "From the book",
+  "ach.fromTheBook.desc": "Study a card made from a book in KnowledgeApp.",
+  "ach.freshStart.name": "Fresh start",
+  "ach.freshStart.desc": "Cards you made that graduated to review.",
   "nav.selectClasses": "Select Classes",
   "sidebar.yourClasses": "Your Classes",
   "sidebar.newClass": "New Class",
@@ -1037,6 +1129,98 @@ Object.assign(TRANSLATIONS.vi, {
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
+  "ach.nav": "Thành tích",
+  "ach.filterAll": "Tất cả",
+  "ach.earnedCount": "Đã đạt {n} / {total}",
+  "ach.earnedOn": "Đạt ngày {date}",
+  "ach.wasEarned": "từng đạt",
+  "ach.waiting": "{n} thẻ đang chờ",
+  "ach.notYet": "Chưa có",
+  "ach.goalOff": "Mục tiêu ngày đang tắt",
+  "ach.next": "Tiếp theo: {name} · {tier}",
+  "ach.allLink": "Tất cả thành tích →",
+  "ach.allEarned": "Bạn đã đạt mọi thành tích.",
+  "ach.keepGoing": "Tiếp tục học để bắt đầu thành tích kế tiếp.",
+  "ach.tier1": "đồng",
+  "ach.tier2": "bạc",
+  "ach.tier3": "vàng",
+  "ach.earnedLine": "Đạt {name}",
+  "ach.earnedTierLine": "{name} · {tier}, {threshold}",
+  "ach.newCount": "{n} mới",
+  "ach.loadFailed": "Không tải được thành tích.",
+  "ach.progress": "{cur} / {target} {unit}",
+  "ach.progressPct": "{cur}% / {target}%",
+  "ach.count": "{n} {unit}",
+  "ach.unit.days": "ngày",
+  "ach.unit.lessons": "bài",
+  "ach.unit.cards": "thẻ",
+  "ach.unit.words": "từ",
+  "ach.unit.typed": "lần gõ",
+  "ach.unit.hours": "giờ",
+  "ach.unit.fixes": "lần sửa",
+  "ach.unit.weeks": "tuần",
+  "ach.unit.reviews": "lượt ôn",
+  "ach.unit.min": "phút",
+  "ach.unit.classes": "lớp",
+  "ach.group.showingUp": "Chuyên cần",
+  "ach.group.mastery": "Thành thạo",
+  "ach.group.effort": "Nỗ lực",
+  "ach.group.method": "Cách học",
+  "ach.group.curiosity": "Khám phá",
+  "ach.dayStreak.name": "Chuỗi ngày",
+  "ach.dayStreak.desc": "Học liên tục nhiều ngày. Tính chuỗi dài nhất của bạn.",
+  "ach.daysStudied.name": "Số ngày học",
+  "ach.daysStudied.desc": "Tổng số ngày bạn đã học.",
+  "ach.goalKeeper.name": "Giữ mục tiêu",
+  "ach.goalKeeper.desc": "Đạt mục tiêu ngày nhiều ngày liên tiếp.",
+  "ach.aboveAverage.name": "Vượt mức trung bình",
+  "ach.aboveAverage.desc": "Học lâu hơn mức trung bình 30 ngày, ngày này qua ngày khác.",
+  "ach.comeback.name": "Trở lại",
+  "ach.comeback.desc": "Quay lại sau một tuần trở lên, rồi học ba ngày liền.",
+  "ach.steadyRhythm.name": "Nhịp đều đặn",
+  "ach.steadyRhythm.desc": "Học năm ngày mỗi tuần, bốn tuần liền.",
+  "ach.dueZero.name": "Không còn thẻ đến hạn",
+  "ach.dueZero.desc": "Ôn hết thẻ đến hạn, nhiều ngày liên tiếp.",
+  "ach.classMastered.name": "Thành thạo một lớp",
+  "ach.classMastered.desc": "Mọi thẻ trong một lớp đều thành thạo: hạn ôn từ 21 ngày trở lên.",
+  "ach.lessonMastered.name": "Thành thạo bài học",
+  "ach.lessonMastered.desc": "Số bài có mọi thẻ đều thành thạo.",
+  "ach.longTermCards.name": "Thẻ trong trí nhớ dài hạn",
+  "ach.longTermCards.desc": "Số thẻ thành thạo: hạn ôn từ 21 ngày trở lên.",
+  "ach.longMemory.name": "Trí nhớ bền",
+  "ach.longMemory.desc": "Đúng 90% trong 50 lượt ôn gần nhất của thẻ đã một tháng không gặp.",
+  "ach.vocabInUse.name": "Từ vựng đã thuộc",
+  "ach.vocabInUse.desc": "Số từ bạn đã lưu và nay đã thành thạo.",
+  "ach.toughOne.name": "Chinh phục thẻ khó",
+  "ach.toughOne.desc": "Thẻ bị đánh dấu Đang học ba lần, sau đó trả lời Rất chắc chắn.",
+  "ach.leechCleared.name": "Vượt qua thẻ dai dẳng",
+  "ach.leechCleared.desc": "Một thẻ đã quên tám lần, nay trở lại ôn tập.",
+  "ach.recallCleared.name": "Hết thẻ cần nhớ lại",
+  "ach.recallCleared.desc": "Mục Cần nhớ lại trống: không còn thẻ chỉ đúng qua trắc nghiệm đến hạn.",
+  "ach.writer.name": "Người viết",
+  "ach.writer.desc": "Số câu trả lời gõ trong chế độ Viết.",
+  "ach.deepSession.name": "Phiên học sâu",
+  "ach.deepSession.desc": "Một phiên từ 25 phút trở lên, không nghỉ quá 10 phút.",
+  "ach.hoursStudied.name": "Số giờ học",
+  "ach.hoursStudied.desc": "Thời gian bạn đã trả lời thẻ.",
+  "ach.recallFirst.name": "Nhớ lại hơn nhận diện",
+  "ach.recallFirst.desc": "Một tuần từ 30 câu trả lời, 70% là thẻ ghi nhớ thay vì trắc nghiệm.",
+  "ach.mixedPractice.name": "Luyện tập xen kẽ",
+  "ach.mixedPractice.desc": "Một phiên trộn từ ba lớp trở lên.",
+  "ach.secondLook.name": "Xem lại",
+  "ach.secondLook.desc": "Quay lại một câu trắc nghiệm bạn đã trả lời sai.",
+  "ach.cardFixer.name": "Sửa thẻ",
+  "ach.cardFixer.desc": "Sửa một thẻ ngay khi đang học.",
+  "ach.wordCollector.name": "Sưu tầm từ",
+  "ach.wordCollector.desc": "Số từ đã lưu vào hộp từ vựng.",
+  "ach.explorer.name": "Nhà khám phá",
+  "ach.explorer.desc": "Học từ ba lớp trở lên trong một tuần.",
+  "ach.builder.name": "Người tạo thẻ",
+  "ach.builder.desc": "Số thẻ bạn tự tạo.",
+  "ach.fromTheBook.name": "Từ trong sách",
+  "ach.fromTheBook.desc": "Học một thẻ tạo từ sách trong KnowledgeApp.",
+  "ach.freshStart.name": "Khởi đầu mới",
+  "ach.freshStart.desc": "Số thẻ bạn tạo đã chuyển sang ôn tập.",
   "nav.selectClasses": "Chọn lớp",
   "sidebar.yourClasses": "Lớp của bạn",
   "sidebar.newClass": "Lớp mới",
@@ -4909,6 +5093,278 @@ document.getElementById("btn-vocabulary-back").addEventListener("click", functio
 document.getElementById("btn-vocabulary-add").addEventListener("click", openAddVocabularyModal);
 document.getElementById("btn-vocabulary-add-save").addEventListener("click", addVocabularyRequest);
 
+/* ============================
+   ACHIEVEMENTS
+   The server works out where each one stands (routes/achievements.js) and records a tier the
+   first time it is seen; this side only draws them and reports the few things only it sees.
+   ============================ */
+var ACH_GROUPS = ["showingUp", "mastery", "effort", "method", "curiosity"];
+var ACH_ICONS = {
+  dayStreak: "flame", daysStudied: "cal", goalKeeper: "goal", aboveAverage: "up", comeback: "back",
+  steadyRhythm: "wave", dueZero: "zero", classMastered: "star", lessonMastered: "book",
+  longTermCards: "brain", longMemory: "bars", vocabInUse: "abc", toughOne: "mtn", leechCleared: "bug",
+  recallCleared: "recall", writer: "pen", deepSession: "clock", hoursStudied: "hour",
+  recallFirst: "head", mixedPractice: "mix", secondLook: "eye", cardFixer: "wrench",
+  wordCollector: "words", explorer: "compass", builder: "build", fromTheBook: "shelf", freshStart: "seed"
+};
+var ACH_ICON_PATHS = {
+  flame: '<path d="M12 3c1.5 3.9 6 5.4 6 10.5a6 6 0 0 1-12 0c0-2.6 1.4-3.9 2.4-5.1.3 2 1.2 3 2.4 3.4C10.5 8.4 11.1 5.1 12 3z"/>',
+  cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  goal: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  up: '<path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/>',
+  back: '<path d="M5 12a7 7 0 1 0 2.1-5"/><path d="M5 4v4h4"/>',
+  wave: '<path d="M3 12h3l2-5 4 10 3-7 2 2h4"/>',
+  zero: '<circle cx="12" cy="12" r="8"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+  star: '<path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9 6.6 19.8l1.1-6.1L3.2 9.4l6.1-.8z"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/>',
+  brain: '<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a3 3 0 0 0-3-1zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/>',
+  bars: '<path d="M4 20h16M6 20v-6M12 20V8M18 20V4"/>',
+  abc: '<path d="M4 18l4-12 4 12M5.5 14h5M15 6v12h3a3 3 0 0 0 0-6h-3"/>',
+  mtn: '<path d="M3 19l6-11 4 6 3-4 5 9z"/>',
+  bug: '<rect x="7" y="8" width="10" height="11" rx="5"/><path d="M12 8V5M7 13H3M21 13h-4M8 18l-3 2M16 18l3 2"/>',
+  recall: '<circle cx="12" cy="12" r="8"/><path d="M8 12h8"/>',
+  pen: '<path d="M4 18l12-12 3 3L7 21H4z"/><path d="M14 4l2-2 4 4-2 2"/>',
+  clock: '<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',
+  hour: '<path d="M7 3h10M7 21h10M8 3c0 5 8 6 8 9s-8 4-8 9M16 3c0 5-8 6-8 9"/>',
+  head: '<circle cx="12" cy="8" r="4"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6"/>',
+  mix: '<path d="M4 7h4l8 10h4M4 17h4l8-10h4"/>',
+  eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  wrench: '<path d="M14.5 6.5a4 4 0 0 0 5 5L13 18l-3 3-4-4 3-3 6.5-6.5a4 4 0 0 1-1-1z"/>',
+  words: '<path d="M5 3h10l4 4v14H5z"/><path d="M8 11h8M8 15h5"/>',
+  compass: '<circle cx="12" cy="12" r="8"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  build: '<rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/><rect x="8.5" y="4" width="7" height="7" rx="1"/>',
+  shelf: '<path d="M5 4v16M9 4v16M13 5l4 15M3 20h18"/>',
+  seed: '<path d="M12 20v-8M12 12c0-4 3-7 7-7 0 4-3 7-7 7zM12 14c0-3-2-5-6-5 0 3 2 5 6 5z"/>'
+};
+// What a plain count is counting, where the server sends no unit of its own.
+var ACH_UNITS = {
+  dayStreak: "days", daysStudied: "days", goalKeeper: "days", aboveAverage: "days", dueZero: "days",
+  lessonMastered: "lessons", longTermCards: "cards", vocabInUse: "words", toughOne: "cards",
+  writer: "typed", hoursStudied: "hours", cardFixer: "fixes", wordCollector: "words",
+  builder: "cards", freshStart: "cards"
+};
+
+function achIcon(key) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    (ACH_ICON_PATHS[ACH_ICONS[key]] || ACH_ICON_PATHS.star) + '</svg>';
+}
+
+// Medal colour for a tier: bronze first, gold at the top tier of a ladder, silver between.
+// A single-step achievement stays bronze, as the design preview showed. A lost one keeps
+// the colour of what it was, faded by CSS.
+function achMedalTier(tier, steps) {
+  if (!tier) return 0;
+  if (steps === 1 || tier === 1) return 1;
+  return tier >= steps ? 3 : 2;
+}
+
+function achThresholdLabel(item, tier) {
+  if (!tier || item.tiers.length === 1) return "";
+  var n = item.tiers[tier - 1];
+  return item.key === "hoursStudied" ? n + "h" : String(n);
+}
+
+function achDate(sec) {
+  return new Date(sec * 1000).toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US", { day: "numeric", month: "short" });
+}
+
+function achCountText(cur, target, unit) {
+  if (unit === "%") return t("ach.progressPct", { cur: cur, target: target });
+  return t("ach.progress", { cur: cur, target: target, unit: unit ? t("ach.unit." + unit) : "" }).trim();
+}
+
+// The line under a medal's name: how far along, when it was earned, or why it is not moving.
+function achProgressText(item) {
+  var s = item.show || {};
+  var text;
+  if (s.off) text = t("ach.goalOff");
+  else if (s.unit === "waiting") text = s.cur > 0 ? t("ach.waiting", { n: s.cur }) : item.tier ? (item.earnedAt ? t("ach.earnedOn", { date: achDate(item.earnedAt) }) : "") : t("ach.notYet");
+  else if (item.next == null) {
+    text = item.tiers.length > 1 ? t("ach.count", { n: item.value, unit: ACH_UNITS[item.key] ? t("ach.unit." + ACH_UNITS[item.key]) : "" }).trim()
+      : item.earnedAt ? t("ach.earnedOn", { date: achDate(item.earnedAt) }) : "";
+  } else if (s.target && (s.unit || item.tiers.length > 1)) text = achCountText(s.cur, s.target, s.unit || ACH_UNITS[item.key]);
+  else text = item.value > 0 ? achCountText(item.value, item.next, ACH_UNITS[item.key]) : t("ach.notYet");
+  return item.lost ? t("ach.wasEarned") + (text ? " · " + text : "") : text;
+}
+
+function achBadgeHtml(item) {
+  var shownTier = item.lost && !item.tier ? 1 : item.tier;
+  var medal = achMedalTier(shownTier, item.tiers.length);
+  var label = achThresholdLabel(item, shownTier);
+  var cls = "ach-badge " + (medal ? "ach-t" + medal : "ach-locked") + (item.lost ? " ach-lost" : "");
+  var name = t("ach." + item.key + ".name");
+  var desc = t("ach." + item.key + ".desc");
+  return '<div class="' + cls + '" data-key="' + escHtml(item.key) + '">' +
+    '<div class="ach-medal">' + achIcon(item.key) + (label ? '<span class="ach-tn">' + escHtml(label) + '</span>' : '') + '</div>' +
+    '<div class="ach-name">' + escHtml(name) + '</div>' +
+    '<div class="ach-desc">' + escHtml(desc) + '</div>' +
+    '<div class="ach-sub">' + escHtml(achProgressText(item)) + '</div>' +
+    (item.next != null && !(item.show && item.show.off)
+      ? '<div class="ach-prog" aria-hidden="true"><i style="width:' + Math.round(Math.max(0, Math.min(1, item.progress || 0)) * 100) + '%"></i></div>' : '') +
+  '</div>';
+}
+
+function achEarnedCount(items) {
+  return items.filter(function(it) { return it.tier > 0; }).length;
+}
+
+// The closest unfinished one, for the Dashboard strip. Ones that cannot move (the daily
+// goal is off) are skipped.
+function achNextUp(items) {
+  var open = items.filter(function(it) { return it.next != null && !(it.show && it.show.off) && it.progress > 0 && it.progress < 1; });
+  open.sort(function(a, b) { return b.progress - a.progress; });
+  return open[0] || null;
+}
+
+// Medals for the session-complete screen: what rose since the snapshot taken when the
+// session began. A lossable one climbing back to a tier it held before is not new; the
+// server only stamps a fresh earnedAt when a tier beats the recorded best.
+function achNewlyEarned(before, items, max) {
+  if (!before) return [];
+  return items.filter(function(it) {
+    return before.tiers[it.key] !== undefined && it.tier > before.tiers[it.key] && it.earnedAt >= before.now;
+  }).slice(0, max || 3);
+}
+
+function achSnapshot(data) {
+  var tiers = {};
+  data.items.forEach(function(it) { tiers[it.key] = it.tier; });
+  return { now: data.now, tiers: tiers };
+}
+
+function achTierName(medal) {
+  return t("ach.tier" + medal);
+}
+
+function achEarnedLineText(item) {
+  var name = t("ach." + item.key + ".name");
+  if (item.tiers.length === 1) return t("ach.earnedLine", { name: name });
+  return t("ach.earnedTierLine", { name: name, tier: achTierName(achMedalTier(item.tier, item.tiers.length)), threshold: achThresholdLabel(item, item.tier) });
+}
+
+function achSeenKey() {
+  return "fc-ach-seen-" + (currentUser && currentUser.id);
+}
+
+// "New" means recorded after the page was last opened. The first fetch on a device marks
+// everything seen, so someone who has studied for a year is not greeted with 20 new medals.
+function updateAchievementsBadge(data) {
+  var badge = document.getElementById("sidebar-achievements-badge");
+  if (!badge || !data) return;
+  var seen = null;
+  try { seen = localStorage.getItem(achSeenKey()); } catch (_) {}
+  if (seen === null) { markAchievementsSeen(data.now); seen = String(data.now); }
+  var n = data.items.filter(function(it) { return it.tier > 0 && it.earnedAt && it.earnedAt > Number(seen); }).length;
+  badge.textContent = t("ach.newCount", { n: n });
+  badge.classList.toggle("hidden", n === 0);
+}
+
+function markAchievementsSeen(now) {
+  try { localStorage.setItem(achSeenKey(), String(now)); } catch (_) {}
+}
+
+function refreshAchievements() {
+  if (!IS_SERVER || !store.getAchievements) return Promise.resolve(null);
+  return store.getAchievements().then(function(data) {
+    state.achievements = data;
+    updateAchievementsBadge(data);
+    return data;
+  });
+}
+
+function recordStudyEvent(kind, ref) {
+  if (!IS_SERVER || !store.recordStudyEvent || !ref) return;
+  store.recordStudyEvent(kind, String(ref)).catch(function() {});
+}
+
+// Second look: going back to a quiz question that was answered wrong, to read it again.
+function noteQuizSecondLook() {
+  var card = state.quizCards[state.quizIndex];
+  var res = card && findQuizResult(card);
+  if (res && !res.correct) recordStudyEvent("second_look", card.id);
+}
+
+function openAchievementsScreen() {
+  showScreen("achievements");
+  var list = document.getElementById("ach-list");
+  var loadEl = document.getElementById("ach-loading");
+  var errEl = document.getElementById("ach-error");
+  loadEl.classList.toggle("hidden", !!state.achievements);
+  errEl.classList.add("hidden");
+  if (state.achievements) renderAchievementsPage(state.achievements);
+  refreshAchievements().then(function(data) {
+    loadEl.classList.add("hidden");
+    if (!data) return;
+    renderAchievementsPage(data);
+    markAchievementsSeen(data.now);
+    updateAchievementsBadge(data);
+  }).catch(function() {
+    loadEl.classList.add("hidden");
+    if (!state.achievements) { list.innerHTML = ""; errEl.classList.remove("hidden"); }
+  });
+}
+
+function renderAchievementsPage(data) {
+  var filter = state.achFilter || "all";
+  document.getElementById("ach-summary").textContent = t("ach.earnedCount", { n: achEarnedCount(data.items), total: data.items.length });
+  document.getElementById("ach-filters").innerHTML = ["all"].concat(ACH_GROUPS).map(function(g) {
+    return '<button type="button" class="pill' + (g === filter ? ' active' : '') + '" data-group="' + g + '" aria-pressed="' + (g === filter) + '">' +
+      escHtml(g === "all" ? t("ach.filterAll") : t("ach.group." + g)) + '</button>';
+  }).join('');
+  document.getElementById("ach-list").innerHTML = ACH_GROUPS.filter(function(g) { return filter === "all" || filter === g; }).map(function(g) {
+    var items = data.items.filter(function(it) { return it.group === g; });
+    if (!items.length) return '';
+    return '<section class="ach-group"><h3 class="ach-group-h">' + escHtml(t("ach.group." + g)) +
+      ' <span>' + achEarnedCount(items) + ' / ' + items.length + '</span></h3>' +
+      '<div class="ach-shelf">' + items.map(achBadgeHtml).join('') + '</div></section>';
+  }).join('');
+}
+
+function achStripHtml(data) {
+  var items = data.items;
+  var latest = items.filter(function(it) { return it.tier > 0 && !it.lost; })
+    .sort(function(a, b) { return (b.earnedAt || 0) - (a.earnedAt || 0); }).slice(0, 5);
+  var next = achNextUp(items);
+  var nextHtml = next
+    ? '<div class="ach-strip-next"><b>' + escHtml(t("ach.next", { name: t("ach." + next.key + ".name"), tier: achTierName(achMedalTier(next.tier + 1, next.tiers.length)) })) + '</b>' +
+      '<span>' + escHtml(achProgressText(next)) + '</span>' +
+      '<div class="ach-prog"><i style="width:' + Math.round(next.progress * 100) + '%"></i></div></div>'
+    : '<div class="ach-strip-next"><span>' + escHtml(achEarnedCount(items) === items.length ? t("ach.allEarned") : t("ach.keepGoing")) + '</span></div>';
+  return '<div class="ach-strip-count">' + achEarnedCount(items) + ' <small>/ ' + items.length + '</small></div>' +
+    (latest.length ? '<div class="ach-strip-medals">' + latest.map(function(it) {
+      return '<span class="ach-medal ach-t' + achMedalTier(it.tier, it.tiers.length) + '" title="' + escHtml(t("ach." + it.key + ".name")) + '">' + achIcon(it.key) + '</span>';
+    }).join('') + '</div>' : '') +
+    nextHtml +
+    '<button type="button" class="btn btn-ghost btn-sm ach-strip-link" id="btn-dash-achievements">' + escHtml(t("ach.allLink")) + '</button>';
+}
+
+function renderAchievementStrip() {
+  var strip = document.getElementById("dash-ach-strip");
+  if (!strip) return;
+  if (!IS_SERVER) { strip.classList.add("hidden"); return; }
+  refreshAchievements().then(function(data) {
+    if (!data) return;
+    strip.innerHTML = achStripHtml(data);
+    strip.classList.remove("hidden");
+  }).catch(function() { strip.classList.add("hidden"); });
+}
+
+document.getElementById("ach-filters").addEventListener("click", function(e) {
+  var btn = e.target.closest("[data-group]");
+  if (!btn || !state.achievements) return;
+  state.achFilter = btn.dataset.group;
+  renderAchievementsPage(state.achievements);
+});
+
+document.getElementById("dash-ach-strip").addEventListener("click", function(e) {
+  if (e.target.closest("#btn-dash-achievements")) openAchievementsScreen();
+});
+
+document.getElementById("btn-achievements-back").addEventListener("click", function() {
+  renderHome();
+  showScreen("home");
+});
+
 document.getElementById("btn-upstream-banner-review").addEventListener("click", openUpstreamScreen);
 
 document.getElementById("upstream-filter").addEventListener("click", function(e) {
@@ -5343,8 +5799,9 @@ function openAddCard() {
   }
 }
 
-function openEditCard(cardId, presetCard) {
+function openEditCard(cardId, presetCard, fromStudy) {
   state.editingCardId = cardId;
+  state.editFromStudy = !!fromStudy;
   // A study/quiz session may span multiple lessons, so state.currentLesson can be the wrong
   // lesson for the card actually on screen — reuse the card object already in memory instead
   // of refetching by (possibly mismatched) lesson id.
@@ -5402,6 +5859,7 @@ function openEditCard(cardId, presetCard) {
 // before — but if the edit was opened from mid-Flashcard/Quiz session, that in-memory array
 // won't pick up the change until the session restarts unless we patch it here too.
 function syncEditedCardIntoStudySession(cardId, data) {
+  if (state.editFromStudy) recordStudyEvent("card_fix", cardId);
   var fcCard = state.studyCards && state.studyCards.find(function(c) { return c.id === cardId; });
   if (fcCard) {
     fcCard.data = data;
@@ -6232,6 +6690,12 @@ function beginStudySession() {
       if (state.sessionToken === token) state.sessionTodayAtStart = today;
     }).catch(function() {});
   }
+  state.sessionAchAtStart = null;
+  if (IS_SERVER && store.getAchievements) {
+    store.getAchievements().then(function(data) {
+      if (state.sessionToken === token) state.sessionAchAtStart = achSnapshot(data);
+    }).catch(function() {});
+  }
 }
 
 // Returns what was added, so undoing a grade can take the same amount back off.
@@ -6310,17 +6774,28 @@ function renderSessionDone(id, ratio, tiles) {
     }).join('') + '</div>' +
     '<div class="session-cheers" aria-live="polite"></div>';
   var before = state.sessionTodayAtStart;
-  if (!IS_SERVER || !store.getToday || !before) return;
+  var achBefore = state.sessionAchAtStart;
+  if (!IS_SERVER || !store.getToday || (!before && !achBefore)) return;
   var token = state.sessionToken;
   // The last answers may still be queued; read today's numbers only once they are written.
-  store.writesSettled().then(function() { return store.getToday(); }).then(function(after) {
+  store.writesSettled().then(function() {
+    return Promise.all([
+      before ? store.getToday() : null,
+      achBefore ? refreshAchievements().catch(function() { return null; }) : null
+    ]);
+  }).then(function(res) {
     if (state.sessionToken !== token) return;
-    var lines = sessionCheers(before, after, state.dailyGoal);
-    if (!lines.length) return;
+    var after = res[0];
+    var lines = after ? sessionCheers(before, after, state.dailyGoal) : [];
+    var earned = res[1] ? achNewlyEarned(achBefore, res[1].items, 3) : [];
+    if (!lines.length && !earned.length) return;
     box.querySelector(".session-cheers").innerHTML = lines.map(function(l) {
       return '<div class="session-cheer cheer-' + l.kind + '">' +
         (l.kind === "goal" ? dailyGoalRing(after.count, state.dailyGoal) : '<span class="session-flame">' + ICON_FLAME + '</span>') +
         '<span>' + escHtml(l.text) + '</span></div>';
+    }).join('') + earned.map(function(it) {
+      return '<div class="session-cheer cheer-ach"><span class="ach-medal ach-t' + achMedalTier(it.tier, it.tiers.length) + '">' + achIcon(it.key) + '</span>' +
+        '<span>' + escHtml(achEarnedLineText(it)) + '</span></div>';
     }).join('');
     playSound("combo");
   }).catch(function() {});
@@ -7206,7 +7681,7 @@ document.getElementById("btn-fc-shuffle").addEventListener("click", function() {
 document.getElementById("btn-fc-edit-card").addEventListener("click", function() {
   var card = state.studyCards[state.studyIndex];
   if (!card) return;
-  openEditCard(card.id, card);
+  openEditCard(card.id, card, true);
 });
 
 document.getElementById("btn-fc-delete-card").addEventListener("click", function() {
@@ -7464,6 +7939,7 @@ function markCard(known, grade, forceRetype) {
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard", clientId: undo.attemptId };
   if (grade) attemptFields.grade = grade;
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
+  if (state.typeToCompare && document.getElementById("fc-type-input").value.trim()) attemptFields.typed = true;
   undo.sessionMs = addSessionTime(attemptFields.durationMs);
   store.recordAttempt(attemptFields).then(function(res) {
     if (res && res.srs_due_at != null && state.fcUndoneAttempt !== undo.attemptId) {
@@ -7891,6 +8367,7 @@ document.getElementById("btn-quiz-prev").addEventListener("click", function() {
   haptic("tick");
   state.quizIndex--;
   renderQuizCard();
+  noteQuizSecondLook();
 });
 
 document.getElementById("btn-quiz-review-next").addEventListener("click", function() {
@@ -7899,12 +8376,13 @@ document.getElementById("btn-quiz-review-next").addEventListener("click", functi
   haptic("tick");
   state.quizIndex++;
   renderQuizCard();
+  noteQuizSecondLook();
 });
 
 document.getElementById("btn-quiz-edit-card").addEventListener("click", function() {
   var card = state.quizCards[state.quizIndex];
   if (!card) return;
-  openEditCard(card.id, card);
+  openEditCard(card.id, card, true);
 });
 
 document.getElementById("btn-quiz-delete-card").addEventListener("click", function() {
@@ -8678,6 +9156,7 @@ function renderDashboard() {
    "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
+  renderAchievementStrip();
 
   // Isolated .catch so a new-card-estimate failure can't blank out the rest of the dashboard.
   var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
@@ -9938,6 +10417,7 @@ var SQLiteAdapter = (function() {
       var body = { cardId: f.cardId, correct: f.correct, source: f.source, clientId: f.clientId || newClientId() };
       if (f.grade) body.grade = f.grade;
       if (f.durationMs != null) body.durationMs = f.durationMs;
+      if (f.typed) body.typed = true;
       return queuedWrite({ method: "POST", path: "/attempts", body: body });
     },
     // Queued behind the answer it undoes, so offline the two replay in order. The empty body
@@ -9978,6 +10458,8 @@ var SQLiteAdapter = (function() {
     getCardHistory: function(cardId) { return req("GET", "/stats/card-history/" + encodeURIComponent(cardId)); },
     getSrsDistribution: function(days) { return req("GET", "/stats/srs-distribution" + (days ? "?days=" + days : "")); },
     getFutureDue: function() { return req("GET", "/stats/future-due"); },
+    getAchievements: function() { return req("GET", "/achievements"); },
+    recordStudyEvent: function(kind, ref) { return req("POST", "/achievements/events", { kind: kind, ref: ref }); },
     getToday: function() { return req("GET", "/stats/today"); },
     writesSettled: function() { return writeChain; },
     getReviewsToday: function() { return req("GET", "/stats/reviews-today"); },
@@ -10326,6 +10808,7 @@ function initUserNav() {
   document.getElementById("btn-dashboard").classList.remove("hidden");
   // Sidebar items
   document.getElementById("sidebar-dashboard-link").classList.remove("hidden");
+  document.getElementById("sidebar-achievements-link").classList.remove("hidden");
   document.getElementById("sidebar-upstream-link").classList.remove("hidden");
   document.getElementById("sidebar-vocabulary-link").classList.remove("hidden");
   document.getElementById("sidebar-select-link").classList.remove("hidden");
@@ -10339,6 +10822,7 @@ function initUserNav() {
   }
   loadUserPreferences();
   refreshVocabularyQueue(false);
+  refreshAchievements().catch(function() {});
   SQLiteAdapter.flushPending();
 }
 
@@ -10385,6 +10869,10 @@ function closeSidebar() {
   document.getElementById("sidebar-dashboard-link").addEventListener("click", function() {
     closeSidebar();
     document.getElementById("btn-dashboard").click();
+  });
+  document.getElementById("sidebar-achievements-link").addEventListener("click", function() {
+    closeSidebar();
+    openAchievementsScreen();
   });
   document.getElementById("sidebar-upstream-link").addEventListener("click", function() {
     closeSidebar();
@@ -10941,7 +11429,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "pref-backup", "sidebar-upstream-link", "sidebar-vocabulary-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "pref-backup", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }
@@ -11721,6 +12209,9 @@ document.addEventListener("keydown", function(e) {
   else if (screen === "vocabulary") {
     if (e.key === "Escape") document.getElementById("btn-vocabulary-back").click();
   }
+  else if (screen === "achievements") {
+    if (e.key === "Escape") document.getElementById("btn-achievements-back").click();
+  }
 
 });
 
@@ -11744,6 +12235,7 @@ function injectKeyHints() {
     ["btn-dashboard-back", "[Esc]"],
     ["btn-upstream-back",  "[Esc]"],
     ["btn-vocabulary-back", "[Esc]"],
+    ["btn-achievements-back", "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
     ["btn-fc-reveal",      "[Space]"],
     ["btn-fc-learning",    "[1]"],
@@ -11784,6 +12276,7 @@ var SCREEN_BACK_BTN = {
   dashboard: "btn-dashboard-back",
   upstream:  "btn-upstream-back",
   vocabulary: "btn-vocabulary-back",
+  achievements: "btn-achievements-back",
   "flashcard-summary": "btn-summary-back"
 };
 
@@ -12055,7 +12548,8 @@ window.addEventListener("popstate", function() {
         "stats": "btn-stats-back",
         "dashboard": "btn-dashboard-back",
         "upstream": "btn-upstream-back",
-        "vocabulary": "btn-vocabulary-back"
+        "vocabulary": "btn-vocabulary-back",
+        "achievements": "btn-achievements-back"
       };
       var btn = backMap[screen];
       if (btn) {

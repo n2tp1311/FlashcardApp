@@ -7,6 +7,7 @@ const vm = require("node:vm");
 const root = path.join(__dirname, "..");
 const app = fs.readFileSync(path.join(root, "client", "app.js"), "utf8");
 const stats = fs.readFileSync(path.join(root, "server", "routes", "stats.js"), "utf8");
+const mastery = fs.readFileSync(path.join(root, "server", "lib", "mastery.js"), "utf8");
 
 function extract(name) {
   const start = app.indexOf("\nfunction " + name + "(");
@@ -38,10 +39,11 @@ test("empty buckets draw no segment", function() {
 });
 
 test("server buckets: no FSRS state is new, learning/relearning, then 21-day review interval splits known from mastered", function() {
-  assert.match(stats, /const MASTERED_INTERVAL_SEC = 21 \* 86400;/);
+  assert.match(mastery, /const MASTERED_INTERVAL_SEC = 21 \* 86400;/);
+  assert.match(mastery, /cs\.fsrs_state = 2 AND " \+\s*"cs\.srs_due_at - COALESCE\(cs\.fsrs_last_review_at, cs\.updated_at\) >= \?\)"/);
   assert.match(stats, /WHEN cs\.card_id IS NULL OR cs\.fsrs_stability IS NULL THEN 'new'/);
   assert.match(stats, /WHEN cs\.fsrs_state IN \(1,3\) THEN 'learning'/);
-  assert.match(stats, /WHEN cs\.fsrs_state = 2 AND cs\.srs_due_at - COALESCE\(cs\.fsrs_last_review_at, cs\.updated_at\) >= \? THEN 'mastered'/);
+  assert.match(stats, /"    WHEN " \+ MASTERED_SQL \+ " THEN 'mastered'"/);
   assert.match(stats, /res\.json\(\{ total, known, mastery: lessonMastery\(req\.params\.id, req\.session\.userId\) \}\)/);
 });
 

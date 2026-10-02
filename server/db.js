@@ -350,6 +350,34 @@ try {
 } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_vocabulary_requests_user_status ON vocabulary_requests(user_id, status, created_at)"); } catch (_) {}
 
+// Achievements. Most are worked out from attempts and card states; these record the few
+// things nothing else stores. typed: the answer was typed in Flashcard & Write (Writer).
+// study_events: one row per (kind, ref) -- a day the due list was emptied (due_zero), a quiz
+// card looked back at after a wrong answer (second_look), a card edited during study
+// (card_fix) -- so a repeat of the same thing counts once.
+try { db.exec("ALTER TABLE attempts ADD COLUMN typed INTEGER"); } catch (_) {}
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS study_events (
+    id         INTEGER PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind       TEXT NOT NULL,
+    ref        TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    UNIQUE (user_id, kind, ref)
+  )`);
+} catch (_) {}
+// The highest tier of each achievement ever reached, and when: an effort achievement stays
+// earned even if the data behind it later changes (an undone answer, a deleted card).
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS user_achievements (
+    user_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    key       TEXT NOT NULL,
+    tier      INTEGER NOT NULL,
+    earned_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    PRIMARY KEY (user_id, key)
+  )`);
+} catch (_) {}
+
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
 const _prepare = db.prepare.bind(db);

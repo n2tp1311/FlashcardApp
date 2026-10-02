@@ -6,6 +6,7 @@ const { requireAuth } = require("../middleware/auth");
 const { computeStreak, weekRow, addDays } = require("../lib/streak");
 const { summarizeToday } = require("../lib/today");
 const { aboveAverageRun } = require("../lib/aboveAvg");
+const { MASTERED_INTERVAL_SEC, MASTERED_SQL } = require("../lib/mastery");
 const router  = express.Router();
 
 function computeStats(attempts) {
@@ -167,11 +168,9 @@ router.get("/trend", requireAuth, (req, res) => {
   res.json(rows);
 });
 
-// Memory state of each card in a lesson, for the mastery bar. Mastered means a Review card
-// scheduled 21 days or more out, Anki's "mature" line and a bucket edge of the dashboard's
-// Memory Interval chart, so the two agree. A card without FSRS state has never been
-// scheduled and counts as new, as cardFromState() treats it.
-const MASTERED_INTERVAL_SEC = 21 * 86400;
+// Memory state of each card in a lesson, for the mastery bar (mastered: see lib/mastery.js).
+// A card without FSRS state has never been scheduled and counts as new, as cardFromState()
+// treats it.
 
 function lessonMastery(lessonId, userId) {
   const rows = db.prepare(
@@ -179,7 +178,7 @@ function lessonMastery(lessonId, userId) {
     "  SELECT CASE" +
     "    WHEN cs.card_id IS NULL OR cs.fsrs_stability IS NULL THEN 'new'" +
     "    WHEN cs.fsrs_state IN (1,3) THEN 'learning'" +
-    "    WHEN cs.fsrs_state = 2 AND cs.srs_due_at - COALESCE(cs.fsrs_last_review_at, cs.updated_at) >= ? THEN 'mastered'" +
+    "    WHEN " + MASTERED_SQL + " THEN 'mastered'" +
     "    ELSE 'known' END AS bucket" +
     "  FROM cards c LEFT JOIN card_states cs ON cs.card_id = c.id AND cs.user_id = ?" +
     "  WHERE c.lesson_id = ?" +

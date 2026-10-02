@@ -4463,3 +4463,79 @@ code {
   .fc-nav { max-width: none; flex-wrap: nowrap; }
   .fc-mark-btns { flex: 1; flex-basis: auto; order: 0; }
 }
+
+/* ============================
+   Achievements: medals on their own page, a strip on the Dashboard, and a line on the
+   session-complete screen. A medal's ring is its tier: bronze, silver between, gold at the
+   top of a ladder. Locked is a dashed ring; lost (a mastery one that no longer holds) fades.
+   ============================ */
+:root {
+  --medal-1: #a8703f; --medal-1-bg: #f3e6da;
+  --medal-2: #6f7784; --medal-2-bg: #e7e9ec;
+  --medal-3: #a87a00; --medal-3-bg: #f6ecd0;
+}
+[data-theme="dark"] {
+  --medal-1: #d9a172; --medal-1-bg: #3a2c22;
+  --medal-2: #bfc6cf; --medal-2-bg: #30343a;
+  --medal-3: #e8c068; --medal-3-bg: #3a3222;
+}
+.ach-page { width: 100%; max-width: 900px; margin: 0 auto; display: grid; gap: 14px; }
+.ach-summary { margin: 2px 0 0; color: var(--text2); font-variant-numeric: tabular-nums; }
+.ach-filters .pill { min-height: 36px; }
+.ach-list { display: grid; gap: 20px; }
+.ach-group { display: grid; gap: 10px; }
+.ach-group-h {
+  margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text3);
+}
+.ach-group-h span { font-weight: 500; letter-spacing: 0; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.ach-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.ach-badge {
+  display: grid; justify-items: center; align-content: start; text-align: center; gap: 4px;
+  padding: 14px 10px 12px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); min-width: 0;
+}
+.ach-medal {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  border: 2px solid currentColor; position: relative; margin-bottom: 4px;
+}
+.ach-medal svg { width: 20px; height: 20px; }
+.ach-tn {
+  position: absolute; bottom: -6px; right: -8px; font-size: 0.625rem; font-weight: 700; min-width: 18px; height: 18px;
+  padding: 0 4px; border-radius: 9px; display: grid; place-items: center; background: var(--surface);
+  border: 1.5px solid currentColor; font-variant-numeric: tabular-nums;
+}
+.ach-t1 { color: var(--medal-1); } .ach-t1 .ach-medal, .ach-medal.ach-t1 { background: var(--medal-1-bg); }
+.ach-t2 { color: var(--medal-2); } .ach-t2 .ach-medal, .ach-medal.ach-t2 { background: var(--medal-2-bg); }
+.ach-t3 { color: var(--medal-3); } .ach-t3 .ach-medal, .ach-medal.ach-t3 { background: var(--medal-3-bg); }
+.ach-locked .ach-medal { color: var(--text3); border-style: dashed; background: transparent; opacity: 0.8; }
+.ach-lost .ach-medal { opacity: 0.5; }
+.ach-name { font-size: 0.8125rem; font-weight: 600; color: var(--text); line-height: 1.25; text-wrap: balance; }
+.ach-desc { font-size: 0.6875rem; color: var(--text2); line-height: 1.35; }
+.ach-sub { font-size: 0.6875rem; color: var(--text3); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.ach-prog { width: 80%; height: 4px; border-radius: 2px; background: var(--surface2); overflow: hidden; margin-top: 2px; }
+.ach-prog i { display: block; height: 100%; border-radius: 2px; background: var(--primary); }
+.ach-new-badge { margin-left: auto; color: var(--success); background: var(--success-light); }
+
+.dash-ach-strip {
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px;
+}
+.ach-strip-count { font-size: 1.375rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.ach-strip-count small { font-size: 0.8125rem; color: var(--text3); font-weight: 500; }
+.ach-strip-medals { display: flex; gap: 6px; }
+.ach-strip-medals .ach-medal { width: 32px; height: 32px; margin: 0; }
+.ach-strip-medals .ach-medal svg { width: 15px; height: 15px; }
+.ach-strip-next { display: grid; gap: 3px; flex: 1 1 220px; min-width: 0; }
+.ach-strip-next b { font-size: 0.8125rem; color: var(--text); font-weight: 600; }
+.ach-strip-next span { font-size: 0.75rem; color: var(--text3); font-variant-numeric: tabular-nums; }
+.ach-strip-next .ach-prog { width: 100%; max-width: 280px; }
+.ach-strip-link { margin-left: auto; color: var(--primary); }
+
+.session-cheer.cheer-ach { background: var(--surface2); color: var(--text); font-weight: 600; }
+.session-cheer.cheer-ach .ach-medal { width: 28px; height: 28px; border-width: 1.5px; margin: 0; }
+.session-cheer.cheer-ach .ach-medal svg { width: 14px; height: 14px; }
+
+@media (max-width: 480px) {
+  .ach-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .dash-ach-strip { padding: 12px 14px; }
+  .ach-strip-link { margin-left: 0; }
+}
