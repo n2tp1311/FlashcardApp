@@ -22,7 +22,9 @@ function load(goal) {
     escHtml: function(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
   };
   vm.createContext(ctx);
-  vm.runInContext("var GOAL_RING_R = 22;" + extract("dailyGoalRing") + extract("weekdayLabel") + extract("todayStripHtml"), ctx);
+  vm.runInContext("var GOAL_RING_R = 22; var ICON_TODAY_TIME = '', ICON_TODAY_NEW = '', ICON_TODAY_REVIEW = '';" +
+    "function formatStudyDuration(ms) { return Math.round(ms / 60000) + ' min'; }" +
+    extract("dailyGoalRing") + extract("weekdayLabel") + extract("todayStripHtml") + extract("todayChipsHtml"), ctx);
   return ctx;
 }
 
@@ -88,4 +90,41 @@ test("dashboard and /today share one computation, so Home and the session end ag
   assert.match(stats, /const today = todayStats\(uid\);\n  const streak = today\.streak;/);
   assert.match(stats, /router\.get\("\/today", requireAuth/);
   assert.doesNotMatch(stats, /let streak = 0;/, "the old streak loop must be gone");
+});
+
+test("chips show time, new cards against the recommendation and reviews against the cap", function() {
+  const ctx = load(20);
+  ctx.state.maxReviewsPerDay = 300;
+  const html = ctx.todayStripHtml({ count: 281, week: week, activity: { studyMs: 47 * 60000, newCards: 12, reviews: 269 } }, 15);
+  assert.match(html, /<b>47 min<\/b> today\.studied/);
+  assert.match(html, /<b>12 \/ 15<\/b> today\.newCards/);
+  assert.match(html, /<b>269 \/ 300<\/b> today\.reviews/);
+});
+
+test("with no cap and no estimate the counts stand alone; a cap of 0 is still a cap", function() {
+  const ctx = load(20);
+  ctx.state.maxReviewsPerDay = null;
+  const html = ctx.todayStripHtml({ count: 3, week: week, activity: { studyMs: 0, newCards: 2, reviews: 1 } }, null);
+  assert.match(html, /<b>2<\/b> today\.newCards/);
+  assert.match(html, /<b>1<\/b> today\.reviews/);
+  ctx.state.maxReviewsPerDay = 0;
+  assert.match(ctx.todayStripHtml({ count: 3, week: week, activity: { studyMs: 0, newCards: 2, reviews: 1 } }, null), /<b>1 \/ 0<\/b>/);
+});
+
+test("the review cap and the Home chip count reviews the same way", function() {
+  assert.match(stats, /router\.get\("\/reviews-today"[\s\S]{0,200}todayActivity\(req\.session\.userId\)\.reviews/);
+  assert.match(stats, /activity: todayActivity\(uid\)/);
+});
+
+const { summarizeToday } = require("../server/lib/today");
+
+test("a card is new on the day of its first answer; later days' answers are reviews", function() {
+  const s = summarizeToday([
+    { card_id: "a", duration_ms: 4000, seen_before: 0 },
+    { card_id: "a", duration_ms: 3000, seen_before: 0 },
+    { card_id: "b", duration_ms: 5000, seen_before: 1 },
+    { card_id: "b", duration_ms: null, seen_before: 1 },
+    { card_id: "c", duration_ms: 2000, seen_before: 0 }
+  ]);
+  assert.deepEqual(s, { studyMs: 14000, newCards: 2, reviews: 2 });
 });

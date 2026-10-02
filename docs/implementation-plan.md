@@ -962,6 +962,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Answer sounds | Done | Marimba correct/wrong on quiz answers and retype; Preferences › Sound effects (`preferences.sounds`, default on); `tests/sounds.test.js` |
 | Encouragement during study | Done | Quiz answer sheet: varied praise, 3/5/10-in-a-row combos with a rising marimba, calm wrong-answer line, halfway/one-left notes, Next on the sheet; `tests/encouragement.test.js` |
 | Rest day + week row | Done | One free missed day per week keeps the streak (`server/lib/streak.js`); Mon–Sun row on the hero card; `tests/streak.test.js` |
+| Today chips: time, new / recommended, reviews / cap | Done | `server/lib/today.js`; review cap now counts reviews only; `tests/today.test.js` |
 | Daily goal ring | Done | Preferences › Daily goal (Off/10/20/30/50, default 20); ring on the hero card; `GET /api/stats/today`; `tests/today.test.js` |
 | Session complete screen | Done | Headline, Cards/Known/Time or Questions/Best run/Time tiles, streak tick and goal-reached lines on both end screens; `tests/session-done.test.js` |
 | Time left in the session | Done | "~N min left" in both study headers from session, history or default median per card; `tests/time-left.test.js` |

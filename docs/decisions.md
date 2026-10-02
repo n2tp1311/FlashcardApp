@@ -420,7 +420,7 @@ User pasted the "no SRS algorithm customization" audit finding — bundles learn
 
 **Design mirrors Anki's actual behavior**: the cap only limits how many due cards get queued into a session — it never changes what's "due" in the DB or what any badge displays. Dashboard/per-class/per-lesson due-counts stay true and uncapped; only the two places that actually start a review session (Study Setup's Due Only/Needs Recall filters, and the lesson screen's "Review N due" quick-start) respect the budget. Verified this invariant explicitly via Playwright: with the cap fully exhausted, the Dashboard's "Due for Review" section and the lesson's own due-count badge still showed the true count (10), while both session-start paths correctly yielded 0/an alert.
 
-**"Reviews done today" approximates to any graded attempt today** (all modes/sources) — `attempts` has no new-vs-review distinction (no `srs_step`-at-attempt-time snapshot), so a true Anki-style "reviews only, not new cards" count isn't available without a schema change. Documented as an honest simplification, not hidden.
+**"Reviews done today" approximates to any graded attempt today** (all modes/sources) — `attempts` has no new-vs-review distinction (no `srs_step`-at-attempt-time snapshot), so a true Anki-style "reviews only, not new cards" count isn't available without a schema change. Documented as an honest simplification, not hidden. *Superseded 2026-10-02:* no schema change was needed after all; a card's first answer date already tells new from review, and the cap now counts reviews only (see that entry).
 
 **Capped cards are chosen most-overdue-first**, not arbitrary DB order — `applyReviewCap()` sorts by `srs_due_at` ascending before slicing to the remaining budget, matching Anki's own prioritization. Verified via direct evaluation: `applyReviewCap([{due:1000},{due:2000},{due:500}], cap=2)` correctly returns the two earliest-due cards, not the first two in array order.
 
@@ -896,7 +896,7 @@ Asked for more contrast and a neon look in dark mode. Earlier the user had rejec
 
 ## 2026-10-02 — An empty Due Only result names the review limit
 
-The user saw "20 due" on Home and "No cards match" in Setup and suspected KnowledgeApp updates had broken due dates. The real cause was Max reviews per day, which caps sessions but not badges (deliberately, as in Anki), and counts every graded attempt today, new cards and quiz answers included. Rather than cap the badges too, which would hide how much is actually due, Setup recomputes the match without the cap and, when that finds cards, explains the limit and where to raise it.
+The user saw "20 due" on Home and "No cards match" in Setup and suspected KnowledgeApp updates had broken due dates. The real cause was Max reviews per day, which caps sessions but not badges (deliberately, as in Anki), and (until 2026-10-02) counted every graded attempt today, new cards and quiz answers included. Rather than cap the badges too, which would hide how much is actually due, Setup recomputes the match without the cap and, when that finds cards, explains the limit and where to raise it.
 
 ## 2026-10-02 — Grade tints are mixed from the palette, not fixed
 
@@ -961,3 +961,9 @@ FSRS cannot be run backwards: stability and difficulty after an answer do not de
 The attempt row is deleted rather than marked undone. A misclick is not a study event, and every stat query (streak, daily goal, accuracy, study time) would otherwise need to learn to skip it. Only the card's latest answer can be undone, and only for ten minutes: restoring an older snapshot would silently discard the effect of the answers after it. The pill is up for six seconds; the server window is longer so an undo that sits in the offline queue still lands.
 
 Flashcards only. A quiz answer is checked by the app, so there is no misjudged grade to take back, and an undo there would be a way to retry a wrong answer.
+
+## 2026-10-02 — The review cap counts reviews only, the same number Home shows against it
+
+The user asked for today's reviews against the cap on Home, picked chips from a preview, and agreed to the count below. The cap had counted every answer today, because `attempts` was thought to lack a new-versus-review distinction. It does not need one: a card's first answer date says when it was new. So a review is an answer today to a card first answered on an earlier day, and both `GET /api/stats/reviews-today` and the Home chip use `todayActivity()`. Showing the old count against the cap would have put new cards under "reviews"; showing the new count while the cap kept the old one would have let the chip read "120 / 300" while Setup said the cap was reached. The cost: anyone who set the cap with the old count in mind now gets more reviews per day, by the number of new cards they answer. Quiz answers to old cards still count as reviews, as before.
+
+The new-card goal is the existing "New cards recommended today" estimate, not a new setting: the app already computes it from the user's own pace and recent accuracy, and a second number to configure would compete with it.

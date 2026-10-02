@@ -472,6 +472,9 @@ Object.assign(TRANSLATIONS.en, {
   "study.showAnswer": "Show answer",
   "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
+  "today.studied": "studied",
+  "today.newCards": "new cards",
+  "today.reviews": "reviews",
   "undo.button": "Undo",
   "undo.graded": "Marked {grade}",
   "undo.failed": "That grade can no longer be undone",
@@ -1224,6 +1227,9 @@ Object.assign(TRANSLATIONS.vi, {
   "study.showAnswer": "Xem đáp án",
   "study.typeYourGuessPlaceholder": "Nhập câu trả lời...",
   "study.yourGuess": "Bạn đã trả lời: {text}",
+  "today.studied": "đã học",
+  "today.newCards": "thẻ mới",
+  "today.reviews": "lượt ôn",
   "undo.button": "Hoàn tác",
   "undo.graded": "Đã đánh dấu {grade}",
   "undo.failed": "Không thể hoàn tác lần đánh dấu này nữa",
@@ -6315,8 +6321,8 @@ function roundRobinMerge(groups) {
 
 // Caps due/needsRecall cards to the user's remaining daily review budget (Preferences →
 // Max reviews per day), prioritizing the most-overdue cards rather than arbitrary DB order.
-// "Reviews done today" approximates to any graded attempt today (attempts has no new-vs-
-// review distinction) — a documented simplification, not a true Anki new/review split.
+// "Reviews done today" counts answers to cards first answered before today; new cards'
+// first-day answers are not reviews (server/lib/today.js).
 function applyReviewCap(dueCards, reviewsToday) {
   // null/undefined means "no limit" — checked explicitly (not a truthy check) so a real
   // cap of 0 ("study nothing today") isn't mistaken for "no limit" set.
@@ -8096,7 +8102,7 @@ function _dashMetricHint(key, studyTime, newCardEstimate) {
 
 function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today) {
   state._dashHeroData = { streak: streak, studyTime: studyTime, summary: summary, newCardEstimate: newCardEstimate, today: today };
-  var todayHtml = todayStripHtml(today);
+  var todayHtml = todayStripHtml(today, newCardEstimate ? newCardEstimate.estimatedNewCards : null);
   var config = state.dashMetricConfig || DEFAULT_DASH_METRIC_CONFIG;
   var highlighted = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "highlight"; });
   var shown = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "show"; });
@@ -8158,7 +8164,7 @@ function weekdayLabel(day) {
 
 // Today's goal ring and this week's row, from GET /api/stats/today (also embedded in the
 // dashboard response). Server mode only: the streak and the day boundary live there.
-function todayStripHtml(today) {
+function todayStripHtml(today, newCardGoal) {
   if (!today || !Array.isArray(today.week)) return "";
   var goal = state.dailyGoal;
   var goalHtml = "";
@@ -8181,7 +8187,29 @@ function todayStripHtml(today) {
     }).join('') +
   '</div>' +
   (hasRest ? '<div class="dash-week-hint">' + escHtml(t("week.restHint")) + '</div>' : '');
-  return '<div class="dash-today' + (goalHtml ? '' : ' no-goal') + '">' + goalHtml + '<div class="dash-week-wrap">' + weekHtml + '</div></div>';
+  return '<div class="dash-today' + (goalHtml ? '' : ' no-goal') + '">' + goalHtml + '<div class="dash-week-wrap">' + weekHtml + '</div>' +
+    todayChipsHtml(today.activity, newCardGoal) + '</div>';
+}
+
+var ICON_TODAY_TIME = svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 14);
+var ICON_TODAY_NEW = svgIcon('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>', 14);
+var ICON_TODAY_REVIEW = svgIcon('<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>', 14);
+
+// Time studied, new cards against today's recommendation, reviews against the daily cap.
+// A count with nothing to measure it against (no estimate, no cap) is shown on its own.
+function todayChipsHtml(activity, newCardGoal) {
+  if (!activity) return "";
+  function chip(kind, icon, value, labelKey) {
+    return '<span class="dash-today-chip is-' + kind + '">' + icon +
+      '<span><b>' + escHtml(value) + '</b> ' + escHtml(t(labelKey)) + '</span></span>';
+  }
+  var cap = state.maxReviewsPerDay;
+  var hasCap = cap !== null && cap !== undefined;
+  return '<div class="dash-today-chips">' +
+    chip("time", ICON_TODAY_TIME, formatStudyDuration(activity.studyMs), "today.studied") +
+    chip("new", ICON_TODAY_NEW, newCardGoal != null ? activity.newCards + " / " + newCardGoal : String(activity.newCards), "today.newCards") +
+    chip("review", ICON_TODAY_REVIEW, hasCap ? activity.reviews + " / " + cap : String(activity.reviews), "today.reviews") +
+  '</div>';
 }
 
 // Re-renders any already-rendered hero card(s) in place from the last data used to build

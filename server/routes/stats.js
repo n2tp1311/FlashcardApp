@@ -4,6 +4,7 @@ const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { computeStreak, weekRow } = require("../lib/streak");
+const { summarizeToday } = require("../lib/today");
 const router  = express.Router();
 
 function computeStats(attempts) {
@@ -668,6 +669,17 @@ function median(values) {
   return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
 }
 
+// Today's answers with whether each card had been answered before today (UTC), the day
+// boundary every other "today" number uses.
+function todayActivity(uid) {
+  const dayStart = Math.floor(Date.parse(new Date().toISOString().slice(0, 10) + "T00:00:00Z") / 1000);
+  return summarizeToday(db.prepare(
+    "SELECT a.card_id, a.duration_ms, EXISTS (SELECT 1 FROM attempts b WHERE b.card_id = a.card_id " +
+    "AND b.user_id = a.user_id AND b.created_at < ?) AS seen_before " +
+    "FROM attempts a WHERE a.user_id = ? AND a.created_at >= ?"
+  ).all(dayStart, uid, dayStart));
+}
+
 function todayStats(uid) {
   const days = db.prepare(
     "SELECT DISTINCT date(created_at, 'unixepoch') AS day FROM attempts WHERE user_id = ? ORDER BY day DESC"
@@ -693,7 +705,8 @@ function todayStats(uid) {
     studiedToday: s.studiedToday,
     restAvailableToday: s.restAvailableToday,
     week: weekRow(days, s.restDays, todayStr),
-    medianMs
+    medianMs,
+    activity: todayActivity(uid)
   };
 }
 
@@ -701,13 +714,11 @@ router.get("/today", requireAuth, (req, res) => {
   res.json(todayStats(req.session.userId));
 });
 
-// GET /api/stats/reviews-today — approximates "reviews done today" as any graded attempt
-// today (attempts has no new-vs-review distinction), used to enforce the daily review cap
+// GET /api/stats/reviews-today — answers today to cards first answered on an earlier day,
+// used to enforce the daily review cap. First answers to new cards do not count: the cap is
+// "Max reviews per day", and the Home strip shows this same number against it.
 router.get("/reviews-today", requireAuth, (req, res) => {
-  const row = db.prepare(
-    "SELECT COUNT(*) AS cnt FROM attempts WHERE user_id = ? AND date(created_at,'unixepoch') = date('now')"
-  ).get(req.session.userId);
-  res.json({ count: row.cnt });
+  res.json({ count: todayActivity(req.session.userId).reviews });
 });
 
 // GET /api/stats/new-card-estimate — estimate how many never-studied cards the user could

@@ -2718,6 +2718,20 @@ code {
   margin-top: 16px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
 }
 .dash-today:last-child { border-bottom: 0; padding-bottom: 0; }
+.dash-today-chips {
+  flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  padding-top: 14px; border-top: 1px solid var(--border);
+}
+.dash-today-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  background: var(--surface2); font-size: 0.8125rem; color: var(--text2);
+}
+.dash-today-chip b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.dash-today-chip svg { flex: none; }
+.dash-today-chip.is-time svg { color: #2f5f8f; } /* the session-end Time tile's blue */
+:root[data-theme="dark"] .dash-today-chip.is-time svg { color: #8fb4e0; }
+.dash-today-chip.is-new svg { color: var(--success); }
+.dash-today-chip.is-review svg { color: var(--warning); }
 .dash-goal { display: flex; align-items: center; gap: 12px; }
 .dash-goal-title { font-weight: 600; font-variant-numeric: tabular-nums; }
 .dash-goal-sub { font-size: 0.8125rem; color: var(--text2); }
