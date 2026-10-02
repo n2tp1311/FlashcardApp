@@ -1252,6 +1252,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">4</kbd><span data-i18n="study.confident">Confident</span></div>
         <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="common.shuffle">Shuffle</span></div>
         <div class="keymap-row"><kbd class="kbd">P</kbd><span data-i18n="keymap.pronounce">Pronounce</span></div>
+        <div class="keymap-row"><kbd class="kbd">Ctrl/⌘</kbd>+<kbd class="kbd">Z</kbd><span data-i18n="keymap.undoGrade">Undo the last grade</span></div>
         <div class="keymap-row"><kbd class="kbd">Alt</kbd>+<kbd class="kbd">T</kbd><span data-i18n="keymap.translate">Translate visible side into your preferred language</span></div>
         <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="keymap.exitStudy">Exit (asks first mid-session)</span></div>
       </div>
@@ -1288,6 +1289,10 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+<div id="grade-undo" class="grade-undo hidden" role="status" aria-live="polite">
+  <span id="grade-undo-text"></span>
+  <button type="button" class="grade-undo-btn" id="btn-grade-undo" data-i18n="undo.button">Undo</button>
+</div>
 <script src="/vocabulary-term.js"></script>
 <script src="/app.js"></script>
 </body>

@@ -2044,6 +2044,31 @@ code {
 }
 .toast.error { border-left: 4px solid var(--danger); }
 
+/* Undo for the last flashcard grade. At the top, under the study header: at the bottom it
+   would sit on the grading buttons, the very thing a misclick came from. */
+.grade-undo {
+  position: fixed;
+  left: 50%;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex; align-items: center; gap: 14px;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 8px 8px 8px 16px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.875rem;
+  box-shadow: var(--shadow-lg);
+  white-space: nowrap;
+}
+.grade-undo-btn {
+  border: 0; border-radius: 999px; padding: 6px 14px; min-height: 32px;
+  background: color-mix(in srgb, var(--surface) 18%, transparent);
+  color: var(--surface); font: inherit; font-weight: 600; cursor: pointer;
+}
+.grade-undo-btn:hover { background: color-mix(in srgb, var(--surface) 28%, transparent); }
+
 .field-error { color: var(--danger); font-size: 0.8125rem; margin: -4px 0 0; }
 .bulk-preview-rejected { margin-top: 8px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--warning-light); color: var(--text); font-size: 0.8125rem; line-height: 1.5; }
 .bulk-preview-rejected-head { font-weight: 600; }

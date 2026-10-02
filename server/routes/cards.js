@@ -369,7 +369,7 @@ router.put("/cards/states/:cardId", requireAuth, (req, res) => {
   db.prepare(
     "INSERT INTO card_states (card_id, user_id, known, updated_at) VALUES (?, ?, ?, unixepoch()) " +
     "ON CONFLICT(card_id, user_id) DO UPDATE SET known = excluded.known, updated_at = unixepoch()"
-  ).run(req.params.cardId, req.session.userId, known ? 1 : 0);
+  ).run(req.params.cardId, req.session.userId, known === null ? null : known ? 1 : 0); // null: undoing a first grade
   res.json({ ok: true });
 });
 

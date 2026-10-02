@@ -751,7 +751,7 @@ PUT    /api/lessons/:id             DELETE /api/lessons/:id
 GET    /api/lessons/:id/cards       POST   /api/lessons/:id/cards
 POST   /api/lessons/:id/cards/bulk
 PUT    /api/cards/:id               DELETE /api/cards/:id
-POST   /api/attempts
+POST   /api/attempts                DELETE /api/attempts/:id   (undo the card's latest answer)
 GET    /api/cards/:id/stats
 GET    /api/stats/lesson/:id        GET    /api/stats/class/:id
 GET    /api/stats/hardest?scope=&limit=
@@ -965,6 +965,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Daily goal ring | Done | Preferences › Daily goal (Off/10/20/30/50, default 20); ring on the hero card; `GET /api/stats/today`; `tests/today.test.js` |
 | Session complete screen | Done | Headline, Cards/Known/Time or Questions/Best run/Time tiles, streak tick and goal-reached lines on both end screens; `tests/session-done.test.js` |
 | Time left in the session | Done | "~N min left" in both study headers from session, history or default median per card; `tests/time-left.test.js` |
+| Undo the last grade | Done | Flashcards; `attempts.prev_state` snapshot, `DELETE /api/attempts/:id` (latest answer, 10 minutes), 6-second pill and `Ctrl/⌘+Z`; `tests/undo.test.js` |
 | Hints in Write mode | Done | One more letter per word per press; a hinted card is Hard at best on every grading path; `tests/hints.test.js` |
 | Mastery bar per lesson | Done | Mastered/Known/Learning/New from FSRS state, 21-day line; `tests/mastery.test.js` |
 | Component audit | Done | Filled main action / tonal selection, Show answer before grades, phone search icon + top-docked search, full-width card rows; `tests/components.test.js` |

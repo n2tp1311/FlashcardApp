@@ -951,3 +951,11 @@ The end screens compare today's numbers from before and after the session instea
 ## 2026-10-02 — A hint caps the grade at Hard
 
 Write mode never checked the typed answer, so a hint could have been a free reveal. It is not, because the grade is what FSRS schedules from: an answer recalled with the first letters shown is not one recalled unaided, and Know It or Confident would push the next review further out than the memory supports. Hard still counts as known, so a hinted card is not punished as forgotten. The cap is enforced in `markCard()` as well as on the buttons, since the keyboard shortcuts and swipe-to-grade do not go through a disabled button. Letters are revealed per word rather than across the whole answer so the first press already shows the answer's shape (how many words, how long), which is often enough to recall it.
+
+## 2026-10-02 — Undo deletes the answer and restores a stored snapshot
+
+FSRS cannot be run backwards: stability and difficulty after an answer do not determine the values before it. So each attempt stores the card's schedule fields as they were before it (`attempts.prev_state`), and undo writes them back. The cost is a short JSON string on every attempt row, kept forever though only the last ten minutes of it can be used; clearing old snapshots would be a write on every answer for a few bytes saved.
+
+The attempt row is deleted rather than marked undone. A misclick is not a study event, and every stat query (streak, daily goal, accuracy, study time) would otherwise need to learn to skip it. Only the card's latest answer can be undone, and only for ten minutes: restoring an older snapshot would silently discard the effect of the answers after it. The pill is up for six seconds; the server window is longer so an undo that sits in the offline queue still lands.
+
+Flashcards only. A quiz answer is checked by the app, so there is no misjudged grade to take back, and an undo there would be a way to retry a wrong answer.

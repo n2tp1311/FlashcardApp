@@ -4,6 +4,7 @@ const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { scheduler, ratingFor, cardFromState } = require("../fsrs");
+const { snapshotState, restoredState, undoRefusal, STATE_FIELDS } = require("../lib/undo");
 const router  = express.Router();
 
 function genId() {
@@ -53,19 +54,20 @@ router.post("/", requireAuth, (req, res) => {
       "WHERE id = ? AND upstream_change = 'updated'"
     ).run(cardId);
 
-    db.prepare(
-      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade) VALUES (?, ?, ?, ?, ?, ?, ?)"
-    ).run(clientId || genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null);
-
     const stateRow = db.prepare(
-      "SELECT srs_due_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_reps, fsrs_lapses, " +
-      "fsrs_learning_steps, fsrs_last_review_at, last_correct_source FROM card_states WHERE card_id = ? AND user_id = ?"
+      "SELECT " + STATE_FIELDS.join(", ") + " FROM card_states WHERE card_id = ? AND user_id = ?"
     ).get(cardId, userId);
     const now = Math.floor(Date.now() / 1000);
     const nowDate = new Date(now * 1000);
+    const notDue = !!(stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now);
+
+    db.prepare(
+      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade, prev_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).run(clientId || genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null,
+          snapshotState(stateRow, notDue));
 
     // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
-    if (stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now) {
+    if (notDue) {
       return { ok: true, srs_due_at: stateRow.srs_due_at, capped: false, notDue: true };
     }
 
@@ -100,6 +102,41 @@ router.post("/", requireAuth, (req, res) => {
   })();
 
   res.status(201).json(result);
+});
+
+// DELETE /api/attempts/:id — undo the card's latest answer: the attempt is removed and the
+// schedule put back from the snapshot taken when it was recorded. Removing the row, rather
+// than marking it, keeps every stat (streak, daily goal, accuracy) as if it was never given.
+// The upstream "updated" flag the answer cleared stays cleared: it was seen either way.
+router.delete("/:id", requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  const result = db.transaction(() => {
+    const attempt = db.prepare(
+      "SELECT rowid, card_id, created_at, prev_state FROM attempts WHERE id = ? AND user_id = ?"
+    ).get(req.params.id, userId);
+    // rowid, not created_at: two answers in the same second must still be ordered.
+    const later = attempt && db.prepare(
+      "SELECT 1 FROM attempts WHERE card_id = ? AND user_id = ? AND rowid > ?"
+    ).get(attempt.card_id, userId, attempt.rowid);
+    const refusal = undoRefusal(attempt, Math.floor(Date.now() / 1000), !!later);
+    if (refusal) return { refusal };
+
+    const restored = restoredState(attempt.prev_state);
+    if (restored) {
+      db.prepare(
+        "UPDATE card_states SET " + STATE_FIELDS.map(f => f + " = ?").join(", ") +
+        " WHERE card_id = ? AND user_id = ?"
+      ).run(...STATE_FIELDS.map(f => restored[f]), attempt.card_id, userId);
+    }
+    db.prepare("DELETE FROM attempts WHERE rowid = ?").run(attempt.rowid);
+    return { ok: true, srs_due_at: restored ? restored.srs_due_at : undefined };
+  })();
+
+  if (result.refusal) {
+    return res.status(result.refusal === "not_found" ? 404 : 409)
+      .json({ error: "This answer can no longer be undone (" + result.refusal + ")", code: "undoExpired" });
+  }
+  res.json(result);
 });
 
 module.exports = router;

@@ -272,6 +272,10 @@ runMigration("attempts_drop_card_fk", function() {
   }
 });
 
+// Migration: the card's schedule from before each answer, so the latest grade can be undone
+// (server/lib/undo.js). After the attempts_drop_card_fk rebuild above, which lists its columns.
+try { db.exec("ALTER TABLE attempts ADD COLUMN prev_state TEXT"); } catch (_) {}
+
 // Migration: free-text tags on classes, stored as a JSON array string
 try { db.exec("ALTER TABLE classes ADD COLUMN tags TEXT"); } catch (_) {}
 

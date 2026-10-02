@@ -472,6 +472,9 @@ Object.assign(TRANSLATIONS.en, {
   "study.showAnswer": "Show answer",
   "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
+  "undo.button": "Undo",
+  "undo.graded": "Marked {grade}",
+  "undo.failed": "That grade can no longer be undone",
   "hint.button": "Hint",
   "hint.more": "More",
   "hint.usedTitle": "You used a hint, so this card counts as Hard at best",
@@ -733,6 +736,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.prevNext": "Prev / Next",
   "keymap.flipCard": "Flip card",
   "keymap.pronounce": "Pronounce",
+  "keymap.undoGrade": "Undo the last grade",
   "keymap.selectOption": "Select option",
   "keymap.sectionResultsEtc": "Results / Stats / Dashboard / Analytics",
   "keymap.retryResultsOnly": "Retry (Results only)",
@@ -1220,6 +1224,9 @@ Object.assign(TRANSLATIONS.vi, {
   "study.showAnswer": "Xem đáp án",
   "study.typeYourGuessPlaceholder": "Nhập câu trả lời...",
   "study.yourGuess": "Bạn đã trả lời: {text}",
+  "undo.button": "Hoàn tác",
+  "undo.graded": "Đã đánh dấu {grade}",
+  "undo.failed": "Không thể hoàn tác lần đánh dấu này nữa",
   "hint.button": "Gợi ý",
   "hint.more": "Thêm",
   "hint.usedTitle": "Bạn đã dùng gợi ý, nên thẻ này tính tối đa là Khó",
@@ -1477,6 +1484,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.prevNext": "Trước / Tiếp",
   "keymap.flipCard": "Lật thẻ",
   "keymap.pronounce": "Phát âm",
+  "keymap.undoGrade": "Hoàn tác lần đánh dấu vừa rồi",
   "keymap.selectOption": "Chọn đáp án",
   "keymap.sectionResultsEtc": "Kết quả / Thống kê / Bảng điều khiển / Phân tích",
   "keymap.retryResultsOnly": "Làm lại (chỉ ở Kết quả)",
@@ -2133,7 +2141,7 @@ var LocalStorageAdapter = (function() {
     recordAttempt: function(fields) {
       var attempts = load(KEY_ATTEMPTS) || [];
       attempts.push({
-        id: genId("att"),
+        id: fields.clientId || genId("att"),
         card_id: fields.cardId,
         correct: fields.correct ? 1 : 0,
         source: fields.source,
@@ -2143,6 +2151,10 @@ var LocalStorageAdapter = (function() {
       if (attempts.length > 10000) attempts = attempts.slice(-10000);
       save(KEY_ATTEMPTS, attempts);
       return Promise.resolve();
+    },
+    undoAttempt: function(id) {
+      save(KEY_ATTEMPTS, (load(KEY_ATTEMPTS) || []).filter(function(a) { return a.id !== id; }));
+      return Promise.resolve({ ok: true });
     },
     getCardStats: function(cardId) {
       var attempts = (load(KEY_ATTEMPTS) || []).filter(function(a) { return a.card_id === cardId; });
@@ -6072,6 +6084,7 @@ function confirmLeaveStudy(leave) {
 
 // Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
 function returnFromStudy() {
+  dismissGradeUndo();
   clearTimeout(state.fcAdvanceTimer);
   clearTimeout(state.quizAdvanceTimer);
   clearFlashcardTranslation();
@@ -6094,6 +6107,7 @@ var STREAK_MILESTONES = [7, 14, 30, 50, 100, 200, 365, 500, 1000];
 // Today's numbers as they were before this session, so the end screen can tell whether this
 // session is what extended the streak or reached the daily goal.
 function beginStudySession() {
+  dismissGradeUndo();
   state.sessionMs = 0;
   state.sessionDurations = [];
   state.sessionTodayAtStart = null;
@@ -6105,11 +6119,13 @@ function beginStudySession() {
   }
 }
 
+// Returns what was added, so undoing a grade can take the same amount back off.
 function addSessionTime(ms) {
-  if (typeof ms !== "number" || !(ms > 0)) return;
+  if (typeof ms !== "number" || !(ms > 0)) return 0;
   ms = Math.min(ms, SESSION_CARD_MAX_MS);
   state.sessionMs = (state.sessionMs || 0) + ms;
   (state.sessionDurations = state.sessionDurations || []).push(ms);
+  return ms;
 }
 
 // Brainscape's "estimated time left". Seconds per card come from this session once it has
@@ -7305,6 +7321,8 @@ function markCard(known, grade, forceRetype) {
   state.studyCardGraded = true;
   setMarkButtonsEnabled(false);
   haptic("select");
+  var undo = { card: card, prevKnown: state.studyKnownMap[card.id], prevLog: state.studySessionLog[card.id],
+               prevDue: card.srs_due_at, attemptId: store.newClientId ? store.newClientId() : genId("att") };
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known).catch(function() {});
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
@@ -7312,18 +7330,19 @@ function markCard(known, grade, forceRetype) {
     card.upstream_change = null;
     setUpstreamCount((state.upstreamCount || 0) - 1);
   }
-  var attemptFields = { cardId: card.id, correct: known, source: "flashcard" };
+  var attemptFields = { cardId: card.id, correct: known, source: "flashcard", clientId: undo.attemptId };
   if (grade) attemptFields.grade = grade;
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
-  addSessionTime(attemptFields.durationMs);
+  undo.sessionMs = addSessionTime(attemptFields.durationMs);
   store.recordAttempt(attemptFields).then(function(res) {
-    if (res && res.srs_due_at != null) {
+    if (res && res.srs_due_at != null && state.fcUndoneAttempt !== undo.attemptId) {
       card.srs_due_at = res.srs_due_at;
     }
   }).catch(function(err) {
     showToast(t("toast.saveFailed", { message: err.message }), "error");
   });
   renderFcDots();
+  offerGradeUndo(undo, state.studySessionLog[card.id]);
 
   // Known client-side already (same check renderFlashcard() uses to blank the interval
   // preview) — shown synchronously rather than waiting on the network response, since the
@@ -7348,6 +7367,64 @@ function markCard(known, grade, forceRetype) {
     scheduleFlashcardAdvance(advanceDelay);
   }
 }
+
+// Undo for the last flashcard grade (Anki's Undo, Duolingo has none). Long enough to notice a
+// misclick after the next card is already up; the server allows ten minutes, so the bar is
+// what limits it, and a slow undo still lands.
+var GRADE_UNDO_MS = 6000;
+var GRADE_LABEL_KEYS = { learning: "study.learning", hard: "study.hard", known: "study.knowIt", confident: "study.confident" };
+
+function offerGradeUndo(undo, log) {
+  state.fcUndo = undo;
+  document.getElementById("grade-undo-text").textContent = t("undo.graded", { grade: t(GRADE_LABEL_KEYS[log]) });
+  document.getElementById("grade-undo").classList.remove("hidden");
+  clearTimeout(state.fcUndoTimer);
+  state.fcUndoTimer = setTimeout(dismissGradeUndo, GRADE_UNDO_MS);
+}
+
+function dismissGradeUndo() {
+  clearTimeout(state.fcUndoTimer);
+  state.fcUndo = null;
+  document.getElementById("grade-undo").classList.add("hidden");
+}
+
+// Puts the session back as it was before the grade; returns the card's index to show again,
+// or -1 when it has left the session (deleted meanwhile).
+function restoreGradedCard(undo) {
+  var id = undo.card.id;
+  if (undo.prevKnown === undefined) delete state.studyKnownMap[id]; else state.studyKnownMap[id] = undo.prevKnown;
+  if (undo.prevLog === undefined) delete state.studySessionLog[id]; else state.studySessionLog[id] = undo.prevLog;
+  if (undo.sessionMs) {
+    state.sessionMs = Math.max(0, (state.sessionMs || 0) - undo.sessionMs);
+    var at = (state.sessionDurations || []).lastIndexOf(undo.sessionMs);
+    if (at >= 0) state.sessionDurations.splice(at, 1);
+  }
+  undo.card.srs_due_at = undo.prevDue;
+  return state.studyCards.indexOf(undo.card);
+}
+
+function undoLastGrade() {
+  var undo = state.fcUndo;
+  if (!undo) return;
+  dismissGradeUndo();
+  clearTimeout(state.fcAdvanceTimer);
+  // Wait for the server before changing the screen: a refused undo (the answer is no longer
+  // the card's latest) must leave everything as it is.
+  store.undoAttempt(undo.attemptId).then(function() {
+    state.fcUndoneAttempt = undo.attemptId;
+    store.setCardKnown(undo.card.id, undo.prevKnown === undefined ? null : undo.prevKnown).catch(function() {});
+    var index = restoreGradedCard(undo);
+    if (index < 0) return;
+    state.studyIndex = index;
+    showScreen("flashcard");
+    renderFlashcard();
+    renderFcDots();
+  }).catch(function() {
+    showToast(t("undo.failed"), "error");
+  });
+}
+
+document.getElementById("btn-grade-undo").addEventListener("click", undoLastGrade);
 
 document.getElementById("btn-fc-learning").addEventListener("click", function() { markCard(false, null, true); });
 document.getElementById("btn-fc-hard").addEventListener("click", function()     { markCard(true, "hard", true); });
@@ -9611,11 +9688,17 @@ var SQLiteAdapter = (function() {
     deleteCard: function(id)               { return req("DELETE", "/cards/" + id); },
 
     recordAttempt: function(f) {
-      var body = { cardId: f.cardId, correct: f.correct, source: f.source, clientId: newClientId() };
+      var body = { cardId: f.cardId, correct: f.correct, source: f.source, clientId: f.clientId || newClientId() };
       if (f.grade) body.grade = f.grade;
       if (f.durationMs != null) body.durationMs = f.durationMs;
       return queuedWrite({ method: "POST", path: "/attempts", body: body });
     },
+    // Queued behind the answer it undoes, so offline the two replay in order. The empty body
+    // matters: drain() matches a queued item by path and body.
+    undoAttempt: function(id) {
+      return queuedWrite({ method: "DELETE", path: "/attempts/" + encodeURIComponent(id), body: {} });
+    },
+    newClientId: newClientId,
     flushPending: flushPending,
     getCardStats: function() { return Promise.resolve({ total: 0, correct: 0, blended: 0, level: "new" }); },
     getDifficultyMap: function(cardIds) {
@@ -11168,6 +11251,15 @@ var CARD_SAVE_MODALS = [
 document.addEventListener("keydown", function(e) {
   var screen = getActiveScreen();
   if (!screen) return;
+
+  // Ctrl/Cmd+Z → undo the last grade while its bar is up. Not from a field with text in it,
+  // where it is the field's own undo; the Write-mode input is empty on the next card.
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z") && state.fcUndo &&
+      !(isInputFocused() && document.activeElement.value)) {
+    e.preventDefault();
+    undoLastGrade();
+    return;
+  }
 
   // Ctrl/Cmd+K → open search
   if ((e.ctrlKey || e.metaKey) && e.key === "k") {
