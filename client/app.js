@@ -279,6 +279,22 @@ Object.assign(TRANSLATIONS.en, {
 
   "stat.dayStreak": "Day Streak",
   "stat.streakResetsIn": "Resets in {time}",
+  "stat.restDayAvailable": "Rest day available today",
+  "stat.restDayHint": "One missed day a week keeps your streak. Study today to save it for later.",
+  "goal.progress": "{done} of {goal} cards today",
+  "goal.left": "{n} more to reach your daily goal",
+  "goal.left_one": "1 more to reach your daily goal",
+  "goal.met": "Daily goal met. Anything more is a bonus.",
+  "week.label": "This week",
+  "week.done": "Studied",
+  "week.rest": "Rest day: the streak carried over",
+  "week.missed": "Missed",
+  "week.today": "Today",
+  "week.future": "Coming up",
+  "week.restHint": "❄ One missed day a week keeps your streak alive.",
+  "pref.dailyGoal": "Daily goal",
+  "pref.dailyGoalOff": "Off",
+  "pref.dailyGoalHint": "Cards to answer each day, shown as a ring on Home. Counts flashcards and quiz answers.",
   "stat.streakResetsAtHint": "Your streak day resets at UTC midnight (00:00 UTC), not your local midnight.",
   "stat.classes": "Classes",
   "stat.lessons": "Lessons",
@@ -1000,6 +1016,21 @@ Object.assign(TRANSLATIONS.vi, {
 
   "stat.dayStreak": "Ngày liên tục",
   "stat.streakResetsIn": "Đặt lại sau {time}",
+  "stat.restDayAvailable": "Hôm nay có thể nghỉ",
+  "stat.restDayHint": "Mỗi tuần được nghỉ một ngày mà vẫn giữ chuỗi. Học hôm nay để để dành ngày nghỉ.",
+  "goal.progress": "{done} / {goal} thẻ hôm nay",
+  "goal.left": "Còn {n} thẻ để đạt mục tiêu ngày",
+  "goal.met": "Đã đạt mục tiêu hôm nay. Học thêm là điểm cộng.",
+  "week.label": "Tuần này",
+  "week.done": "Đã học",
+  "week.rest": "Ngày nghỉ: chuỗi vẫn được giữ",
+  "week.missed": "Bỏ lỡ",
+  "week.today": "Hôm nay",
+  "week.future": "Sắp tới",
+  "week.restHint": "❄ Mỗi tuần được nghỉ một ngày mà chuỗi vẫn giữ.",
+  "pref.dailyGoal": "Mục tiêu mỗi ngày",
+  "pref.dailyGoalOff": "Tắt",
+  "pref.dailyGoalHint": "Số thẻ cần trả lời mỗi ngày, hiện thành vòng tròn ở Trang chủ. Tính cả thẻ ghi nhớ và câu trắc nghiệm.",
   "stat.streakResetsAtHint": "Ngày tính chuỗi học của bạn được đặt lại vào lúc 00:00 UTC, không phải nửa đêm giờ địa phương.",
   "stat.classes": "Lớp học",
   "stat.lessons": "Bài học",
@@ -2457,6 +2488,7 @@ var state = {
   highContrast: false,
   haptics: true,
   sounds: true,
+  dailyGoal: 20,
   quizCountsAsKnown: false,
   fontScale: 1,
   ttsRate: 0.9,
@@ -2828,7 +2860,7 @@ function renderHomeCharts() {
   Promise.all([store.getDashboard(state.studyTimeWindowDays), newCardEstimatePromise]).then(function(results) {
     var dash = results[0], newCardEstimate = results[1];
     var grid = document.getElementById("home-summary-grid");
-    grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary, newCardEstimate);
+    grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary, newCardEstimate, dash.today);
     section.classList.remove("hidden");
   }).catch(function() { section.classList.add("hidden"); });
 }
@@ -7723,8 +7755,9 @@ function _dashMetricHint(key, studyTime, newCardEstimate) {
   return null;
 }
 
-function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate) {
-  state._dashHeroData = { streak: streak, studyTime: studyTime, summary: summary, newCardEstimate: newCardEstimate };
+function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today) {
+  state._dashHeroData = { streak: streak, studyTime: studyTime, summary: summary, newCardEstimate: newCardEstimate, today: today };
+  var todayHtml = todayStripHtml(today);
   var config = state.dashMetricConfig || DEFAULT_DASH_METRIC_CONFIG;
   var highlighted = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "highlight"; });
   var shown = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "show"; });
@@ -7732,14 +7765,18 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate) {
 
   if (!highlighted.length && !shown.length) {
     return '<div class="dash-hero-card dash-hero-empty">' + gearBtn +
-      '<div class="dash-hero-empty-note">' + t("dashboard.allMetricsHidden") + '</div>' +
+      '<div class="dash-hero-empty-note">' + t("dashboard.allMetricsHidden") + '</div>' + todayHtml +
     '</div>';
   }
 
   var mainHtml = highlighted.map(function(m, i) {
+    // With this week's rest day unused, missing today does not reset anything, so a
+    // countdown would be a false alarm.
     var countdownHtml = (m.key === "streak" && streak > 0)
-      ? '<div class="dash-hero-countdown" data-countdown="streak" title="' + escHtml(t("stat.streakResetsAtHint")) + '">' +
-          escHtml(_streakResetCountdownText()) + '</div>'
+      ? (today && today.restAvailableToday
+        ? '<div class="dash-hero-countdown" title="' + escHtml(t("stat.restDayHint")) + '">' + escHtml(t("stat.restDayAvailable")) + '</div>'
+        : '<div class="dash-hero-countdown" data-countdown="streak" title="' + escHtml(t("stat.streakResetsAtHint")) + '">' +
+          escHtml(_streakResetCountdownText()) + '</div>')
       : '';
     return (i > 0 ? '<div class="dash-hero-divider"></div>' : '') +
       '<div class="dash-hero-stat">' +
@@ -7755,8 +7792,57 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate) {
 
   return '<div class="dash-hero-card">' + gearBtn +
     (mainHtml ? '<div class="dash-hero-main">' + mainHtml + '</div>' : '') +
+    todayHtml +
     (subHtml ? '<div class="dash-hero-sub">' + subHtml + '</div>' : '') +
   '</div>';
+}
+
+var GOAL_RING_R = 22;
+
+function dailyGoalRing(done, goal) {
+  var c = 2 * Math.PI * GOAL_RING_R;
+  var offset = c * (1 - Math.min(done / goal, 1));
+  return '<svg class="goal-ring' + (done >= goal ? ' met' : '') + '" viewBox="0 0 56 56" aria-hidden="true">' +
+    '<circle class="goal-ring-track" cx="28" cy="28" r="' + GOAL_RING_R + '"/>' +
+    '<circle class="goal-ring-arc" cx="28" cy="28" r="' + GOAL_RING_R + '" style="stroke-dasharray:' + c.toFixed(2) +
+      ';stroke-dashoffset:' + offset.toFixed(2) + '"/>' +
+    '<text x="28" y="28">' + (done >= goal ? "✓" : done) + '</text>' +
+  '</svg>';
+}
+
+function weekdayLabel(day) {
+  try {
+    return new Date(day + "T00:00:00Z").toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US",
+      { weekday: "short", timeZone: "UTC" });
+  } catch (_) { return day.slice(5); }
+}
+
+// Today's goal ring and this week's row, from GET /api/stats/today (also embedded in the
+// dashboard response). Server mode only: the streak and the day boundary live there.
+function todayStripHtml(today) {
+  if (!today || !Array.isArray(today.week)) return "";
+  var goal = state.dailyGoal;
+  var goalHtml = "";
+  if (goal > 0) {
+    var met = today.count >= goal;
+    goalHtml = '<div class="dash-goal">' + dailyGoalRing(today.count, goal) +
+      '<div><div class="dash-goal-title">' + escHtml(t("goal.progress", { done: today.count, goal: goal })) + '</div>' +
+      '<div class="dash-goal-sub">' + escHtml(met ? t("goal.met") : t("goal.left", { n: goal - today.count })) + '</div></div>' +
+    '</div>';
+  }
+  var hasRest = today.restAvailableToday || today.week.some(function(d) { return d.status === "rest"; });
+  var weekHtml = '<div class="dash-week" role="list" aria-label="' + escHtml(t("week.label")) + '">' +
+    today.week.map(function(d) {
+      var mark = d.status === "done" ? "✓" : d.status === "rest" ? "❄" : "";
+      var label = weekdayLabel(d.day);
+      return '<div class="dash-week-day" role="listitem" aria-label="' + escHtml(label + ": " + t("week." + d.status)) + '" title="' + escHtml(t("week." + d.status)) + '">' +
+        '<span class="dash-week-name">' + escHtml(label) + '</span>' +
+        '<span class="dash-week-dot is-' + d.status + (d.isToday && d.status !== "today" ? ' is-today' : '') + '">' + mark + '</span>' +
+      '</div>';
+    }).join('') +
+  '</div>' +
+  (hasRest ? '<div class="dash-week-hint">' + escHtml(t("week.restHint")) + '</div>' : '');
+  return '<div class="dash-today' + (goalHtml ? '' : ' no-goal') + '">' + goalHtml + '<div class="dash-week-wrap">' + weekHtml + '</div></div>';
 }
 
 // Re-renders any already-rendered hero card(s) in place from the last data used to build
@@ -7769,7 +7855,7 @@ function _refreshDashHeroCards() {
     var hero = grid.querySelector(".dash-hero-card");
     if (!hero) return;
     var wrap = document.createElement("div");
-    wrap.innerHTML = streakTimeHeroCard(state._dashHeroData.streak, state._dashHeroData.studyTime, state._dashHeroData.summary, state._dashHeroData.newCardEstimate);
+    wrap.innerHTML = streakTimeHeroCard(state._dashHeroData.streak, state._dashHeroData.studyTime, state._dashHeroData.summary, state._dashHeroData.newCardEstimate, state._dashHeroData.today);
     hero.replaceWith(wrap.firstElementChild);
   });
 }
@@ -8078,7 +8164,7 @@ function renderDashboard() {
 
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
-    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary, newCardEstimate);
+    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary, newCardEstimate, d.today);
 
     // Accuracy bar
     var accPct = d.accuracy.total > 0
@@ -9512,6 +9598,9 @@ function applyPrefs(prefs) {
   if (typeof prefs.maxReviewsPerDay === "number") {
     state.maxReviewsPerDay = prefs.maxReviewsPerDay;
   }
+  if (typeof prefs.dailyGoal === "number") {
+    state.dailyGoal = prefs.dailyGoal;
+  }
   if (typeof prefs.quizCountsAsKnown === "boolean") {
     state.quizCountsAsKnown = prefs.quizCountsAsKnown;
   }
@@ -9905,6 +9994,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   closeAllDropdowns();
   prefsSnapshot = { theme: state.themePref, palette: state.palette, highContrast: state.highContrast, fontScale: state.fontScale };
   setPillGroup("pref-theme", state.themePref);
+  setPillGroup("pref-daily-goal", String(state.dailyGoal));
   document.getElementById("pref-contrast").checked = state.highContrast;
   setPillGroup("pref-palette", state.palette);
   document.getElementById("pref-haptics").checked = state.haptics;
@@ -10016,6 +10106,12 @@ document.getElementById("pref-theme").addEventListener("click", function(e) {
   applyThemePref(pill.dataset.value);
 });
 
+document.getElementById("pref-daily-goal").addEventListener("click", function(e) {
+  var pill = e.target.closest(".pill");
+  if (!pill) return;
+  setPillGroup("pref-daily-goal", pill.dataset.value);
+});
+
 document.getElementById("pref-palette").addEventListener("click", function(e) {
   var pill = e.target.closest(".pill");
   if (!pill) return;
@@ -10092,9 +10188,13 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   applyLanguage(lang);
   var maxReviews = maxReviewsRaw === "" ? null : parseInt(maxReviewsRaw, 10);
   state.maxReviewsPerDay = maxReviews;
+  var goalPill = document.querySelector("#pref-daily-goal .pill.active");
+  var dailyGoal = goalPill ? parseInt(goalPill.dataset.value, 10) : state.dailyGoal;
+  state.dailyGoal = dailyGoal;
+  _refreshDashHeroCards();
   // A changed review cap changes what Study Setup matches (and whether Start is enabled).
   if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
-  var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, sounds: sounds, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
+  var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, sounds: sounds, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, dailyGoal: dailyGoal, quizCountsAsKnown: quizCountsAsKnown };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.

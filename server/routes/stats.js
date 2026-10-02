@@ -3,6 +3,7 @@
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
+const { computeStreak, weekRow } = require("../lib/streak");
 const router  = express.Router();
 
 function computeStats(attempts) {
@@ -280,24 +281,10 @@ router.get("/dashboard", requireAuth, (req, res) => {
   // Flashcard-only study, or a Quiz session started but not finished, was invisible to
   // the streak — a user could study daily and still see it reset. attempts is written
   // immediately by both modes (per Flashcard grade, per Quiz answer), so it reflects
-  // "did you study" rather than "did you finish a quiz."
-  const days = db.prepare(
-    "SELECT DISTINCT date(created_at, 'unixepoch') AS day FROM attempts WHERE user_id = ? ORDER BY day DESC"
-  ).all(uid).map(r => r.day);
-
-  let streak = 0;
-  if (days.length) {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const msPerDay = 86400000;
-    // startDay=0 if studied today, 1 if last study was yesterday (still counts as active streak)
-    const startDay = (days[0] === todayStr) ? 0 : 1;
-    for (let i = 0; i < days.length; i++) {
-      const expectedDate = new Date(Date.now() - (i + startDay) * msPerDay)
-        .toISOString().slice(0, 10);
-      if (days[i] === expectedDate) streak++;
-      else break;
-    }
-  }
+  // "did you study" rather than "did you finish a quiz." One missed day a week is a rest
+  // day (see ../lib/streak.js).
+  const today = todayStats(uid);
+  const streak = today.streak;
 
   // Study Time (total + Avg/Min/Max per study day) — windowed if ?days= is given (clamped
   // 7-90, same range as /analytics), else all-time (the original, backward-compatible
@@ -348,6 +335,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
     dueForReview,
     dueByClass,
     streak,
+    today,
     studyTime: {
       totalMs:     totalMsRow.total || 0,
       avgDailyMs:  Math.round(studyTimeStatsRow.avg || 0),
@@ -644,6 +632,50 @@ router.get("/future-due", requireAuth, (req, res) => {
     "GROUP BY day"
   ).all(req.session.userId, req.session.userId, FUTURE_DUE_WINDOW_DAYS * 86400);
   res.json({ days: rows, windowDays: FUTURE_DUE_WINDOW_DAYS });
+});
+
+// What the home board and the end of a session need about today: cards answered, the
+// streak with its rest days, this week's row, and the user's typical seconds per card.
+const MEDIAN_SAMPLE = 200;
+
+function median(values) {
+  if (!values.length) return null;
+  const sorted = values.slice().sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+function todayStats(uid) {
+  const days = db.prepare(
+    "SELECT DISTINCT date(created_at, 'unixepoch') AS day FROM attempts WHERE user_id = ? ORDER BY day DESC"
+  ).all(uid).map(r => r.day);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const s = computeStreak(days, todayStr);
+  const count = db.prepare(
+    "SELECT COUNT(*) AS cnt FROM attempts WHERE user_id = ? AND date(created_at,'unixepoch') = date('now')"
+  ).get(uid).cnt;
+  // Flashcards and quiz questions take very different times, so each gets its own median;
+  // a median, not a mean, so one card left open over lunch does not double the estimate.
+  const medianMs = {};
+  ["flashcard", "quiz"].forEach(source => {
+    medianMs[source] = median(db.prepare(
+      "SELECT duration_ms FROM attempts WHERE user_id = ? AND source = ? AND duration_ms > 0 " +
+      "ORDER BY created_at DESC LIMIT ?"
+    ).all(uid, source, MEDIAN_SAMPLE).map(r => r.duration_ms));
+  });
+  return {
+    date: todayStr,
+    count,
+    streak: s.streak,
+    studiedToday: s.studiedToday,
+    restAvailableToday: s.restAvailableToday,
+    week: weekRow(days, s.restDays, todayStr),
+    medianMs
+  };
+}
+
+router.get("/today", requireAuth, (req, res) => {
+  res.json(todayStats(req.session.userId));
 });
 
 // GET /api/stats/reviews-today — approximates "reviews done today" as any graded attempt

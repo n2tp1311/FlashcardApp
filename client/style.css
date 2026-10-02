@@ -2624,6 +2624,35 @@ code {
 }
 .dash-hero-label { font-size: 0.8125rem; color: var(--text2); margin-top: 4px; }
 .dash-hero-countdown { font-size: 0.6875rem; color: var(--text2); opacity: 0.75; margin-top: 2px; }
+
+/* Today strip: daily goal ring beside this week's row (Duolingo's week row, Apple's rings). */
+.dash-today {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 28px;
+  margin-top: 16px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.dash-today:last-child { border-bottom: 0; padding-bottom: 0; }
+.dash-goal { display: flex; align-items: center; gap: 12px; }
+.dash-goal-title { font-weight: 600; font-variant-numeric: tabular-nums; }
+.dash-goal-sub { font-size: 0.8125rem; color: var(--text2); }
+.goal-ring { width: 56px; height: 56px; flex: none; }
+.goal-ring circle { fill: none; stroke-width: 6; }
+.goal-ring-track { stroke: var(--surface2); }
+.goal-ring-arc { stroke: var(--primary); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.5s ease, stroke 0.3s; }
+.goal-ring.met .goal-ring-arc { stroke: var(--warning); }
+.goal-ring text { fill: var(--text); font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
+.dash-week-wrap { display: grid; gap: 6px; justify-items: center; }
+.dash-week { display: grid; grid-template-columns: repeat(7, minmax(30px, 1fr)); gap: 4px; text-align: center; }
+.dash-week-day { display: grid; gap: 3px; justify-items: center; }
+.dash-week-name { font-size: 0.6875rem; color: var(--text2); }
+.dash-week-dot {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 0.8125rem; font-weight: 700; background: var(--surface2); color: var(--text3);
+}
+.dash-week-dot.is-done { background: var(--warning-light); color: var(--warning); }
+.dash-week-dot.is-rest { background: var(--primary-light); color: var(--primary); }
+.dash-week-dot.is-future { background: transparent; border: 1px dashed var(--border); }
+.dash-week-dot.is-today { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary); }
+.dash-week-hint { font-size: 0.75rem; color: var(--text2); }
 .dash-hero-sub {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(90px, 130px));
