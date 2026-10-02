@@ -66,7 +66,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
      cool palette gets cool-leaning reds and greens and the row sits in the theme instead of
      on top of it. The hues are the same in both modes; only the mix amount changes. */
   --soft-mix: 11%;
-  --class-saturate: 0.6;
+  /* Class colours are stored as Tailwind 600s. On a light page they are damped; the dark
+     theme lifts them instead (below), since a 600 on charcoal is too dark to read as colour. */
+  --class-filter: saturate(0.6);
+  --due-bg: var(--warning-fill);
+  --due-text: #fff;
   --success-hue: #46a758;
   --danger-hue: #e5484d;
   --warning-hue: #e8a317;
@@ -132,6 +136,12 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --danger-soft-text: #f5aeb4;
   --warning-soft-text: #ecc976;
   --confident-soft-text: #6fe0c4;
+  /* About two Tailwind steps lighter at full saturation: chosen by the user from a preview,
+     over the 60% damping the light theme uses. The due badge is full amber with dark text,
+     the one thing on a class card that asks for action today. */
+  --class-filter: brightness(1.4) saturate(1.05);
+  --due-bg: #f0ac1c;
+  --due-text: #1c1c1c;
   --shadow:       0 1px 3px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);
   --shadow-md:    0 4px 6px -1px rgba(0,0,0,.7), 0 2px 4px -1px rgba(0,0,0,.6);
   --shadow-lg:    0 10px 15px -3px rgba(0,0,0,.7), 0 4px 6px -2px rgba(0,0,0,.6);
@@ -1027,10 +1037,10 @@ body {
 .class-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* Class colours are fixed, saturated picks (Tailwind 600s) stored per class. Shown at full
-   strength they outshout the neutral page, so wherever a class colour is painted it is
-   desaturated on display; the stored colour is unchanged. */
+   strength they outshout a light page, so there they are desaturated on display; in dark
+   mode they are lifted instead (--class-filter). The stored colour is unchanged. */
 .class-card-accent, .class-list-colorbar, .progress-mini-fill[id^="cls-prog-fill-"],
-.class-icon svg, .sidebar-class-icon svg { filter: saturate(var(--class-saturate)); }
+.class-icon svg, .sidebar-class-icon svg { filter: var(--class-filter); }
 
 .class-card-accent {
   position: absolute;
@@ -2584,8 +2594,8 @@ code {
 .due-badge {
   font-size: 0.6875rem;
   font-weight: 700;
-  color: #fff;
-  background: var(--warning-fill);
+  color: var(--due-text);
+  background: var(--due-bg);
   border-radius: 10px;
   padding: 2px 8px;
   flex-shrink: 0;
@@ -4249,6 +4259,10 @@ code {
 .lesson-acc-pill.acc-high { background: rgba(22,163,74,0.12); color: #16a34a; border-color: rgba(22,163,74,0.25); }
 .lesson-acc-pill.acc-mid  { background: rgba(217,119,6,0.12); color: #d97706; border-color: rgba(217,119,6,0.25); }
 .lesson-acc-pill.acc-low  { background: rgba(220,38,38,0.12); color: #dc2626; border-color: rgba(220,38,38,0.25); }
+/* The light theme's 600 greens/ambers/reds are dark-on-dark here; use the theme's own. */
+[data-theme="dark"] :is(.class-acc-pill, .lesson-acc-pill).acc-high { background: var(--success-light); color: var(--success); border-color: color-mix(in srgb, var(--success) 28%, transparent); }
+[data-theme="dark"] :is(.class-acc-pill, .lesson-acc-pill).acc-mid  { background: var(--warning-light); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 28%, transparent); }
+[data-theme="dark"] :is(.class-acc-pill, .lesson-acc-pill).acc-low  { background: var(--danger-light); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 28%, transparent); }
 
 /* ============================
    REDUCED MOTION
