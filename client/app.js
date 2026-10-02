@@ -472,9 +472,21 @@ Object.assign(TRANSLATIONS.en, {
   "study.showAnswer": "Show answer",
   "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
-  "today.studied": "studied",
-  "today.newCards": "new cards",
-  "today.reviews": "reviews",
+  "hero.streak": "Streak",
+  "hero.days": "days",
+  "hero.today": "Today",
+  "hero.cardsToday": "{n} cards today",
+  "hero.studied": "Studied",
+  "hero.studiedHint": "Bar fills at your average day ({time})",
+  "hero.newCards": "New cards",
+  "hero.reviews": "Reviews",
+  "hero.reviewsHint": "Against Max reviews per day (Preferences)",
+  "hero.lastDays": "Last {n} days",
+  "hero.perDay": "a day",
+  "hero.total": "total",
+  "hero.shortest": "shortest",
+  "hero.longest": "longest",
+  "hero.sparkLabel": "Daily study time, last {n} days",
   "undo.button": "Undo",
   "undo.graded": "Marked {grade}",
   "undo.failed": "That grade can no longer be undone",
@@ -616,7 +628,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.srsDistribution": "Memory Interval Distribution",
   "dashboard.studyTime": "Study Time",
   "dashboard.configureMetrics": "Customize metrics",
-  "dashboard.configureMetricsHint": "Choose what to show on your summary board, and which metrics to feature at the top.",
+  "dashboard.configureMetricsHint": "Choose what to show on your summary board. Hiding every study-time number hides that tile.",
   "dashboard.studyTimeWindowLabel": "Study Time window",
   "dashboard.allMetricsHidden": "All metrics are hidden — customize to show some again.",
   "dashboard.metricHidden": "Hidden",
@@ -1227,9 +1239,21 @@ Object.assign(TRANSLATIONS.vi, {
   "study.showAnswer": "Xem đáp án",
   "study.typeYourGuessPlaceholder": "Nhập câu trả lời...",
   "study.yourGuess": "Bạn đã trả lời: {text}",
-  "today.studied": "đã học",
-  "today.newCards": "thẻ mới",
-  "today.reviews": "lượt ôn",
+  "hero.streak": "Chuỗi ngày",
+  "hero.days": "ngày",
+  "hero.today": "Hôm nay",
+  "hero.cardsToday": "{n} thẻ hôm nay",
+  "hero.studied": "Đã học",
+  "hero.studiedHint": "Thanh đầy khi bằng ngày trung bình của bạn ({time})",
+  "hero.newCards": "Thẻ mới",
+  "hero.reviews": "Lượt ôn",
+  "hero.reviewsHint": "So với Số lượt ôn tối đa mỗi ngày (Tùy chọn)",
+  "hero.lastDays": "{n} ngày qua",
+  "hero.perDay": "mỗi ngày",
+  "hero.total": "tổng",
+  "hero.shortest": "ít nhất",
+  "hero.longest": "nhiều nhất",
+  "hero.sparkLabel": "Thời gian học mỗi ngày, {n} ngày qua",
   "undo.button": "Hoàn tác",
   "undo.graded": "Đã đánh dấu {grade}",
   "undo.failed": "Không thể hoàn tác lần đánh dấu này nữa",
@@ -1369,7 +1393,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.srsDistribution": "Phân bố khoảng ghi nhớ",
   "dashboard.studyTime": "Thời gian học",
   "dashboard.configureMetrics": "Tùy chỉnh chỉ số",
-  "dashboard.configureMetricsHint": "Chọn những gì hiển thị trên bảng tổng quan, và chỉ số nào được nổi bật lên đầu.",
+  "dashboard.configureMetricsHint": "Chọn những gì hiển thị trên bảng tổng quan. Ẩn mọi số liệu thời gian học sẽ ẩn ô đó.",
   "dashboard.studyTimeWindowLabel": "Khoảng thời gian học",
   "dashboard.allMetricsHidden": "Tất cả chỉ số đang ẩn — tùy chỉnh để hiện lại.",
   "dashboard.metricHidden": "Ẩn",
@@ -2434,12 +2458,12 @@ function shuffle(arr) {
 /* ============================
    DASHBOARD METRIC CONFIG
    Per-metric visibility for the summary-board hero card (Home + Dashboard share one config):
-   "hidden" | "show" | "highlight" (headline, at the top of the card).
+   "hidden" | "show". "highlight" was the old headline row; saved configs may still hold it,
+   and it reads as "show".
    ============================ */
 var DASH_METRICS = [
   { key: "streak",          labelKey: "stat.dayStreak" },
   { key: "studyTime",       labelKey: "dashboard.studyTime" },
-  { key: "newCardEstimate", labelKey: "setup.newCardEstimateLabel", shortLabelKey: "dashboard.newCardsShortLabel" },
   { key: "avgDaily",        labelKey: "stat.avgDailyLabel" },
   { key: "minDaily",        labelKey: "stat.minDailyLabel" },
   { key: "maxDaily",        labelKey: "stat.maxDailyLabel" },
@@ -2451,8 +2475,7 @@ var DASH_METRICS = [
 ];
 
 var DEFAULT_DASH_METRIC_CONFIG = {
-  streak: "highlight", studyTime: "highlight",
-  newCardEstimate: "show",
+  streak: "show", studyTime: "show",
   avgDaily: "show", minDaily: "show", maxDaily: "show",
   classes: "show", lessons: "show", cards: "show", sessions: "show", attempts: "show"
 };
@@ -8044,44 +8067,8 @@ function _streakResetCountdownText() {
   return t("stat.streakResetsIn", { time: _formatCountdownDuration(_msUntilUtcMidnight()) });
 }
 
-function _dashMetricValue(key, streak, studyTime, summary, newCardEstimate) {
-  var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0 };
-  switch (key) {
-    case "streak":          return String(streak);
-    case "studyTime":       return formatStudyDuration(st.totalMs);
-    case "newCardEstimate": return newCardEstimate ? String(newCardEstimate.estimatedNewCards) : "–";
-    case "avgDaily":        return formatStudyDuration(st.avgDailyMs);
-    case "minDaily":        return formatStudyDuration(st.minDailyMs);
-    case "maxDaily":        return formatStudyDuration(st.maxDailyMs);
-    case "classes":         return String(summary.classes);
-    case "lessons":         return String(summary.lessons);
-    case "cards":           return String(summary.cards);
-    case "sessions":        return String(summary.quizSessions);
-    case "attempts":        return String(summary.attempts);
-    default: return "";
-  }
-}
 
-function _dashMetricIcon(key) {
-  if (key === "streak") return ICON_FLAME;
-  if (key === "studyTime") return ICON_CLOCK;
-  if (key === "newCardEstimate") return ICON_PLUS_CIRCLE;
-  return "";
-}
 
-// Appends the active window to Study Time's label, e.g. "Avg/day(7)" for a 7-day window
-// vs plain "Avg/day" for all-time — reads the window off the actual studyTime data just
-// rendered (not the pending state), so the label can never claim a window the displayed
-// numbers don't actually reflect. Covers the total ("studyTime") too, not just Avg/Min/Max
-// — the window slicer scopes all four together.
-function _dashMetricLabel(m, studyTime) {
-  var label = t(m.shortLabelKey || m.labelKey);
-  var windowedKeys = { studyTime: 1, avgDaily: 1, minDaily: 1, maxDaily: 1 };
-  if (windowedKeys[m.key] && studyTime && studyTime.windowDays) {
-    label += "(" + studyTime.windowDays + ")";
-  }
-  return label;
-}
 
 function _dashMetricHint(key, studyTime, newCardEstimate) {
   if (key === "sessions") return t("stat.sessionsHint");
@@ -8100,46 +8087,125 @@ function _dashMetricHint(key, studyTime, newCardEstimate) {
   return null;
 }
 
+// Three tiles, each answering one question: am I keeping my streak, how is today going, how
+// has the study-time window gone. Chosen by the user from a preview over the old four
+// stacked bands, where study time appeared five times without saying which was which. The
+// gear still hides single numbers or a whole tile; the old "highlight" now reads as "show".
 function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today) {
   state._dashHeroData = { streak: streak, studyTime: studyTime, summary: summary, newCardEstimate: newCardEstimate, today: today };
-  var todayHtml = todayStripHtml(today, newCardEstimate ? newCardEstimate.estimatedNewCards : null);
-  var config = state.dashMetricConfig || DEFAULT_DASH_METRIC_CONFIG;
-  var highlighted = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "highlight"; });
-  var shown = DASH_METRICS.filter(function(m) { return (config[m.key] || "show") === "show"; });
+  var config = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, state.dashMetricConfig);
+  function on(key) { return config[key] !== "hidden"; }
   var gearBtn = '<button class="icon-btn dash-hero-settings-btn" title="' + escHtml(t("dashboard.configureMetrics")) + '">' + ICON_SETTINGS + '</button>';
 
-  if (!highlighted.length && !shown.length) {
+  var tiles = [];
+  if (on("streak")) tiles.push(heroStreakTile(streak, today));
+  if (today && today.activity) tiles.push(heroTodayTile(today, newCardEstimate, studyTime));
+  var timeTile = heroStudyTimeTile(studyTime, on);
+  if (timeTile) tiles.push(timeTile);
+
+  var library = ["classes", "lessons", "cards", "attempts", "sessions"].filter(on).map(function(key) {
+    var m = DASH_METRICS.filter(function(x) { return x.key === key; })[0];
+    var n = key === "sessions" ? summary.quizSessions : summary[key];
+    return '<span' + (key === "sessions" ? ' title="' + escHtml(t("stat.sessionsHint")) + '"' : '') + '><b>' + escHtml(String(n)) + '</b> ' + escHtml(t(m.labelKey)) + '</span>';
+  });
+  var libraryHtml = library.length ? '<div class="dash-hero-library">' + library.join('') + '</div>' : '';
+
+  if (!tiles.length && !libraryHtml) {
     return '<div class="dash-hero-card dash-hero-empty">' + gearBtn +
-      '<div class="dash-hero-empty-note">' + t("dashboard.allMetricsHidden") + '</div>' + todayHtml +
-    '</div>';
+      '<div class="dash-hero-empty-note">' + t("dashboard.allMetricsHidden") + '</div></div>';
   }
-
-  var mainHtml = highlighted.map(function(m, i) {
-    // With this week's rest day unused, missing today does not reset anything, so a
-    // countdown would be a false alarm.
-    var countdownHtml = (m.key === "streak" && streak > 0)
-      ? (today && today.restAvailableToday
-        ? '<div class="dash-hero-countdown" title="' + escHtml(t("stat.restDayHint")) + '">' + escHtml(t("stat.restDayAvailable")) + '</div>'
-        : '<div class="dash-hero-countdown" data-countdown="streak" title="' + escHtml(t("stat.streakResetsAtHint")) + '">' +
-          escHtml(_streakResetCountdownText()) + '</div>')
-      : '';
-    return (i > 0 ? '<div class="dash-hero-divider"></div>' : '') +
-      '<div class="dash-hero-stat">' +
-        '<div class="dash-hero-value">' + _dashMetricIcon(m.key) + ' ' + _dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate) + '</div>' +
-        '<div class="dash-hero-label">' + escHtml(_dashMetricLabel(m, studyTime)) + '</div>' +
-        countdownHtml +
-      '</div>';
-  }).join('');
-
-  var subHtml = shown.map(function(m) {
-    return heroSubCard(_dashMetricValue(m.key, streak, studyTime, summary, newCardEstimate), escHtml(_dashMetricLabel(m, studyTime)), _dashMetricHint(m.key, studyTime, newCardEstimate));
-  }).join('');
-
   return '<div class="dash-hero-card">' + gearBtn +
-    (mainHtml ? '<div class="dash-hero-main">' + mainHtml + '</div>' : '') +
-    todayHtml +
-    (subHtml ? '<div class="dash-hero-sub">' + subHtml + '</div>' : '') +
+    (tiles.length ? '<div class="dash-hero-tiles">' + tiles.join('') + '</div>' : '') +
+    libraryHtml +
   '</div>';
+}
+
+function heroStreakTile(streak, today) {
+  // With this week's rest day unused, missing today does not reset anything, so a
+  // countdown would be a false alarm.
+  var caption = streak > 0
+    ? (today && today.restAvailableToday
+      ? '<div class="dash-hero-countdown" title="' + escHtml(t("stat.restDayHint")) + '">' + escHtml(t("stat.restDayAvailable")) + '</div>'
+      : '<div class="dash-hero-countdown" data-countdown="streak" title="' + escHtml(t("stat.streakResetsAtHint")) + '">' +
+        escHtml(_streakResetCountdownText()) + '</div>')
+    : '';
+  return '<section class="dash-tile">' +
+    '<h3 class="dash-tile-h">' + escHtml(t("hero.streak")) + '</h3>' +
+    '<div class="dash-tile-big is-streak">' + ICON_FLAME + '<span class="dash-tile-num">' + escHtml(String(streak)) + '</span>' +
+      '<span class="dash-tile-unit">' + escHtml(t("hero.days")) + '</span></div>' +
+    heroWeekHtml(today) + caption +
+  '</section>';
+}
+
+function heroTodayTile(today, newCardEstimate, studyTime) {
+  var a = today.activity;
+  var goal = state.dailyGoal;
+  var head = goal > 0
+    ? '<div class="dash-goal">' + dailyGoalRing(today.count, goal) +
+        '<div><div class="dash-goal-title">' + escHtml(t("goal.progress", { done: today.count, goal: goal })) + '</div>' +
+        '<div class="dash-goal-sub">' + escHtml(today.count >= goal ? t("goal.met") : t("goal.left", { n: goal - today.count })) + '</div></div>' +
+      '</div>'
+    : '<div class="dash-goal-title">' + escHtml(t("hero.cardsToday", { n: today.count })) + '</div>';
+  var avgMs = studyTime && studyTime.avgDailyMs;
+  var newGoal = newCardEstimate ? newCardEstimate.estimatedNewCards : null;
+  var cap = state.maxReviewsPerDay;
+  var hasCap = cap !== null && cap !== undefined;
+  return '<section class="dash-tile">' +
+    '<h3 class="dash-tile-h">' + escHtml(t("hero.today")) + '</h3>' + head +
+    '<div class="dash-meters">' +
+      heroMeter("time", ICON_TODAY_TIME, "hero.studied", formatStudyDuration(a.studyMs),
+        avgMs > 0 ? a.studyMs / avgMs : null, avgMs > 0 ? t("hero.studiedHint", { time: formatStudyDuration(avgMs) }) : null) +
+      heroMeter("new", ICON_TODAY_NEW, "hero.newCards", newGoal != null ? a.newCards + " / " + newGoal : String(a.newCards),
+        newGoal ? a.newCards / newGoal : null, _dashMetricHint("newCardEstimate", studyTime, newCardEstimate)) +
+      heroMeter("review", ICON_TODAY_REVIEW, "hero.reviews", hasCap ? a.reviews + " / " + cap : String(a.reviews),
+        hasCap ? (cap > 0 ? a.reviews / cap : 1) : null, hasCap ? t("hero.reviewsHint") : null) +
+    '</div>' +
+  '</section>';
+}
+
+// A count with nothing to measure it against (no estimate, no cap, no study history yet)
+// is shown without a bar, rather than a bar that means nothing.
+function heroMeter(kind, icon, labelKey, value, ratio, hint) {
+  return '<div class="dash-meter is-' + kind + '"' + (hint ? ' title="' + escHtml(hint) + '"' : '') + '>' +
+    '<div class="dash-meter-top"><span class="dash-meter-label">' + icon + escHtml(t(labelKey)) + '</span><b>' + escHtml(value) + '</b></div>' +
+    (ratio == null ? '' : '<div class="dash-meter-track"><i style="transform:scaleX(' + Math.max(0, Math.min(ratio, 1)).toFixed(3) + ')"></i></div>') +
+  '</div>';
+}
+
+function heroStudyTimeTile(studyTime, on) {
+  var st = studyTime || { totalMs: 0, avgDailyMs: 0, minDailyMs: 0, maxDailyMs: 0 };
+  var trio = [["studyTime", st.totalMs, "hero.total"], ["minDaily", st.minDailyMs, "hero.shortest"], ["maxDaily", st.maxDailyMs, "hero.longest"]]
+    .filter(function(x) { return on(x[0]); })
+    .map(function(x) { return '<div><b>' + escHtml(formatStudyDuration(x[1])) + '</b><span>' + escHtml(t(x[2])) + '</span></div>'; });
+  if (!on("avgDaily") && !trio.length) return null;
+  var hint = _dashMetricHint("studyTime", studyTime, null);
+  return '<section class="dash-tile" title="' + escHtml(hint) + '">' +
+    '<h3 class="dash-tile-h">' + escHtml(st.windowDays ? t("hero.lastDays", { n: st.windowDays }) : t("stat.allTime")) + '</h3>' +
+    (on("avgDaily") ? '<div class="dash-tile-big"><span class="dash-tile-num">' + escHtml(formatStudyDuration(st.avgDailyMs)) + '</span>' +
+      '<span class="dash-tile-unit">' + escHtml(t("hero.perDay")) + '</span></div>' : '') +
+    studySparkline(st.daily, st.avgDailyMs, !st.windowDays) +
+    (trio.length ? '<div class="dash-trio">' + trio.join('') + '</div>' : '') +
+  '</section>';
+}
+
+// Daily study minutes as a line over an area, the average as a dashed rule, today as a dot.
+// Days without study are drawn at zero: the dips are the information.
+function studySparkline(daily, avgMs, allTime) {
+  if (!Array.isArray(daily) || daily.length < 2) return '';
+  var w = 300, h = 56, pad = 4;
+  var max = Math.max.apply(null, daily.map(function(d) { return d.ms; }).concat([avgMs || 0, 1]));
+  function y(ms) { return (h - pad - (ms / max) * (h - 2 * pad)).toFixed(1); }
+  var pts = daily.map(function(d, i) { return (i * w / (daily.length - 1)).toFixed(1) + " " + y(d.ms); });
+  var line = "M" + pts.join(" L");
+  var last = pts[pts.length - 1].split(" ");
+  return '<svg class="dash-spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img" aria-label="' +
+      escHtml(t("hero.sparkLabel", { n: daily.length })) + '">' +
+    '<path class="dash-spark-area" d="' + line + ' L' + w + ' ' + h + ' L0 ' + h + ' Z"/>' +
+    (avgMs > 0 ? '<line class="dash-spark-avg" x1="0" x2="' + w + '" y1="' + y(avgMs) + '" y2="' + y(avgMs) + '"/>' : '') +
+    '<path class="dash-spark-line" d="' + line + '"/>' +
+    '<circle class="dash-spark-dot" cx="' + last[0] + '" cy="' + last[1] + '" r="3"/>' +
+  '</svg>' +
+  (allTime ? '<div class="dash-spark-note">' + escHtml(t("hero.sparkLabel", { n: daily.length })) + '</div>' : '');
 }
 
 var GOAL_RING_R = 22;
@@ -8162,21 +8228,12 @@ function weekdayLabel(day) {
   } catch (_) { return day.slice(5); }
 }
 
-// Today's goal ring and this week's row, from GET /api/stats/today (also embedded in the
-// dashboard response). Server mode only: the streak and the day boundary live there.
-function todayStripHtml(today, newCardGoal) {
+// This week's row, from GET /api/stats/today (also embedded in the dashboard response).
+// Server mode only: the streak and the day boundary live there.
+function heroWeekHtml(today) {
   if (!today || !Array.isArray(today.week)) return "";
-  var goal = state.dailyGoal;
-  var goalHtml = "";
-  if (goal > 0) {
-    var met = today.count >= goal;
-    goalHtml = '<div class="dash-goal">' + dailyGoalRing(today.count, goal) +
-      '<div><div class="dash-goal-title">' + escHtml(t("goal.progress", { done: today.count, goal: goal })) + '</div>' +
-      '<div class="dash-goal-sub">' + escHtml(met ? t("goal.met") : t("goal.left", { n: goal - today.count })) + '</div></div>' +
-    '</div>';
-  }
   var hasRest = today.restAvailableToday || today.week.some(function(d) { return d.status === "rest"; });
-  var weekHtml = '<div class="dash-week" role="list" aria-label="' + escHtml(t("week.label")) + '">' +
+  return '<div class="dash-week" role="list" aria-label="' + escHtml(t("week.label")) + '">' +
     today.week.map(function(d) {
       var mark = d.status === "done" ? "✓" : d.status === "rest" ? "❄" : "";
       var label = weekdayLabel(d.day);
@@ -8187,30 +8244,11 @@ function todayStripHtml(today, newCardGoal) {
     }).join('') +
   '</div>' +
   (hasRest ? '<div class="dash-week-hint">' + escHtml(t("week.restHint")) + '</div>' : '');
-  return '<div class="dash-today' + (goalHtml ? '' : ' no-goal') + '">' + goalHtml + '<div class="dash-week-wrap">' + weekHtml + '</div>' +
-    todayChipsHtml(today.activity, newCardGoal) + '</div>';
 }
 
 var ICON_TODAY_TIME = svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 14);
 var ICON_TODAY_NEW = svgIcon('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>', 14);
 var ICON_TODAY_REVIEW = svgIcon('<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>', 14);
-
-// Time studied, new cards against today's recommendation, reviews against the daily cap.
-// A count with nothing to measure it against (no estimate, no cap) is shown on its own.
-function todayChipsHtml(activity, newCardGoal) {
-  if (!activity) return "";
-  function chip(kind, icon, value, labelKey) {
-    return '<span class="dash-today-chip is-' + kind + '">' + icon +
-      '<span><b>' + escHtml(value) + '</b> ' + escHtml(t(labelKey)) + '</span></span>';
-  }
-  var cap = state.maxReviewsPerDay;
-  var hasCap = cap !== null && cap !== undefined;
-  return '<div class="dash-today-chips">' +
-    chip("time", ICON_TODAY_TIME, formatStudyDuration(activity.studyMs), "today.studied") +
-    chip("new", ICON_TODAY_NEW, newCardGoal != null ? activity.newCards + " / " + newCardGoal : String(activity.newCards), "today.newCards") +
-    chip("review", ICON_TODAY_REVIEW, hasCap ? activity.reviews + " / " + cap : String(activity.reviews), "today.reviews") +
-  '</div>';
-}
 
 // Re-renders any already-rendered hero card(s) in place from the last data used to build
 // them, so saving the metrics config updates the board immediately without a network refetch.
@@ -8241,13 +8279,6 @@ function _updateStreakCountdowns() {
 }
 setInterval(_updateStreakCountdowns, 60000);
 
-function heroSubCard(val, label, hint) {
-  var titleAttr = hint ? ' title="' + escHtml(hint) + '"' : "";
-  return '<div class="dash-hero-sub-card"' + titleAttr + '>' +
-    '<div class="dash-hero-sub-value">' + val + '</div>' +
-    '<div class="dash-hero-sub-label">' + label + '</div>' +
-  '</div>';
-}
 
 function diffBar(name, count, total, color) {
   var pct = total > 0 ? (count / total * 100) : 0;
@@ -10596,8 +10627,8 @@ function _renderDashMetricsModalRows() {
   var list = document.getElementById("dash-metrics-list");
   if (!list) return;
   list.innerHTML = DASH_METRICS.map(function(m) {
-    var mode = _dashMetricDraft[m.key] || "show";
-    var pills = ["hidden", "show", "highlight"].map(function(opt) {
+    var mode = _dashMetricDraft[m.key] === "hidden" ? "hidden" : "show";
+    var pills = ["hidden", "show"].map(function(opt) {
       var labelKey = "dashboard.metric" + opt.charAt(0).toUpperCase() + opt.slice(1);
       return '<button type="button" class="pill' + (mode === opt ? " active" : "") + '" data-mode="' + opt + '">' + t(labelKey) + "</button>";
     }).join("");

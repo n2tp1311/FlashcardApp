@@ -2697,41 +2697,56 @@ code {
   text-align: center;
   padding-right: 30px;
 }
-.dash-hero-main { display: flex; align-items: center; }
-.dash-hero-stat { flex: 1; text-align: center; }
-.dash-hero-divider { width: 1px; align-self: stretch; background: var(--border); }
-.dash-hero-value {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--text);
-}
-.dash-hero-label { font-size: 0.8125rem; color: var(--text2); margin-top: 4px; }
-.dash-hero-countdown { font-size: 0.6875rem; color: var(--text2); opacity: 0.75; margin-top: 2px; }
+.dash-hero-countdown { font-size: 0.6875rem; color: var(--text2); opacity: 0.85; }
 
-/* Today strip: daily goal ring beside this week's row (Duolingo's week row, Apple's rings). */
-.dash-today {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 28px;
-  margin-top: 16px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+/* Hero card: three tiles (streak, today, study-time window), then a line of library counts. */
+.dash-hero-tiles {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;
+  margin-right: 28px; /* clear of the gear */
 }
-.dash-today:last-child { border-bottom: 0; padding-bottom: 0; }
-.dash-today-chips {
-  flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
-  padding-top: 14px; border-top: 1px solid var(--border);
+.dash-tile {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px 16px; min-width: 0; display: grid; gap: 12px; align-content: start;
 }
-.dash-today-chip {
-  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
-  background: var(--surface2); font-size: 0.8125rem; color: var(--text2);
+.dash-tile-h {
+  margin: 0; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3);
 }
-.dash-today-chip b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
-.dash-today-chip svg { flex: none; }
-.dash-today-chip.is-time svg { color: #2f5f8f; } /* the session-end Time tile's blue */
-:root[data-theme="dark"] .dash-today-chip.is-time svg { color: #8fb4e0; }
-.dash-today-chip.is-new svg { color: var(--success); }
-.dash-today-chip.is-review svg { color: var(--warning); }
+.dash-tile-big { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.dash-tile-big.is-streak svg { color: var(--warning); align-self: center; width: 22px; height: 22px; }
+.dash-tile-num { font-size: 1.875rem; font-weight: 800; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+.dash-tile-unit { font-size: 0.8125rem; color: var(--text2); }
+.dash-meters { display: grid; gap: 10px; }
+.dash-meter-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.8125rem; color: var(--text2); }
+.dash-meter-top b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dash-meter-label { display: inline-flex; align-items: center; gap: 7px; }
+.dash-meter-track { height: 6px; border-radius: 3px; background: var(--surface2); margin-top: 5px; overflow: hidden; }
+.dash-meter-track i { display: block; height: 100%; border-radius: 3px; transform-origin: left; transition: transform var(--bar-fill-transition); }
+.dash-meter.is-time svg { color: #2f5f8f; } /* the session-end Time tile's blue */
+.dash-meter.is-time .dash-meter-track i { background: #2f5f8f; }
+:root[data-theme="dark"] .dash-meter.is-time svg { color: #8fb4e0; }
+:root[data-theme="dark"] .dash-meter.is-time .dash-meter-track i { background: #8fb4e0; }
+.dash-meter.is-new svg { color: var(--success); }
+.dash-meter.is-new .dash-meter-track i { background: var(--success); }
+.dash-meter.is-review svg { color: var(--warning); }
+.dash-meter.is-review .dash-meter-track i { background: var(--warning); }
+.dash-spark { display: block; width: 100%; height: 56px; overflow: visible; }
+.dash-spark-area { fill: color-mix(in srgb, #2f5f8f 14%, transparent); }
+.dash-spark-line { fill: none; stroke: #2f5f8f; stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.dash-spark-avg { stroke: var(--text3); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.dash-spark-dot { fill: #2f5f8f; }
+:root[data-theme="dark"] .dash-spark-area { fill: color-mix(in srgb, #8fb4e0 14%, transparent); }
+:root[data-theme="dark"] .dash-spark-line { stroke: #8fb4e0; }
+:root[data-theme="dark"] .dash-spark-dot { fill: #8fb4e0; }
+.dash-spark-note { font-size: 0.6875rem; color: var(--text3); margin-top: -6px; }
+.dash-trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; }
+.dash-trio div { display: grid; gap: 1px; }
+.dash-trio b { font-size: 0.9375rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.dash-trio span { font-size: 0.6875rem; color: var(--text3); }
+.dash-hero-library {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 12px;
+  font-size: 0.75rem; color: var(--text3);
+}
+.dash-hero-library b { color: var(--text2); font-variant-numeric: tabular-nums; }
 .dash-goal { display: flex; align-items: center; gap: 12px; }
 .dash-goal-title { font-weight: 600; font-variant-numeric: tabular-nums; }
 .dash-goal-sub { font-size: 0.8125rem; color: var(--text2); }
@@ -2741,35 +2756,18 @@ code {
 .goal-ring-arc { stroke: var(--primary); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.5s ease, stroke 0.3s; }
 .goal-ring.met .goal-ring-arc { stroke: var(--warning); }
 .goal-ring text { fill: var(--text); font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
-.dash-week-wrap { display: grid; gap: 6px; justify-items: center; }
-.dash-week { display: grid; grid-template-columns: repeat(7, minmax(30px, 1fr)); gap: 4px; text-align: center; }
+.dash-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; max-width: 260px; }
 .dash-week-day { display: grid; gap: 3px; justify-items: center; }
 .dash-week-name { font-size: 0.6875rem; color: var(--text2); }
 .dash-week-dot {
-  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  width: min(28px, 100%); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
   font-size: 0.8125rem; font-weight: 700; background: var(--surface2); color: var(--text3);
 }
 .dash-week-dot.is-done { background: var(--warning-light); color: var(--warning); }
 .dash-week-dot.is-rest { background: var(--primary-light); color: var(--primary); }
 .dash-week-dot.is-future { background: transparent; border: 1px dashed var(--border); }
-.dash-week-dot.is-today { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary); }
+.dash-week-dot.is-today { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary); } /* --bg: the tile it sits on */
 .dash-week-hint { font-size: 0.75rem; color: var(--text2); }
-.dash-hero-sub {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 130px));
-  justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
-}
-.dash-hero-sub-card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  text-align: center;
-}
-.dash-hero-sub-value { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
-.dash-hero-sub-label { font-size: 0.6875rem; color: var(--text2); margin-top: 2px; }
 
 .dash-metrics-hint {
   font-size: 0.8125rem;
@@ -3666,10 +3664,7 @@ code {
   .dash-summary-grid { grid-template-columns: repeat(3, 1fr); }
   .dash-streak-num { font-size: 1.75rem; }
   .dash-hero-card { padding: 14px 16px; }
-  .dash-hero-value { font-size: 1.375rem; gap: 6px; }
-  .dash-hero-sub { grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .dash-hero-sub-card { padding: 6px 4px; }
-  .dash-hero-sub-value { font-size: 0.8125rem; }
+  .dash-hero-tiles { margin-right: 0; margin-top: 22px; }
 }
 
 /* ============================

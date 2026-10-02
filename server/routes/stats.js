@@ -3,7 +3,7 @@
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
-const { computeStreak, weekRow } = require("../lib/streak");
+const { computeStreak, weekRow, addDays } = require("../lib/streak");
 const { summarizeToday } = require("../lib/today");
 const router  = express.Router();
 
@@ -346,6 +346,20 @@ router.get("/dashboard", requireAuth, (req, res) => {
     )
   `).get(...windowParams);
 
+  // Study minutes per calendar day for the hero card's sparkline, every day of the window
+  // (the last 30 for all-time) with unstudied days as 0, oldest first, today last.
+  const sparkDays = windowDays || 30;
+  const dayMs = new Map(db.prepare(
+    "SELECT date(created_at, 'unixepoch') AS day, SUM(duration_ms) AS ms FROM attempts " +
+    "WHERE user_id = ? AND date(created_at, 'unixepoch') > date('now', ?) GROUP BY day"
+  ).all(uid, "-" + sparkDays + " days").map(r => [r.day, r.ms || 0]));
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const daily = [];
+  for (let i = sparkDays - 1; i >= 0; i--) {
+    const day = addDays(todayStr, -i);
+    daily.push({ day, ms: dayMs.get(day) || 0 });
+  }
+
   res.json({
     summary: {
       classes:      totalClasses,
@@ -366,7 +380,8 @@ router.get("/dashboard", requireAuth, (req, res) => {
       minDailyMs:  studyTimeStatsRow.min || 0,
       maxDailyMs:  studyTimeStatsRow.max || 0,
       trackedDays: studyTimeStatsRow.trackedDays || 0,
-      windowDays:  windowDays
+      windowDays:  windowDays,
+      daily
     }
   });
 });

@@ -967,6 +967,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Session complete screen | Done | Headline, Cards/Known/Time or Questions/Best run/Time tiles, streak tick and goal-reached lines on both end screens; `tests/session-done.test.js` |
 | Time left in the session | Done | "~N min left" in both study headers from session, history or default median per card; `tests/time-left.test.js` |
 | Undo the last grade | Done | Flashcards; `attempts.prev_state` snapshot, `DELETE /api/attempts/:id` (latest answer, 10 minutes), 6-second pill and `Ctrl/⌘+Z`; `tests/undo.test.js` |
+| Hero card as three tiles: streak, today, study time | Done | `streakTimeHeroCard` + `heroStreakTile`/`heroTodayTile`/`heroStudyTimeTile`; `studyTime.daily` for the sparkline; metrics Hidden/Show only; `tests/today.test.js` |
 | Hints in Write mode | Done | One more letter per word per press; a hinted card is Hard at best on every grading path; `tests/hints.test.js` |
 | Mastery bar per lesson | Done | Mastered/Known/Learning/New from FSRS state, 21-day line; `tests/mastery.test.js` |
 | Component audit | Done | Filled main action / tonal selection, Show answer before grades, phone search icon + top-docked search, full-width card rows; `tests/components.test.js` |
