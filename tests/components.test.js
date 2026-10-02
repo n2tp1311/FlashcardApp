@@ -33,3 +33,10 @@ test("on a phone the search bar is an icon and search opens at the top", functio
   assert.match(css, /@media \(max-width: 480px\) \{\n  \.nav-search-bar \{[^}]*width: 44px/);
   assert.match(css, /#modal-search \{ align-items: flex-start;/);
 });
+
+test("from tablet width up, the study progress bar is centred over the content, not between uneven controls", function() {
+  const block = css.slice(css.indexOf("@media (min-width: 601px) {\n  #screen-quiz .app-header"));
+  assert.ok(block.length > 0, "centring block missing");
+  assert.match(block, /#screen-quiz \.fc-progress-wrap, #screen-flashcard \.fc-progress-wrap \{\s*position: absolute; left: 50%; top: 50%; transform: translate\(-50%, -50%\);/);
+  assert.match(block, /#quiz-score-display, #btn-fc-shuffle \{ margin-left: auto; \}/);
+});
