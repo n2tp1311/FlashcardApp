@@ -959,6 +959,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Bulk delete lessons + cards | Done | Select mode with checkboxes, select-all, delete |
 | Archive classes | Done | Single-class and multi-selected Home actions; excluded from dashboard/due aggregation; still browsable/studyable on demand |
 | Colour themes + soft buttons | Done | Fifteen palettes (six own, nine from editor schemes) picked in Preferences (`preferences.palette`, both modes each); tinted buttons instead of deep fills; `tests/palettes.test.js` holds every pair to 4.5:1 |
+| Answer sounds | Done | Marimba correct/wrong on quiz answers and retype; Preferences › Sound effects (`preferences.sounds`, default on); `tests/sounds.test.js` |
 | Component audit | Done | Filled main action / tonal selection, Show answer before grades, phone search icon + top-docked search, full-width card rows; `tests/components.test.js` |
 | Select bars as contextual action bars | Done | Close + count + Select all head, equal-width actions on phones, primary last; `tests/select-bar.test.js` |
 | Parchment matched to KnowledgeApp | Done | Stone neutrals, 1px hairlines, outlined search, class colours desaturated on display (`--class-saturate`) |

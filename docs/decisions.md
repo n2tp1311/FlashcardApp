@@ -930,3 +930,7 @@ The user asked for every component to be checked against established UI practice
 
 Also fixed in passing: the Level field's placeholder was cut off at 180px, and `.card-item:hover` used a hardcoded cold grey. Left alone deliberately: the nine-chip stats card (already user-configurable), the Study Setup order, and the Preferences layout. `tests/components.test.js` holds the five changes.
 
+## 2026-10-02 — Answer sounds are synthesized, and only for answers the app checks
+
+The user asked for correct/incorrect sounds and picked Marimba from five previewed sets. The sounds are generated with Web Audio (a sine fundamental plus a short fourth harmonic for the wooden click) rather than shipped as files: nothing to download, cache for offline use, or license, and the cost is that changing the sound means changing code. They play on quiz answers and on the retype drill, where the app decides right from wrong. Self-grades on flashcards stay silent: a "wrong" knock on the user's own "Learning" would read as the app disagreeing with them. The setting is on by default, like vibration, and follows the iPhone silent switch where Safari allows it (`navigator.audioSession.type = "ambient"`, Safari 17+); older iOS plays through silent mode, which is the known cost of the default.
+
