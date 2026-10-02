@@ -248,12 +248,14 @@ test("every achievement has an icon and both languages carry every string", func
 test("wiring: sidebar, screen, back paths, strip, events and the typed flag", function() {
   assert.match(html, /id="sidebar-achievements-link"/);
   assert.match(html, /id="screen-achievements"/);
-  assert.match(html, /id="dash-summary-grid"><\/div>\s*<div class="dash-ach-strip hidden" id="dash-ach-strip">/);
+  assert.doesNotMatch(html, /dash-ach-strip/);
   assert.match(app, /"sidebar-vocabulary-link", "sidebar-achievements-link"\]\.forEach/);
   assert.match(app, /achievements: "btn-achievements-back"/);
   assert.match(app, /"achievements": "btn-achievements-back"/);
   assert.match(app, /screen === "achievements"\) \{\s*if \(e\.key === "Escape"\)/);
-  assert.match(extract("renderDashboard"), /renderAchievementStrip\(\);/);
+  // The Dashboard shows them in the Streak tile, filled once the hero card is drawn.
+  assert.match(extract("renderDashboard"), /streakTimeHeroCard\([^)]*\{ due: d\.dueForReview \|\| \[\], futureDue: futureDue \}\);\s*renderDashAchievements\(\);/);
+  assert.match(extract("heroStreakTile"), /withAchievements \? '<div data-ach-mini>'/);
   assert.match(extract("beginStudySession"), /state\.sessionAchAtStart = achSnapshot\(data\)/);
   assert.match(extract("markCard"), /if \(state\.typeToCompare && document\.getElementById\("fc-type-input"\)\.value\.trim\(\)\) attemptFields\.typed = true;/);
   assert.match(app, /if \(f\.typed\) body\.typed = true;/);

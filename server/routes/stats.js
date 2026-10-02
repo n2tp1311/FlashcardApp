@@ -285,6 +285,19 @@ router.get("/dashboard", requireAuth, (req, res) => {
     .filter(l => dueLessonIds.has(l.id))
     .map(l => ({ ...l, dueCount: dueCountMap[l.id] || 0 }));
 
+  // Every lesson with its card count and mastered count, for the Dashboard's lesson table.
+  // Mastered is the lesson mastery bar's definition (lib/mastery.js).
+  const masteryMap = {};
+  db.prepare(
+    "SELECT ca.lesson_id, COUNT(*) AS cards, SUM(CASE WHEN " + MASTERED_SQL + " THEN 1 ELSE 0 END) AS mastered " +
+    "FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id " +
+    "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 GROUP BY ca.lesson_id"
+  ).all(MASTERED_INTERVAL_SEC, uid, uid).forEach(r => { masteryMap[r.lesson_id] = r; });
+  const lessons = allLessons.map(l => ({
+    ...l, cards: masteryMap[l.id] ? masteryMap[l.id].cards : 0, mastered: masteryMap[l.id] ? masteryMap[l.id].mastered || 0 : 0
+  }));
+
   // Class-level due aggregation — derived from dueCountMap, no extra DB query
   const dueByClass = {};
   allLessons.forEach(l => {
@@ -366,6 +379,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
     accuracy:          { correct: attRow.correct_count || 0, total: attRow.total || 0 },
     dueForReview,
     dueByClass,
+    lessons,
     streak,
     today,
     studyTime: {

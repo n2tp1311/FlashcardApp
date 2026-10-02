@@ -4515,20 +4515,9 @@ code {
 .ach-prog i { display: block; height: 100%; border-radius: 2px; background: var(--primary); }
 .ach-new-badge { margin-left: auto; color: var(--success); background: var(--success-light); }
 
-.dash-ach-strip {
-  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 12px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px;
-}
-.ach-strip-count { font-size: 1.375rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
-.ach-strip-count small { font-size: 0.8125rem; color: var(--text3); font-weight: 500; }
-.ach-strip-medals { display: flex; gap: 6px; }
-.ach-strip-medals .ach-medal { width: 32px; height: 32px; margin: 0; }
-.ach-strip-medals .ach-medal svg { width: 15px; height: 15px; }
-.ach-strip-next { display: grid; gap: 3px; flex: 1 1 220px; min-width: 0; }
-.ach-strip-next b { font-size: 0.8125rem; color: var(--text); font-weight: 600; }
-.ach-strip-next span { font-size: 0.75rem; color: var(--text3); font-variant-numeric: tabular-nums; }
-.ach-strip-next .ach-prog { width: 100%; max-width: 280px; }
-.ach-strip-link { margin-left: auto; color: var(--primary); }
+.ach-strip-medals { display: flex; gap: 5px; flex: none; }
+.ach-strip-medals .ach-medal { width: 28px; height: 28px; margin: 0; border-width: 1.5px; }
+.ach-strip-medals .ach-medal svg { width: 13px; height: 13px; }
 
 .session-cheer.cheer-ach { background: var(--surface2); color: var(--text); font-weight: 600; }
 .session-cheer.cheer-ach .ach-medal { width: 28px; height: 28px; border-width: 1.5px; margin: 0; }
@@ -4536,6 +4525,92 @@ code {
 
 @media (max-width: 480px) {
   .ach-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .dash-ach-strip { padding: 12px 14px; }
-  .ach-strip-link { margin-left: 0; }
+}
+
+/* ============================
+   Dashboard in three tabs: Overview (today, due, streak, lessons needing attention),
+   Charts, and Lessons (one table for accuracy, mastery, due and struggling).
+   ============================ */
+.dash-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 0 0 16px; overflow-x: auto; }
+.dash-tab {
+  appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  padding: 10px 14px; min-height: 44px; font: inherit; font-size: 0.875rem; color: var(--text2); cursor: pointer; white-space: nowrap;
+}
+.dash-tab:hover { color: var(--text); }
+.dash-tab.active { color: var(--text); font-weight: 600; border-bottom-color: var(--primary); }
+.dash-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; margin: 20px 0 10px; }
+.dash-panel-head .dash-section-label { margin: 0; }
+#dash-panel-charts > .dash-panel-head:first-child, #dash-panel-lessons > .dash-panel-head:first-child { margin-top: 0; }
+.dash-panel-head .slicer-bar { margin: 0; }
+.dash-head-link { color: var(--primary); }
+.dash-lesson-note { margin: 0; font-size: 0.75rem; color: var(--text3); }
+
+/* Due now tile */
+.dash-due-rows { display: grid; gap: 2px; margin: 0 -8px; }
+.dash-due-row {
+  appearance: none; background: none; border: 0; border-radius: var(--radius-sm); font: inherit; color: inherit; text-align: left;
+  display: flex; align-items: center; gap: 10px; padding: 6px 8px; min-height: 40px; cursor: pointer;
+}
+.dash-due-row:hover { background: var(--surface2); }
+.dash-due-row.is-loading { opacity: 0.6; pointer-events: none; }
+.dash-due-name { display: grid; min-width: 0; flex: 1; }
+.dash-due-name b { font-size: 0.8125rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-due-name small { font-size: 0.6875rem; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-due-empty { font-size: 0.8125rem; color: var(--text2); }
+.dash-due-more { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-size: 0.75rem; font-weight: 600; color: var(--primary); cursor: pointer; justify-self: start; }
+
+/* Achievements row in the Streak tile */
+.dash-ach-mini { display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+.dash-ach-mini-text { display: grid; gap: 4px; flex: 1; min-width: 0; font-size: 0.75rem; color: var(--text2); }
+.dash-ach-mini-text b { color: var(--text); font-variant-numeric: tabular-nums; }
+.dash-ach-mini-text .ach-prog { width: 100%; margin: 0; }
+.dash-ach-mini-link { color: var(--primary); flex: none; }
+
+/* Study time in the Charts tab: the hero tile without its own frame */
+.dash-studytime-card .dash-tile { background: none; border: 0; padding: 0; }
+/* Study time and How you answered share a row, so neither leaves an empty two-thirds. */
+@media (min-width: 761px) {
+  .dash-studytime-card:not(.hidden) + .analytics-chart-card.is-wide { grid-column: span 2; }
+}
+
+/* Lesson table */
+.dash-ltable { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.dash-lrow {
+  display: grid; grid-template-columns: minmax(0, 1fr) 96px 80px 84px 84px 104px; gap: 12px; align-items: center;
+  padding: 10px 16px; border-top: 1px solid var(--border);
+}
+.dash-lrow[data-lesson] { cursor: pointer; }
+.dash-lrow[data-lesson]:hover { background: var(--surface2); }
+.dash-lrow:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.dash-lhead { border-top: 0; padding-block: 8px; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text3); }
+.dash-lhead > *:not(:first-child) { text-align: right; }
+.dash-lsort {
+  appearance: none; background: none; border: 0; padding: 4px 0; font: inherit; letter-spacing: inherit; text-transform: inherit;
+  color: inherit; cursor: pointer; text-align: inherit;
+}
+.dash-lsort:hover, .dash-lsort.is-on { color: var(--text); }
+.dash-lname { display: grid; min-width: 0; }
+.dash-lname b { font-size: 0.875rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-lname small { font-size: 0.75rem; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-lnum { text-align: right; font-size: 0.8125rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.dash-lacc { font-weight: 600; }
+.dash-lacc.is-good { color: var(--success); }
+.dash-lacc.is-mid { color: var(--warning); }
+.dash-lacc.is-bad { color: var(--danger); }
+.dash-lnone { color: var(--text3); }
+.dash-ldue { border: 0; cursor: pointer; font: inherit; font-size: 0.6875rem; font-weight: 700; }
+.dash-ldue.is-loading { opacity: 0.6; pointer-events: none; }
+.dash-lflag { text-align: right; }
+
+/* A phone has no room for six columns: the name takes a line, the numbers share the next. */
+@media (max-width: 760px) {
+  .dash-lhead { display: none; }
+  .dash-lrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 10px 14px; }
+  .dash-lrow:nth-child(2) { border-top: 0; }
+  .dash-lname { flex: 1 1 100%; }
+  .dash-lnum { text-align: left; font-size: 0.75rem; }
+  .dash-lnum[data-label]::before { content: attr(data-label) " "; color: var(--text3); font-weight: 400; }
+  .dash-lrow > .dash-lnum:nth-child(5) { margin-left: auto; }
+  .dash-lnone { display: none; }
+  .dash-lflag:empty { display: none; }
 }

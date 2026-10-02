@@ -229,6 +229,28 @@ Object.assign(TRANSLATIONS.en, {
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
+  "dashboard.tabOverview": "Overview",
+  "dashboard.tabCharts": "Charts",
+  "dashboard.tabLessons": "Lessons",
+  "dashboard.needsAttention": "Needs attention",
+  "dashboard.allLessons": "All lessons →",
+  "dashboard.filterAll": "All",
+  "dashboard.colLesson": "Lesson",
+  "dashboard.colAccuracy": "Accuracy",
+  "dashboard.colAnswers": "Answers",
+  "dashboard.colMastered": "Mastered",
+  "dashboard.colDue": "Due",
+  "dashboard.struggling": "Struggling",
+  "dashboard.strugglingHint": "{pct}% of answered cards are hard, last {n} days",
+  "dashboard.lessonsNote": "Accuracy and answers: all time. Mastered and due: now. Struggling: last {n} days.",
+  "dashboard.nothingNeedsAttention": "Nothing needs attention: no cards due and no struggling lessons.",
+  "dashboard.noLessons": "No lessons yet.",
+  "dashboard.dueNow": "Due now",
+  "dashboard.cardsDue": "cards due",
+  "dashboard.moreLessonsDue": "+{n} more lessons",
+  "dashboard.moreLessonsDue_one": "+1 more lesson",
+  "dashboard.dueLater": "{n} more due in the next {days} days",
+  "dashboard.achAll": "All →",
   "ach.nav": "Achievements",
   "ach.filterAll": "All",
   "ach.earnedCount": "{n} of {total} earned",
@@ -731,7 +753,6 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.gradeDistribution": "How you answered",
   "dashboard.reviewTimeTrend": "Answer time",
   "dashboard.newCardsTrend": "New cards",
-  "dashboard.periodNote": "Applies to the charts in this section only — the summary card above is all-time, except Study Time which has its own window control.",
   "dashboard.srsDistribution": "Memory intervals",
   "dashboard.studyTime": "Study Time",
   "dashboard.configureMetrics": "Customize metrics",
@@ -741,13 +762,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.metricHidden": "Hidden",
   "dashboard.metricShow": "Show",
   "dashboard.metricHighlight": "Highlight",
-  "dashboard.lessonAccuracy": "Lesson Accuracy",
-  "dashboard.dueForReview": "Due for Review",
-  "dashboard.strugglingLessons": "Struggling Lessons",
-  "dashboard.lastNDays": "(last {n} days)",
   "dashboard.allCaughtUp": "All caught up — no cards due.",
-  "dashboard.noStrugglingLessons": "No struggling lessons — great work!",
-  "dashboard.pctHard": "{pct}% hard",
   "common.due": "Due",
   "dashboard.thisWeek": "This week",
   "dashboard.lastWeek": "Last week",
@@ -785,7 +800,6 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.gradeQuiz": "Quiz",
   "dashboard.gradeUngraded": "Ungraded",
   "dashboard.avgReviewDuration": "{duration} avg · {n} reviews",
-  "dashboard.attemptsAbbrev": "{n} att.",
   "dashboard.heatmapCellTooltip": "{date}: {duration} studied ({n} attempts)",
   "dashboard.heatmapCellTooltip_one": "{date}: {duration} studied ({n} attempt)",
   "dashboard.monthAbbrevs": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
@@ -1129,6 +1143,27 @@ Object.assign(TRANSLATIONS.vi, {
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
+  "dashboard.tabOverview": "Tổng quan",
+  "dashboard.tabCharts": "Biểu đồ",
+  "dashboard.tabLessons": "Bài học",
+  "dashboard.needsAttention": "Cần chú ý",
+  "dashboard.allLessons": "Tất cả bài học →",
+  "dashboard.filterAll": "Tất cả",
+  "dashboard.colLesson": "Bài học",
+  "dashboard.colAccuracy": "Độ chính xác",
+  "dashboard.colAnswers": "Câu trả lời",
+  "dashboard.colMastered": "Thành thạo",
+  "dashboard.colDue": "Đến hạn",
+  "dashboard.struggling": "Đang gặp khó",
+  "dashboard.strugglingHint": "{pct}% thẻ đã trả lời là thẻ khó, {n} ngày qua",
+  "dashboard.lessonsNote": "Độ chính xác và câu trả lời: toàn bộ. Thành thạo và đến hạn: hiện tại. Đang gặp khó: {n} ngày qua.",
+  "dashboard.nothingNeedsAttention": "Không có gì cần chú ý: không có thẻ đến hạn và không có bài đang gặp khó.",
+  "dashboard.noLessons": "Chưa có bài học nào.",
+  "dashboard.dueNow": "Đến hạn",
+  "dashboard.cardsDue": "thẻ đến hạn",
+  "dashboard.moreLessonsDue": "+{n} bài khác",
+  "dashboard.dueLater": "{n} thẻ nữa đến hạn trong {days} ngày tới",
+  "dashboard.achAll": "Tất cả →",
   "ach.nav": "Thành tích",
   "ach.filterAll": "Tất cả",
   "ach.earnedCount": "Đã đạt {n} / {total}",
@@ -1618,7 +1653,6 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.gradeDistribution": "Cách bạn trả lời",
   "dashboard.reviewTimeTrend": "Thời gian trả lời",
   "dashboard.newCardsTrend": "Thẻ mới",
-  "dashboard.periodNote": "Chỉ áp dụng cho các biểu đồ trong mục này — thẻ tổng quan phía trên tính toàn thời gian, riêng Thời gian học có bộ chọn khoảng thời gian riêng.",
   "dashboard.srsDistribution": "Khoảng ghi nhớ",
   "dashboard.studyTime": "Thời gian học",
   "dashboard.configureMetrics": "Tùy chỉnh chỉ số",
@@ -1628,13 +1662,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.metricHidden": "Ẩn",
   "dashboard.metricShow": "Hiện",
   "dashboard.metricHighlight": "Nổi bật",
-  "dashboard.lessonAccuracy": "Độ chính xác bài học",
-  "dashboard.dueForReview": "Đến hạn ôn tập",
-  "dashboard.strugglingLessons": "Bài học đang gặp khó",
-  "dashboard.lastNDays": "(trong {n} ngày)",
   "dashboard.allCaughtUp": "Đã hoàn thành hết — không có thẻ nào đến hạn.",
-  "dashboard.noStrugglingLessons": "Không có bài học nào gặp khó — làm tốt lắm!",
-  "dashboard.pctHard": "{pct}% khó",
   "common.due": "Đến hạn",
   "dashboard.thisWeek": "Tuần này",
   "dashboard.lastWeek": "Tuần trước",
@@ -1671,7 +1699,6 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.gradeQuiz": "Trắc nghiệm",
   "dashboard.gradeUngraded": "Chưa đánh giá",
   "dashboard.avgReviewDuration": "TB {duration} · {n} lượt ôn",
-  "dashboard.attemptsAbbrev": "{n} lượt",
   "dashboard.heatmapCellTooltip": "{date}: học {duration} ({n} lượt làm)",
   "dashboard.monthAbbrevs": "Th1,Th2,Th3,Th4,Th5,Th6,Th7,Th8,Th9,Th10,Th11,Th12",
   "dashboard.dayAbbrevs": "CN,T2,T3,T4,T5,T6,T7",
@@ -5320,33 +5347,33 @@ function renderAchievementsPage(data) {
   }).join('');
 }
 
-function achStripHtml(data) {
+// The achievements row in the Dashboard's Streak tile: the latest medals, the count, and the
+// closest unfinished one.
+function achMiniHtml(data) {
   var items = data.items;
   var latest = items.filter(function(it) { return it.tier > 0 && !it.lost; })
-    .sort(function(a, b) { return (b.earnedAt || 0) - (a.earnedAt || 0); }).slice(0, 5);
+    .sort(function(a, b) { return (b.earnedAt || 0) - (a.earnedAt || 0); }).slice(0, 3);
   var next = achNextUp(items);
-  var nextHtml = next
-    ? '<div class="ach-strip-next"><b>' + escHtml(t("ach.next", { name: t("ach." + next.key + ".name"), tier: achTierName(achMedalTier(next.tier + 1, next.tiers.length)) })) + '</b>' +
-      '<span>' + escHtml(achProgressText(next)) + '</span>' +
-      '<div class="ach-prog"><i style="width:' + Math.round(next.progress * 100) + '%"></i></div></div>'
-    : '<div class="ach-strip-next"><span>' + escHtml(achEarnedCount(items) === items.length ? t("ach.allEarned") : t("ach.keepGoing")) + '</span></div>';
-  return '<div class="ach-strip-count">' + achEarnedCount(items) + ' <small>/ ' + items.length + '</small></div>' +
+  var count = achEarnedCount(items);
+  var text = next
+    ? t("ach.next", { name: t("ach." + next.key + ".name"), tier: achTierName(achMedalTier(next.tier + 1, next.tiers.length)) })
+    : count === items.length ? t("ach.allEarned") : t("ach.keepGoing");
+  return '<div class="dash-ach-mini">' +
     (latest.length ? '<div class="ach-strip-medals">' + latest.map(function(it) {
       return '<span class="ach-medal ach-t' + achMedalTier(it.tier, it.tiers.length) + '" title="' + escHtml(t("ach." + it.key + ".name")) + '">' + achIcon(it.key) + '</span>';
     }).join('') + '</div>' : '') +
-    nextHtml +
-    '<button type="button" class="btn btn-ghost btn-sm ach-strip-link" id="btn-dash-achievements">' + escHtml(t("ach.allLink")) + '</button>';
+    '<div class="dash-ach-mini-text"><span><b>' + count + ' / ' + items.length + '</b> · ' + escHtml(text) + '</span>' +
+      (next ? '<div class="ach-prog"><i style="width:' + Math.round(next.progress * 100) + '%"></i></div>' : '') + '</div>' +
+    '<button type="button" class="btn btn-ghost btn-sm dash-ach-mini-link" data-open-achievements>' + escHtml(t("dashboard.achAll")) + '</button>' +
+  '</div>';
 }
 
-function renderAchievementStrip() {
-  var strip = document.getElementById("dash-ach-strip");
-  if (!strip) return;
-  if (!IS_SERVER) { strip.classList.add("hidden"); return; }
+function renderDashAchievements() {
+  if (!IS_SERVER) return;
   refreshAchievements().then(function(data) {
     if (!data) return;
-    strip.innerHTML = achStripHtml(data);
-    strip.classList.remove("hidden");
-  }).catch(function() { strip.classList.add("hidden"); });
+    document.querySelectorAll("#dash-summary-grid [data-ach-mini]").forEach(function(el) { el.innerHTML = achMiniHtml(data); });
+  }).catch(function() {});
 }
 
 document.getElementById("ach-filters").addEventListener("click", function(e) {
@@ -5354,10 +5381,6 @@ document.getElementById("ach-filters").addEventListener("click", function(e) {
   if (!btn || !state.achievements) return;
   state.achFilter = btn.dataset.group;
   renderAchievementsPage(state.achievements);
-});
-
-document.getElementById("dash-ach-strip").addEventListener("click", function(e) {
-  if (e.target.closest("#btn-dash-achievements")) openAchievementsScreen();
 });
 
 document.getElementById("btn-achievements-back").addEventListener("click", function() {
@@ -8672,18 +8695,25 @@ function _dashMetricHint(key, studyTime, newCardEstimate) {
 // has the study-time window gone. Chosen by the user from a preview over the old four
 // stacked bands, where study time appeared five times without saying which was which. The
 // gear still hides single numbers or a whole tile; the old "highlight" now reads as "show".
-function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today) {
+// dash: { due, futureDue } on the Dashboard, whose third tile is what is due now (study time
+// moves to the Charts tab there). Home leaves it out and keeps the study-time tile.
+function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today, dash) {
   state._dashHeroData = { streak: streak, studyTime: studyTime, summary: summary, newCardEstimate: newCardEstimate, today: today };
+  if (dash) state._dashHeroDash = dash;
   var config = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, state.dashMetricConfig);
   function on(key) { return config[key] !== "hidden"; }
   var gearBtn = '<button class="icon-btn dash-hero-settings-btn" title="' + escHtml(t("dashboard.configureMetrics")) + '">' + ICON_SETTINGS + '</button>';
 
   var tiles = [];
   var run = on("aboveAvg") && studyTime ? studyTime.aboveAvg : null;
-  if (on("streak") || run) tiles.push(heroStreakTile(on("streak") ? streak : null, today, run));
+  if (on("streak") || run) tiles.push(heroStreakTile(on("streak") ? streak : null, today, run, !!dash));
   if (today && today.activity) tiles.push(heroTodayTile(today, newCardEstimate, studyTime));
-  var timeTile = heroStudyTimeTile(studyTime, on);
-  if (timeTile) tiles.push(timeTile);
+  if (dash) {
+    tiles.push(heroDueTile(dash.due, dash.futureDue));
+  } else {
+    var timeTile = heroStudyTimeTile(studyTime, on);
+    if (timeTile) tiles.push(timeTile);
+  }
 
   var library = ["classes", "lessons", "cards", "attempts", "sessions"].filter(on).map(function(key) {
     var m = DASH_METRICS.filter(function(x) { return x.key === key; })[0];
@@ -8705,9 +8735,11 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today) 
   '</div>';
 }
 
-function heroStreakTile(streak, today, run) {
+function heroStreakTile(streak, today, run, withAchievements) {
+  // Filled from the last fetch at once, then refreshed by renderDashAchievements().
+  var ach = withAchievements ? '<div data-ach-mini>' + (state.achievements ? achMiniHtml(state.achievements) : '') + '</div>' : '';
   if (streak == null) {
-    return '<section class="dash-tile"><h3 class="dash-tile-h">' + escHtml(t("hero.streak")) + '</h3>' + heroAboveAvgHtml(run) + '</section>';
+    return '<section class="dash-tile"><h3 class="dash-tile-h">' + escHtml(t("hero.streak")) + '</h3>' + heroAboveAvgHtml(run) + ach + '</section>';
   }
   // With this week's rest day unused, missing today does not reset anything, so a
   // countdown would be a false alarm.
@@ -8721,7 +8753,29 @@ function heroStreakTile(streak, today, run) {
     '<h3 class="dash-tile-h">' + escHtml(t("hero.streak")) + '</h3>' +
     '<div class="dash-tile-big is-streak">' + ICON_FLAME + '<span class="dash-tile-num">' + escHtml(String(streak)) + '</span>' +
       '<span class="dash-tile-unit">' + escHtml(t("hero.days")) + '</span></div>' +
-    heroWeekHtml(today) + heroAboveAvgHtml(run) + caption +
+    heroWeekHtml(today) + heroAboveAvgHtml(run) + caption + ach +
+  '</section>';
+}
+
+var DASH_DUE_SHOWN = 4;
+
+// What can be reviewed right now, most due first; each row starts that lesson's due review.
+function heroDueTile(due, futureDue) {
+  var lessons = (due || []).slice().sort(function(a, b) { return (b.dueCount || 0) - (a.dueCount || 0); });
+  var total = lessons.reduce(function(sum, l) { return sum + (l.dueCount || 0); }, 0);
+  var shown = lessons.slice(0, DASH_DUE_SHOWN);
+  var later = futureDue && futureDue.days
+    ? futureDueBuckets(futureDue).reduce(function(sum, b) { return b.n > 0 ? sum + b.cnt : sum; }, 0) : null;
+  return '<section class="dash-tile">' +
+    '<h3 class="dash-tile-h">' + escHtml(t("dashboard.dueNow")) + '</h3>' +
+    '<div class="dash-tile-big"><span class="dash-tile-num">' + total + '</span><span class="dash-tile-unit">' + escHtml(t("dashboard.cardsDue")) + '</span></div>' +
+    (shown.length ? '<div class="dash-due-rows">' + shown.map(function(l) {
+      return '<button type="button" class="dash-due-row" data-due-lesson="' + escHtml(l.id) + '" data-due-class="' + escHtml(l.class_id) + '" title="' + escHtml(t("study.reviewDueTitle")) + '">' +
+        '<span class="dash-due-name"><b>' + escHtml(l.title) + '</b><small>' + escHtml(l.class_name) + '</small></span>' +
+        '<span class="due-badge">' + escHtml(String(l.dueCount)) + '</span></button>';
+    }).join('') + '</div>' : '<div class="dash-due-empty">' + escHtml(t("dashboard.allCaughtUp")) + '</div>') +
+    (lessons.length > shown.length ? '<button type="button" class="dash-due-more" data-dash-tab="lessons">' + escHtml(t("dashboard.moreLessonsDue", { n: lessons.length - shown.length })) + '</button>' : '') +
+    (later != null ? '<div class="dash-hero-countdown">' + escHtml(t("dashboard.dueLater", { n: later, days: futureDue.windowDays })) + '</div>' : '') +
   '</section>';
 }
 
@@ -8868,9 +8922,21 @@ function _refreshDashHeroCards() {
     var hero = grid.querySelector(".dash-hero-card");
     if (!hero) return;
     var wrap = document.createElement("div");
-    wrap.innerHTML = streakTimeHeroCard(state._dashHeroData.streak, state._dashHeroData.studyTime, state._dashHeroData.summary, state._dashHeroData.newCardEstimate, state._dashHeroData.today);
+    wrap.innerHTML = streakTimeHeroCard(state._dashHeroData.streak, state._dashHeroData.studyTime, state._dashHeroData.summary, state._dashHeroData.newCardEstimate, state._dashHeroData.today,
+      gridId === "dash-summary-grid" ? state._dashHeroDash : undefined);
     hero.replaceWith(wrap.firstElementChild);
   });
+  renderDashStudyTime();
+}
+
+// The Dashboard's study-time tile lives in the Charts tab, under the same metric settings.
+function renderDashStudyTime() {
+  var card = document.getElementById("dash-studytime-card");
+  if (!card || !state._dashStudyTime) return;
+  var config = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, state.dashMetricConfig);
+  var tile = heroStudyTimeTile(state._dashStudyTime, function(key) { return config[key] !== "hidden"; });
+  card.innerHTML = tile || '';
+  card.classList.toggle("hidden", !tile);
 }
 
 // Keeps any rendered streak countdown(s) fresh. A single interval started once at
@@ -9152,11 +9218,10 @@ function renderDashboard() {
   var exportBtn = document.getElementById("btn-dashboard-export");
   if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid",
-   "dash-chart-kpis","dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-retention-wrap","dash-grade-wrap","dash-reviewtime-wrap","dash-lesson-wrap",
-   "dash-due-list","dash-struggle-list"].forEach(function(id) {
+   "dash-chart-kpis","dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-retention-wrap","dash-grade-wrap","dash-reviewtime-wrap",
+   "dash-studytime-card","dash-attn-list","dash-lesson-table"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
   });
-  renderAchievementStrip();
 
   // Isolated .catch so a new-card-estimate failure can't blank out the rest of the dashboard.
   var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
@@ -9169,7 +9234,10 @@ function renderDashboard() {
 
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
-    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary, newCardEstimate, d.today);
+    summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary, newCardEstimate, d.today, { due: d.dueForReview || [], futureDue: futureDue });
+    renderDashAchievements();
+    state._dashStudyTime = d.studyTime;
+    renderDashStudyTime();
 
     // Charts (from analytics)
     state.dashFutureDue = futureDue;
@@ -9179,77 +9247,14 @@ function renderDashboard() {
     var futureDueTitle = document.getElementById("dash-future-due-title");
     if (futureDueTitle) futureDueTitle.textContent = t("dashboard.futureDue", { n: futureDue.windowDays });
     renderFutureDue(futureDue, document.getElementById("dash-future-due-wrap"));
-    renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
 
     // Enable export if there's data
     var totalAttempts = (analytics.lessonBreakdown || []).reduce(function(sum, l) { return sum + (l.total_attempts || 0); }, 0);
     if (exportBtn) exportBtn.disabled = totalAttempts === 0;
 
-    // Due for review
-    var dueList = document.getElementById("dash-due-list");
-    var dueBadge = document.getElementById("dash-due-badge");
-    var totalDueCards = (d.dueForReview || []).reduce(function(acc, l) { return acc + (l.dueCount || 0); }, 0);
-    dueBadge.textContent = totalDueCards || "";
-    dueList.innerHTML = "";
-    if (!(d.dueForReview || []).length) {
-      dueList.innerHTML = '<div class="dash-empty-note">' + t("dashboard.allCaughtUp") + '</div>';
-    } else {
-      var byClass = {};
-      var classOrder = [];
-      d.dueForReview.forEach(function(l) {
-        if (!byClass[l.class_id]) {
-          byClass[l.class_id] = { class_name: l.class_name, lessons: [], total: 0 };
-          classOrder.push(l.class_id);
-        }
-        byClass[l.class_id].lessons.push(l);
-        byClass[l.class_id].total += (l.dueCount || 0);
-      });
-      classOrder.forEach(function(cid) {
-        var group = byClass[cid];
-        var header = document.createElement("div");
-        header.className = "dash-class-due-header";
-        header.innerHTML =
-          '<span class="dash-class-due-name">' + escHtml(group.class_name) + '</span>' +
-          '<span class="due-badge">' + t("count.due", { n: group.total }) + '</span>';
-        dueList.appendChild(header);
-        group.lessons.forEach(function(l) {
-          var row = document.createElement("div");
-          row.className = "dash-lesson-row dash-lesson-clickable dash-lesson-sub";
-          row.title = t("study.reviewDueTitle");
-          row.innerHTML =
-            '<span class="dash-lesson-title">' + escHtml(l.title) + '</span>' +
-            '<span class="due-badge">' + t("count.due", { n: l.dueCount }) + '</span>' +
-            '<span class="dash-row-action">' + escHtml(t("setup.quiz")) + '</span>';
-          row.addEventListener("click", function() {
-            if (row.classList.contains("is-loading")) return;
-            row.classList.add("is-loading");
-            openDueReview(l.id, l.class_id).catch(function() {
-              showToast(t("setup.loadFailed"), "error");
-            }).then(function() {
-              row.classList.remove("is-loading");
-            });
-          });
-          dueList.appendChild(row);
-        });
-      });
-    }
-
-    // Struggling lessons — windowed by the same period pills as the charts above (moved
-    // off the all-time /dashboard payload so a lesson doesn't stay flagged long after
-    // the user actually fixed it)
-    var strugList = document.getElementById("dash-struggle-list");
-    var strugBadge = document.getElementById("dash-struggle-badge");
-    var strugPeriod = document.getElementById("dash-struggle-period");
-    var strugglingLessons = analytics.strugglingLessons || [];
-    if (strugPeriod) strugPeriod.textContent = t("dashboard.lastNDays", { n: days });
-    strugBadge.textContent = strugglingLessons.length || "";
-    if (!strugglingLessons.length) {
-      strugList.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStrugglingLessons") + '</div>';
-    } else {
-      strugList.innerHTML = strugglingLessons.map(function(l) {
-        return dashLessonRow(l, "struggle");
-      }).join("");
-    }
+    state.dashLessonData = { lessons: d.lessons || [], due: d.dueForReview || [], breakdown: analytics.lessonBreakdown || [],
+      struggling: analytics.strugglingLessons || [], days: days };
+    renderDashLessons();
 
   }).catch(function() {
     if (requestId !== dashboardAnalyticsRequestId) return;
@@ -9259,16 +9264,185 @@ function renderDashboard() {
   });
 }
 
-function dashLessonRow(lesson, type) {
-  var badge = type === "struggle"
-    ? '<span class="diff-pill hard">' + t("dashboard.pctHard", { pct: Math.round(lesson.hardRatio * 100) }) + '</span>'
-    : '<span class="due-badge">' + t("common.due") + '</span>';
-  return '<div class="dash-lesson-row">' +
-    '<div class="dash-lesson-info">' +
-      '<span class="dash-lesson-title">' + escHtml(lesson.title) + '</span>' +
-      '<span class="dash-lesson-class">' + escHtml(lesson.class_name) + '</span>' +
-    '</div>' + badge + '</div>';
+var DASH_ATTENTION_SHOWN = 5;
+var DASH_TABS = ["overview", "charts", "lessons"];
+
+// One row per lesson of a live class. Accuracy and answers are all time (lessonBreakdown),
+// mastered and due are now, struggling is the chart period's window.
+function dashLessonTableRows(lessons, breakdown, due, struggling) {
+  var byId = {};
+  var rows = (lessons || []).map(function(l) {
+    var r = { id: l.id, class_id: l.class_id, title: l.title, class_name: l.class_name, cards: l.cards || 0,
+      mastered: l.mastered || 0, attempts: 0, accuracy: null, due: 0, hardRatio: null };
+    byId[l.id] = r;
+    return r;
+  });
+  (breakdown || []).forEach(function(b) {
+    var r = byId[b.id];
+    if (!r) return;
+    r.attempts = b.total_attempts || 0;
+    r.accuracy = r.attempts ? Math.round((b.correct_attempts || 0) / r.attempts * 100) : null;
+  });
+  (due || []).forEach(function(d) { if (byId[d.id]) byId[d.id].due = d.dueCount || 0; });
+  (struggling || []).forEach(function(x) { if (byId[x.id]) byId[x.id].hardRatio = x.hardRatio; });
+  return rows;
 }
+
+function dashNeedsAttention(r) {
+  return r.due > 0 || r.hardRatio != null;
+}
+
+// "attention": most due first, then struggling, then weakest. Other keys sort one column; a
+// lesson with no value there (never answered, no cards) goes last whichever way it runs.
+function sortDashLessons(rows, key, dir) {
+  var sign = dir === "asc" ? 1 : -1;
+  function val(r) {
+    if (key === "accuracy") return r.accuracy;
+    if (key === "answers") return r.attempts;
+    if (key === "mastered") return r.cards ? r.mastered / r.cards : null;
+    if (key === "due") return r.due;
+    return null;
+  }
+  return rows.slice().sort(function(a, b) {
+    if (key === "attention") {
+      return (b.due - a.due) || ((b.hardRatio != null) - (a.hardRatio != null)) ||
+        ((a.accuracy == null ? 101 : a.accuracy) - (b.accuracy == null ? 101 : b.accuracy)) || a.title.localeCompare(b.title);
+    }
+    if (key === "name") return sign * a.title.localeCompare(b.title);
+    var va = val(a), vb = val(b);
+    if (va == null && vb == null) return a.title.localeCompare(b.title);
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    return sign * (va - vb) || a.title.localeCompare(b.title);
+  });
+}
+
+function dashLessonTableHtml(rows, opts) {
+  opts = opts || {};
+  var cols = [["name", "dashboard.colLesson"], ["accuracy", "dashboard.colAccuracy"], ["answers", "dashboard.colAnswers"],
+    ["mastered", "dashboard.colMastered"], ["due", "dashboard.colDue"]];
+  var head = '<div class="dash-lrow dash-lhead" role="row">' + cols.map(function(c) {
+    var label = escHtml(t(c[1]));
+    if (!opts.sortable) return '<span role="columnheader">' + label + '</span>';
+    var on = opts.sortKey === c[0];
+    return '<button type="button" role="columnheader" class="dash-lsort' + (on ? ' is-on' : '') + '" data-sort="' + c[0] + '" aria-sort="' +
+      (on ? (opts.sortDir === "asc" ? "ascending" : "descending") : "none") + '">' + label + (on ? (opts.sortDir === "asc" ? ' ↑' : ' ↓') : '') + '</button>';
+  }).join('') + '<span role="columnheader"></span></div>';
+  var body = rows.map(function(r) {
+    var mastered = r.cards ? Math.round(r.mastered / r.cards * 100) : null;
+    var acc = r.accuracy == null ? '' : r.accuracy >= 70 ? ' is-good' : r.accuracy >= 40 ? ' is-mid' : ' is-bad';
+    return '<div class="dash-lrow" role="row" tabindex="0" data-lesson="' + escHtml(r.id) + '" data-title="' + escHtml(r.title) + '">' +
+      '<span class="dash-lname" role="cell"><b>' + escHtml(r.title) + '</b><small>' + escHtml(r.class_name) + '</small></span>' +
+      '<span class="dash-lnum dash-lacc' + acc + '" role="cell" data-label="' + escHtml(t("dashboard.colAccuracy")) + '">' + (r.accuracy == null ? '—' : r.accuracy + '%') + '</span>' +
+      '<span class="dash-lnum" role="cell" data-label="' + escHtml(t("dashboard.colAnswers")) + '">' + r.attempts + '</span>' +
+      '<span class="dash-lnum" role="cell" data-label="' + escHtml(t("dashboard.colMastered")) + '">' + (mastered == null ? '—' : mastered + '%') + '</span>' +
+      '<span class="dash-lnum" role="cell">' + (r.due
+        ? '<button type="button" class="due-badge dash-ldue" data-due-lesson="' + escHtml(r.id) + '" data-due-class="' + escHtml(r.class_id) + '" title="' + escHtml(t("study.reviewDueTitle")) + '">' + escHtml(t("count.due", { n: r.due })) + '</button>'
+        : '<span class="dash-lnone">—</span>') + '</span>' +
+      '<span class="dash-lflag" role="cell">' + (r.hardRatio != null
+        ? '<span class="diff-pill hard" title="' + escHtml(t("dashboard.strugglingHint", { pct: Math.round(r.hardRatio * 100), n: opts.days })) + '">' + escHtml(t("dashboard.struggling")) + '</span>'
+        : '') + '</span>' +
+    '</div>';
+  }).join('');
+  return '<div class="dash-ltable" role="table">' + head + body + '</div>';
+}
+
+function renderDashLessons() {
+  var data = state.dashLessonData;
+  if (!data) return;
+  var rows = dashLessonTableRows(data.lessons, data.breakdown, data.due, data.struggling);
+  var attention = sortDashLessons(rows.filter(dashNeedsAttention), "attention");
+  document.getElementById("dash-attn-badge").textContent = attention.length || "";
+  document.getElementById("dash-attn-list").innerHTML = attention.length
+    ? dashLessonTableHtml(attention.slice(0, DASH_ATTENTION_SHOWN), { days: data.days })
+    : '<div class="dash-empty-note">' + escHtml(t("dashboard.nothingNeedsAttention")) + '</div>';
+  var filter = state.dashLessonFilter || "all";
+  document.querySelectorAll("#dash-lesson-filter .pill").forEach(function(p) {
+    var on = p.dataset.filter === filter;
+    p.classList.toggle("active", on);
+    p.setAttribute("aria-pressed", on);
+  });
+  document.getElementById("dash-lesson-note").textContent = t("dashboard.lessonsNote", { n: data.days });
+  var shown = filter === "attention" ? rows.filter(dashNeedsAttention) : rows;
+  var key = state.dashLessonSort || "attention", dir = state.dashLessonSortDir || "desc";
+  document.getElementById("dash-lesson-table").innerHTML = shown.length
+    ? dashLessonTableHtml(sortDashLessons(shown, key, dir), { sortable: true, sortKey: key, sortDir: dir, days: data.days })
+    : '<div class="dash-empty-note">' + escHtml(t(rows.length ? "dashboard.nothingNeedsAttention" : "dashboard.noLessons")) + '</div>';
+}
+
+function setDashTab(tab) {
+  if (DASH_TABS.indexOf(tab) === -1) tab = "overview";
+  state.dashTab = tab;
+  try { localStorage.setItem("fc-dash-tab", tab); } catch (_) {}
+  DASH_TABS.forEach(function(name) {
+    var on = name === tab;
+    var btn = document.getElementById("dash-tab-" + name);
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-selected", on);
+    btn.tabIndex = on ? 0 : -1;
+    document.getElementById("dash-panel-" + name).classList.toggle("hidden", !on);
+  });
+  // Charts drawn while their tab was hidden were sized to a guess; draw them at the real width.
+  if (tab === "charts") redrawDashCharts();
+}
+
+function redrawDashCharts() {
+  if (state.dashAnalytics) renderStudyCharts(state.dashAnalytics);
+  if (state.dashSrs) renderSrsDistribution(state.dashSrs, document.getElementById("dash-srs-wrap"));
+  if (state.dashFutureDue) renderFutureDue(state.dashFutureDue, document.getElementById("dash-future-due-wrap"));
+}
+
+setDashTab((function() { try { return localStorage.getItem("fc-dash-tab"); } catch (_) { return null; } })());
+
+document.getElementById("dash-tabs").addEventListener("click", function(e) {
+  var btn = e.target.closest("[data-tab]");
+  if (btn) setDashTab(btn.dataset.tab);
+});
+document.getElementById("dash-tabs").addEventListener("keydown", function(e) {
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  var i = DASH_TABS.indexOf(state.dashTab) + (e.key === "ArrowRight" ? 1 : -1);
+  setDashTab(DASH_TABS[(i + DASH_TABS.length) % DASH_TABS.length]);
+  document.getElementById("dash-tab-" + state.dashTab).focus();
+  e.preventDefault();
+});
+
+function openDashLessonRow(row) {
+  openStats("lesson", row.dataset.lesson, row.dataset.title);
+}
+
+document.getElementById("screen-dashboard").addEventListener("click", function(e) {
+  var dueBtn = e.target.closest("[data-due-lesson]");
+  if (dueBtn) {
+    if (dueBtn.classList.contains("is-loading")) return;
+    dueBtn.classList.add("is-loading");
+    openDueReview(dueBtn.dataset.dueLesson, dueBtn.dataset.dueClass).catch(function() {
+      showToast(t("setup.loadFailed"), "error");
+    }).then(function() { dueBtn.classList.remove("is-loading"); });
+    return;
+  }
+  if (e.target.closest("[data-open-achievements]")) { openAchievementsScreen(); return; }
+  var tabLink = e.target.closest("[data-dash-tab]");
+  if (tabLink) { setDashTab(tabLink.dataset.dashTab); return; }
+  var sortBtn = e.target.closest(".dash-lsort");
+  if (sortBtn) {
+    var key = sortBtn.dataset.sort;
+    // Weakest first and A to Z are the useful first clicks; a second click reverses.
+    state.dashLessonSortDir = state.dashLessonSort === key
+      ? (state.dashLessonSortDir === "asc" ? "desc" : "asc")
+      : (key === "accuracy" || key === "name" ? "asc" : "desc");
+    state.dashLessonSort = key;
+    renderDashLessons();
+    return;
+  }
+  var pill = e.target.closest("#dash-lesson-filter .pill");
+  if (pill) { state.dashLessonFilter = pill.dataset.filter; renderDashLessons(); return; }
+  var row = e.target.closest(".dash-lrow[data-lesson]");
+  if (row) openDashLessonRow(row);
+});
+document.getElementById("screen-dashboard").addEventListener("keydown", function(e) {
+  if (e.key !== "Enter" || !e.target.matches(".dash-lrow[data-lesson]")) return;
+  openDashLessonRow(e.target);
+});
 
 document.getElementById("btn-dashboard").addEventListener("click", function() {
   renderDashboard();
@@ -9308,8 +9482,6 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
     document.getElementById("dash-retention-wrap").innerHTML = "";
     document.getElementById("dash-grade-wrap").innerHTML = "";
     document.getElementById("dash-reviewtime-wrap").innerHTML = "";
-    document.getElementById("dash-lesson-wrap").innerHTML = "";
-    document.getElementById("dash-struggle-list").innerHTML = "";
     store.getSrsDistribution(state.dashPeriod).then(function(srs) {
       if (requestId !== dashboardPeriodRequestId) return;
       state.dashSrs = srs;
@@ -9322,20 +9494,15 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
       if (requestId !== dashboardPeriodRequestId) return;
       var days = analytics.days || state.dashPeriod;
       renderStudyCharts(analytics);
-      renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
-
-      var strugList = document.getElementById("dash-struggle-list");
-      var strugBadge = document.getElementById("dash-struggle-badge");
-      var strugPeriod = document.getElementById("dash-struggle-period");
-      var strugglingLessons = analytics.strugglingLessons || [];
-      if (strugPeriod) strugPeriod.textContent = t("dashboard.lastNDays", { n: days });
-      strugBadge.textContent = strugglingLessons.length || "";
-      strugList.innerHTML = strugglingLessons.length
-        ? strugglingLessons.map(function(l) { return dashLessonRow(l, "struggle"); }).join("")
-        : '<div class="dash-empty-note">' + t("dashboard.noStrugglingLessons") + '</div>';
+      if (state.dashLessonData) {
+        state.dashLessonData.breakdown = analytics.lessonBreakdown || [];
+        state.dashLessonData.struggling = analytics.strugglingLessons || [];
+        state.dashLessonData.days = days;
+        renderDashLessons();
+      }
     }).catch(function() {
       if (requestId !== dashboardPeriodRequestId) return;
-      ["dash-heatmap-wrap", "dash-trend-wrap", "dash-newcards-trend-wrap", "dash-retention-wrap", "dash-grade-wrap", "dash-reviewtime-wrap", "dash-lesson-wrap", "dash-struggle-list"].forEach(function(id) {
+      ["dash-heatmap-wrap", "dash-trend-wrap", "dash-newcards-trend-wrap", "dash-retention-wrap", "dash-grade-wrap", "dash-reviewtime-wrap"].forEach(function(id) {
         document.getElementById(id).textContent = t("common.networkError");
       });
     });
@@ -9407,9 +9574,7 @@ window.addEventListener("resize", function() {
     var wrap = document.getElementById("dash-trend-wrap");
     if (!wrap || !wrap.clientWidth || !state.dashAnalytics) return;
     if (Math.abs(wrap.clientWidth - (state.dashChartWidth || 0)) < 24) return;
-    renderStudyCharts(state.dashAnalytics);
-    if (state.dashSrs) renderSrsDistribution(state.dashSrs, document.getElementById("dash-srs-wrap"));
-    if (state.dashFutureDue) renderFutureDue(state.dashFutureDue, document.getElementById("dash-future-due-wrap"));
+    redrawDashCharts();
   }, 200);
 });
 
@@ -9808,39 +9973,6 @@ function renderAccuracyTrend(rows, wrap, maxWeeksAgo) {
       '<span class="trend-label">' + escHtml(label) + '</span>' +
       '<div class="trend-bar-track"><div class="trend-bar-fill" style="transform:' + scaleXStyle(pct / 100) + '"></div></div>' +
       '<span class="trend-count">' + (week.total > 0 ? week.correct + "/" + week.total : "—") + '</span>';
-    wrap.appendChild(rowEl);
-  });
-}
-
-function renderLessonBreakdown(rows, wrap) {
-  wrap = wrap || document.getElementById("dash-lesson-wrap");
-  if (!rows || !rows.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStudyData") + '</div>';
-    return;
-  }
-  rows.forEach(function(lesson) {
-    var accuracy = lesson.total_attempts > 0
-      ? Math.round(lesson.correct_attempts / lesson.total_attempts * 100)
-      : 0;
-    var accClass = accuracy >= 70 ? "acc-good" : accuracy >= 40 ? "acc-mid" : "acc-bad";
-    var barColor = accuracy >= 70 ? "#16a34a" : accuracy >= 40 ? "#d97706" : "#dc2626";
-    var rowEl = document.createElement("div");
-    rowEl.className = "analytics-lesson-row";
-    rowEl.innerHTML =
-      '<div class="analytics-lesson-info">' +
-        '<span class="analytics-lesson-title">' + escHtml(lesson.title) + '</span>' +
-        '<span class="analytics-lesson-class">' + escHtml(lesson.class_name) + '</span>' +
-      '</div>' +
-      '<div class="analytics-lesson-stats">' +
-        '<span class="analytics-lesson-accuracy ' + accClass + '">' + accuracy + '%</span>' +
-        '<div class="analytics-retention-bar">' +
-          '<div class="analytics-retention-fill" style="transform:' + scaleXStyle(accuracy / 100) + ';background:' + barColor + '"></div>' +
-        '</div>' +
-        '<span class="analytics-lesson-attempts">' + t("dashboard.attemptsAbbrev", { n: lesson.total_attempts }) + '</span>' +
-      '</div>';
-    rowEl.addEventListener("click", function() {
-      openStats("lesson", lesson.id, lesson.title);
-    });
     wrap.appendChild(rowEl);
   });
 }

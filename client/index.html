@@ -312,20 +312,33 @@
     <h2 class="screen-title" data-i18n="nav.dashboard">Dashboard</h2>
     <button class="btn btn-ghost btn-sm" id="btn-dashboard-export" data-i18n="dashboard.exportCsv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
   </header>
+  <div class="dash-tabs" id="dash-tabs" role="tablist">
+    <button type="button" class="dash-tab" role="tab" id="dash-tab-overview" data-tab="overview" aria-controls="dash-panel-overview" data-i18n="dashboard.tabOverview">Overview</button>
+    <button type="button" class="dash-tab" role="tab" id="dash-tab-charts" data-tab="charts" aria-controls="dash-panel-charts" data-i18n="dashboard.tabCharts">Charts</button>
+    <button type="button" class="dash-tab" role="tab" id="dash-tab-lessons" data-tab="lessons" aria-controls="dash-panel-lessons" data-i18n="dashboard.tabLessons">Lessons</button>
+  </div>
   <div id="dash-loading" class="empty-state"><p data-i18n="common.loadingEllipsis">Loading…</p></div>
   <div id="dash-error" class="empty-state hidden"><p data-i18n="dashboard.loadFailed">Failed to load dashboard.</p></div>
 
-  <div class="dash-summary-grid" id="dash-summary-grid"></div>
-  <div class="dash-ach-strip hidden" id="dash-ach-strip"></div>
+  <section class="dash-panel" id="dash-panel-overview" role="tabpanel" aria-labelledby="dash-tab-overview">
+    <div class="dash-summary-grid" id="dash-summary-grid"></div>
+    <div class="dash-panel-head">
+      <h3 class="dash-section-label"><span data-i18n="dashboard.needsAttention">Needs attention</span><span class="dash-badge" id="dash-attn-badge"></span></h3>
+      <button type="button" class="btn btn-ghost btn-sm dash-head-link" data-dash-tab="lessons" data-i18n="dashboard.allLessons">All lessons →</button>
+    </div>
+    <div id="dash-attn-list"></div>
+  </section>
 
-  <h3 class="dash-section-label" data-i18n="dashboard.studyCharts">Study Charts</h3>
-  <div class="slicer-bar" id="dash-period-bar">
-    <button class="pill" data-period="7" data-i18n="dashboard.days7">7 days</button>
-    <button class="pill" data-period="30" data-i18n="dashboard.days30">30 days</button>
-    <button class="pill" data-period="60" data-i18n="dashboard.days60">60 days</button>
-    <button class="pill" data-period="90" data-i18n="dashboard.days90">90 days</button>
+  <section class="dash-panel hidden" id="dash-panel-charts" role="tabpanel" aria-labelledby="dash-tab-charts">
+  <div class="dash-panel-head">
+    <h3 class="dash-section-label" data-i18n="dashboard.studyCharts">Study Charts</h3>
+    <div class="slicer-bar" id="dash-period-bar">
+      <button class="pill" data-period="7" data-i18n="dashboard.days7">7 days</button>
+      <button class="pill" data-period="30" data-i18n="dashboard.days30">30 days</button>
+      <button class="pill" data-period="60" data-i18n="dashboard.days60">60 days</button>
+      <button class="pill" data-period="90" data-i18n="dashboard.days90">90 days</button>
+    </div>
   </div>
-  <p class="dash-period-note" data-i18n="dashboard.periodNote">Applies to the charts in this section only — the stats above are all-time.</p>
   <div id="dash-chart-kpis" class="chart-kpis"></div>
   <div class="analytics-charts-grid is-four">
     <div class="stat-card analytics-chart-card">
@@ -358,27 +371,24 @@
       <h3 class="analytics-chart-title"><span data-i18n="dashboard.srsDistribution">Memory intervals</span></h3>
       <div id="dash-srs-wrap"></div>
     </div>
+    <div class="stat-card analytics-chart-card dash-studytime-card hidden" id="dash-studytime-card"></div>
     <div class="stat-card analytics-chart-card is-wide">
       <h3 class="analytics-chart-title"><span data-i18n="dashboard.gradeDistribution">How you answered</span></h3>
       <div id="dash-grade-wrap"></div>
     </div>
   </div>
+  </section>
 
-  <h3 class="dash-section-label" data-i18n="dashboard.lessonAccuracy">Lesson Accuracy</h3>
-  <div id="dash-lesson-wrap" class="analytics-lesson-list"></div>
-
-  <h3 class="dash-section-label">
-    <span data-i18n="dashboard.dueForReview">Due for Review</span>
-    <span class="dash-badge" id="dash-due-badge"></span>
-  </h3>
-  <div id="dash-due-list" class="dash-lesson-list"></div>
-
-  <h3 class="dash-section-label">
-    <span data-i18n="dashboard.strugglingLessons">Struggling Lessons</span>
-    <span class="dash-section-subnote" id="dash-struggle-period"></span>
-    <span class="dash-badge dash-badge-warn" id="dash-struggle-badge"></span>
-  </h3>
-  <div id="dash-struggle-list" class="dash-lesson-list"></div>
+  <section class="dash-panel hidden" id="dash-panel-lessons" role="tabpanel" aria-labelledby="dash-tab-lessons">
+    <div class="dash-panel-head">
+      <div class="pill-group" id="dash-lesson-filter">
+        <button type="button" class="pill" data-filter="all" data-i18n="dashboard.filterAll">All</button>
+        <button type="button" class="pill" data-filter="attention" data-i18n="dashboard.needsAttention">Needs attention</button>
+      </div>
+      <p class="dash-lesson-note" id="dash-lesson-note"></p>
+    </div>
+    <div id="dash-lesson-table"></div>
+  </section>
 </div>
 
 <!-- ===== SCREEN: Class Detail (Lesson List) ===== -->
