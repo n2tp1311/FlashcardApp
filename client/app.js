@@ -8218,7 +8218,10 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today) 
     return '<div class="dash-hero-card dash-hero-empty">' + gearBtn +
       '<div class="dash-hero-empty-note">' + t("dashboard.allMetricsHidden") + '</div></div>';
   }
-  return '<div class="dash-hero-card">' + gearBtn +
+  // The gear sits in the last tile's corner, so all three tiles share the card's margins
+  // instead of the row giving up a gutter on the right to clear it.
+  if (tiles.length) tiles[tiles.length - 1] = tiles[tiles.length - 1].replace(/^(<section[^>]*>)/, "$1" + gearBtn);
+  return '<div class="dash-hero-card">' + (tiles.length ? '' : gearBtn) +
     (tiles.length ? '<div class="dash-hero-tiles">' + tiles.join('') + '</div>' : '') +
     libraryHtml +
   '</div>';

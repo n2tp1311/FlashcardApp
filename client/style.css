@@ -2714,12 +2714,14 @@ code {
 /* Hero card: three tiles (streak, today, study-time window), then a line of library counts. */
 .dash-hero-tiles {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;
-  margin-right: 28px; /* clear of the gear */
 }
 .dash-tile {
+  position: relative;
   background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: 14px 16px; min-width: 0; display: grid; gap: 12px; align-content: start;
 }
+.dash-tile .dash-hero-settings-btn { top: 8px; right: 8px; }
+.dash-tile:has(> .dash-hero-settings-btn) .dash-tile-h { padding-right: 28px; }
 .dash-tile-h {
   margin: 0; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3);
 }
@@ -3654,7 +3656,6 @@ code {
   .dash-summary-grid { grid-template-columns: repeat(3, 1fr); }
   .dash-streak-num { font-size: 1.75rem; }
   .dash-hero-card { padding: 14px 16px; }
-  .dash-hero-tiles { margin-right: 0; margin-top: 22px; }
 }
 
 /* ============================
