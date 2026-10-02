@@ -996,3 +996,7 @@ The charts are SVG generated as strings at the container's pixel width rather th
 ## 2026-10-02 — The quiz speaker reads the term only
 
 The user asked for a speaker in Quiz mode that reads the term only. The answer options are left out because hearing them reads the answer list aloud, which is not a pronunciation aid. A vocabulary term's trailing `/IPA/` is cut, as the flashcard speaker already does, because the voice would spell it out letter by letter. Multiple choice, True/False and image cards have no term to speak, so the button is hidden on them rather than reading the question. The cost: someone who wants a long MCQ question read aloud has no way to do it here.
+
+## 2026-10-02 — A complete class is shown by its progress line, not a separate badge
+
+The user asked for a badge on a class with every card known and picked option B from a preview. A corner seal (A) would share the corner where the edit and archive buttons appear on hover, and a gold edge (C) is loud on a Home grid of many classes. B changes only the line that already measured progress: the bar turns success green and the text becomes "Complete". It is computed from the same known count each time, not stored, so it can be lost; "known" is a flag a later Still learning grade clears, and a badge that outlived it would claim something untrue. Rounding had shown 239 of 240 as 100%, which next to a Complete pill reads as a bug, so an incomplete class tops out at 99%.

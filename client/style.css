@@ -2900,6 +2900,21 @@ code {
   margin-top: 3px;
 }
 
+/* A complete class: success green wins over the class colour and its display filter. */
+.progress-mini-wrap.is-complete .progress-mini-fill { background: var(--success) !important; filter: none !important; }
+.progress-mini-wrap.is-complete .progress-mini-text { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.class-done-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px 2px 6px;
+  border-radius: 10px;
+  background: var(--success-soft);
+  color: var(--success-soft-text);
+}
+
 .mastery-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--border); }
 .mastery-bar i { display: block; height: 100%; }
 .mastery-mastered { background: var(--success); }

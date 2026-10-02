@@ -275,6 +275,8 @@ Object.assign(TRANSLATIONS.en, {
   "mastery.tooltip": "Mastered {mastered} · Known {remembered} · Learning {learning} · New {fresh}. Mastered: the next review is 21 or more days away. Marked Know It: {flagged} / {total}.",
   "class.levelMeta": "Lv {level} · {lessons}",
   "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
+  "class.complete": "Complete",
+  "class.completeTooltip": "Every card in this class is marked Know It",
   "class.accuracyTooltip": "Accuracy across all recorded attempts (Flashcard + Quiz)",
   "confirm.deleteClass": "Delete class \"{name}\" and all its lessons and cards? Your study history and stats are kept.",
   "confirm.archiveClasses": "Archive {n} selected classes?",
@@ -1081,6 +1083,8 @@ Object.assign(TRANSLATIONS.vi, {
   "mastery.tooltip": "Thành thạo {mastered} · Đã nhớ {remembered} · Đang học {learning} · Mới {fresh}. Thành thạo: lần ôn tới cách 21 ngày trở lên. Đã đánh dấu thuộc: {flagged} / {total}.",
   "class.levelMeta": "Bậc {level} · {lessons}",
   "class.knownTooltip": "Số thẻ bạn đã tự đánh dấu \"Đã thuộc\" trong chế độ Thẻ ghi nhớ",
+  "class.complete": "Hoàn thành",
+  "class.completeTooltip": "Mọi thẻ trong lớp này đều đã thuộc",
   "class.accuracyTooltip": "Độ chính xác trên toàn bộ lượt trả lời đã ghi nhận (Thẻ ghi nhớ + Trắc nghiệm)",
   "confirm.deleteClass": "Xóa lớp \"{name}\" cùng toàn bộ bài học và thẻ ghi nhớ? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "confirm.archiveClasses": "Lưu trữ {n} lớp đã chọn?",
@@ -3280,18 +3284,7 @@ function _renderClassGridCard(cls, container) {
     var meta = document.getElementById("cls-meta-" + cls.id);
     if (meta) meta.textContent = formatClassMeta(cls, lessons.length);
   });
-  store.getProgress("class", cls.id).then(function(p) {
-    if (!p || p.total === 0) return;
-    var wrap = document.getElementById("cls-prog-wrap-" + cls.id);
-    var fill = document.getElementById("cls-prog-fill-" + cls.id);
-    var text = document.getElementById("cls-prog-text-" + cls.id);
-    if (!wrap) return;
-    var pct = Math.round(p.known / p.total * 100);
-    wrap.style.display = "";
-    fill.style.transform = scaleXStyle(pct / 100);
-    text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
-    text.title = t("class.knownTooltip");
-  });
+  store.getProgress("class", cls.id).then(function(p) { setClassProgress(cls.id, p); });
   // Apply cached accuracy immediately if available
   if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
     _setClassAccuracyPill(cls.id, state._classAccuracyMap[cls.id]);
@@ -3356,21 +3349,41 @@ function _renderClassListRow(cls, container) {
     var meta = document.getElementById("cls-meta-" + cls.id);
     if (meta) meta.textContent = formatClassMeta(cls, lessons.length);
   });
-  store.getProgress("class", cls.id).then(function(p) {
-    if (!p || p.total === 0) return;
-    var wrap = document.getElementById("cls-prog-wrap-" + cls.id);
-    var fill = document.getElementById("cls-prog-fill-" + cls.id);
-    var text = document.getElementById("cls-prog-text-" + cls.id);
-    if (!wrap) return;
-    var pct = Math.round(p.known / p.total * 100);
-    wrap.style.display = "";
-    fill.style.transform = scaleXStyle(pct / 100);
-    text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
-    text.title = t("class.knownTooltip");
-  });
+  store.getProgress("class", cls.id).then(function(p) { setClassProgress(cls.id, p); });
   if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
     _setClassAccuracyPill(cls.id, state._classAccuracyMap[cls.id]);
   }
+}
+
+function classComplete(p) {
+  return !!p && p.total > 0 && p.known >= p.total;
+}
+
+// A class with every card known says so in place of its progress line, rather than with a
+// badge of its own: the bar already is the measure, so at 100% it turns success green and the
+// text becomes "Complete". It is not stored -- a card falling back to not known takes it away.
+function classProgressHtml(p) {
+  if (classComplete(p)) {
+    return '<span class="class-done-pill"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      escHtml(t("class.complete")) + '</span><span>' + escHtml(t("count.cards", { n: p.total })) + '</span>';
+  }
+  // 239 of 240 rounds to 100%, which would read as complete beside a class that is.
+  var pct = Math.min(99, Math.round(p.known / p.total * 100));
+  return escHtml(t("count.knownProgress", { known: p.known, total: p.total, pct: pct }));
+}
+
+function setClassProgress(classId, p) {
+  if (!p || p.total === 0) return;
+  var wrap = document.getElementById("cls-prog-wrap-" + classId);
+  var fill = document.getElementById("cls-prog-fill-" + classId);
+  var text = document.getElementById("cls-prog-text-" + classId);
+  if (!wrap) return;
+  var done = classComplete(p);
+  wrap.style.display = "";
+  wrap.classList.toggle("is-complete", done);
+  fill.style.transform = scaleXStyle(done ? 1 : Math.round(p.known / p.total * 100) / 100);
+  text.innerHTML = classProgressHtml(p);
+  text.title = t(done ? "class.completeTooltip" : "class.knownTooltip");
 }
 
 function _setClassAccuracyPill(classId, acc) {
