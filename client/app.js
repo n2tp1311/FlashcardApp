@@ -501,8 +501,11 @@ Object.assign(TRANSLATIONS.en, {
   "undo.button": "Undo",
   "undo.graded": "Marked {grade}",
   "undo.failed": "That grade can no longer be undone",
-  "hint.button": "Hint",
-  "hint.more": "More",
+  "hint.button": "Show first word",
+  "hint.more": "Show next word",
+  "hint.cap": "Hint used · best grade is Hard",
+  "hint.moreWords": "+{n} words",
+  "hint.moreWords_one": "+{n} word",
   "hint.usedTitle": "You used a hint, so this card counts as Hard at best",
   "study.retypeLabel": "Type the answer to continue",
   "study.retypeRequiredHint": "Type (or confirm) the answer above to continue",
@@ -1301,8 +1304,10 @@ Object.assign(TRANSLATIONS.vi, {
   "undo.button": "Hoàn tác",
   "undo.graded": "Đã đánh dấu {grade}",
   "undo.failed": "Không thể hoàn tác lần đánh dấu này nữa",
-  "hint.button": "Gợi ý",
-  "hint.more": "Thêm",
+  "hint.button": "Hiện từ đầu tiên",
+  "hint.more": "Hiện từ tiếp theo",
+  "hint.cap": "Đã dùng gợi ý · tối đa là Khó",
+  "hint.moreWords": "+{n} từ",
   "hint.usedTitle": "Bạn đã dùng gợi ý, nên thẻ này tính tối đa là Khó",
   "study.retypeLabel": "Nhập lại đáp án để tiếp tục",
   "study.retypeRequiredHint": "Nhập (hoặc xác nhận) đáp án ở trên để tiếp tục",
@@ -6596,30 +6601,31 @@ function applyHintGradeCap() {
   });
 }
 
-// The answer with the first `step` letters of each word shown and the rest as underscores.
-// Spaces and punctuation stay, so the shape of the answer (word count, lengths, a hyphen or
-// comma) is the first thing a hint gives away. Code points, not UTF-16 units, so a Vietnamese
-// letter or an emoji is one blank.
-function hintMask(answer, step) {
-  var out = "";
-  var inWord = 0;
-  Array.from((answer || "").normalize("NFC").trim()).forEach(function(ch) {
-    if (/[\p{L}\p{N}]/u.test(ch)) {
-      out += inWord < step ? ch : "_";
-      inWord++;
-    } else {
-      out += ch;
-      inWord = 0;
-    }
-  });
-  return out;
+// Hints uncover the answer one word at a time, in reading order. Answers are mostly
+// definitions, and a letter mask over a whole sentence (the first design) gave a line of
+// underscores that changed everywhere at once on each press.
+function hintWords(answer) {
+  return (answer || "").normalize("NFC").trim().split(/\s+/).filter(Boolean);
 }
 
-// Steps until the mask shows everything: the longest word's length.
-function hintMaxSteps(answer) {
-  return Math.max(0, ...((answer || "").normalize("NFC").split(/[^\p{L}\p{N}]+/u).map(function(w) {
-    return Array.from(w).length;
-  })));
+// Uncovered words as text, the next few as blocks the length of their word, so you can see
+// where you are in the sentence. The card face has a fixed height (220px on a phone), so a
+// long definition shows only the last HINT_SHOWN_WINDOW words uncovered, HINT_BLOCKS_AHEAD
+// blocks, and a count of the rest. Covered words are not in the DOM at all: a block made by
+// colouring text transparent could be selected and read.
+var HINT_SHOWN_WINDOW = 6;
+var HINT_BLOCKS_AHEAD = 3;
+function hintRevealHtml(answer, shown) {
+  var words = hintWords(answer);
+  var from = Math.max(0, shown - HINT_SHOWN_WINDOW);
+  var to = Math.min(words.length, shown + HINT_BLOCKS_AHEAD);
+  var parts = words.slice(from, to).map(function(w, k) {
+    if (from + k < shown) return escHtml(w);
+    return '<span class="hint-hid" style="width:' + Math.min(Array.from(w).length, 16) + 'ch" aria-hidden="true"></span>';
+  });
+  if (from > 0) parts.unshift("…");
+  if (to < words.length) parts.push('<span class="hint-rest">' + escHtml(t("hint.moreWords", { n: words.length - to })) + '</span>');
+  return parts.join(" ");
 }
 
 // Hints need a plain-text answer to mask; a formula would come out as a row of blanked TeX.
@@ -6891,7 +6897,8 @@ function renderFlashcard() {
   // every card, so this saves a click; when it's off the input isn't even visible.
   if (state.typeToCompare) typeInput.focus();
   state.fcHintSteps = 0;
-  document.getElementById("fc-type-hint-text").textContent = "";
+  document.getElementById("fc-type-hint-text").innerHTML = "";
+  document.getElementById("fc-hint-cap").classList.add("hidden");
   var hintBtn = document.getElementById("btn-fc-type-hint");
   hintBtn.textContent = t("hint.button");
   hintBtn.disabled = false;
@@ -7120,9 +7127,12 @@ document.getElementById("fc-type-hint-row").addEventListener("click", function(e
 document.getElementById("btn-fc-type-hint").addEventListener("click", function() {
   if (state.studyHasFlippedCard) return;
   var answer = state.studyBackText;
-  var max = hintMaxSteps(answer);
+  var max = hintWords(answer).length;
   state.fcHintSteps = Math.min((state.fcHintSteps || 0) + 1, max);
-  document.getElementById("fc-type-hint-text").textContent = hintMask(answer, state.fcHintSteps);
+  document.getElementById("fc-type-hint-text").innerHTML = hintRevealHtml(answer, state.fcHintSteps);
+  var cap = document.getElementById("fc-hint-cap");
+  cap.textContent = t("hint.cap");
+  cap.classList.remove("hidden");
   this.textContent = t("hint.more");
   if (state.fcHintSteps >= max) this.disabled = true;
   haptic("tick");

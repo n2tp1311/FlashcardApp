@@ -972,6 +972,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Vocabulary: no duplicate word in the same context | Done | 409 `duplicateWordQueued`/`duplicateWordFetched`; `server/lib/vocabularyDup.js`; `tests/vocabulary-dup.test.js` |
 | Quiz: speaker reads the term only | Done | `#btn-quiz-audio` + `P`; hidden on mcq/true-false/image-def; `quizSpeechText()`; `tests/quiz-speech.test.js` |
 | Class complete badge (option B) | Done | Progress line becomes a green "Complete" pill at 100% known; incomplete capped at 99%; `setClassProgress()`; `tests/class-complete.test.js` |
+| Hints reveal word by word (option B) | Done | Replaces the per-word letter mask; window of six shown words, three blocks, +N; visible Hard-cap note; `tests/hints.test.js` |
 | Study charts redesign (headline row, upright charts) | Done | `chartKpisHtml`, `chartColumnsSvg`, `chartLineSvg`, `renderStudyCharts`; Retention chart folded into Accuracy; `tests/study-charts.test.js` |
 | Hints in Write mode | Done | One more letter per word per press; a hinted card is Hard at best on every grading path; `tests/hints.test.js` |
 | Mastery bar per lesson | Done | Mastered/Known/Learning/New from FSRS state, 21-day line; `tests/mastery.test.js` |

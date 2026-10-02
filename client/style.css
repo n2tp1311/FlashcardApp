@@ -1982,15 +1982,23 @@ code {
 .fc-type-input:focus { border-color: var(--primary); }
 .fc-type-input:disabled { opacity: 0.6; }
 
-/* Hint row under the Write-mode input: a soft pill button and the letters revealed so far. */
+/* Hint under the Write-mode input: the answer so far, covered words as blocks, then a soft
+   pill button. The text sits above the button so it lines up with the input you type in. */
 .fc-type-hint-row {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  margin-top: 8px; max-width: 320px; width: 100%; flex-wrap: wrap;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  margin-top: 8px; max-width: 360px; width: 100%;
 }
-.fc-type-hint-btn { background: var(--surface2); border-radius: 999px; padding: 4px 12px; }
+.fc-type-hint-btn { background: var(--surface2); border-radius: 999px; padding: 4px 12px; order: 2; }
 .fc-type-hint-text {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.9375rem; letter-spacing: 0.08em; color: var(--text2); white-space: pre-wrap;
+  font-size: 0.875rem; line-height: 1.7; color: var(--text); text-align: center; order: 1;
+  overflow-wrap: anywhere;
+}
+.hint-rest { font-size: 0.75rem; color: var(--text3); white-space: nowrap; }
+/* Once a hint is showing, the face is full; Enter flips in Write mode, so the label gives way. */
+.fc-front:has(.fc-type-hint-text:not(:empty)) .fc-hint { display: none; }
+.hint-hid {
+  display: inline-block; height: 0.95em; vertical-align: -0.1em;
+  background: var(--surface2); border-radius: 3px; max-width: 100%;
 }
 .fc-type-hint-text:empty { display: none; }
 
@@ -2468,6 +2476,8 @@ code {
   padding: 8px 12px;
   margin-top: 12px;
 }
+/* A short label, so it sits centred under the card at its own width, not across the screen. */
+.fc-hint-cap { width: fit-content; max-width: 600px; margin: 12px auto 0; padding: 4px 12px; border-radius: 999px; }
 
 /* ============================
    RESULTS
