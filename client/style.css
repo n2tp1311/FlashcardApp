@@ -1966,6 +1966,18 @@ code {
 .fc-type-input:focus { border-color: var(--primary); }
 .fc-type-input:disabled { opacity: 0.6; }
 
+/* Hint row under the Write-mode input: a soft pill button and the letters revealed so far. */
+.fc-type-hint-row {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 8px; max-width: 320px; width: 100%; flex-wrap: wrap;
+}
+.fc-type-hint-btn { background: var(--surface2); border-radius: 999px; padding: 4px 12px; }
+.fc-type-hint-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9375rem; letter-spacing: 0.08em; color: var(--text2); white-space: pre-wrap;
+}
+.fc-type-hint-text:empty { display: none; }
+
 .fc-your-guess {
   font-size: 0.8125rem;
   color: var(--text3);

@@ -947,3 +947,7 @@ The daily goal counts cards answered, not minutes or XP. Cards are what the app 
 ## 2026-10-02 — The session end says what changed today, measured rather than inferred
 
 The end screens compare today's numbers from before and after the session instead of working out locally whether the streak should have gone up. The server owns the day boundary and the rest-day rule, and a client-side guess would disagree with Home the first time either changed. The cost is one extra request at each end of a session, plus waiting for the write queue to drain before the second one, so the streak line appears a moment after the tiles. Offline, it does not appear at all.
+
+## 2026-10-02 — A hint caps the grade at Hard
+
+Write mode never checked the typed answer, so a hint could have been a free reveal. It is not, because the grade is what FSRS schedules from: an answer recalled with the first letters shown is not one recalled unaided, and Know It or Confident would push the next review further out than the memory supports. Hard still counts as known, so a hinted card is not punished as forgotten. The cap is enforced in `markCard()` as well as on the buttons, since the keyboard shortcuts and swipe-to-grade do not go through a disabled button. Letters are revealed per word rather than across the whole answer so the first press already shows the answer's shape (how many words, how long), which is often enough to recall it.

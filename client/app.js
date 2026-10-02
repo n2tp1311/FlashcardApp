@@ -472,6 +472,9 @@ Object.assign(TRANSLATIONS.en, {
   "study.showAnswer": "Show answer",
   "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
+  "hint.button": "Hint",
+  "hint.more": "More",
+  "hint.usedTitle": "You used a hint, so this card counts as Hard at best",
   "study.retypeLabel": "Type the answer to continue",
   "study.retypeRequiredHint": "Type (or confirm) the answer above to continue",
   "study.retypePlaceholder": "Type the answer...",
@@ -1217,6 +1220,9 @@ Object.assign(TRANSLATIONS.vi, {
   "study.showAnswer": "Xem đáp án",
   "study.typeYourGuessPlaceholder": "Nhập câu trả lời...",
   "study.yourGuess": "Bạn đã trả lời: {text}",
+  "hint.button": "Gợi ý",
+  "hint.more": "Thêm",
+  "hint.usedTitle": "Bạn đã dùng gợi ý, nên thẻ này tính tối đa là Khó",
   "study.retypeLabel": "Nhập lại đáp án để tiếp tục",
   "study.retypeRequiredHint": "Nhập (hoặc xác nhận) đáp án ở trên để tiếp tục",
   "study.retypePlaceholder": "Nhập đáp án...",
@@ -2477,6 +2483,7 @@ var state = {
   studyFlipped: false,
   studyHasFlippedCard: false,
   studyCardGraded: false,
+  fcHintSteps: 0,
   studyKnownMap: {},
   studyFrontText: "",
   studyBackText: "",
@@ -6439,6 +6446,49 @@ function setMarkButtonsEnabled(enabled) {
   ["btn-fc-learning", "btn-fc-hard", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
     document.getElementById(id).disabled = !enabled;
   });
+  if (enabled && state.fcHintSteps > 0) applyHintGradeCap();
+}
+
+// A hinted answer was not recalled unaided, so Know It and Confident would tell FSRS the card
+// is easier than it is and push the next review too far out. markCard() enforces the same cap
+// for the keyboard and swipe paths, which do not go through the disabled buttons.
+function applyHintGradeCap() {
+  ["btn-fc-known", "btn-fc-easy"].forEach(function(id) {
+    var btn = document.getElementById(id);
+    btn.disabled = true;
+    btn.title = t("hint.usedTitle");
+  });
+}
+
+// The answer with the first `step` letters of each word shown and the rest as underscores.
+// Spaces and punctuation stay, so the shape of the answer (word count, lengths, a hyphen or
+// comma) is the first thing a hint gives away. Code points, not UTF-16 units, so a Vietnamese
+// letter or an emoji is one blank.
+function hintMask(answer, step) {
+  var out = "";
+  var inWord = 0;
+  Array.from((answer || "").normalize("NFC").trim()).forEach(function(ch) {
+    if (/[\p{L}\p{N}]/u.test(ch)) {
+      out += inWord < step ? ch : "_";
+      inWord++;
+    } else {
+      out += ch;
+      inWord = 0;
+    }
+  });
+  return out;
+}
+
+// Steps until the mask shows everything: the longest word's length.
+function hintMaxSteps(answer) {
+  return Math.max(0, ...((answer || "").normalize("NFC").split(/[^\p{L}\p{N}]+/u).map(function(w) {
+    return Array.from(w).length;
+  })));
+}
+
+// Hints need a plain-text answer to mask; a formula would come out as a row of blanked TeX.
+function hintAvailable(answer) {
+  return !!(answer || "").trim() && !containsLatex(answer);
 }
 
 // Locks out everything but Exit (btn-fc-back, deliberately excluded below) while a
@@ -6698,6 +6748,15 @@ function renderFlashcard() {
   // Auto-focus only when the mode has it on — the user picked Flashcard & Write specifically to type on
   // every card, so this saves a click; when it's off the input isn't even visible.
   if (state.typeToCompare) typeInput.focus();
+  state.fcHintSteps = 0;
+  document.getElementById("fc-type-hint-text").textContent = "";
+  var hintBtn = document.getElementById("btn-fc-type-hint");
+  hintBtn.textContent = t("hint.button");
+  hintBtn.disabled = false;
+  ["btn-fc-known", "btn-fc-easy"].forEach(function(id) {
+    var btn = document.getElementById(id);
+    btn.title = t(id === "btn-fc-known" ? "study.knowItHint" : "study.confidentHint");
+  });
 
   // Cancel any pending auto-advance from a previous grade — otherwise it fires later
   // against whatever card the user has since navigated to (Prev/Next/dot/shuffle/delete),
@@ -6780,6 +6839,9 @@ function renderFlashcard() {
     renderLatex(back,  backEl);
     frontAudioBtn.parentNode.style.visibility = "";
   }
+
+  document.getElementById("fc-type-hint-row").classList.toggle("hidden",
+    !state.typeToCompare || !hintAvailable(state.studyBackText));
 
   var expContainer = document.getElementById("fc-explanation");
   expContainer.innerHTML = "";
@@ -6896,6 +6958,7 @@ document.getElementById("fc-scene").addEventListener("click", function() {
         guessEl.classList.remove("hidden");
       }
       typeInput.disabled = true;
+      document.getElementById("btn-fc-type-hint").disabled = true;
     }
   }
   var expContainer = document.getElementById("fc-explanation");
@@ -6908,6 +6971,20 @@ document.getElementById("btn-fc-reveal").addEventListener("click", function() {
 
 document.getElementById("fc-type-input").addEventListener("click", function(e) {
   e.stopPropagation();
+});
+document.getElementById("fc-type-hint-row").addEventListener("click", function(e) {
+  e.stopPropagation(); // a click on the hint row must not flip the card
+});
+document.getElementById("btn-fc-type-hint").addEventListener("click", function() {
+  if (state.studyHasFlippedCard) return;
+  var answer = state.studyBackText;
+  var max = hintMaxSteps(answer);
+  state.fcHintSteps = Math.min((state.fcHintSteps || 0) + 1, max);
+  document.getElementById("fc-type-hint-text").textContent = hintMask(answer, state.fcHintSteps);
+  this.textContent = t("hint.more");
+  if (state.fcHintSteps >= max) this.disabled = true;
+  haptic("tick");
+  document.getElementById("fc-type-input").focus();
 });
 document.getElementById("fc-type-input").addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
@@ -7224,6 +7301,7 @@ function confirmLatexRetype() {
 function markCard(known, grade, forceRetype) {
   var card = state.studyCards[state.studyIndex];
   if (!card || state.studyCardGraded) return;
+  if (known && state.fcHintSteps > 0) grade = "hard";
   state.studyCardGraded = true;
   setMarkButtonsEnabled(false);
   haptic("select");
