@@ -269,6 +269,8 @@ Object.assign(TRANSLATIONS.en, {
   "count.lessons": "{n} lessons",
   "count.lessons_one": "{n} lesson",
   "count.knownProgress": "{known} / {total} known ({pct}%)",
+  "mastery.text": "{pct}% mastered",
+  "mastery.tooltip": "Mastered {mastered} · Known {remembered} · Learning {learning} · New {fresh}. Mastered: the next review is 21 or more days away. Marked Know It: {flagged} / {total}.",
   "class.levelMeta": "Lv {level} · {lessons}",
   "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
   "class.accuracyTooltip": "Accuracy across all recorded attempts (Flashcard + Quiz)",
@@ -1020,6 +1022,8 @@ Object.assign(TRANSLATIONS.vi, {
   "count.due": "{n} thẻ cần ôn",
   "count.lessons": "{n} bài học",
   "count.knownProgress": "{known} / {total} đã thuộc ({pct}%)",
+  "mastery.text": "Thành thạo {pct}%",
+  "mastery.tooltip": "Thành thạo {mastered} · Đã nhớ {remembered} · Đang học {learning} · Mới {fresh}. Thành thạo: lần ôn tới cách 21 ngày trở lên. Đã đánh dấu thuộc: {flagged} / {total}.",
   "class.levelMeta": "Bậc {level} · {lessons}",
   "class.knownTooltip": "Số thẻ bạn đã tự đánh dấu \"Đã thuộc\" trong chế độ Thẻ ghi nhớ",
   "class.accuracyTooltip": "Độ chính xác trên toàn bộ lượt trả lời đã ghi nhận (Thẻ ghi nhớ + Trắc nghiệm)",
@@ -3811,12 +3815,35 @@ function _renderLessonItems(lessons, accMap) {
         if (!wrap) return;
         var pct = Math.round(p.known / p.total * 100);
         wrap.style.display = "";
+        if (p.mastery) {
+          renderMasteryBar(wrap, p);
+          return;
+        }
         fill.style.transform = scaleXStyle(pct / 100);
         text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
         text.title = t("class.knownTooltip");
       });
     });
   });
+}
+
+// Brainscape's deck mastery bar: mastered, known, learning, new, left to right. The memory
+// states come from the scheduler, so this shows long-term progress, which the manual Know It
+// flag (now in the tooltip, to keep the label on one line on a phone) does not.
+var MASTERY_ORDER = ["mastered", "known", "learning"];
+
+function renderMasteryBar(wrap, p) {
+  var m = p.mastery, total = p.total;
+  var pct = Math.round(m.mastered / total * 100);
+  var tip = t("mastery.tooltip", { mastered: m.mastered, remembered: m.known, learning: m.learning, fresh: m.new, flagged: p.known, total: total });
+  wrap.innerHTML =
+    '<div class="mastery-bar" role="img" aria-label="' + escHtml(tip) + '">' +
+      MASTERY_ORDER.map(function(k) {
+        return m[k] ? '<i class="mastery-' + k + '" style="width:' + (m[k] / total * 100).toFixed(2) + '%"></i>' : '';
+      }).join('') +
+    '</div>' +
+    '<span class="progress-mini-text" title="' + escHtml(tip) + '">' +
+      escHtml(t("mastery.text", { pct: pct })) + '</span>';
 }
 
 function _applyLessonAccuracy(accMap) {

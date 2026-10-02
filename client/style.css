@@ -2828,6 +2828,12 @@ code {
   margin-top: 3px;
 }
 
+.mastery-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--border); }
+.mastery-bar i { display: block; height: 100%; }
+.mastery-mastered { background: var(--success); }
+.mastery-known    { background: color-mix(in srgb, var(--success) 45%, var(--surface)); }
+.mastery-learning { background: var(--warning); }
+
 /* Class card uses accent color for fill (set inline) */
 .class-card .progress-mini { margin-top: 8px; }
 

@@ -165,6 +165,29 @@ router.get("/trend", requireAuth, (req, res) => {
   res.json(rows);
 });
 
+// Memory state of each card in a lesson, for the mastery bar. Mastered means a Review card
+// scheduled 21 days or more out, Anki's "mature" line and a bucket edge of the dashboard's
+// Memory Interval chart, so the two agree. A card without FSRS state has never been
+// scheduled and counts as new, as cardFromState() treats it.
+const MASTERED_INTERVAL_SEC = 21 * 86400;
+
+function lessonMastery(lessonId, userId) {
+  const rows = db.prepare(
+    "SELECT bucket, COUNT(*) AS n FROM (" +
+    "  SELECT CASE" +
+    "    WHEN cs.card_id IS NULL OR cs.fsrs_stability IS NULL THEN 'new'" +
+    "    WHEN cs.fsrs_state IN (1,3) THEN 'learning'" +
+    "    WHEN cs.fsrs_state = 2 AND cs.srs_due_at - COALESCE(cs.fsrs_last_review_at, cs.updated_at) >= ? THEN 'mastered'" +
+    "    ELSE 'known' END AS bucket" +
+    "  FROM cards c LEFT JOIN card_states cs ON cs.card_id = c.id AND cs.user_id = ?" +
+    "  WHERE c.lesson_id = ?" +
+    ") GROUP BY bucket"
+  ).all(MASTERED_INTERVAL_SEC, userId, lessonId);
+  const mastery = { new: 0, learning: 0, known: 0, mastered: 0 };
+  rows.forEach(r => { mastery[r.bucket] = r.n; });
+  return mastery;
+}
+
 // GET /api/stats/progress/lesson/:id
 router.get("/progress/lesson/:id", requireAuth, (req, res) => {
   const lesson = db.prepare(
@@ -180,7 +203,7 @@ router.get("/progress/lesson/:id", requireAuth, (req, res) => {
     "WHERE cards.lesson_id = ? AND cs.user_id = ? AND cs.known = 1"
   ).get(req.params.id, req.session.userId).n;
 
-  res.json({ total, known });
+  res.json({ total, known, mastery: lessonMastery(req.params.id, req.session.userId) });
 });
 
 // GET /api/stats/progress/class/:id
