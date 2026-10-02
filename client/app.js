@@ -538,6 +538,8 @@ Object.assign(TRANSLATIONS.en, {
   "done.streak": "Day streak {from} → {to}",
   "done.streakMilestone": "{n}-day streak!",
   "done.goalMet": "Daily goal reached: {n} cards today",
+  "eta.minutes": "~{n} min left",
+  "eta.underMinute": "<1 min left",
   "summary.new": "New",
   "summary.review": "Review",
   "summary.skippedNote": "{n} cards skipped (not graded)",
@@ -1279,6 +1281,8 @@ Object.assign(TRANSLATIONS.vi, {
   "done.streak": "Chuỗi ngày học {from} → {to}",
   "done.streakMilestone": "Chuỗi {n} ngày!",
   "done.goalMet": "Đã đạt mục tiêu ngày: {n} thẻ hôm nay",
+  "eta.minutes": "còn ~{n} phút",
+  "eta.underMinute": "còn <1 phút",
   "summary.new": "Mới",
   "summary.review": "Ôn tập",
   "summary.skippedNote": "{n} thẻ đã bỏ qua (chưa chấm điểm)",
@@ -6057,6 +6061,7 @@ var STREAK_MILESTONES = [7, 14, 30, 50, 100, 200, 365, 500, 1000];
 // session is what extended the streak or reached the daily goal.
 function beginStudySession() {
   state.sessionMs = 0;
+  state.sessionDurations = [];
   state.sessionTodayAtStart = null;
   var token = state.sessionToken = {};
   if (IS_SERVER && store.getToday) {
@@ -6067,7 +6072,40 @@ function beginStudySession() {
 }
 
 function addSessionTime(ms) {
-  if (typeof ms === "number" && ms > 0) state.sessionMs = (state.sessionMs || 0) + Math.min(ms, SESSION_CARD_MAX_MS);
+  if (typeof ms !== "number" || !(ms > 0)) return;
+  ms = Math.min(ms, SESSION_CARD_MAX_MS);
+  state.sessionMs = (state.sessionMs || 0) + ms;
+  (state.sessionDurations = state.sessionDurations || []).push(ms);
+}
+
+// Brainscape's "estimated time left". Seconds per card come from this session once it has
+// three answers (pace varies by lesson and by day), else from the user's own history for the
+// mode, else a guess. A median throughout, so one long pause does not swing it.
+var ETA_FALLBACK_MS = { flashcard: 10000, quiz: 15000 };
+var ETA_MIN_SAMPLES = 3;
+
+function medianOf(values) {
+  if (!values || !values.length) return null;
+  var sorted = values.slice().sort(function(a, b) { return a - b; });
+  var mid = sorted.length >> 1;
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function estimateTimeLeftMs(remaining, source) {
+  if (!(remaining > 0)) return 0;
+  var own = state.sessionDurations && state.sessionDurations.length >= ETA_MIN_SAMPLES ? medianOf(state.sessionDurations) : null;
+  var history = state.sessionTodayAtStart && state.sessionTodayAtStart.medianMs ? state.sessionTodayAtStart.medianMs[source] : null;
+  return remaining * (own || history || ETA_FALLBACK_MS[source]);
+}
+
+function formatTimeLeft(ms) {
+  if (!(ms > 0)) return "";
+  return ms < 60000 ? t("eta.underMinute") : t("eta.minutes", { n: Math.round(ms / 60000) });
+}
+
+function studyProgressText(position, total, remaining, source) {
+  var eta = formatTimeLeft(estimateTimeLeftMs(remaining, source));
+  return position + " / " + total + (eta ? " · " + eta : "");
 }
 
 function formatSessionTime(ms) {
@@ -6640,7 +6678,8 @@ function renderFlashcard() {
   clearTimeout(state.fcAdvanceTimer);
 
   // Progress
-  document.getElementById("fc-progress-text").textContent = (i + 1) + " / " + cards.length;
+  document.getElementById("fc-progress-text").textContent = studyProgressText(i + 1, cards.length,
+    cards.length - Object.keys(state.studySessionLog || {}).length, "flashcard");
   document.getElementById("fc-progress-fill").style.transform = scaleXStyle((i + 1) / cards.length);
 
   // Lesson label (multi-lesson sessions)
@@ -7289,7 +7328,8 @@ function renderQuizCard() {
   // Don't reset the timer on a read-only Prev/Next replay of an already-answered card.
   if (!priorResult) state.quizCardShownAt = Date.now();
 
-  document.getElementById("quiz-progress-text").textContent = (i + 1) + " / " + total;
+  document.getElementById("quiz-progress-text").textContent = studyProgressText(i + 1, total,
+    total - state.quizResults.length, "quiz");
   document.getElementById("quiz-progress-fill").style.transform = scaleXStyle((i + 1) / total);
   document.getElementById("quiz-score-display").textContent = state.quizScore + " / " + state.quizResults.length;
 
