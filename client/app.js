@@ -222,6 +222,8 @@ Object.assign(TRANSLATIONS.en, {
   "vocabulary.addError": "Couldn't add the word: {message}",
   "vocabulary.deleteError": "Couldn't remove the word: {message}",
   "vocabulary.alreadyFetched": "This word has already been fetched by KnowledgeApp.",
+  "vocabulary.duplicatePending": "‘{word}’ is already in the queue with the same context. Add a different context to save another meaning.",
+  "vocabulary.duplicateFetched": "‘{word}’ is already in your vocabulary deck with the same context. Add a different context to save another meaning.",
   "setup.updated": "Updated",
   "setup.hintUpdated": "Cards KnowledgeApp changed since you last reviewed them",
 
@@ -542,6 +544,8 @@ Object.assign(TRANSLATIONS.en, {
   "study.savingWord": "Saving word…",
   "study.wordQueued": "Saved — fetch in KnowledgeApp",
   "study.wordSaveFailed": "Couldn't save the word. Try again.",
+  "study.wordAlreadyQueued": "Already saved with this context",
+  "study.wordAlreadyFetched": "Already in your vocabulary deck",
   "study.prev": "Prev",
   "study.stillLearningHint": "Still Learning (1)",
   "study.learning": "Learning",
@@ -1007,6 +1011,8 @@ Object.assign(TRANSLATIONS.vi, {
   "vocabulary.addError": "Không thể thêm từ: {message}",
   "vocabulary.deleteError": "Không thể xóa từ: {message}",
   "vocabulary.alreadyFetched": "Từ này đã được KnowledgeApp tải.",
+  "vocabulary.duplicatePending": "‘{word}’ đã có trong hàng chờ với cùng ngữ cảnh. Thêm ngữ cảnh khác để lưu nghĩa khác.",
+  "vocabulary.duplicateFetched": "‘{word}’ đã có trong bộ từ vựng với cùng ngữ cảnh. Thêm ngữ cảnh khác để lưu nghĩa khác.",
   "setup.updated": "Đã cập nhật",
   "setup.hintUpdated": "Thẻ KnowledgeApp đã thay đổi kể từ lần bạn xem lại gần nhất",
 
@@ -1317,6 +1323,8 @@ Object.assign(TRANSLATIONS.vi, {
   "study.savingWord": "Đang lưu từ…",
   "study.wordQueued": "Đã lưu — hãy Fetch trong KnowledgeApp",
   "study.wordSaveFailed": "Không thể lưu từ. Vui lòng thử lại.",
+  "study.wordAlreadyQueued": "Đã lưu với ngữ cảnh này",
+  "study.wordAlreadyFetched": "Đã có trong bộ từ vựng",
   "study.prev": "Trước",
   "study.stillLearningHint": "Đang học (1)",
   "study.learning": "Đang học",
@@ -4595,7 +4603,9 @@ function addVocabularyRequest() {
     closeModal("vocabulary-add");
     return refreshVocabularyQueue(true);
   }).catch(function(err) {
-    error.textContent = t("vocabulary.addError", { message: err.message });
+    error.textContent = err.code === "duplicateWordQueued" || err.code === "duplicateWordFetched"
+      ? t(err.code === "duplicateWordQueued" ? "vocabulary.duplicatePending" : "vocabulary.duplicateFetched", { word: word })
+      : t("vocabulary.addError", { message: err.message });
     error.classList.remove("hidden");
   }).then(function() {
     button.disabled = false;
@@ -6680,7 +6690,13 @@ function saveSelectedVocabularyWord() {
     button.disabled = true;
     button.textContent = t("study.wordQueued");
     refreshVocabularyQueue(false);
-  }).catch(function() {
+  }).catch(function(err) {
+    if (err && (err.code === "duplicateWordQueued" || err.code === "duplicateWordFetched")) {
+      vocabularySelectionText = "";
+      button.disabled = true;
+      button.textContent = t(err.code === "duplicateWordQueued" ? "study.wordAlreadyQueued" : "study.wordAlreadyFetched");
+      return;
+    }
     button.disabled = false;
     button.textContent = t("study.wordSaveFailed");
   }).then(function() {

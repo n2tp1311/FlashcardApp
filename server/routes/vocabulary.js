@@ -4,6 +4,7 @@ const express = require("express");
 const db = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { rateLimit, byUser } = require("../middleware/rateLimit");
+const { findDuplicate } = require("../lib/vocabularyDup");
 
 const router = express.Router();
 const saveLimiter = rateLimit({
@@ -51,6 +52,23 @@ router.post("/", requireAuth, saveLimiter, (req, res) => {
       "WHERE ca.id = ? AND cl.user_id = ?"
     ).get(sourceCardId, req.session.userId);
     if (!source) return res.status(404).json({ error: "Source card not found" });
+  }
+
+  // A completed request whose card was since deleted no longer stands: saving the word again
+  // is how the user gets it back.
+  const standing = db.prepare(
+    "SELECT v.id, v.status, v.selected_text, v.context_text FROM vocabulary_requests v " +
+    "LEFT JOIN cards c ON c.id = v.card_id " +
+    "WHERE v.user_id = ? AND (v.status = 'pending' OR c.id IS NOT NULL)"
+  ).all(req.session.userId);
+  const dup = findDuplicate(standing, selectedText, contextText);
+  if (dup) {
+    return res.status(409).json({
+      error: dup.status === "pending"
+        ? "This word is already waiting in the vocabulary queue with the same context"
+        : "This word is already in your vocabulary deck with the same context",
+      code: dup.status === "pending" ? "duplicateWordQueued" : "duplicateWordFetched", id: dup.id
+    });
   }
 
   const id = genId();

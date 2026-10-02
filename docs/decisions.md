@@ -982,3 +982,7 @@ The user asked for consecutive days of study time above a rolling 30-day mean an
 
 Today joins the run only after it passes its mean, and until then the run shown ends yesterday with the minutes still needed, the same convention as the day streak, so a run does not read as broken every morning. It is computed over the whole history on each dashboard load; one grouped query of study days is a few thousand rows at most.
 
+## 2026-10-02 — A saved English word is a duplicate only in the same context
+
+The user asked that saving a word never create a duplicate unless the context differs. Each request becomes one card in KnowledgeApp, so a repeated save meant a repeated card. The word alone is the wrong key: "bank" by a river and "bank" that lends are two cards worth having, and the context is what tells KnowledgeApp which sense to define. So the key is the word plus the context, both compared without case or spacing, and the word without punctuation the selection picked up. A save with no context is covered by any earlier save of the word, since it adds no new sense. Completed requests count only while their card exists, so deleting a card is how a word gets saved again. The cost: the same sentence copied with one word changed counts as a new context, and a card saved from two different cards' text is two requests even when the meaning is the same.
+
