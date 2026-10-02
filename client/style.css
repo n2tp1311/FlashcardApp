@@ -2334,6 +2334,29 @@ code {
 }
 #btn-quiz-review-next { margin-left: auto; }
 
+/* Answer sheet: Duolingo's feedback bar. It rises after every answer with the praise or the
+   calm wrong-answer line and, when the user has to press on, the Next button. Full-width
+   tint, content held to the quiz column. */
+.study-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: grid; gap: 12px; justify-items: stretch;
+  padding: 16px max(16px, calc((100% - 600px) / 2)) calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  transform: translateY(105%); visibility: hidden;
+  transition: transform 0.22s ease-out, visibility 0s linear 0.22s;
+}
+.study-sheet.on { transform: none; visibility: visible; transition: transform 0.22s ease-out; }
+.study-sheet-correct { background: var(--success-light); }
+.study-sheet-combo   { background: var(--warning-light); }
+.study-sheet-wrong   { background: var(--danger-light); }
+.study-sheet-title { font-weight: 700; font-size: 1.0625rem; }
+.study-sheet-correct .study-sheet-title { color: var(--success); }
+.study-sheet-combo   .study-sheet-title { color: var(--warning); }
+.study-sheet-wrong   .study-sheet-title { color: var(--danger); }
+.study-sheet-sub { color: var(--text2); font-size: 0.875rem; margin-top: 2px; }
+/* Room below the explanation so the sheet never covers what the user is reading. */
+#screen-quiz.sheet-open .quiz-container { padding-bottom: 180px; }
+
 /* True/False answer picker in card modal */
 .tf-answer-picker { display: flex; gap: 10px; margin-top: 4px; }
 .tf-answer-btn { flex: 1; padding: 16px; font-size: 1rem; font-weight: 600; border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-family: inherit; transition: background var(--transition), border-color var(--transition), color var(--transition); }

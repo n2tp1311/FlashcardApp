@@ -458,6 +458,25 @@ Object.assign(TRANSLATIONS.en, {
   "study.retypeRequiredHint": "Type (or confirm) the answer above to continue",
   "study.retypePlaceholder": "Type the answer...",
   "study.retypeMismatch": "Not quite — try again.",
+  "enc.right1": "Nice!",
+  "enc.right2": "Spot on!",
+  "enc.right3": "Great recall!",
+  "enc.right4": "Correct!",
+  "enc.right5": "You've got it!",
+  "enc.right6": "Well done!",
+  "enc.rightSub1": "That one's sticking.",
+  "enc.rightSub2": "Your memory is doing the work.",
+  "enc.rightSub3": "Keep this pace.",
+  "enc.wrong1": "Not quite",
+  "enc.wrong2": "Almost",
+  "enc.wrong3": "Good try",
+  "enc.wrongSub": "The right answer is marked. Mistakes now make it stick later.",
+  "enc.combo3": "3 in a row!",
+  "enc.combo5": "5 in a row! On fire",
+  "enc.combo10": "{n} in a row! Unstoppable",
+  "enc.comboSub": "Your streak of right answers is growing.",
+  "enc.half": "Halfway there.",
+  "enc.oneLeft": "One more to go.",
   "study.retypeCorrect": "Correct!",
   "study.retypeCloseEnough": "Close enough!",
   "study.latexConfirmLabel": "Review the answer above, then continue when you've got it",
@@ -1154,6 +1173,25 @@ Object.assign(TRANSLATIONS.vi, {
   "study.retypeRequiredHint": "Nhập (hoặc xác nhận) đáp án ở trên để tiếp tục",
   "study.retypePlaceholder": "Nhập đáp án...",
   "study.retypeMismatch": "Chưa đúng — thử lại nhé.",
+  "enc.right1": "Tốt lắm!",
+  "enc.right2": "Chính xác!",
+  "enc.right3": "Nhớ giỏi quá!",
+  "enc.right4": "Đúng rồi!",
+  "enc.right5": "Bạn nắm được rồi!",
+  "enc.right6": "Làm tốt lắm!",
+  "enc.rightSub1": "Kiến thức này đang vào đầu rồi.",
+  "enc.rightSub2": "Trí nhớ của bạn đang làm việc.",
+  "enc.rightSub3": "Giữ nhịp này nhé.",
+  "enc.wrong1": "Chưa đúng",
+  "enc.wrong2": "Suýt nữa",
+  "enc.wrong3": "Cố gắng tốt",
+  "enc.wrongSub": "Đáp án đúng đã được đánh dấu. Sai bây giờ giúp nhớ lâu hơn.",
+  "enc.combo3": "3 câu liên tiếp!",
+  "enc.combo5": "5 câu liên tiếp! Đang bùng cháy",
+  "enc.combo10": "{n} câu liên tiếp! Không thể cản",
+  "enc.comboSub": "Chuỗi câu đúng của bạn đang dài thêm.",
+  "enc.half": "Được nửa đường rồi.",
+  "enc.oneLeft": "Còn một câu nữa.",
   "study.retypeCorrect": "Chính xác!",
   "study.retypeCloseEnough": "Gần đúng, chấp nhận!",
   "study.latexConfirmLabel": "Xem lại đáp án ở trên, rồi tiếp tục khi bạn đã nhớ",
@@ -7046,6 +7084,7 @@ function startQuiz() {
   state.quizScore  = 0;
   state.quizResults = [];
   state.quizCompleteBuzzed = false;
+  state.quizStreak = 0;
   renderQuizCard();
   showScreen("quiz");
 }
@@ -7094,6 +7133,7 @@ function renderQuizCard() {
   if (prevExp) prevExp.remove();
   var prevNext = document.getElementById("quiz-next-btn");
   if (prevNext) prevNext.remove();
+  hideQuizSheet();
   var prevCap = document.getElementById("quiz-cap-hint");
   if (prevCap) prevCap.remove();
   var prevNotDue = document.getElementById("quiz-notdue-hint");
@@ -7200,8 +7240,12 @@ function answerQuiz(selectedIdx) {
   var selectedVal = opts[selectedIdx];
   var isCorrect   = selectedVal === correct;
 
+  state.quizStreak = isCorrect ? (state.quizStreak || 0) + 1 : 0;
+  var cheer = quizEncouragement(isCorrect, state.quizStreak, state.quizResults.length + 1,
+    state.quizCards.length, state.quizLastPraise);
+  if (cheer.praise) state.quizLastPraise = cheer.praise;
   haptic(isCorrect ? "success" : "error");
-  playSound(isCorrect ? "correct" : "wrong");
+  playSound(cheer.tone === "combo" ? "combo" : isCorrect ? "correct" : "wrong", state.quizStreak - 1);
   if (isCorrect) state.quizScore++;
 
   // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
@@ -7261,6 +7305,8 @@ function answerQuiz(selectedIdx) {
     document.getElementById("quiz-options").after(expEl);
   }
 
+  showQuizSheet(cheer);
+
   // Only a correct answer with nothing to read moves on by itself; after a wrong answer or with
   // an explanation, the user needs time to see the right option, so they press Next.
   if (isCorrect && !hasExplanation) {
@@ -7271,6 +7317,46 @@ function answerQuiz(selectedIdx) {
   } else {
     showQuizNextButton();
   }
+}
+
+var QUIZ_PRAISE_COUNT = 6, QUIZ_PRAISE_SUB_COUNT = 3, QUIZ_WRONG_COUNT = 3;
+
+function randomPick(count, avoid) {
+  var n;
+  do { n = 1 + Math.floor(Math.random() * count); } while (count > 1 && n === avoid);
+  return n;
+}
+
+// The words on the answer sheet. Praise never repeats the previous phrase, and a wrong answer
+// gets a calm line rather than a verdict: the red option already says it was wrong. Progress
+// notes replace the praise subtitle only, so a combo or a mistake is never talked over.
+function quizEncouragement(isCorrect, streak, answered, total, lastPraise) {
+  if (!isCorrect) {
+    return { tone: "wrong", title: t("enc.wrong" + randomPick(QUIZ_WRONG_COUNT)), sub: t("enc.wrongSub") };
+  }
+  if (streak === 3 || streak === 5 || (streak >= 10 && streak % 10 === 0)) {
+    return { tone: "combo", title: t("enc.combo" + Math.min(streak, 10), { n: streak }), sub: t("enc.comboSub") };
+  }
+  var praise = randomPick(QUIZ_PRAISE_COUNT, lastPraise);
+  var sub = total >= 6 && answered === Math.ceil(total / 2) ? t("enc.half") :
+    total >= 3 && answered === total - 1 ? t("enc.oneLeft") :
+    t("enc.rightSub" + randomPick(QUIZ_PRAISE_SUB_COUNT));
+  return { tone: "correct", title: t("enc.right" + praise), sub: sub, praise: praise };
+}
+
+function showQuizSheet(cheer) {
+  var sheet = document.getElementById("quiz-sheet");
+  sheet.className = "study-sheet study-sheet-" + cheer.tone;
+  document.getElementById("quiz-sheet-title").textContent = cheer.title;
+  document.getElementById("quiz-sheet-sub").textContent = cheer.sub;
+  void sheet.offsetWidth; // restart the slide-up when the previous answer's sheet was still open
+  sheet.classList.add("on");
+  document.getElementById("screen-quiz").classList.add("sheet-open");
+}
+
+function hideQuizSheet() {
+  document.getElementById("quiz-sheet").classList.remove("on");
+  document.getElementById("screen-quiz").classList.remove("sheet-open");
 }
 
 function quizOptionResultClass(opt, idx, correctVal, selectedIdx) {
@@ -7285,14 +7371,15 @@ function showQuizNextButton() {
   var nextBtn = document.createElement("button");
   nextBtn.id = "quiz-next-btn";
   nextBtn.className = "btn btn-primary btn-full";
-  nextBtn.style.marginTop = "8px";
   nextBtn.innerHTML = t("study.next") + " " + ICON_ARROW_RIGHT;
   nextBtn.addEventListener("click", function() {
     haptic("tick");
     state.quizIndex++;
     renderQuizCard();
   });
-  (document.getElementById("quiz-explanation") || document.getElementById("quiz-options")).after(nextBtn);
+  // Duolingo's placement: Continue lives on the feedback sheet, under the thumb, the same
+  // spot after every answer.
+  document.getElementById("quiz-sheet").appendChild(nextBtn);
 }
 
 
@@ -8943,12 +9030,20 @@ function soundTone(c, freq, start, dur, gain, attack) {
 
 // Each mallet strike is a short fundamental plus a faint, very short fourth harmonic: the
 // harmonic is the "wood" click.
+function soundStrike(c, f, start) {
+  soundTone(c, f, start, 0.25, 0.3, 0.003);
+  soundTone(c, f * 4, start, 0.06, 0.06, 0.002);
+}
+
+// step = right answers in a row before this one. Each raises the pair a whole tone, so a run
+// is heard climbing; capped at six steps (an octave less a tone) before it turns shrill.
 var SOUNDS = {
-  correct: function(c) {
-    [523.25, 659.25].forEach(function(f, i) {
-      soundTone(c, f, i * 0.08, 0.25, 0.3, 0.003);
-      soundTone(c, f * 4, i * 0.08, 0.06, 0.06, 0.002);
-    });
+  correct: function(c, step) {
+    var k = Math.pow(2, Math.min(Math.max(step || 0, 0), 6) * 2 / 12);
+    [523.25, 659.25].forEach(function(f, i) { soundStrike(c, f * k, i * 0.08); });
+  },
+  combo: function(c) {
+    [523.25, 659.25, 783.99, 1046.5].forEach(function(f, i) { soundStrike(c, f, i * 0.07); });
   },
   wrong: function(c) {
     soundTone(c, 196, 0, 0.22, 0.35, 0.003);
@@ -8956,12 +9051,12 @@ var SOUNDS = {
   }
 };
 
-function playSound(name) {
+function playSound(name, step) {
   if (!state.sounds || !SOUNDS[name]) return;
   // Like haptic(): feedback must never break the answer that triggered it.
   try {
     var c = soundContext();
-    if (c) SOUNDS[name](c);
+    if (c) SOUNDS[name](c, step);
   } catch (_) {}
 }
 

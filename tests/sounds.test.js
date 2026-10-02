@@ -59,7 +59,7 @@ test("sounds off, no Web Audio, or a failing context all stay silent without thr
 
 test("only checked answers play a sound; self-grades stay silent", function() {
   const quiz = app.slice(app.indexOf("function answerQuiz("), app.indexOf("function answerQuiz(") + 1200);
-  assert.match(quiz, /playSound\(isCorrect \? "correct" : "wrong"\)/);
+  assert.match(quiz, /playSound\(cheer\.tone === "combo" \? "combo" : isCorrect \? "correct" : "wrong", state\.quizStreak - 1\)/);
   const retype = app.slice(app.indexOf("function submitForcedRetype("), app.indexOf("function confirmLatexRetype("));
   assert.match(retype, /playSound\("correct"\)/);
   assert.match(retype, /playSound\("wrong"\)/);
@@ -72,4 +72,16 @@ test("Sound effects is a saved preference, on by default", function() {
   assert.match(app, /haptics: true,\n  sounds: true,/);
   assert.match(app, /haptics: haptics, sounds: sounds,/);
   assert.equal(app.split('"pref.sounds"').length - 1, 2, "needs English and Vietnamese");
+});
+
+test("a run of right answers climbs a whole tone per step, capped at six", function() {
+  const s = sandbox();
+  s.ctx.playSound("correct", 1);
+  assert.ok(Math.abs(s.log.oscillators[0] - 523.25 * Math.pow(2, 2 / 12)) < 1e-9);
+  s.log.oscillators.length = 0;
+  s.ctx.playSound("correct", 40);
+  assert.ok(Math.abs(s.log.oscillators[0] - 523.25 * 2) < 1e-9, "capped at six whole tones");
+  s.log.oscillators.length = 0;
+  s.ctx.playSound("combo");
+  assert.deepEqual(s.log.oscillators.filter((_, i) => i % 2 === 0), [523.25, 659.25, 783.99, 1046.5]);
 });
