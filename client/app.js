@@ -629,8 +629,6 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.exportCsv": "Export CSV",
   "common.loadingEllipsis": "Loading…",
   "dashboard.loadFailed": "Failed to load dashboard.",
-  "dashboard.overallAccuracy": "Overall Accuracy",
-  "dashboard.cardDifficultyBreakdown": "Card Difficulty Breakdown",
   "dashboard.studyCharts": "Study Charts",
   "dashboard.days7": "7 days",
   "dashboard.days30": "30 days",
@@ -655,9 +653,6 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.dueForReview": "Due for Review",
   "dashboard.strugglingLessons": "Struggling Lessons",
   "dashboard.lastNDays": "(last {n} days)",
-  "dashboard.accuracyBySourceQuiz": "Quiz: {pct}% ({n})",
-  "dashboard.accuracyBySourceFlashcard": "Flashcard: {pct}% ({n})",
-  "dashboard.accuracyLabel": "{pct}% — {correct} / {total} correct",
   "dashboard.allCaughtUp": "All caught up — no cards due.",
   "dashboard.noStrugglingLessons": "No struggling lessons — great work!",
   "dashboard.pctHard": "{pct}% hard",
@@ -1429,8 +1424,6 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.exportCsv": "Xuất CSV",
   "common.loadingEllipsis": "Đang tải…",
   "dashboard.loadFailed": "Tải bảng điều khiển thất bại.",
-  "dashboard.overallAccuracy": "Độ chính xác tổng thể",
-  "dashboard.cardDifficultyBreakdown": "Phân bố độ khó thẻ",
   "dashboard.studyCharts": "Biểu đồ học tập",
   "dashboard.days7": "7 ngày",
   "dashboard.days30": "30 ngày",
@@ -1455,9 +1448,6 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.dueForReview": "Đến hạn ôn tập",
   "dashboard.strugglingLessons": "Bài học đang gặp khó",
   "dashboard.lastNDays": "(trong {n} ngày)",
-  "dashboard.accuracyBySourceQuiz": "Trắc nghiệm: {pct}% ({n})",
-  "dashboard.accuracyBySourceFlashcard": "Thẻ ghi nhớ: {pct}% ({n})",
-  "dashboard.accuracyLabel": "{pct}% — {correct} / {total} đúng",
   "dashboard.allCaughtUp": "Đã hoàn thành hết — không có thẻ nào đến hạn.",
   "dashboard.noStrugglingLessons": "Không có bài học nào gặp khó — làm tốt lắm!",
   "dashboard.pctHard": "{pct}% khó",
@@ -8680,7 +8670,7 @@ function renderDashboard() {
   errEl.classList.add("hidden");
   var exportBtn = document.getElementById("btn-dashboard-export");
   if (exportBtn) exportBtn.disabled = true;
-  ["dash-summary-grid","dash-accuracy-wrap","dash-diff-breakdown",
+  ["dash-summary-grid",
    "dash-chart-kpis","dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-retention-wrap","dash-grade-wrap","dash-reviewtime-wrap","dash-lesson-wrap",
    "dash-due-list","dash-struggle-list"].forEach(function(id) {
     document.getElementById(id).innerHTML = "";
@@ -8698,28 +8688,6 @@ function renderDashboard() {
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
     summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary, newCardEstimate, d.today);
-
-    // Accuracy bar
-    var accPct = d.accuracy.total > 0
-      ? Math.round(d.accuracy.correct / d.accuracy.total * 100) : 0;
-    var accuracyLabel = d.accuracy.total > 0
-      ? t("dashboard.accuracyLabel", { pct: accPct, correct: d.accuracy.correct, total: d.accuracy.total })
-      : t("stats.noDataYet");
-    document.getElementById("dash-accuracy-wrap").innerHTML =
-      '<div class="dash-accuracy-label">' + accuracyLabel + '</div>' +
-      '<div class="dash-accuracy-bar">' +
-        '<div class="dash-accuracy-fill" style="transform:' + scaleXStyle(accPct / 100) + '"></div>' +
-      '</div>' +
-      '<div id="dash-source-pills-wrap">' + (periodRequestId === dashboardPeriodRequestId ? renderAccuracyBySourcePills(analytics.accuracyBySource) : '') + '</div>';
-
-    // Difficulty breakdown
-    var db_ = d.diffBreakdown;
-    var totalCards = db_.new + db_.easy + db_.medium + db_.hard;
-    document.getElementById("dash-diff-breakdown").innerHTML =
-      diffBar(t("difficulty.new"),    db_.new,    totalCards, "#9ca3af") +
-      diffBar(t("difficulty.easy"),   db_.easy,   totalCards, "#16a34a") +
-      diffBar(t("difficulty.medium"), db_.medium, totalCards, "#d97706") +
-      diffBar(t("difficulty.hard"),   db_.hard,   totalCards, "#dc2626");
 
     // Charts (from analytics)
     state.dashFutureDue = futureDue;
@@ -8873,9 +8841,6 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
       var days = analytics.days || state.dashPeriod;
       renderStudyCharts(analytics);
       renderLessonBreakdown(analytics.lessonBreakdown, document.getElementById("dash-lesson-wrap"));
-
-      var pillsWrap = document.getElementById("dash-source-pills-wrap");
-      if (pillsWrap) pillsWrap.innerHTML = renderAccuracyBySourcePills(analytics.accuracyBySource);
 
       var strugList = document.getElementById("dash-struggle-list");
       var strugBadge = document.getElementById("dash-struggle-badge");
@@ -9329,23 +9294,6 @@ function renderFutureDue(data, wrap) {
     values: buckets.map(function(b) { return b.cnt; }),
     titles: buckets.map(function(b) { return (b.n === 0 ? t("dashboard.futureDueTodayHint") : t("time.inDays", { n: b.n })) + ": " + b.cnt; })
   });
-}
-
-var ACCURACY_SOURCE_KEYS = {
-  quiz: "dashboard.accuracyBySourceQuiz",
-  flashcard: "dashboard.accuracyBySourceFlashcard"
-};
-
-function renderAccuracyBySourcePills(bySource) {
-  if (!bySource) return "";
-  var pills = [];
-  ["quiz", "flashcard"].forEach(function(source) {
-    var s = bySource[source];
-    if (!s || s.total === 0) return;
-    var pct = Math.round(s.correct / s.total * 100);
-    pills.push('<span class="dash-source-pill">' + escHtml(t(ACCURACY_SOURCE_KEYS[source], { pct: pct, n: s.total })) + '</span>');
-  });
-  return pills.length ? '<div class="dash-source-pills">' + pills.join("") + '</div>' : "";
 }
 
 // Lesson/class-scoped weekly accuracy trend (Stats screen) — same trend-row visual

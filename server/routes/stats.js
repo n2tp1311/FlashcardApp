@@ -263,15 +263,6 @@ router.get("/dashboard", requireAuth, (req, res) => {
   const totalSessions = db.prepare("SELECT COUNT(*) AS n FROM quiz_sessions WHERE user_id = ?").get(uid).n;
   const attRow        = db.prepare("SELECT COUNT(*) AS total, SUM(correct) AS correct_count FROM attempts WHERE user_id = ?").get(uid);
 
-  // Difficulty breakdown — compute via existing helper on all user cards
-  const allCardIds = db.prepare(
-    "SELECT ca.id FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id WHERE c.user_id = ? AND c.archived = 0"
-  ).all(uid).map(r => r.id);
-
-  const withStats = getCardsWithStats(allCardIds, uid);
-  const diffBreakdown = { new: 0, easy: 0, medium: 0, hard: 0 };
-  withStats.forEach(({ stats }) => { diffBreakdown[stats.level] = (diffBreakdown[stats.level] || 0) + 1; });
-
   // Due for review — lessons with at least 1 card whose srs_due_at has passed
   const allLessons = db.prepare(
     "SELECT l.id, l.title, l.class_id, c.name AS class_name FROM lessons l JOIN classes c ON l.class_id = c.id WHERE c.user_id = ? AND c.archived = 0"
@@ -374,7 +365,6 @@ router.get("/dashboard", requireAuth, (req, res) => {
       attempts:     attRow.total
     },
     accuracy:          { correct: attRow.correct_count || 0, total: attRow.total || 0 },
-    diffBreakdown,
     dueForReview,
     dueByClass,
     streak,
@@ -442,14 +432,6 @@ router.get("/analytics", requireAuth, function(req, res) {
     "ORDER BY (correct_attempts * 1.0 / total_attempts) ASC"
   ).all(uid, uid);
 
-  // Accuracy split by study mode — windowed (unlike the dashboard's lifetime Overall
-  // Accuracy) since the point of this diagnostic is "how am I doing lately," not lifetime.
-  var accuracyBySourceRows = db.prepare(
-    "SELECT source, COUNT(*) AS total, SUM(CASE WHEN correct=1 THEN 1 ELSE 0 END) AS correct " +
-    "FROM attempts WHERE user_id=? AND created_at >= strftime('%s','now') - ? GROUP BY source"
-  ).all(uid, secs);
-  var accuracyBySource = {};
-  accuracyBySourceRows.forEach(function(r) { accuracyBySource[r.source] = { total: r.total, correct: r.correct || 0 }; });
 
   // Retention is represented as observed weekly accuracy, not predicted FSRS recall.
   // The client zero-fills missing weeks using the same window as the study-volume trend.
@@ -515,7 +497,6 @@ router.get("/analytics", requireAuth, function(req, res) {
     reviewTimeTrend: reviewTimeWeeklyRows,
     newCardsWeeklyTrend: newCardsWeeklyRows,
     lessonBreakdown: lessonRows,
-    accuracyBySource: accuracyBySource,
     strugglingLessons: strugglingLessons,
     days: days
   });

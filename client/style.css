@@ -3539,48 +3539,6 @@ code {
   color: var(--text3);
 }
 
-.dash-source-pills {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.dash-source-pill {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--surface2);
-  color: var(--text2);
-  border: 1px solid var(--border);
-}
-
-.dash-accuracy-wrap { margin-bottom: 4px; }
-
-.dash-accuracy-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.dash-accuracy-bar {
-  width: 100%;
-  height: 10px;
-  background: var(--border);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.dash-accuracy-fill {
-  width: 100%;
-  height: 100%;
-  background: #16a34a;
-  border-radius: 5px;
-  transform-origin: left;
-  transition: transform var(--bar-fill-transition);
-}
-
 .dash-lesson-list {
   display: flex;
   flex-direction: column;

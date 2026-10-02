@@ -338,7 +338,7 @@ Rating map: ✗ Missed → Again(1), ~ Unsure → Hard(2), ✓ Got It → Good(3
 
 ### 5.12 Analytics Screen
 
-Not a separate screen — it renders inside `#screen-dashboard` (`renderDashboard()` + `showScreen("dashboard")`); "Analytics" was only ever a second nav label pointing at the same screen, and that duplicate label was removed (see §11 nav dedup entry). Study-pattern/weak-spot content lives inside that one screen, split into an all-time section (summary counts, Overall Accuracy + per-source pills, Difficulty Breakdown, Due for Review) and a period-windowed section below a 7/30/60/90-day pill bar (heatmap, Weekly Trend with accuracy, Memory Interval Distribution, Future Due forecast, Study Time, Lesson Accuracy, Struggling Lessons).
+Not a separate screen — it renders inside `#screen-dashboard` (`renderDashboard()` + `showScreen("dashboard")`); "Analytics" was only ever a second nav label pointing at the same screen, and that duplicate label was removed (see §11 nav dedup entry). Study-pattern/weak-spot content lives inside that one screen, split into an all-time section (summary counts, Due for Review; Overall Accuracy and Difficulty Breakdown were removed on 2026-10-02 as repeats of the Study charts) and a period-windowed section below a 7/30/60/90-day pill bar (heatmap, Weekly Trend with accuracy, Memory Interval Distribution, Future Due forecast, Study Time, Lesson Accuracy, Struggling Lessons).
 
 | Section | Content |
 |---------|---------|
@@ -972,6 +972,7 @@ All Phase 1 and Phase 2 core features are shipped. The following are confirmed b
 | Vocabulary: no duplicate word in the same context | Done | 409 `duplicateWordQueued`/`duplicateWordFetched`; `server/lib/vocabularyDup.js`; `tests/vocabulary-dup.test.js` |
 | Quiz: speaker reads the term only | Done | `#btn-quiz-audio` + `P`; hidden on mcq/true-false/image-def; `quizSpeechText()`; `tests/quiz-speech.test.js` |
 | Class complete badge (option B) | Done | Progress line becomes a green "Complete" pill at 100% known; incomplete capped at 99%; `setClassProgress()`; `tests/class-complete.test.js` |
+| Dashboard: drop Overall Accuracy and Card Difficulty Breakdown | Done | Repeated the Study charts; server stops computing `diffBreakdown` and `accuracyBySource` |
 | Hints reveal word by word (option B) | Done | Replaces the per-word letter mask; window of six shown words, three blocks, +N; visible Hard-cap note; `tests/hints.test.js` |
 | Study charts redesign (headline row, upright charts) | Done | `chartKpisHtml`, `chartColumnsSvg`, `chartLineSvg`, `renderStudyCharts`; Retention chart folded into Accuracy; `tests/study-charts.test.js` |
 | Hints in Write mode | Done | One more letter per word per press; a hinted card is Hard at best on every grading path; `tests/hints.test.js` |
