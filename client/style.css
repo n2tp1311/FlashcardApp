@@ -2732,7 +2732,12 @@ code {
 .dash-spark { display: block; width: 100%; height: 56px; overflow: visible; }
 .dash-spark-area { fill: color-mix(in srgb, #2f5f8f 14%, transparent); }
 .dash-spark-line { fill: none; stroke: #2f5f8f; stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-.dash-spark-avg { stroke: var(--text3); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.dash-spark-avg { fill: none; stroke: var(--text3); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.dash-run { display: grid; gap: 4px; }
+.dash-run-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 0.8125rem; color: var(--text2); }
+.dash-run-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; background: var(--success-light); color: var(--success); font-weight: 600; font-variant-numeric: tabular-nums; }
+.dash-run-best { font-variant-numeric: tabular-nums; }
+.dash-run-sub { font-size: 0.75rem; color: var(--text2); }
 .dash-spark-dot { fill: #2f5f8f; }
 :root[data-theme="dark"] .dash-spark-area { fill: color-mix(in srgb, #8fb4e0 14%, transparent); }
 :root[data-theme="dark"] .dash-spark-line { stroke: #8fb4e0; }
@@ -2757,7 +2762,7 @@ code {
 .goal-ring.met .goal-ring-arc { stroke: var(--warning); }
 .goal-ring text { fill: var(--text); font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
 .dash-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; max-width: 260px; }
-.dash-week-day { display: grid; gap: 3px; justify-items: center; }
+.dash-week-day { display: grid; gap: 9px; justify-items: center; }
 .dash-week-name { font-size: 0.6875rem; color: var(--text2); }
 .dash-week-dot {
   width: min(28px, 100%); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;

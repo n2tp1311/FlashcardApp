@@ -487,6 +487,14 @@ Object.assign(TRANSLATIONS.en, {
   "hero.shortest": "shortest",
   "hero.longest": "longest",
   "hero.sparkLabel": "Daily study time, last {n} days",
+  "hero.aboveAvgRun": "{n} days above average",
+  "hero.aboveAvgRun1": "1 day above average",
+  "hero.aboveAvgBest": "best {n}",
+  "hero.aboveAvgToday": "Today is above your average.",
+  "hero.aboveAvgKeep": "{time} more today keeps it going.",
+  "hero.aboveAvgStart": "{time} more today starts a run.",
+  "hero.aboveAvgHint": "A day counts when you study longer than the average of the 30 days before it. Days you didn't study count as 0 min. The dashed line on the study-time chart is that average.",
+  "stat.aboveAvgLabel": "Above-average run",
   "undo.button": "Undo",
   "undo.graded": "Marked {grade}",
   "undo.failed": "That grade can no longer be undone",
@@ -1254,6 +1262,14 @@ Object.assign(TRANSLATIONS.vi, {
   "hero.shortest": "ít nhất",
   "hero.longest": "nhiều nhất",
   "hero.sparkLabel": "Thời gian học mỗi ngày, {n} ngày qua",
+  "hero.aboveAvgRun": "{n} ngày trên mức trung bình",
+  "hero.aboveAvgRun1": "1 ngày trên mức trung bình",
+  "hero.aboveAvgBest": "kỷ lục {n}",
+  "hero.aboveAvgToday": "Hôm nay đã trên mức trung bình.",
+  "hero.aboveAvgKeep": "Học thêm {time} hôm nay để giữ chuỗi.",
+  "hero.aboveAvgStart": "Học thêm {time} hôm nay để bắt đầu chuỗi.",
+  "hero.aboveAvgHint": "Một ngày được tính khi bạn học lâu hơn mức trung bình của 30 ngày trước đó. Ngày không học tính là 0 phút. Đường nét đứt trên biểu đồ thời gian học là mức trung bình đó.",
+  "stat.aboveAvgLabel": "Chuỗi trên trung bình",
   "undo.button": "Hoàn tác",
   "undo.graded": "Đã đánh dấu {grade}",
   "undo.failed": "Không thể hoàn tác lần đánh dấu này nữa",
@@ -2463,6 +2479,7 @@ function shuffle(arr) {
    ============================ */
 var DASH_METRICS = [
   { key: "streak",          labelKey: "stat.dayStreak" },
+  { key: "aboveAvg",        labelKey: "stat.aboveAvgLabel" },
   { key: "studyTime",       labelKey: "dashboard.studyTime" },
   { key: "avgDaily",        labelKey: "stat.avgDailyLabel" },
   { key: "minDaily",        labelKey: "stat.minDailyLabel" },
@@ -2475,7 +2492,7 @@ var DASH_METRICS = [
 ];
 
 var DEFAULT_DASH_METRIC_CONFIG = {
-  streak: "show", studyTime: "show",
+  streak: "show", aboveAvg: "show", studyTime: "show",
   avgDaily: "show", minDaily: "show", maxDaily: "show",
   classes: "show", lessons: "show", cards: "show", sessions: "show", attempts: "show"
 };
@@ -8098,7 +8115,8 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today) 
   var gearBtn = '<button class="icon-btn dash-hero-settings-btn" title="' + escHtml(t("dashboard.configureMetrics")) + '">' + ICON_SETTINGS + '</button>';
 
   var tiles = [];
-  if (on("streak")) tiles.push(heroStreakTile(streak, today));
+  var run = on("aboveAvg") && studyTime ? studyTime.aboveAvg : null;
+  if (on("streak") || run) tiles.push(heroStreakTile(on("streak") ? streak : null, today, run));
   if (today && today.activity) tiles.push(heroTodayTile(today, newCardEstimate, studyTime));
   var timeTile = heroStudyTimeTile(studyTime, on);
   if (timeTile) tiles.push(timeTile);
@@ -8120,7 +8138,10 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today) 
   '</div>';
 }
 
-function heroStreakTile(streak, today) {
+function heroStreakTile(streak, today, run) {
+  if (streak == null) {
+    return '<section class="dash-tile"><h3 class="dash-tile-h">' + escHtml(t("hero.streak")) + '</h3>' + heroAboveAvgHtml(run) + '</section>';
+  }
   // With this week's rest day unused, missing today does not reset anything, so a
   // countdown would be a false alarm.
   var caption = streak > 0
@@ -8133,8 +8154,23 @@ function heroStreakTile(streak, today) {
     '<h3 class="dash-tile-h">' + escHtml(t("hero.streak")) + '</h3>' +
     '<div class="dash-tile-big is-streak">' + ICON_FLAME + '<span class="dash-tile-num">' + escHtml(String(streak)) + '</span>' +
       '<span class="dash-tile-unit">' + escHtml(t("hero.days")) + '</span></div>' +
-    heroWeekHtml(today) + caption +
+    heroWeekHtml(today) + heroAboveAvgHtml(run) + caption +
   '</section>';
+}
+
+// The second streak: days in a row studied longer than the rolling 30-day mean (server/lib/aboveAvg.js).
+// Before today passes its mean the run shown ends yesterday, and the line says what today still needs.
+function heroAboveAvgHtml(run) {
+  if (!run) return '';
+  var label = run.current === 1 ? t("hero.aboveAvgRun1") : t("hero.aboveAvgRun", { n: run.current });
+  var need = Math.max(60000, Math.ceil((run.todayAvgMs - run.todayMs + 1) / 60000) * 60000);
+  var sub = run.todayAbove ? t("hero.aboveAvgToday")
+    : t(run.current > 0 ? "hero.aboveAvgKeep" : "hero.aboveAvgStart", { time: formatStudyDuration(need) });
+  return '<div class="dash-run" title="' + escHtml(t("hero.aboveAvgHint")) + '">' +
+    '<div class="dash-run-row"><span class="dash-run-pill">▲ ' + escHtml(label) + '</span>' +
+    '<span class="dash-run-best">' + escHtml(t("hero.aboveAvgBest", { n: run.best })) + '</span></div>' +
+    '<div class="dash-run-sub">' + escHtml(sub) + '</div>' +
+  '</div>';
 }
 
 function heroTodayTile(today, newCardEstimate, studyTime) {
@@ -8188,12 +8224,14 @@ function heroStudyTimeTile(studyTime, on) {
   '</section>';
 }
 
-// Daily study minutes as a line over an area, the average as a dashed rule, today as a dot.
-// Days without study are drawn at zero: the dips are the information.
+// Daily study minutes as a line over an area, today as a dot, and dashed the rolling 30-day
+// mean each day was measured against (a flat average from an older server). Days without
+// study are drawn at zero: the dips are the information.
 function studySparkline(daily, avgMs, allTime) {
   if (!Array.isArray(daily) || daily.length < 2) return '';
   var w = 300, h = 56, pad = 4;
-  var max = Math.max.apply(null, daily.map(function(d) { return d.ms; }).concat([avgMs || 0, 1]));
+  var rolling = daily.every(function(d) { return typeof d.avgMs === "number"; });
+  var max = Math.max.apply(null, daily.map(function(d) { return Math.max(d.ms, rolling ? d.avgMs : 0); }).concat([rolling ? 0 : avgMs || 0, 1]));
   function y(ms) { return (h - pad - (ms / max) * (h - 2 * pad)).toFixed(1); }
   var pts = daily.map(function(d, i) { return (i * w / (daily.length - 1)).toFixed(1) + " " + y(d.ms); });
   var line = "M" + pts.join(" L");
@@ -8201,7 +8239,9 @@ function studySparkline(daily, avgMs, allTime) {
   return '<svg class="dash-spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img" aria-label="' +
       escHtml(t("hero.sparkLabel", { n: daily.length })) + '">' +
     '<path class="dash-spark-area" d="' + line + ' L' + w + ' ' + h + ' L0 ' + h + ' Z"/>' +
-    (avgMs > 0 ? '<line class="dash-spark-avg" x1="0" x2="' + w + '" y1="' + y(avgMs) + '" y2="' + y(avgMs) + '"/>' : '') +
+    (rolling
+      ? '<path class="dash-spark-avg" d="M' + daily.map(function(d, i) { return (i * w / (daily.length - 1)).toFixed(1) + " " + y(d.avgMs); }).join(" L") + '"/>'
+      : avgMs > 0 ? '<line class="dash-spark-avg" x1="0" x2="' + w + '" y1="' + y(avgMs) + '" y2="' + y(avgMs) + '"/>' : '') +
     '<path class="dash-spark-line" d="' + line + '"/>' +
     '<circle class="dash-spark-dot" cx="' + last[0] + '" cy="' + last[1] + '" r="3"/>' +
   '</svg>' +

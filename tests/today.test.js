@@ -29,7 +29,7 @@ function load(goal) {
     "function _streakResetCountdownText() { return 'resets'; }" +
     "function _dashMetricHint() { return 'hint'; }" +
     ["dailyGoalRing", "weekdayLabel", "heroWeekHtml", "streakTimeHeroCard", "heroStreakTile", "heroTodayTile",
-     "heroMeter", "heroStudyTimeTile", "studySparkline"].map(extract).join(""), ctx);
+     "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml"].map(extract).join(""), ctx);
   return ctx;
 }
 
@@ -177,6 +177,31 @@ test("the sparkline draws every day of the window, today last, the average dashe
 
 test("the dashboard sends a zero-filled daily series for the sparkline", function() {
   assert.match(stats, /const sparkDays = windowDays \|\| 30;/);
-  assert.match(stats, /daily\.push\(\{ day, ms: dayMs\.get\(day\) \|\| 0 \}\)/);
-  assert.match(stats, /windowDays:  windowDays,\n      daily\n/);
+  assert.match(stats, /daily\.push\(\{ day, ms: dayMs\.get\(day\) \|\| 0, avgMs: /);
+  assert.match(stats, /windowDays:  windowDays,\n      daily,\n/);
+});
+
+test("the streak tile carries the above-average run, and says what today still needs", function() {
+  const ctx = load(20);
+  const run = { current: 3, best: 9, todayAbove: false, todayMs: 20 * 60000, todayAvgMs: 28.8 * 60000 };
+  const out = hero(ctx, { count: 3, week: week, activity: activity }, { studyTime: { aboveAvg: run } });
+  assert.match(out, /hero\.streak[\s\S]*dash-week[\s\S]*hero\.aboveAvgRun\|n=3[\s\S]*hero\.aboveAvgBest\|n=9[\s\S]*hero\.today/);
+  assert.match(out, /hero\.aboveAvgKeep\|time=9 min/, "28.8 min against 20 needs 9 more, rounded up to the minute");
+  assert.match(ctx.heroAboveAvgHtml(Object.assign({}, run, { todayAbove: true, current: 4 })), /hero\.aboveAvgToday/);
+  assert.match(ctx.heroAboveAvgHtml(Object.assign({}, run, { current: 0 })), /hero\.aboveAvgStart/);
+  assert.match(ctx.heroAboveAvgHtml(Object.assign({}, run, { current: 1 })), /hero\.aboveAvgRun1/);
+  ctx.state.dashMetricConfig = { aboveAvg: "hidden" };
+  assert.doesNotMatch(hero(ctx, { count: 3, week: week, activity: activity }, { studyTime: { aboveAvg: run } }), /dash-run/);
+  ctx.state.dashMetricConfig = { streak: "hidden" };
+  const alone = hero(ctx, { count: 3, week: week, activity: activity }, { studyTime: { aboveAvg: run } });
+  assert.match(alone, /hero\.streak[\s\S]*dash-run/, "the run keeps the tile when the day streak is hidden");
+  assert.doesNotMatch(alone, /dash-week|data-countdown/);
+});
+
+test("the sparkline's dashed line follows each day's rolling average when the server sends it", function() {
+  const ctx = load(20);
+  const daily = [{ day: "a", ms: 3600000, avgMs: 1800000 }, { day: "b", ms: 0, avgMs: 2400000 }, { day: "c", ms: 7200000, avgMs: 1600000 }];
+  const svg = ctx.studySparkline(daily, 9e9, false);
+  assert.match(svg, /<path class="dash-spark-avg" d="M0\.0 [\d.]+ L150\.0 [\d.]+ L300\.0 [\d.]+"/);
+  assert.match(svg, /<path class="dash-spark-line" d="M0\.0 [\d.]+ L150\.0 52\.0 L300\.0 4\.0"/, "the flat window average is ignored for scale");
 });

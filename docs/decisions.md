@@ -976,3 +976,9 @@ The Hidden/Show/Highlight selector became Hidden/Show. Highlight decided which n
 
 The sparkline needed the per-day minutes, which the dashboard did not send. `studyTime.daily` adds one small array (30 to 90 entries) to a response that is already fetched; when the window is All time it shows the last 30 days, since a line over every day since the first answer flattens recent weeks into nothing, and the tile says which days it covers. The cost: the time bar fills against the average study day, so a long day reads as a full bar rather than a number past 100%.
 
+## 2026-10-02 — An above-average run, measured against a rolling 30-day mean with skipped days as 0
+
+The user asked for consecutive days of study time above a rolling 30-day mean and picked placement C from a preview: a second streak in the Streak tile, next to the day streak it resembles. The mean covers the 30 calendar days before each day with unstudied days as 0, rather than the study-day average the Study time tile shows. Counting skipped days is what makes it a rolling mean of your habit: after a week off the bar drops and a normal day counts again, while the study-day average would hold the bar at your best weeks. The cost is that the two averages on the card differ, so the chart's dashed line now draws the rolling mean each day was measured against, and the tooltip says so.
+
+Today joins the run only after it passes its mean, and until then the run shown ends yesterday with the minutes still needed, the same convention as the day streak, so a run does not read as broken every morning. It is computed over the whole history on each dashboard load; one grouped query of study days is a few thousand rows at most.
+
