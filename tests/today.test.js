@@ -187,7 +187,8 @@ test("the streak tile carries the above-average run, and says what today still n
   const out = hero(ctx, { count: 3, week: week, activity: activity }, { studyTime: { aboveAvg: run } });
   assert.match(out, /hero\.streak[\s\S]*dash-week[\s\S]*hero\.aboveAvgRun\|n=3[\s\S]*hero\.aboveAvgBest\|n=9[\s\S]*hero\.today/);
   assert.match(out, /hero\.aboveAvgKeep\|time=9 min/, "28.8 min against 20 needs 9 more, rounded up to the minute");
-  assert.match(ctx.heroAboveAvgHtml(Object.assign({}, run, { todayAbove: true, current: 4 })), /hero\.aboveAvgToday/);
+  const counted = ctx.heroAboveAvgHtml(Object.assign({}, run, { todayAbove: true, current: 4 }));
+  assert.doesNotMatch(counted, /dash-run-sub/, "once today counts, the pill says it all");
   assert.match(ctx.heroAboveAvgHtml(Object.assign({}, run, { current: 0 })), /hero\.aboveAvgStart/);
   assert.match(ctx.heroAboveAvgHtml(Object.assign({}, run, { current: 1 })), /hero\.aboveAvgRun1/);
   ctx.state.dashMetricConfig = { aboveAvg: "hidden" };

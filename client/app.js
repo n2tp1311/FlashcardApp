@@ -492,7 +492,6 @@ Object.assign(TRANSLATIONS.en, {
   "hero.aboveAvgRun": "{n} days above average",
   "hero.aboveAvgRun1": "1 day above average",
   "hero.aboveAvgBest": "best {n}",
-  "hero.aboveAvgToday": "Today is above your average.",
   "hero.aboveAvgKeep": "{time} more today keeps it going.",
   "hero.aboveAvgStart": "{time} more today starts a run.",
   "hero.aboveAvgHint": "A day counts when you study longer than the average of the 30 days before it. Days you didn't study count as 0 min. The dashed line on the study-time chart is that average.",
@@ -1271,7 +1270,6 @@ Object.assign(TRANSLATIONS.vi, {
   "hero.aboveAvgRun": "{n} ngày trên mức trung bình",
   "hero.aboveAvgRun1": "1 ngày trên mức trung bình",
   "hero.aboveAvgBest": "kỷ lục {n}",
-  "hero.aboveAvgToday": "Hôm nay đã trên mức trung bình.",
   "hero.aboveAvgKeep": "Học thêm {time} hôm nay để giữ chuỗi.",
   "hero.aboveAvgStart": "Học thêm {time} hôm nay để bắt đầu chuỗi.",
   "hero.aboveAvgHint": "Một ngày được tính khi bạn học lâu hơn mức trung bình của 30 ngày trước đó. Ngày không học tính là 0 phút. Đường nét đứt trên biểu đồ thời gian học là mức trung bình đó.",
@@ -8180,12 +8178,13 @@ function heroAboveAvgHtml(run) {
   if (!run) return '';
   var label = run.current === 1 ? t("hero.aboveAvgRun1") : t("hero.aboveAvgRun", { n: run.current });
   var need = Math.max(60000, Math.ceil((run.todayAvgMs - run.todayMs + 1) / 60000) * 60000);
-  var sub = run.todayAbove ? t("hero.aboveAvgToday")
+  // Once today counts, the run already includes it; a line saying so only repeats the pill.
+  var sub = run.todayAbove ? ''
     : t(run.current > 0 ? "hero.aboveAvgKeep" : "hero.aboveAvgStart", { time: formatStudyDuration(need) });
   return '<div class="dash-run" title="' + escHtml(t("hero.aboveAvgHint")) + '">' +
     '<div class="dash-run-row"><span class="dash-run-pill">▲ ' + escHtml(label) + '</span>' +
     '<span class="dash-run-best">' + escHtml(t("hero.aboveAvgBest", { n: run.best })) + '</span></div>' +
-    '<div class="dash-run-sub">' + escHtml(sub) + '</div>' +
+    (sub ? '<div class="dash-run-sub">' + escHtml(sub) + '</div>' : '') +
   '</div>';
 }
 
