@@ -17,10 +17,16 @@ function luminance(hex) {
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 }
 
-test("dark mode lifts class colours where light mode damps them", function() {
+test("dark mode keeps class colours muted at rest and lights up the card under the pointer", function() {
   assert.match(block(":root"), /--class-filter: saturate\(0\.6\);/);
-  assert.match(block('[data-theme="dark"]'), /--class-filter: brightness\(1\.4\) saturate\(1\.05\);/);
-  assert.match(css, /\.class-icon svg, \.sidebar-class-icon svg \{ filter: var\(--class-filter\); \}/);
+  assert.match(block(":root"), /--class-filter-hot: saturate\(0\.6\);/, "light mode does not change on hover");
+  assert.doesNotMatch(block('[data-theme="dark"]'), /--class-filter:/, "dark mode rests at the same damping");
+  assert.match(block('[data-theme="dark"]'), /--class-filter-hot: brightness\(1\.4\) saturate\(1\.05\);/);
+  assert.match(css, /:is\(\.class-card, \.class-list-row\):is\(:hover, :focus-visible, \.selected\) [^{]+\{ filter: var\(--class-filter-hot\); \}/);
+});
+
+test("the class progress fill keeps its width animation alongside the filter fade", function() {
+  assert.match(css, /\.progress-mini-fill\[id\^="cls-prog-fill-"\] \{ transition: transform var\(--bar-fill-transition\), filter 0\.25s ease; \}/);
 });
 
 test("the dark due badge is full amber with dark text at AA contrast", function() {

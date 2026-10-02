@@ -66,9 +66,10 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
      cool palette gets cool-leaning reds and greens and the row sits in the theme instead of
      on top of it. The hues are the same in both modes; only the mix amount changes. */
   --soft-mix: 11%;
-  /* Class colours are stored as Tailwind 600s. On a light page they are damped; the dark
-     theme lifts them instead (below), since a 600 on charcoal is too dark to read as colour. */
+  /* Class colours are stored as Tailwind 600s and damped on display. --class-filter-hot is
+     what the card under the pointer shows; in light mode it is the same. */
   --class-filter: saturate(0.6);
+  --class-filter-hot: saturate(0.6);
   --due-bg: var(--warning-fill);
   --due-text: #fff;
   --success-hue: #46a758;
@@ -136,10 +137,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --danger-soft-text: #f5aeb4;
   --warning-soft-text: #ecc976;
   --confident-soft-text: #6fe0c4;
-  /* About two Tailwind steps lighter at full saturation: chosen by the user from a preview,
-     over the 60% damping the light theme uses. The due badge is full amber with dark text,
-     the one thing on a class card that asks for action today. */
-  --class-filter: brightness(1.4) saturate(1.05);
+  /* Muted at rest, and the card under the pointer, focused or selected lights up about two
+     Tailwind steps lighter at full saturation: chosen by the user from a preview over every
+     card bright at once. The due badge is full amber with dark text at all times, the one
+     thing on a class card that asks for action today. */
+  --class-filter-hot: brightness(1.4) saturate(1.05);
   --due-bg: #f0ac1c;
   --due-text: #1c1c1c;
   --shadow:       0 1px 3px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);
@@ -1040,7 +1042,11 @@ body {
    strength they outshout a light page, so there they are desaturated on display; in dark
    mode they are lifted instead (--class-filter). The stored colour is unchanged. */
 .class-card-accent, .class-list-colorbar, .progress-mini-fill[id^="cls-prog-fill-"],
-.class-icon svg, .sidebar-class-icon svg { filter: var(--class-filter); }
+.class-icon svg, .sidebar-class-icon svg { filter: var(--class-filter); transition: filter 0.25s ease; }
+/* The fill already animates its width; a plain `transition: filter` would cancel that. */
+.progress-mini-fill[id^="cls-prog-fill-"] { transition: transform var(--bar-fill-transition), filter 0.25s ease; }
+:is(.class-card, .class-list-row):is(:hover, :focus-visible, .selected) :is(.class-card-accent, .class-list-colorbar, .progress-mini-fill, .class-icon svg),
+.sidebar-class-item:is(:hover, :focus-visible) .sidebar-class-icon svg { filter: var(--class-filter-hot); }
 
 .class-card-accent {
   position: absolute;
