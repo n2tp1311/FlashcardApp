@@ -449,6 +449,7 @@ Object.assign(TRANSLATIONS.en, {
   "study.editCard": "Edit card",
   "study.deleteCard": "Delete card",
   "study.clickToFlip": "Click to flip",
+  "study.showAnswer": "Show answer",
   "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
   "study.retypeLabel": "Type the answer to continue",
@@ -1142,6 +1143,7 @@ Object.assign(TRANSLATIONS.vi, {
   "study.editCard": "Sửa thẻ",
   "study.deleteCard": "Xóa thẻ",
   "study.clickToFlip": "Nhấn để lật thẻ",
+  "study.showAnswer": "Xem đáp án",
   "study.typeYourGuessPlaceholder": "Nhập câu trả lời...",
   "study.yourGuess": "Bạn đã trả lời: {text}",
   "study.retypeLabel": "Nhập lại đáp án để tiếp tục",
@@ -6180,6 +6182,12 @@ function startFlashcards() {
   renderFlashcard();
 }
 
+// Until the answer has been seen, the grade row is a single Show answer button, as in Anki:
+// four faded grades read as broken, and they took the place where the reveal belongs.
+function setAwaitingReveal(awaiting) {
+  document.getElementById("fc-mark-btns").classList.toggle("awaiting-reveal", awaiting);
+}
+
 function setMarkButtonsEnabled(enabled) {
   ["btn-fc-learning", "btn-fc-hard", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
     document.getElementById(id).disabled = !enabled;
@@ -6430,6 +6438,7 @@ function renderFlashcard() {
   state.studyHasFlippedCard = false;
   state.studyCardGraded = false;
   setMarkButtonsEnabled(false);
+  setAwaitingReveal(true);
 
   // Optional "type before flip" scratchpad, on for the whole session in Flashcard & Write
   // mode (state.typeToCompare, set once in startStudy()) — reset per card, not tied to
@@ -6629,6 +6638,7 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   if (state.studyFlipped && !state.studyHasFlippedCard) {
     state.studyHasFlippedCard = true;
     setMarkButtonsEnabled(true);
+    setAwaitingReveal(false);
     if (state.typeToCompare) {
       var typeInput = document.getElementById("fc-type-input");
       var guess = typeInput.value.trim();
@@ -6642,6 +6652,10 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   }
   var expContainer = document.getElementById("fc-explanation");
   expContainer.classList.toggle("hidden", !state.studyFlipped || expContainer.innerHTML === "");
+});
+
+document.getElementById("btn-fc-reveal").addEventListener("click", function() {
+  document.getElementById("fc-scene").click();
 });
 
 document.getElementById("fc-type-input").addEventListener("click", function(e) {
@@ -10857,6 +10871,7 @@ function injectKeyHints() {
     ["btn-upstream-back",  "[Esc]"],
     ["btn-vocabulary-back", "[Esc]"],
     ["btn-quiz-back",      "[Esc]"],
+    ["btn-fc-reveal",      "[Space]"],
     ["btn-fc-learning",    "[1]"],
     ["btn-fc-hard",        "[2]"],
     ["btn-fc-known",       "[3]"],

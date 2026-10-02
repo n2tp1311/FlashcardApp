@@ -842,6 +842,13 @@ body {
 
 .nav-search-icon { flex-shrink: 0; opacity: 0.75; }
 
+/* A phone header has no room for the word, and "Sea…" read as a bug; the bar becomes a
+   round search button, as top app bars do on compact widths. */
+@media (max-width: 480px) {
+  .nav-search-bar { flex: 0 0 44px; width: 44px; padding: 0; justify-content: center; }
+  .home-header .nav-search-bar { flex: 0 0 44px; margin-left: auto; }
+  .nav-search-placeholder { display: none; }
+}
 .nav-search-placeholder { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 450; }
 
 .screen-title {
@@ -888,6 +895,18 @@ body {
   border-color: color-mix(in srgb, var(--primary-soft-text) 25%, transparent);
 }
 .btn-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--primary-soft) 86%, var(--primary-soft-text)); }
+/* The one action a screen exists for (Start Studying, a dialog's Save, Sign In) is filled,
+   per Material's emphasis ladder: filled for the primary action, tonal for the rest. Soft
+   everywhere left it paler than the selected pills above it. */
+.btn-primary.btn-full, .modal-footer .btn-primary {
+  background: var(--primary-fill);
+  color: #fff;
+  border-color: var(--primary-fill);
+}
+.btn-primary.btn-full:hover:not(:disabled), .modal-footer .btn-primary:hover:not(:disabled) {
+  background: var(--primary-fill-hover);
+  border-color: var(--primary-fill-hover);
+}
 
 .btn-ghost { background: transparent; color: var(--text2); }
 .btn-ghost:hover:not(:disabled) { background: var(--surface2); color: var(--text); }
@@ -951,10 +970,15 @@ body {
   gap: 6px;
 }
 
-.pill.active, .pill:hover {
-  background: var(--primary-fill);
-  color: #fff;
-  border-color: var(--primary-fill);
+/* Selected options are tonal, like Material's selected filter chip and segmented button:
+   a solid fill here outranked the screen's actual action. Hover is a neutral wash, since
+   making it look selected told the pointer it had already chosen. */
+.pill:hover { background: var(--surface2); }
+.pill.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  font-weight: 600;
 }
 
 /* ============================
@@ -1256,7 +1280,7 @@ body {
   gap: 12px;
 }
 
-.card-item:hover { border-color: #d1d5db; }
+.card-item:hover { border-color: color-mix(in srgb, var(--text3) 40%, var(--border)); }
 
 .card-content { flex: 1; min-width: 0; }
 
@@ -1285,6 +1309,15 @@ body {
 }
 
 .card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* On a phone the number, status pill and two icons took a third of the row and squeezed the
+   definition into a narrow column. Lists put meta and trailing actions on a header line and
+   give the content the full width under it. */
+@media (max-width: 480px) {
+  .card-item { flex-wrap: wrap; gap: 4px 10px; padding: 10px 12px 12px; }
+  .card-item > .card-content { order: 5; flex-basis: 100%; }
+  .card-item > .card-num { margin-right: auto; padding-top: 0; align-self: center; }
+}
 
 /* ============================
    EMPTY STATE
@@ -2148,6 +2181,9 @@ code {
   flex-basis: 100%;
   order: -1;
 }
+.fc-reveal-btn { display: none; }
+.fc-mark-btns.awaiting-reveal .fc-reveal-btn { display: inline-flex; }
+.fc-mark-btns.awaiting-reveal .btn-mark:not(.fc-reveal-btn) { display: none; }
 .fc-mark-btns .btn-mark { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: normal; line-height: 1.2; }
 /* rem follows the text size preference (root font-size), so large text switches to 2×2 too;
    a media query can't do that, since its rem ignores the root font-size. */
@@ -2790,8 +2826,9 @@ code {
 }
 
 .auth-tab.active {
-  background: var(--primary-fill);
-  color: #fff;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .auth-form {
@@ -3692,6 +3729,12 @@ code {
 .dash-empty-note { font-size: 0.875rem; color: var(--text2); padding: 16px 0; text-align: center; }
 
 /* ── Global Search ──────────────────────────────────────── */
+/* Material's search view is full-screen on compact windows: a box floating mid-screen left
+   its results under the keyboard. */
+@media (max-width: 600px) {
+  #modal-search { align-items: flex-start; padding: calc(8px + env(safe-area-inset-top, 0px)) 8px 8px; }
+  #modal-search .search-modal { width: 100%; max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px)); }
+}
 .search-modal {
   max-width: 560px;
   width: 95%;
@@ -3938,8 +3981,8 @@ code {
 }
 
 .view-toggle-btn.active {
-  background: var(--primary-fill);
-  color: #fff;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 /* ============================
