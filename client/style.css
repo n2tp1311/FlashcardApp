@@ -2289,6 +2289,7 @@ code {
 }
 
 .quiz-question-wrap {
+  position: relative;
   background: var(--surface);
   border: 2px solid var(--border);
   border-radius: var(--radius);
@@ -2314,6 +2315,7 @@ code {
   align-self: center;
 }
 
+.quiz-audio { position: absolute; top: 8px; right: 8px; }
 .quiz-question {
   font-size: 1.125rem;
   font-weight: 500;

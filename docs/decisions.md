@@ -992,3 +992,7 @@ The user asked for a redesign of the Dashboard's Study charts and picked option 
 
 The charts are SVG generated as strings at the container's pixel width rather than scaled with a viewBox, because scaling made the 10px axis labels 7px in a quarter-width card and 14px in a full-width one. The cost is a redraw on resize, debounced and skipped for changes under 24px. "This week" in the headline row is the last seven days, not the calendar week, to match the charts beneath it; a calendar week would make Monday's numbers look like a collapse.
 
+
+## 2026-10-02 — The quiz speaker reads the term only
+
+The user asked for a speaker in Quiz mode that reads the term only. The answer options are left out because hearing them reads the answer list aloud, which is not a pronunciation aid. A vocabulary term's trailing `/IPA/` is cut, as the flashcard speaker already does, because the voice would spell it out letter by letter. Multiple choice, True/False and image cards have no term to speak, so the button is hidden on them rather than reading the question. The cost: someone who wants a long MCQ question read aloud has no way to do it here.

@@ -532,6 +532,7 @@ Object.assign(TRANSLATIONS.en, {
   "study.speakP": "Speak (P)",
   "study.speakFront": "Speak front",
   "study.speakBack": "Speak back",
+  "study.speakTerm": "Speak term",
   "study.translate": "Translate visible side (Alt+T)",
   "study.translating": "Translating…",
   "study.translationUnavailable": "Translation is available in server mode only.",
@@ -780,6 +781,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.prevNext": "Prev / Next",
   "keymap.flipCard": "Flip card",
   "keymap.pronounce": "Pronounce",
+  "keymap.pronounceTerm": "Pronounce the term",
   "keymap.undoGrade": "Undo the last grade",
   "keymap.selectOption": "Select option",
   "keymap.sectionResultsEtc": "Results / Stats / Dashboard / Analytics",
@@ -1328,6 +1330,7 @@ Object.assign(TRANSLATIONS.vi, {
   "study.speakP": "Đọc (P)",
   "study.speakFront": "Đọc mặt trước",
   "study.speakBack": "Đọc mặt sau",
+  "study.speakTerm": "Đọc thuật ngữ",
   "study.translate": "Dịch mặt đang xem (Alt+T)",
   "study.translating": "Đang dịch…",
   "study.translationUnavailable": "Chỉ có thể dịch khi dùng chế độ máy chủ.",
@@ -1572,6 +1575,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.prevNext": "Trước / Tiếp",
   "keymap.flipCard": "Lật thẻ",
   "keymap.pronounce": "Phát âm",
+  "keymap.pronounceTerm": "Đọc thuật ngữ",
   "keymap.undoGrade": "Hoàn tác lần đánh dấu vừa rồi",
   "keymap.selectOption": "Chọn đáp án",
   "keymap.sectionResultsEtc": "Kết quả / Thống kê / Bảng điều khiển / Phân tích",
@@ -1917,6 +1921,19 @@ function speakText(text) {
     .trim();
   if (!clean) return;
   speakWith(clean, state.ttsRate);
+}
+
+// What the quiz speaker reads: the card's term and nothing else -- not the question wording,
+// not the options. A card without a term (multiple choice, true/false, image) has no button.
+function quizSpeechText(card) {
+  if (!card || !card.data || card.format === "mcq" || card.format === "true-false" || card.format === "image-def") return "";
+  var term = typeof card.data.term === "string" ? card.data.term.trim() : "";
+  if (term && window.getVocabularySpeechText) term = window.getVocabularySpeechText(term);
+  return term;
+}
+
+function speakQuizTerm() {
+  speakText(quizSpeechText(state.quizCards[state.quizIndex]));
 }
 
 function speakStudyFront() {
@@ -7145,6 +7162,11 @@ document.getElementById("btn-fc-audio-front").addEventListener("click", function
   speakStudyFront();
 });
 
+document.getElementById("btn-quiz-audio").addEventListener("click", function(e) {
+  e.stopPropagation();
+  speakQuizTerm();
+});
+
 document.getElementById("btn-fc-audio-back").addEventListener("click", function(e) {
   e.stopPropagation();
   speakText(state.studyBackText);
@@ -7632,6 +7654,7 @@ function renderQuizCard() {
   } else {
     renderLatex(card.data.term, qEl);
   }
+  document.getElementById("btn-quiz-audio").classList.toggle("hidden", !window.speechSynthesis || !quizSpeechText(card));
 
   // Options — replay the exact shuffled set from when this card was first answered
   // (buildQuizOptions() re-shuffles on every call, so a reviewed card must reuse its saved opts)
@@ -11699,6 +11722,7 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "Escape") confirmLeaveStudy(returnFromStudy);
     else if (e.key === "ArrowLeft") document.getElementById("btn-quiz-prev").click();
     else if (e.key === "ArrowRight") document.getElementById("btn-quiz-review-next").click();
+    else if ((e.key === "p" || e.key === "P") && !e.ctrlKey && !e.metaKey && !e.altKey) speakQuizTerm();
   }
 
   else if (screen === "results") {
