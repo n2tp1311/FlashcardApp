@@ -155,6 +155,8 @@ Object.assign(TRANSLATIONS.en, {
   "pref.palette.tokyonight": "Tokyo Night",
   "pref.palette.dracula": "Dracula",
   "pref.haptics": "Vibration feedback",
+  "pref.sounds": "Sound effects",
+  "pref.soundsHint": "A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.",
   "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
   "pref.quizCountsAsKnown": "Quiz answers count as Know It",
   "pref.quizCountsAsKnownHint": "A correct quiz answer counts as Know It (marks the card known and schedules it like a flashcard); a wrong answer counts as Still Learning. Off: cards only make progress through flashcards.",
@@ -862,6 +864,8 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.palette.tokyonight": "Tokyo Night",
   "pref.palette.dracula": "Dracula",
   "pref.haptics": "Phản hồi rung",
+  "pref.sounds": "Hiệu ứng âm thanh",
+  "pref.soundsHint": "Tiếng marimba khi câu trả lời trắc nghiệm hoặc câu gõ lại đúng, tiếng gõ trầm khi sai.",
   "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
   "pref.quizCountsAsKnown": "Trả lời Trắc nghiệm được tính là Đã thuộc",
   "pref.quizCountsAsKnownHint": "Trả lời đúng khi làm Trắc nghiệm được tính là Đã thuộc (đánh dấu thẻ đã thuộc và xếp lịch ôn như Thẻ ghi nhớ); trả lời sai được tính là Đang học. Tắt: thẻ chỉ tiến bộ qua chế độ Thẻ ghi nhớ.",
@@ -2414,6 +2418,7 @@ var state = {
   darkMode: false,
   highContrast: false,
   haptics: true,
+  sounds: true,
   quizCountsAsKnown: false,
   fontScale: 1,
   ttsRate: 0.9,
@@ -6950,6 +6955,7 @@ function submitForcedRetype() {
   var matchType = fuzzyMatchType(typed, expected);
   if (matchType) {
     haptic("success");
+    playSound("correct");
     input.disabled = true; // belt-and-suspenders: disabled inputs don't get further keydowns
     feedback.textContent = t(matchType === "exact" ? "study.retypeCorrect" : "study.retypeCloseEnough");
     feedback.className = "fc-retype-feedback fc-retype-feedback-success";
@@ -6957,6 +6963,7 @@ function submitForcedRetype() {
     completeForcedRetype();
   } else {
     haptic("error");
+    playSound("wrong");
     feedback.textContent = t("study.retypeMismatch");
     feedback.className = "fc-retype-feedback fc-retype-feedback-error";
     feedback.classList.remove("hidden");
@@ -7194,6 +7201,7 @@ function answerQuiz(selectedIdx) {
   var isCorrect   = selectedVal === correct;
 
   haptic(isCorrect ? "success" : "error");
+  playSound(isCorrect ? "correct" : "wrong");
   if (isCorrect) state.quizScore++;
 
   // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
@@ -8902,6 +8910,61 @@ function haptic(name) {
   try { navigator.vibrate(pattern); } catch (_) {}
 }
 
+// Answer sounds: the Marimba set the user picked from five previews. Synthesized with Web
+// Audio, so there is nothing to download and nothing to cache offline. Only answers the app
+// checks get a sound (quiz options, the retype drill); a self-grade on a flashcard is the
+// user's own judgement, and a "wrong" sound on it would read as the app disagreeing.
+var soundCtx = null;
+var SOUND_VOLUME = 0.6;
+
+function soundContext() {
+  if (!soundCtx) {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    // Safari 17+: "ambient" makes Web Audio obey the iPhone's silent switch, like other
+    // interface sounds. Older iOS has no audioSession and plays through silent mode.
+    try { if (navigator.audioSession) navigator.audioSession.type = "ambient"; } catch (_) {}
+    soundCtx = new Ctx();
+  }
+  if (soundCtx.state === "suspended") soundCtx.resume().catch(function() {});
+  return soundCtx;
+}
+
+function soundTone(c, freq, start, dur, gain, attack) {
+  var t0 = c.currentTime + start;
+  var o = c.createOscillator(), g = c.createGain();
+  o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain * SOUND_VOLUME, t0 + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+
+// Each mallet strike is a short fundamental plus a faint, very short fourth harmonic: the
+// harmonic is the "wood" click.
+var SOUNDS = {
+  correct: function(c) {
+    [523.25, 659.25].forEach(function(f, i) {
+      soundTone(c, f, i * 0.08, 0.25, 0.3, 0.003);
+      soundTone(c, f * 4, i * 0.08, 0.06, 0.06, 0.002);
+    });
+  },
+  wrong: function(c) {
+    soundTone(c, 196, 0, 0.22, 0.35, 0.003);
+    soundTone(c, 784, 0, 0.04, 0.05, 0.002);
+  }
+};
+
+function playSound(name) {
+  if (!state.sounds || !SOUNDS[name]) return;
+  // Like haptic(): feedback must never break the answer that triggered it.
+  try {
+    var c = soundContext();
+    if (c) SOUNDS[name](c);
+  } catch (_) {}
+}
+
 function relativeTime(unixSec) {
   if (!unixSec) return t("time.never");
   var diff = Math.floor(Date.now() / 1000) - unixSec;
@@ -9333,6 +9396,9 @@ function applyPrefs(prefs) {
   applyPalette(paletteFromPrefs(prefs));
   applyContrast(prefs.highContrast);
   applyThemePref(themeFromPrefs(prefs));
+  if (typeof prefs.sounds === "boolean") {
+    state.sounds = prefs.sounds;
+  }
   if (typeof prefs.haptics === "boolean") {
     state.haptics = prefs.haptics;
   }
@@ -9747,6 +9813,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-contrast").checked = state.highContrast;
   setPillGroup("pref-palette", state.palette);
   document.getElementById("pref-haptics").checked = state.haptics;
+  document.getElementById("pref-sounds").checked = state.sounds;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
   document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
   prefFontLabel();
@@ -9868,6 +9935,12 @@ document.getElementById("pref-contrast").addEventListener("change", function() {
 // Sample buzz only — unlike dark mode, this preview deliberately doesn't write state:
 // vibration is invisible, so a preview left behind by Cancel would silently disagree with
 // the saved setting.
+// Same rule as vibration below: play a sample, but leave state alone until Save.
+document.getElementById("pref-sounds").addEventListener("change", function() {
+  if (!this.checked) return;
+  try { var c = soundContext(); if (c) SOUNDS.correct(c); } catch (_) {}
+});
+
 document.getElementById("pref-haptics").addEventListener("change", function() {
   if (!this.checked || !navigator.vibrate) return;
   try { navigator.vibrate(HAPTIC_PATTERNS.select); } catch (_) {}
@@ -9914,6 +9987,8 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   applyContrast(highContrast);
   var haptics = document.getElementById("pref-haptics").checked;
   state.haptics = haptics;
+  var sounds = document.getElementById("pref-sounds").checked;
+  state.sounds = sounds;
   var quizCountsAsKnown = document.getElementById("pref-quiz-known").checked;
   state.quizCountsAsKnown = quizCountsAsKnown;
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
@@ -9924,7 +9999,7 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   state.maxReviewsPerDay = maxReviews;
   // A changed review cap changes what Study Setup matches (and whether Start is enabled).
   if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
-  var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
+  var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, sounds: sounds, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, quizCountsAsKnown: quizCountsAsKnown };
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
