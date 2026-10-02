@@ -1022,3 +1022,8 @@ Costs:
 - Study time leaves the Dashboard's hero but stays on Home's.
 - The table mixes time windows. Accuracy and answers are all time and Struggling follows the period, because those are what the endpoints already computed, so a line under the filter states it rather than leaving it to be guessed.
 - There is still no "review everything due" action, so each due lesson starts its own quiz, as the old rows did.
+
+## 2026-10-02 — The sidebar calls KnowledgeApp's changes "Updates"
+
+"KnowledgeApp changes" was the longest sidebar label. The user chose "Updates" (*Cập nhật*) from four short names. Only the label changed. The screen title and the home banner still name KnowledgeApp, so the source stays clear once you are there. The cost: "Updates" alone could be read as app updates until you open it.
+
