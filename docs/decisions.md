@@ -918,3 +918,15 @@ Class colours are user data, so they are desaturated on display with `filter: sa
 
 On a phone the Home select bar wrapped into three ragged rows (Select all, Cancel and Export; then Archive and Study; then the count), with Cancel as a text button among the actions and brown-outlined Export/Archive louder than the soft Study. Material's contextual action bar, Adobe Spectrum's action bar and eBay's bulk-editing pattern agree on one shape: close and the selected count first, actions grouped after, at most five. All three of our bars now use it, and phones give the actions their own equal-width row. Cancel became an icon, which costs the word but every one of those systems does the same; it keeps its label as `aria-label` and tooltip. `tests/select-bar.test.js` holds the order, so a new action added to a bar has to go before the primary.
 
+## 2026-10-02 — Component audit against platform guidance
+
+The user asked for every component to be checked against established UI practice. Eleven screens were captured at 390px and 1280px and compared with Material 3, Anki and Material's search guidance; five things did not hold up and were changed.
+
+- **Emphasis was inverted.** Selected pills were solid brown while Start Studying and dialog Save were pale tints, so the option you had picked outranked the action you came to take. Material puts filled on the primary action and tonal on selection, so that is now the rule. This partly walks back "soft buttons everywhere": only the single main action per screen is filled, everything else stays soft.
+- **Faded grades before the flip.** Four disabled grade buttons read as broken and occupied the place where the reveal belongs. Anki shows one Show answer button, then the grades. Grading was already blocked until the flip, so the behaviour is unchanged; only what fills the row is.
+- **Truncated search on phones.** "Sea…" in a 120px pill read as a bug. It is now an icon button; the placeholder text was not doing any work at that width.
+- **Search dialog mid-screen on phones.** Material's search view is full-screen on compact windows; ours floated in the middle with its results under the keyboard. It now docks to the top, full width.
+- **Card rows squeezed on phones.** Number, status pill and two icons took a third of the row, wrapping definitions at about 140px. Meta and actions moved to a header line.
+
+Also fixed in passing: the Level field's placeholder was cut off at 180px, and `.card-item:hover` used a hardcoded cold grey. Left alone deliberately: the nine-chip stats card (already user-configurable), the Study Setup order, and the Preferences layout. `tests/components.test.js` holds the five changes.
+
