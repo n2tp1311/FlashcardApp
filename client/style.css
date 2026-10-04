@@ -2406,7 +2406,7 @@ code {
 .quiz-options.grid-mode:not(.tf-mode) .quiz-opt {
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
   min-height: 180px;
   padding: 16px 12px;

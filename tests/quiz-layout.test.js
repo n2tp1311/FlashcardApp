@@ -65,5 +65,7 @@ test("the quiz header has the button, both languages label it, and true/false ke
 test("the grid widens the quiz column and puts the answers in one row on a wide screen", function() {
   assert.match(css, /\.quiz-container:has\(> \.quiz-options\.grid-mode:not\(\.tf-mode\)\)\s*\{\s*max-width:\s*1400px/);
   assert.match(css, /\.quiz-options\.grid-mode:not\(\.tf-mode\)\s*\{[^}]*grid-auto-flow:\s*column/);
+  // Tiles of different text lengths line up along the top, numbers in one row.
+  assert.match(css, /\.quiz-options\.grid-mode:not\(\.tf-mode\) \.quiz-opt\s*\{[^}]*justify-content:\s*flex-start/);
   assert.match(css, /@media \(max-width: 900px\)\s*\{\s*\.quiz-options\.grid-mode:not\(\.tf-mode\)\s*\{\s*grid-auto-flow:\s*row/);
 });
