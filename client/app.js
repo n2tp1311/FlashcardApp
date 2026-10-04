@@ -161,7 +161,7 @@ Object.assign(TRANSLATIONS.en, {
   "pref.soundsHint": "A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.",
   "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
   "pref.quizCountsAsKnown": "Quiz answers count as Know It",
-  "pref.quizCountsAsKnownHint": "A correct quiz answer counts as Know It (marks the card known and schedules it like a flashcard); a wrong answer counts as Still Learning. Off: cards only make progress through flashcards.",
+  "pref.quizCountsAsKnownHint": "A correct quiz answer counts as Know It (marks the card known and schedules it like a flashcard); a wrong answer counts as Learning. Off: cards only make progress through flashcards.",
   "pref.language": "Language",
   "pref.speed": "Speed",
   "pref.testSpeed": "Test speed",
@@ -474,6 +474,14 @@ Object.assign(TRANSLATIONS.en, {
   "common.export": "Export",
   "import.invalidJson": "That file isn't valid JSON.",
   "import.success": "Imported {classes}, {lessons}, {cards}.",
+  "import.importing": "Importing…",
+  "import.importFile": "Import file",
+  "import.open": "Open",
+  "pref.groupAppearance": "Appearance",
+  "pref.groupStudy": "Study",
+  "pref.groupSound": "Sound & speech",
+  "pref.groupData": "Account & data",
+  "study.reviewDueShort": "Quiz · {n}",
   "count.classes": "{n} classes",
   "count.classes_one": "{n} class",
   "common.zeroSelected": "0 selected",
@@ -483,13 +491,13 @@ Object.assign(TRANSLATIONS.en, {
   "class.editClass": "Edit Class",
   "class.archiveClass": "Archive Class",
   "class.aiPromptGuide": "AI Prompt Guide",
-  "class.bulkImport": "Bulk Import",
+  "class.bulkImport": "Paste lessons",
   "class.newLesson": "+ Lesson",
   "class.emptyLessons": "No lessons yet. Add a lesson to this class.",
   "lesson.studySelected": "Study selected",
   "lesson.editLesson": "Edit Lesson",
   "lesson.addCard": "+ Add Card",
-  "lesson.bulkAdd": "+ Bulk Add",
+  "lesson.bulkAdd": "+ Paste cards",
   "lesson.reviewDueZero": "Quick quiz · 0 due",
   "lesson.emptyCards": "No cards yet. Add cards to start studying.",
   "sort.lastStudied": "Last studied",
@@ -501,7 +509,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.allCards": "All Cards",
   "setup.dueOnly": "Due Only",
   "setup.needsRecall": "Needs Recall",
-  "setup.stillLearning": "Still Learning",
+  "setup.stillLearning": "Learning",
   "setup.mode": "Mode",
   "setup.flashcards": "Flashcards",
   "setup.flashcardWrite": "Flashcard & Write",
@@ -521,7 +529,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
   "setup.hintFlashcardWriteMode": "Type your answer before flipping, then flip to compare — an extra production step on top of recall.",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
-  "setup.hintQuizModeKnown": "Faster — with your preference on, a correct answer counts as Know It and a wrong one as Still Learning.",
+  "setup.hintQuizModeKnown": "Faster — with your preference on, a correct answer counts as Know It and a wrong one as Learning.",
   "setup.newCardEstimateLabel": "New cards recommended today",
   "dashboard.newCardsShortLabel": "Suggested new cards",
   "dashboard.futureDueTodayHint": "Includes cards already due or overdue",
@@ -668,7 +676,7 @@ Object.assign(TRANSLATIONS.en, {
   "study.wordAlreadyQueued": "Already saved with this context",
   "study.wordAlreadyFetched": "Already in your vocabulary deck",
   "study.prev": "Prev",
-  "study.stillLearningHint": "Still Learning (1)",
+  "study.stillLearningHint": "Learning (1)",
   "study.learning": "Learning",
   "study.hardHint": "Hard (2) — recalled it, but it took some effort",
   "study.hard": "Hard",
@@ -718,9 +726,9 @@ Object.assign(TRANSLATIONS.en, {
   "results.cappedNote_one": "{n} card needs a Flashcard-mode recall to move to a longer review interval.",
 
   "difficulty.new": "New",
-  "difficulty.easy": "Easy",
-  "difficulty.medium": "Medium",
-  "difficulty.hard": "Hard",
+  "difficulty.easy": "Strong",
+  "difficulty.medium": "OK",
+  "difficulty.hard": "Weak",
 
   "stats.titlePrefix": "Stats: {title}",
   "stats.overview": "Overview",
@@ -799,10 +807,10 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.noStudyData": "No study data yet.",
   "dashboard.noReviewGrades": "No graded review data yet.",
   "dashboard.noReviewTime": "No tracked review times yet.",
-  "dashboard.gradeAgain": "Again / incorrect",
+  "dashboard.gradeAgain": "Learning / incorrect",
   "dashboard.gradeHard": "Hard",
-  "dashboard.gradeMedium": "Good",
-  "dashboard.gradeEasy": "Easy",
+  "dashboard.gradeMedium": "Know It",
+  "dashboard.gradeEasy": "Confident",
   "dashboard.gradeQuiz": "Quiz",
   "dashboard.gradeUngraded": "Ungraded",
   "dashboard.avgReviewDuration": "{duration} avg · {n} reviews",
@@ -847,7 +855,7 @@ Object.assign(TRANSLATIONS.en, {
   "imagedef.defPlaceholder": "e.g. The Eiffel Tower, built 1889, Paris.",
   "bulk.pasteHere": "Paste cards here...",
   "bulk.addCards": "Add Cards",
-  "bulkImport.title": "Bulk Import Lessons & Cards",
+  "bulkImport.title": "Paste lessons and cards",
   "common.import": "Import",
   "delete.confirmTitle": "Confirm Delete",
   "confirm.archiveTitle": "Confirm Archive",
@@ -911,7 +919,7 @@ Object.assign(TRANSLATIONS.en, {
 
   "class.newClass": "New Class",
   "lesson.newLesson": "New Lesson",
-  "bulk.addCardsTitle": "Bulk Add Cards",
+  "bulk.addCardsTitle": "Paste cards",
   "card.addCard": "Add Card",
   "card.editCard": "Edit Card",
   "lesson.hintTermDef": "Best for vocabulary, concepts, formulas. Bulk: term | definition",
@@ -1390,6 +1398,14 @@ Object.assign(TRANSLATIONS.vi, {
   "common.export": "Xuất dữ liệu",
   "import.invalidJson": "Tệp này không phải JSON hợp lệ.",
   "import.success": "Đã nhập {classes}, {lessons}, {cards}.",
+  "import.importing": "Đang nhập…",
+  "import.importFile": "Nhập tệp",
+  "import.open": "Mở",
+  "pref.groupAppearance": "Giao diện",
+  "pref.groupStudy": "Học",
+  "pref.groupSound": "Âm thanh & giọng đọc",
+  "pref.groupData": "Tài khoản & dữ liệu",
+  "study.reviewDueShort": "Ôn · {n}",
   "count.classes": "{n} lớp",
   "common.zeroSelected": "Đã chọn 0",
   "common.nSelected": "Đã chọn {n}",
@@ -1398,13 +1414,13 @@ Object.assign(TRANSLATIONS.vi, {
   "class.editClass": "Sửa lớp",
   "class.archiveClass": "Lưu trữ lớp",
   "class.aiPromptGuide": "Hướng dẫn Prompt AI",
-  "class.bulkImport": "Nhập hàng loạt",
+  "class.bulkImport": "Dán bài học",
   "class.newLesson": "+ Bài học",
   "class.emptyLessons": "Chưa có bài học nào. Thêm bài học vào lớp này.",
   "lesson.studySelected": "Học mục đã chọn",
   "lesson.editLesson": "Sửa bài học",
   "lesson.addCard": "+ Thêm thẻ",
-  "lesson.bulkAdd": "+ Thêm hàng loạt",
+  "lesson.bulkAdd": "+ Dán thẻ",
   "lesson.reviewDueZero": "Trắc nghiệm nhanh · 0 thẻ đến hạn",
   "lesson.emptyCards": "Chưa có thẻ nào. Thêm thẻ để bắt đầu học.",
   "sort.lastStudied": "Học gần nhất",
@@ -1626,9 +1642,9 @@ Object.assign(TRANSLATIONS.vi, {
   "results.cappedNote": "{n} thẻ cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
 
   "difficulty.new": "Mới",
-  "difficulty.easy": "Dễ",
-  "difficulty.medium": "Trung bình",
-  "difficulty.hard": "Khó",
+  "difficulty.easy": "Vững",
+  "difficulty.medium": "Khá",
+  "difficulty.hard": "Yếu",
 
   "stats.titlePrefix": "Thống kê: {title}",
   "stats.overview": "Tổng quan",
@@ -1706,10 +1722,10 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
   "dashboard.noReviewGrades": "Chưa có dữ liệu đánh giá ôn tập.",
   "dashboard.noReviewTime": "Chưa có dữ liệu thời gian ôn tập.",
-  "dashboard.gradeAgain": "Làm lại / sai",
+  "dashboard.gradeAgain": "Đang học / sai",
   "dashboard.gradeHard": "Khó",
-  "dashboard.gradeMedium": "Tốt",
-  "dashboard.gradeEasy": "Dễ",
+  "dashboard.gradeMedium": "Đã thuộc",
+  "dashboard.gradeEasy": "Rất chắc chắn",
   "dashboard.gradeQuiz": "Trắc nghiệm",
   "dashboard.gradeUngraded": "Chưa đánh giá",
   "dashboard.avgReviewDuration": "TB {duration} · {n} lượt ôn",
@@ -1753,7 +1769,7 @@ Object.assign(TRANSLATIONS.vi, {
   "imagedef.defPlaceholder": "vd: Tháp Eiffel, xây năm 1889, Paris.",
   "bulk.pasteHere": "Dán các thẻ vào đây...",
   "bulk.addCards": "Thêm thẻ",
-  "bulkImport.title": "Nhập hàng loạt bài học & thẻ",
+  "bulkImport.title": "Dán bài học và thẻ",
   "common.import": "Nhập",
   "delete.confirmTitle": "Xác nhận xóa",
   "confirm.archiveTitle": "Xác nhận lưu trữ",
@@ -1817,7 +1833,7 @@ Object.assign(TRANSLATIONS.vi, {
 
   "class.newClass": "Lớp mới",
   "lesson.newLesson": "Bài học mới",
-  "bulk.addCardsTitle": "Thêm thẻ hàng loạt",
+  "bulk.addCardsTitle": "Dán thẻ",
   "card.addCard": "Thêm thẻ",
   "card.editCard": "Sửa thẻ",
   "lesson.hintTermDef": "Phù hợp cho từ vựng, khái niệm, công thức. Hàng loạt: thuật ngữ | định nghĩa",
@@ -3005,13 +3021,40 @@ function restoreLastScreen() {
 
 var toastTimer = null;
 
-function showToast(message, kind) {
+// An error stays until dismissed and is announced at once: a failed import used to vanish
+// after four seconds, possibly before it was read. An action ("Open") keeps it for eight.
+function showToast(message, kind, action) {
   var el = document.getElementById("toast");
-  el.textContent = message;
-  el.classList.toggle("error", kind === "error");
+  var error = kind === "error";
+  el.textContent = "";
+  var text = document.createElement("span");
+  text.className = "toast-text";
+  text.textContent = message;
+  el.appendChild(text);
+  function hide() { el.classList.add("hidden"); }
+  if (action) {
+    var go = document.createElement("button");
+    go.type = "button";
+    go.className = "toast-btn";
+    go.textContent = action.label;
+    go.addEventListener("click", function() { hide(); action.run(); });
+    el.appendChild(go);
+  }
+  if (error) {
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "toast-btn toast-close";
+    close.setAttribute("aria-label", t("common.close"));
+    close.textContent = "×";
+    close.addEventListener("click", hide);
+    el.appendChild(close);
+  }
+  el.setAttribute("role", error ? "alert" : "status");
+  el.setAttribute("aria-live", error ? "assertive" : "polite");
+  el.classList.toggle("error", error);
   el.classList.remove("hidden");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function() { el.classList.add("hidden"); }, 4000);
+  if (!error) toastTimer = setTimeout(hide, action ? 8000 : 4000);
 }
 
 // Server errors are English; the ones a user can cause carry a stable code we translate.
@@ -3961,6 +4004,11 @@ document.getElementById("import-flashcards-input").addEventListener("change", fu
   e.target.value = ""; // allow re-selecting the same file back-to-back
   if (!file) return;
   importInFlight = true;
+  // Extra clicks used to be ignored with nothing on screen to say why.
+  var importBtn = document.getElementById("btn-import-flashcards");
+  var importLabel = importBtn.querySelector(".home-import-label");
+  importBtn.disabled = true;
+  importLabel.textContent = t("import.importing");
   file.text().then(function(text) {
     var parsed;
     try {
@@ -3974,11 +4022,15 @@ document.getElementById("import-flashcards-input").addEventListener("change", fu
     return store.importFlashcards({ classes: parsed && parsed.classes });
   }).then(function(result) {
     renderHome();
-    showToast(t("import.success", { classes: t("count.classes", { n: result.imported.classes }), lessons: t("count.lessons", { n: result.imported.lessons }), cards: t("count.cards", { n: result.imported.cards }) }));
+    var ids = result.imported.classIds || [];
+    showToast(t("import.success", { classes: t("count.classes", { n: result.imported.classes }), lessons: t("count.lessons", { n: result.imported.lessons }), cards: t("count.cards", { n: result.imported.cards }) }),
+      null, ids.length === 1 ? { label: t("import.open"), run: function() { openClass(ids[0]); } } : null);
   }).catch(function(err) {
     showToast(err.message, "error");
   }).finally(function() {
     importInFlight = false;
+    importBtn.disabled = false;
+    importLabel.textContent = t("import.importFile");
   });
 });
 
@@ -4566,6 +4618,10 @@ function updateCardSelectBar() {
   var total = (state.currentLessonCards || []).length;
   if (allCheck) allCheck.checked = total > 0 && n === total;
 }
+
+document.getElementById("btn-lesson-select-menu").addEventListener("click", function() {
+  document.getElementById("btn-select-cards").click();
+});
 
 document.getElementById("btn-select-cards").addEventListener("click", function() {
   setCardSelectMode(!state.cardSelectMode);
@@ -5722,7 +5778,10 @@ function renderCards() {
       var dueCount = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec; }).length;
       var dueBtn = document.getElementById("btn-review-due");
       if (dueCount > 0) {
-        dueBtn.textContent = t("study.reviewDue", { n: dueCount });
+        dueBtn.innerHTML = '<span class="due-full"></span><span class="due-short"></span>';
+        dueBtn.firstChild.textContent = t("study.reviewDue", { n: dueCount });
+        dueBtn.lastChild.textContent = t("study.reviewDueShort", { n: dueCount });
+        dueBtn.setAttribute("aria-label", t("study.reviewDue", { n: dueCount }));
         dueBtn.classList.remove("hidden");
       } else {
         dueBtn.classList.add("hidden");
@@ -11715,7 +11774,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "pref-backup", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }

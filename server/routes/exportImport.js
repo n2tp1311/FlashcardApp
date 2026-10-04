@@ -383,10 +383,12 @@ importRouter.post("/flashcards", requireAuth, flashcardImportLimiter, (req, res)
   const startingClassOrder = db.prepare("SELECT COUNT(*) as n FROM classes WHERE user_id = ?").get(userId).n;
   let importedLessons = 0;
   let importedCards = 0;
+  const classIds = [];
 
   db.transaction(() => {
     classes.forEach((cls, i) => {
       const classId = genId();
+      classIds.push(classId);
       // Same shape as classes.js's normalizeLevel/normalizeTags (not exported from there, so
       // reimplemented here — the import file is hand-editable, so these fields need the same
       // sanitization as the manual-entry path, not just the "trust our own export" assumption).
@@ -426,7 +428,7 @@ importRouter.post("/flashcards", requireAuth, flashcardImportLimiter, (req, res)
     });
   })();
 
-  res.status(201).json({ ok: true, imported: { classes: classes.length, lessons: importedLessons, cards: importedCards } });
+  res.status(201).json({ ok: true, imported: { classes: classes.length, lessons: importedLessons, cards: importedCards, classIds } });
 });
 
 module.exports = { exportRouter, importRouter };

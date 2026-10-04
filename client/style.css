@@ -873,6 +873,29 @@ body {
 }
 .screen-title svg { vertical-align: -3px; }
 
+/* Preferences sections: the quiz scoring rule and review cap were easy to miss in one
+   ungrouped scroll. */
+.pref-group {
+  margin: 18px 0 2px; font-size: 0.8125rem; font-weight: 700; color: var(--text2);
+  border-bottom: 1px solid var(--border); padding-bottom: 6px;
+}
+.pref-group:first-child { margin-top: 0; }
+
+.dropdown-item.lesson-select-mobile, #btn-review-due .due-short { display: none; }
+/* Phone lesson header: in Vietnamese with cards due it took three rows (~170px) before the
+   first card. Select moves into the menu, the due button shrinks to a chip, and the title
+   may take two lines instead of being cut to "Week 1: Linear Regres…". */
+@media (max-width: 480px) {
+  #btn-select-cards { display: none; }
+  .dropdown-item.lesson-select-mobile { display: flex; }
+  #btn-review-due .due-full { display: none; }
+  #btn-review-due .due-short { display: inline; }
+  #lesson-detail-title {
+    white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    line-height: 1.3;
+  }
+}
+
 .header-actions {
   display: flex;
   gap: 8px;
@@ -2079,6 +2102,14 @@ code {
   box-shadow: var(--shadow-lg);
 }
 .toast.error { border-left: 4px solid var(--danger); }
+.toast { display: flex; align-items: center; gap: 12px; }
+.toast-text { flex: 1; }
+.toast-btn {
+  border: 0; border-radius: 999px; padding: 6px 12px; min-height: 32px; flex-shrink: 0;
+  background: color-mix(in srgb, var(--surface) 18%, transparent);
+  color: var(--surface); font: inherit; font-weight: 600; cursor: pointer;
+}
+.toast-close { padding: 6px 10px; font-size: 1.125rem; line-height: 1; }
 
 /* Undo for the last flashcard grade. At the top, under the study header: at the bottom it
    would sit on the grading buttons, the very thing a misclick came from. */

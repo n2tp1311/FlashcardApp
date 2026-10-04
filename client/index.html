@@ -147,9 +147,9 @@
     </div>
     <div id="user-nav" class="user-nav hidden">
       <button class="btn btn-ghost home-select-btn" id="btn-select-classes" data-i18n="common.select">Select</button>
-      <button class="btn btn-ghost home-import-btn" id="btn-import-flashcards" title="Import" data-i18n-title="common.import">
+      <button class="btn btn-ghost home-import-btn" id="btn-import-flashcards" title="Import file" data-i18n-title="import.importFile">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span class="home-import-label" data-i18n="common.import">Import</span>
+        <span class="home-import-label" data-i18n="import.importFile">Import file</span>
       </button>
       <input type="file" id="import-flashcards-input" accept="application/json,.json" style="display:none">
       <button class="btn btn-primary home-new-class-btn" id="btn-new-class">
@@ -397,7 +397,7 @@
           <button class="dropdown-item" id="btn-share-class" data-i18n="common.share"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
           <button class="dropdown-item" id="btn-prompt-guide" data-i18n="class.aiPromptGuide"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg> AI Prompt Guide</button>
           <div class="dropdown-divider"></div>
-          <button class="dropdown-item" id="btn-bulk-import" data-i18n="class.bulkImport"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Bulk Import</button>
+          <button class="dropdown-item" id="btn-bulk-import" data-i18n="class.bulkImport"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Paste lessons</button>
           <button class="dropdown-item" id="btn-export-class" data-i18n="common.export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
         </div>
       </div>
@@ -446,12 +446,13 @@
       <div class="dropdown-wrap">
         <button class="btn btn-ghost btn-icon" id="btn-lesson-menu" title="More options" aria-label="More options" data-i18n-title="common.moreOptions" data-i18n-aria="common.moreOptions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
         <div class="dropdown-menu hidden" id="lesson-dropdown-menu">
+          <button class="dropdown-item lesson-select-mobile" id="btn-lesson-select-menu" data-i18n="common.select">Select</button>
           <button class="dropdown-item" id="btn-lesson-stats" data-i18n="common.stats"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Stats</button>
           <button class="dropdown-item" id="btn-edit-lesson" data-i18n="lesson.editLesson"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit Lesson</button>
           <button class="dropdown-item" id="btn-export-lesson" data-i18n="common.export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item" id="btn-add-card" data-i18n="lesson.addCard">+ Add Card</button>
-          <button class="dropdown-item" id="btn-bulk-add" data-i18n="lesson.bulkAdd">+ Bulk Add</button>
+          <button class="dropdown-item" id="btn-bulk-add" data-i18n="lesson.bulkAdd">+ Paste cards</button>
         </div>
       </div>
       <button class="btn btn-warning btn-sm hidden" id="btn-review-due" data-i18n="lesson.reviewDueZero" data-i18n-title="study.reviewDueTitle" title="Multiple-choice quiz on the cards due now (respects Max reviews per day)">Quick quiz · 0 due</button>
@@ -504,7 +505,7 @@
         <button class="pill active" data-value="all" data-i18n="setup.allCards">All Cards</button>
         <button class="pill" data-value="due" data-i18n="setup.dueOnly">Due Only</button>
         <button class="pill" data-value="needsRecall" data-i18n="setup.needsRecall">Needs Recall</button>
-        <button class="pill" data-value="learning" data-i18n="setup.stillLearning">Still Learning</button>
+        <button class="pill" data-value="learning" data-i18n="setup.stillLearning">Learning</button>
         <button class="pill" data-value="updated" data-i18n="setup.updated" id="setup-filter-updated">Updated</button>
       </div>
       <p class="setup-filter-hint" id="setup-filter-hint">Study all cards</p>
@@ -597,7 +598,7 @@
     <button class="btn btn-outline btn-lg" id="btn-fc-prev" data-i18n="study.prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Prev</button>
     <div class="fc-mark-btns" id="fc-mark-btns">
       <button type="button" class="btn btn-primary btn-mark fc-reveal-btn" id="btn-fc-reveal" data-i18n="study.showAnswer">Show answer</button>
-      <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Still Learning (1)" data-i18n-title="study.stillLearningHint" data-i18n="study.learning"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Learning<span class="mark-int" id="fc-int-learning"></span></button>
+      <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Learning (1)" data-i18n-title="study.stillLearningHint" data-i18n="study.learning"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Learning<span class="mark-int" id="fc-int-learning"></span></button>
       <button class="btn btn-warning btn-mark" id="btn-fc-hard" title="Hard (2)" data-i18n-title="study.hardHint" data-i18n="study.hard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg> Hard<span class="mark-int" id="fc-int-hard"></span></button>
       <button class="btn btn-success btn-mark" id="btn-fc-known" title="Know It (3)" data-i18n-title="study.knowItHint" data-i18n="study.knowIt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Know It<span class="mark-int" id="fc-int-known"></span></button>
       <button class="btn btn-primary btn-mark" id="btn-fc-easy" title="Confident (4)" data-i18n-title="study.confidentHint" data-i18n="study.confident"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Confident<span class="mark-int" id="fc-int-easy"></span></button>
@@ -720,6 +721,7 @@
       <button class="modal-close" data-modal="preferences" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
+      <h4 class="pref-group" data-i18n="pref.groupAppearance">Appearance</h4>
       <div class="pref-row">
         <label class="form-label" data-i18n="pref.textSize">Text size</label>
         <div class="font-scale-row">
@@ -765,21 +767,13 @@
         </div>
       </div>
       <div class="pref-row">
-        <label class="form-label" for="pref-sounds" data-i18n="pref.sounds">Sound effects</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="pref-sounds">
-          <span class="toggle-track"></span>
-        </label>
+        <label class="form-label" data-i18n="pref.language">Language</label>
+        <div class="font-scale-row">
+          <button type="button" class="pill" data-lang="en" id="pref-lang-en">English</button>
+          <button type="button" class="pill" data-lang="vi" id="pref-lang-vi">Tiếng Việt</button>
+        </div>
       </div>
-      <p class="pref-hint" data-i18n="pref.soundsHint">A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.</p>
-      <div class="pref-row">
-        <label class="form-label" for="pref-haptics" data-i18n="pref.haptics">Vibration feedback</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="pref-haptics">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-      <p class="pref-hint hidden" id="pref-haptics-hint" data-i18n="pref.hapticsUnsupported">This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.</p>
+      <h4 class="pref-group" data-i18n="pref.groupStudy">Study</h4>
       <div class="pref-row">
         <label class="form-label" for="pref-quiz-known" data-i18n="pref.quizCountsAsKnown">Quiz answers count as Know It</label>
         <label class="toggle-switch">
@@ -787,23 +781,7 @@
           <span class="toggle-track"></span>
         </label>
       </div>
-      <p class="pref-hint" data-i18n="pref.quizCountsAsKnownHint">A correct quiz answer counts as Know It (marks the card known and schedules it like a flashcard); a wrong answer counts as Still Learning. Off: cards only make progress through flashcards.</p>
-      <div class="pref-row">
-        <label class="form-label" data-i18n="pref.language">Language</label>
-        <div class="font-scale-row">
-          <button type="button" class="pill" data-lang="en" id="pref-lang-en">English</button>
-          <button type="button" class="pill" data-lang="vi" id="pref-lang-vi">Tiếng Việt</button>
-        </div>
-      </div>
-      <div class="pref-row">
-        <label class="form-label" data-i18n="pref.speed">Speed</label>
-        <div class="font-scale-row">
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-decrease">−</button>
-          <span id="pref-rate-label" data-dirty-text class="tf-pct-label">0.9x</span>
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-increase">+</button>
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-tts-test" title="Test speed" aria-label="Test speed" data-i18n-title="pref.testSpeed" data-i18n-aria="pref.testSpeed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
-        </div>
-      </div>
+      <p class="pref-hint" data-i18n="pref.quizCountsAsKnownHint">A correct quiz answer counts as Know It (marks the card known and schedules it like a flashcard); a wrong answer counts as Learning. Off: cards only make progress through flashcards.</p>
       <div class="pref-row">
         <label class="form-label" data-i18n="pref.dailyGoal">Daily goal</label>
         <div class="font-scale-row" id="pref-daily-goal">
@@ -823,6 +801,33 @@
         <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
         <button type="button" class="btn btn-sm btn-ghost" id="btn-replay-tutorial" data-i18n="tutorial.replay">Show tutorial</button>
       </div>
+      <h4 class="pref-group" data-i18n="pref.groupSound">Sound &amp; speech</h4>
+      <div class="pref-row">
+        <label class="form-label" for="pref-sounds" data-i18n="pref.sounds">Sound effects</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pref-sounds">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <p class="pref-hint" data-i18n="pref.soundsHint">A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.</p>
+      <div class="pref-row">
+        <label class="form-label" for="pref-haptics" data-i18n="pref.haptics">Vibration feedback</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pref-haptics">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <p class="pref-hint hidden" id="pref-haptics-hint" data-i18n="pref.hapticsUnsupported">This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.</p>
+      <div class="pref-row">
+        <label class="form-label" data-i18n="pref.speed">Speed</label>
+        <div class="font-scale-row">
+          <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-decrease">−</button>
+          <span id="pref-rate-label" data-dirty-text class="tf-pct-label">0.9x</span>
+          <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-increase">+</button>
+          <button type="button" class="btn btn-sm btn-ghost" id="pref-tts-test" title="Test speed" aria-label="Test speed" data-i18n-title="pref.testSpeed" data-i18n-aria="pref.testSpeed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+        </div>
+      </div>
+      <h4 class="pref-group" id="pref-group-data" data-i18n="pref.groupData">Account &amp; data</h4>
       <div class="pref-tokens" id="pref-backup" data-no-dirty>
         <label class="form-label" data-i18n="pref.backup">Backup</label>
         <p class="pref-hint" data-i18n="pref.backupHint">Everything in your account, including study progress. To share one class, use Export on the class instead.</p>
@@ -1070,7 +1075,7 @@
   <!-- Bulk Add Modal -->
   <div id="modal-bulk" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-bulk-title">
     <div class="modal-header">
-      <h3 id="modal-bulk-title">Bulk Add Cards</h3>
+      <h3 id="modal-bulk-title">Paste cards</h3>
       <button class="modal-close" data-modal="bulk" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -1088,7 +1093,7 @@
   <!-- Bulk Lesson+Card Import Modal -->
   <div id="modal-bulk-import" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-bulk-import-heading">
     <div class="modal-header">
-      <h3 id="modal-bulk-import-heading" data-i18n="bulkImport.title">Bulk Import Lessons &amp; Cards</h3>
+      <h3 id="modal-bulk-import-heading" data-i18n="bulkImport.title">Paste lessons and cards</h3>
       <button class="modal-close" data-modal="bulk-import" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -1271,7 +1276,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-section-title" data-i18n="keymap.sectionFlashcards">Flashcards</div>
         <div class="keymap-row"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd><span data-i18n="keymap.prevNext">Prev / Next</span></div>
         <div class="keymap-row"><kbd class="kbd">Space</kbd><span data-i18n="keymap.flipCard">Flip card</span></div>
-        <div class="keymap-row"><kbd class="kbd">1</kbd><span data-i18n="study.learning">Still Learning</span></div>
+        <div class="keymap-row"><kbd class="kbd">1</kbd><span data-i18n="study.learning">Learning</span></div>
         <div class="keymap-row"><kbd class="kbd">2</kbd><span data-i18n="study.hard">Hard</span></div>
         <div class="keymap-row"><kbd class="kbd">3</kbd><span data-i18n="study.knowIt">Know It</span></div>
         <div class="keymap-row"><kbd class="kbd">4</kbd><span data-i18n="study.confident">Confident</span></div>

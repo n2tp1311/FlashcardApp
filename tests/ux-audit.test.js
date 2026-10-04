@@ -157,3 +157,48 @@ test("Updates actions are real buttons with Delete set apart; wide list screens 
   assert.match(css, /#screen-class, #screen-lesson, #screen-upstream \{\s*padding-left: calc\(\(100% - var\(--content-max\)\) \/ 2\);/);
   assert.match(app, /'<div class="lesson-badges">'/);
 });
+
+function tr(lang, key) {
+  const block = app.slice(app.indexOf("Object.assign(TRANSLATIONS." + lang + ", {"));
+  const m = block.match(new RegExp('"' + key.replace(/\./g, "\\.") + '": "([^"]*)"'));
+  return m && m[1];
+}
+
+test("a grade has one name everywhere, and the difficulty pill can no longer be read as one", function() {
+  assert.equal(tr("en", "dashboard.gradeMedium"), tr("en", "study.knowIt"));
+  assert.equal(tr("en", "dashboard.gradeEasy"), tr("en", "study.confident"));
+  assert.equal(tr("vi", "dashboard.gradeMedium"), tr("vi", "study.knowIt"));
+  ["difficulty.easy", "difficulty.medium", "difficulty.hard"].forEach(function(k) {
+    ["study.learning", "study.hard", "study.knowIt", "study.confident"].forEach(function(g) {
+      assert.notEqual(tr("en", k), tr("en", g), k + " vs " + g);
+    });
+  });
+  assert.doesNotMatch(app + html, /Still Learning/);
+});
+
+test("imports have plain names, show progress, and errors stay until dismissed", function() {
+  assert.equal(tr("en", "class.bulkImport"), "Paste lessons");
+  assert.equal(tr("en", "lesson.bulkAdd"), "+ Paste cards");
+  assert.match(html, /data-i18n="import\.importFile">Import file</);
+  assert.match(app, /importLabel\.textContent = t\("import\.importing"\)/);
+  const toast = fn("showToast");
+  assert.match(toast, /if \(!error\) toastTimer = setTimeout/);
+  assert.match(toast, /el\.setAttribute\("role", error \? "alert" : "status"\)/);
+  const server = fs.readFileSync(path.join(root, "server", "routes", "exportImport.js"), "utf8");
+  assert.match(server, /imported: \{ classes: classes\.length, lessons: importedLessons, cards: importedCards, classIds \}/);
+});
+
+test("Preferences is in four sections, and the data one hides with its rows in local mode", function() {
+  const groups = html.match(/<h4 class="pref-group"[^>]*data-i18n="(pref\.group\w+)"/g) || [];
+  assert.equal(groups.length, 4);
+  assert.match(app, /"pref-backup", "pref-group-data"/);
+  ["Appearance", "Study", "Sound", "Data"].forEach(function(g) { assert.ok(tr("vi", "pref.group" + g), g); });
+});
+
+test("on a phone the lesson header moves Select into the menu and shortens the due button", function() {
+  assert.match(html, /id="btn-lesson-select-menu"/);
+  const phone = css.slice(css.indexOf("Phone lesson header"));
+  assert.match(phone, /#btn-select-cards \{ display: none; \}/);
+  assert.match(phone, /#btn-review-due \.due-short \{ display: inline; \}/);
+  assert.ok(tr("vi", "study.reviewDueShort"));
+});
