@@ -6692,6 +6692,23 @@ function confirmLeaveStudy(leave) {
   confirmAction(t("confirm.leaveSession", { n: done }), leave, "leave");
 }
 
+function markFcOverflow() {
+  ["fc-front-content", "fc-back-content"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle("fc-long", el.textContent.length > FC_LONG_TEXT);
+    el.classList.toggle("fc-more", el.scrollHeight - el.scrollTop - el.clientHeight > 4);
+  });
+}
+var FC_LONG_TEXT = 140;
+["fc-front-content", "fc-back-content"].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener("scroll", markFcOverflow, { passive: true });
+});
+window.addEventListener("resize", function() {
+  if (document.getElementById("screen-flashcard").classList.contains("active")) markFcOverflow();
+});
+
 // Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
 function returnFromStudy() {
   dismissGradeUndo();
@@ -7549,6 +7566,7 @@ function renderFlashcard() {
 
   // Dots
   renderFcDots();
+  requestAnimationFrame(markFcOverflow);
 
   // Mark buttons reflect known state
   var known = state.studyKnownMap[card.id];

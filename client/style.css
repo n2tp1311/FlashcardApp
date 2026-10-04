@@ -1916,7 +1916,8 @@ code {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: var(--radius);
-  padding: 24px;
+  /* The speaker and difficulty badge get their own band instead of covering the first line. */
+  padding: 44px 24px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1950,6 +1951,12 @@ code {
 }
 
 .fc-back .fc-content { color: var(--card-back-text); }
+/* A paragraph reads better ragged-right; and iOS shows no scrollbar, so a fade says there is more. */
+.fc-content.fc-long { text-align: start; }
+.fc-content.fc-more {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+}
 .fc-vocabulary-headword {
   font-size: 1.2em;
   font-weight: 650;
@@ -3256,7 +3263,9 @@ code {
   .screen { padding: env(safe-area-inset-top, 0px) 12px max(60px, calc(40px + env(safe-area-inset-bottom, 0px))); }
   .app-header { padding: 12px 0; gap: 8px; }
   .app-title { font-size: 1.125rem; }
-  .fc-scene { height: 220px; }
+  /* From the viewport, as landscape does: a fixed 220px clipped sentence-length answers with
+     ~300px of empty screen below. 340px is the header, toolbar, dots and the grade rows. */
+  .fc-scene { height: clamp(220px, calc(100dvh - 340px), 520px); }
   .fc-content { font-size: 0.9375rem; }
   .quiz-question { font-size: 0.9375rem; }
   .quiz-opt { padding: 11px 14px; font-size: 0.875rem; }
@@ -4448,6 +4457,11 @@ code {
   input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea {
     font-size: max(16px, 0.875rem) !important;
   }
+  /* Apple's 44pt minimum. Measured before: study edit/delete 34x26, sort direction 30x22,
+     modal close ~22px, small buttons 27px tall. Icon buttons are borderless, so the larger box
+     does not show; small text buttons stop at 40px so a row of them does not balloon. */
+  .btn-icon, .icon-btn, .sort-dir-btn, .btn-audio, .modal-close { min-width: 44px; min-height: 44px; }
+  .btn-sm { min-height: 40px; }
 }
 
 /* Grade row in thumb reach on phones: sticky to the viewport bottom, and margin-top:auto keeps

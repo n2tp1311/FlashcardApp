@@ -71,3 +71,28 @@ test("pills and tabs carry their ARIA state; form focus is visible; distractors 
   const op = css.match(/\.quiz-opt\.dimmed \{ opacity: ([\d.]+); \}/);
   assert.ok(op && Number(op[1]) >= 0.7);
 });
+
+test("a phone flashcard sizes from the viewport and says when there is more to scroll", function() {
+  assert.match(css, /\.fc-scene \{ height: clamp\(220px, calc\(100dvh - 340px\), 520px\); \}/);
+  assert.doesNotMatch(css, /\.fc-scene \{ height: 220px; \}/);
+  assert.match(css, /\.fc-front, \.fc-back \{[^}]*padding: 44px 24px 24px;/);
+  assert.match(css, /\.fc-content\.fc-more \{[^}]*mask-image/);
+  const marks = [];
+  const els = {};
+  ["fc-front-content", "fc-back-content"].forEach(function(id, i) {
+    els[id] = { textContent: i ? "x".repeat(200) : "short", scrollHeight: i ? 900 : 100, scrollTop: 0, clientHeight: 300,
+      classList: { toggle: function(c, on) { marks.push(id + ":" + c + ":" + on); } } };
+  });
+  const ctx = { document: { getElementById: function(id) { return els[id]; } }, FC_LONG_TEXT: 140 };
+  vm.createContext(ctx);
+  vm.runInContext(fn("markFcOverflow"), ctx);
+  ctx.markFcOverflow();
+  assert.deepEqual(marks, ["fc-front-content:fc-long:false", "fc-front-content:fc-more:false",
+                           "fc-back-content:fc-long:true", "fc-back-content:fc-more:true"]);
+});
+
+test("touch screens get 44px icon targets", function() {
+  const coarse = css.slice(css.indexOf("Apple's 44pt minimum"));
+  assert.match(coarse, /\.btn-icon, \.icon-btn, \.sort-dir-btn, \.btn-audio, \.modal-close \{ min-width: 44px; min-height: 44px; \}/);
+  assert.match(html, /id="btn-fc-edit-card"[^\n]*\n\s*<span class="fc-toolbar-gap"/);
+});
