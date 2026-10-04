@@ -45,13 +45,13 @@ test("the grid layout tags the options and the button offers the list back", fun
   assert.ok(g.classes.has("grid-mode"));
   assert.equal(g.btn.innerHTML, "LIST");
   assert.equal(g.btn.title, "quiz.layoutList");
-  assert.equal(g.attrs["aria-pressed"], "true");
+  // The label already flips; aria-pressed on top read as "list, pressed".
+  assert.equal(g.attrs["aria-pressed"], undefined);
 
   const l = load(null);
   l.ctx.applyQuizLayout();
   assert.ok(!l.classes.has("grid-mode"));
   assert.equal(l.btn.innerHTML, "GRID");
-  assert.equal(l.attrs["aria-pressed"], "false");
 });
 
 test("the quiz header has the button, both languages label it, and true/false keeps its row", function() {

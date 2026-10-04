@@ -1501,6 +1501,7 @@ body {
 }
 
 .form-input:focus { border-color: var(--primary); }
+.form-input:focus-visible, .form-textarea:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 45%, transparent); }
 
 .form-textarea {
   width: 100%;
@@ -2378,7 +2379,8 @@ code {
 .quiz-opt.wrong { background: var(--danger-light); border-color: var(--danger); }
 .quiz-opt.wrong .opt-num { background: var(--danger-fill); color: #fff; }
 
-.quiz-opt.dimmed { opacity: 0.4; }
+/* Not opacity .4: that left the distractors at ~3:1 in dark mode, and they are worth reading. */
+.quiz-opt.dimmed { opacity: 0.72; }
 
 /* Keep answered options legible — the UA disabled-button style dims text to an unreadable
    ~30% opacity, which is invisible on the correct/wrong tint (esp. in dark mode). */
@@ -3253,8 +3255,6 @@ code {
   .user-nav { flex: 0 0 auto; }
   /* Hide ☑ Select from header — available in ⋮ menu instead */
   #btn-select-classes { display: none; }
-  /* Show the ☑ Select item inside the ⋮ dropdown */
-  .home-select-mobile { display: flex !important; }
 
   /* M12: keep the screen title readable — reserve space so the header-actions wrap to
      a second row instead of squeezing the class/lesson name down to "…". */
@@ -3279,16 +3279,6 @@ code {
 /* M10: single column class grid on small phones */
 @media (max-width: 480px) {
   .class-grid { grid-template-columns: 1fr; }
-}
-/* On desktop, hide the ☑ Select item from the ⋮ dropdown (it lives in the header) */
-.home-select-mobile { display: none; }
-
-/* Dashboard / Analytics: inline in header when there's room, in dropdown when not */
-.nav-inline-btn { display: none; }
-@media (min-width: 680px) {
-  .nav-inline-btn { display: inline-flex; }
-  .dash-analytics-dropdown { display: none !important; }
-  #btn-home-menu { display: none; }
 }
 
 /* ============================

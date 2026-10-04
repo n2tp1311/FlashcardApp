@@ -588,7 +588,7 @@ Object.assign(TRANSLATIONS.en, {
   "study.exit": "Exit",
   "study.editCard": "Edit card",
   "study.deleteCard": "Delete card",
-  "study.clickToFlip": "Click to flip",
+  "study.clickToFlip": "Tap or click to flip",
   "study.showAnswer": "Show answer",
   "study.typeYourGuessPlaceholder": "Type your answer...",
   "study.yourGuess": "Your answer: {text}",
@@ -681,6 +681,10 @@ Object.assign(TRANSLATIONS.en, {
   "results.retry": "Retry",
   "results.changeSetup": "Change Setup",
   "results.backToLesson": "Back to Lesson",
+  "results.backToHome": "Back to Home",
+  "results.backToClass": "Back to Class",
+  "results.backToUpdates": "Back to Updates",
+  "results.backToDashboard": "Back to Dashboard",
   "summary.title": "Session Complete",
   "summary.cardsStudied": "cards studied",
   "done.perfect": "Perfect session!",
@@ -700,7 +704,7 @@ Object.assign(TRANSLATIONS.en, {
   "summary.review": "Review",
   "summary.skippedNote": "{n} cards skipped (not graded)",
   "summary.skippedNote_one": "{n} card skipped (not graded)",
-  "summary.reviewAction": "Review",
+  "summary.reviewAction": "Go through cards again",
 
   "confirm.deleteCard": "Delete this card? Your study history and stats are kept.",
   "common.true": "True",
@@ -875,6 +879,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.navigateClasses": "Navigate classes",
   "keymap.openClassToggle": "Open class / toggle selection",
   "keymap.newClass": "New class",
+  "keymap.dashboardOutsideSelect": "Dashboard (outside select mode)",
   "keymap.sectionClass": "Class",
   "keymap.navigateLessons": "Navigate lessons",
   "keymap.openLessonToggle": "Open lesson / toggle selection",
@@ -1585,6 +1590,10 @@ Object.assign(TRANSLATIONS.vi, {
   "results.retry": "Làm lại",
   "results.changeSetup": "Đổi thiết lập",
   "results.backToLesson": "Về bài học",
+  "results.backToHome": "Về trang chủ",
+  "results.backToClass": "Về lớp học",
+  "results.backToUpdates": "Về Cập nhật",
+  "results.backToDashboard": "Về bảng điều khiển",
   "summary.title": "Hoàn thành phiên học",
   "summary.cardsStudied": "thẻ đã học",
   "done.perfect": "Phiên học hoàn hảo!",
@@ -1603,7 +1612,7 @@ Object.assign(TRANSLATIONS.vi, {
   "summary.new": "Mới",
   "summary.review": "Ôn tập",
   "summary.skippedNote": "{n} thẻ đã bỏ qua (chưa chấm điểm)",
-  "summary.reviewAction": "Xem lại",
+  "summary.reviewAction": "Xem lại các thẻ",
 
   "confirm.deleteCard": "Xóa thẻ này? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "common.true": "Đúng",
@@ -1775,6 +1784,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.navigateClasses": "Di chuyển giữa các lớp",
   "keymap.openClassToggle": "Mở lớp / chọn",
   "keymap.newClass": "Lớp mới",
+  "keymap.dashboardOutsideSelect": "Bảng điều khiển (ngoài chế độ chọn)",
   "keymap.sectionClass": "Lớp học",
   "keymap.navigateLessons": "Di chuyển giữa các bài học",
   "keymap.openLessonToggle": "Mở bài học / chọn",
@@ -4405,10 +4415,6 @@ document.getElementById("btn-select-classes").addEventListener("click", function
   setHomeSelectMode(!state.homeSelectMode);
 });
 
-document.getElementById("btn-home-select").addEventListener("click", function() {
-  setHomeSelectMode(!state.homeSelectMode);
-});
-
 document.getElementById("btn-select-classes-cancel").addEventListener("click", function() {
   setHomeSelectMode(false);
 });
@@ -5692,7 +5698,7 @@ document.getElementById("btn-review-due").addEventListener("click", function() {
 
 // The lesson's quick-quiz button and the Dashboard's due rows bypass Study Setup entirely, so
 // they need their own fresh reviews-today fetch to apply the same daily cap Setup respects.
-function startDueQuiz(lesson, dueCards) {
+function startDueQuiz(lesson, dueCards, returnScreen) {
   var hasCap = IS_SERVER && state.maxReviewsPerDay !== null && state.maxReviewsPerDay !== undefined;
   var capPromise = hasCap ? store.getReviewsToday() : Promise.resolve({ count: 0 });
   return capPromise.then(function(r) {
@@ -5701,7 +5707,7 @@ function startDueQuiz(lesson, dueCards) {
     state.studyScope = {
       lessonIds: [lesson.id],
       lessons: [lesson],
-      returnScreen: "lesson",
+      returnScreen: returnScreen || "lesson",
       title: lesson.title
     };
     state.studyMode = "quiz";
@@ -6690,11 +6696,34 @@ function returnFromStudy() {
   clearTimeout(state.fcAdvanceTimer);
   clearTimeout(state.quizAdvanceTimer);
   clearFlashcardTranslation();
-  var target = state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson";
+  var target = studyReturnTarget();
   showScreen(target);
   if (target === "home") renderHome();
   else if (target === "upstream") renderUpstream();
+  else if (target === "dashboard") renderDashboard();
+  // The card list, not the class's lesson list: the session just changed every pill on it.
+  else if (target === "lesson") renderCards();
   else renderLessons();
+}
+
+function studyReturnTarget() {
+  return state.studyScope && state.studyScope.returnScreen ? state.studyScope.returnScreen : "lesson";
+}
+
+var BACK_LABEL_KEYS = {
+  lesson: "results.backToLesson", home: "results.backToHome", class: "results.backToClass",
+  upstream: "results.backToUpdates", dashboard: "results.backToDashboard"
+};
+
+// The end-screen button names where it actually goes; it said "Back to Lesson" after a
+// session started from Home, a class or Updates.
+function setStudyBackLabels() {
+  var key = BACK_LABEL_KEYS[studyReturnTarget()] || BACK_LABEL_KEYS.lesson;
+  ["btn-results-back", "btn-summary-back"].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.setAttribute("data-i18n", key);
+    applyI18n(el.parentNode);
+  });
 }
 
 /* ============================
@@ -6868,6 +6897,7 @@ function showFlashcardSummary() {
     skippedNote.classList.add("hidden");
   }
 
+  setStudyBackLabels();
   showScreen("flashcard-summary");
 }
 
@@ -8118,7 +8148,8 @@ function quizLayout() {
   try { return localStorage.getItem("fc-quiz-layout") === "grid" ? "grid" : "list"; } catch (_) { return "list"; }
 }
 
-// The button shows the layout it switches TO, like the other header toggles.
+// The button shows the layout it switches TO, like the other header toggles. No aria-pressed:
+// with a label that already flips, VoiceOver read "Show answers as a list, pressed".
 function applyQuizLayout() {
   var grid = quizLayout() === "grid";
   document.getElementById("quiz-options").classList.toggle("grid-mode", grid);
@@ -8127,7 +8158,6 @@ function applyQuizLayout() {
   btn.innerHTML = grid ? ICON_LAYOUT_LIST : ICON_LAYOUT_GRID;
   btn.title = label;
   btn.setAttribute("aria-label", label);
-  btn.setAttribute("aria-pressed", grid ? "true" : "false");
 }
 
 function findQuizResult(card) {
@@ -8522,6 +8552,7 @@ function showQuizResults() {
     store.saveQuizSession(state.studyScope.lessonIds, score, total);
   }
 
+  setStudyBackLabels();
   showScreen("results");
 }
 
@@ -8559,8 +8590,7 @@ function openStats(type, id, title) {
   resetStatsPanel(document.getElementById("stats-all"));
   document.getElementById("stats-title").textContent = t("stats.titlePrefix", { title: title });
   // Reset tabs
-  document.querySelectorAll(".tab").forEach(function(t) { t.classList.toggle("active", t.dataset.tab === "overview"); });
-  document.querySelectorAll(".stats-panel").forEach(function(p) { p.classList.toggle("active", p.id === "stats-overview"); });
+  setStatsTab("overview");
 
   renderStatsOverview(type, id);
   renderStatsHardest(type, id);
@@ -9180,14 +9210,15 @@ function renderCardHistory(cardId) {
 }
 
 // Stats tab switching
-document.querySelectorAll(".tab").forEach(function(tab) {
-  tab.addEventListener("click", function() {
-    var tabName = this.dataset.tab;
-    document.querySelectorAll(".tab").forEach(function(t) { t.classList.remove("active"); });
-    document.querySelectorAll(".stats-panel").forEach(function(p) { p.classList.remove("active"); });
-    this.classList.add("active");
-    document.getElementById("stats-" + tabName).classList.add("active");
+function setStatsTab(name) {
+  document.querySelectorAll(".stats-tabs .tab").forEach(function(t) {
+    t.classList.toggle("active", t.dataset.tab === name);
+    t.setAttribute("aria-selected", String(t.dataset.tab === name));
   });
+  document.querySelectorAll(".stats-panel").forEach(function(p) { p.classList.toggle("active", p.id === "stats-" + name); });
+}
+document.querySelectorAll(".stats-tabs .tab").forEach(function(tab) {
+  tab.addEventListener("click", function() { setStatsTab(this.dataset.tab); });
 });
 
 document.getElementById("btn-stats-back").addEventListener("click", function() {
@@ -9226,7 +9257,7 @@ function openDueReview(lessonId, classId) {
         var nowSec = Math.floor(Date.now() / 1000);
         var dueCards = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec; });
         if (!dueCards.length) { renderCards(); showScreen("lesson"); return; }
-        return startDueQuiz(lesson, dueCards);
+        return startDueQuiz(lesson, dueCards, "dashboard");
       });
     });
   });
@@ -9472,14 +9503,10 @@ document.getElementById("screen-dashboard").addEventListener("keydown", function
   openDashLessonRow(e.target);
 });
 
-document.getElementById("btn-dashboard").addEventListener("click", function() {
+function openDashboard() {
   renderDashboard();
   showScreen("dashboard");
-});
-document.getElementById("btn-dashboard-inline").addEventListener("click", function() {
-  renderDashboard();
-  showScreen("dashboard");
-});
+}
 
 document.getElementById("btn-dashboard-back").addEventListener("click", function() {
   dashboardAnalyticsRequestId++;
@@ -10696,7 +10723,6 @@ document.addEventListener("click", closeAllDropdowns);
 registerDropdown("btn-class-menu",  "class-dropdown-menu");
 registerDropdown("btn-lesson-menu", "lesson-dropdown-menu");
 registerDropdown("btn-user-menu",   "user-dropdown-menu");
-registerDropdown("btn-home-menu",   "home-dropdown-menu");
 
 /* ============================
    AUTH UI
@@ -10965,7 +10991,6 @@ function initUserNav() {
   document.getElementById("user-dropdown-email").textContent = currentUser.email || "";
   var circle = document.getElementById("user-initial-circle");
   if (circle) circle.textContent = (currentUser.name || "?")[0].toUpperCase();
-  document.getElementById("btn-dashboard").classList.remove("hidden");
   // Sidebar items
   document.getElementById("sidebar-dashboard-link").classList.remove("hidden");
   document.getElementById("sidebar-achievements-link").classList.remove("hidden");
@@ -11028,7 +11053,7 @@ function closeSidebar() {
   });
   document.getElementById("sidebar-dashboard-link").addEventListener("click", function() {
     closeSidebar();
-    document.getElementById("btn-dashboard").click();
+    openDashboard();
   });
   document.getElementById("sidebar-achievements-link").addEventListener("click", function() {
     closeSidebar();
@@ -11245,8 +11270,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
   prefFontLabel();
   prefRateLabel(state.ttsRate);
-  document.getElementById("pref-lang-en").classList.toggle("active", state.language !== "vi");
-  document.getElementById("pref-lang-vi").classList.toggle("active", state.language === "vi");
+  setPrefLang(state.language === "vi" ? "vi" : "en");
   var ttsSupported = !!window.speechSynthesis;
   document.getElementById("pref-rate-decrease").disabled = !ttsSupported;
   document.getElementById("pref-rate-increase").disabled = !ttsSupported;
@@ -11331,14 +11355,15 @@ document.getElementById("pref-token-copy").addEventListener("click", function() 
   }
 });
 
-document.getElementById("pref-lang-en").addEventListener("click", function() {
-  this.classList.add("active");
-  document.getElementById("pref-lang-vi").classList.remove("active");
-});
-document.getElementById("pref-lang-vi").addEventListener("click", function() {
-  this.classList.add("active");
-  document.getElementById("pref-lang-en").classList.remove("active");
-});
+function setPrefLang(lang) {
+  ["en", "vi"].forEach(function(l) {
+    var pill = document.getElementById("pref-lang-" + l);
+    pill.classList.toggle("active", l === lang);
+    pill.setAttribute("aria-pressed", String(l === lang));
+  });
+}
+document.getElementById("pref-lang-en").addEventListener("click", function() { setPrefLang("en"); });
+document.getElementById("pref-lang-vi").addEventListener("click", function() { setPrefLang("vi"); });
 
 // Live preview, same as font-scale/TTS-rate below; not persisted until Save.
 document.getElementById("pref-theme").addEventListener("click", function(e) {
@@ -11583,7 +11608,6 @@ if (IS_SERVER && !currentUser) {
   showScreen("auth");
 } else {
   initUserNav();
-  if (IS_SERVER) document.getElementById("btn-dashboard").style.display = "";
   // Export/import both hit server routes (GET /api/export/flashcards, POST
   // /api/import/flashcards) with no local/offline equivalent — hidden outright rather than
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
@@ -12234,7 +12258,7 @@ document.addEventListener("keydown", function(e) {
     }
     else if ((e.key === "s" || e.key === "S") && state.homeSelectMode) document.getElementById("btn-study-classes").click();
     else if (e.key === "n" || e.key === "N") { e.preventDefault(); openNewClass(); }
-    else if ((e.key === "a" || e.key === "A") && IS_SERVER) { renderDashboard(); showScreen("dashboard"); }
+    else if ((e.key === "a" || e.key === "A") && IS_SERVER) openDashboard();
     else if (e.key === "ArrowRight") { e.preventDefault(); moveFocus("#class-list [data-class-id]", 1); }
     else if (e.key === "ArrowLeft")  { e.preventDefault(); moveFocus("#class-list [data-class-id]", -1); }
     else if (e.key === "ArrowDown")  { e.preventDefault(); moveFocus("#class-list [data-class-id]", _gridColumnCount(document.getElementById("class-list"))); }
@@ -12720,7 +12744,7 @@ window.addEventListener("popstate", function() {
   }, { passive: true });
 
   // ─── 3. Search modal: swipe down to close ─────────────────────────────
-  var modal = document.getElementById("search-modal");
+  var modal = document.querySelector("#modal-search .search-modal");
   var modalStartY;
   if (modal) {
     modal.addEventListener("touchstart", function(e) {
