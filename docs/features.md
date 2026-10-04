@@ -181,7 +181,7 @@
 - Native browser Back is trapped in-app: a single-URL SPA has no router, so a real Back press used to leave the app entirely; a `pushState`/`popstate` listener now re-arms on every pop and either closes the topmost open modal or clicks the current screen's own back button instead
 - Quiz: `1`–`5` select option, `Esc` back; Recall: `Enter` reveal, `1`/`2`/`3` grade, `Esc` back
 - Global: `H` go home (ignored during a flashcard or quiz session), `?` toggle keymap modal, `Esc` close any open modal, `Ctrl/⌘+Enter` save from inside the Add/Edit Card modal (all 4 card formats) — plain `Enter` stays a newline in the term/def/etc. textareas since a LaTeX answer can be multi-line
-- `?` key shortcut modal lists all bindings; `⌨` header button also opens it
+- `?` key shortcut modal lists all bindings; the account menu's Keyboard shortcuts item also opens it
 - `[key]` hints injected next to button labels on desktop; hidden on mobile (`≤600px`)
 - Escape works for any modal (overlay forms, share, prompt guide, keymap)
 - Dialogs are a stack: Esc, browser Back or a backdrop tap closes only the top one (a confirm opened over a form sits on top of it). Opening a dialog moves focus into it and closing returns focus to what opened it; everything behind the top dialog is `inert`, and every dialog has `role="dialog"`, `aria-modal` and a label. A backdrop tap never dismisses the first-run tutorial
@@ -344,7 +344,7 @@
 - `touch-action: pan-y` on `.fc-scene` — browser owns vertical scroll, JS owns horizontal swipe
 - Edge back swipe: start from x < 30px, swipe right > 90px → triggers back button for current screen, or opens the sidebar on Home; excluded on flashcard screen (handled by card swipe instead)
 - A separate non-passive `touchmove` listener on the leftmost 24px calls `preventDefault()` on a recognizably horizontal drag, attempting to suppress iOS's own native edge-swipe-back gesture in that same zone (a long-standing WKWebView quirk, active even in installed/standalone PWAs) — see decisions.md for the back-and-forth on this; effectiveness is unconfirmed on real devices
-- Search modal: swipe down > 80px closes it
+- Search modal: swipe down > 80px closes it (the listener looked up a non-existent `#search-modal` and never attached until 2026-10-04; `tests/ux-audit.test.js`)
 - Fixed (WebKit-specific): List view's hover-only class actions (edit/archive/delete) stayed in the layout flow at `opacity:0` on touch, silently eating ~124px from the row; a class with both a due-badge and an accuracy pill could squeeze the title down to one character per line. Actions are now `display:none` below 600px (still reachable via the class's ⋮ menu)
 - Fixed: the SRS interval preview text on Flashcard grading buttons (`· 10m` etc.) sat inline after the label, adding to the button's width rather than its height, which could push the 3-button row past a narrow viewport (`white-space:nowrap` blocks flex-shrink below content width). Initially worked around by hiding it on mobile; properly fixed by wrapping it onto its own row inside the button (`flex-wrap` + `flex-basis:100%`) so it adds height instead — re-enabled on mobile now that the root cause is fixed
 - Fixed: pull-to-refresh only checked vertical drag distance, so a diagonal edge-swipe (opening the sidebar) could also cross its threshold and fire a spurious refresh + spinner on top of the sidebar animation; now bails if the gesture is more horizontal than vertical
@@ -379,4 +379,9 @@
 - Preferences → Backup: "Download full backup" (every class, lesson, card, attempt and SRS state) as `flashcards-backup-YYYY-MM-DD.json` via `GET /api/export`. The class Import button recognizes that file and explains it isn't a class export
 - `POST /api/import` only attaches rows to parents imported from the same file, rejects non-array bodies, skips malformed rows, clears KnowledgeApp external ids the user already has, and reports rows actually added
 - Share dialog loads the class's current link from the server (`GET /api/share/link/:classId`), so it survives a reload; "Disable link" is labelled, confirms first, and reports a failed delete
+
+## UX audit fixes (2026-10-04)
+- Leaving a session redraws the screen it returns to: the lesson's card list (it used to redraw the class's lesson list, so every card still said "New" until you left and came back), the class, Home, Updates or the Dashboard. A due quiz started from the Dashboard returns to the Dashboard. The end-screen button names the destination ("Back to Home / Class / Updates / Dashboard / Lesson") and the flashcard summary's re-entry button is "Go through cards again". `tests/ux-audit.test.js`
+- Accessibility: the quiz layout toggle has no `aria-pressed` (its label already names the layout it switches to); language pills carry `aria-pressed`; Stats tabs are `role="tab"` with `aria-selected`; form fields get a visible focus ring; unchosen quiz options dim to 0.72 opacity, not 0.4 (about 3:1 in dark mode). The flip hint says "Tap or click to flip".
+- Removed the hidden "keep for compatibility" header block; the sidebar's Dashboard item calls `openDashboard()` instead of clicking a hidden button. The keymap's Dashboard `A` row says "(outside select mode)".
 
