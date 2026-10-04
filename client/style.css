@@ -2381,6 +2381,11 @@ code {
 }
 
 .quiz-audio { position: absolute; top: 8px; right: 8px; }
+/* Room for the speaker on both sides, so a long question neither runs under it nor sits off-centre. */
+.quiz-question-wrap:has(.quiz-audio:not(.hidden)) { padding-inline: 44px; }
+@media (pointer: coarse) {
+  .quiz-question-wrap:has(.quiz-audio:not(.hidden)) { padding-inline: 56px; }
+}
 .quiz-question {
   font-size: 1.125rem;
   font-weight: 500;
