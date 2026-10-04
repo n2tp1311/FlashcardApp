@@ -277,3 +277,9 @@ test("list screens make room for the docked sidebar from 1024px; study screens n
   assert.match(css, /\.screen \{ margin-left: var\(--nav-w, 0px\); \}/);
   assert.match(css, /100% - var\(--nav-w, 0px\) - var\(--content-max\)/);
 });
+
+test("corner radii that match a token use the token", function() {
+  assert.match(css, /--radius-pill: 999px;/);
+  const literal = css.match(/border-radius: (?:999px|50px|20px|10px|7px|6px);/g);
+  assert.equal(literal, null);
+});
