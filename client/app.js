@@ -11765,6 +11765,12 @@ try {
   applyThemePref(themeFromPrefs(cachedStartPrefs));
 } catch (_) { applyPalette("parchment"); applyThemePref("system"); }
 
+// Offline shell for the installed app (client/sw.js). Not on plain http other than localhost,
+// where browsers refuse service workers anyway.
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("/sw.js").catch(function() {});
+}
+
 if (IS_SERVER && !currentUser) {
   showScreen("auth");
 } else {
