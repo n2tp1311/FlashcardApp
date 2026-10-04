@@ -1856,6 +1856,8 @@ code {
   padding: 0 0 12px;
   justify-content: center;
 }
+/* Delete sits apart from Edit: 8px apart they were easy to hit for each other. */
+.fc-toolbar-gap { width: 24px; }
 
 .fc-scene {
   perspective: 1200px;
@@ -2394,29 +2396,39 @@ code {
 
 /* Side-by-side tiles (Quizizz-style). The 600px column widens to the screen so every answer
    sits in one row, however many there are -- auto-fit wrapped four as three and one. Below
-   900px four across is too narrow to read, so they go two by two. True/False keeps its row. */
-.quiz-container:has(> .quiz-options.grid-mode:not(.tf-mode)) { max-width: 1400px; }
+   900px four across is too narrow to read, so they go two by two, an odd last tile spanning
+   the row. Tiles are as tall as the tallest answer, not a fixed height. True/False keeps its row. */
+#screen-quiz { --quiz-col: 600px; }
+#screen-quiz:has(.quiz-options.grid-mode:not(.tf-mode)) { --quiz-col: 1400px; }
+.quiz-container { max-width: var(--quiz-col, 600px); }
 .quiz-options.grid-mode:not(.tf-mode) {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
   gap: 12px;
 }
-@media (max-width: 900px) {
-  .quiz-options.grid-mode:not(.tf-mode) { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
-}
 .quiz-options.grid-mode:not(.tf-mode) .quiz-opt {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  min-height: 180px;
-  padding: 16px 12px;
+  min-height: 112px;
+  padding: 16px;
 }
 .quiz-options.grid-mode:not(.tf-mode) .quiz-opt .opt-text { flex: 0 1 auto; }
+.quiz-options.grid-mode.long-opts:not(.tf-mode) .quiz-opt { align-items: stretch; text-align: start; }
+.quiz-options.grid-mode.long-opts:not(.tf-mode) .quiz-opt .opt-num { align-self: center; }
+@media (max-width: 900px) {
+  .quiz-options.grid-mode:not(.tf-mode) { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+  .quiz-options.grid-mode:not(.tf-mode) .quiz-opt:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
 @media (max-width: 600px) {
   .quiz-options.grid-mode:not(.tf-mode) { gap: 8px; }
-  .quiz-options.grid-mode:not(.tf-mode) .quiz-opt { min-height: 120px; padding: 12px 8px; font-size: 0.8125rem; }
+  .quiz-options.grid-mode:not(.tf-mode) .quiz-opt { min-height: 96px; padding: 12px 8px; font-size: 0.8125rem; }
+  /* Sentence-length answers in a 2x2 on a phone are columns of three words each. */
+  .quiz-options.grid-mode.long-opts:not(.tf-mode) { display: flex; flex-direction: column; }
+  .quiz-options.grid-mode.long-opts:not(.tf-mode) .quiz-opt { flex-direction: row; align-items: flex-start; min-height: 0; padding: 14px 16px; font-size: 0.9375rem; }
+  .quiz-options.grid-mode.long-opts:not(.tf-mode) .quiz-opt .opt-num { align-self: flex-start; }
 }
 
 .quiz-nav {
@@ -2432,7 +2444,8 @@ code {
 .study-sheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
   display: grid; gap: 12px; justify-items: stretch;
-  padding: 16px max(16px, calc((100% - 600px) / 2)) calc(16px + env(safe-area-inset-bottom));
+  /* Lines up with the quiz column, which widens to 1400px for answer tiles. */
+  padding: 16px max(16px, calc((100% - var(--quiz-col, 600px)) / 2)) calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
   transform: translateY(105%); visibility: hidden;
   transition: transform 0.22s ease-out, visibility 0s linear 0.22s;

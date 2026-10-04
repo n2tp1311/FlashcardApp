@@ -1024,6 +1024,7 @@ Object.assign(TRANSLATIONS.en, {
   "common.releaseToRefresh": "Release to refresh",
   "alert.noLessonsInSelectedClasses": "The selected classes have no lessons.",
   "quiz.exit": "Exit quiz",
+  "quiz.scoreTitle": "{n} correct of {total} answered",
   "quiz.layoutGrid": "Show answers side by side",
   "quiz.layoutList": "Show answers in a list",
   "quiz.cappedHint": "Correct — but this card needs a Flashcard-mode recall to move to a longer review interval.",
@@ -1923,6 +1924,7 @@ Object.assign(TRANSLATIONS.vi, {
   "common.releaseToRefresh": "Thả để làm mới",
   "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào.",
   "quiz.exit": "Thoát Trắc nghiệm",
+  "quiz.scoreTitle": "Đúng {n} trên {total} câu đã trả lời",
   "quiz.layoutGrid": "Xếp đáp án cạnh nhau",
   "quiz.layoutList": "Xếp đáp án thành danh sách",
   "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
@@ -8118,6 +8120,28 @@ function startQuiz() {
   showScreen("quiz");
 }
 
+// "✓ 3", not "3 / 4": beside the "4 / 10" progress, two x / y numbers read as one.
+function setQuizScoreDisplay() {
+  var el = document.getElementById("quiz-score-display");
+  el.textContent = "✓ " + state.quizScore;
+  el.title = t("quiz.scoreTitle", { n: state.quizScore, total: state.quizResults.length });
+}
+
+// Distractors come from the session and then the open lesson; with too few, the question
+// shows fewer choices rather than "—" padding, which gave the answer away.
+function quizDistractors(card, field) {
+  var seen = {};
+  seen[card.data[field]] = true;
+  var pool = [];
+  state.quizCards.concat(state.currentLessonCards || []).forEach(function(c) {
+    if (c.id === card.id || c.format !== card.format || !c.data || !c.data[field]) return;
+    if (seen[c.data[field]]) return;
+    seen[c.data[field]] = true;
+    pool.push(c.data[field]);
+  });
+  return shuffle(pool).slice(0, 3);
+}
+
 function buildQuizOptions(card) {
   if (card.format === "true-false") {
     return [t("common.true"), t("common.false")];
@@ -8125,24 +8149,13 @@ function buildQuizOptions(card) {
   if (card.format === "mcq") {
     return shuffle([card.data.correct].concat(card.data.distractors));
   }
-  if (card.format === "image-def") {
-    var correct = card.data.def;
-    var pool = state.quizCards
-      .filter(function(c) { return c.id !== card.id && c.format === "image-def"; })
-      .map(function(c) { return c.data.def; });
-    var distractors = shuffle(pool).slice(0, 3);
-    while (distractors.length < 3) distractors.push("—");
-    return shuffle([correct].concat(distractors));
-  }
-  // term-def: auto-generate distractors from other term-def cards in session
-  var correct = card.data.def;
-  var pool = state.quizCards
-    .filter(function(c) { return c.id !== card.id && c.format === "term-def"; })
-    .map(function(c) { return c.data.def; });
-  var distractors = shuffle(pool).slice(0, 3);
-  while (distractors.length < 3) distractors.push("—");
-  return shuffle([correct].concat(distractors));
+  // term-def and image-def: the other cards' definitions are the wrong answers.
+  return shuffle([card.data.def].concat(quizDistractors(card, "def")));
 }
+
+// Tiles left-align their text once any answer is a sentence: centred paragraphs in narrow
+// columns were hard to read, and on a phone such answers fall back to the list.
+var QUIZ_LONG_OPTION = 80;
 
 function quizLayout() {
   try { return localStorage.getItem("fc-quiz-layout") === "grid" ? "grid" : "list"; } catch (_) { return "list"; }
@@ -8195,7 +8208,7 @@ function renderQuizCard() {
   document.getElementById("quiz-progress-text").textContent = studyProgressText(i + 1, total,
     total - state.quizResults.length, "quiz");
   document.getElementById("quiz-progress-fill").style.transform = scaleXStyle((i + 1) / total);
-  document.getElementById("quiz-score-display").textContent = state.quizScore + " / " + state.quizResults.length;
+  setQuizScoreDisplay();
 
   // Lesson label (multi-lesson sessions)
   setStudyLessonLabel("quiz-lesson-label", card);
@@ -8229,6 +8242,7 @@ function renderQuizCard() {
   var optsEl = document.getElementById("quiz-options");
   optsEl.innerHTML = "";
   optsEl.classList.toggle("tf-mode", card.format === "true-false");
+  optsEl.classList.toggle("long-opts", opts.some(function(o) { return String(o).length > QUIZ_LONG_OPTION; }));
   applyQuizLayout();
   opts.forEach(function(opt, idx) {
     var btn = document.createElement(priorResult ? "div" : "button");
@@ -8337,8 +8351,7 @@ function answerQuiz(selectedIdx) {
     btn.replaceWith(block);
   });
 
-  document.getElementById("quiz-score-display").textContent =
-    state.quizScore + " / " + state.quizResults.length;
+  setQuizScoreDisplay();
 
   var hasExplanation = (card.format === "mcq" || card.format === "true-false") && !!card.data.explanation;
   if (hasExplanation) {
