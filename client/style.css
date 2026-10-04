@@ -1137,6 +1137,8 @@ body {
 .sort-dir-btn:hover { background: var(--surface2); color: var(--text); }
 .lesson-list { display: flex; flex-direction: column; gap: 10px; }
 
+.lesson-badges { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 0 0 auto; min-width: 190px; }
+@media (max-width: 600px) { .lesson-badges { min-width: 0; } }
 .lesson-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -4407,7 +4409,9 @@ code {
 .upstream-field.changed { outline: 1px dashed var(--primary); outline-offset: 2px; }
 .diff-del { background: var(--danger-light); color: var(--danger); text-decoration: line-through; }
 .diff-ins { background: var(--success-light); color: var(--success); text-decoration: none; }
-.upstream-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.upstream-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+/* Delete was a text link identical to Edit beside it. */
+.upstream-actions .upstream-delete { margin-left: auto; color: var(--danger); }
 #sidebar-upstream-badge { margin-left: auto; }
 @media (max-width: 600px) { .upstream-compare { grid-template-columns: 1fr; } }
 
@@ -4658,3 +4662,15 @@ code {
   .dash-lnone { display: none; }
   .dash-lflag:empty { display: none; }
 }
+
+/* List screens stop at a readable width on a wide desktop: at 1600px a card's text sat at
+   the left and its edit icon 1,400px away. Padding, not max-width on children, so fixed
+   select bars and sheets keep spanning the viewport. */
+:root { --content-max: 1040px; }
+@media (min-width: 1100px) {
+  #screen-class, #screen-lesson, #screen-upstream {
+    padding-left: calc((100% - var(--content-max)) / 2);
+    padding-right: calc((100% - var(--content-max)) / 2);
+  }
+}
+

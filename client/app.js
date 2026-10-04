@@ -2940,6 +2940,7 @@ var state = {
    ============================ */
 
 function showScreen(id) {
+  if (id !== "upstream") flushUpstreamPending();
   if (id !== "flashcard" && document.getElementById("screen-flashcard").classList.contains("active")) {
     clearFlashcardTranslation();
   }
@@ -4133,9 +4134,12 @@ function _renderLessonItems(lessons, accMap) {
             '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +
           '</div>' +
         '</div>' +
-        (isDue ? '<span class="due-badge">' + t("count.due", { n: dueCount }) + '</span>' : '') +
-        accHtml +
-        '<span class="format-badge ' + lesson.format + '">' + formatLabel(lesson.format) + '</span>' +
+        // One fixed-width slot for the badges, so every row's progress bar ends at the same x.
+        '<div class="lesson-badges">' +
+          (isDue ? '<span class="due-badge">' + t("count.due", { n: dueCount }) + '</span>' : '') +
+          accHtml +
+          '<span class="format-badge ' + lesson.format + '">' + formatLabel(lesson.format) + '</span>' +
+        '</div>' +
         (state.selectMode
           ? ''
           : '<div class="lesson-actions">' +
@@ -4903,12 +4907,7 @@ function renderUpstream() {
     state.upstreamData = res;
     setUpstreamCount(res.count.total);
     loading.classList.add("hidden");
-    var empty = res.count.total === 0;
-    var emptyEl = document.getElementById("upstream-empty");
-    emptyEl.querySelector("p").textContent = t("upstream.empty");
-    emptyEl.classList.toggle("hidden", !empty);
-    document.getElementById("upstream-body").classList.toggle("hidden", empty);
-    if (!empty) renderUpstreamList();
+    showUpstreamData();
   }).catch(function(err) {
     loading.classList.add("hidden");
     document.getElementById("upstream-body").classList.add("hidden");
@@ -4916,6 +4915,15 @@ function renderUpstream() {
     emptyEl.classList.remove("hidden");
     emptyEl.querySelector("p").textContent = err.message;
   });
+}
+
+function showUpstreamData() {
+  var empty = state.upstreamData.count.total === 0;
+  var emptyEl = document.getElementById("upstream-empty");
+  emptyEl.querySelector("p").textContent = t("upstream.empty");
+  emptyEl.classList.toggle("hidden", !empty);
+  document.getElementById("upstream-body").classList.toggle("hidden", empty);
+  if (!empty) renderUpstreamList();
 }
 
 function upstreamFilteredCards() {
@@ -4982,6 +4990,72 @@ function upstreamConceptName(card) {
   return name.length > 60 ? name.slice(0, 59) + "…" : name;
 }
 
+// Takes the card out of the list in place: re-fetching after every mark flashed the loading
+// row and jumped the list, once per card, after every sync.
+function dropUpstreamCard(card) {
+  var data = state.upstreamData;
+  var at = data.cards.indexOf(card);
+  if (at < 0) return -1;
+  data.cards.splice(at, 1);
+  data.count.total--;
+  data.count[card.upstream_change] = (data.count[card.upstream_change] || 1) - 1;
+  setUpstreamCount(data.count.total);
+  showUpstreamData();
+  return at;
+}
+
+function restoreUpstreamCard(card, at) {
+  var data = state.upstreamData;
+  data.cards.splice(Math.min(at, data.cards.length), 0, card);
+  data.count.total++;
+  data.count[card.upstream_change] = (data.count[card.upstream_change] || 0) + 1;
+  setUpstreamCount(data.count.total);
+  showUpstreamData();
+}
+
+// The acknowledgement is sent when the undo bar goes, not at the click: the server has no
+// "un-acknowledge", and the bar is the only way back from a misclick.
+var UPSTREAM_UNDO_MS = 6000;
+function markUpstreamReviewed(card) {
+  flushUpstreamPending();
+  var at = dropUpstreamCard(card);
+  if (at < 0) return;
+  var pending = { card: card, at: at };
+  state.upstreamPending = pending;
+  pending.timer = setTimeout(flushUpstreamPending, UPSTREAM_UNDO_MS);
+  state.undoHandler = function() {
+    clearTimeout(pending.timer);
+    state.upstreamPending = null;
+    hideUndoBar();
+    restoreUpstreamCard(card, at);
+  };
+  showUndoBar(t("upstream.markedOne", { name: upstreamConceptName(card) }));
+}
+
+window.addEventListener("pagehide", function() { flushUpstreamPending(); });
+
+function flushUpstreamPending() {
+  var pending = state.upstreamPending;
+  if (!pending) return;
+  state.upstreamPending = null;
+  clearTimeout(pending.timer);
+  hideUndoBar();
+  store.acknowledgeCardUpdate(pending.card.id).catch(function(err) {
+    if (state.upstreamData) restoreUpstreamCard(pending.card, pending.at);
+    showToast(err.message, "error");
+  });
+}
+
+function showUndoBar(text) {
+  document.getElementById("grade-undo-text").textContent = text;
+  document.getElementById("grade-undo").classList.remove("hidden");
+}
+
+function hideUndoBar() {
+  state.undoHandler = null;
+  document.getElementById("grade-undo").classList.add("hidden");
+}
+
 function showUpstreamStatus(cards) {
   var names = cards.map(upstreamConceptName);
   var text = cards.length === 1
@@ -5040,31 +5114,25 @@ function renderUpstreamItem(card) {
 
   var actions = document.createElement("div");
   actions.className = "upstream-actions";
-  function action(labelKey, onClick) {
+  function action(labelKey, cls, onClick) {
     var b = document.createElement("button");
     b.type = "button";
-    b.className = "link-btn";
+    b.className = "btn btn-sm " + cls;
     b.textContent = t(labelKey);
     b.addEventListener("click", function() { onClick(b); });
     actions.appendChild(b);
   }
-  action("upstream.markReviewed", function(b) {
-    b.disabled = true;
-    store.acknowledgeCardUpdate(card.id).then(function() {
-      showUpstreamStatus([card]);
-      renderUpstream();
-    }, function() { b.disabled = false; });
-  });
-  action("upstream.openInLesson", function() { openLessonFromAnywhere(card.class_id, card.lesson_id); });
+  action("upstream.markReviewed", "btn-outline", function() { markUpstreamReviewed(card); });
+  action("upstream.openInLesson", "btn-ghost", function() { openLessonFromAnywhere(card.class_id, card.lesson_id); });
   if (card.format === "term-def") {
-    action("common.edit", function() {
+    action("common.edit", "btn-ghost", function() {
       openEditCard(card.id, { id: card.id, lesson_id: card.lesson_id, format: card.format, data: card.data });
     });
   }
   if (card.upstream_change === "deleted") {
-    action("common.delete", function() {
+    action("common.delete", "btn-ghost btn-toolbar-danger upstream-delete", function() {
       confirmDelete(t("confirm.deleteCard"), function() {
-        store.deleteCard(card.id, card.lesson_id).then(renderUpstream);
+        store.deleteCard(card.id, card.lesson_id).then(function() { dropUpstreamCard(card); });
       });
     });
   }
@@ -5423,6 +5491,7 @@ document.getElementById("btn-upstream-ack-all").addEventListener("click", functi
 });
 
 function ackAllShown(btn, cards, ids) {
+  flushUpstreamPending();
   btn.disabled = true;
   store.acknowledgeCardUpdates(ids).then(function() {
     showUpstreamStatus(cards);
@@ -5495,7 +5564,7 @@ function renderUpstreamNotice(card) {
 
   var ack = document.createElement("button");
   ack.type = "button";
-  ack.className = "link-btn";
+  ack.className = "btn btn-sm btn-outline";
   ack.textContent = t("upstream.markReviewed");
   ack.addEventListener("click", function(e) {
     e.stopPropagation();
@@ -8062,8 +8131,8 @@ var GRADE_LABEL_KEYS = { learning: "study.learning", hard: "study.hard", known: 
 
 function offerGradeUndo(undo, log) {
   state.fcUndo = undo;
-  document.getElementById("grade-undo-text").textContent = t("undo.graded", { grade: t(GRADE_LABEL_KEYS[log]) });
-  document.getElementById("grade-undo").classList.remove("hidden");
+  showUndoBar(t("undo.graded", { grade: t(GRADE_LABEL_KEYS[log]) }));
+  state.undoHandler = undoLastGrade;
   clearTimeout(state.fcUndoTimer);
   state.fcUndoTimer = setTimeout(dismissGradeUndo, GRADE_UNDO_MS);
 }
@@ -8071,7 +8140,7 @@ function offerGradeUndo(undo, log) {
 function dismissGradeUndo() {
   clearTimeout(state.fcUndoTimer);
   state.fcUndo = null;
-  document.getElementById("grade-undo").classList.add("hidden");
+  if (state.undoHandler === undoLastGrade) hideUndoBar();
 }
 
 // Puts the session back as it was before the grade; returns the card's index to show again,
@@ -8110,7 +8179,9 @@ function undoLastGrade() {
   });
 }
 
-document.getElementById("btn-grade-undo").addEventListener("click", undoLastGrade);
+document.getElementById("btn-grade-undo").addEventListener("click", function() {
+  if (state.undoHandler) state.undoHandler();
+});
 
 document.getElementById("btn-fc-learning").addEventListener("click", function() { markCard(false, null, true); });
 document.getElementById("btn-fc-hard").addEventListener("click", function()     { markCard(true, "hard", true); });

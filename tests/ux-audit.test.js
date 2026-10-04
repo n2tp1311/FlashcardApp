@@ -96,3 +96,64 @@ test("touch screens get 44px icon targets", function() {
   assert.match(coarse, /\.btn-icon, \.icon-btn, \.sort-dir-btn, \.btn-audio, \.modal-close \{ min-width: 44px; min-height: 44px; \}/);
   assert.match(html, /id="btn-fc-edit-card"[^\n]*\n\s*<span class="fc-toolbar-gap"/);
 });
+
+function upstreamCtx() {
+  const acks = [];
+  const timers = [];
+  const els = {};
+  const el = function(id) {
+    return els[id] || (els[id] = { textContent: "", classList: { add: function() {}, remove: function() {} } });
+  };
+  const cards = [{ id: "a", upstream_change: "updated" }, { id: "b", upstream_change: "deleted" }];
+  const ctx = {
+    state: { upstreamData: { cards: cards.slice(), count: { total: 2, updated: 1, deleted: 1 } } },
+    store: { acknowledgeCardUpdate: function(id) { acks.push(id); return Promise.resolve(); } },
+    document: { getElementById: el },
+    setTimeout: function(f) { timers.push(f); return timers.length; },
+    clearTimeout: function() {},
+    setUpstreamCount: function() {}, showUpstreamData: function() {}, showToast: function() {},
+    upstreamConceptName: function(c) { return c.id; }, t: function(k) { return k; },
+    UPSTREAM_UNDO_MS: 6000,
+  };
+  vm.createContext(ctx);
+  vm.runInContext(["dropUpstreamCard", "restoreUpstreamCard", "markUpstreamReviewed", "flushUpstreamPending",
+                   "showUndoBar", "hideUndoBar"].map(fn).join(""), ctx);
+  return { ctx, acks, timers, cards };
+}
+
+test("Mark reviewed leaves the list in place and sends the acknowledgement only when undo expires", function() {
+  const u = upstreamCtx();
+  u.ctx.markUpstreamReviewed(u.cards[0]);
+  assert.deepEqual(u.ctx.state.upstreamData.cards.map(function(c) { return c.id; }), ["b"]);
+  assert.equal(u.ctx.state.upstreamData.count.total, 1);
+  assert.deepEqual(u.acks, []);
+  u.timers[0]();
+  assert.deepEqual(u.acks, ["a"]);
+});
+
+test("Undo puts the card back where it was and sends nothing", function() {
+  const u = upstreamCtx();
+  u.ctx.markUpstreamReviewed(u.cards[0]);
+  u.ctx.state.undoHandler();
+  assert.deepEqual(u.ctx.state.upstreamData.cards.map(function(c) { return c.id; }), ["a", "b"]);
+  assert.equal(u.ctx.state.upstreamData.count.updated, 1);
+  assert.equal(u.ctx.state.upstreamPending, null);
+  assert.deepEqual(u.acks, []);
+});
+
+test("a second mark, or leaving the screen, sends the pending one at once", function() {
+  const u = upstreamCtx();
+  u.ctx.markUpstreamReviewed(u.cards[0]);
+  u.ctx.markUpstreamReviewed(u.cards[1]);
+  assert.deepEqual(u.acks, ["a"]);
+  assert.match(fn("showScreen"), /if \(id !== "upstream"\) flushUpstreamPending\(\);/);
+});
+
+test("Updates actions are real buttons with Delete set apart; wide list screens stop at --content-max", function() {
+  const item = fn("renderUpstreamItem");
+  assert.match(item, /b\.className = "btn btn-sm " \+ cls/);
+  assert.match(item, /"btn-ghost btn-toolbar-danger upstream-delete"/);
+  assert.doesNotMatch(item, /link-btn/);
+  assert.match(css, /#screen-class, #screen-lesson, #screen-upstream \{\s*padding-left: calc\(\(100% - var\(--content-max\)\) \/ 2\);/);
+  assert.match(app, /'<div class="lesson-badges">'/);
+});
