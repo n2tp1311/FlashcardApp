@@ -2390,19 +2390,25 @@ code {
 .quiz-options.tf-mode .quiz-opt { flex: 1; justify-content: center; text-align: center; font-size: 1.125rem; font-weight: 600; padding: 24px 16px; }
 .quiz-options.tf-mode .opt-num { display: none; }
 
-/* Side-by-side tiles (Quizizz-style), two by two: the quiz column is too narrow for four
-   across, where auto-fit wrapped four answers as three and one. True/False keeps its row. */
+/* Side-by-side tiles (Quizizz-style). The 600px column widens to the screen so every answer
+   sits in one row, however many there are -- auto-fit wrapped four as three and one. Below
+   900px four across is too narrow to read, so they go two by two. True/False keeps its row. */
+.quiz-container:has(> .quiz-options.grid-mode:not(.tf-mode)) { max-width: 1400px; }
 .quiz-options.grid-mode:not(.tf-mode) {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .quiz-options.grid-mode:not(.tf-mode) { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
 }
 .quiz-options.grid-mode:not(.tf-mode) .quiz-opt {
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-height: 140px;
+  min-height: 180px;
   padding: 16px 12px;
 }
 .quiz-options.grid-mode:not(.tf-mode) .quiz-opt .opt-text { flex: 0 1 auto; }
