@@ -4478,7 +4478,8 @@ function toggleClassSelection(classId) {
   var idx = state.selectedClassIds.indexOf(classId);
   if (idx === -1) state.selectedClassIds.push(classId);
   else state.selectedClassIds.splice(idx, 1);
-  var card = document.querySelector('[data-class-id="' + classId + '"]');
+  // Scoped to the home list: the sidebar's class links carry data-class-id too and come first.
+  var card = document.querySelector('#class-list [data-class-id="' + classId + '"]');
   if (card) {
     var nowSelected = state.selectedClassIds.indexOf(classId) !== -1;
     card.classList.toggle("selected", nowSelected);
