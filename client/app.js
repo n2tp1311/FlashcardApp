@@ -2964,6 +2964,39 @@ function showScreen(id) {
   document.querySelectorAll(".screen").forEach(function(s) { s.classList.remove("active"); });
   var el = document.getElementById("screen-" + id);
   if (el) { el.classList.add("active"); window.scrollTo(0, 0); }
+  syncSidebar(id);
+}
+
+// Which screens show the sidebar: "home" docks it from 768px as before, "page" from 1024px,
+// where there is room beside a list. Study screens never: they are full-attention.
+var NAV_SCREENS = { home: "home", "class": "page", lesson: "page", dashboard: "page",
+  vocabulary: "page", achievements: "page", upstream: "page" };
+var NAV_CURRENT = { home: "sidebar-home-link", dashboard: "sidebar-dashboard-link",
+  achievements: "sidebar-achievements-link", upstream: "sidebar-upstream-link",
+  vocabulary: "sidebar-vocabulary-link" };
+
+function syncSidebar(id) {
+  var nav = NAV_SCREENS[id];
+  if (nav) document.body.setAttribute("data-nav", nav); else document.body.removeAttribute("data-nav");
+  document.querySelectorAll("#sidebar .sidebar-nav-item").forEach(function(li) {
+    var on = li.id === NAV_CURRENT[id];
+    li.classList.toggle("sidebar-nav-active", on);
+    if (on) li.setAttribute("aria-current", "page"); else li.removeAttribute("aria-current");
+  });
+  var classId = (id === "class" || id === "lesson") && state.currentClass ? String(state.currentClass.id) : null;
+  document.querySelectorAll("#sidebar-class-list .sidebar-class-item").forEach(function(li) {
+    var on = li.dataset.classId === classId;
+    li.classList.toggle("sidebar-nav-active", on);
+    if (on) li.setAttribute("aria-current", "page"); else li.removeAttribute("aria-current");
+  });
+  // A reload restored straight into a class never ran renderHome, which fills the list.
+  if (nav === "page" && !state.sidebarClassesLoaded) {
+    state.sidebarClassesLoaded = true;
+    store.getClasses().then(function(classes) {
+      renderSidebarClasses(classes.filter(function(c) { return !c.archived; }));
+      syncSidebar(getActiveScreen());
+    }).catch(function() { state.sidebarClassesLoaded = false; });
+  }
 }
 
 function saveScreenState(screen, classId, lessonId) {
@@ -11175,11 +11208,15 @@ function initUserNav() {
 function renderSidebarClasses(classes) {
   var list = document.getElementById("sidebar-class-list");
   if (!list) return;
+  state.sidebarClassesLoaded = true;
   list.innerHTML = "";
   (classes || []).forEach(function(cls) {
     var li = document.createElement("li");
     li.className = "sidebar-class-item";
     li.title = cls.name;
+    li.tabIndex = 0;
+    li.setAttribute("role", "link");
+    li.dataset.classId = String(cls.id);
     li.innerHTML =
       '<span class="sidebar-class-icon">' + classIconHtml(cls.icon, 14) + '</span>' +
       '<span class="sidebar-class-name">' + escHtml(cls.name) + '</span>';
@@ -11207,6 +11244,15 @@ function closeSidebar() {
   });
   document.getElementById("sidebar-overlay").addEventListener("click", closeSidebar);
   document.getElementById("btn-sidebar-close").addEventListener("click", closeSidebar);
+  // The items are <li>s with click handlers; tabindex alone reaches them, this activates them.
+  document.getElementById("sidebar").addEventListener("keydown", function(e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var item = e.target.closest(".sidebar-nav-item, .sidebar-class-item");
+    if (!item || item !== e.target) return;
+    e.preventDefault();
+    e.stopPropagation();
+    item.click();
+  });
   document.getElementById("sidebar-home-link").addEventListener("click", function() {
     closeSidebar();
     renderHome();

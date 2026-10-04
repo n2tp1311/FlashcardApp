@@ -559,13 +559,26 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 20px 0 32px;
-  position: sticky;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 0 32px;
+  position: fixed;
+  left: 0;
   top: 0;
-  height: 100vh;
+  bottom: 0;
   overflow-y: auto;
   z-index: 10;
 }
+
+/* The sidebar lives outside the screens (showScreen sets body[data-nav]). Home docks it from
+   768px; class, lesson, dashboard, vocabulary, achievements and Updates from 1024px, where it
+   had been one Back away. The active screen moves over by --nav-w. */
+body:not([data-nav]) :is(.sidebar, .sidebar-overlay) { display: none; }
+@media (max-width: 1023px) {
+  body[data-nav="page"] :is(.sidebar, .sidebar-overlay) { display: none; }
+}
+@media (min-width: 768px) { body[data-nav="home"] { --nav-w: 240px; } }
+@media (min-width: 1024px) { body[data-nav] { --nav-w: 240px; } }
+.screen { margin-left: var(--nav-w, 0px); }
+body[data-nav="page"] #sidebar-select-link { display: none; }
 
 .sidebar-brand {
   display: flex;
@@ -4700,8 +4713,8 @@ code {
 :root { --content-max: 1040px; }
 @media (min-width: 1100px) {
   #screen-class, #screen-lesson, #screen-upstream {
-    padding-left: calc((100% - var(--content-max)) / 2);
-    padding-right: calc((100% - var(--content-max)) / 2);
+    padding-left: max(16px, calc((100% - var(--nav-w, 0px) - var(--content-max)) / 2));
+    padding-right: max(16px, calc((100% - var(--nav-w, 0px) - var(--content-max)) / 2));
   }
 }
 

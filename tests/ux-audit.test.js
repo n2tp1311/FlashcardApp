@@ -154,7 +154,7 @@ test("Updates actions are real buttons with Delete set apart; wide list screens 
   assert.match(item, /b\.className = "btn btn-sm " \+ cls/);
   assert.match(item, /"btn-ghost btn-toolbar-danger upstream-delete"/);
   assert.doesNotMatch(item, /link-btn/);
-  assert.match(css, /#screen-class, #screen-lesson, #screen-upstream \{\s*padding-left: calc\(\(100% - var\(--content-max\)\) \/ 2\);/);
+  assert.match(css, /#screen-class, #screen-lesson, #screen-upstream \{\s*padding-left: max\(16px, calc\(\(100% - var\(--nav-w, 0px\) - var\(--content-max\)\) \/ 2\)\);/);
   assert.match(app, /'<div class="lesson-badges">'/);
 });
 
@@ -201,4 +201,79 @@ test("on a phone the lesson header moves Select into the menu and shortens the d
   assert.match(phone, /#btn-select-cards \{ display: none; \}/);
   assert.match(phone, /#btn-review-due \.due-short \{ display: inline; \}/);
   assert.ok(tr("vi", "study.reviewDueShort"));
+});
+
+test("the sidebar sits outside every screen and its items take keyboard focus", function() {
+  const nav = html.indexOf('<nav id="sidebar"');
+  const home = html.indexOf('<div id="screen-home"');
+  assert.ok(nav > 0 && nav < home, "sidebar must precede #screen-home, not live inside it");
+  const items = html.match(/<li class="sidebar-nav-item[^>]*>/g);
+  assert.equal(items.length, 6);
+  items.forEach(function(li) { assert.match(li, /tabindex="0" role="link"/); });
+  const render = fn("renderSidebarClasses");
+  assert.match(render, /li\.tabIndex = 0/);
+  assert.match(render, /li\.dataset\.classId/);
+  assert.match(app, /closest\("\.sidebar-nav-item, \.sidebar-class-item"\)[\s\S]{0,120}item\.click\(\)/);
+});
+
+function fakeItem(id, classId) {
+  const attrs = {}, classes = new Set();
+  return {
+    id: id, dataset: classId ? { classId: classId } : {},
+    classList: { toggle: function(c, on) { if (on) classes.add(c); else classes.delete(c); }, has: function(c) { return classes.has(c); } },
+    setAttribute: function(k, v) { attrs[k] = v; }, removeAttribute: function(k) { delete attrs[k]; },
+    attrs: attrs,
+  };
+}
+
+function sidebarAfter(screen, currentClass) {
+  const navItems = ["sidebar-home-link", "sidebar-dashboard-link", "sidebar-upstream-link"].map(function(id) { return fakeItem(id); });
+  const classItems = [fakeItem("", "c1"), fakeItem("", "c2")];
+  const body = fakeItem("body");
+  let fetched = 0;
+  const ctx = {
+    state: { currentClass: currentClass, sidebarClassesLoaded: true },
+    document: {
+      body: body,
+      querySelectorAll: function(sel) { return sel.indexOf("class-list") >= 0 ? classItems : navItems; },
+    },
+    store: { getClasses: function() { fetched++; return { then: function() { return { catch: function() {} }; } }; } },
+  };
+  vm.createContext(ctx);
+  const src = app.slice(app.indexOf("\nvar NAV_SCREENS"), app.indexOf("\nfunction syncSidebar("));
+  vm.runInContext(src + fn("syncSidebar"), ctx);
+  ctx.syncSidebar(screen);
+  return { body: body.attrs, navItems: navItems, classItems: classItems, fetched: function() { return fetched; }, ctx: ctx };
+}
+
+test("showScreen docks the sidebar on list screens and marks where you are", function() {
+  const dash = sidebarAfter("dashboard", null);
+  assert.equal(dash.body["data-nav"], "page");
+  assert.equal(dash.navItems[1].attrs["aria-current"], "page");
+  assert.equal(dash.navItems[0].attrs["aria-current"], undefined);
+
+  const cls = sidebarAfter("lesson", { id: "c2" });
+  assert.equal(cls.classItems[1].attrs["aria-current"], "page");
+  assert.ok(cls.classItems[1].classList.has("sidebar-nav-active"));
+  assert.equal(cls.classItems[0].attrs["aria-current"], undefined);
+
+  assert.equal(sidebarAfter("home", null).body["data-nav"], "home");
+  assert.equal(sidebarAfter("quiz", { id: "c2" }).body["data-nav"], undefined);
+  assert.equal(sidebarAfter("flashcard", null).body["data-nav"], undefined);
+});
+
+test("a reload straight into a class fills the sidebar's class list once", function() {
+  const r = sidebarAfter("class", { id: "c1" });
+  assert.equal(r.fetched(), 0);
+  r.ctx.state.sidebarClassesLoaded = false;
+  r.ctx.syncSidebar("class");
+  r.ctx.syncSidebar("lesson");
+  assert.equal(r.fetched(), 1);
+});
+
+test("list screens make room for the docked sidebar from 1024px; study screens never show it", function() {
+  assert.match(css, /body:not\(\[data-nav\]\) :is\(\.sidebar, \.sidebar-overlay\) \{ display: none; \}/);
+  assert.match(css, /@media \(min-width: 1024px\) \{ body\[data-nav\] \{ --nav-w: 240px; \} \}/);
+  assert.match(css, /\.screen \{ margin-left: var\(--nav-w, 0px\); \}/);
+  assert.match(css, /100% - var\(--nav-w, 0px\) - var\(--content-max\)/);
 });
