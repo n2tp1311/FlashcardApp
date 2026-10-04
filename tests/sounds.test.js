@@ -18,10 +18,12 @@ function sandbox(opts) {
   function FakeCtx() {
     if (opts.throwOnCreate) throw new Error("no audio");
     this.currentTime = 0;
-    this.state = "suspended";
+    this.state = opts.initialState || "suspended";
+    log.created = (log.created || 0) + 1;
     this.destination = {};
   }
   FakeCtx.prototype.resume = function() { log.resumed++; return Promise.resolve(); };
+  FakeCtx.prototype.close = function() { log.closed = (log.closed || 0) + 1; this.state = "closed"; return Promise.resolve(); };
   FakeCtx.prototype.createGain = function() { return { gain: param(), connect() {} }; };
   FakeCtx.prototype.createOscillator = function() {
     const o = { frequency: param(), connect() {}, start() {}, stop() {} };
@@ -33,6 +35,13 @@ function sandbox(opts) {
     navigator: { audioSession: { type: "auto" } },
     state: { sounds: opts.sounds !== false }
   };
+  if (opts.document) {
+    const listeners = {};
+    ctx.document = { visibilityState: "visible", addEventListener(t, f) { listeners[t] = f; } };
+    ctx.window.addEventListener = function(t, f) { listeners["window:" + t] = f; };
+    ctx.window.speechSynthesis = { cancel() { log.speechCancelled = (log.speechCancelled || 0) + 1; } };
+    log.listeners = listeners;
+  }
   vm.createContext(ctx);
   vm.runInContext(block, ctx);
   return { ctx, log };
@@ -84,4 +93,23 @@ test("a run of right answers climbs a whole tone per step, capped at six", funct
   s.log.oscillators.length = 0;
   s.ctx.playSound("combo");
   assert.deepEqual(s.log.oscillators.filter((_, i) => i % 2 === 0), [523.25, 659.25, 783.99, 1046.5]);
+});
+
+test("an iOS-interrupted context is resumed, not only a suspended one", function() {
+  const s = sandbox({ initialState: "interrupted" });
+  s.ctx.playSound("correct");
+  assert.equal(s.log.resumed, 1);
+});
+
+test("returning from the background drops the context and clears stuck speech", function() {
+  const s = sandbox({ initialState: "running", document: true });
+  s.ctx.playSound("correct");
+  assert.equal(s.log.created, 1);
+  s.log.listeners.visibilitychange();
+  assert.equal(s.log.closed, 1);
+  assert.equal(s.log.speechCancelled, 1);
+  s.ctx.playSound("correct");
+  assert.equal(s.log.created, 2, "the next answer builds a fresh context");
+  s.log.listeners["window:pageshow"]({ persisted: true });
+  assert.equal(s.log.closed, 2);
 });

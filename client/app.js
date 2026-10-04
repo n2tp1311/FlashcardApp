@@ -2142,6 +2142,7 @@ if (window.speechSynthesis) {
 function speakWith(text, rate, langHint) {
   if (!window.speechSynthesis || !text) return;
   window.speechSynthesis.cancel();
+  if (window.speechSynthesis.paused) window.speechSynthesis.resume();
   var lang = langHint === "vi" || langHint === "en" ? langHint : _detectSpeechLang(text);
   setTimeout(function() {
     var u = new SpeechSynthesisUtterance(text);
@@ -10537,6 +10538,7 @@ var soundCtx = null;
 var SOUND_VOLUME = 0.6;
 
 function soundContext() {
+  if (soundCtx && soundCtx.state === "closed") soundCtx = null;
   if (!soundCtx) {
     var Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return null;
@@ -10545,8 +10547,32 @@ function soundContext() {
     try { if (navigator.audioSession) navigator.audioSession.type = "ambient"; } catch (_) {}
     soundCtx = new Ctx();
   }
-  if (soundCtx.state === "suspended") soundCtx.resume().catch(function() {});
+  // iOS reports "interrupted", not "suspended", after a lock, the app switcher or a call, and
+  // a context left there plays nothing for the rest of the session.
+  if (soundCtx.state !== "running") soundCtx.resume().catch(function() {});
   return soundCtx;
+}
+
+// A context brought back from the background on iOS can claim "running" and still be silent,
+// so it is dropped on return and the next answer builds a fresh one inside its own tap.
+// The sounds are synthesized, so a new context costs nothing. Speech gets the same reset:
+// WebKit can come back with its queue stuck "speaking" or paused, and every later speak()
+// waits behind it.
+function resetAudioAfterBackground() {
+  if (soundCtx) {
+    try { soundCtx.close().catch(function() {}); } catch (_) {}
+    soundCtx = null;
+  }
+  if (window.speechSynthesis) {
+    try { window.speechSynthesis.cancel(); } catch (_) {}
+  }
+}
+
+if (typeof document !== "undefined" && document.addEventListener) {
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") resetAudioAfterBackground();
+  });
+  window.addEventListener("pageshow", function(e) { if (e.persisted) resetAudioAfterBackground(); });
 }
 
 function soundTone(c, freq, start, dur, gain, attack) {
