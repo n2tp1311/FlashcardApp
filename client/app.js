@@ -30,6 +30,8 @@ var ICON_DELETE   = svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a
 var ICON_ARCHIVE  = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>');
 var ICON_UNARCHIVE = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="12" y1="17" x2="12" y2="11"/><polyline points="9 14 12 11 15 14"/>');
 var ICON_CHECK    = svgIcon('<polyline points="20 6 9 17 4 12"/>');
+var ICON_LAYOUT_LIST = svgIcon('<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>', 16);
+var ICON_LAYOUT_GRID = svgIcon('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', 16);
 var ICON_X        = svgIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
 var ICON_FLAME     = svgIcon('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>');
 var ICON_CLOCK     = svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>');
@@ -1017,6 +1019,8 @@ Object.assign(TRANSLATIONS.en, {
   "common.releaseToRefresh": "Release to refresh",
   "alert.noLessonsInSelectedClasses": "The selected classes have no lessons.",
   "quiz.exit": "Exit quiz",
+  "quiz.layoutGrid": "Show answers side by side",
+  "quiz.layoutList": "Show answers in a list",
   "quiz.cappedHint": "Correct — but this card needs a Flashcard-mode recall to move to a longer review interval.",
   "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
@@ -1909,6 +1913,8 @@ Object.assign(TRANSLATIONS.vi, {
   "common.releaseToRefresh": "Thả để làm mới",
   "alert.noLessonsInSelectedClasses": "Các lớp đã chọn không có bài học nào.",
   "quiz.exit": "Thoát Trắc nghiệm",
+  "quiz.layoutGrid": "Xếp đáp án cạnh nhau",
+  "quiz.layoutList": "Xếp đáp án thành danh sách",
   "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
@@ -8108,6 +8114,22 @@ function buildQuizOptions(card) {
   return shuffle([correct].concat(distractors));
 }
 
+function quizLayout() {
+  try { return localStorage.getItem("fc-quiz-layout") === "grid" ? "grid" : "list"; } catch (_) { return "list"; }
+}
+
+// The button shows the layout it switches TO, like the other header toggles.
+function applyQuizLayout() {
+  var grid = quizLayout() === "grid";
+  document.getElementById("quiz-options").classList.toggle("grid-mode", grid);
+  var btn = document.getElementById("btn-quiz-layout");
+  var label = t(grid ? "quiz.layoutList" : "quiz.layoutGrid");
+  btn.innerHTML = grid ? ICON_LAYOUT_LIST : ICON_LAYOUT_GRID;
+  btn.title = label;
+  btn.setAttribute("aria-label", label);
+  btn.setAttribute("aria-pressed", grid ? "true" : "false");
+}
+
 function findQuizResult(card) {
   return state.quizResults.find(function(r) { return r.card.id === card.id; });
 }
@@ -8177,6 +8199,7 @@ function renderQuizCard() {
   var optsEl = document.getElementById("quiz-options");
   optsEl.innerHTML = "";
   optsEl.classList.toggle("tf-mode", card.format === "true-false");
+  applyQuizLayout();
   opts.forEach(function(opt, idx) {
     var btn = document.createElement(priorResult ? "div" : "button");
     btn.className = "quiz-opt";
@@ -8400,6 +8423,11 @@ document.getElementById("btn-quiz-review-next").addEventListener("click", functi
   state.quizIndex++;
   renderQuizCard();
   noteQuizSecondLook();
+});
+
+document.getElementById("btn-quiz-layout").addEventListener("click", function() {
+  try { localStorage.setItem("fc-quiz-layout", quizLayout() === "grid" ? "list" : "grid"); } catch (_) {}
+  applyQuizLayout();
 });
 
 document.getElementById("btn-quiz-edit-card").addEventListener("click", function() {

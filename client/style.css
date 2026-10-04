@@ -2390,6 +2390,27 @@ code {
 .quiz-options.tf-mode .quiz-opt { flex: 1; justify-content: center; text-align: center; font-size: 1.125rem; font-weight: 600; padding: 24px 16px; }
 .quiz-options.tf-mode .opt-num { display: none; }
 
+/* Side-by-side tiles (Quizizz-style), two by two: the quiz column is too narrow for four
+   across, where auto-fit wrapped four answers as three and one. True/False keeps its row. */
+.quiz-options.grid-mode:not(.tf-mode) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.quiz-options.grid-mode:not(.tf-mode) .quiz-opt {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 140px;
+  padding: 16px 12px;
+}
+.quiz-options.grid-mode:not(.tf-mode) .quiz-opt .opt-text { flex: 0 1 auto; }
+@media (max-width: 600px) {
+  .quiz-options.grid-mode:not(.tf-mode) { gap: 8px; }
+  .quiz-options.grid-mode:not(.tf-mode) .quiz-opt { min-height: 120px; padding: 12px 8px; font-size: 0.8125rem; }
+}
+
 .quiz-nav {
   display: flex;
   align-items: center;
