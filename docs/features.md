@@ -196,7 +196,8 @@
 - A split in KnowledgeApp adds the new cards right after the original in the same lesson
 - KnowledgeApp can merge its cards into classes you built yourself, without losing progress: it reads your class, links cards that mean the same thing to its own (so later changes flow in), and adds the cards you don't have yet — right after a related card, or into a new lesson of that class. KnowledgeApp shows you a preview before anything is written
 - A new lesson added this way appears first under the default "date added" lesson sort
-- Deleting a card KnowledgeApp created tells KnowledgeApp it was not worth studying: its next Sync or Fetch removes that card's source from the book (restorable there) instead of adding it back. Deleting a whole lesson or class does not
+- Deleting a card KnowledgeApp created tells KnowledgeApp it was not worth studying: its next Sync or Fetch removes that card's source from the book (restorable there) instead of adding it back
+- Deleting a whole lesson of KnowledgeApp cards means "stop studying these": KnowledgeApp keeps the cards' sources but no longer syncs them back. The lesson delete records each linked card in `external_card_deletions` with `kind = 'lesson'` in the same transaction, and `GET /api/integrations/knowledge/deletions` returns `kind` (`tests/lesson-delete-sync.test.js`). Deleting a class records nothing
 - KnowledgeApp's Fetch button reads your study progress back, so it can show how much of each book you have actually learned
 - KnowledgeApp's Sync button publishes a book straight into your account: it creates the class the first time, then adds the book's new cards on later syncs
 - KnowledgeApp can turn multiple-choice and true/false cards into term-def cards, keeping each card's study history and schedule exactly as they were; the original question is kept so the conversion can be undone
