@@ -318,9 +318,11 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_external ON cards(external_i
 // conversion can be undone. Separate from upstream_prev_data, which only ever holds term-def
 // content tied to an "updated" flag.
 try { db.exec("ALTER TABLE cards ADD COLUMN converted_from TEXT"); } catch (_) {}
-// A linked card (external_id set) the learner deleted one by one: KnowledgeApp reads these so
-// the unit behind it is removed there too and never synced back. Only single-card deletes
-// write one -- deleting a lesson or class is "stop studying this", not "this card is wrong".
+// A linked card (external_id set) the learner deleted: KnowledgeApp reads these so the card
+// is never synced back. `kind` says how it went. 'card' is a single-card delete, "this card is
+// wrong", and KnowledgeApp removes the unit behind it. 'lesson' came with its whole lesson,
+// "stop studying these": KnowledgeApp keeps the units and only stops sending them here.
+// Deleting a class writes none -- that is unpairing the book, handled on the other side.
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS external_card_deletions (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -330,6 +332,7 @@ try {
     deleted_at  INTEGER NOT NULL DEFAULT (unixepoch())
   )`);
 } catch (_) {}
+try { db.exec("ALTER TABLE external_card_deletions ADD COLUMN kind TEXT NOT NULL DEFAULT 'card'"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_ext_deletions_user ON external_card_deletions(user_id, id)"); } catch (_) {}
 
 // Selected English terms waiting for KnowledgeApp to add a definition and example.

@@ -100,7 +100,13 @@ router.put("/lessons/:id", requireAuth, (req, res) => {
 router.delete("/lessons/:id", requireAuth, (req, res) => {
   if (!ownLesson(req.params.id, req.session.userId))
     return res.status(404).json({ error: "Not found" });
-  db.prepare("DELETE FROM lessons WHERE id = ?").run(req.params.id);
+  db.transaction(() => {
+    db.prepare(
+      "INSERT INTO external_card_deletions (user_id, external_id, card_id, kind) " +
+      "SELECT ?, external_id, id, 'lesson' FROM cards WHERE lesson_id = ? AND external_id IS NOT NULL"
+    ).run(req.session.userId, req.params.id);
+    db.prepare("DELETE FROM lessons WHERE id = ?").run(req.params.id);
+  })();
   res.status(204).end();
 });
 
