@@ -61,3 +61,12 @@ test("lesson rows use the mastery bar when the server sends it, the old bar othe
   assert.match(extract("_renderLessonItems"), /if \(p\.mastery\) \{\s*renderMasteryBar\(wrap, p\);\s*return;\s*\}/);
   assert.equal(app.split('"mastery.tooltip":').length - 1, 2);
 });
+
+test("the class page draws one mastery bar for the whole class above its lessons", function() {
+  const html = fs.readFileSync(path.join(root, "client", "index.html"), "utf8");
+  assert.match(html, /<\/header>\s*<div id="class-mastery" class="class-mastery hidden"><\/div>\s*<div class="lesson-sort-bar">/);
+  const fn = extract("_renderClassMastery");
+  assert.match(fn, /store\.getProgress\("class", classId\)/);
+  assert.match(fn, /state\.currentClass\.id !== classId\) return;\s*renderMasteryBar\(el, p\);/);
+  assert.match(extract("renderLessons"), /_renderClassMastery\(state\.currentClass\.id\);/);
+});

@@ -4116,6 +4116,7 @@ function renderLessons() {
     state.currentClassLessons = lessons;
     _renderLessonSlicer(lessons);
     _renderLessonItems(lessons, state._lessonAccuracyMap);
+    _renderClassMastery(state.currentClass.id);
 
     // Load accuracy async (server only)
     if (IS_SERVER && store.getLessonAccuracy) {
@@ -4125,6 +4126,19 @@ function renderLessons() {
       }).catch(function() {});
     }
   });
+}
+
+// The whole class in one mastery bar above its lessons, the same bar each lesson row draws.
+// Local mode has no scheduler counts, so it shows nothing rather than a different measure.
+function _renderClassMastery(classId) {
+  var el = document.getElementById("class-mastery");
+  el.classList.add("hidden");
+  store.getProgress("class", classId).then(function(p) {
+    if (!p || !p.mastery || p.total === 0) return;
+    if (!state.currentClass || state.currentClass.id !== classId) return;
+    renderMasteryBar(el, p);
+    el.classList.remove("hidden");
+  }).catch(function() {});
 }
 
 function _renderLessonSlicer(lessons) {

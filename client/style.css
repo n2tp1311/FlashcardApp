@@ -1142,6 +1142,8 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 /* ============================
    LESSON LIST
    ============================ */
+.class-mastery { margin: 0 0 14px; }
+.class-mastery .progress-mini-text { font-size: 0.8125rem; margin-top: 6px; }
 .lesson-sort-bar {
   display: flex;
   align-items: center;
