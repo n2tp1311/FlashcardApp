@@ -688,6 +688,8 @@ Object.assign(TRANSLATIONS.en, {
   "study.next": "Next",
   "results.title": "Results",
   "results.retry": "Retry",
+  "results.retryMissed": "Retry the {n} you missed",
+  "results.retryMissed_one": "Retry the one you missed",
   "results.changeSetup": "Change Setup",
   "results.backToLesson": "Back to Lesson",
   "results.backToHome": "Back to Home",
@@ -908,6 +910,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.selectOption": "Select option",
   "keymap.sectionResultsEtc": "Results / Stats / Dashboard / Analytics",
   "keymap.retryResultsOnly": "Retry (Results only)",
+  "keymap.retryMissed": "Retry the cards you missed (session end)",
   "keymap.toggleSelectMode": "Toggle select mode",
   "keymap.toggleSelectionSelectMode": "Toggle selection (select mode)",
   "keymap.selectAllSelectMode": "Select all (select mode)",
@@ -1039,6 +1042,7 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.cappedHint": "Correct — but this card needs a Flashcard-mode recall to move to a longer review interval.",
   "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
+  "study.source": "From the book",
   "keymap.reviewPrevNext": "Review prev / next answered question"
 });
 Object.assign(TRANSLATIONS.vi, {
@@ -1607,6 +1611,7 @@ Object.assign(TRANSLATIONS.vi, {
   "study.next": "Tiếp",
   "results.title": "Kết quả",
   "results.retry": "Làm lại",
+  "results.retryMissed": "Làm lại {n} thẻ sai",
   "results.changeSetup": "Đổi thiết lập",
   "results.backToLesson": "Về bài học",
   "results.backToHome": "Về trang chủ",
@@ -1823,6 +1828,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.selectOption": "Chọn đáp án",
   "keymap.sectionResultsEtc": "Kết quả / Thống kê / Bảng điều khiển / Phân tích",
   "keymap.retryResultsOnly": "Làm lại (chỉ ở Kết quả)",
+  "keymap.retryMissed": "Làm lại các thẻ sai (cuối phiên)",
   "keymap.toggleSelectMode": "Bật/tắt chế độ chọn",
   "keymap.toggleSelectionSelectMode": "Chọn/bỏ chọn (chế độ chọn)",
   "keymap.selectAllSelectMode": "Chọn tất cả (chế độ chọn)",
@@ -1948,6 +1954,7 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
+  "study.source": "Trích từ sách",
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
 
@@ -7109,9 +7116,39 @@ function showFlashcardSummary() {
     skippedNote.classList.add("hidden");
   }
 
+  setMissedButton("summary", missedFlashcards(state.studyCards, log).length);
+
   setStudyBackLabels();
   showScreen("flashcard-summary");
 }
+
+// "Missed" is what the learner said they did not recall: Learning in flashcards (Hard was
+// recalled, with effort), a wrong answer in a quiz. Retrying them straight away is the
+// end-of-session relearning pass; each answer still goes to the scheduler as usual, which
+// leaves a card that is not due yet where it is (see the not-due hint).
+function missedFlashcards(cards, log) {
+  return (cards || []).filter(function(c) { return log && log[c.id] === "learning"; });
+}
+
+function missedQuizCards(results) {
+  return (results || []).filter(function(r) { return !r.correct; }).map(function(r) { return r.card; });
+}
+
+function setMissedButton(prefix, n) {
+  document.getElementById("btn-" + prefix + "-missed").classList.toggle("hidden", n === 0);
+  document.getElementById(prefix + "-missed-label").textContent = n ? t("results.retryMissed", { n: n }) : "";
+}
+
+document.getElementById("btn-summary-missed").addEventListener("click", function() {
+  var missed = missedFlashcards(state.studyCards, state.studySessionLog);
+  if (!missed.length) return;
+  state.studyCards = missed;
+  state.studyIndex = 0;
+  state.studyFlipped = false;
+  state.studySessionLog = {};
+  state.studySessionNewSet = {};
+  startFlashcards();
+});
 
 document.getElementById("btn-summary-back").addEventListener("click", function() {
   returnFromStudy();
@@ -7291,6 +7328,7 @@ function startStudy(count, filter, mode, order) {
       startFlashcards();
     } else if (mode === "quiz") {
       state.quizCards  = filtered;
+      state.quizPool   = null;
       state.quizIndex  = 0;
       state.quizScore  = 0;
       state.quizResults = [];
@@ -7587,6 +7625,26 @@ function translateVisibleFlashcardSide() {
   });
 }
 
+// The book passage a KnowledgeApp card was written from (cards.source), collapsed: it is
+// there for "why is this the answer?", not to be read on every card. Plain text through
+// textContent -- book prose is full of $ amounts that renderLatex would turn into math.
+var ICON_BOOK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>';
+
+function sourcePanel(card, id) {
+  if (!card || typeof card.source !== "string" || !card.source.trim()) return null;
+  var el = document.createElement("details");
+  if (id) el.id = id;
+  el.className = "explanation-panel source-panel";
+  var sum = document.createElement("summary");
+  sum.innerHTML = ICON_BOOK + " " + escHtml(t("study.source"));
+  var body = document.createElement("blockquote");
+  body.className = "explanation-body source-body";
+  body.textContent = card.source;
+  el.appendChild(sum);
+  el.appendChild(body);
+  return el;
+}
+
 function renderFlashcard() {
   hideVocabularySelectionAction(true);
   clearFlashcardTranslation();
@@ -7744,6 +7802,8 @@ function renderFlashcard() {
     expEl.appendChild(body);
     expContainer.appendChild(expEl);
   }
+  var fcSource = sourcePanel(card);
+  if (fcSource) expContainer.appendChild(fcSource);
 
   // Difficulty badge — read from the already-fetched studyStatsMap (server-backed accuracy
   // history), not localStorage's "fc-attempts" (only ever populated in local/offline mode).
@@ -8346,7 +8406,7 @@ function quizDistractors(card, field) {
   var seen = {};
   seen[card.data[field]] = true;
   var pool = [];
-  state.quizCards.concat(state.currentLessonCards || []).forEach(function(c) {
+  state.quizCards.concat(state.quizPool || [], state.currentLessonCards || []).forEach(function(c) {
     if (c.id === card.id || c.format !== card.format || !c.data || !c.data[field]) return;
     if (seen[c.data[field]]) return;
     seen[c.data[field]] = true;
@@ -8402,6 +8462,8 @@ function renderQuizCard() {
 
   var prevExp = document.getElementById("quiz-explanation");
   if (prevExp) prevExp.remove();
+  var prevSource = document.getElementById("quiz-source");
+  if (prevSource) prevSource.remove();
   var prevNext = document.getElementById("quiz-next-btn");
   if (prevNext) prevNext.remove();
   hideQuizSheet();
@@ -8484,6 +8546,8 @@ function renderQuizCard() {
     expEl.appendChild(bodyEl);
     optsEl.after(expEl);
   }
+  var replaySource = priorResult && sourcePanel(card, "quiz-source");
+  if (replaySource) (document.getElementById("quiz-explanation") || optsEl).after(replaySource);
 
   if (priorResult && priorResult.capped) showQuizHint("quiz-cap-hint", "quiz.cappedHint");
   if (priorResult && priorResult.notDue) showQuizHint("quiz-notdue-hint", "study.notDueHint");
@@ -8580,6 +8644,8 @@ function answerQuiz(selectedIdx) {
     expEl.appendChild(bodyEl);
     document.getElementById("quiz-options").after(expEl);
   }
+  var answerSource = sourcePanel(card, "quiz-source");
+  if (answerSource) (document.getElementById("quiz-explanation") || document.getElementById("quiz-options")).after(answerSource);
 
   showQuizSheet(cheer);
 
@@ -8778,9 +8844,21 @@ function showQuizResults() {
     store.saveQuizSession(state.studyScope.lessonIds, score, total);
   }
 
+  setMissedButton("results", missedQuizCards(state.quizResults).length);
+
   setStudyBackLabels();
   showScreen("results");
 }
+
+document.getElementById("btn-results-missed").addEventListener("click", function() {
+  var missed = missedQuizCards(state.quizResults);
+  if (!missed.length) return;
+  // Keep the whole session as the distractor pool: two missed cards alone would make a
+  // two-option question that gives itself away.
+  state.quizPool = (state.quizPool || []).concat(state.quizCards);
+  state.quizCards = shuffle(missed);
+  startQuiz();
+});
 
 document.getElementById("btn-results-retry").addEventListener("click", function() {
   var snap = state.setupSnapshot;
@@ -12643,11 +12721,13 @@ document.addEventListener("keydown", function(e) {
 
   else if (screen === "results") {
     if (e.key === "r" || e.key === "R") document.getElementById("btn-results-retry").click();
+    else if (e.key === "m" || e.key === "M") document.getElementById("btn-results-missed").click();
     else if (e.key === "Escape") returnFromStudy();
   }
 
   else if (screen === "flashcard-summary") {
-    if (e.key === "Escape") returnFromStudy();
+    if (e.key === "m" || e.key === "M") document.getElementById("btn-summary-missed").click();
+    else if (e.key === "Escape") returnFromStudy();
   }
 
   else if (screen === "stats") {
@@ -12683,6 +12763,8 @@ function injectKeyHints() {
     ["btn-study-lesson",   "[S]"],
     ["btn-fc-shuffle",     "[S]"],
     ["btn-results-retry",  "[R]"],
+    ["btn-results-missed", "[M]"],
+    ["btn-summary-missed", "[M]"],
     ["btn-results-back",   "[Esc]"],
     ["btn-summary-back",   "[Esc]"],
     ["btn-stats-back",     "[Esc]"],

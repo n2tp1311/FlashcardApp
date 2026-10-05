@@ -2564,6 +2564,11 @@ code {
      as lower-value for this low-traffic element. */
   animation: exp-fade-in 0.2s ease-out;
 }
+
+/* Book passage: quieter than an explanation, and set off as a quotation. After
+   .explanation-body, so these margins and colour win over its own. */
+.source-panel { margin-top: 10px; }
+.explanation-body.source-body { margin: 12px 16px; padding: 0 0 0 12px; font-style: normal; color: var(--text2); line-height: 1.55; border-left: 3px solid var(--border); }
 @keyframes exp-fade-in {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }

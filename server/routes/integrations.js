@@ -22,6 +22,8 @@ const MAX_LINK_CARDS = 2000;
 const MAX_ADD_CARDS = 500;
 const MAX_CONVERT_CARDS = 500;
 const MAX_TITLE_LEN = 200;
+const MAX_SOURCES = 500;
+const MAX_SOURCE_LEN = 4000;
 const EVENT_TYPES = ["updated", "deleted", "restored", "split"];
 
 const limiter = rateLimit({ windowMs: 60 * 1000, max: 120, message: "Too many sync requests. Try again later.", keyFn: byApiUser });
@@ -283,6 +285,32 @@ router.post("/link", (req, res) => {
     unmatched_units: byText.size - matched.size,
     ambiguous
   });
+});
+
+// POST /api/integrations/knowledge/sources  { sources: [{external_id, text}] }
+// Sets the book passage on every card of this user linked to each unit. Replaying a batch
+// writes the same text again; a unit with no card here counts as not_found.
+router.post("/sources", (req, res) => {
+  const sources = req.body && req.body.sources;
+  if (!Array.isArray(sources) || sources.length < 1 || sources.length > MAX_SOURCES)
+    return res.status(400).json({ error: "sources must be an array of 1-" + MAX_SOURCES });
+  for (let i = 0; i < sources.length; i++) {
+    const s = sources[i];
+    if (!s || !isId(s.external_id) || typeof s.text !== "string" || !s.text.trim() || s.text.length > MAX_SOURCE_LEN)
+      return res.status(400).json({ error: "source " + i + ": external_id and text (1-" + MAX_SOURCE_LEN + " chars) required" });
+  }
+  let updated = 0, notFound = 0;
+  db.transaction(() => {
+    const stmt = db.prepare(
+      "UPDATE cards SET source = ? WHERE external_id = ? AND lesson_id IN (" +
+      "SELECT lessons.id FROM lessons JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ?)"
+    );
+    sources.forEach(s => {
+      const n = stmt.run(s.text.trim(), s.external_id, req.userId).changes;
+      if (n) updated += n; else notFound++;
+    });
+  })();
+  res.json({ updated, not_found: notFound });
 });
 
 // GET /api/integrations/knowledge/classes — what KnowledgeApp can reconcile into

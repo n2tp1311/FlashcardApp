@@ -318,6 +318,9 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_cards_external ON cards(external_i
 // conversion can be undone. Separate from upstream_prev_data, which only ever holds term-def
 // content tied to an "updated" flag.
 try { db.exec("ALTER TABLE cards ADD COLUMN converted_from TEXT"); } catch (_) {}
+// The book passage a KnowledgeApp card was written from, shown under the answer. Plain text;
+// KnowledgeApp picks a ~100-word excerpt, so this never holds a whole chapter.
+try { db.exec("ALTER TABLE cards ADD COLUMN source TEXT"); } catch (_) {}
 // A linked card (external_id set) the learner deleted: KnowledgeApp reads these so the card
 // is never synced back. `kind` says how it went. 'card' is a single-card delete, "this card is
 // wrong", and KnowledgeApp removes the unit behind it. 'lesson' came with its whole lesson,

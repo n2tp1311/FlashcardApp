@@ -663,6 +663,7 @@
     <div class="results-review-hint" id="results-review-hint"></div>
     <div class="quiz-cap-hint hidden" id="results-cap-note"></div>
     <div class="results-actions">
+      <button class="btn btn-primary hidden" id="btn-results-missed"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> <span id="results-missed-label"></span></button>
       <button class="btn btn-outline" id="btn-results-retry" data-i18n="results.retry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Retry</button>
       <button class="btn btn-outline" id="btn-results-change" data-i18n="results.changeSetup"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Change Setup</button>
       <button class="btn btn-primary" id="btn-results-back" data-i18n="results.backToLesson"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Lesson</button>
@@ -690,6 +691,7 @@
     <div class="summary-status-breakdown" id="summary-status-breakdown"></div>
     <div class="results-detail hidden" id="summary-skipped-note"></div>
     <div class="results-actions">
+      <button class="btn btn-primary hidden" id="btn-summary-missed"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> <span id="summary-missed-label"></span></button>
       <button class="btn btn-outline" id="btn-summary-review" data-i18n="summary.reviewAction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Go through cards again</button>
       <button class="btn btn-primary" id="btn-summary-back" data-i18n="results.backToLesson"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Lesson</button>
     </div>
@@ -1298,6 +1300,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
       <div class="keymap-section">
         <div class="keymap-section-title" data-i18n="keymap.sectionResultsEtc">Results / Stats / Dashboard / Analytics</div>
         <div class="keymap-row"><kbd class="kbd">R</kbd><span data-i18n="keymap.retryResultsOnly">Retry (Results only)</span></div>
+        <div class="keymap-row"><kbd class="kbd">M</kbd><span data-i18n="keymap.retryMissed">Retry the cards you missed (session end)</span></div>
         <div class="keymap-row"><kbd class="kbd">Esc</kbd><span data-i18n="common.back">Back</span></div>
       </div>
     </div>
