@@ -393,6 +393,7 @@ Object.assign(TRANSLATIONS.en, {
   "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
   "class.complete": "Complete",
   "class.completeTooltip": "Every card in this class is marked Know It",
+  "class.masteredTooltip": "Every card in this class is mastered: the next review is 21 or more days away",
   "class.accuracyTooltip": "Accuracy across all recorded attempts (Flashcard + Quiz)",
   "confirm.deleteClass": "Delete class \"{name}\" and all its lessons and cards? Your study history and stats are kept.",
   "confirm.archiveClasses": "Archive {n} selected classes?",
@@ -1320,6 +1321,7 @@ Object.assign(TRANSLATIONS.vi, {
   "class.knownTooltip": "Số thẻ bạn đã tự đánh dấu \"Đã thuộc\" trong chế độ Thẻ ghi nhớ",
   "class.complete": "Hoàn thành",
   "class.completeTooltip": "Mọi thẻ trong lớp này đều đã thuộc",
+  "class.masteredTooltip": "Mọi thẻ trong lớp này đều thành thạo: lần ôn tới cách 21 ngày trở lên",
   "class.accuracyTooltip": "Độ chính xác trên toàn bộ lượt trả lời đã ghi nhận (Thẻ ghi nhớ + Trắc nghiệm)",
   "confirm.deleteClass": "Xóa lớp \"{name}\" cùng toàn bộ bài học và thẻ ghi nhớ? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "confirm.archiveClasses": "Lưu trữ {n} lớp đã chọn?",
@@ -3657,13 +3659,17 @@ function _renderClassListRow(cls, container) {
   }
 }
 
+// With the server's mastery counts the bar measures mastery, so complete means every card
+// mastered; a class all marked Know It at 30% mastered must not read "Complete" under a bar
+// that is 30% full. Local mode has no scheduler counts and keeps the Know It measure.
 function classComplete(p) {
-  return !!p && p.total > 0 && p.known >= p.total;
+  if (!p || p.total <= 0) return false;
+  return p.mastery ? p.mastery.mastered >= p.total : p.known >= p.total;
 }
 
-// A class with every card known says so in place of its progress line, rather than with a
-// badge of its own: the bar already is the measure, so at 100% it turns success green and the
-// text becomes "Complete". It is not stored -- a card falling back to not known takes it away.
+// A complete class says so in place of its progress line, rather than with a badge of its
+// own: the bar already is the measure, so at 100% the text becomes "Complete". It is not
+// stored -- a card falling back takes it away.
 function classProgressHtml(p) {
   if (classComplete(p)) {
     return '<span class="class-done-pill"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
@@ -3683,6 +3689,15 @@ function setClassProgress(classId, p) {
   var done = classComplete(p);
   wrap.style.display = "";
   wrap.classList.toggle("is-complete", done);
+  if (p.mastery) {
+    renderMasteryBar(wrap, p);
+    if (done) {
+      var label = wrap.querySelector(".progress-mini-text");
+      label.innerHTML = classProgressHtml(p);
+      label.title = t("class.masteredTooltip");
+    }
+    return;
+  }
   fill.style.transform = scaleXStyle(done ? 1 : Math.round(p.known / p.total * 100) / 100);
   text.innerHTML = classProgressHtml(p);
   text.title = t(done ? "class.completeTooltip" : "class.knownTooltip");
@@ -4285,7 +4300,8 @@ var MASTERY_ORDER = ["mastered", "known", "learning"];
 
 function renderMasteryBar(wrap, p) {
   var m = p.mastery, total = p.total;
-  var pct = Math.round(m.mastered / total * 100);
+  // 239 of 240 would round to 100% beside a deck that is wholly mastered.
+  var pct = m.mastered >= total ? 100 : Math.min(99, Math.round(m.mastered / total * 100));
   var tip = t("mastery.tooltip", { mastered: m.mastered, remembered: m.known, learning: m.learning, fresh: m.new, flagged: p.known, total: total });
   wrap.innerHTML =
     '<div class="mastery-bar" role="img" aria-label="' + escHtml(tip) + '">' +

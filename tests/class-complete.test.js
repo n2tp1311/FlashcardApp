@@ -47,3 +47,16 @@ test("a complete class shows the Complete pill and its card count", function() {
 test("both the grid card and the list row use the shared progress setter", function() {
   assert.equal(app.split('store.getProgress("class", cls.id).then(function(p) { setClassProgress(cls.id, p); });').length - 1, 2);
 });
+
+test("with the server's mastery counts, complete means every card mastered, not every card known", function() {
+  const ctx = load();
+  const m = (mastered) => ({ mastered: mastered, known: 240 - mastered, learning: 0, new: 0 });
+  assert.equal(ctx.classComplete({ known: 240, total: 240, mastery: m(72) }), false);
+  assert.equal(ctx.classComplete({ known: 3, total: 240, mastery: m(240) }), true);
+  assert.doesNotMatch(ctx.classProgressHtml({ known: 240, total: 240, mastery: m(72) }), /class-done-pill/);
+});
+
+test("class cards draw the mastery bar when the server sends it, the Know It bar otherwise", function() {
+  assert.match(extract("setClassProgress"), /if \(p\.mastery\) \{\s*renderMasteryBar\(wrap, p\);/);
+  assert.equal(app.split('"class.masteredTooltip":').length - 1, 2);
+});

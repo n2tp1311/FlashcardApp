@@ -3036,6 +3036,7 @@ code {
 
 /* Class card uses accent color for fill (set inline) */
 .class-card .progress-mini { margin-top: 8px; }
+.class-card .mastery-bar { margin-top: 8px; }
 
 /* ============================
    KATEX OVERRIDES

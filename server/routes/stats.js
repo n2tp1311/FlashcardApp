@@ -168,11 +168,11 @@ router.get("/trend", requireAuth, (req, res) => {
   res.json(rows);
 });
 
-// Memory state of each card in a lesson, for the mastery bar (mastered: see lib/mastery.js).
-// A card without FSRS state has never been scheduled and counts as new, as cardFromState()
-// treats it.
+// Memory state of each card in a lesson or class, for the mastery bar (mastered: see
+// lib/mastery.js). A card without FSRS state has never been scheduled and counts as new, as
+// cardFromState() treats it. `scope` is a fixed condition on `c`, never user input.
 
-function lessonMastery(lessonId, userId) {
+function masteryCounts(scope, id, userId) {
   const rows = db.prepare(
     "SELECT bucket, COUNT(*) AS n FROM (" +
     "  SELECT CASE" +
@@ -181,13 +181,17 @@ function lessonMastery(lessonId, userId) {
     "    WHEN " + MASTERED_SQL + " THEN 'mastered'" +
     "    ELSE 'known' END AS bucket" +
     "  FROM cards c LEFT JOIN card_states cs ON cs.card_id = c.id AND cs.user_id = ?" +
-    "  WHERE c.lesson_id = ?" +
+    "  WHERE " + scope +
     ") GROUP BY bucket"
-  ).all(MASTERED_INTERVAL_SEC, userId, lessonId);
+  ).all(MASTERED_INTERVAL_SEC, userId, id);
   const mastery = { new: 0, learning: 0, known: 0, mastered: 0 };
   rows.forEach(r => { mastery[r.bucket] = r.n; });
   return mastery;
 }
+
+const lessonMastery = (lessonId, userId) => masteryCounts("c.lesson_id = ?", lessonId, userId);
+const classMastery = (classId, userId) =>
+  masteryCounts("c.lesson_id IN (SELECT id FROM lessons WHERE class_id = ?)", classId, userId);
 
 // GET /api/stats/progress/lesson/:id
 router.get("/progress/lesson/:id", requireAuth, (req, res) => {
@@ -223,7 +227,7 @@ router.get("/progress/class/:id", requireAuth, (req, res) => {
     "WHERE lessons.class_id = ? AND cs.user_id = ? AND cs.known = 1"
   ).get(req.params.id, req.session.userId).n;
 
-  res.json({ total, known });
+  res.json({ total, known, mastery: classMastery(req.params.id, req.session.userId) });
 });
 
 // POST /api/stats/difficulty-map  { cardIds: [...] }

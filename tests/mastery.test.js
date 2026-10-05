@@ -45,6 +45,16 @@ test("server buckets: no FSRS state is new, learning/relearning, then 21-day rev
   assert.match(stats, /WHEN cs\.fsrs_state IN \(1,3\) THEN 'learning'/);
   assert.match(stats, /"    WHEN " \+ MASTERED_SQL \+ " THEN 'mastered'"/);
   assert.match(stats, /res\.json\(\{ total, known, mastery: lessonMastery\(req\.params\.id, req\.session\.userId\) \}\)/);
+  assert.match(stats, /res\.json\(\{ total, known, mastery: classMastery\(req\.params\.id, req\.session\.userId\) \}\)/);
+  assert.match(stats, /masteryCounts\("c\.lesson_id IN \(SELECT id FROM lessons WHERE class_id = \?\)", classId, userId\)/);
+});
+
+test("a nearly mastered deck never reads 100%", function() {
+  const wrap = { innerHTML: "" };
+  ctx.renderMasteryBar(wrap, { total: 240, known: 0, mastery: { mastered: 239, known: 1, learning: 0, new: 0 } });
+  assert.match(wrap.innerHTML, /mastery\.text\|pct=99/);
+  ctx.renderMasteryBar(wrap, { total: 240, known: 0, mastery: { mastered: 240, known: 0, learning: 0, new: 0 } });
+  assert.match(wrap.innerHTML, /mastery\.text\|pct=100/);
 });
 
 test("lesson rows use the mastery bar when the server sends it, the old bar otherwise", function() {
