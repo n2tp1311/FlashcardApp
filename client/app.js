@@ -529,6 +529,9 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintLearning": "Cards not yet known / still learning",
   "setup.hintFlashcardMode": "Recall it yourself first — the strongest signal for spaced repetition.",
   "setup.hintFlashcardWriteMode": "Type your answer before flipping, then flip to compare — an extra production step on top of recall.",
+  "setup.cram": "Cram",
+  "setup.hintCram": "For a test: a card you miss comes back a few cards later, and each card leaves the round after 3 correct answers.",
+  "summary.cramNote": "{done} of {n} cards reached their goal · {misses} misses",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
   "setup.hintQuizModeKnown": "Faster — with your preference on, a correct answer counts as Know It and a wrong one as Learning.",
   "setup.newCardEstimateLabel": "New cards recommended today",
@@ -1456,6 +1459,9 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintLearning": "Thẻ chưa thuộc / đang học",
   "setup.hintFlashcardMode": "Tự nhớ lại trước khi lật thẻ — tín hiệu ghi nhớ mạnh nhất cho lặp lại ngắt quãng.",
   "setup.hintFlashcardWriteMode": "Gõ đáp án trước khi lật thẻ, rồi lật để so sánh — thêm một bước viết ra bên cạnh việc nhớ lại.",
+  "setup.cram": "Ôn cấp tốc",
+  "setup.hintCram": "Ôn thi: thẻ trả lời sai sẽ quay lại sau vài thẻ, mỗi thẻ rời vòng sau 3 lần đúng.",
+  "summary.cramNote": "{done}/{n} thẻ đạt mục tiêu · {misses} lần sai",
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "setup.hintQuizModeKnown": "Nhanh hơn — với tùy chọn đang bật, trả lời đúng được tính là Đã thuộc, trả lời sai được tính là Đang học.",
   "setup.newCardEstimateLabel": "Số thẻ mới nên học hôm nay",
@@ -6468,6 +6474,7 @@ function openSetup(scope) {
   var multiLesson = state.studyScope.lessons.length > 1;
   document.getElementById("pill-order-interleaved").style.display = multiLesson ? "" : "none";
   setPillGroup("setup-order", "in-order");
+  setOrderHint("in-order");
 
   renderSetupPresets();
   resetSetupPresetSaveRow();
@@ -6569,7 +6576,9 @@ function applyStudyPreset(preset) {
   // falling back avoids silently activating a pill the user can't see.
   var multiLesson = state.studyScope && state.studyScope.lessons.length > 1;
   var order = preset.order === "interleaved" && !multiLesson ? "in-order" : preset.order;
+  if (order === "cram" && mode === "quiz") order = "shuffle";
   setPillGroup("setup-order", order);
+  setOrderHint(order);
 
   var filterHint = document.getElementById("setup-filter-hint");
   var filterKey = FILTER_HINT_KEYS[preset.filter];
@@ -6873,6 +6882,19 @@ var MODE_HINT_KEYS = {
         if (thisRequestId === state.setupRequestId) updateSetupMatchCount(data);
       });
     }
+    // Cram is a flashcard queue: a quiz has no "comes back later". Picking one gives up the other.
+    if (groupId === "setup-order") {
+      if (pill.dataset.value === "cram" && document.querySelector("#setup-mode .pill.active").dataset.value === "quiz") {
+        setPillGroup("setup-mode", "flashcard");
+        document.getElementById("setup-mode-hint").textContent = t(MODE_HINT_KEYS.flashcard);
+      }
+      setOrderHint(pill.dataset.value);
+    }
+    if (groupId === "setup-mode" && pill.dataset.value === "quiz" &&
+        document.querySelector("#setup-order .pill.active").dataset.value === "cram") {
+      setPillGroup("setup-order", "shuffle");
+      setOrderHint("shuffle");
+    }
     if (groupId === "setup-mode") {
       var modeHint = document.getElementById("setup-mode-hint");
       var modeKey = pill.dataset.value === "quiz" && state.quizCountsAsKnown ? "setup.hintQuizModeKnown" : MODE_HINT_KEYS[pill.dataset.value];
@@ -7082,6 +7104,8 @@ function renderSessionDone(id, ratio, tiles) {
 // were graded, the new-vs-review split, and a status breakdown, all from state.studySessionLog.
 function showFlashcardSummary() {
   haptic("complete");
+  // Each card once, so the skipped count and "retry the ones you missed" do not see repeats.
+  if (state.cram) state.studyCards = uniqueCards(state.studyCards);
   var log = state.studySessionLog || {};
   var gradedIds = Object.keys(log);
   var total = gradedIds.length;
@@ -7118,6 +7142,13 @@ function showFlashcardSummary() {
 
   setMissedButton("summary", missedFlashcards(state.studyCards, log).length);
 
+  var cramNote = document.getElementById("summary-cram-note");
+  if (state.cram) {
+    var cp = cramProgress(state.cram);
+    cramNote.textContent = t("summary.cramNote", { done: cp.done, n: cp.total, misses: cp.misses });
+  }
+  cramNote.classList.toggle("hidden", !state.cram);
+
   setStudyBackLabels();
   showScreen("flashcard-summary");
 }
@@ -7142,6 +7173,7 @@ function setMissedButton(prefix, n) {
 document.getElementById("btn-summary-missed").addEventListener("click", function() {
   var missed = missedFlashcards(state.studyCards, state.studySessionLog);
   if (!missed.length) return;
+  state.cram = null;
   state.studyCards = missed;
   state.studyIndex = 0;
   state.studyFlipped = false;
@@ -7202,6 +7234,77 @@ function weightedShuffle(cards, statsMap) {
 // Takes one card from each group in turn (round-robin), skipping groups once they're
 // exhausted — guarantees alternation across groups instead of relying on chance, unlike a
 // flat shuffle of the combined list.
+/* ============================
+   CRAM
+   ============================ */
+
+// Cramming for a test, by what the research supports (docs/research.md): self-testing, topics
+// mixed, a missed card back a few cards later, and a card out of the round after three correct
+// recalls -- Rawson & Dunlosky (2011) found the return falls off after about three. Later
+// rounds ask one, or two of a card missed last round. Hard counts as recalled, as it does for
+// "missed" at the end of a session. Every answer still goes to the scheduler; a repeat of a
+// card that is not due is recorded without moving its schedule (attempts.js, notDue).
+var CRAM_MISS_GAP = 3;
+var CRAM_HIT_GAP = 8;
+
+function cramTarget(round, missedLastRound) {
+  if (!round || round <= 1) return 3;
+  return missedLastRound ? 2 : 1;
+}
+
+function newCram(cards, opts) {
+  opts = opts || {};
+  var round = opts.round || 1, missed = opts.missedLast || {};
+  var targets = {};
+  cards.forEach(function(c) { targets[c.id] = cramTarget(round, !!missed[c.id]); });
+  return { ids: cards.map(function(c) { return c.id; }), targets: targets, counts: {}, misses: {},
+           round: round, cramId: opts.cramId || null };
+}
+
+// Where a just-answered card goes back into the queue, or -1 once it has reached its goal.
+// Near the end of the queue it goes last, which with one card left is straight away.
+function cramRequeueAt(length, index, correct, count, target) {
+  if (correct && count >= target) return -1;
+  return Math.min(length, index + 1 + (correct ? CRAM_HIT_GAP : CRAM_MISS_GAP));
+}
+
+// Counts the answer and puts the card back in `queue`; returns what undoing it needs.
+function cramAnswered(cram, queue, index, card, correct) {
+  var id = card.id;
+  var prev = { count: cram.counts[id] || 0, misses: cram.misses[id] || 0, at: -1 };
+  if (correct) cram.counts[id] = prev.count + 1; else cram.misses[id] = prev.misses + 1;
+  prev.at = cramRequeueAt(queue.length, index, correct, cram.counts[id] || 0, cram.targets[id] || 3);
+  if (prev.at >= 0) queue.splice(prev.at, 0, card);
+  return prev;
+}
+
+function cramUndo(cram, queue, card, prev) {
+  if (prev.at >= 0 && queue[prev.at] === card) queue.splice(prev.at, 1);
+  cram.counts[card.id] = prev.count;
+  cram.misses[card.id] = prev.misses;
+}
+
+function cramProgress(cram) {
+  var done = 0, left = 0, misses = 0;
+  cram.ids.forEach(function(id) {
+    var need = (cram.targets[id] || 3) - (cram.counts[id] || 0);
+    if (need <= 0) done++; else left += need;
+    misses += cram.misses[id] || 0;
+  });
+  return { done: done, total: cram.ids.length, answersLeft: left, misses: misses };
+}
+
+function uniqueCards(cards) {
+  var seen = {};
+  return cards.filter(function(c) { return seen[c.id] ? false : (seen[c.id] = true); });
+}
+
+function setOrderHint(order) {
+  var el = document.getElementById("setup-order-hint");
+  el.textContent = order === "cram" ? t("setup.hintCram") : "";
+  el.classList.toggle("hidden", order !== "cram");
+}
+
 function roundRobinMerge(groups) {
   var result = [];
   var maxLen = groups.reduce(function(m, g) { return Math.max(m, g.length); }, 0);
@@ -7294,6 +7397,12 @@ function startStudy(count, filter, mode, order) {
       });
       filtered = roundRobinMerge(interleaveGroups);
       if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
+    } else if (order === "cram") {
+      // Interleaved across lessons, hardest first within each: mixing topics is part of the method.
+      filtered = roundRobinMerge(cardArrays.map(function(arr) {
+        return weightedShuffle(arr.filter(function(c) { return filtered.some(function(f) { return f.id === c.id; }); }), statsMap);
+      }));
+      if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
     } else {
       // "in-order": keep original DB order
       if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
@@ -7305,6 +7414,7 @@ function startStudy(count, filter, mode, order) {
     }
 
     state.studyMode = mode;
+    state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
 
     // Record last_seen_at for all cards in this session (fire-and-forget)
     store.markCardsSeen(filtered.map(function(c) { return c.id; }));
@@ -7707,9 +7817,16 @@ function renderFlashcard() {
   clearTimeout(state.fcAdvanceTimer);
 
   // Progress
-  document.getElementById("fc-progress-text").textContent = studyProgressText(i + 1, cards.length,
-    cards.length - Object.keys(state.studySessionLog || {}).length, "flashcard");
-  document.getElementById("fc-progress-fill").style.transform = scaleXStyle((i + 1) / cards.length);
+  if (state.cram) {
+    // The queue grows as cards come back, so its length means nothing; cards at their goal do.
+    var cp = cramProgress(state.cram);
+    document.getElementById("fc-progress-text").textContent = studyProgressText(cp.done, cp.total, cp.answersLeft, "flashcard");
+    document.getElementById("fc-progress-fill").style.transform = scaleXStyle(cp.total ? cp.done / cp.total : 0);
+  } else {
+    document.getElementById("fc-progress-text").textContent = studyProgressText(i + 1, cards.length,
+      cards.length - Object.keys(state.studySessionLog || {}).length, "flashcard");
+    document.getElementById("fc-progress-fill").style.transform = scaleXStyle((i + 1) / cards.length);
+  }
 
   // Lesson label (multi-lesson sessions)
   setStudyLessonLabel("fc-lesson-label", card);
@@ -7845,6 +7962,9 @@ function renderFlashcard() {
 function renderFcDots() {
   var dots = document.getElementById("fc-dots");
   dots.innerHTML = "";
+  // A dot per queue position would show a card once for every time it came back.
+  dots.classList.toggle("hidden", !!state.cram);
+  if (state.cram) return;
   var cards = state.studyCards;
   var max = Math.min(cards.length, 40); // limit visible dots
   for (var i = 0; i < max; i++) {
@@ -8260,7 +8380,9 @@ function markCard(known, grade, forceRetype) {
   setMarkButtonsEnabled(false);
   haptic("select");
   var undo = { card: card, prevKnown: state.studyKnownMap[card.id], prevLog: state.studySessionLog[card.id],
-               prevDue: card.srs_due_at, attemptId: store.newClientId ? store.newClientId() : genId("att") };
+               prevDue: card.srs_due_at, attemptId: store.newClientId ? store.newClientId() : genId("att"),
+               index: state.studyIndex };
+  if (state.cram) undo.cram = cramAnswered(state.cram, state.studyCards, state.studyIndex, card, known);
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known).catch(function() {});
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
@@ -8286,7 +8408,8 @@ function markCard(known, grade, forceRetype) {
   // Known client-side already (same check renderFlashcard() uses to blank the interval
   // preview) — shown synchronously rather than waiting on the network response, since the
   // normal 400ms auto-advance would otherwise hide it before most people could read it.
-  var stillNotDue = card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000);
+  // Cram repeats cards on purpose, so nearly every repeat is not due; saying so each time is noise.
+  var stillNotDue = !state.cram && card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000);
   if (stillNotDue) {
     var hintEl = document.getElementById("fc-notdue-hint");
     hintEl.textContent = t("study.notDueHint");
@@ -8339,6 +8462,10 @@ function restoreGradedCard(undo) {
     if (at >= 0) state.sessionDurations.splice(at, 1);
   }
   undo.card.srs_due_at = undo.prevDue;
+  if (undo.cram && state.cram) {
+    cramUndo(state.cram, state.studyCards, undo.card, undo.cram);
+    if (state.studyCards[undo.index] === undo.card) return undo.index;
+  }
   return state.studyCards.indexOf(undo.card);
 }
 

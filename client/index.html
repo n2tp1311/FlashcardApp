@@ -526,7 +526,9 @@
         <button class="pill active" data-value="in-order" data-i18n="setup.inOrder">In Order</button>
         <button class="pill" data-value="shuffle" data-i18n="common.shuffle">Shuffle</button>
         <button class="pill" id="pill-order-interleaved" data-value="interleaved" style="display:none">Interleaved ✦</button>
+        <button class="pill" data-value="cram" data-i18n="setup.cram">Cram</button>
       </div>
+      <p class="setup-filter-hint hidden" id="setup-order-hint"></p>
     </div>
   </div>
   <div class="setup-sticky-footer">
@@ -690,6 +692,7 @@
     </div>
     <div class="summary-status-breakdown" id="summary-status-breakdown"></div>
     <div class="results-detail hidden" id="summary-skipped-note"></div>
+    <div class="results-detail hidden" id="summary-cram-note"></div>
     <div class="results-actions">
       <button class="btn btn-primary hidden" id="btn-summary-missed"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> <span id="summary-missed-label"></span></button>
       <button class="btn btn-outline" id="btn-summary-review" data-i18n="summary.reviewAction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Go through cards again</button>
