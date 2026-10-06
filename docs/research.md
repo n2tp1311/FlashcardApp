@@ -80,6 +80,24 @@ This file records the research findings that inform feature decisions for the Fl
 
 ---
 
+## 6. Cramming for a Test
+
+**Question:** With a test a day or a few days away, what study method gives the best score?
+
+**Findings:**
+- Practice testing beats rereading: in Roediger & Karpicke (2006) retrieval practice gave about 50% better recall a week later, though rereading felt more effective. Dunlosky et al. (2013) rated practice testing and distributed practice the only two "high utility" techniques of ten; highlighting, rereading and summarising were rated low.
+- Spacing helps inside a short window. Cepeda et al. (2008) put the best gap between sessions at roughly 10-20% of the time to the test.
+- Rawson & Dunlosky (2011): about three correct recalls per item in a first session, then one or two in later sessions; beyond that the return falls off.
+- Interleaving topics beats blocking them (Rohrer & Taylor, 2007), especially for telling similar concepts apart.
+- Sleep consolidates memory; giving it up to study tends to lower the next day's results (Gillen-O'Neel et al., 2013).
+- Massed practice feels better and works worse: in Kornell (2009) spaced flashcards beat massed for 90% of participants, while most believed the opposite.
+
+**Decision:** Cram mode — a Cram card order (three correct recalls, missed cards back sooner, lessons interleaved) and saved crams with a test date that space rounds at 15% of the time left, hold a final review of the most-missed cards in the last 12 hours, and say "sleep" late on the eve.
+
+**Status:** Implemented (2026-10-06). See `docs/features.md` "Cram for a test" and `docs/decisions.md`.
+
+---
+
 ## Summary Table
 
 | Finding | Implemented | Priority |
@@ -89,3 +107,4 @@ This file records the research findings that inform feature decisions for the Fl
 | Confidence-Based Repetition improves scheduling | No | Low (deferred — UX concern) |
 | Delayed/gated explanation improves transfer | No | 2 (MCQ Explanation Field) |
 | Free recall produces ~80% retention vs ~34% re-reading | No | 3 (Recall Mode) |
+| Cramming: test yourself, 3 correct recalls, spaced rounds, sleep | Yes — Cram mode | — |
