@@ -2127,12 +2127,14 @@ code {
 }
 .toast-close { padding: 6px 10px; font-size: 1.125rem; line-height: 1; }
 
-/* Undo for the last flashcard grade. At the top, under the study header: at the bottom it
-   would sit on the grading buttons, the very thing a misclick came from. */
+/* Undo for the last flashcard grade. At the bottom, in thumb reach (at the top it was a
+   stretch on a phone), but above the grading row: on top of it, it would cover the very
+   buttons a misclick came from. --grade-row-h is that row's height while it is stuck to the
+   viewport bottom, kept by watchGradeRow(); 0 elsewhere. */
 .grade-undo {
   position: fixed;
   left: 50%;
-  top: calc(64px + env(safe-area-inset-top, 0px));
+  bottom: max(calc(24px + env(safe-area-inset-bottom, 0px)), calc(var(--grade-row-h, 0px) + 8px));
   transform: translateX(-50%);
   z-index: 1100;
   display: flex; align-items: center; gap: 14px;

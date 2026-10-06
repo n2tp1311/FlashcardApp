@@ -5246,6 +5246,16 @@ function showUndoBar(text) {
   document.getElementById("grade-undo").classList.remove("hidden");
 }
 
+function watchGradeRow() {
+  var row = document.querySelector("#screen-flashcard .fc-nav");
+  if (!row || typeof ResizeObserver === "undefined") return;
+  var root = document.documentElement;
+  new ResizeObserver(function () {
+    var stuck = row.offsetHeight > 0 && getComputedStyle(row).position === "sticky";
+    root.style.setProperty("--grade-row-h", (stuck ? row.offsetHeight : 0) + "px");
+  }).observe(row);
+}
+
 function hideUndoBar() {
   state.undoHandler = null;
   document.getElementById("grade-undo").classList.add("hidden");
@@ -8840,6 +8850,7 @@ function undoLastGrade() {
 document.getElementById("btn-grade-undo").addEventListener("click", function() {
   if (state.undoHandler) state.undoHandler();
 });
+watchGradeRow();
 
 document.getElementById("btn-fc-learning").addEventListener("click", function() { markCard(false, null, true); });
 document.getElementById("btn-fc-hard").addEventListener("click", function()     { markCard(true, "hard", true); });
