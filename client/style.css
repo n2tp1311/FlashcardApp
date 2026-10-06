@@ -4732,3 +4732,17 @@ code {
   }
 }
 
+
+/* Cram: one column like Study Setup; the countdown is the headline. */
+.cram-body { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-top: 8px; }
+.cram-countdown { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--text); }
+.cram-ready .progress-bar { height: 8px; max-width: none; }
+.cram-ready-text, .cram-status { margin: 8px 0 0; color: var(--text2); font-size: 0.875rem; }
+.cram-status { margin: 0; }
+.cram-note { margin: 0; padding: 10px 14px; background: var(--primary-light); color: var(--text); border-radius: var(--radius); font-size: 0.875rem; }
+.cram-actions { display: flex; gap: 8px; justify-content: center; }
+.home-crams { display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; }
+.cram-home-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.cram-home-row:hover, .cram-home-row:focus-visible { border-color: var(--primary); }
+.cram-home-name { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.cram-home-meta { color: var(--text2); font-size: 0.8125rem; white-space: nowrap; }

@@ -99,6 +99,7 @@ app.use("/api/tokens",  require("./routes/apiTokens"));
 app.use("/api/translation", require("./routes/translation"));
 app.use("/api/vocabulary", require("./routes/vocabulary"));
 app.use("/api/achievements", require("./routes/achievements"));
+app.use("/api/crams",   require("./routes/crams"));
 app.use("/uploads",     require("express").static(UPLOADS, { index: false }));
 
 // ── Helper: inject APP_CONFIG and serve index.html ───────

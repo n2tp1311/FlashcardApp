@@ -108,3 +108,121 @@ test("Study Setup offers Cram as a card order, flashcards only, and the summary 
       assert.ok(block.includes('"' + key + '"'), lang + " " + key);
   }
 });
+
+// --- Saved crams: round planning ---
+const plan = {
+  t: (k, v) => k + (v ? JSON.stringify(v) : ""),
+  shuffle: (a) => a.slice(),
+  state: { language: "en" }
+};
+vm.createContext(plan);
+vm.runInContext(
+  "var CRAM_GAP_SHARE = 0.15, CRAM_MIN_GAP_S = 1200, CRAM_MAX_GAP_S = 86400, CRAM_FINAL_S = 43200," +
+  " CRAM_FINAL_CARDS = 20, CRAM_SLEEP_HOUR = 22, CRAM_WAKE_HOUR = 5;" +
+  ["cramGap", "cramPlan", "cramRoundOrder", "cramCountdown", "roundRobinMerge", "cramLocalInput", "cramFromLocalInput"]
+    .map(extract).join(""), plan);
+
+const H = 3600, D = 86400, NOW = 1_800_000_000;
+const deck = [{ id: "a", lesson_id: "L1" }, { id: "b", lesson_id: "L1" }, { id: "c", lesson_id: "L2" }, { id: "d", lesson_id: "L2" }];
+
+test("rounds are spaced at 15% of the time left, between 20 minutes and a day", () => {
+  assert.equal(plan.cramGap(NOW, NOW + 3 * D), Math.round(3 * D * 0.15));   // about 11 hours
+  assert.equal(plan.cramGap(NOW, NOW + 10 * D), D);
+  assert.equal(plan.cramGap(NOW, NOW + 8 * H), Math.round(8 * H * 0.15));
+  assert.equal(plan.cramGap(NOW, NOW + H), 1200);
+});
+
+test("a new cram has round 1 ready with every card; nothing is ready yet", () => {
+  const p = plan.cramPlan({ test_at: NOW + 3 * D, rounds: 0 }, deck, {}, NOW, 10);
+  assert.equal(p.phase, "rounds");
+  assert.equal(p.round, 1);
+  assert.equal(p.cards.length, 4);
+  assert.equal(p.ready, 0);
+  assert.equal(p.nextAt, null);
+  assert.equal(p.sleep, false);
+});
+
+test("after a round the next waits for the gap, and a card missed in it is not ready", () => {
+  const cram = { test_at: NOW + 2 * D, rounds: 1, last_round_at: NOW - H, last_missed: ["b"] };
+  const progress = { a: { correct: 3, wrong: 0 }, b: { correct: 3, wrong: 2 }, c: { correct: 3, wrong: 0 } };
+  const p = plan.cramPlan(cram, deck, progress, NOW, 10);
+  assert.equal(p.round, 2);
+  assert.equal(p.ready, 2);                                          // a and c; b missed, d unseen
+  assert.equal(p.nextAt, NOW - H + plan.cramGap(NOW - H, NOW + 2 * D));
+  assert.equal(p.missedLast.b, true);
+  assert.equal(plan.cramPlan({ ...cram, last_round_at: NOW - 2 * D }, deck, progress, NOW, 10).nextAt, null);
+});
+
+test("within 12 hours the round is the most-missed cards seen so far, and nothing new", () => {
+  const progress = { a: { correct: 3, wrong: 0 }, b: { correct: 3, wrong: 4 }, c: { correct: 1, wrong: 1 } };
+  const p = plan.cramPlan({ test_at: NOW + 6 * H, rounds: 3 }, deck, progress, NOW, 8);
+  assert.equal(p.phase, "final");
+  assert.deepEqual(p.cards.map((c) => c.id), ["b", "c", "a"]);
+  // Nothing studied yet: an ordinary round is still better than none.
+  assert.equal(plan.cramPlan({ test_at: NOW + 6 * H, rounds: 0 }, deck, {}, NOW, 8).phase, "rounds");
+});
+
+test("late on the eve the screen says to sleep; after the test there is no round", () => {
+  assert.equal(plan.cramPlan({ test_at: NOW + 11 * H, rounds: 1 }, deck, {}, NOW, 23).sleep, true);
+  assert.equal(plan.cramPlan({ test_at: NOW + 11 * H, rounds: 1 }, deck, {}, NOW, 1).sleep, true);
+  assert.equal(plan.cramPlan({ test_at: NOW + 30 * H, rounds: 1 }, deck, {}, NOW, 23).sleep, false);
+  const over = plan.cramPlan({ test_at: NOW - 60, rounds: 4 }, deck, {}, NOW, 10);
+  assert.equal(over.phase, "over");
+  assert.equal(over.cards.length, 0);
+});
+
+test("a round interleaves the cram's lessons in order", () => {
+  assert.equal(plan.cramRoundOrder(deck, ["L2", "L1"]).map((c) => c.id).join(), "c,a,d,b");
+});
+
+test("the countdown reads days, hours or minutes", () => {
+  assert.equal(plan.cramCountdown(2 * D + 5 * H), 'cram.inDays{"d":2,"h":5}');
+  assert.equal(plan.cramCountdown(3 * H + 120), 'cram.inHours{"h":3,"m":2}');
+  assert.equal(plan.cramCountdown(30), 'cram.inMinutes{"m":1}');
+  assert.equal(plan.cramCountdown(0), "cram.over");
+});
+
+test("a test time round-trips through the date field in local time", () => {
+  const ts = 1_800_000_000 - (1_800_000_000 % 60);
+  assert.equal(plan.cramFromLocalInput(plan.cramLocalInput(ts)), ts);
+  assert.ok(Number.isNaN(plan.cramFromLocalInput("")));
+});
+
+test("only a finished round of a saved cram is recorded, once", () => {
+  const calls = [];
+  const rec = { state: {}, store: { updateCram: (id, body) => { calls.push([id, body]); return Promise.resolve(); } },
+    showToast() {}, t: (k) => k };
+  vm.createContext(rec);
+  vm.runInContext(extract("recordCramRound"), rec);
+  const cram = { cramId: "k", ids: ["a", "b"], misses: { b: 2 } };
+  rec.recordCramRound(cram, { done: 1, total: 2 });
+  assert.equal(calls.length, 0);
+  rec.recordCramRound(cram, { done: 2, total: 2 });
+  rec.recordCramRound(cram, { done: 2, total: 2 });
+  assert.equal(JSON.stringify(calls), JSON.stringify([["k", { round: { missed: ["b"] } }]]));
+  rec.recordCramRound({ cramId: null, ids: [], misses: {} }, { done: 0, total: 0 });
+  assert.equal(calls.length, 1);
+});
+
+test("saved crams are wired: screen, modal, Home, select bar, server-only, every string translated", () => {
+  for (const id of ["screen-cram", "modal-cram", "home-crams", "btn-cram-selected", "btn-cram-start", "cram-date"])
+    assert.ok(html.includes('id="' + id + '"'), id);
+  assert.match(app, /btn-cram-selected"\)\.classList\.toggle\("hidden", !IS_SERVER\)/);
+  assert.match(app, /if \(!IS_SERVER \|\| !store\.getCrams\)/);
+  assert.match(app, /cram: "results\.backToCram"/);
+  assert.match(app, /else if \(target === "cram"\) renderCram\(\);/);
+  // Card names and test names reach innerHTML only through escHtml.
+  const home = extract("renderHomeCrams");
+  assert.match(home, /escHtml\(c\.name\)/);
+  assert.match(home, /escHtml\(c\.id\)/);
+  const keys = [...app.matchAll(/t\("(cram\.[a-zA-Z]+)"/g)].map((m) => m[1]);
+  assert.ok(keys.length > 15);
+  for (const lang of ["en", "vi"]) {
+    const block = app.slice(app.indexOf("Object.assign(TRANSLATIONS." + lang));
+    for (const key of new Set(keys)) assert.ok(block.includes('"' + key + '"'), lang + " " + key);
+  }
+});
+
+test("a modal's close icon is an X, not one line drawn twice", () => {
+  assert.ok(!html.includes('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/>'));
+});

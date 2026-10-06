@@ -338,6 +338,25 @@ try {
 try { db.exec("ALTER TABLE external_card_deletions ADD COLUMN kind TEXT NOT NULL DEFAULT 'card'"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_ext_deletions_user ON external_card_deletions(user_id, id)"); } catch (_) {}
 
+// A test to cram for: its lessons and date (routes/crams.js). Per-card progress is not kept
+// here -- it is read from attempts since created_at. A round is recorded only when finished,
+// with the cards missed in it, which set the next round's goals.
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS crams (
+    id            TEXT PRIMARY KEY,
+    user_id       TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name          TEXT NOT NULL,
+    lesson_ids    TEXT NOT NULL,
+    test_at       INTEGER NOT NULL,
+    created_at    INTEGER NOT NULL DEFAULT (unixepoch()),
+    rounds        INTEGER NOT NULL DEFAULT 0,
+    last_round_at INTEGER,
+    last_missed   TEXT,
+    archived_at   INTEGER
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_crams_user ON crams(user_id, test_at)"); } catch (_) {}
+
 // Selected English terms waiting for KnowledgeApp to add a definition and example.
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS vocabulary_requests (

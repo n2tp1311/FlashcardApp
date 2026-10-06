@@ -531,7 +531,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintFlashcardWriteMode": "Type your answer before flipping, then flip to compare — an extra production step on top of recall.",
   "setup.cram": "Cram",
   "setup.hintCram": "For a test: a card you miss comes back a few cards later, and each card leaves the round after 3 correct answers.",
-  "summary.cramNote": "{done} of {n} cards reached their goal · {misses} misses",
+  "summary.cramNote": "{done} of {n} cards reached their goal · misses: {misses}",
   "setup.hintQuizMode": "Faster, but recognizing an answer isn't the same as recalling it — cards need one correct Flashcard answer to reach longer review intervals.",
   "setup.hintQuizModeKnown": "Faster — with your preference on, a correct answer counts as Know It and a wrong one as Learning.",
   "setup.newCardEstimateLabel": "New cards recommended today",
@@ -699,6 +699,36 @@ Object.assign(TRANSLATIONS.en, {
   "results.backToClass": "Back to Class",
   "results.backToUpdates": "Back to Updates",
   "results.backToDashboard": "Back to Dashboard",
+  "cram.forTest": "Cram for a test",
+  "cram.nameLabel": "Test name",
+  "cram.namePlaceholder": "e.g. Statistics midterm",
+  "cram.dateLabel": "Test date and time",
+  "cram.lessons": "{n} lessons",
+  "cram.lessons_one": "1 lesson",
+  "cram.create": "Start cramming",
+  "cram.nameRequired": "Give the test a name.",
+  "cram.invalidDate": "Pick a time within the next year.",
+  "cram.inDays": "Test in {d} d {h} h",
+  "cram.inHours": "Test in {h} h {m} min",
+  "cram.inMinutes": "Test in {m} min",
+  "cram.over": "The test time has passed",
+  "cram.ready": "{pct}% ready · {n} of {total} cards recalled in the last round without a miss",
+  "cram.roundReady": "Round {n} is ready.",
+  "cram.nextAt": "Next round at {time}. Spacing rounds out makes them stick; you can start early.",
+  "cram.startRound": "Start round {n}",
+  "cram.finalStatus": "Final review: {n} cards you have seen, the ones you missed most first. Nothing new now.",
+  "cram.startFinal": "Start final review",
+  "cram.sleep": "It's late and the test is tomorrow. Sleep will do more for these cards than another round.",
+  "cram.overNote": "Your cards stay in normal review, so what you crammed is kept.",
+  "cram.changeDate": "Change date",
+  "cram.end": "End cram",
+  "cram.confirmEndTitle": "End this cram?",
+  "cram.confirmEnd": "Your cards and their progress stay as they are.",
+  "cram.rounds": "{n} rounds done",
+  "cram.rounds_one": "1 round done",
+  "cram.homeTitle": "Cramming",
+  "cram.noCards": "These lessons have no flashcards to cram.",
+  "results.backToCram": "Back to Cram",
   "summary.title": "Session Complete",
   "summary.cardsStudied": "cards studied",
   "done.perfect": "Perfect session!",
@@ -1461,7 +1491,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintFlashcardWriteMode": "Gõ đáp án trước khi lật thẻ, rồi lật để so sánh — thêm một bước viết ra bên cạnh việc nhớ lại.",
   "setup.cram": "Ôn cấp tốc",
   "setup.hintCram": "Ôn thi: thẻ trả lời sai sẽ quay lại sau vài thẻ, mỗi thẻ rời vòng sau 3 lần đúng.",
-  "summary.cramNote": "{done}/{n} thẻ đạt mục tiêu · {misses} lần sai",
+  "summary.cramNote": "{done}/{n} thẻ đạt mục tiêu · số lần sai: {misses}",
   "setup.hintQuizMode": "Nhanh hơn, nhưng nhận ra đáp án khác với tự nhớ lại — thẻ cần một lần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "setup.hintQuizModeKnown": "Nhanh hơn — với tùy chọn đang bật, trả lời đúng được tính là Đã thuộc, trả lời sai được tính là Đang học.",
   "setup.newCardEstimateLabel": "Số thẻ mới nên học hôm nay",
@@ -1624,6 +1654,34 @@ Object.assign(TRANSLATIONS.vi, {
   "results.backToClass": "Về lớp học",
   "results.backToUpdates": "Về Cập nhật",
   "results.backToDashboard": "Về bảng điều khiển",
+  "cram.forTest": "Ôn thi cấp tốc",
+  "cram.nameLabel": "Tên bài thi",
+  "cram.namePlaceholder": "VD: Thi giữa kỳ Thống kê",
+  "cram.dateLabel": "Ngày giờ thi",
+  "cram.lessons": "{n} bài học",
+  "cram.create": "Bắt đầu ôn",
+  "cram.nameRequired": "Đặt tên cho bài thi.",
+  "cram.invalidDate": "Chọn thời điểm trong vòng một năm tới.",
+  "cram.inDays": "Còn {d} ngày {h} giờ đến giờ thi",
+  "cram.inHours": "Còn {h} giờ {m} phút đến giờ thi",
+  "cram.inMinutes": "Còn {m} phút đến giờ thi",
+  "cram.over": "Đã qua giờ thi",
+  "cram.ready": "Sẵn sàng {pct}% · {n}/{total} thẻ nhớ được ở vòng trước mà không sai",
+  "cram.roundReady": "Vòng {n} đã sẵn sàng.",
+  "cram.nextAt": "Vòng tiếp theo lúc {time}. Giãn các vòng giúp nhớ lâu hơn; bạn vẫn có thể bắt đầu sớm.",
+  "cram.startRound": "Bắt đầu vòng {n}",
+  "cram.finalStatus": "Ôn cuối: {n} thẻ đã gặp, thẻ sai nhiều nhất trước. Không học thẻ mới lúc này.",
+  "cram.startFinal": "Bắt đầu ôn cuối",
+  "cram.sleep": "Đã khuya và mai thi rồi. Ngủ đủ giấc giúp nhớ các thẻ này hơn một vòng nữa.",
+  "cram.overNote": "Các thẻ vẫn nằm trong lịch ôn thường, nên những gì đã ôn được giữ lại.",
+  "cram.changeDate": "Đổi ngày",
+  "cram.end": "Kết thúc",
+  "cram.confirmEndTitle": "Kết thúc đợt ôn này?",
+  "cram.confirmEnd": "Thẻ và tiến độ học vẫn giữ nguyên.",
+  "cram.rounds": "Đã xong {n} vòng",
+  "cram.homeTitle": "Đang ôn thi",
+  "cram.noCards": "Các bài này không có thẻ ghi nhớ để ôn.",
+  "results.backToCram": "Về đợt ôn",
   "summary.title": "Hoàn thành phiên học",
   "summary.cardsStudied": "thẻ đã học",
   "done.perfect": "Phiên học hoàn hảo!",
@@ -2986,7 +3044,7 @@ function showScreen(id) {
 // Which screens show the sidebar: "home" docks it from 768px as before, "page" from 1024px,
 // where there is room beside a list. Study screens never: they are full-attention.
 var NAV_SCREENS = { home: "home", "class": "page", lesson: "page", dashboard: "page",
-  vocabulary: "page", achievements: "page", upstream: "page" };
+  vocabulary: "page", achievements: "page", upstream: "page", cram: "page" };
 var NAV_CURRENT = { home: "sidebar-home-link", dashboard: "sidebar-dashboard-link",
   achievements: "sidebar-achievements-link", upstream: "sidebar-upstream-link",
   vocabulary: "sidebar-vocabulary-link" };
@@ -3343,6 +3401,7 @@ function renderHomeCharts() {
 function renderHome() {
   setHomeSelectMode(false);
   renderHomeCharts();
+  renderHomeCrams();
   _updateHomeViewToggle();
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
@@ -4461,6 +4520,8 @@ function updateSelectBar() {
   var n = state.selectedLessonIds.length;
   document.getElementById("select-count").textContent = t("common.nSelected", { n: n });
   document.getElementById("btn-study-selected").disabled = n === 0;
+  document.getElementById("btn-cram-selected").disabled = n === 0;
+  document.getElementById("btn-cram-selected").classList.toggle("hidden", !IS_SERVER);
   document.getElementById("btn-delete-selected-lessons").disabled = n === 0;
   var total = (state.currentClassLessons || []).length;
   document.getElementById("select-all-lessons").checked = total > 0 && n === total;
@@ -6413,7 +6474,7 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
 function confirmAction(msg, cb, actionKey) {
   var keys = { archive: ["confirm.archiveTitle", "common.archive"], leave: ["confirm.leaveTitle", "study.exit"],
     discard: ["confirm.discardTitle", "confirm.discard"], review: ["confirm.reviewTitle", "upstream.markReviewed"],
-    disableLink: ["share.disableLinkTitle", "share.disableLink"] }[actionKey]
+    disableLink: ["share.disableLinkTitle", "share.disableLink"], endCram: ["cram.confirmEndTitle", "cram.end"] }[actionKey]
     || ["delete.confirmTitle", "common.delete"];
   var titleKey = keys[0];
   var buttonKey = keys[1];
@@ -6944,6 +7005,7 @@ function returnFromStudy() {
   else if (target === "dashboard") renderDashboard();
   // The card list, not the class's lesson list: the session just changed every pill on it.
   else if (target === "lesson") renderCards();
+  else if (target === "cram") renderCram();
   else renderLessons();
 }
 
@@ -6953,7 +7015,7 @@ function studyReturnTarget() {
 
 var BACK_LABEL_KEYS = {
   lesson: "results.backToLesson", home: "results.backToHome", class: "results.backToClass",
-  upstream: "results.backToUpdates", dashboard: "results.backToDashboard"
+  upstream: "results.backToUpdates", dashboard: "results.backToDashboard", cram: "results.backToCram"
 };
 
 // The end-screen button names where it actually goes; it said "Back to Lesson" after a
@@ -7146,6 +7208,7 @@ function showFlashcardSummary() {
   if (state.cram) {
     var cp = cramProgress(state.cram);
     cramNote.textContent = t("summary.cramNote", { done: cp.done, n: cp.total, misses: cp.misses });
+    recordCramRound(state.cram, cp);
   }
   cramNote.classList.toggle("hidden", !state.cram);
 
@@ -7304,6 +7367,290 @@ function setOrderHint(order) {
   el.textContent = order === "cram" ? t("setup.hintCram") : "";
   el.classList.toggle("hidden", order !== "cram");
 }
+
+/* Saved crams: a test date and its lessons (server mode, routes/crams.js). Rounds are spaced
+   to the time left -- 15% of it, between 20 minutes and a day; Cepeda et al. (2008) put the best
+   gap at 10-20% of the time to the test. Within 12 hours of the test a round is a final review
+   of the most-missed cards and nothing new. Late on the eve the screen says sleep is worth more
+   than another round: memory consolidates in sleep, and an all-nighter trades that away. */
+var CRAM_GAP_SHARE = 0.15;
+var CRAM_MIN_GAP_S = 20 * 60;
+var CRAM_MAX_GAP_S = 24 * 3600;
+var CRAM_FINAL_S = 12 * 3600;
+var CRAM_FINAL_CARDS = 20;
+var CRAM_SLEEP_HOUR = 22;
+var CRAM_WAKE_HOUR = 5;
+
+function cramGap(from, testAt) {
+  return Math.min(CRAM_MAX_GAP_S, Math.max(CRAM_MIN_GAP_S, Math.round((testAt - from) * CRAM_GAP_SHARE)));
+}
+
+// What the cram screen shows and what the next round holds. `progress` is the server's per-card
+// {correct, wrong} since the cram began; `now` is in seconds and `hour` the local hour.
+// "Ready" is a card answered in the cram and not missed in the last finished round.
+function cramPlan(cram, cards, progress, now, hour) {
+  progress = progress || {};
+  var missed = {};
+  (cram.last_missed || []).forEach(function(id) { missed[id] = true; });
+  var ready = cards.filter(function(c) {
+    var p = progress[c.id];
+    return p && p.correct > 0 && !missed[c.id];
+  }).length;
+  var plan = { total: cards.length, ready: ready, round: (cram.rounds || 0) + 1, missedLast: missed,
+               phase: "rounds", cards: cards, nextAt: null, sleep: false };
+  var left = cram.test_at - now;
+  if (left <= 0) {
+    plan.phase = "over";
+    plan.cards = [];
+    return plan;
+  }
+  if (cram.last_round_at) {
+    var next = cram.last_round_at + cramGap(cram.last_round_at, cram.test_at);
+    if (next > now) plan.nextAt = next;
+  }
+  plan.sleep = left < 24 * 3600 && (hour >= CRAM_SLEEP_HOUR || hour < CRAM_WAKE_HOUR);
+  if (left <= CRAM_FINAL_S) {
+    var seen = cards.filter(function(c) { return progress[c.id]; });
+    if (seen.length) {
+      plan.phase = "final";
+      plan.cards = seen.slice().sort(function(a, b) {
+        var pa = progress[a.id], pb = progress[b.id];
+        return (pb.wrong - pa.wrong) || (pa.correct - pb.correct);
+      }).slice(0, CRAM_FINAL_CARDS);
+    }
+  }
+  return plan;
+}
+
+// A round's cards, lessons interleaved in the cram's order, shuffled within each.
+function cramRoundOrder(cards, lessonIds) {
+  var groups = lessonIds.map(function(id) {
+    return shuffle(cards.filter(function(c) { return c.lesson_id === id; }));
+  });
+  return roundRobinMerge(groups);
+}
+
+function cramCountdown(left) {
+  if (left <= 0) return t("cram.over");
+  var m = Math.floor(left / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  if (d >= 1) return t("cram.inDays", { d: d, h: h % 24 });
+  if (h >= 1) return t("cram.inHours", { h: h, m: m % 60 });
+  return t("cram.inMinutes", { m: Math.max(1, m) });
+}
+
+function cramClock(ts) {
+  var d = new Date(ts * 1000);
+  var sameDay = d.toDateString() === new Date().toDateString();
+  return d.toLocaleString(state.language === "vi" ? "vi-VN" : undefined,
+    sameDay ? { hour: "2-digit", minute: "2-digit" } : { weekday: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+// datetime-local works in local time, without a zone: "2026-10-07T09:00".
+function cramLocalInput(ts) {
+  var d = new Date(ts * 1000);
+  var pad = function(n) { return String(n).padStart(2, "0"); };
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+function cramFromLocalInput(value) {
+  if (!value) return NaN;
+  return Math.floor(new Date(value).getTime() / 1000);
+}
+
+function cramDefaultTestAt() {
+  var d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(9, 0, 0, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+
+// A finished round is recorded with the cards it missed, which set the next round's goals.
+// An abandoned round is not: its misses would stand for a round that never ended.
+function recordCramRound(cram, cp) {
+  if (!cram.cramId || cram.recorded || cp.done < cp.total) return;
+  cram.recorded = true;
+  var missed = cram.ids.filter(function(id) { return cram.misses[id] > 0; });
+  state.cramRoundSave = store.updateCram(cram.cramId, { round: { missed: missed } }).catch(function(err) {
+    cram.recorded = false;
+    showToast(t("toast.saveFailed", { message: err.message }), "error");
+  });
+}
+
+function openCram(id) {
+  state.cramOpenId = id;
+  showScreen("cram");
+  renderCram();
+}
+
+function renderCram() {
+  var id = state.cramOpenId;
+  var token = state.cramRender = {};
+  var startBtn = document.getElementById("btn-cram-start");
+  startBtn.disabled = true;
+  Promise.resolve(state.cramRoundSave).then(function() {
+    return Promise.all([store.getCrams(), store.getCramProgress(id)]);
+  }).then(function(r) {
+    if (state.cramRender !== token) return;
+    var cram = r[0].crams.find(function(c) { return c.id === id; });
+    if (!cram) {
+      showScreen("home");
+      renderHome();
+      return;
+    }
+    return store.getBulkCards(cram.lesson_ids).then(function(cards) {
+      if (state.cramRender !== token) return;
+      var now = Math.floor(Date.now() / 1000);
+      var plan = cramPlan(cram, cards, r[1].cards, now, new Date().getHours());
+      state.cramCurrent = { cram: cram, plan: plan };
+      document.getElementById("cram-title").textContent = cram.name;
+      document.getElementById("cram-countdown").textContent = cramCountdown(cram.test_at - now);
+      document.getElementById("cram-ready-fill").style.transform = scaleXStyle(plan.total ? plan.ready / plan.total : 0);
+      document.getElementById("cram-ready-text").textContent = t("cram.ready",
+        { pct: plan.total ? Math.round(100 * plan.ready / plan.total) : 0, n: plan.ready, total: plan.total });
+      var status = !plan.total ? t("cram.noCards")
+        : plan.phase === "over" ? t("cram.overNote")
+        : plan.phase === "final" ? t("cram.finalStatus", { n: plan.cards.length })
+        : plan.nextAt ? t("cram.nextAt", { time: cramClock(plan.nextAt) })
+        : t("cram.roundReady", { n: plan.round });
+      document.getElementById("cram-status").textContent = status;
+      startBtn.textContent = plan.phase === "final" ? t("cram.startFinal") : t("cram.startRound", { n: plan.round });
+      startBtn.classList.toggle("hidden", plan.phase === "over");
+      startBtn.disabled = !plan.cards.length;
+      var note = document.getElementById("cram-note");
+      note.textContent = plan.sleep ? t("cram.sleep") : "";
+      note.classList.toggle("hidden", !plan.sleep);
+      document.getElementById("btn-cram-edit").classList.toggle("hidden", plan.phase === "over");
+    });
+  }).catch(function(err) {
+    if (state.cramRender === token) showToast(err.message, "error");
+  });
+}
+
+function startCramRound(cram, plan) {
+  var cards = plan.phase === "final" ? plan.cards.slice() : cramRoundOrder(plan.cards, cram.lesson_ids);
+  if (!cards.length) return;
+  state.studyScope = { lessonIds: cram.lesson_ids.slice(), lessons: [], returnScreen: "cram", title: cram.name };
+  var known = {};
+  cards.forEach(function(c) {
+    if (c.known !== null && c.known !== undefined) known[c.id] = c.known === 1 || c.known === true;
+  });
+  state.studyKnownMap = known;
+  state.studyStatsMap = {};
+  state.studyMode = "flashcard";
+  state.typeToCompare = false;
+  // A final review asks one correct answer of each card, like any round after the first.
+  state.cram = newCram(cards, { round: plan.phase === "final" ? Math.max(2, plan.round) : plan.round,
+                                missedLast: plan.missedLast, cramId: cram.id });
+  state.studyCards = cards;
+  state.studyIndex = 0;
+  state.studyFlipped = false;
+  state.studySessionLog = {};
+  state.studySessionNewSet = {};
+  cards.forEach(function(c) { if (!c.last_studied_at) state.studySessionNewSet[c.id] = true; });
+  store.markCardsSeen(cards.map(function(c) { return c.id; }));
+  startFlashcards();
+}
+
+function openCramModal(opts) {
+  state.cramModal = opts;
+  var cram = opts.cram;
+  document.getElementById("cram-name").value = cram ? cram.name : (state.currentClass ? state.currentClass.name : "");
+  document.getElementById("cram-date").value = cramLocalInput(cram ? cram.test_at : cramDefaultTestAt());
+  document.getElementById("cram-modal-lessons").textContent =
+    t("cram.lessons", { n: cram ? cram.lesson_ids.length : opts.lessonIds.length });
+  var save = document.getElementById("btn-cram-save");
+  save.setAttribute("data-i18n", cram ? "common.save" : "cram.create");
+  save.textContent = t(cram ? "common.save" : "cram.create");
+  document.getElementById("cram-modal-error").classList.add("hidden");
+  openModal("cram");
+  document.getElementById("cram-name").focus();
+}
+
+function cramModalError(msg) {
+  var el = document.getElementById("cram-modal-error");
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+
+document.getElementById("btn-cram-save").addEventListener("click", function() {
+  var opts = state.cramModal || {};
+  var name = document.getElementById("cram-name").value.trim();
+  var testAt = cramFromLocalInput(document.getElementById("cram-date").value);
+  var now = Math.floor(Date.now() / 1000);
+  if (!name) return cramModalError(t("cram.nameRequired"));
+  if (!(testAt > now && testAt < now + 366 * 86400)) return cramModalError(t("cram.invalidDate"));
+  var btn = this;
+  btn.disabled = true;
+  var saving = opts.cram ? store.updateCram(opts.cram.id, { name: name, testAt: testAt })
+                         : store.createCram({ name: name, lessonIds: opts.lessonIds, testAt: testAt });
+  saving.then(function(saved) {
+    closeModal("cram");
+    if (!opts.cram) setSelectMode(false);
+    openCram(saved.id);
+  }).catch(function(err) {
+    cramModalError(err.message);
+  }).then(function() { btn.disabled = false; });
+});
+
+document.getElementById("btn-cram-selected").addEventListener("click", function() {
+  var ids = state.selectedLessonIds.slice();
+  if (ids.length) openCramModal({ lessonIds: ids });
+});
+
+document.getElementById("btn-cram-start").addEventListener("click", function() {
+  var cur = state.cramCurrent;
+  if (cur && cur.cram.id === state.cramOpenId) startCramRound(cur.cram, cur.plan);
+});
+
+document.getElementById("btn-cram-edit").addEventListener("click", function() {
+  var cur = state.cramCurrent;
+  if (cur) openCramModal({ cram: cur.cram });
+});
+
+document.getElementById("btn-cram-end").addEventListener("click", function() {
+  var id = state.cramOpenId;
+  confirmAction(t("cram.confirmEnd"), function() {
+    store.updateCram(id, { archived: true }).then(function() {
+      showScreen("home");
+      renderHome();
+    }).catch(function(err) { showToast(t("toast.saveFailed", { message: err.message }), "error"); });
+  }, "endCram");
+});
+
+document.getElementById("btn-cram-back").addEventListener("click", function() {
+  showScreen("home");
+  renderHome();
+});
+
+function renderHomeCrams() {
+  var box = document.getElementById("home-crams");
+  if (!IS_SERVER || !store.getCrams) {
+    box.classList.add("hidden");
+    return;
+  }
+  store.getCrams().then(function(data) {
+    var now = Math.floor(Date.now() / 1000);
+    var live = [];
+    data.crams.forEach(function(c) {
+      // A day after the test the cram is over: archived quietly, its cards carry on in review.
+      if (c.test_at + 86400 < now) store.updateCram(c.id, { archived: true }).catch(function() {});
+      else live.push(c);
+    });
+    box.innerHTML = live.length ? '<span class="home-section-title">' + escHtml(t("cram.homeTitle")) + "</span>" +
+      live.map(function(c) {
+        return '<button type="button" class="cram-home-row" data-cram-id="' + escHtml(c.id) + '">' +
+          '<span class="cram-home-name">' + escHtml(c.name) + "</span>" +
+          '<span class="cram-home-meta">' + escHtml(cramCountdown(c.test_at - now)) + " · " +
+          escHtml(t("cram.rounds", { n: c.rounds })) + "</span></button>";
+      }).join("") : "";
+    box.classList.toggle("hidden", !live.length);
+  }).catch(function() { box.classList.add("hidden"); });
+}
+
+document.getElementById("home-crams").addEventListener("click", function(e) {
+  var row = e.target.closest("[data-cram-id]");
+  if (row) openCram(row.dataset.cramId);
+});
 
 function roundRobinMerge(groups) {
   var result = [];
@@ -11104,6 +11451,10 @@ var SQLiteAdapter = (function() {
     getAchievements: function() { return req("GET", "/achievements"); },
     recordStudyEvent: function(kind, ref) { return req("POST", "/achievements/events", { kind: kind, ref: ref }); },
     getToday: function() { return req("GET", "/stats/today"); },
+    getCrams: function() { return req("GET", "/crams"); },
+    createCram: function(fields) { return req("POST", "/crams", fields); },
+    updateCram: function(id, fields) { return req("PATCH", "/crams/" + encodeURIComponent(id), fields); },
+    getCramProgress: function(id) { return req("GET", "/crams/" + encodeURIComponent(id) + "/progress"); },
     writesSettled: function() { return writeChain; },
     getReviewsToday: function() { return req("GET", "/stats/reviews-today"); },
     getNewCardEstimate: function() { return req("GET", "/stats/new-card-estimate"); },
@@ -12940,7 +13291,8 @@ var SCREEN_BACK_BTN = {
   upstream:  "btn-upstream-back",
   vocabulary: "btn-vocabulary-back",
   achievements: "btn-achievements-back",
-  "flashcard-summary": "btn-summary-back"
+  "flashcard-summary": "btn-summary-back",
+  cram:      "btn-cram-back"
 };
 
 function fcAnyOverlayOpen() {

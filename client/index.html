@@ -176,6 +176,7 @@
   </header>
 
   <!-- ===== HOME CONTENT ===== -->
+  <div id="home-crams" class="home-crams hidden"></div>
   <div id="home-charts-section" class="hidden">
     <div class="dash-summary-grid" id="home-summary-grid"></div>
   </div>
@@ -427,6 +428,7 @@
     </div>
     <div class="select-bar-actions">
       <button class="btn btn-sm btn-danger" id="btn-delete-selected-lessons" disabled data-i18n="common.deleteSelected">Delete selected</button>
+      <button class="btn btn-sm btn-ghost hidden" id="btn-cram-selected" disabled data-i18n="cram.forTest">Cram for a test</button>
       <button class="btn btn-sm btn-primary" id="btn-study-selected" disabled data-i18n="lesson.studySelected">Study selected</button>
     </div>
   </div>
@@ -534,6 +536,28 @@
   <div class="setup-sticky-footer">
     <p class="setup-match-count" id="setup-match-count" aria-live="polite"></p>
     <button class="btn btn-primary btn-full" id="btn-start-study" data-i18n="setup.startStudying">Start Studying</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Cram ===== -->
+<div id="screen-cram" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-cram-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+    <h2 class="screen-title" id="cram-title"></h2>
+  </header>
+  <div class="cram-body">
+    <p class="cram-countdown" id="cram-countdown"></p>
+    <div class="cram-ready">
+      <div class="progress-bar"><div id="cram-ready-fill" class="progress-fill"></div></div>
+      <p class="cram-ready-text" id="cram-ready-text"></p>
+    </div>
+    <p class="cram-status" id="cram-status" aria-live="polite"></p>
+    <button class="btn btn-primary btn-full" id="btn-cram-start"></button>
+    <p class="cram-note hidden" id="cram-note"></p>
+    <div class="cram-actions">
+      <button class="btn btn-sm btn-ghost" id="btn-cram-edit" data-i18n="cram.changeDate">Change date</button>
+      <button class="btn btn-sm btn-ghost" id="btn-cram-end" data-i18n="cram.end">End cram</button>
+    </div>
   </div>
 </div>
 
@@ -865,7 +889,7 @@
   <div id="modal-vocabulary-add" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="vocabulary-add-title">
     <div class="modal-header">
       <h3 id="vocabulary-add-title" data-i18n="vocabulary.addTitle">Add a word to the queue</h3>
-      <button class="modal-close" data-modal="vocabulary-add" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg></button>
+      <button class="modal-close" data-modal="vocabulary-add" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <div id="vocabulary-add-error" class="auth-error hidden"></div>
@@ -877,6 +901,25 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="vocabulary-add" data-i18n="common.cancel">Cancel</button>
       <button type="button" class="btn btn-primary" id="btn-vocabulary-add-save" data-i18n="vocabulary.add">Add word</button>
+    </div>
+  </div>
+
+  <div id="modal-cram" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="cram-modal-title">
+    <div class="modal-header">
+      <h3 id="cram-modal-title" data-i18n="cram.forTest">Cram for a test</h3>
+      <button class="modal-close" data-modal="cram" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div id="cram-modal-error" class="auth-error hidden"></div>
+      <label class="form-label" for="cram-name" data-i18n="cram.nameLabel">Test name</label>
+      <input type="text" id="cram-name" class="form-input" maxlength="80" autocomplete="off" placeholder="e.g. Statistics midterm" data-i18n-placeholder="cram.namePlaceholder">
+      <label class="form-label" for="cram-date" data-i18n="cram.dateLabel">Test date and time</label>
+      <input type="datetime-local" id="cram-date" class="form-input">
+      <p class="setup-filter-hint" id="cram-modal-lessons"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="cram" data-i18n="common.cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-cram-save" data-i18n="cram.create">Start cramming</button>
     </div>
   </div>
 
