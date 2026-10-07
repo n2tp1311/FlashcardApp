@@ -19,12 +19,14 @@ let browser;
 before(async function() { browser = await chromium.launch({ headless: true }); });
 after(async function() { if (browser) await browser.close(); });
 
-async function render(p) {
-  const page = await browser.newPage({ viewport: { width: 900, height: 500 } });
+async function render(p, width) {
+  const page = await browser.newPage({ viewport: { width: width || 900, height: 500 } });
   await page.setContent(
-    '<div style="display:grid;grid-template-columns:260px;gap:16px;padding:24px">' +
-      '<div class="class-card" id="card"><div class="class-card-actions"><button class="icon-btn">E</button></div>' +
+    '<div class="class-grid" style="padding:16px">' +
+      '<div class="class-card" id="card"><div class="class-card-actions">' +
+        '<button class="icon-btn">A</button><button class="icon-btn">E</button><button class="icon-btn">D</button></div>' +
         '<span class="class-done-medal hidden" id="cls-done-c1" role="img"></span>' +
+        '<span class="class-icon" style="width:28px;height:28px"></span>' +
         '<div class="class-name">Linear Algebra</div></div>' +
       '<div class="class-list-row" id="row"><div class="class-list-right">' +
         '<span class="class-done-medal hidden" id="cls-done-c2" role="img"></span></div></div>' +
@@ -84,4 +86,20 @@ test("a card falling back takes the medallion away", async function() {
   assert.equal(grid.display, "none");
   assert.equal(grid.label, null);
   await page.close();
+});
+
+test("on a phone, where the card's buttons are always shown, the medallion sits clear of them", async function() {
+  for (const width of [375, 600]) {
+    const page = await render({ known: 3, total: 240, mastery: mastery(240, 0, 0) }, width);
+    const r = await page.evaluate(function() {
+      const box = (el) => el.getBoundingClientRect();
+      const m = box(document.getElementById("cls-done-c1")), a = box(document.querySelector(".class-card-actions")), i = box(document.querySelector(".class-icon"));
+      return { gapToActions: a.left - m.right, gapToIcon: m.left - i.right, opacity: getComputedStyle(document.querySelector(".class-card-actions")).opacity };
+    });
+    assert.equal(r.opacity, "1", "buttons always visible at " + width);
+    assert.ok(r.gapToActions > 0 && r.gapToIcon > 0, width + ": " + JSON.stringify(r));
+    await page.hover("#card");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("cls-done-c1")).opacity), "1");
+    await page.close();
+  }
 });
