@@ -3024,18 +3024,25 @@ code {
 
 /* A complete class: success green wins over the class colour and its display filter. */
 .progress-mini-wrap.is-complete .progress-mini-fill { background: var(--success) !important; filter: none !important; }
-.progress-mini-wrap.is-complete .progress-mini-text { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-variant-numeric: tabular-nums; }
-.class-done-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  padding: 2px 8px 2px 6px;
-  border-radius: var(--radius);
+/* Learned is a soft ring with one check, Mastered solid green with two. */
+.class-done-medal {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: opacity var(--transition);
+}
+.class-done-medal.is-learned {
   background: var(--success-soft);
   color: var(--success-soft-text);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--success) 45%, transparent);
 }
+.class-done-medal.is-mastered { background: var(--success-fill); color: #fff; }
+.class-card .class-done-medal { position: absolute; top: 14px; right: 14px; }
+.class-list-row .class-done-medal { width: 22px; height: 22px; }
+/* The edit and delete buttons take this corner on hover. */
+.class-card:hover .class-done-medal { opacity: 0; }
 
 .mastery-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--border); }
 .mastery-bar i { display: block; height: 100%; }

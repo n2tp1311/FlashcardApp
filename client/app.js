@@ -391,7 +391,7 @@ Object.assign(TRANSLATIONS.en, {
   "mastery.tooltip": "Mastered {mastered} · Known {remembered} · Learning {learning} · New {fresh}. Mastered: the next review is 21 or more days away. Marked Know It: {flagged} / {total}.",
   "class.levelMeta": "Lv {level} · {lessons}",
   "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
-  "class.complete": "Complete",
+  "class.learnedTooltip": "Every card in this class is learned: none are New or Learning",
   "class.completeTooltip": "Every card in this class is marked Know It",
   "class.masteredTooltip": "Every card in this class is mastered: the next review is 21 or more days away",
   "class.accuracyTooltip": "Accuracy across all recorded attempts (Flashcard + Quiz)",
@@ -1356,7 +1356,7 @@ Object.assign(TRANSLATIONS.vi, {
   "mastery.tooltip": "Thành thạo {mastered} · Đã nhớ {remembered} · Đang học {learning} · Mới {fresh}. Thành thạo: lần ôn tới cách 21 ngày trở lên. Đã đánh dấu thuộc: {flagged} / {total}.",
   "class.levelMeta": "Bậc {level} · {lessons}",
   "class.knownTooltip": "Số thẻ bạn đã tự đánh dấu \"Đã thuộc\" trong chế độ Thẻ ghi nhớ",
-  "class.complete": "Hoàn thành",
+  "class.learnedTooltip": "Mọi thẻ trong lớp này đều đã học: không còn thẻ Mới hay Đang học",
   "class.completeTooltip": "Mọi thẻ trong lớp này đều đã thuộc",
   "class.masteredTooltip": "Mọi thẻ trong lớp này đều thành thạo: lần ôn tới cách 21 ngày trở lên",
   "class.accuracyTooltip": "Độ chính xác trên toàn bộ lượt trả lời đã ghi nhận (Thẻ ghi nhớ + Trắc nghiệm)",
@@ -3617,6 +3617,7 @@ function _renderClassGridCard(cls, container) {
   card.dataset.classId = cls.id;
   card.innerHTML =
     '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
+    '<span class="class-done-medal hidden" id="cls-done-' + cls.id + '" role="img"></span>' +
     '<span class="class-icon">' + classIconHtml(cls.icon, 28) + '</span>' +
     '<div class="class-name">' + escHtml(cls.name) + '</div>' +
     '<div class="class-meta" id="cls-meta-' + cls.id + '">' + t("common.loading") + '</div>' +
@@ -3689,6 +3690,7 @@ function _renderClassListRow(cls, container) {
     '<div class="class-list-right">' +
       (cls.due_count > 0 ? '<span class="due-badge">' + t("count.due", { n: cls.due_count }) + '</span>' : '') +
       '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
+      '<span class="class-done-medal hidden" id="cls-done-' + cls.id + '" role="img"></span>' +
       (state.homeSelectMode ? '' :
         '<div class="class-list-actions">' +
           '<button class="icon-btn" title="' + (cls.archived ? t("common.unarchive") : t("common.archive")) + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
@@ -3731,25 +3733,42 @@ function _renderClassListRow(cls, container) {
   }
 }
 
-// With the server's mastery counts the bar measures mastery, so complete means every card
-// mastered; a class all marked Know It at 30% mastered must not read "Complete" under a bar
-// that is 30% full. Local mode has no scheduler counts and keeps the Know It measure.
-function classComplete(p) {
-  if (!p || p.total <= 0) return false;
-  return p.mastery ? p.mastery.mastered >= p.total : p.known >= p.total;
+// Two levels. Learned: nothing New or Learning is left, every card is Known or Mastered.
+// Mastered: every card's next review is 21+ days out, which can take weeks after Learned, so
+// Learned is what finishing a class earns. Local mode has no scheduler counts; every card
+// marked Know It is as far as it can say, so it reaches Learned and never Mastered.
+function classDoneLevel(p) {
+  if (!p || p.total <= 0) return null;
+  if (!p.mastery) return p.known >= p.total ? "learned" : null;
+  if (p.mastery.mastered >= p.total) return "mastered";
+  return p.mastery.mastered + p.mastery.known >= p.total ? "learned" : null;
 }
 
-// A complete class says so in place of its progress line, rather than with a badge of its
-// own: the bar already is the measure, so at 100% the text becomes "Complete". It is not
-// stored -- a card falling back takes it away.
 function classProgressHtml(p) {
-  if (classComplete(p)) {
-    return '<span class="class-done-pill"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-      escHtml(t("class.complete")) + '</span><span>' + escHtml(t("count.cards", { n: p.total })) + '</span>';
-  }
-  // 239 of 240 rounds to 100%, which would read as complete beside a class that is.
-  var pct = Math.min(99, Math.round(p.known / p.total * 100));
+  // 239 of 240 rounds to 100%, which would read as done beside a class that is.
+  var pct = p.known >= p.total ? 100 : Math.min(99, Math.round(p.known / p.total * 100));
   return escHtml(t("count.knownProgress", { known: p.known, total: p.total, pct: pct }));
+}
+
+var CLASS_DONE_ICONS = {
+  learned: '<svg viewBox="0 0 12 12" width="13" height="13" fill="none" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  mastered: '<svg viewBox="0 0 16 12" width="16" height="12" fill="none" aria-hidden="true"><path d="M1.5 6.2l2.3 2.3 4.7-4.9M7.3 8.3l.2.2 4.7-4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+
+// Computed on every render, never stored: a card graded Still learning takes it away, and a
+// badge that outlived that would claim something untrue.
+function setClassDoneMedal(classId, p) {
+  var el = document.getElementById("cls-done-" + classId);
+  if (!el) return;
+  var level = classDoneLevel(p);
+  el.classList.toggle("hidden", !level);
+  el.classList.remove("is-learned", "is-mastered");
+  if (!level) { el.innerHTML = ""; el.removeAttribute("title"); el.removeAttribute("aria-label"); return; }
+  var tip = t(level === "mastered" ? "class.masteredTooltip" : p.mastery ? "class.learnedTooltip" : "class.completeTooltip");
+  el.classList.add("is-" + level);
+  el.innerHTML = CLASS_DONE_ICONS[level];
+  el.title = tip;
+  el.setAttribute("aria-label", tip);
 }
 
 function setClassProgress(classId, p) {
@@ -3758,18 +3777,11 @@ function setClassProgress(classId, p) {
   var fill = document.getElementById("cls-prog-fill-" + classId);
   var text = document.getElementById("cls-prog-text-" + classId);
   if (!wrap) return;
-  var done = classComplete(p);
+  setClassDoneMedal(classId, p);
   wrap.style.display = "";
+  if (p.mastery) { renderMasteryBar(wrap, p); return; }
+  var done = p.known >= p.total;
   wrap.classList.toggle("is-complete", done);
-  if (p.mastery) {
-    renderMasteryBar(wrap, p);
-    if (done) {
-      var label = wrap.querySelector(".progress-mini-text");
-      label.innerHTML = classProgressHtml(p);
-      label.title = t("class.masteredTooltip");
-    }
-    return;
-  }
   fill.style.transform = scaleXStyle(done ? 1 : Math.round(p.known / p.total * 100) / 100);
   text.innerHTML = classProgressHtml(p);
   text.title = t(done ? "class.completeTooltip" : "class.knownTooltip");

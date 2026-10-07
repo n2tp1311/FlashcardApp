@@ -19,44 +19,49 @@ function load() {
     escHtml: function(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
   };
   vm.createContext(ctx);
-  vm.runInContext(["classComplete", "classProgressHtml"].map(extract).join(""), ctx);
+  vm.runInContext(["classDoneLevel", "classProgressHtml"].map(extract).join(""), ctx);
   return ctx;
 }
 
-test("a class is complete only when every card is known", function() {
+const m = (mastered, known, learning, fresh) => ({ mastered, known, learning: learning || 0, new: fresh || 0 });
+
+test("local mode: every card marked Know It is Learned, never Mastered", function() {
   const ctx = load();
-  assert.equal(ctx.classComplete({ known: 240, total: 240 }), true);
-  assert.equal(ctx.classComplete({ known: 239, total: 240 }), false);
-  assert.equal(ctx.classComplete({ known: 0, total: 0 }), false);
-  assert.equal(ctx.classComplete(null), false);
+  assert.equal(ctx.classDoneLevel({ known: 240, total: 240 }), "learned");
+  assert.equal(ctx.classDoneLevel({ known: 239, total: 240 }), null);
+  assert.equal(ctx.classDoneLevel({ known: 0, total: 0 }), null);
+  assert.equal(ctx.classDoneLevel(null), null);
+});
+
+test("server mode: Learned once nothing is New or Learning, Mastered once every card is", function() {
+  const ctx = load();
+  assert.equal(ctx.classDoneLevel({ known: 3, total: 240, mastery: m(72, 168) }), "learned");
+  assert.equal(ctx.classDoneLevel({ known: 240, total: 240, mastery: m(72, 167, 1) }), null);
+  assert.equal(ctx.classDoneLevel({ known: 240, total: 240, mastery: m(72, 167, 0, 1) }), null);
+  assert.equal(ctx.classDoneLevel({ known: 3, total: 240, mastery: m(240, 0) }), "mastered");
+  assert.equal(ctx.classDoneLevel({ known: 0, total: 0, mastery: m(0, 0) }), null);
 });
 
 test("an incomplete class never reads 100%", function() {
   const ctx = load();
-  const html = ctx.classProgressHtml({ known: 239, total: 240 });
-  assert.equal(html, "count.knownProgress|known=239,total=240,pct=99");
-  assert.doesNotMatch(html, /class-done-pill/);
+  assert.equal(ctx.classProgressHtml({ known: 239, total: 240 }), "count.knownProgress|known=239,total=240,pct=99");
+  assert.equal(ctx.classProgressHtml({ known: 240, total: 240 }), "count.knownProgress|known=240,total=240,pct=100");
 });
 
-test("a complete class shows the Complete pill and its card count", function() {
-  const ctx = load();
-  const html = ctx.classProgressHtml({ known: 240, total: 240 });
-  assert.match(html, /<span class="class-done-pill"><svg[^]*class\.complete<\/span><span>count\.cards\|n=240<\/span>/);
-});
-
-test("both the grid card and the list row use the shared progress setter", function() {
+test("both the grid card and the list row carry the medallion and the shared progress setter", function() {
   assert.equal(app.split('store.getProgress("class", cls.id).then(function(p) { setClassProgress(cls.id, p); });').length - 1, 2);
+  assert.equal(app.split('<span class="class-done-medal hidden" id="cls-done-\' + cls.id + \'" role="img"></span>').length - 1, 2);
+  assert.match(extract("setClassProgress"), /setClassDoneMedal\(classId, p\);[^]*if \(p\.mastery\) \{ renderMasteryBar\(wrap, p\); return; \}/);
 });
 
-test("with the server's mastery counts, complete means every card mastered, not every card known", function() {
-  const ctx = load();
-  const m = (mastered) => ({ mastered: mastered, known: 240 - mastered, learning: 0, new: 0 });
-  assert.equal(ctx.classComplete({ known: 240, total: 240, mastery: m(72) }), false);
-  assert.equal(ctx.classComplete({ known: 3, total: 240, mastery: m(240) }), true);
-  assert.doesNotMatch(ctx.classProgressHtml({ known: 240, total: 240, mastery: m(72) }), /class-done-pill/);
+test("the medallion's tooltip names its level, in both languages", function() {
+  for (const k of ["class.learnedTooltip", "class.masteredTooltip", "class.completeTooltip"]) {
+    assert.equal(app.split('"' + k + '":').length - 1, 2, k);
+  }
+  assert.doesNotMatch(app, /"class\.complete":/);
 });
 
-test("class cards draw the mastery bar when the server sends it, the Know It bar otherwise", function() {
-  assert.match(extract("setClassProgress"), /if \(p\.mastery\) \{\s*renderMasteryBar\(wrap, p\);/);
-  assert.equal(app.split('"class.masteredTooltip":').length - 1, 2);
+test("the medallion hides under the hover buttons in the grid card's corner", function() {
+  const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
+  assert.match(css, /\.class-card:hover \.class-done-medal \{ opacity: 0; \}/);
 });
