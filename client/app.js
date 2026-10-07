@@ -4166,6 +4166,9 @@ function sortLessons(lessons, dueInfo, key, dir) {
     var r;
     if (key === "date_added") {
       r = (a.created_at || 0) - (b.created_at || 0);
+    } else if (key === "name") {
+      // Numeric, so "2. Summarizing" comes before "10. Combining" in a numbered course.
+      r = String(a.title || "").localeCompare(String(b.title || ""), undefined, { numeric: true, sensitivity: "base" });
     } else if (key === "date_interacted") {
       r = (a.last_interacted_at || 0) - (b.last_interacted_at || 0);
     } else if (key === "date_modified") {
