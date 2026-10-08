@@ -7,7 +7,7 @@ const { ratingFor, cardFromState, MAX_INTERVAL, State } = require("../fsrs");
 const { balanceDue, normalizeTz, settingsFrom } = require("../lib/workload");
 const { snapshotState, restoredState, undoRefusal, STATE_FIELDS } = require("../lib/undo");
 const { LEECH_LAPSES } = require("../lib/leech");
-const { userScheduler } = require("../lib/memory");
+const { userScheduler, maybeAdapt } = require("../lib/memory");
 const router  = express.Router();
 
 function genId() {
@@ -143,6 +143,8 @@ router.post("/", requireAuth, (req, res) => {
 
   recordDueZero(userId);
   res.status(201).json(result);
+  // After the response: a fit takes a second or more and must not hold up the next card.
+  if (!result.notDue) setImmediate(() => { maybeAdapt(db, userId, tz).catch(() => {}); });
 });
 
 // DELETE /api/attempts/:id — undo the card's latest answer: the attempt is removed and the

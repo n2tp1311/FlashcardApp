@@ -1,11 +1,17 @@
 "use strict";
 
-// Target recall and a personal FSRS model. FSRS schedules a card for the moment its
-// predicted chance of recall falls to the target; the default target is 90% and the
-// default model is FSRS's own parameters, fitted to many other people's reviews. A user
-// may choose a target from 80% to 95%, and may fit the 21 parameters to their own
-// answers. A fit is only proposed: training stores a candidate and its held-out error
-// beside the default's, and nothing changes until the user applies it.
+// How much to remember, and adapting the scheduler to the learner. FSRS schedules a card
+// for the moment its predicted chance of recall falls to a target; the user picks one of
+// three named choices (Fewer reviews 85%, Balanced 90%, Remember more 95%) rather than a
+// percentage, because a percentage is not something a learner can weigh and reviews per
+// day and how often you forget are.
+//
+// "Adapt to my memory" (on by default) fits FSRS's 21 parameters to the user's own answers
+// once there are 400, then again as answers accumulate, from an answer's request, in the
+// background. A fit is used only if it predicts the user's latest answers, which it did not
+// train on, better than FSRS's defaults do; otherwise the defaults are kept. The user is
+// never asked to judge a prediction error: the check decides, and one status line says
+// what happened. Turning the switch off ignores the stored model without deleting it.
 //
 // A new model or target applies to each card from its next answer. Stability and
 // difficulty already stored were computed with the old model and are not recomputed:
@@ -17,20 +23,24 @@ const { FSRS, generatorParameters } = require("ts-fsrs");
 const { MAX_INTERVAL, ratingFor } = require("../fsrs");
 const { localDay, normalizeTz } = require("./workload");
 
-const DEFAULT_RECALL = 90, MIN_RECALL = 80, MAX_RECALL = 95;
-// Below this many answers a fit is mostly noise; the button shows progress until then.
+const CHOICES = [85, 90, 95];
+const DEFAULT_RECALL = 90;
+// Below this many answers a fit is mostly noise; the setting shows progress until then.
 const MIN_REVIEWS = 400;
-// Suggest retraining once this many answers have come in since the last fit, or as many
-// as it was trained on if that is fewer: a small fit gains most from new data.
+// Fit again once this many answers have come in since the last fit, or as many as it was
+// trained on if that is fewer: a small fit gains most from new data (400, 800, 1600, 2600…).
 const RETRAIN_AFTER = 1000;
 // The later share of the history held out to compare the default and personal models.
 const HOLDOUT = 0.2;
 const PARAM_COUNT = 21;
 const DEFAULT_W = generatorParameters({}).w.slice();
 
+// The nearest of the three choices. A value saved by the earlier 80-95% slider maps to the
+// choice closest to it, so 80 becomes Fewer reviews rather than falling back to Balanced.
 function targetRecall(prefs) {
   const v = prefs && prefs.targetRecall;
-  return Number.isInteger(v) && v >= MIN_RECALL && v <= MAX_RECALL ? v : DEFAULT_RECALL;
+  if (typeof v !== "number" || !isFinite(v) || v < 70 || v > 99) return DEFAULT_RECALL;
+  return CHOICES.reduce((best, c) => Math.abs(c - v) < Math.abs(best - v) ? c : best, DEFAULT_RECALL);
 }
 
 function validWeights(w) {
@@ -60,17 +70,35 @@ function schedulerFor(w, recall) {
   return s;
 }
 
+// The last fit, used or not, so a fit that was no better is not retried on every answer.
+function parseLastFit(json) {
+  if (!json) return null;
+  try {
+    const f = JSON.parse(json);
+    return f && Number.isInteger(f.reviews) ? f : null;
+  } catch (_) { return null; }
+}
+
 function readUser(db, userId) {
-  const row = db.prepare("SELECT preferences, fsrs_model, fsrs_candidate FROM users WHERE id = ?").get(userId) || {};
+  const row = db.prepare("SELECT preferences, fsrs_model, fsrs_last_fit FROM users WHERE id = ?").get(userId) || {};
   let prefs = {};
   try { prefs = JSON.parse(row.preferences || "{}"); } catch (_) {}
-  return { recall: targetRecall(prefs), model: parseModel(row.fsrs_model), candidate: parseModel(row.fsrs_candidate) };
+  return { recall: targetRecall(prefs), adapt: prefs.adaptMemory !== false,
+           model: parseModel(row.fsrs_model), lastFit: parseLastFit(row.fsrs_last_fit) };
+}
+
+function activeWeights(u) {
+  return u.adapt && u.model ? u.model.w : null;
 }
 
 // The scheduler every due date, interval preview and recall estimate for this user uses.
 function userScheduler(db, userId) {
   const u = readUser(db, userId);
-  return schedulerFor(u.model && u.model.w, u.recall);
+  return schedulerFor(activeWeights(u), u.recall);
+}
+
+function nextFitAt(lastFit) {
+  return lastFit ? lastFit.reviews + Math.min(RETRAIN_AFTER, Math.max(1, lastFit.reviews)) : MIN_REVIEWS;
 }
 
 // FSRS's interval for a stability at a target, before rounding and the 365-day cap. Same
@@ -86,7 +114,7 @@ function intervalAt(stability, recall, w) {
 // number is a comparison between targets, not a forecast.
 function loadByTarget(stabilities, w) {
   const out = {};
-  for (let r = MIN_RECALL; r <= MAX_RECALL; r++) {
+  for (const r of CHOICES) {
     let sum = 0;
     for (const s of stabilities) sum += 1 / Math.min(MAX_INTERVAL, Math.max(1, intervalAt(s, r, w)));
     out[r] = Math.round(sum * 10) / 10;
@@ -147,7 +175,7 @@ class TrainingError extends Error {
 }
 
 // Fits on the earlier part of the history and compares both models on the later part,
-// which neither saw; the candidate itself is then fitted on everything. Runs in the
+// which neither saw; the fit itself is then made on everything. Runs in the
 // training child process (trainWorker.js), never in the server.
 async function fit(items, binding) {
   const b = binding || require("@open-spaced-repetition/binding");
@@ -193,9 +221,42 @@ function train(items) {
   });
 }
 
+// One fit at a time per user.
+const fitting = new Set();
+
+// Called after an answer is recorded. Fits when adapting is on and enough new answers have
+// come in, and keeps the fit only if it beats the defaults on the held-out answers. Every
+// outcome is recorded in fsrs_last_fit, so the next try waits for the next threshold.
+async function maybeAdapt(db, userId, tz, trainFn) {
+  const u = readUser(db, userId);
+  if (!u.adapt || fitting.has(userId)) return null;
+  const reviews = reviewCount(db, userId);
+  if (reviews < nextFitAt(u.lastFit)) return null;
+  fitting.add(userId);
+  try {
+    const at = Math.floor(Date.now() / 1000);
+    let result, model = u.model;
+    try {
+      const fit = await (trainFn || train)(trainingItems(histories(db, userId, normalizeTz(tz))));
+      const better = fit.errorPersonal < fit.errorDefault;
+      result = better ? "adapted" : "standard";
+      model = better ? { w: fit.w, trainedAt: at, reviews, errorDefault: fit.errorDefault, errorPersonal: fit.errorPersonal } : null;
+    } catch (e) {
+      // A failed fit keeps whatever was in use; the next threshold tries again.
+      if (!(e instanceof TrainingError)) console.error("[memory] adapting failed:", e && e.message);
+      result = e && e.code === "notEnoughData" ? "notEnoughData" : "failed";
+    }
+    db.prepare("UPDATE users SET fsrs_model = ?, fsrs_last_fit = ? WHERE id = ?")
+      .run(model ? JSON.stringify(model) : null, JSON.stringify({ at, reviews, result }), userId);
+    return result;
+  } finally {
+    fitting.delete(userId);
+  }
+}
+
 module.exports = {
-  DEFAULT_RECALL, MIN_RECALL, MAX_RECALL, MIN_REVIEWS, RETRAIN_AFTER, HOLDOUT, DEFAULT_W,
-  targetRecall, validWeights, parseModel, schedulerFor, readUser, userScheduler,
+  CHOICES, DEFAULT_RECALL, MIN_REVIEWS, RETRAIN_AFTER, HOLDOUT, DEFAULT_W,
+  targetRecall, validWeights, parseModel, schedulerFor, readUser, activeWeights, userScheduler, nextFitAt, maybeAdapt,
   intervalAt, loadByTarget, reviewCount, histories, trainingItems, crossDay, fit, train, TrainingError,
   normalizeTz
 };

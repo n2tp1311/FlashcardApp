@@ -15,18 +15,11 @@ const M = require(path.join(root, "server/lib/memory.js"));
 const { cardFromState, Rating } = require(path.join(root, "server/fsrs.js"));
 const DAY = 86400;
 
-test("the target is a whole percent from 80 to 95, and anything else reads as 90", function() {
+test("the target is one of three choices; an old slider value maps to the nearest", function() {
   assert.equal(M.targetRecall({}), 90);
-  assert.equal(M.targetRecall({ targetRecall: 85 }), 85);
-  for (const bad of [79, 96, 87.5, "85", null]) assert.equal(M.targetRecall({ targetRecall: bad }), 90, String(bad));
-});
-
-test("a stored model must be 21 finite numbers, or it is the default", function() {
-  assert.equal(M.parseModel(null), null);
-  assert.equal(M.parseModel("{bad"), null);
-  assert.equal(M.parseModel(JSON.stringify({ w: [1, 2, 3] })), null);
-  assert.equal(M.parseModel(JSON.stringify({ w: M.DEFAULT_W.map((x, i) => i === 3 ? "x" : x) })), null);
-  assert.deepEqual(M.parseModel(JSON.stringify({ w: M.DEFAULT_W })).w, M.DEFAULT_W);
+  for (const [v, want] of [[85, 85], [80, 85], [87, 85], [88, 90], [90, 90], [93, 95], [95, 95], [99, 95]])
+    assert.equal(M.targetRecall({ targetRecall: v }), want, String(v));
+  for (const bad of [60, 100, "85", null, NaN]) assert.equal(M.targetRecall({ targetRecall: bad }), 90, String(bad));
 });
 
 function reviewState(stability, daysAgo, now) {
@@ -37,10 +30,10 @@ function reviewState(stability, daysAgo, now) {
 test("a higher target gives a shorter interval, and so more reviews a day", function() {
   const now = Math.floor(Date.UTC(2026, 9, 8) / 1000);
   const days = (r) => (M.schedulerFor(null, r).next(reviewState(10, 10, now), new Date(now * 1000), Rating.Good).card.due / 1000 - now) / DAY;
-  assert.ok(days(80) > days(90) && days(90) > days(95), [days(80), days(90), days(95)].join(" "));
+  assert.ok(days(85) > days(90) && days(90) > days(95), [days(85), days(90), days(95)].join(" "));
   const load = M.loadByTarget([5, 20, 60], null);
-  assert.equal(Object.keys(load).length, 16);
-  assert.ok(load[80] < load[90] && load[90] < load[95]);
+  assert.deepEqual(Object.keys(load), ["85", "90", "95"]);
+  assert.ok(load[85] < load[90] && load[90] < load[95]);
   assert.ok(Math.abs(M.intervalAt(10, 90, null) - 10) < 1e-9, "at 90% the interval equals the stability");
   assert.equal(M.schedulerFor(null, 90), M.schedulerFor(null, 90), "schedulers are cached");
 });
@@ -95,8 +88,11 @@ test.before(() => new Promise((ok) => { listener = server.listen(0, "127.0.0.1",
 test.after(() => listener.close());
 
 db.exec(`
-  INSERT INTO users (id, email, name, preferences) VALUES ('u1', 'a@x', 'A', '{"loadBalance":false}');
+  INSERT INTO users (id, email, name, preferences) VALUES ('u1', 'a@x', 'A', '{"loadBalance":false,"adaptMemory":false}');
   INSERT INTO users (id, email, name, preferences) VALUES ('u2', 'b@x', 'B', '{"loadBalance":false}');
+  INSERT INTO users (id, email, name, preferences) VALUES ('u3', 'c@x', 'C', '{"loadBalance":false}');
+  INSERT INTO classes (id, user_id, name) VALUES ('k3', 'u3', 'Auto');
+  INSERT INTO lessons (id, class_id, title, format) VALUES ('l3', 'k3', 'Ch 1', 'term-def');
   INSERT INTO classes (id, user_id, name) VALUES ('k1', 'u1', 'Stats');
   INSERT INTO lessons (id, class_id, title, format) VALUES ('l1', 'k1', 'Ch 1', 'term-def');
   INSERT INTO classes (id, user_id, name) VALUES ('k2', 'u2', 'Few');
@@ -135,6 +131,7 @@ function simulate(userId, lessonId, cards) {
 }
 const reviews = simulate("u1", "l1", 160);
 simulate("u2", "l2", 20);
+simulate("u3", "l3", 80);
 
 const call = async (method, p, body, user = "u1") => {
   const r = await fetch(base + p, { method, headers: { "content-type": "application/json", "x-user": user }, body: body && JSON.stringify(body) });
@@ -152,55 +149,77 @@ async function answerDays(id, userId = "u1") {
   return (r.body.srs_due_at - Math.floor(Date.now() / 1000)) / DAY;
 }
 
-test("an answer is scheduled at the user's target", async function() {
+const prefs = (p) => db.prepare("UPDATE users SET preferences = ? WHERE id = 'u1'").run(JSON.stringify({ loadBalance: false, ...p }));
+
+test("an answer is scheduled at the user's choice", async function() {
+  prefs({ adaptMemory: false });
   const at90 = await answerDays("u1-c0");
-  db.prepare("UPDATE users SET preferences = ? WHERE id = 'u1'").run(JSON.stringify({ loadBalance: false, targetRecall: 80 }));
-  const at80 = await answerDays("u1-c0");
-  db.prepare("UPDATE users SET preferences = ? WHERE id = 'u1'").run(JSON.stringify({ loadBalance: false }));
-  assert.ok(at80 > at90 * 1.5, at80 + " vs " + at90);
+  prefs({ adaptMemory: false, targetRecall: 85 });
+  const at85 = await answerDays("u1-c0");
+  prefs({ adaptMemory: false });
+  assert.ok(at85 > at90 * 1.3, at85 + " vs " + at90);
 });
 
-test("below 400 reviews the model cannot be trained, and the summary says how far there is to go", async function() {
-  const r = await call("POST", "/api/memory/train", { tz: 0 }, "u2");
-  assert.equal(r.status, 409);
-  assert.equal(r.body.code, "notEnoughReviews");
+test("below 400 answers nothing is fitted, and the summary says how far there is to go", async function() {
+  assert.equal(await M.maybeAdapt(db, "u2", 0), null);
   const info = (await call("GET", "/api/memory", undefined, "u2")).body;
-  assert.ok(info.reviews < 400 && info.minReviews === 400 && info.model === null && info.candidate === null);
+  assert.ok(info.reviews < 400 && info.minReviews === 400 && info.nextFitAt === 400 && info.model === null && info.lastFit === null);
+  assert.equal(info.adapt, true, "on by default");
 });
 
-test("training proposes a fit; applying it schedules every later answer; reset goes back", async function() {
+test("adapting fits on its own, is used when it beats the defaults, and the switch turns it off", async function() {
   assert.ok(reviews >= 400, "simulated " + reviews);
-  const defaultDays = await answerDays("u1-c1");
+  prefs({ adaptMemory: false });
+  const standardDays = await answerDays("u1-c1");
+  assert.equal(await M.maybeAdapt(db, "u1", -420), null, "off: nothing is fitted");
 
-  const trained = await call("POST", "/api/memory/train", { tz: -420 });
-  assert.equal(trained.status, 200, JSON.stringify(trained.body));
-  const c = trained.body.candidate;
-  assert.equal(c.reviews, M.reviewCount(db, "u1"));
-  assert.ok(c.errorPersonal < c.errorDefault, "a learner unlike the default is fitted better: " + JSON.stringify(c));
-
-  assert.equal(await answerDays("u1-c1"), defaultDays, "a candidate changes nothing until applied");
+  prefs({});
+  assert.equal(await M.maybeAdapt(db, "u1", -420), "adapted", "a learner unlike the default is fitted better");
   let info = (await call("GET", "/api/memory")).body;
-  assert.ok(info.candidate && info.candidateLoad && !info.model);
+  const n = M.reviewCount(db, "u1");
+  assert.equal(info.model.reviews, n);
+  assert.equal(info.lastFit.result, "adapted");
+  assert.equal(info.nextFitAt, n + 1000);
+  assert.equal(await M.maybeAdapt(db, "u1", -420), null, "not again until 1,000 more answers");
 
-  assert.equal((await call("POST", "/api/memory/apply", {})).status, 200);
-  info = (await call("GET", "/api/memory")).body;
-  assert.ok(info.model && !info.candidate && info.newSince === 1 && info.retrainSuggested === false);
-  const personalDays = await answerDays("u1-c1");
-  assert.ok(personalDays < defaultDays, "a faster forgetter gets shorter intervals: " + personalDays + " vs " + defaultDays);
-
-  const cards = (await call("GET", "/api/lessons/l1/cards")).body;
-  const row = cards.find(x => x.id === "u1-c1");
+  const adaptedDays = await answerDays("u1-c1");
+  assert.ok(adaptedDays < standardDays, "a faster forgetter gets shorter intervals: " + adaptedDays + " vs " + standardDays);
+  const row = (await call("GET", "/api/lessons/l1/cards")).body.find(x => x.id === "u1-c1");
   assert.ok(row.fsrs_preview_good > 0, "the button previews come from the same scheduler");
 
-  assert.equal((await call("POST", "/api/memory/apply", {})).body.code, "noCandidate");
-  await call("DELETE", "/api/memory/model");
-  assert.equal(await answerDays("u1-c1"), defaultDays);
+  prefs({ adaptMemory: false });
+  assert.equal(await answerDays("u1-c1"), standardDays, "off ignores the stored model");
+  assert.ok(M.readUser(db, "u1").model, "but keeps it for when it is turned back on");
 });
 
-test("the parameters only come from training: the preferences blob cannot set them", function() {
-  db.prepare("UPDATE users SET preferences = ? WHERE id = 'u1'").run(JSON.stringify({ fsrsModel: { w: M.DEFAULT_W.map(() => 0) } }));
+test("a fit no better than the defaults is not used, and a failed one keeps what was in use", async function() {
+  prefs({});
+  const reset = () => db.prepare("UPDATE users SET fsrs_last_fit = NULL WHERE id = 'u1'").run();
+  reset();
+  const kept = M.readUser(db, "u1").model;
+  assert.equal(await M.maybeAdapt(db, "u1", 0, async () => { throw new M.TrainingError("notEnoughData", "x"); }), "notEnoughData");
+  assert.deepEqual(M.readUser(db, "u1").model, kept);
+  reset();
+  assert.equal(await M.maybeAdapt(db, "u1", 0, async () => ({ w: M.DEFAULT_W, errorDefault: 0.03, errorPersonal: 0.05 })), "standard");
+  const u = M.readUser(db, "u1");
+  assert.equal(u.model, null);
+  assert.equal(u.lastFit.result, "standard");
+  prefs({ adaptMemory: false });
+});
+
+test("an answer starts adapting in the background once there are enough", async function() {
+  const id = "u3-c0";
+  seedReviewCard(id, "u3");
+  await call("POST", "/api/attempts", { cardId: id, correct: true, source: "flashcard", grade: "medium", tz: 0 }, "u3");
+  for (let i = 0; i < 100 && !M.readUser(db, "u3").lastFit; i++) await new Promise(ok => setTimeout(ok, 100));
+  assert.ok(M.readUser(db, "u3").lastFit, "a fit was attempted after the answer");
+});
+
+test("the parameters only come from fitting: the preferences blob cannot set them", function() {
+  prefs({ fsrsModel: { w: M.DEFAULT_W.map(() => 0) } });
+  db.prepare("UPDATE users SET fsrs_model = NULL WHERE id = 'u1'").run();
   assert.equal(M.readUser(db, "u1").model, null);
-  db.prepare("UPDATE users SET preferences = ? WHERE id = 'u1'").run(JSON.stringify({ loadBalance: false }));
+  prefs({ adaptMemory: false });
 });
 
 // --- Client ---
@@ -216,71 +235,84 @@ function english(k, v) {
   const m = appJs.match(new RegExp('"' + k.replace(/\./g, "\\.") + '": "([^"]*)"'));
   return (m ? m[1] : k).replace(/\{(\w+)\}/g, (_, x) => (v && v[x] != null ? v[x] : ""));
 }
-function modelHtml(info, recall, training, t) {
-  const ctx = { state: { language: "en" }, t: t || ((k, v) => k + (v ? JSON.stringify(v) : "")),
-                escHtml: (s) => String(s).replace(/</g, "&lt;") };
+function client(t) {
+  const ctx = { state: { language: "en" }, t: t || ((k, v) => k + (v ? JSON.stringify(v) : "")), escHtml: (s) => String(s).replace(/</g, "&lt;") };
   vm.createContext(ctx);
-  for (const f of ["memoryPerDay", "memoryPct", "memoryDate", "memoryModelHtml"]) vm.runInContext(extract(f), ctx);
-  return ctx.memoryModelHtml(info, recall, training);
+  const choices = appJs.slice(appJs.indexOf("var MEMORY_CHOICES = ["), appJs.indexOf("];", appJs.indexOf("var MEMORY_CHOICES = [")) + 2);
+  vm.runInContext(choices, ctx);
+  for (const f of ["nearestMemoryChoice", "memoryPerDay", "memoryDate", "memoryChoicesHtml", "memoryStatusHtml"]) vm.runInContext(extract(f), ctx);
+  return ctx;
 }
-const info = (over) => Object.assign({ reviews: 900, minReviews: 400, model: null, candidate: null, newSince: null,
-  retrainSuggested: false, reviewCards: 50, load: { 90: 42 }, candidateLoad: null }, over);
+const info = (over) => Object.assign({ choice: 90, adapt: true, reviews: 900, minReviews: 400, nextFitAt: 400, model: null, lastFit: null,
+  reviewCards: 50, load: { 85: 22, 90: 42, 95: 104 } }, over);
 
-test("the model panel: locked below the minimum, a candidate shows both errors, a model can retrain", function() {
-  const locked = modelHtml(info({ reviews: 172 }), 90, false);
-  assert.match(locked, /width:43%/);
-  assert.match(locked, /data-action="train" disabled/);
-
-  const ready = modelHtml(info({}), 90, false);
-  assert.match(ready, /data-action="train">pref\.modelTrain</);
-  assert.match(modelHtml(info({}), 90, true), /data-action="train" disabled>pref\.modelTraining/);
-
-  const cand = modelHtml(info({ candidate: { reviews: 2814, errorDefault: 0.079, errorPersonal: 0.031 }, candidateLoad: { 90: 36 } }), 90, false);
-  assert.match(cand, /7\.9%/);
-  assert.match(cand, /3\.1%/);
-  assert.match(cand, /42 → 36/);
-  assert.match(cand, /pref\.modelBetter/);
-  assert.match(cand, /btn-primary" data-action="apply"/);
-
-  const worse = modelHtml(info({ candidate: { reviews: 500, errorDefault: 0.03, errorPersonal: 0.05 } }), 90, false);
-  assert.match(worse, /memory-badge warn">pref\.modelWorse/);
-  assert.match(worse, /btn-primary" data-action="keep"/);
-
-  const applied = modelHtml(info({ model: { reviews: 2814, trainedAt: 1791450310 }, newSince: 1240, retrainSuggested: true }), 90, false);
-  assert.match(applied, /memory-nudge/);
-  assert.match(applied, /data-action="reset"/);
+test("three choices, each with reviews a day and how often you forget", function() {
+  const c = client();
+  const html = c.memoryChoicesHtml(info({}), 95);
+  assert.equal((html.match(/role="radio"/g) || []).length, 3);
+  assert.match(html, /class="memory-choice on" role="radio" aria-checked="true" data-value="95"/);
+  assert.match(html, /pref\.memoryPerDay\{"n":"104"\}/);
+  assert.match(html, /pref\.memoryForget\{"n":7\}/);
+  assert.equal((html.match(/memory-rec/g) || []).length, 1, "Balanced is the recommended one");
+  assert.doesNotMatch(c.memoryChoicesHtml(info({ reviewCards: 0 }), 90), /memoryPerDay/, "no estimate with no review cards");
+  assert.deepEqual([80, 87, 88, 93, 96, "x"].map(c.nearestMemoryChoice), [85, 85, 90, 95, 95, 90]);
 });
 
-test("the target is saved, loaded and server-only, with every string in both languages", function() {
-  assert.match(appJs, /prefs\.targetRecall = state\.targetRecall;/);
-  assert.match(appJs, /Number\.isInteger\(prefs\.targetRecall\) && prefs\.targetRecall >= 80 && prefs\.targetRecall <= 95/);
+test("the status line under the switch", function() {
+  const c = client();
+  assert.match(c.memoryStatusHtml(info({}), false), /pref\.adaptOff/);
+  const waiting = c.memoryStatusHtml(info({ reviews: 172 }), true);
+  assert.match(waiting, /width:43%/);
+  assert.match(waiting, /pref\.adaptWaiting\{"n":228\}/);
+  assert.match(c.memoryStatusHtml(info({}), true), /pref\.adaptSoon/);
+  assert.match(c.memoryStatusHtml(info({ model: { trainedAt: 1791450310, reviews: 2814 } }), true), /memory-line good">✓ pref\.adaptDone/);
+  assert.match(c.memoryStatusHtml(info({ lastFit: { at: 1791450310, reviews: 900, result: "standard" } }), true), /pref\.adaptStandard/);
+  assert.match(c.memoryStatusHtml(info({ nextFitAt: 1300, lastFit: { at: 1, reviews: 900, result: "notEnoughData" } }), true), /pref\.adaptRetry\{"n":400\}/);
+});
+
+test("the choice and the switch are saved, loaded and server-only, with every string in both languages", function() {
+  assert.match(appJs, /prefs\.targetRecall = state\.targetRecall;\s*prefs\.adaptMemory = state\.adaptMemory;/);
+  assert.match(appJs, /state\.targetRecall = nearestMemoryChoice\(prefs\.targetRecall\);/);
+  assert.match(appJs, /typeof prefs\.adaptMemory === "boolean"/);
   assert.match(appJs, /"pref-workload", "pref-memory", "pref-api-tokens"/);
-  assert.match(indexHtml, /id="pref-target-recall" class="memory-slider" min="80" max="95" step="1"/);
-  for (const k of appJs.match(/"(pref\.(targetRecall|memory|model)\w*|toast\.model\w+|error\.(notEnoughData|notEnoughReviews|trainingBusy|optimizerUnavailable|optimizerFailed))":/g)) {
-    assert.equal(appJs.split(k).length - 1, 2, k);
-  }
+  assert.match(indexHtml, /id="pref-memory-choices" role="radiogroup"/);
+  assert.match(indexHtml, /id="pref-adapt-memory"/);
+  assert.doesNotMatch(appJs + indexHtml, /pref-target-recall|pref\.model\w+|trainMemory/, "the first version's slider and model panel are gone");
+  for (const k of appJs.match(/"pref\.(memory|adapt)\w*":/g)) assert.equal(appJs.split(k).length - 1, 2, k);
 });
 
-test("on a 320px phone the slider and a candidate panel fit the Preferences dialog", async function() {
+test("on a 320px phone the three choices and the status line fit the Preferences dialog", async function() {
   const { chromium } = require("playwright");
   const browser = await chromium.launch({ headless: true });
   try {
-    const page = await browser.newPage({ viewport: { width: 320, height: 640 }, isMobile: true });
+    const page = await browser.newPage({ viewport: { width: 320, height: 640 }, isMobile: true, reducedMotion: "reduce" });
     await page.route("**/*.js", (r) => r.abort());
     await page.goto("file://" + path.join(root, "client", "index.html"));
     await page.addStyleTag({ path: path.join(root, "client", "style.css") });
-    const html = modelHtml(info({ candidate: { reviews: 2814, errorDefault: 0.079, errorPersonal: 0.031 }, candidateLoad: { 90: 36 } }), 90, false, english);
-    const r = await page.evaluate(function(h) {
+    const c = client(english);
+    const choices = c.memoryChoicesHtml(info({}), 90);
+    const status = c.memoryStatusHtml(info({ model: { trainedAt: 1791450310, reviews: 2814 } }), true);
+    const r = await page.evaluate(function([ch, st]) {
       document.getElementById("modal-overlay").classList.remove("hidden");
       document.getElementById("modal-preferences").classList.remove("hidden");
-      document.getElementById("pref-memory-model").innerHTML = h;
-      document.getElementById("pref-memory-model").scrollIntoView();
+      document.getElementById("pref-memory-choices").innerHTML = ch;
+      document.getElementById("pref-memory-status").innerHTML = st;
+      document.getElementById("pref-memory").scrollIntoView();
       const box = document.getElementById("modal-preferences").getBoundingClientRect();
       const parts = Array.from(document.querySelectorAll("#pref-memory *")).map(el => [el, el.getBoundingClientRect()]).filter(p => p[1].width > 0);
-      return { left: box.left, right: box.right, parts: parts.map(([el, b]) => [b.left, b.right, el.tagName + "." + el.className + "#" + el.id]) };
-    }, html);
+      const rows = Array.from(document.querySelectorAll(".memory-choice")).map(b => {
+        const name = Array.from(b.querySelector("b").getClientRects()).reduce((m, x) => ({ top: Math.min(m.top, x.top), right: Math.max(m.right, x.right) }), { top: 1e9, right: 0 });
+        const rec = b.querySelector(".memory-rec");
+        if (rec) { const x = rec.getBoundingClientRect(); name.right = Math.max(name.right, x.right); }
+        const per = b.querySelector(".memory-per").getBoundingClientRect();
+        return Math.abs(name.top - per.top) < 12 && name.right <= per.left;
+      });
+      return { left: box.left, right: box.right, rows, parts: parts.map(([el, b]) => [b.left, b.right, el.tagName + "." + el.className]) };
+    }, [choices, status]);
     for (const [l, rr, what] of r.parts) assert.ok(l >= r.left - 0.5 && rr <= r.right + 0.5, JSON.stringify([what, l, rr, r.left, r.right]));
-    await page.screenshot({ path: path.join(root, "test-results", "memory-phone.png") });
+    assert.deepEqual(r.rows, [true, true, true], "each choice's name and reviews a day share a line without touching");
+    await page.waitForTimeout(400);
+    await page.locator("#pref-memory").screenshot({ path: path.join(root, "test-results", "memory-phone.png") });
   } finally {
     await browser.close();
   }

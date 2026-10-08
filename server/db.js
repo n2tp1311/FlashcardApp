@@ -398,10 +398,13 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_rewrite_requests_card ON rewrite_r
 
 // A personal FSRS model (lib/memory.js), as JSON { w, trainedAt, reviews, errorDefault,
 // errorPersonal }. Its own columns, not preferences: the preferences PUT takes whatever the
-// client sends, and the parameters must only ever come from the optimizer. A candidate is
-// a fit the user has not applied yet.
+// client sends, and the parameters must only ever come from the optimizer. fsrs_last_fit
+// is the last fit's outcome, used or not, so a fit that was no better is not retried on
+// every answer. fsrs_candidate held a fit awaiting the user's approval in the first
+// version, which asked; it is no longer read.
 try { db.exec("ALTER TABLE users ADD COLUMN fsrs_model TEXT"); } catch (_) {}
 try { db.exec("ALTER TABLE users ADD COLUMN fsrs_candidate TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE users ADD COLUMN fsrs_last_fit TEXT"); } catch (_) {}
 
 // Achievements. Most are worked out from attempts and card states; these record the few
 // things nothing else stores. typed: the answer was typed in Flashcard & Write (Writer).

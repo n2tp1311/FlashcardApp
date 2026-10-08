@@ -179,29 +179,22 @@ Object.assign(TRANSLATIONS.en, {
   "pref.easyDayLabel": "{day}: {level}",
   "pref.forecastTitle": "Due in the next 14 days",
   "pref.forecastBar": "{date}: {n} due",
-  "pref.targetRecall": "Target recall",
-  "pref.targetRecallHint": "The chance you still remember a card when it comes due. Higher means more reviews.",
-  "pref.memoryLoad": "About {n} reviews a day once your cards settle at {r}%. A new target applies to each card from its next review.",
-  "pref.modelTitle": "Scheduler",
-  "pref.modelDefault": "Default",
-  "pref.modelPersonal": "Personal · {date}",
-  "pref.modelProgress": "{n} of {min} reviews. Personalizing unlocks at {min}.",
-  "pref.modelIntro": "Fits the scheduler to how you remember, from your own answers. You see the result before anything changes.",
-  "pref.modelTrain": "Personalize from my reviews",
-  "pref.modelTraining": "Training…",
-  "pref.modelTrained": "Trained on {n} reviews",
-  "pref.modelBetter": "Better fit",
-  "pref.modelWorse": "No better",
-  "pref.modelErrorDefault": "Prediction error, default",
-  "pref.modelErrorPersonal": "Prediction error, yours",
-  "pref.modelLoadAt": "Reviews per day at {r}%",
-  "pref.modelErrorHint": "How far predicted recall was from what you actually got, on your latest reviews, which training did not see.",
-  "pref.modelApply": "Use my model",
-  "pref.modelKeep": "Keep current",
-  "pref.modelSince": "Trained on {n} reviews. {m} new since then.",
-  "pref.modelRetrainNudge": "You have {m} new reviews. Retrain to include them.",
-  "pref.modelRetrain": "Retrain",
-  "pref.modelReset": "Reset to default",
+  "pref.memoryQuestion": "How much do you want to remember?",
+  "pref.memoryFewer": "Fewer reviews",
+  "pref.memoryBalanced": "Balanced",
+  "pref.memoryMore": "Remember more",
+  "pref.memoryRecommended": "Recommended",
+  "pref.memoryForget": "You will forget about 1 card in {n}.",
+  "pref.memoryExam": "Good before an exam.",
+  "pref.memoryPerDay": "≈ {n} / day",
+  "pref.adaptMemory": "Adapt to my memory",
+  "pref.adaptHint": "Learns how fast you forget from your answers, and times reviews to match.",
+  "pref.adaptOff": "Off: the standard schedule everyone starts with is used.",
+  "pref.adaptWaiting": "Starts after {n} more answers.",
+  "pref.adaptSoon": "Adapting after your next answer.",
+  "pref.adaptDone": "Adapted to you on {date}, from {n} answers.",
+  "pref.adaptStandard": "Checked on {date}: the standard schedule already fits you, so it is kept.",
+  "pref.adaptRetry": "Tries again after {n} more answers.",
   "pref.noLimit": "No limit",
   "pref.maxReviewsInvalid": "Enter a whole number (0 or more), or leave it empty for no limit.",
   "pref.apiTokens": "API tokens",
@@ -278,8 +271,6 @@ Object.assign(TRANSLATIONS.en, {
   "leech.rewriteAlreadyRequested": "Rewrite requested",
   "leech.keepStudying": "Keep studying",
   "toast.rewriteRequested": "KnowledgeApp will rewrite this card on its next run.",
-  "toast.modelApplied": "Your model is in use. It applies to each card from its next review.",
-  "toast.modelReset": "Back to the default scheduler.",
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
@@ -1093,11 +1084,6 @@ Object.assign(TRANSLATIONS.en, {
   "search.queryLabel": "Search query",
   "search.resultsLabel": "Search results",
   "error.requestFailed": "Something went wrong ({status}). Try again.",
-  "error.notEnoughData": "These reviews are not enough to fit a model on yet. Keep studying over a few more days.",
-  "error.notEnoughReviews": "Not enough reviews to personalize yet.",
-  "error.trainingBusy": "Already training. Wait a moment.",
-  "error.optimizerUnavailable": "Personalizing is not available on this server.",
-  "error.optimizerFailed": "Training failed. Try again later.",
   "error.rateLimited": "Too many requests. Try again later.",
   "error.missingFields": "Please fill in all fields.",
   "error.passwordTooShort": "Password must be at least 6 characters.",
@@ -1212,29 +1198,22 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.easyDayLabel": "{day}: {level}",
   "pref.forecastTitle": "Đến hạn trong 14 ngày tới",
   "pref.forecastBar": "{date}: {n} thẻ đến hạn",
-  "pref.targetRecall": "Mức nhớ mục tiêu",
-  "pref.targetRecallHint": "Khả năng bạn còn nhớ thẻ khi đến hạn ôn. Càng cao thì càng nhiều lượt ôn.",
-  "pref.memoryLoad": "Khoảng {n} lượt ôn mỗi ngày khi thẻ ổn định ở mức {r}%. Mục tiêu mới áp dụng cho mỗi thẻ từ lần ôn tiếp theo.",
-  "pref.modelTitle": "Bộ lập lịch",
-  "pref.modelDefault": "Mặc định",
-  "pref.modelPersonal": "Cá nhân · {date}",
-  "pref.modelProgress": "{n}/{min} lượt ôn. Cá nhân hoá mở khi đủ {min}.",
-  "pref.modelIntro": "Điều chỉnh bộ lập lịch theo cách bạn ghi nhớ, dựa trên câu trả lời của bạn. Bạn xem kết quả trước khi áp dụng.",
-  "pref.modelTrain": "Cá nhân hoá từ lượt ôn của tôi",
-  "pref.modelTraining": "Đang huấn luyện…",
-  "pref.modelTrained": "Huấn luyện trên {n} lượt ôn",
-  "pref.modelBetter": "Khớp hơn",
-  "pref.modelWorse": "Không tốt hơn",
-  "pref.modelErrorDefault": "Sai số dự đoán, mặc định",
-  "pref.modelErrorPersonal": "Sai số dự đoán, của bạn",
-  "pref.modelLoadAt": "Lượt ôn mỗi ngày ở {r}%",
-  "pref.modelErrorHint": "Độ lệch giữa khả năng nhớ dự đoán và kết quả thật, đo trên các lượt ôn gần nhất mà mô hình chưa thấy khi huấn luyện.",
-  "pref.modelApply": "Dùng mô hình của tôi",
-  "pref.modelKeep": "Giữ nguyên",
-  "pref.modelSince": "Huấn luyện trên {n} lượt ôn. {m} lượt mới từ đó.",
-  "pref.modelRetrainNudge": "Bạn có {m} lượt ôn mới. Huấn luyện lại để dùng chúng.",
-  "pref.modelRetrain": "Huấn luyện lại",
-  "pref.modelReset": "Về mặc định",
+  "pref.memoryQuestion": "Bạn muốn nhớ đến mức nào?",
+  "pref.memoryFewer": "Ít lượt ôn hơn",
+  "pref.memoryBalanced": "Cân bằng",
+  "pref.memoryMore": "Nhớ nhiều hơn",
+  "pref.memoryRecommended": "Khuyên dùng",
+  "pref.memoryForget": "Bạn sẽ quên khoảng 1 trong {n} thẻ.",
+  "pref.memoryExam": "Hợp khi sắp thi.",
+  "pref.memoryPerDay": "≈ {n} / ngày",
+  "pref.adaptMemory": "Thích ứng với trí nhớ của tôi",
+  "pref.adaptHint": "Học tốc độ quên của bạn từ các câu trả lời và hẹn lịch ôn cho phù hợp.",
+  "pref.adaptOff": "Đang tắt: dùng lịch chuẩn mà ai cũng bắt đầu với.",
+  "pref.adaptWaiting": "Bắt đầu sau {n} câu trả lời nữa.",
+  "pref.adaptSoon": "Sẽ thích ứng sau câu trả lời tiếp theo.",
+  "pref.adaptDone": "Đã thích ứng với bạn ngày {date}, từ {n} câu trả lời.",
+  "pref.adaptStandard": "Đã kiểm tra ngày {date}: lịch chuẩn đã hợp với bạn nên được giữ nguyên.",
+  "pref.adaptRetry": "Sẽ thử lại sau {n} câu trả lời nữa.",
   "pref.noLimit": "Không giới hạn",
   "pref.maxReviewsInvalid": "Nhập số nguyên từ 0 trở lên, hoặc để trống nếu không giới hạn.",
   "pref.apiTokens": "Mã API",
@@ -1307,8 +1286,6 @@ Object.assign(TRANSLATIONS.vi, {
   "leech.rewriteAlreadyRequested": "Đã yêu cầu viết lại",
   "leech.keepStudying": "Tiếp tục học",
   "toast.rewriteRequested": "KnowledgeApp sẽ viết lại thẻ này ở lần chạy tới.",
-  "toast.modelApplied": "Đang dùng mô hình của bạn. Áp dụng cho mỗi thẻ từ lần ôn tiếp theo.",
-  "toast.modelReset": "Đã về bộ lập lịch mặc định.",
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
@@ -2097,11 +2074,6 @@ Object.assign(TRANSLATIONS.vi, {
   "search.queryLabel": "Nội dung tìm kiếm",
   "search.resultsLabel": "Kết quả tìm kiếm",
   "error.requestFailed": "Đã xảy ra lỗi ({status}). Hãy thử lại.",
-  "error.notEnoughData": "Chưa đủ dữ liệu để huấn luyện. Hãy ôn thêm vài ngày nữa.",
-  "error.notEnoughReviews": "Chưa đủ lượt ôn để cá nhân hoá.",
-  "error.trainingBusy": "Đang huấn luyện. Vui lòng chờ một chút.",
-  "error.optimizerUnavailable": "Máy chủ này chưa hỗ trợ cá nhân hoá.",
-  "error.optimizerFailed": "Huấn luyện thất bại. Hãy thử lại sau.",
   "error.rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
   "error.missingFields": "Vui lòng điền đầy đủ thông tin.",
   "error.passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự.",
@@ -3094,6 +3066,7 @@ var state = {
   loadBalance: true,
   easyDays: [0, 0, 0, 0, 0, 0, 0],
   targetRecall: 90,
+  adaptMemory: true,
   fontScale: 1,
   ttsRate: 0.9,
   language: (function() {
@@ -11736,11 +11709,6 @@ var SQLiteAdapter = (function() {
     getSrsDistribution: function(days) { return req("GET", "/stats/srs-distribution" + (days ? "?days=" + days : "")); },
     getFutureDue: function(tz) { return req("GET", "/stats/future-due" + (tz != null ? "?tz=" + encodeURIComponent(tz) : "")); },
     getMemory: function() { return req("GET", "/memory"); },
-    // A few thousand reviews train in about a second; a long history may take a while.
-    trainMemory: function(tz) { return req("POST", "/memory/train", { tz: tz }, 120000); },
-    applyMemory: function() { return req("POST", "/memory/apply", {}); },
-    keepMemory: function() { return req("DELETE", "/memory/candidate"); },
-    resetMemory: function() { return req("DELETE", "/memory/model"); },
     getAchievements: function() { return req("GET", "/achievements"); },
     recordStudyEvent: function(kind, ref) { return req("POST", "/achievements/events", { kind: kind, ref: ref }); },
     getToday: function() { return req("GET", "/stats/today"); },
@@ -11973,8 +11941,11 @@ function applyPrefs(prefs) {
   if (Array.isArray(prefs.easyDays) && prefs.easyDays.length === 7) {
     state.easyDays = prefs.easyDays.map(function(v) { return v === 1 || v === 2 ? v : 0; });
   }
-  if (Number.isInteger(prefs.targetRecall) && prefs.targetRecall >= 80 && prefs.targetRecall <= 95) {
-    state.targetRecall = prefs.targetRecall;
+  if (typeof prefs.targetRecall === "number") {
+    state.targetRecall = nearestMemoryChoice(prefs.targetRecall);
+  }
+  if (typeof prefs.adaptMemory === "boolean") {
+    state.adaptMemory = prefs.adaptMemory;
   }
   if (prefs.dashMetricConfig && typeof prefs.dashMetricConfig === "object") {
     state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, prefs.dashMetricConfig);
@@ -12573,18 +12544,25 @@ document.getElementById("pref-easy-days").addEventListener("click", function(e) 
   if (again) again.focus();
 });
 
-// Target recall and the personal scheduler model (server/lib/memory.js). The slider is saved
-// with the other preferences; training, applying and resetting act at once, because each
-// is already an explicit choice and the candidate is shown before it is used.
+// How much to remember, and adapting to the learner (server/lib/memory.js). Three named
+// choices rather than a percentage, each with what it costs a day and how often you forget;
+// adapting runs on the server after answers, and the line under the switch says what it did.
+var MEMORY_CHOICES = [
+  { value: 85, key: "pref.memoryFewer", forget: 7 },
+  { value: 90, key: "pref.memoryBalanced", forget: 10, recommended: true },
+  { value: 95, key: "pref.memoryMore", forget: 20, exam: true }
+];
 var memoryInfo = null;
-var memoryTraining = false;
+var memoryChoiceDraft = 90;
+
+// A value saved by the earlier 80-95% slider maps to the nearest choice, as on the server.
+function nearestMemoryChoice(v) {
+  if (typeof v !== "number" || !isFinite(v) || v < 70 || v > 99) return 90;
+  return [85, 95].reduce(function(best, c) { return Math.abs(c - v) < Math.abs(best - v) ? c : best; }, 90);
+}
 
 function memoryPerDay(n) {
   return n >= 10 ? String(Math.round(n)) : String(Math.round(n * 10) / 10);
-}
-
-function memoryPct(x) {
-  return (Math.round(x * 1000) / 10).toFixed(1) + "%";
 }
 
 function memoryDate(ts) {
@@ -12592,92 +12570,60 @@ function memoryDate(ts) {
   catch (_) { return ""; }
 }
 
-function memoryModelHtml(info, recall, training) {
+function memoryChoicesHtml(info, chosen) {
+  var showLoad = !!(info && info.reviewCards && info.load);
+  return MEMORY_CHOICES.map(function(c) {
+    var on = c.value === chosen;
+    var load = showLoad ? info.load[c.value] : null;
+    return '<button type="button" class="memory-choice' + (on ? " on" : "") + '" role="radio" aria-checked="' + on +
+      '" data-value="' + c.value + '"><span class="memory-radio"></span><b>' + escHtml(t(c.key)) +
+      (c.recommended ? '<span class="memory-rec">' + escHtml(t("pref.memoryRecommended")) + "</span>" : "") + "</b>" +
+      (load != null ? '<span class="memory-per">' + escHtml(t("pref.memoryPerDay", { n: memoryPerDay(load) })) + "</span>" : "<span></span>") +
+      "<small>" + escHtml(t("pref.memoryForget", { n: c.forget })) + (c.exam ? " " + escHtml(t("pref.memoryExam")) : "") + "</small></button>";
+  }).join("");
+}
+
+// The line under the switch. adapt is the switch as it stands, saved or not.
+function memoryStatusHtml(info, adapt) {
   if (!info) return "";
-  var head = function(badge, warn) {
-    return '<div class="memory-head"><span>' + escHtml(t("pref.modelTitle")) + '</span><span class="memory-badge' +
-      (warn ? " warn" : "") + '">' + escHtml(badge) + "</span></div>";
-  };
-  var btn = function(action, key, primary, disabled) {
-    return '<button type="button" class="btn btn-sm ' + (primary ? "btn-primary" : "btn-ghost") + '" data-action="' + action +
-      '"' + (disabled ? " disabled" : "") + ">" + escHtml(t(key)) + "</button>";
-  };
-  var c = info.candidate;
-  if (c) {
-    var better = c.errorPersonal < c.errorDefault;
-    var now = info.load && info.load[recall], next = info.candidateLoad && info.candidateLoad[recall];
-    return '<div class="memory-head"><span>' + escHtml(t("pref.modelTrained", { n: c.reviews.toLocaleString() })) +
-      '</span><span class="memory-badge' + (better ? "" : " warn") + '">' + escHtml(t(better ? "pref.modelBetter" : "pref.modelWorse")) + "</span></div>" +
-      '<dl class="memory-kv"><dt>' + escHtml(t("pref.modelErrorDefault")) + "</dt><dd>" + memoryPct(c.errorDefault) + "</dd>" +
-      "<dt>" + escHtml(t("pref.modelErrorPersonal")) + "</dt><dd>" + memoryPct(c.errorPersonal) + "</dd>" +
-      (info.reviewCards && now != null && next != null
-        ? "<dt>" + escHtml(t("pref.modelLoadAt", { r: recall })) + "</dt><dd>" + memoryPerDay(now) + " → " + memoryPerDay(next) + "</dd>" : "") +
-      "</dl>" +
-      '<p class="pref-hint">' + escHtml(t("pref.modelErrorHint")) + "</p>" +
-      '<div class="memory-actions">' + btn("apply", "pref.modelApply", better) + btn("keep", "pref.modelKeep", !better) + "</div>";
-  }
-  if (info.model) {
-    var m = info.model;
-    return head(t("pref.modelPersonal", { date: memoryDate(m.trainedAt) })) +
-      '<p class="pref-hint">' + escHtml(t("pref.modelSince", { n: m.reviews.toLocaleString(), m: info.newSince.toLocaleString() })) + "</p>" +
-      (info.retrainSuggested ? '<p class="memory-nudge">' + escHtml(t("pref.modelRetrainNudge", { m: info.newSince.toLocaleString() })) + "</p>" : "") +
-      '<div class="memory-actions">' + btn("train", training ? "pref.modelTraining" : "pref.modelRetrain", info.retrainSuggested, training) +
-      btn("reset", "pref.modelReset", false, training) + "</div>";
-  }
+  if (!adapt) return '<p class="pref-hint">' + escHtml(t("pref.adaptOff")) + "</p>";
+  var line = function(text, good) { return '<p class="memory-line' + (good ? " good" : "") + '">' + escHtml(text) + "</p>"; };
+  if (info.model) return line("✓ " + t("pref.adaptDone", { date: memoryDate(info.model.trainedAt), n: info.model.reviews.toLocaleString() }), true);
   if (info.reviews < info.minReviews) {
     var pct = Math.round(info.reviews / info.minReviews * 100);
-    return head(t("pref.modelDefault"), true) +
-      '<div class="memory-progress" role="progressbar" aria-valuemin="0" aria-valuemax="' + info.minReviews + '" aria-valuenow="' + info.reviews +
-      '"><i style="width:' + pct + '%"></i></div>' +
-      '<p class="pref-hint">' + escHtml(t("pref.modelProgress", { n: info.reviews, min: info.minReviews })) + "</p>" +
-      '<div class="memory-actions">' + btn("train", "pref.modelTrain", false, true) + "</div>";
+    return '<div class="memory-progress" role="progressbar" aria-valuemin="0" aria-valuemax="' + info.minReviews +
+      '" aria-valuenow="' + info.reviews + '"><i style="width:' + pct + '%"></i></div>' +
+      line(t("pref.adaptWaiting", { n: info.minReviews - info.reviews }));
   }
-  return head(t("pref.modelDefault"), true) +
-    '<p class="pref-hint">' + escHtml(t("pref.modelIntro")) + "</p>" +
-    '<div class="memory-actions">' + btn("train", training ? "pref.modelTraining" : "pref.modelTrain", true, training) + "</div>";
+  var f = info.lastFit;
+  if (f && f.result === "standard") return line(t("pref.adaptStandard", { date: memoryDate(f.at) }));
+  if (f) return line(t("pref.adaptRetry", { n: Math.max(1, info.nextFitAt - info.reviews) }));
+  return line(t("pref.adaptSoon"));
 }
 
 function renderMemory() {
-  var recall = parseInt(document.getElementById("pref-target-recall").value, 10);
-  document.getElementById("pref-target-recall-value").textContent = recall + "%";
-  var load = memoryInfo && memoryInfo.reviewCards && memoryInfo.load ? memoryInfo.load[recall] : null;
-  document.getElementById("pref-memory-load").textContent = load != null ? t("pref.memoryLoad", { n: memoryPerDay(load), r: recall }) : "";
-  document.getElementById("pref-memory-model").innerHTML = memoryModelHtml(memoryInfo, recall, memoryTraining);
-}
-
-function refreshMemory() {
-  return store.getMemory().then(function(info) { memoryInfo = info; renderMemory(); });
+  document.getElementById("pref-memory-choices").innerHTML = memoryChoicesHtml(memoryInfo, memoryChoiceDraft);
+  document.getElementById("pref-memory-status").innerHTML = memoryStatusHtml(memoryInfo, document.getElementById("pref-adapt-memory").checked);
 }
 
 function openMemoryPrefs() {
-  document.getElementById("pref-target-recall").value = String(state.targetRecall);
+  memoryChoiceDraft = state.targetRecall;
+  document.getElementById("pref-adapt-memory").checked = state.adaptMemory;
   memoryInfo = null;
   renderMemory();
-  refreshMemory().catch(function() {});
+  store.getMemory().then(function(info) { memoryInfo = info; renderMemory(); }).catch(function() {});
 }
 
-document.getElementById("pref-target-recall").addEventListener("input", renderMemory);
-
-document.getElementById("pref-memory-model").addEventListener("click", function(e) {
-  var b = e.target.closest("button[data-action]");
-  if (!b || b.disabled) return;
-  var action = b.dataset.action;
-  var run;
-  if (action === "train") {
-    memoryTraining = true;
-    renderMemory();
-    run = store.trainMemory(new Date().getTimezoneOffset()).finally(function() { memoryTraining = false; });
-  } else if (action === "apply") {
-    run = store.applyMemory().then(function() { showToast(t("toast.modelApplied")); });
-  } else if (action === "keep") {
-    run = store.keepMemory();
-  } else if (action === "reset") {
-    run = store.resetMemory().then(function() { showToast(t("toast.modelReset")); });
-  } else return;
-  b.disabled = true;
-  run.catch(function(err) { showToast(err.message, "error"); })
-    .then(refreshMemory).catch(function() { renderMemory(); });
+document.getElementById("pref-memory-choices").addEventListener("click", function(e) {
+  var b = e.target.closest(".memory-choice");
+  if (!b) return;
+  memoryChoiceDraft = parseInt(b.dataset.value, 10);
+  renderMemory();
+  var again = document.querySelector('#pref-memory-choices [data-value="' + memoryChoiceDraft + '"]');
+  if (again) again.focus();
 });
+
+document.getElementById("pref-adapt-memory").addEventListener("change", renderMemory);
 
 document.getElementById("pref-daily-goal").addEventListener("click", function(e) {
   var pill = e.target.closest(".pill");
@@ -12773,8 +12719,10 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
     state.easyDays = easyDaysDraft.slice();
     prefs.loadBalance = state.loadBalance;
     prefs.easyDays = state.easyDays;
-    state.targetRecall = parseInt(document.getElementById("pref-target-recall").value, 10);
+    state.targetRecall = memoryChoiceDraft;
+    state.adaptMemory = document.getElementById("pref-adapt-memory").checked;
     prefs.targetRecall = state.targetRecall;
+    prefs.adaptMemory = state.adaptMemory;
   }
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache

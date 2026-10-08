@@ -851,15 +851,17 @@
         </div>
       </div>
       <div id="pref-memory">
+        <span class="form-label memory-question" id="pref-memory-label" data-i18n="pref.memoryQuestion">How much do you want to remember?</span>
+        <div class="memory-choices" id="pref-memory-choices" role="radiogroup" aria-labelledby="pref-memory-label"></div>
         <div class="pref-row">
-          <label class="form-label" for="pref-target-recall" data-i18n="pref.targetRecall">Target recall</label>
-          <b class="memory-value" id="pref-target-recall-value">90%</b>
+          <label class="form-label" for="pref-adapt-memory" data-i18n="pref.adaptMemory">Adapt to my memory</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-adapt-memory">
+            <span class="toggle-track"></span>
+          </label>
         </div>
-        <input type="range" id="pref-target-recall" class="memory-slider" min="80" max="95" step="1" value="90">
-        <div class="memory-ticks" aria-hidden="true"><span>80%</span><span>85%</span><span>90%</span><span>95%</span></div>
-        <p class="pref-hint" data-i18n="pref.targetRecallHint">The chance you still remember a card when it comes due. Higher means more reviews.</p>
-        <p class="pref-hint" id="pref-memory-load" aria-live="polite"></p>
-        <div class="memory-model" id="pref-memory-model" aria-live="polite"></div>
+        <p class="pref-hint" data-i18n="pref.adaptHint">Learns how fast you forget from your answers, and times reviews to match.</p>
+        <div class="memory-status" id="pref-memory-status" aria-live="polite"></div>
       </div>
       <div class="pref-row">
         <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
