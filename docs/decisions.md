@@ -1110,3 +1110,12 @@ The user asked for a PancakeSwap look, then for more in that vein. They are pale
 ## 2026-10-08 — Light mode gets depth from the page, not from white cards
 
 The user found light mode flat and low in contrast, and pointed at the session-end tiles (coloured band, thick coloured edge) as the look they liked. Page and card were nearly the same colour, so cards sank into the page. The fix darkens each palette's light page halfway toward its own border colour rather than making cards white, because white surfaces were rejected earlier as too bright (Parchment stops at #fcfbf9); only the five app-style palettes, whose originals are white, use #fff cards. Shadows are tinted with the palette's text colour instead of grey, so a Plum card casts a plum shadow. The flashcard edge takes 40% of the accent, and the main buttons a 3px ledge that sinks on press, the Duolingo and PancakeSwap cue for "this can be pressed". Dark mode is unchanged: it already had the contrast, and a ledge there reads as a glow. Every text pair still passes 4.5:1 on the darker pages; Candy's teal was darkened one step to keep a margin.
+
+## 2026-10-09 — One elevation on the home page: everything with an edge is raised
+
+After light mode gained depth, the home page mixed two languages: buttons and class cards stood on a ledge while the dashboard tiles, search bar and sort controls were flat, and the hero tiles sat on the page colour inside a card, so they read as recessed. The user compared "all flat" with "all raised" side by side and chose raised. So every bordered surface or control gets a 2px edge and a solid ledge (`--ledge`, the border mixed 16% toward the text colour), and only text-only actions stay flat, since they have no edge to stand on. The hero card stopped being a card; its tiles are the surfaces.
+
+The dashboard's colours went the same way. A fixed blue for time, green for new cards and amber for reviews gave six meanings on one screen, and green and amber already mean "good" and "warning" elsewhere. Meters, sparkline and week dots now use the palette's primary at three strengths, so they follow every palette; green is kept for a met goal, which is good news. The accuracy pills' Tailwind 600 colours measured 2.6–3.7:1 on their tints and moved to the soft status tokens.
+
+Cost: the ledge is light mode only, as with the buttons — in dark mode a ledge reads as a glow — so the two modes differ in depth, by design.
+
