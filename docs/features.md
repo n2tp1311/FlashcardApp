@@ -33,7 +33,7 @@
 
 ## Auth
 - Email/password register & login
-- Google OAuth (sign in, auto-register, link existing account)
+- Google OAuth (sign in, auto-register, link existing account). Linking, from Preferences or by a first Google sign-in to an account with the same email, ends with a "Google account linked" message. A failed sign-in shows a short reason code after the message (`invalid_client`, `redirect_uri_mismatch`, `server_no_such_column_google_id`), so it can be diagnosed without the server logs. `APP_URL` set without `https://` gets it added (`appUrl()` in `server/config/env.js`); without that, Google rejected the return address with Error 400. A users table made before Google sign-in gets `google_id` and `avatar_url` from a migration
 - Forgot password → email reset link (SMTP/Gmail via env vars)
 - Reset password page at /reset-password?token=...
 - Production security: dev reset token suppressed when NODE_ENV=production

@@ -222,6 +222,9 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
       user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
       if (user) {
         db.prepare("UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?").run(googleId, picture, user.id);
+        // Said on arrival, so a first Google sign-in to an email account is not a silent change.
+        setSession(req, user);
+        return res.redirect("/?google_linked=1");
       } else {
         // Create new account
         const id = genId();

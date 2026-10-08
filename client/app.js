@@ -531,6 +531,7 @@ Object.assign(TRANSLATIONS.en, {
   "auth.passwordsNoMatch": "Passwords do not match",
   "auth.resetFailed": "Reset failed",
   "auth.googleCancelled": "Google sign-in was cancelled.",
+  "auth.googleLinked": "Google account linked. You can now sign in with Google.",
   "auth.googleFailed": "Google sign-in failed. Please try again.",
   "auth.googleAlreadyLinked": "This Google account is already linked to another user.",
   "auth.genericError": "Authentication error.",
@@ -1557,6 +1558,7 @@ Object.assign(TRANSLATIONS.vi, {
   "auth.passwordsNoMatch": "Mật khẩu không khớp",
   "auth.resetFailed": "Đặt lại mật khẩu thất bại",
   "auth.googleCancelled": "Đăng nhập Google đã bị hủy.",
+  "auth.googleLinked": "Đã liên kết tài khoản Google. Giờ bạn có thể đăng nhập bằng Google.",
   "auth.googleFailed": "Đăng nhập Google thất bại. Vui lòng thử lại.",
   "auth.googleAlreadyLinked": "Tài khoản Google này đã được liên kết với người dùng khác.",
   "auth.genericError": "Lỗi xác thực.",
@@ -12380,6 +12382,7 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
   }
   if (params.get("google_linked") === "1") {
     history.replaceState({}, "", "/");
+    showToast(t("auth.googleLinked"));
   }
 })();
 

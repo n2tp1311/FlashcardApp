@@ -35,3 +35,11 @@ test("a failed Google sign-in says why in the message, as a bare code", function
   const app = fs.readFileSync(path.join(__dirname, "..", "client/app.js"), "utf8");
   assert.match(app, /if \(reason && \/\^\[a-z0-9_\]\{1,40\}\$\/\.test\(reason\)\) msg \+= " \(" \+ reason \+ "\)";/);
 });
+
+test("linking Google, from Preferences or by a first Google sign-in to an email account, says so", function() {
+  const auth = fs.readFileSync(path.join(__dirname, "..", "server/routes/auth.js"), "utf8");
+  assert.equal(auth.split('res.redirect("/?google_linked=1")').length - 1, 2);
+  const app = fs.readFileSync(path.join(__dirname, "..", "client/app.js"), "utf8");
+  assert.match(app, /params\.get\("google_linked"\) === "1"\) \{\s*history\.replaceState\(\{\}, "", "\/"\);\s*showToast\(t\("auth\.googleLinked"\)\);/);
+  assert.equal(app.split('"auth.googleLinked":').length - 1, 2, "English and Vietnamese");
+});
