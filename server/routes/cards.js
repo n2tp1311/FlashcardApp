@@ -8,13 +8,14 @@ const { requireAuth } = require("../middleware/auth");
 const { previewIntervals } = require("../fsrs");
 const { forEachBatch } = require("../lib/batch");
 const { isLeech, lapsesSinceEdit, resetLeech } = require("../lib/leech");
+const { userScheduler } = require("../lib/memory");
 const router  = express.Router();
 
 const UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads");
 
 // Precomputes what each of the 4 grading buttons would produce for this card, so the
 // flashcard screen's interval-preview text never has to duplicate FSRS math client-side.
-function attachFsrsPreview(row) {
+function attachFsrsPreview(row, sched) {
   var now = new Date();
   var preview = previewIntervals({
     srs_due_at: row.srs_due_at,
@@ -25,7 +26,7 @@ function attachFsrsPreview(row) {
     fsrs_lapses: row.fsrs_lapses,
     fsrs_learning_steps: row.fsrs_learning_steps,
     fsrs_last_review_at: row.fsrs_last_review_at
-  }, now);
+  }, now, sched);
   row.fsrs_preview_again = preview.again;
   row.fsrs_preview_hard  = preview.hard;
   row.fsrs_preview_good  = preview.good;
@@ -119,7 +120,8 @@ router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   const lastStudiedMap = batchLastStudiedAt(cards.map(c => c.id), userId);
   const rows = cards.map(c => ({ ...c, last_studied_at: lastStudiedMap[c.id] ?? null }));
 
-  res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) })));
+  const sched = userScheduler(db, userId);
+  res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) }, sched)));
 });
 
 // POST /api/cards/by-lessons  { lessonIds: [...] }  — bulk load for multi-lesson quiz
@@ -152,7 +154,8 @@ router.post("/cards/by-lessons", requireAuth, (req, res) => {
   const lastStudiedMap = batchLastStudiedAt(cards.map(c => c.id), userId);
   const rows = cards.map(c => ({ ...c, last_studied_at: lastStudiedMap[c.id] ?? null }));
 
-  res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) })));
+  const sched = userScheduler(db, userId);
+  res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) }, sched)));
 });
 
 // POST /api/lessons/:lessonId/cards

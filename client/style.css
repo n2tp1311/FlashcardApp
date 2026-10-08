@@ -4503,6 +4503,25 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .workload-axis { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; font-size: 0.5625rem; color: var(--text3); text-align: center; }
 .workload-axis .level-1 { color: var(--warning); font-weight: 700; }
 .workload-axis .level-2 { font-weight: 700; }
+
+/* Target recall and the personal scheduler model (Preferences, server only). */
+.memory-value { font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+.memory-slider { width: 100%; margin: 4px 0 0; accent-color: var(--primary); }
+.memory-ticks { display: flex; justify-content: space-between; font-size: 0.625rem; color: var(--text3); font-variant-numeric: tabular-nums; padding: 0 2px; }
+.memory-model { display: grid; gap: 8px; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 16px; }
+.memory-model:empty { display: none; }
+.memory-model .pref-hint { margin: 0; }
+.memory-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.8125rem; font-weight: 600; }
+.memory-head > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.memory-badge { font-size: 0.6875rem; font-weight: 700; border-radius: var(--radius-pill); padding: 2px 8px; background: var(--success-soft); color: var(--success-soft-text); white-space: nowrap; }
+.memory-badge.warn { background: var(--warning-soft); color: var(--warning-soft-text); }
+.memory-kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; font-size: 0.8125rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.memory-kv dt { margin: 0; }
+.memory-kv dd { margin: 0; text-align: right; font-weight: 700; color: var(--text); }
+.memory-progress { height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+.memory-progress i { display: block; height: 100%; background: var(--primary); }
+.memory-nudge { margin: 0; font-size: 0.8125rem; background: var(--success-soft); color: var(--success-soft-text); border-radius: 8px; padding: 8px 10px; }
+.memory-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .pref-token-list { list-style: none; margin: 0 0 8px; padding: 0; }
 .pref-token-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 0.8125rem; }
 .pref-token-info { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }

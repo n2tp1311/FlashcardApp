@@ -8,7 +8,8 @@
 const express = require("express");
 const db      = require("../db");
 const { forEachBatch } = require("../lib/batch");
-const { scheduler, cardFromState } = require("../fsrs");
+const { cardFromState } = require("../fsrs");
+const { userScheduler } = require("../lib/memory");
 const { requireApiToken } = require("../middleware/apiToken");
 const { resetLeech } = require("../lib/leech");
 const { rateLimit, byApiUser } = require("../middleware/rateLimit");
@@ -490,6 +491,7 @@ router.get("/classes/:id/cards", (req, res) => {
   const positions = new Map();
   const cards = [];
   const nowDate = new Date();
+  const scheduler = userScheduler(db, req.userId);
   rows.forEach(r => {
     const position = positions.get(r.lesson_id) || 0;
     positions.set(r.lesson_id, position + 1);

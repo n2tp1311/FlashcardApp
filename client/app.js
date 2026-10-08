@@ -179,6 +179,29 @@ Object.assign(TRANSLATIONS.en, {
   "pref.easyDayLabel": "{day}: {level}",
   "pref.forecastTitle": "Due in the next 14 days",
   "pref.forecastBar": "{date}: {n} due",
+  "pref.targetRecall": "Target recall",
+  "pref.targetRecallHint": "The chance you still remember a card when it comes due. Higher means more reviews.",
+  "pref.memoryLoad": "About {n} reviews a day once your cards settle at {r}%. A new target applies to each card from its next review.",
+  "pref.modelTitle": "Scheduler",
+  "pref.modelDefault": "Default",
+  "pref.modelPersonal": "Personal · {date}",
+  "pref.modelProgress": "{n} of {min} reviews. Personalizing unlocks at {min}.",
+  "pref.modelIntro": "Fits the scheduler to how you remember, from your own answers. You see the result before anything changes.",
+  "pref.modelTrain": "Personalize from my reviews",
+  "pref.modelTraining": "Training…",
+  "pref.modelTrained": "Trained on {n} reviews",
+  "pref.modelBetter": "Better fit",
+  "pref.modelWorse": "No better",
+  "pref.modelErrorDefault": "Prediction error, default",
+  "pref.modelErrorPersonal": "Prediction error, yours",
+  "pref.modelLoadAt": "Reviews per day at {r}%",
+  "pref.modelErrorHint": "How far predicted recall was from what you actually got, on your latest reviews, which training did not see.",
+  "pref.modelApply": "Use my model",
+  "pref.modelKeep": "Keep current",
+  "pref.modelSince": "Trained on {n} reviews. {m} new since then.",
+  "pref.modelRetrainNudge": "You have {m} new reviews. Retrain to include them.",
+  "pref.modelRetrain": "Retrain",
+  "pref.modelReset": "Reset to default",
   "pref.noLimit": "No limit",
   "pref.maxReviewsInvalid": "Enter a whole number (0 or more), or leave it empty for no limit.",
   "pref.apiTokens": "API tokens",
@@ -255,6 +278,8 @@ Object.assign(TRANSLATIONS.en, {
   "leech.rewriteAlreadyRequested": "Rewrite requested",
   "leech.keepStudying": "Keep studying",
   "toast.rewriteRequested": "KnowledgeApp will rewrite this card on its next run.",
+  "toast.modelApplied": "Your model is in use. It applies to each card from its next review.",
+  "toast.modelReset": "Back to the default scheduler.",
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
@@ -1068,6 +1093,11 @@ Object.assign(TRANSLATIONS.en, {
   "search.queryLabel": "Search query",
   "search.resultsLabel": "Search results",
   "error.requestFailed": "Something went wrong ({status}). Try again.",
+  "error.notEnoughData": "These reviews are not enough to fit a model on yet. Keep studying over a few more days.",
+  "error.notEnoughReviews": "Not enough reviews to personalize yet.",
+  "error.trainingBusy": "Already training. Wait a moment.",
+  "error.optimizerUnavailable": "Personalizing is not available on this server.",
+  "error.optimizerFailed": "Training failed. Try again later.",
   "error.rateLimited": "Too many requests. Try again later.",
   "error.missingFields": "Please fill in all fields.",
   "error.passwordTooShort": "Password must be at least 6 characters.",
@@ -1182,6 +1212,29 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.easyDayLabel": "{day}: {level}",
   "pref.forecastTitle": "Đến hạn trong 14 ngày tới",
   "pref.forecastBar": "{date}: {n} thẻ đến hạn",
+  "pref.targetRecall": "Mức nhớ mục tiêu",
+  "pref.targetRecallHint": "Khả năng bạn còn nhớ thẻ khi đến hạn ôn. Càng cao thì càng nhiều lượt ôn.",
+  "pref.memoryLoad": "Khoảng {n} lượt ôn mỗi ngày khi thẻ ổn định ở mức {r}%. Mục tiêu mới áp dụng cho mỗi thẻ từ lần ôn tiếp theo.",
+  "pref.modelTitle": "Bộ lập lịch",
+  "pref.modelDefault": "Mặc định",
+  "pref.modelPersonal": "Cá nhân · {date}",
+  "pref.modelProgress": "{n}/{min} lượt ôn. Cá nhân hoá mở khi đủ {min}.",
+  "pref.modelIntro": "Điều chỉnh bộ lập lịch theo cách bạn ghi nhớ, dựa trên câu trả lời của bạn. Bạn xem kết quả trước khi áp dụng.",
+  "pref.modelTrain": "Cá nhân hoá từ lượt ôn của tôi",
+  "pref.modelTraining": "Đang huấn luyện…",
+  "pref.modelTrained": "Huấn luyện trên {n} lượt ôn",
+  "pref.modelBetter": "Khớp hơn",
+  "pref.modelWorse": "Không tốt hơn",
+  "pref.modelErrorDefault": "Sai số dự đoán, mặc định",
+  "pref.modelErrorPersonal": "Sai số dự đoán, của bạn",
+  "pref.modelLoadAt": "Lượt ôn mỗi ngày ở {r}%",
+  "pref.modelErrorHint": "Độ lệch giữa khả năng nhớ dự đoán và kết quả thật, đo trên các lượt ôn gần nhất mà mô hình chưa thấy khi huấn luyện.",
+  "pref.modelApply": "Dùng mô hình của tôi",
+  "pref.modelKeep": "Giữ nguyên",
+  "pref.modelSince": "Huấn luyện trên {n} lượt ôn. {m} lượt mới từ đó.",
+  "pref.modelRetrainNudge": "Bạn có {m} lượt ôn mới. Huấn luyện lại để dùng chúng.",
+  "pref.modelRetrain": "Huấn luyện lại",
+  "pref.modelReset": "Về mặc định",
   "pref.noLimit": "Không giới hạn",
   "pref.maxReviewsInvalid": "Nhập số nguyên từ 0 trở lên, hoặc để trống nếu không giới hạn.",
   "pref.apiTokens": "Mã API",
@@ -1254,6 +1307,8 @@ Object.assign(TRANSLATIONS.vi, {
   "leech.rewriteAlreadyRequested": "Đã yêu cầu viết lại",
   "leech.keepStudying": "Tiếp tục học",
   "toast.rewriteRequested": "KnowledgeApp sẽ viết lại thẻ này ở lần chạy tới.",
+  "toast.modelApplied": "Đang dùng mô hình của bạn. Áp dụng cho mỗi thẻ từ lần ôn tiếp theo.",
+  "toast.modelReset": "Đã về bộ lập lịch mặc định.",
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
@@ -2042,6 +2097,11 @@ Object.assign(TRANSLATIONS.vi, {
   "search.queryLabel": "Nội dung tìm kiếm",
   "search.resultsLabel": "Kết quả tìm kiếm",
   "error.requestFailed": "Đã xảy ra lỗi ({status}). Hãy thử lại.",
+  "error.notEnoughData": "Chưa đủ dữ liệu để huấn luyện. Hãy ôn thêm vài ngày nữa.",
+  "error.notEnoughReviews": "Chưa đủ lượt ôn để cá nhân hoá.",
+  "error.trainingBusy": "Đang huấn luyện. Vui lòng chờ một chút.",
+  "error.optimizerUnavailable": "Máy chủ này chưa hỗ trợ cá nhân hoá.",
+  "error.optimizerFailed": "Huấn luyện thất bại. Hãy thử lại sau.",
   "error.rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
   "error.missingFields": "Vui lòng điền đầy đủ thông tin.",
   "error.passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự.",
@@ -3033,6 +3093,7 @@ var state = {
   quizCountsAsKnown: false,
   loadBalance: true,
   easyDays: [0, 0, 0, 0, 0, 0, 0],
+  targetRecall: 90,
   fontScale: 1,
   ttsRate: 0.9,
   language: (function() {
@@ -11674,6 +11735,12 @@ var SQLiteAdapter = (function() {
     getCardHistory: function(cardId) { return req("GET", "/stats/card-history/" + encodeURIComponent(cardId)); },
     getSrsDistribution: function(days) { return req("GET", "/stats/srs-distribution" + (days ? "?days=" + days : "")); },
     getFutureDue: function(tz) { return req("GET", "/stats/future-due" + (tz != null ? "?tz=" + encodeURIComponent(tz) : "")); },
+    getMemory: function() { return req("GET", "/memory"); },
+    // A few thousand reviews train in about a second; a long history may take a while.
+    trainMemory: function(tz) { return req("POST", "/memory/train", { tz: tz }, 120000); },
+    applyMemory: function() { return req("POST", "/memory/apply", {}); },
+    keepMemory: function() { return req("DELETE", "/memory/candidate"); },
+    resetMemory: function() { return req("DELETE", "/memory/model"); },
     getAchievements: function() { return req("GET", "/achievements"); },
     recordStudyEvent: function(kind, ref) { return req("POST", "/achievements/events", { kind: kind, ref: ref }); },
     getToday: function() { return req("GET", "/stats/today"); },
@@ -11905,6 +11972,9 @@ function applyPrefs(prefs) {
   }
   if (Array.isArray(prefs.easyDays) && prefs.easyDays.length === 7) {
     state.easyDays = prefs.easyDays.map(function(v) { return v === 1 || v === 2 ? v : 0; });
+  }
+  if (Number.isInteger(prefs.targetRecall) && prefs.targetRecall >= 80 && prefs.targetRecall <= 95) {
+    state.targetRecall = prefs.targetRecall;
   }
   if (prefs.dashMetricConfig && typeof prefs.dashMetricConfig === "object") {
     state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, prefs.dashMetricConfig);
@@ -12320,7 +12390,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-haptics").checked = state.haptics;
   document.getElementById("pref-sounds").checked = state.sounds;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
-  if (IS_SERVER) openWorkloadPrefs();
+  if (IS_SERVER) { openWorkloadPrefs(); openMemoryPrefs(); }
   document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
   prefFontLabel();
   prefRateLabel(state.ttsRate);
@@ -12503,6 +12573,112 @@ document.getElementById("pref-easy-days").addEventListener("click", function(e) 
   if (again) again.focus();
 });
 
+// Target recall and the personal scheduler model (server/lib/memory.js). The slider is saved
+// with the other preferences; training, applying and resetting act at once, because each
+// is already an explicit choice and the candidate is shown before it is used.
+var memoryInfo = null;
+var memoryTraining = false;
+
+function memoryPerDay(n) {
+  return n >= 10 ? String(Math.round(n)) : String(Math.round(n * 10) / 10);
+}
+
+function memoryPct(x) {
+  return (Math.round(x * 1000) / 10).toFixed(1) + "%";
+}
+
+function memoryDate(ts) {
+  try { return new Date(ts * 1000).toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US", { day: "numeric", month: "short" }); }
+  catch (_) { return ""; }
+}
+
+function memoryModelHtml(info, recall, training) {
+  if (!info) return "";
+  var head = function(badge, warn) {
+    return '<div class="memory-head"><span>' + escHtml(t("pref.modelTitle")) + '</span><span class="memory-badge' +
+      (warn ? " warn" : "") + '">' + escHtml(badge) + "</span></div>";
+  };
+  var btn = function(action, key, primary, disabled) {
+    return '<button type="button" class="btn btn-sm ' + (primary ? "btn-primary" : "btn-ghost") + '" data-action="' + action +
+      '"' + (disabled ? " disabled" : "") + ">" + escHtml(t(key)) + "</button>";
+  };
+  var c = info.candidate;
+  if (c) {
+    var better = c.errorPersonal < c.errorDefault;
+    var now = info.load && info.load[recall], next = info.candidateLoad && info.candidateLoad[recall];
+    return '<div class="memory-head"><span>' + escHtml(t("pref.modelTrained", { n: c.reviews.toLocaleString() })) +
+      '</span><span class="memory-badge' + (better ? "" : " warn") + '">' + escHtml(t(better ? "pref.modelBetter" : "pref.modelWorse")) + "</span></div>" +
+      '<dl class="memory-kv"><dt>' + escHtml(t("pref.modelErrorDefault")) + "</dt><dd>" + memoryPct(c.errorDefault) + "</dd>" +
+      "<dt>" + escHtml(t("pref.modelErrorPersonal")) + "</dt><dd>" + memoryPct(c.errorPersonal) + "</dd>" +
+      (info.reviewCards && now != null && next != null
+        ? "<dt>" + escHtml(t("pref.modelLoadAt", { r: recall })) + "</dt><dd>" + memoryPerDay(now) + " → " + memoryPerDay(next) + "</dd>" : "") +
+      "</dl>" +
+      '<p class="pref-hint">' + escHtml(t("pref.modelErrorHint")) + "</p>" +
+      '<div class="memory-actions">' + btn("apply", "pref.modelApply", better) + btn("keep", "pref.modelKeep", !better) + "</div>";
+  }
+  if (info.model) {
+    var m = info.model;
+    return head(t("pref.modelPersonal", { date: memoryDate(m.trainedAt) })) +
+      '<p class="pref-hint">' + escHtml(t("pref.modelSince", { n: m.reviews.toLocaleString(), m: info.newSince.toLocaleString() })) + "</p>" +
+      (info.retrainSuggested ? '<p class="memory-nudge">' + escHtml(t("pref.modelRetrainNudge", { m: info.newSince.toLocaleString() })) + "</p>" : "") +
+      '<div class="memory-actions">' + btn("train", training ? "pref.modelTraining" : "pref.modelRetrain", info.retrainSuggested, training) +
+      btn("reset", "pref.modelReset", false, training) + "</div>";
+  }
+  if (info.reviews < info.minReviews) {
+    var pct = Math.round(info.reviews / info.minReviews * 100);
+    return head(t("pref.modelDefault"), true) +
+      '<div class="memory-progress" role="progressbar" aria-valuemin="0" aria-valuemax="' + info.minReviews + '" aria-valuenow="' + info.reviews +
+      '"><i style="width:' + pct + '%"></i></div>' +
+      '<p class="pref-hint">' + escHtml(t("pref.modelProgress", { n: info.reviews, min: info.minReviews })) + "</p>" +
+      '<div class="memory-actions">' + btn("train", "pref.modelTrain", false, true) + "</div>";
+  }
+  return head(t("pref.modelDefault"), true) +
+    '<p class="pref-hint">' + escHtml(t("pref.modelIntro")) + "</p>" +
+    '<div class="memory-actions">' + btn("train", training ? "pref.modelTraining" : "pref.modelTrain", true, training) + "</div>";
+}
+
+function renderMemory() {
+  var recall = parseInt(document.getElementById("pref-target-recall").value, 10);
+  document.getElementById("pref-target-recall-value").textContent = recall + "%";
+  var load = memoryInfo && memoryInfo.reviewCards && memoryInfo.load ? memoryInfo.load[recall] : null;
+  document.getElementById("pref-memory-load").textContent = load != null ? t("pref.memoryLoad", { n: memoryPerDay(load), r: recall }) : "";
+  document.getElementById("pref-memory-model").innerHTML = memoryModelHtml(memoryInfo, recall, memoryTraining);
+}
+
+function refreshMemory() {
+  return store.getMemory().then(function(info) { memoryInfo = info; renderMemory(); });
+}
+
+function openMemoryPrefs() {
+  document.getElementById("pref-target-recall").value = String(state.targetRecall);
+  memoryInfo = null;
+  renderMemory();
+  refreshMemory().catch(function() {});
+}
+
+document.getElementById("pref-target-recall").addEventListener("input", renderMemory);
+
+document.getElementById("pref-memory-model").addEventListener("click", function(e) {
+  var b = e.target.closest("button[data-action]");
+  if (!b || b.disabled) return;
+  var action = b.dataset.action;
+  var run;
+  if (action === "train") {
+    memoryTraining = true;
+    renderMemory();
+    run = store.trainMemory(new Date().getTimezoneOffset()).finally(function() { memoryTraining = false; });
+  } else if (action === "apply") {
+    run = store.applyMemory().then(function() { showToast(t("toast.modelApplied")); });
+  } else if (action === "keep") {
+    run = store.keepMemory();
+  } else if (action === "reset") {
+    run = store.resetMemory().then(function() { showToast(t("toast.modelReset")); });
+  } else return;
+  b.disabled = true;
+  run.catch(function(err) { showToast(err.message, "error"); })
+    .then(refreshMemory).catch(function() { renderMemory(); });
+});
+
 document.getElementById("pref-daily-goal").addEventListener("click", function(e) {
   var pill = e.target.closest(".pill");
   if (!pill) return;
@@ -12597,6 +12773,8 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
     state.easyDays = easyDaysDraft.slice();
     prefs.loadBalance = state.loadBalance;
     prefs.easyDays = state.easyDays;
+    state.targetRecall = parseInt(document.getElementById("pref-target-recall").value, 10);
+    prefs.targetRecall = state.targetRecall;
   }
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
@@ -12755,7 +12933,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-memory", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }

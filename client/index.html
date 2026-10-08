@@ -850,6 +850,17 @@
           <div class="workload-axis" id="pref-forecast-axis"></div>
         </div>
       </div>
+      <div id="pref-memory">
+        <div class="pref-row">
+          <label class="form-label" for="pref-target-recall" data-i18n="pref.targetRecall">Target recall</label>
+          <b class="memory-value" id="pref-target-recall-value">90%</b>
+        </div>
+        <input type="range" id="pref-target-recall" class="memory-slider" min="80" max="95" step="1" value="90">
+        <div class="memory-ticks" aria-hidden="true"><span>80%</span><span>85%</span><span>90%</span><span>95%</span></div>
+        <p class="pref-hint" data-i18n="pref.targetRecallHint">The chance you still remember a card when it comes due. Higher means more reviews.</p>
+        <p class="pref-hint" id="pref-memory-load" aria-live="polite"></p>
+        <div class="memory-model" id="pref-memory-model" aria-live="polite"></div>
+      </div>
       <div class="pref-row">
         <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
         <button type="button" class="btn btn-sm btn-ghost" id="btn-replay-tutorial" data-i18n="tutorial.replay">Show tutorial</button>

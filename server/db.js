@@ -396,6 +396,13 @@ try {
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_rewrite_requests_user_status ON rewrite_requests(user_id, status, created_at)"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_rewrite_requests_card ON rewrite_requests(card_id)"); } catch (_) {}
 
+// A personal FSRS model (lib/memory.js), as JSON { w, trainedAt, reviews, errorDefault,
+// errorPersonal }. Its own columns, not preferences: the preferences PUT takes whatever the
+// client sends, and the parameters must only ever come from the optimizer. A candidate is
+// a fit the user has not applied yet.
+try { db.exec("ALTER TABLE users ADD COLUMN fsrs_model TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE users ADD COLUMN fsrs_candidate TEXT"); } catch (_) {}
+
 // Achievements. Most are worked out from attempts and card states; these record the few
 // things nothing else stores. typed: the answer was typed in Flashcard & Write (Writer).
 // study_events: one row per (kind, ref) -- a day the due list was emptied (due_zero), a quiz

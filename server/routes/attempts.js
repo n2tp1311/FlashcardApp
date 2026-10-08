@@ -3,10 +3,11 @@
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
-const { scheduler, ratingFor, cardFromState, MAX_INTERVAL, State } = require("../fsrs");
+const { ratingFor, cardFromState, MAX_INTERVAL, State } = require("../fsrs");
 const { balanceDue, normalizeTz, settingsFrom } = require("../lib/workload");
 const { snapshotState, restoredState, undoRefusal, STATE_FIELDS } = require("../lib/undo");
 const { LEECH_LAPSES } = require("../lib/leech");
+const { userScheduler } = require("../lib/memory");
 const router  = express.Router();
 
 function genId() {
@@ -105,7 +106,7 @@ router.post("/", requireAuth, (req, res) => {
 
     const rating = ratingFor(correct, grade, source);
     const fsrsCard = cardFromState(stateRow, nowDate);
-    const nextCard = scheduler.next(fsrsCard, nowDate, rating).card;
+    const nextCard = userScheduler(db, userId).next(fsrsCard, nowDate, rating).card;
     let dueAt = Math.floor(nextCard.due.getTime() / 1000);
     if (nextCard.state === State.Review) dueAt = balancedDue(userId, cardId, now, dueAt, tz);
 

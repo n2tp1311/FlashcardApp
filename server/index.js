@@ -87,6 +87,7 @@ app.use("/api/classes", require("./routes/classes"));
 app.use("/api",         require("./routes/lessons"));
 app.use("/api",         require("./routes/cards"));
 app.use("/api/attempts",require("./routes/attempts"));
+app.use("/api/memory",  require("./routes/memory"));
 app.use("/api/stats",   require("./routes/stats"));
 const { exportRouter, importRouter } = require("./routes/exportImport");
 app.use("/api/export",  exportRouter);

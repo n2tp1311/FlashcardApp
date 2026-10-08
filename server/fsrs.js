@@ -40,14 +40,16 @@ function cardFromState(stateRow, nowDate) {
 // Precomputes what each of the 4 grading buttons would produce, in seconds-from-now, without
 // committing anything — powers the client's interval-preview text. Server-computed (not
 // duplicated client-side) so the preview can never drift from the authoritative scheduler.
-function previewIntervals(stateRow, nowDate) {
+// sched is the user's own (lib/memory.js userScheduler); the default is FSRS's defaults at 90%.
+function previewIntervals(stateRow, nowDate, sched) {
+  sched = sched || scheduler;
   var fsrsCard = cardFromState(stateRow, nowDate);
   var nowSec = Math.floor(nowDate.getTime() / 1000);
   return {
-    again: Math.floor(scheduler.next(fsrsCard, nowDate, Rating.Again).card.due.getTime() / 1000) - nowSec,
-    hard:  Math.floor(scheduler.next(fsrsCard, nowDate, Rating.Hard).card.due.getTime() / 1000) - nowSec,
-    good:  Math.floor(scheduler.next(fsrsCard, nowDate, Rating.Good).card.due.getTime() / 1000) - nowSec,
-    easy:  Math.floor(scheduler.next(fsrsCard, nowDate, Rating.Easy).card.due.getTime() / 1000) - nowSec
+    again: Math.floor(sched.next(fsrsCard, nowDate, Rating.Again).card.due.getTime() / 1000) - nowSec,
+    hard:  Math.floor(sched.next(fsrsCard, nowDate, Rating.Hard).card.due.getTime() / 1000) - nowSec,
+    good:  Math.floor(sched.next(fsrsCard, nowDate, Rating.Good).card.due.getTime() / 1000) - nowSec,
+    easy:  Math.floor(sched.next(fsrsCard, nowDate, Rating.Easy).card.due.getTime() / 1000) - nowSec
   };
 }
 
