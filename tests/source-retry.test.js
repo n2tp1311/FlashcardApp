@@ -49,7 +49,7 @@ test("no passage, no panel", () => {
 });
 
 test("the panel follows the explanation on the flashcard back and after a quiz answer, and is cleared per question", () => {
-  assert.match(extract("renderFlashcard"), /var fcSource = sourcePanel\(card\);\s*if \(fcSource\) expContainer\.appendChild\(fcSource\);/);
+  assert.match(extract("renderFlashcard"), /var fcWhy = whyPanel\(card\);\s*if \(fcWhy\) expContainer\.appendChild\(fcWhy\);/);
   assert.match(extract("renderQuizCard"), /var prevSource = document\.getElementById\("quiz-source"\);\s*if \(prevSource\) prevSource\.remove\(\);/);
   assert.match(extract("renderQuizCard"), /priorResult && sourcePanel\(card, "quiz-source"\)/);
   assert.match(extract("answerQuiz"), /sourcePanel\(card, "quiz-source"\)/);

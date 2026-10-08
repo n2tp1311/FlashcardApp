@@ -1160,6 +1160,12 @@ Object.assign(TRANSLATIONS.en, {
   "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
   "study.source": "From the book",
+  "study.why": "Why is this the answer?",
+  "study.whyPrompt": "In your own words, why?",
+  "study.whyHint": "A few words is enough. Then check it against the book.",
+  "study.whySkip": "Skip",
+  "study.whyCheck": "Check",
+  "study.whyYou": "You: {text}",
   "keymap.reviewPrevNext": "Review prev / next answered question"
 });
 Object.assign(TRANSLATIONS.vi, {
@@ -2184,6 +2190,12 @@ Object.assign(TRANSLATIONS.vi, {
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
   "study.source": "Trích từ sách",
+  "study.why": "Vì sao là đáp án này?",
+  "study.whyPrompt": "Theo cách của bạn, vì sao?",
+  "study.whyHint": "Vài chữ là đủ. Rồi đối chiếu với sách.",
+  "study.whySkip": "Bỏ qua",
+  "study.whyCheck": "Đối chiếu",
+  "study.whyYou": "Bạn: {text}",
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
 
@@ -8458,6 +8470,55 @@ function sourcePanel(card, id) {
   return el;
 }
 
+// "Why?" on a flashcard with a book passage: you write your own reason first, then the passage
+// opens under it. Explaining an answer to yourself before checking makes a miss stick better
+// than re-reading, which the passage alone would be. The reason is not stored: it only has to
+// be written to do its work. Skip goes straight to the passage.
+function whyPanel(card) {
+  if (!card || typeof card.source !== "string" || !card.source.trim()) return null;
+  var el = document.createElement("section");
+  el.className = "why-panel";
+  el.id = "fc-why";
+  el.innerHTML =
+    '<button type="button" class="why-btn" id="btn-fc-why" aria-expanded="false">' + ICON_BOOK + " " + escHtml(t("study.why")) + "</button>" +
+    '<div class="why-ask hidden" id="fc-why-ask">' +
+      '<label class="why-label" for="fc-why-input">' + escHtml(t("study.whyPrompt")) + "</label>" +
+      '<textarea class="form-textarea why-input" id="fc-why-input" rows="2" maxlength="500"></textarea>' +
+      '<p class="why-hint">' + escHtml(t("study.whyHint")) + "</p>" +
+      '<div class="why-btns"><button type="button" class="btn btn-sm btn-ghost" id="btn-fc-why-skip">' + escHtml(t("study.whySkip")) + "</button>" +
+      '<button type="button" class="btn btn-sm btn-primary" id="btn-fc-why-check">' + escHtml(t("study.whyCheck")) + "</button></div>" +
+    "</div>" +
+    '<div class="why-answer hidden" id="fc-why-answer" aria-live="polite">' +
+      '<p class="why-yours hidden" id="fc-why-yours"></p>' +
+      '<p class="why-from">' + escHtml(t("study.source")) + "</p>" +
+      '<blockquote class="explanation-body source-body why-source" id="fc-why-source"></blockquote>' +
+    "</div>";
+  // textContent, as in sourcePanel: book prose is full of $ amounts and markup-like text.
+  el.querySelector("#fc-why-source").textContent = card.source;
+  var btn = el.querySelector("#btn-fc-why"), ask = el.querySelector("#fc-why-ask"), input = el.querySelector("#fc-why-input");
+  function reveal(reason) {
+    var yours = el.querySelector("#fc-why-yours");
+    yours.textContent = reason ? t("study.whyYou", { text: reason }) : "";
+    yours.classList.toggle("hidden", !reason);
+    ask.classList.add("hidden");
+    el.querySelector("#fc-why-answer").classList.remove("hidden");
+  }
+  btn.addEventListener("click", function() {
+    btn.classList.add("hidden");
+    btn.setAttribute("aria-expanded", "true");
+    ask.classList.remove("hidden");
+    input.focus();
+  });
+  el.querySelector("#btn-fc-why-skip").addEventListener("click", function() { reveal(""); });
+  el.querySelector("#btn-fc-why-check").addEventListener("click", function() { reveal(input.value.trim()); });
+  // Enter checks; Shift+Enter is a new line. Esc leaves the field so study keys work again.
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); reveal(input.value.trim()); }
+    else if (e.key === "Escape") { e.stopPropagation(); input.blur(); }
+  });
+  return el;
+}
+
 function renderFlashcard() {
   hideVocabularySelectionAction(true);
   clearFlashcardTranslation();
@@ -8622,8 +8683,8 @@ function renderFlashcard() {
     expEl.appendChild(body);
     expContainer.appendChild(expEl);
   }
-  var fcSource = sourcePanel(card);
-  if (fcSource) expContainer.appendChild(fcSource);
+  var fcWhy = whyPanel(card);
+  if (fcWhy) expContainer.appendChild(fcWhy);
 
   // Difficulty badge — read from the already-fetched studyStatsMap (server-backed accuracy
   // history), not localStorage's "fc-attempts" (only ever populated in local/offline mode).
