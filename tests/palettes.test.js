@@ -117,3 +117,14 @@ test("High contrast is a saved preference, applied before first paint", function
     assert.equal(app.split('"' + key + '"').length - 1, 2, key + " needs an English and a Vietnamese string");
   }
 });
+
+// Light mode has depth: each palette tints its own shadows, so the card lifts off the page.
+test("every light palette sets its own shadows", function() {
+  for (const palette of PALETTES) {
+    const sel = palette === "parchment" ? ":root {" : ':root[data-palette="' + palette + '"]:not([data-theme="dark"]) {';
+    const start = css.indexOf(sel);
+    const body = css.slice(start, css.indexOf("\n}", start));
+    assert.match(body, /--shadow-md: 0 2px 4px rgba\(/, palette);
+  }
+  assert.match(css, /:root:not\(\[data-theme="dark"\]\) \.btn-primary,/);
+});
