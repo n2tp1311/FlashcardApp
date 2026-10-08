@@ -147,3 +147,12 @@ test("the home dashboard keeps its meter hues and takes the rest from the palett
   assert.match(html, /id="sidebar-upstream-badge" class="due-badge is-count/);
   assert.match(html, /id="sidebar-vocabulary-badge" class="due-badge is-count/);
 });
+
+test("in light mode the card back is a light face tinted with the palette's accent", function() {
+  for (const palette of PALETTES) {
+    const t = tokensFor(palette, "light");
+    assert.ok(ratio(t["card-back"], "#000000") > ratio(t["card-back"], "#ffffff"), palette + ": light card back is dark");
+    assert.notEqual(t["card-back"], t["surface"], palette + ": card back is not tinted");
+    assert.equal(t["card-back-text"], t["text"], palette);
+  }
+});
