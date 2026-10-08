@@ -1083,3 +1083,13 @@ Costs:
 - With the three server-only topics, the list is a little taller than a small phone's screen. It fits in the offline app.
 - The page shown is an attribute on the dialog (`data-page`), so the layout is plain CSS and the existing phone layout tests only have to set it.
 
+## 2026-10-08 — "Why?" shows the book passage after your own reason, with no model call
+
+Explaining an answer to yourself before checking helps a miss stick better than re-reading it. The preview offered three versions: your reason, then an explanation Claude writes (A); your reason, then the book passage (B); or Claude's explanation straight away (C). A and C would spend the Anthropic key on Railway, about a cent or less per card the first time. The user chose B, which costs nothing.
+
+Costs:
+- Only KnowledgeApp cards have a passage, so cards you typed yourself have no Why?.
+- The passage does not answer your reason. You compare the two yourself.
+- What you write is not saved. It only has to be written to do its work, and keeping it would need a column and a place to show it.
+- Flashcards only: a quiz answer already shows the passage, and MCQ cards have their own explanation.
+
