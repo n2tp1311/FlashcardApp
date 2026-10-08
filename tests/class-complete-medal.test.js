@@ -32,7 +32,7 @@ async function render(p, width) {
         '<span class="class-done-medal hidden" id="cls-done-c2" role="img"></span></div></div>' +
     '</div>');
   await page.addStyleTag({ path: path.join(root, "client", "style.css") });
-  await page.addScriptTag({ content: "function t(k) { return k; }" + icons + ["classDoneLevel", "setClassDoneMedal"].map(extract).join("") });
+  await page.addScriptTag({ content: "function t(k) { return k; }" + icons + ["classDoneLevel", "classGoalText", "setClassDoneMedal"].map(extract).join("") });
   await page.evaluate(function(p) { setClassDoneMedal("c1", p); setClassDoneMedal("c2", p); }, p);
   return page;
 }
@@ -48,10 +48,18 @@ function medal(page, id) {
 
 const mastery = (mastered, known, learning) => ({ mastered, known, learning, new: 0 });
 
-test("a class still in progress shows no medallion", async function() {
+test("a class still in progress shows an empty badge that says what earns the check", async function() {
   const page = await render({ known: 200, total: 240, mastery: mastery(60, 170, 10) });
-  assert.equal((await medal(page, "cls-done-c1")).display, "none");
-  assert.equal((await medal(page, "cls-done-c2")).display, "none");
+  for (const id of ["cls-done-c1", "cls-done-c2"]) {
+    const m = await medal(page, id);
+    assert.equal(m.display, "grid");
+    assert.match(m.cls, /is-goal/);
+    assert.doesNotMatch(m.cls, /is-learned|is-mastered/);
+    assert.equal(m.label, "class.goalLearning");
+  }
+  await page.evaluate(function() { setClassDoneMedal("c1", { known: 0, total: 240, mastery: { mastered: 0, known: 0, learning: 0, new: 0 } }); });
+  await page.evaluate(function() { setClassDoneMedal("c2", { known: 0, total: 0 }); });
+  assert.equal((await medal(page, "cls-done-c2")).display, "none", "an empty class has nothing to earn");
   await page.close();
 });
 
@@ -83,8 +91,9 @@ test("a card falling back takes the medallion away", async function() {
   const page = await render({ known: 3, total: 240, mastery: mastery(240, 0, 0) });
   await page.evaluate(function() { setClassDoneMedal("c1", { known: 3, total: 240, mastery: { mastered: 239, known: 0, learning: 1, new: 0 } }); });
   const grid = await medal(page, "cls-done-c1");
-  assert.equal(grid.display, "none");
-  assert.equal(grid.label, null);
+  assert.match(grid.cls, /is-goal/);
+  assert.equal(grid.paths, 1);
+  assert.equal(grid.label, "class.goalLearning");
   await page.close();
 });
 

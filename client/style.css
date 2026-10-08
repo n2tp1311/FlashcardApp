@@ -3064,6 +3064,8 @@ button.leech-pill:hover { filter: brightness(0.96); }
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--success) 45%, transparent);
 }
 .class-done-medal.is-mastered { background: var(--success-fill); color: #fff; }
+/* Not earned yet: an empty dashed badge in its place, whose tip says what earns it. */
+.class-done-medal.is-goal { border: 1.5px dashed var(--border); color: var(--text3); opacity: .75; cursor: help; }
 .class-card .class-done-medal { position: absolute; top: 14px; right: 14px; }
 .class-list-row .class-done-medal { width: 22px; height: 22px; }
 /* Pinned: a small pin before the class name. */
@@ -3389,6 +3391,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .class-card .class-done-medal { top: 36px; left: 36px; right: auto; width: 20px; height: 20px; box-shadow: 0 0 0 2px var(--surface); }
   .class-card .class-done-medal.is-learned { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--success) 45%, transparent), 0 0 0 2px var(--surface); }
   .class-card .class-done-medal svg { width: 11px; height: 11px; }
+  .class-card .class-done-medal.is-goal { background: var(--surface); }
   .class-card:hover .class-done-medal { opacity: 1; }
   /* A fourth always-visible button would push the row into the icon; pinning is in the
      class's menu on a phone. */

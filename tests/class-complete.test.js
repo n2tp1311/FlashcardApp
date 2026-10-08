@@ -19,7 +19,7 @@ function load() {
     escHtml: function(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
   };
   vm.createContext(ctx);
-  vm.runInContext(["classDoneLevel", "classProgressHtml"].map(extract).join(""), ctx);
+  vm.runInContext(["classDoneLevel", "classProgressHtml", "classGoalText", "classMedalTip"].map(extract).join(""), ctx);
   return ctx;
 }
 
@@ -51,7 +51,7 @@ test("an incomplete class never reads 100%", function() {
 test("both the grid card and the list row carry the medallion and the shared progress setter", function() {
   assert.equal(app.split('store.getProgress("class", cls.id).then(function(p) { setClassProgress(cls.id, p); });').length - 1, 2);
   assert.equal(app.split('<span class="class-done-medal hidden" id="cls-done-\' + cls.id + \'" role="img"></span>').length - 1, 2);
-  assert.match(extract("setClassProgress"), /setClassDoneMedal\(classId, p\);[^]*if \(p\.mastery\) \{ renderMasteryBar\(wrap, p\); return; \}/);
+  assert.match(extract("setClassProgress"), /setClassDoneMedal\(classId, p\);[^]*if \(p\.mastery\) \{\s*renderMasteryBar\(wrap, p\);[^]*?return;\s*\}/);
 });
 
 test("the medallion's tooltip names its level, in both languages", function() {
@@ -64,4 +64,28 @@ test("the medallion's tooltip names its level, in both languages", function() {
 test("the medallion hides under the hover buttons in the grid card's corner", function() {
   const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
   assert.match(css, /\.class-card:hover \.class-done-medal \{ opacity: 0; \}/);
+});
+
+test("the empty badge names what is left: new cards, cards in Learning, or both", function() {
+  const ctx = load();
+  assert.equal(ctx.classGoalText({ known: 240, total: 240, mastery: m(20, 211, 9) }), "class.goalLearning|n=0,l=9");
+  assert.equal(ctx.classGoalText({ known: 0, total: 240, mastery: m(0, 228, 0, 12) }), "class.goalNew|n=12,l=0");
+  assert.equal(ctx.classGoalText({ known: 0, total: 240, mastery: m(0, 219, 9, 12) }), "class.goalNewLearning|n=12,l=9");
+  assert.equal(ctx.classGoalText({ known: 230, total: 240 }), "class.goalKnown|n=10");
+  for (const lang of ["en", "vi"]) {
+    const block = app.slice(app.indexOf(lang === "en" ? '"class.learnedTooltip": "Every' : '"class.learnedTooltip": "Mọi'));
+    for (const k of ["goalLearning", "goalNew", "goalNewLearning", "goalKnown"]) assert.match(block.slice(0, 1200), new RegExp('"class\\.' + k + '":'), lang + " " + k);
+  }
+});
+
+test("a tap on the badge shows its tip instead of opening the class", function() {
+  const ctx = load();
+  const shown = [];
+  ctx.showToast = function(msg) { shown.push(msg); };
+  const medal = { title: "To earn the ✓, get every card in Learning right (9 left)" };
+  const on = { target: { closest: (sel) => sel === ".class-done-medal" ? medal : null } };
+  assert.equal(ctx.classMedalTip(on), true);
+  assert.deepEqual(shown, [medal.title]);
+  assert.equal(ctx.classMedalTip({ target: { closest: () => null } }), false, "elsewhere on the card opens the class");
+  assert.match(app, /if \(!state\.homeSelectMode && classMedalTip\(e\)\) return;[\s\S]*if \(!state\.homeSelectMode && classMedalTip\(e\)\) return;/, "grid card and list row both");
 });

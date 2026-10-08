@@ -455,6 +455,10 @@ Object.assign(TRANSLATIONS.en, {
   "class.levelMeta": "Lv {level} · {lessons}",
   "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
   "class.learnedTooltip": "Every card in this class is learned: none are New or Learning",
+  "class.goalLearning": "To earn the ✓, get every card in Learning right ({l} left)",
+  "class.goalNew": "To earn the ✓, study every new card ({n} left)",
+  "class.goalNewLearning": "To earn the ✓, study every new card ({n} left) and get every card in Learning right ({l} left)",
+  "class.goalKnown": "To earn the ✓, mark every card Know It ({n} left)",
   "class.completeTooltip": "Every card in this class is marked Know It",
   "class.masteredTooltip": "Every card in this class is mastered: the next review is 21 or more days away",
   "class.accuracyTooltip": "Accuracy across all recorded attempts (Flashcard + Quiz)",
@@ -1480,6 +1484,10 @@ Object.assign(TRANSLATIONS.vi, {
   "class.levelMeta": "Bậc {level} · {lessons}",
   "class.knownTooltip": "Số thẻ bạn đã tự đánh dấu \"Đã thuộc\" trong chế độ Thẻ ghi nhớ",
   "class.learnedTooltip": "Mọi thẻ trong lớp này đều đã học: không còn thẻ Mới hay Đang học",
+  "class.goalLearning": "Để nhận ✓, hãy trả lời đúng mọi thẻ Đang học (còn {l})",
+  "class.goalNew": "Để nhận ✓, hãy học mọi thẻ mới (còn {n})",
+  "class.goalNewLearning": "Để nhận ✓, hãy học mọi thẻ mới (còn {n}) và trả lời đúng mọi thẻ Đang học (còn {l})",
+  "class.goalKnown": "Để nhận ✓, hãy đánh dấu thuộc mọi thẻ (còn {n})",
   "class.completeTooltip": "Mọi thẻ trong lớp này đều đã thuộc",
   "class.masteredTooltip": "Mọi thẻ trong lớp này đều thành thạo: lần ôn tới cách 21 ngày trở lên",
   "class.accuracyTooltip": "Độ chính xác trên toàn bộ lượt trả lời đã ghi nhận (Thẻ ghi nhớ + Trắc nghiệm)",
@@ -3799,6 +3807,7 @@ function _renderClassGridCard(cls, container) {
   onLongPress(card, function() { longPressSelectClass(cls.id); });
   card.addEventListener("click", function(e) {
     if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive],[data-cls-pin]")) return;
+    if (!state.homeSelectMode && classMedalTip(e)) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
     openClass(cls.id);
   });
@@ -3867,6 +3876,7 @@ function _renderClassListRow(cls, container) {
   onLongPress(row, function() { longPressSelectClass(cls.id); });
   row.addEventListener("click", function(e) {
     if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive],[data-cls-pin]")) return;
+    if (!state.homeSelectMode && classMedalTip(e)) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
     openClass(cls.id);
   });
@@ -3926,20 +3936,40 @@ var CLASS_DONE_ICONS = {
   mastered: '<svg viewBox="0 0 16 12" width="16" height="12" fill="none" aria-hidden="true"><path d="M1.5 6.2l2.3 2.3 4.7-4.9M7.3 8.3l.2.2 4.7-4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 
+// What is left before the Learned badge: a class whose cards had all been studied lost its
+// check when a few were answered wrong, and nothing on the card said why.
+function classGoalText(p) {
+  if (!p.mastery) return t("class.goalKnown", { n: Math.max(0, p.total - p.known) });
+  var n = p.mastery.new, l = p.mastery.learning;
+  return t(n && l ? "class.goalNewLearning" : n ? "class.goalNew" : "class.goalLearning", { n: n, l: l });
+}
+
 // Computed on every render, never stored: a card graded Still learning takes it away, and a
-// badge that outlived that would claim something untrue.
+// badge that outlived that would claim something untrue. Until it is earned, an empty dashed
+// badge holds its place and says what earns it.
 function setClassDoneMedal(classId, p) {
   var el = document.getElementById("cls-done-" + classId);
   if (!el) return;
   var level = classDoneLevel(p);
-  el.classList.toggle("hidden", !level);
-  el.classList.remove("is-learned", "is-mastered");
-  if (!level) { el.innerHTML = ""; el.removeAttribute("title"); el.removeAttribute("aria-label"); return; }
-  var tip = t(level === "mastered" ? "class.masteredTooltip" : p.mastery ? "class.learnedTooltip" : "class.completeTooltip");
+  var goal = !level && p && p.total > 0;
+  el.classList.toggle("hidden", !level && !goal);
+  el.classList.remove("is-learned", "is-mastered", "is-goal");
+  if (!level && !goal) { el.innerHTML = ""; el.removeAttribute("title"); el.removeAttribute("aria-label"); return; }
+  var tip = goal ? classGoalText(p)
+    : t(level === "mastered" ? "class.masteredTooltip" : p.mastery ? "class.learnedTooltip" : "class.completeTooltip");
+  level = level || "goal";
   el.classList.add("is-" + level);
-  el.innerHTML = CLASS_DONE_ICONS[level];
+  el.innerHTML = CLASS_DONE_ICONS[level === "goal" ? "learned" : level];
   el.title = tip;
   el.setAttribute("aria-label", tip);
+}
+
+// A phone has no hover, so a tap on the badge shows what its tooltip says.
+function classMedalTip(e) {
+  var medal = e.target.closest(".class-done-medal");
+  if (!medal || !medal.title) return false;
+  showToast(medal.title);
+  return true;
 }
 
 function setClassProgress(classId, p) {
@@ -3950,7 +3980,13 @@ function setClassProgress(classId, p) {
   if (!wrap) return;
   setClassDoneMedal(classId, p);
   wrap.style.display = "";
-  if (p.mastery) { renderMasteryBar(wrap, p); return; }
+  if (p.mastery) {
+    renderMasteryBar(wrap, p);
+    // On a desktop grid card the edit buttons cover the badge on hover; the bar's tip says it too.
+    var masteryText = wrap.querySelector(".progress-mini-text");
+    if (masteryText && !classDoneLevel(p)) masteryText.title += " " + classGoalText(p) + ".";
+    return;
+  }
   var done = p.known >= p.total;
   wrap.classList.toggle("is-complete", done);
   fill.style.transform = scaleXStyle(done ? 1 : Math.round(p.known / p.total * 100) / 100);
