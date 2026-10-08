@@ -750,201 +750,233 @@
   <!-- Preferences Modal -->
   <div id="modal-preferences" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-preferences-heading">
     <div class="modal-header">
+      <button type="button" class="pref-back" id="pref-back" aria-label="Back" data-i18n-aria="common.back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg><span data-i18n="pref.title">Preferences</span></button>
       <h3 id="modal-preferences-heading" data-i18n="pref.title">Preferences</h3>
+      <span class="pref-saved" id="pref-saved" role="status" aria-live="polite"></span>
       <button class="modal-close" data-modal="preferences" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <h4 class="pref-group" data-i18n="pref.groupAppearance">Appearance</h4>
-      <div class="pref-row">
-        <label class="form-label" data-i18n="pref.textSize">Text size</label>
-        <div class="font-scale-row">
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-font-decrease">A−</button>
-          <span id="pref-font-label" data-dirty-text class="tf-pct-label">100%</span>
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-font-increase">A+</button>
+    <div class="modal-body prefs-body">
+      <nav class="pref-home" id="pref-home" aria-labelledby="modal-preferences-heading">
+        <div class="pref-nav-group">
+          <button type="button" class="pref-nav-row" data-page="appearance" id="pref-nav-appearance"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupAppearance">Appearance</span><small class="pref-nav-sum" id="pref-sum-appearance"></small></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button type="button" class="pref-nav-row" data-page="language" id="pref-nav-language"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.language">Language</span><small class="pref-nav-sum" id="pref-sum-language"></small></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
-      </div>
-      <div class="pref-row">
-        <label class="form-label" data-i18n="pref.theme">Theme</label>
-        <div class="font-scale-row" id="pref-theme">
-          <button type="button" class="pill" data-value="light" data-i18n="pref.themeLight">Light</button>
-          <button type="button" class="pill" data-value="dark" data-i18n="pref.themeDark">Dark</button>
-          <button type="button" class="pill" data-value="system" data-i18n="pref.themeSystem">Match device</button>
-        </div>
-      </div>
-      <div class="pref-row">
-        <label class="form-label" for="pref-contrast" data-i18n="pref.highContrast">High contrast</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="pref-contrast">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-      <p class="pref-hint" data-i18n="pref.highContrastHint">Dark mode only: brighter text and vivid colours on the page and both sides of the card.</p>
-      <div class="pref-row pref-row-wrap">
-        <label class="form-label" data-i18n="pref.palette">Colour theme</label>
-        <div class="palette-row" id="pref-palette">
-          <button type="button" class="pill palette-pill" data-value="parchment" data-i18n="pref.palette.parchment">Parchment</button>
-          <button type="button" class="pill palette-pill" data-value="sage" data-i18n="pref.palette.sage">Sage</button>
-          <button type="button" class="pill palette-pill" data-value="slate" data-i18n="pref.palette.slate">Slate</button>
-          <button type="button" class="pill palette-pill" data-value="sepia" data-i18n="pref.palette.sepia">Sepia</button>
-          <button type="button" class="pill palette-pill" data-value="plum" data-i18n="pref.palette.plum">Plum</button>
-          <button type="button" class="pill palette-pill" data-value="harbour" data-i18n="pref.palette.harbour">Harbour</button>
-          <button type="button" class="pill palette-pill" data-value="serika" data-i18n="pref.palette.serika">Serika</button>
-          <button type="button" class="pill palette-pill" data-value="nord" data-i18n="pref.palette.nord">Nord</button>
-          <button type="button" class="pill palette-pill" data-value="gruvbox" data-i18n="pref.palette.gruvbox">Gruvbox</button>
-          <button type="button" class="pill palette-pill" data-value="solarized" data-i18n="pref.palette.solarized">Solarized</button>
-          <button type="button" class="pill palette-pill" data-value="catppuccin" data-i18n="pref.palette.catppuccin">Catppuccin</button>
-          <button type="button" class="pill palette-pill" data-value="rosepine" data-i18n="pref.palette.rosepine">Rosé Pine</button>
-          <button type="button" class="pill palette-pill" data-value="everforest" data-i18n="pref.palette.everforest">Everforest</button>
-          <button type="button" class="pill palette-pill" data-value="tokyonight" data-i18n="pref.palette.tokyonight">Tokyo Night</button>
-          <button type="button" class="pill palette-pill" data-value="dracula" data-i18n="pref.palette.dracula">Dracula</button>
-        </div>
-      </div>
-      <div class="pref-row">
-        <label class="form-label" data-i18n="pref.language">Language</label>
-        <div class="font-scale-row">
-          <button type="button" class="pill" data-lang="en" id="pref-lang-en">English</button>
-          <button type="button" class="pill" data-lang="vi" id="pref-lang-vi">Tiếng Việt</button>
-        </div>
-      </div>
-      <h4 class="pref-group" data-i18n="pref.groupStudy">Study</h4>
-      <div class="pref-row">
-        <label class="form-label" for="pref-quiz-known" data-i18n="pref.quizCountsAsKnown">Quiz answers count as Know It</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="pref-quiz-known">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-      <p class="pref-hint" data-i18n="pref.quizCountsAsKnownHint">A correct quiz answer counts as Know It (marks the card known and schedules it like a flashcard); a wrong answer counts as Learning. Off: cards only make progress through flashcards.</p>
-      <div class="pref-row">
-        <label class="form-label" data-i18n="pref.dailyGoal">Daily goal</label>
-        <div class="font-scale-row" id="pref-daily-goal">
-          <button type="button" class="pill" data-value="0" data-i18n="pref.dailyGoalOff">Off</button>
-          <button type="button" class="pill" data-value="10">10</button>
-          <button type="button" class="pill" data-value="20">20</button>
-          <button type="button" class="pill" data-value="30">30</button>
-          <button type="button" class="pill" data-value="50">50</button>
-        </div>
-      </div>
-      <p class="pref-hint" data-i18n="pref.dailyGoalHint">Cards to answer each day, shown as a ring on Home. Counts flashcards and quiz answers.</p>
-      <div class="pref-row">
-        <label class="form-label" for="pref-max-reviews" data-i18n="pref.maxReviewsPerDay">Max reviews per day</label>
-        <input type="number" id="pref-max-reviews" class="form-input" min="0" step="1" inputmode="numeric" style="width:100px" placeholder="No limit" data-i18n-placeholder="pref.noLimit">
-      </div>
-      <div id="pref-workload">
-        <div class="pref-row">
-          <label class="form-label" for="pref-load-balance" data-i18n="pref.loadBalance">Spread reviews evenly</label>
+        <div class="pref-nav-group">
+          <button type="button" class="pref-nav-row" data-page="plan" id="pref-nav-plan"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupPlan">Daily plan</span><small class="pref-nav-sum" id="pref-sum-plan"></small></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button type="button" class="pref-nav-row" data-page="memory" id="pref-nav-memory"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupMemory">Memory</span><small class="pref-nav-sum" id="pref-sum-memory"></small></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button type="button" class="pref-nav-row" data-page="reminders" id="pref-nav-reminders"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupReminders">Reminders</span><small class="pref-nav-sum" id="pref-sum-reminders"></small></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <div class="pref-row pref-nav-toggle">
+          <label class="form-label" for="pref-quiz-known" data-i18n="pref.quizCountsAsKnown">Quiz answers count as Know It</label>
           <label class="toggle-switch">
-            <input type="checkbox" id="pref-load-balance">
+            <input type="checkbox" id="pref-quiz-known">
             <span class="toggle-track"></span>
           </label>
         </div>
-        <p class="pref-hint" data-i18n="pref.loadBalanceHint">Moves each due date by a day or two toward a quieter day. Your memory of the card is barely affected.</p>
-        <div class="pref-row pref-row-wrap">
-          <span class="form-label" id="pref-easy-days-label" data-i18n="pref.easyDays">Easy days</span>
-          <div class="easy-days" id="pref-easy-days" role="group" aria-labelledby="pref-easy-days-label"></div>
+        <p class="pref-hint" data-i18n="pref.quizCountsAsKnownHint">Right answers move cards on like Know It, wrong ones like Learning. Off: only flashcards move cards on.</p>
         </div>
-        <p class="pref-hint" data-i18n="pref.easyDaysHint">Tap a day to cycle Normal, Light and Minimum. Light gets about half the usual reviews; Minimum only cards that cannot move to another day.</p>
-        <div class="workload-forecast" id="pref-forecast">
-          <div class="workload-forecast-head"><span data-i18n="pref.forecastTitle">Due in the next 14 days</span><b id="pref-forecast-total"></b></div>
-          <div class="workload-bars" id="pref-forecast-bars"></div>
-          <div class="workload-axis" id="pref-forecast-axis"></div>
+        <div class="pref-nav-group">
+          <button type="button" class="pref-nav-row" data-page="sound" id="pref-nav-sound"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupSound">Sound &amp; speech</span><small class="pref-nav-sum" id="pref-sum-sound"></small></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button type="button" class="pref-nav-row" data-page="data" id="pref-nav-data"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupData">Account &amp; data</span><small class="pref-nav-sum" id="pref-sum-data"></small></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <div class="pref-row pref-nav-toggle">
+          <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-replay-tutorial" data-i18n="tutorial.replay">Show tutorial</button>
         </div>
-      </div>
-      <div id="pref-memory">
-        <span class="form-label memory-question" id="pref-memory-label" data-i18n="pref.memoryQuestion">How much do you want to remember?</span>
-        <div class="memory-choices" id="pref-memory-choices" role="radiogroup" aria-labelledby="pref-memory-label"></div>
-        <div class="pref-row">
-          <label class="form-label" for="pref-adapt-memory" data-i18n="pref.adaptMemory">Adapt to my memory</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="pref-adapt-memory">
-            <span class="toggle-track"></span>
-          </label>
         </div>
-        <p class="pref-hint" data-i18n="pref.adaptHint">Learns how fast you forget from your answers, and times reviews to match.</p>
-        <div class="memory-status" id="pref-memory-status" aria-live="polite"></div>
-      </div>
-      <div id="pref-reminders">
-        <div class="pref-row">
-          <label class="form-label" for="pref-reminders-on" data-i18n="pref.reminders">Remind me to study</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="pref-reminders-on">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="reminder-options" id="pref-reminder-options">
+      </nav>
+      <div class="pref-pages">
+        <section class="pref-page" data-page="appearance" aria-labelledby="pref-page-appearance">
+          <h4 class="pref-group" id="pref-page-appearance" data-i18n="pref.groupAppearance">Appearance</h4>
           <div class="pref-row">
-            <label class="form-label" for="pref-reminder-time" data-i18n="pref.reminderTime">Every day at</label>
-            <input type="time" class="form-input reminder-time" id="pref-reminder-time" value="20:00">
+            <label class="form-label" data-i18n="pref.textSize">Text size</label>
+            <div class="font-scale-row">
+              <button type="button" class="btn btn-sm btn-ghost" id="pref-font-decrease">A−</button>
+              <span id="pref-font-label" data-dirty-text class="tf-pct-label">100%</span>
+              <button type="button" class="btn btn-sm btn-ghost" id="pref-font-increase">A+</button>
+            </div>
           </div>
-          <p class="pref-hint" data-i18n="pref.reminderHint">Only on days with cards to review, and not if you have already studied.</p>
           <div class="pref-row">
-            <label class="form-label" for="pref-reminder-streak" data-i18n="pref.reminderStreak">Save my streak in the evening</label>
+            <label class="form-label" data-i18n="pref.theme">Theme</label>
+            <div class="font-scale-row" id="pref-theme">
+              <button type="button" class="pill" data-value="light" data-i18n="pref.themeLight">Light</button>
+              <button type="button" class="pill" data-value="dark" data-i18n="pref.themeDark">Dark</button>
+              <button type="button" class="pill" data-value="system" data-i18n="pref.themeSystem">Match device</button>
+            </div>
+          </div>
+          <div class="pref-row">
+            <label class="form-label" for="pref-contrast" data-i18n="pref.highContrast">High contrast</label>
             <label class="toggle-switch">
-              <input type="checkbox" id="pref-reminder-streak">
+              <input type="checkbox" id="pref-contrast">
               <span class="toggle-track"></span>
             </label>
           </div>
-          <p class="pref-hint" data-i18n="pref.reminderStreakHint">One more nudge in the evening, only if you have not studied today and your streak would end.</p>
-          <button type="button" class="btn btn-sm btn-ghost" id="btn-reminder-test" data-i18n="pref.reminderTest">Send a test reminder</button>
-        </div>
-        <p class="reminder-status" id="pref-reminder-status" aria-live="polite"></p>
-      </div>
-      <div class="pref-row">
-        <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
-        <button type="button" class="btn btn-sm btn-ghost" id="btn-replay-tutorial" data-i18n="tutorial.replay">Show tutorial</button>
-      </div>
-      <h4 class="pref-group" data-i18n="pref.groupSound">Sound &amp; speech</h4>
-      <div class="pref-row">
-        <label class="form-label" for="pref-sounds" data-i18n="pref.sounds">Sound effects</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="pref-sounds">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-      <p class="pref-hint" data-i18n="pref.soundsHint">A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.</p>
-      <div class="pref-row">
-        <label class="form-label" for="pref-haptics" data-i18n="pref.haptics">Vibration feedback</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="pref-haptics">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-      <p class="pref-hint hidden" id="pref-haptics-hint" data-i18n="pref.hapticsUnsupported">This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.</p>
-      <div class="pref-row">
-        <label class="form-label" data-i18n="pref.speed">Speed</label>
-        <div class="font-scale-row">
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-decrease">−</button>
-          <span id="pref-rate-label" data-dirty-text class="tf-pct-label">0.9x</span>
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-increase">+</button>
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-tts-test" title="Test speed" aria-label="Test speed" data-i18n-title="pref.testSpeed" data-i18n-aria="pref.testSpeed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
-        </div>
-      </div>
-      <h4 class="pref-group" id="pref-group-data" data-i18n="pref.groupData">Account &amp; data</h4>
-      <div class="pref-tokens" id="pref-backup" data-no-dirty>
-        <label class="form-label" data-i18n="pref.backup">Backup</label>
-        <p class="pref-hint" data-i18n="pref.backupHint">Everything in your account, including study progress. To share one class, use Export on the class instead.</p>
-        <button type="button" class="btn btn-sm btn-outline" id="btn-download-backup" data-i18n="pref.downloadBackup">Download full backup</button>
-      </div>
-      <div class="pref-tokens" id="pref-api-tokens" data-no-dirty>
-        <label class="form-label" data-i18n="pref.apiTokens">API tokens</label>
-        <p class="pref-hint" data-i18n="pref.apiTokensHint">Lets KnowledgeApp send card updates to your account.</p>
-        <ul class="pref-token-list" id="pref-token-list"></ul>
-        <div class="pref-token-create">
-          <input type="text" id="pref-token-name" class="form-input" maxlength="60" placeholder="Token name" data-i18n-placeholder="pref.tokenName">
-          <button type="button" class="btn btn-sm btn-ghost" id="pref-token-create" data-i18n="pref.createToken">Create token</button>
-        </div>
-        <div class="pref-token-reveal hidden" id="pref-token-reveal">
-          <p class="pref-hint" data-i18n="pref.tokenCopyOnce">Copy this token now — it won't be shown again.</p>
-          <div class="pref-token-create">
-            <input type="text" id="pref-token-value" class="form-input" readonly>
-            <button type="button" class="btn btn-sm btn-primary" id="pref-token-copy" data-i18n="pref.copy">Copy</button>
+          <p class="pref-hint" data-i18n="pref.highContrastHint">Dark mode only: brighter text and vivid colours on the page and both sides of the card.</p>
+          <div class="pref-row pref-row-wrap">
+            <label class="form-label" data-i18n="pref.palette">Colour theme</label>
+            <div class="palette-row" id="pref-palette">
+              <button type="button" class="pill palette-pill" data-value="parchment" data-i18n="pref.palette.parchment">Parchment</button>
+              <button type="button" class="pill palette-pill" data-value="sage" data-i18n="pref.palette.sage">Sage</button>
+              <button type="button" class="pill palette-pill" data-value="slate" data-i18n="pref.palette.slate">Slate</button>
+              <button type="button" class="pill palette-pill" data-value="sepia" data-i18n="pref.palette.sepia">Sepia</button>
+              <button type="button" class="pill palette-pill" data-value="plum" data-i18n="pref.palette.plum">Plum</button>
+              <button type="button" class="pill palette-pill" data-value="harbour" data-i18n="pref.palette.harbour">Harbour</button>
+              <button type="button" class="pill palette-pill" data-value="serika" data-i18n="pref.palette.serika">Serika</button>
+              <button type="button" class="pill palette-pill" data-value="nord" data-i18n="pref.palette.nord">Nord</button>
+              <button type="button" class="pill palette-pill" data-value="gruvbox" data-i18n="pref.palette.gruvbox">Gruvbox</button>
+              <button type="button" class="pill palette-pill" data-value="solarized" data-i18n="pref.palette.solarized">Solarized</button>
+              <button type="button" class="pill palette-pill" data-value="catppuccin" data-i18n="pref.palette.catppuccin">Catppuccin</button>
+              <button type="button" class="pill palette-pill" data-value="rosepine" data-i18n="pref.palette.rosepine">Rosé Pine</button>
+              <button type="button" class="pill palette-pill" data-value="everforest" data-i18n="pref.palette.everforest">Everforest</button>
+              <button type="button" class="pill palette-pill" data-value="tokyonight" data-i18n="pref.palette.tokyonight">Tokyo Night</button>
+              <button type="button" class="pill palette-pill" data-value="dracula" data-i18n="pref.palette.dracula">Dracula</button>
+            </div>
           </div>
-        </div>
+        </section>
+        <section class="pref-page" data-page="language" aria-labelledby="pref-page-language">
+          <h4 class="pref-group" id="pref-page-language" data-i18n="pref.language">Language</h4>
+          <div class="pref-row">
+            <label class="form-label" data-i18n="pref.language">Language</label>
+            <div class="font-scale-row">
+              <button type="button" class="pill" data-lang="en" id="pref-lang-en">English</button>
+              <button type="button" class="pill" data-lang="vi" id="pref-lang-vi">Tiếng Việt</button>
+            </div>
+          </div>
+        </section>
+        <section class="pref-page" data-page="plan" aria-labelledby="pref-page-plan">
+          <h4 class="pref-group" id="pref-page-plan" data-i18n="pref.groupPlan">Daily plan</h4>
+          <div class="pref-row">
+            <label class="form-label" data-i18n="pref.dailyGoal">Daily goal</label>
+            <div class="font-scale-row" id="pref-daily-goal">
+              <button type="button" class="pill" data-value="0" data-i18n="pref.dailyGoalOff">Off</button>
+              <button type="button" class="pill" data-value="10">10</button>
+              <button type="button" class="pill" data-value="20">20</button>
+              <button type="button" class="pill" data-value="30">30</button>
+              <button type="button" class="pill" data-value="50">50</button>
+            </div>
+          </div>
+          <p class="pref-hint" data-i18n="pref.dailyGoalHint">Cards to answer each day, shown as a ring on Home. Counts flashcards and quiz answers.</p>
+          <div class="pref-row">
+            <label class="form-label" for="pref-max-reviews" data-i18n="pref.maxReviewsPerDay">Max reviews per day</label>
+            <input type="number" id="pref-max-reviews" class="form-input" min="0" step="1" inputmode="numeric" style="width:100px" placeholder="No limit" data-i18n-placeholder="pref.noLimit">
+          </div>
+          <div id="pref-workload">
+            <div class="pref-row">
+              <label class="form-label" for="pref-load-balance" data-i18n="pref.loadBalance">Spread reviews evenly</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="pref-load-balance">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <p class="pref-hint" data-i18n="pref.loadBalanceHint">Moves each due date by a day or two toward a quieter day. Your memory of the card is barely affected.</p>
+            <div class="pref-row pref-row-wrap">
+              <span class="form-label" id="pref-easy-days-label" data-i18n="pref.easyDays">Easy days</span>
+              <div class="easy-days" id="pref-easy-days" role="group" aria-labelledby="pref-easy-days-label"></div>
+            </div>
+            <p class="pref-hint" data-i18n="pref.easyDaysHint">Tap a day to cycle Normal, Light and Minimum. Light gets about half the usual reviews; Minimum only cards that cannot move to another day.</p>
+            <div class="workload-forecast" id="pref-forecast">
+              <div class="workload-forecast-head"><span data-i18n="pref.forecastTitle">Due in the next 14 days</span><b id="pref-forecast-total"></b></div>
+              <div class="workload-bars" id="pref-forecast-bars"></div>
+              <div class="workload-axis" id="pref-forecast-axis"></div>
+            </div>
+          </div>
+        </section>
+        <section class="pref-page" data-page="memory" aria-labelledby="pref-page-memory">
+          <h4 class="pref-group" id="pref-page-memory" data-i18n="pref.groupMemory">Memory</h4>
+          <div id="pref-memory">
+            <span class="form-label memory-question" id="pref-memory-label" data-i18n="pref.memoryQuestion">How much do you want to remember?</span>
+            <div class="memory-choices" id="pref-memory-choices" role="radiogroup" aria-labelledby="pref-memory-label"></div>
+            <div class="pref-row">
+              <label class="form-label" for="pref-adapt-memory" data-i18n="pref.adaptMemory">Adapt to my memory</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="pref-adapt-memory">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <p class="pref-hint" data-i18n="pref.adaptHint">Learns how fast you forget from your answers, and times reviews to match.</p>
+            <div class="memory-status" id="pref-memory-status" aria-live="polite"></div>
+          </div>
+        </section>
+        <section class="pref-page" data-page="reminders" aria-labelledby="pref-page-reminders">
+          <h4 class="pref-group" id="pref-page-reminders" data-i18n="pref.groupReminders">Reminders</h4>
+          <div id="pref-reminders">
+            <div class="pref-row">
+              <label class="form-label" for="pref-reminders-on" data-i18n="pref.reminders">Remind me to study</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="pref-reminders-on">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="reminder-options" id="pref-reminder-options">
+              <div class="pref-row">
+                <label class="form-label" for="pref-reminder-time" data-i18n="pref.reminderTime">Every day at</label>
+                <input type="time" class="form-input reminder-time" id="pref-reminder-time" value="20:00">
+              </div>
+              <p class="pref-hint" data-i18n="pref.reminderHint">Only on days with cards to review, and not if you have already studied.</p>
+              <div class="pref-row">
+                <label class="form-label" for="pref-reminder-streak" data-i18n="pref.reminderStreak">Save my streak in the evening</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="pref-reminder-streak">
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+              <p class="pref-hint" data-i18n="pref.reminderStreakHint">One more nudge in the evening, only if you have not studied today and your streak would end.</p>
+              <button type="button" class="btn btn-sm btn-ghost" id="btn-reminder-test" data-i18n="pref.reminderTest">Send a test reminder</button>
+            </div>
+            <p class="reminder-status" id="pref-reminder-status" aria-live="polite"></p>
+          </div>
+        </section>
+        <section class="pref-page" data-page="sound" aria-labelledby="pref-page-sound">
+          <h4 class="pref-group" id="pref-page-sound" data-i18n="pref.groupSound">Sound &amp; speech</h4>
+          <div class="pref-row">
+            <label class="form-label" for="pref-sounds" data-i18n="pref.sounds">Sound effects</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="pref-sounds">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <p class="pref-hint" data-i18n="pref.soundsHint">A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.</p>
+          <div class="pref-row">
+            <label class="form-label" for="pref-haptics" data-i18n="pref.haptics">Vibration feedback</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="pref-haptics">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <p class="pref-hint hidden" id="pref-haptics-hint" data-i18n="pref.hapticsUnsupported">This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.</p>
+          <div class="pref-row">
+            <label class="form-label" data-i18n="pref.speed">Speed</label>
+            <div class="font-scale-row">
+              <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-decrease">−</button>
+              <span id="pref-rate-label" data-dirty-text class="tf-pct-label">0.9x</span>
+              <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-increase">+</button>
+              <button type="button" class="btn btn-sm btn-ghost" id="pref-tts-test" title="Test speed" aria-label="Test speed" data-i18n-title="pref.testSpeed" data-i18n-aria="pref.testSpeed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+            </div>
+          </div>
+        </section>
+        <section class="pref-page" data-page="data" aria-labelledby="pref-page-data">
+          <h4 class="pref-group" id="pref-page-data" data-i18n="pref.groupData">Account &amp; data</h4>
+          <div class="pref-tokens" id="pref-backup" data-no-dirty>
+            <label class="form-label" data-i18n="pref.backup">Backup</label>
+            <p class="pref-hint" data-i18n="pref.backupHint">Everything in your account, including study progress. To share one class, use Export on the class instead.</p>
+            <button type="button" class="btn btn-sm btn-outline" id="btn-download-backup" data-i18n="pref.downloadBackup">Download full backup</button>
+          </div>
+          <div class="pref-tokens" id="pref-api-tokens" data-no-dirty>
+            <label class="form-label" data-i18n="pref.apiTokens">API tokens</label>
+            <p class="pref-hint" data-i18n="pref.apiTokensHint">Lets KnowledgeApp send card updates to your account.</p>
+            <ul class="pref-token-list" id="pref-token-list"></ul>
+            <div class="pref-token-create">
+              <input type="text" id="pref-token-name" class="form-input" maxlength="60" placeholder="Token name" data-i18n-placeholder="pref.tokenName">
+              <button type="button" class="btn btn-sm btn-ghost" id="pref-token-create" data-i18n="pref.createToken">Create token</button>
+            </div>
+            <div class="pref-token-reveal hidden" id="pref-token-reveal">
+              <p class="pref-hint" data-i18n="pref.tokenCopyOnce">Copy this token now — it won't be shown again.</p>
+              <div class="pref-token-create">
+                <input type="text" id="pref-token-value" class="form-input" readonly>
+                <button type="button" class="btn btn-sm btn-primary" id="pref-token-copy" data-i18n="pref.copy">Copy</button>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" data-modal="preferences" data-i18n="common.cancel">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-preferences" data-i18n="common.save">Save</button>
     </div>
   </div>
 

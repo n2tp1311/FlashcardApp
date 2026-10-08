@@ -171,7 +171,7 @@ test("the forecast lays 14 local days out from today with each day's level", fun
 });
 
 test("settings are saved, loaded, sent with every answer, and server-only", function() {
-  assert.match(appJs, /prefs\.loadBalance = state\.loadBalance;\s*prefs\.easyDays = state\.easyDays;/);
+  assert.match(appJs, /prefs\.loadBalance = document\.getElementById\("pref-load-balance"\)\.checked;\s*prefs\.easyDays = easyDaysDraft\.slice\(\);/);
   assert.match(appJs, /typeof prefs\.loadBalance === "boolean"/);
   assert.match(appJs, /body\.tz = new Date\(\)\.getTimezoneOffset\(\);/);
   assert.match(appJs, /"setup-filter-leeches", "pref-workload"/);
@@ -193,6 +193,7 @@ test("on a 320px phone the seven day chips and the forecast fit the Preferences 
     const r = await page.evaluate(function() {
       document.getElementById("modal-overlay").classList.remove("hidden");
       document.getElementById("modal-preferences").classList.remove("hidden");
+      document.getElementById("modal-preferences").dataset.page = "plan";
       document.getElementById("pref-easy-days").innerHTML = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(function(d, i) {
         return '<button type="button" class="easy-day level-' + (i > 4 ? 2 : 0) + '">' + d + "<small>" + (i > 4 ? "Tối thiểu" : "Normal") + "</small></button>";
       }).join("");

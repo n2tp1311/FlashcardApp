@@ -118,6 +118,24 @@ Object.assign(TRANSLATIONS.en, {
   "toast.synced": "{n} saved answers synced.",
   "toast.synced_one": "{n} saved answer synced.",
   "pref.title": "Preferences",
+  "pref.saved": "Saved",
+  "pref.groupPlan": "Daily plan",
+  "pref.groupMemory": "Memory",
+  "pref.groupReminders": "Reminders",
+  "pref.sumGoal": "Goal {n}",
+  "pref.sumNoGoal": "No daily goal",
+  "pref.sumMax": "At most {n} a day",
+  "pref.sumSpread": "Spread evenly",
+  "pref.sumAdapting": "Adapting to you",
+  "pref.sumOff": "Off",
+  "pref.sumStreak": "Streak saver",
+  "pref.sumSoundsOn": "Sounds on",
+  "pref.sumSoundsOff": "Sounds off",
+  "pref.sumSpeed": "Speech {n}×",
+  "pref.sumTextLarger": "Larger text",
+  "pref.sumContrast": "High contrast",
+  "pref.sumTextSmaller": "Smaller text",
+  "pref.sumData": "Backup · API tokens",
   "tutorial.title": "Quick tour",
   "tutorial.preferenceLabel": "Getting started",
   "tutorial.replay": "Show tutorial",
@@ -164,7 +182,7 @@ Object.assign(TRANSLATIONS.en, {
   "pref.soundsHint": "A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.",
   "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
   "pref.quizCountsAsKnown": "Quiz answers count as Know It",
-  "pref.quizCountsAsKnownHint": "A correct quiz answer counts as Know It (marks the card known and schedules it like a flashcard); a wrong answer counts as Learning. Off: cards only make progress through flashcards.",
+  "pref.quizCountsAsKnownHint": "Right answers move cards on like Know It, wrong ones like Learning. Off: only flashcards move cards on.",
   "pref.language": "Language",
   "pref.speed": "Speed",
   "pref.testSpeed": "Test speed",
@@ -205,7 +223,6 @@ Object.assign(TRANSLATIONS.en, {
   "pref.reminderBlocked": "Notifications are blocked for this site. Allow them in your browser settings, then try again.",
   "pref.reminderUnsupported": "This browser cannot show reminders.",
   "pref.reminderIphone": "To get reminders on iPhone, add the app to your Home Screen first: tap Share, then \"Add to Home Screen\", and open it from there.",
-  "pref.reminderSaveHint": "Press Save to keep this setting.",
   "pref.adaptStandard": "Checked on {date}: the standard schedule already fits you, so it is kept.",
   "pref.adaptRetry": "Tries again after {n} more answers.",
   "pref.noLimit": "No limit",
@@ -547,7 +564,6 @@ Object.assign(TRANSLATIONS.en, {
   "import.importFile": "Import file",
   "import.open": "Open",
   "pref.groupAppearance": "Appearance",
-  "pref.groupStudy": "Study",
   "pref.groupSound": "Sound & speech",
   "pref.groupData": "Account & data",
   "study.reviewDueShort": "Quiz · {n}",
@@ -1155,6 +1171,24 @@ Object.assign(TRANSLATIONS.vi, {
   "toast.offlineQueued": "Bạn đang ngoại tuyến. Câu trả lời được giữ trên thiết bị này và sẽ đồng bộ khi có kết nối lại.",
   "toast.synced": "Đã đồng bộ {n} câu trả lời đã lưu.",
   "pref.title": "Tùy chọn",
+  "pref.saved": "Đã lưu",
+  "pref.groupPlan": "Kế hoạch mỗi ngày",
+  "pref.groupMemory": "Trí nhớ",
+  "pref.groupReminders": "Nhắc nhở",
+  "pref.sumGoal": "Mục tiêu {n}",
+  "pref.sumNoGoal": "Không đặt mục tiêu",
+  "pref.sumMax": "Tối đa {n} mỗi ngày",
+  "pref.sumSpread": "Dàn đều",
+  "pref.sumAdapting": "Theo trí nhớ của bạn",
+  "pref.sumOff": "Tắt",
+  "pref.sumStreak": "Giữ chuỗi",
+  "pref.sumSoundsOn": "Bật âm thanh",
+  "pref.sumSoundsOff": "Tắt âm thanh",
+  "pref.sumSpeed": "Giọng đọc {n}×",
+  "pref.sumTextLarger": "Chữ lớn hơn",
+  "pref.sumContrast": "Tương phản cao",
+  "pref.sumTextSmaller": "Chữ nhỏ hơn",
+  "pref.sumData": "Sao lưu · Mã API",
   "tutorial.title": "Hướng dẫn nhanh",
   "tutorial.preferenceLabel": "Bắt đầu sử dụng",
   "tutorial.replay": "Xem hướng dẫn",
@@ -1201,7 +1235,7 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.soundsHint": "Tiếng marimba khi câu trả lời trắc nghiệm hoặc câu gõ lại đúng, tiếng gõ trầm khi sai.",
   "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
   "pref.quizCountsAsKnown": "Trả lời Trắc nghiệm được tính là Đã thuộc",
-  "pref.quizCountsAsKnownHint": "Trả lời đúng khi làm Trắc nghiệm được tính là Đã thuộc (đánh dấu thẻ đã thuộc và xếp lịch ôn như Thẻ ghi nhớ); trả lời sai được tính là Đang học. Tắt: thẻ chỉ tiến bộ qua chế độ Thẻ ghi nhớ.",
+  "pref.quizCountsAsKnownHint": "Trả lời đúng được tính như Đã thuộc, trả lời sai như Đang học. Tắt: thẻ chỉ tiến bộ qua Thẻ ghi nhớ.",
   "pref.language": "Ngôn ngữ",
   "pref.speed": "Tốc độ",
   "pref.testSpeed": "Nghe thử tốc độ",
@@ -1242,7 +1276,6 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.reminderBlocked": "Thông báo đang bị chặn cho trang này. Hãy cho phép trong cài đặt trình duyệt rồi thử lại.",
   "pref.reminderUnsupported": "Trình duyệt này không hiển thị được lời nhắc.",
   "pref.reminderIphone": "Để nhận nhắc nhở trên iPhone, hãy thêm ứng dụng vào Màn hình chính trước: chạm Chia sẻ, chọn \"Thêm vào MH chính\", rồi mở ứng dụng từ đó.",
-  "pref.reminderSaveHint": "Nhấn Lưu để giữ cài đặt này.",
   "pref.adaptStandard": "Đã kiểm tra ngày {date}: lịch chuẩn đã hợp với bạn nên được giữ nguyên.",
   "pref.adaptRetry": "Sẽ thử lại sau {n} câu trả lời nữa.",
   "pref.noLimit": "Không giới hạn",
@@ -1574,7 +1607,6 @@ Object.assign(TRANSLATIONS.vi, {
   "import.importFile": "Nhập tệp",
   "import.open": "Mở",
   "pref.groupAppearance": "Giao diện",
-  "pref.groupStudy": "Học",
   "pref.groupSound": "Âm thanh & giọng đọc",
   "pref.groupData": "Tài khoản & dữ liệu",
   "study.reviewDueShort": "Ôn · {n}",
@@ -3374,10 +3406,10 @@ function syncInert() {
   document.querySelectorAll("#modal-overlay > .modal").forEach(function(m) { m.inert = m.id !== topId; });
 }
 
-// Dialogs whose input would be lost by closing them. Manage Presets isn't here: it applies
-// each change immediately.
+// Dialogs whose input would be lost by closing them. Manage Presets and Preferences aren't
+// here: they keep each change as it is made.
 var DIRTY_GUARDED = ["class", "lesson", "card-termdef", "card-mcq", "card-tf", "card-imagedef",
-  "bulk", "bulk-import", "vocabulary-add", "preferences", "dash-metrics"];
+  "bulk", "bulk-import", "vocabulary-add", "dash-metrics"];
 
 // A cheap "did the user change anything": field values, selected pickers, previews, and
 // value labels ([data-dirty-text], e.g. Preferences text size and speed).
@@ -3413,7 +3445,7 @@ function closeModal(id) {
   var modal = document.getElementById("modal-" + id);
   if (!modal) return;
   if (id === "tutorial" && !modal.classList.contains("hidden")) markTutorialSeen();
-  if (id === "preferences") revertPrefsPreview();
+  if (id === "preferences") savePrefsNow();
   // Blur first so a pending edit that commits on focusout (preset rename) still lands.
   if (modal.contains(document.activeElement)) document.activeElement.blur();
   modal.classList.add("hidden");
@@ -3431,6 +3463,8 @@ function requestCloseTopModal(fromBackdrop) {
   var top = modalStack[modalStack.length - 1];
   if (!top) return;
   if (fromBackdrop && top.id === "tutorial") return;
+  // On a phone, Back from a Preferences page returns to its list, like the phone's Settings.
+  if (!fromBackdrop && top.id === "preferences" && prefsPageOnPhone()) { showPrefsPage(null); return; }
   if (top.snapshot !== null && top.snapshot !== modalFormState(document.getElementById("modal-" + top.id))) {
     confirmAction(t("confirm.discardChanges"), function() { closeModal(top.id); }, "discard");
     return;
@@ -12414,22 +12448,73 @@ function prefRateLabel(rate) {
   el.dataset.rate = rate;
 }
 
-// Dark mode and text size preview live while Preferences is open; closing it any way other
-// than Save puts back what was there when it opened.
-var prefsSnapshot = null;
+// Preferences is a list of topics, each opening its own page. On a phone the list and a page
+// take turns, so a page is a short screen instead of one long scroll; from 720px wide the
+// list stays on the left. The page shown is #modal-preferences[data-page].
+var PREFS_WIDE = window.matchMedia("(min-width: 720px)");
 
-function revertPrefsPreview() {
-  if (!prefsSnapshot) return;
-  applyThemePref(prefsSnapshot.theme);
-  applyPalette(prefsSnapshot.palette);
-  applyContrast(prefsSnapshot.highContrast);
-  applyFontScale(prefsSnapshot.fontScale);
-  prefsSnapshot = null;
+function prefsPageOnPhone() {
+  return !PREFS_WIDE.matches && !!document.getElementById("modal-preferences").dataset.page;
+}
+
+function showPrefsPage(page) {
+  var modal = document.getElementById("modal-preferences");
+  var left = modal.dataset.page;
+  if (page) modal.dataset.page = page; else delete modal.dataset.page;
+  modal.querySelectorAll(".pref-nav-row").forEach(function(row) {
+    if (row.dataset.page === page) row.setAttribute("aria-current", "page"); else row.removeAttribute("aria-current");
+  });
+  modal.querySelector(".modal-body").scrollTop = 0;
+  modal.querySelector(".pref-pages").scrollTop = 0;
+  if (PREFS_WIDE.matches) return;
+  if (page) document.getElementById("pref-back").focus();
+  else if (left) document.getElementById("pref-nav-" + left).focus();
+}
+
+PREFS_WIDE.addEventListener("change", function() {
+  var modal = document.getElementById("modal-preferences");
+  if (PREFS_WIDE.matches && !modal.dataset.page) showPrefsPage("appearance");
+});
+
+document.getElementById("pref-home").addEventListener("click", function(e) {
+  var row = e.target.closest(".pref-nav-row");
+  if (row) showPrefsPage(row.dataset.page);
+});
+document.getElementById("pref-back").addEventListener("click", function() { showPrefsPage(null); });
+
+function prefsReminderTime(hhmm) {
+  var parts = hhmm.split(":");
+  try {
+    return new Date(2023, 0, 1, +parts[0], +parts[1]).toLocaleTimeString(state.language === "vi" ? "vi-VN" : "en-US", { hour: "numeric", minute: "2-digit" });
+  } catch (_) { return hhmm; }
+}
+
+// Each row in the list says what is set now, so most visits need not open the page.
+function renderPrefSummaries() {
+  var themeKeys = { light: "pref.themeLight", dark: "pref.themeDark", system: "pref.themeSystem" };
+  var look = [t(themeKeys[state.themePref] || "pref.themeSystem"), t("pref.palette." + state.palette)];
+  if (state.highContrast) look.push(t("pref.sumContrast"));
+  if (state.fontScale > 1) look.push(t("pref.sumTextLarger"));
+  else if (state.fontScale < 1) look.push(t("pref.sumTextSmaller"));
+  var plan = [state.dailyGoal ? t("pref.sumGoal", { n: state.dailyGoal }) : t("pref.sumNoGoal")];
+  if (state.maxReviewsPerDay !== null && state.maxReviewsPerDay !== undefined) plan.push(t("pref.sumMax", { n: state.maxReviewsPerDay }));
+  if (IS_SERVER && state.loadBalance) plan.push(t("pref.sumSpread"));
+  var memory = MEMORY_CHOICES.filter(function(c) { return c.value === state.targetRecall; })[0];
+  var r = state.reminders;
+  var sums = {
+    appearance: look.join(" · "),
+    language: state.language === "vi" ? "Tiếng Việt" : "English",
+    plan: plan.join(" · "),
+    memory: [memory ? t(memory.key) : "", state.adaptMemory ? t("pref.sumAdapting") : ""].filter(Boolean).join(" · "),
+    reminders: r.on ? [prefsReminderTime(r.time), r.streak ? t("pref.sumStreak") : ""].filter(Boolean).join(" · ") : t("pref.sumOff"),
+    sound: [t(state.sounds ? "pref.sumSoundsOn" : "pref.sumSoundsOff"), t("pref.sumSpeed", { n: state.ttsRate.toFixed(1) })].join(" · "),
+    data: t("pref.sumData")
+  };
+  Object.keys(sums).forEach(function(k) { document.getElementById("pref-sum-" + k).textContent = sums[k]; });
 }
 
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
-  prefsSnapshot = { theme: state.themePref, palette: state.palette, highContrast: state.highContrast, fontScale: state.fontScale };
   setPillGroup("pref-theme", state.themePref);
   setPillGroup("pref-daily-goal", String(state.dailyGoal));
   document.getElementById("pref-contrast").checked = state.highContrast;
@@ -12453,11 +12538,14 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
     document.getElementById("pref-token-value").value = "";
     renderApiTokens();
   }
+  clearTimeout(prefsSaveTimer);
+  prefsLastSent = JSON.stringify(readPrefsForm());
+  renderPrefSummaries();
+  showPrefsPage(PREFS_WIDE.matches ? "appearance" : null);
   openModal("preferences");
 });
 
-// Token create/revoke take effect immediately rather than on Save — a created token
-// already exists server-side, so tying it to the modal's Cancel would be misleading.
+// Tokens are not part of the preferences blob: create and revoke are their own requests.
 function renderApiTokens() {
   var list = document.getElementById("pref-token-list");
   store.listApiTokens().then(function(tokens) {
@@ -12536,7 +12624,7 @@ function setPrefLang(lang) {
 document.getElementById("pref-lang-en").addEventListener("click", function() { setPrefLang("en"); });
 document.getElementById("pref-lang-vi").addEventListener("click", function() { setPrefLang("vi"); });
 
-// Live preview, same as font-scale/TTS-rate below; not persisted until Save.
+// Shown at once; savePrefsNow() keeps it a moment later.
 document.getElementById("pref-theme").addEventListener("click", function(e) {
   var pill = e.target.closest(".pill");
   if (!pill) return;
@@ -12704,7 +12792,7 @@ document.getElementById("pref-adapt-memory").addEventListener("change", renderMe
 // ── Study reminders (server/lib/reminders.js) ──
 // Turning the switch on asks for notification permission and registers this device with
 // the server straight away, because the browser only allows the permission prompt inside a
-// tap. The settings themselves (on, time, streak) are saved with Save, like the rest.
+// tap. The settings themselves (on, time, streak) are kept as they change, like the rest.
 
 function normalizeReminders(r) {
   return { on: r.on === true, time: /^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) ? r.time : "20:00", streak: r.streak !== false };
@@ -12780,13 +12868,13 @@ function subscribeThisDevice() {
 document.getElementById("pref-reminders-on").addEventListener("change", function(e) {
   var toggle = e.target;
   renderReminderPrefs();
-  if (!toggle.checked) { reminderStatus("pref.reminderSaveHint"); return; }
   reminderStatus(null);
+  if (!toggle.checked) return;
   toggle.disabled = true;
   subscribeThisDevice().then(function(problem) {
     toggle.disabled = false;
-    if (problem) { toggle.checked = false; renderReminderPrefs(); }
-    reminderStatus(problem || "pref.reminderSaveHint");
+    if (problem) { toggle.checked = false; renderReminderPrefs(); schedulePrefsSave(0); }
+    reminderStatus(problem);
   });
 });
 
@@ -12816,10 +12904,7 @@ document.getElementById("pref-contrast").addEventListener("change", function() {
   applyContrast(this.checked);
 });
 
-// Sample buzz only — unlike dark mode, this preview deliberately doesn't write state:
-// vibration is invisible, so a preview left behind by Cancel would silently disagree with
-// the saved setting.
-// Same rule as vibration below: play a sample, but leave state alone until Save.
+// A sample only; savePrefsNow() changes the setting.
 document.getElementById("pref-sounds").addEventListener("change", function() {
   if (!this.checked) return;
   try { var c = soundContext(); if (c) SOUNDS.correct(c); } catch (_) {}
@@ -12853,55 +12938,81 @@ document.getElementById("pref-tts-test").addEventListener("click", function() {
   speakWith(t("tts.testPhrase"), rate);
 });
 
-document.getElementById("btn-save-preferences").addEventListener("click", function() {
+// Every change is kept as it is made: there is no Save button to forget, and closing
+// Preferences never throws anything away. The controls only update the form; this reads the
+// whole form after each tap or edit and sends it when something actually changed.
+var prefsSaveTimer = null;
+var prefsLastSent = null;
+
+function readPrefsForm() {
   // Empty = no limit (null); 0 is a real "study nothing today" cap, so anything else that isn't
   // a whole number is rejected rather than quietly becoming 0.
   var maxField = document.getElementById("pref-max-reviews");
   var maxReviewsRaw = maxField.value.trim();
-  if (maxField.validity.badInput || (maxReviewsRaw !== "" && !/^\d+$/.test(maxReviewsRaw))) {
-    showFieldError(maxField, t("pref.maxReviewsInvalid"));
-    return;
-  }
-  prefsSnapshot = null;
+  if (maxField.validity.badInput || (maxReviewsRaw !== "" && !/^\d+$/.test(maxReviewsRaw))) return null;
   var theme = document.querySelector("#pref-theme .pill.active").dataset.value;
-  applyThemePref(theme);
   var palette = document.querySelector("#pref-palette .pill.active").dataset.value;
-  applyPalette(palette);
   var highContrast = document.getElementById("pref-contrast").checked;
-  applyContrast(highContrast);
   var haptics = document.getElementById("pref-haptics").checked;
-  state.haptics = haptics;
   var sounds = document.getElementById("pref-sounds").checked;
-  state.sounds = sounds;
   var quizCountsAsKnown = document.getElementById("pref-quiz-known").checked;
-  state.quizCountsAsKnown = quizCountsAsKnown;
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
-  state.ttsRate = rate;
   var lang = document.getElementById("pref-lang-vi").classList.contains("active") ? "vi" : "en";
-  applyLanguage(lang);
   var maxReviews = maxReviewsRaw === "" ? null : parseInt(maxReviewsRaw, 10);
-  state.maxReviewsPerDay = maxReviews;
   var goalPill = document.querySelector("#pref-daily-goal .pill.active");
   var dailyGoal = goalPill ? parseInt(goalPill.dataset.value, 10) : state.dailyGoal;
-  state.dailyGoal = dailyGoal;
-  _refreshDashHeroCards();
-  // A changed review cap changes what Study Setup matches (and whether Start is enabled).
-  if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
   var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, sounds: sounds, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, dailyGoal: dailyGoal, quizCountsAsKnown: quizCountsAsKnown };
   if (IS_SERVER) {
-    state.loadBalance = document.getElementById("pref-load-balance").checked;
-    state.easyDays = easyDaysDraft.slice();
-    prefs.loadBalance = state.loadBalance;
-    prefs.easyDays = state.easyDays;
-    state.targetRecall = memoryChoiceDraft;
-    state.adaptMemory = document.getElementById("pref-adapt-memory").checked;
-    prefs.targetRecall = state.targetRecall;
-    prefs.adaptMemory = state.adaptMemory;
-    state.reminders = readReminderPrefs();
-    prefs.reminders = state.reminders;
+    prefs.loadBalance = document.getElementById("pref-load-balance").checked;
+    prefs.easyDays = easyDaysDraft.slice();
+    prefs.targetRecall = memoryChoiceDraft;
+    prefs.adaptMemory = document.getElementById("pref-adapt-memory").checked;
+    prefs.reminders = readReminderPrefs();
     // Where the user is now, so a reminder set for 8:00 PM follows them when they travel.
     prefs.reminderTz = new Date().getTimezoneOffset();
   }
+  return prefs;
+}
+
+function flashPrefsSaved() {
+  var el = document.getElementById("pref-saved");
+  el.textContent = "\u2713 " + t("pref.saved");
+  el.classList.add("show");
+  clearTimeout(flashPrefsSaved.timer);
+  flashPrefsSaved.timer = setTimeout(function() { el.classList.remove("show"); }, 1600);
+}
+
+function savePrefsNow() {
+  clearTimeout(prefsSaveTimer);
+  prefsSaveTimer = null;
+  var maxField = document.getElementById("pref-max-reviews");
+  var prefs = readPrefsForm();
+  if (!prefs) { showFieldError(maxField, t("pref.maxReviewsInvalid")); return; }
+  clearFieldError(maxField);
+  var sent = JSON.stringify(prefs);
+  if (sent === prefsLastSent) return;
+  prefsLastSent = sent;
+  applyThemePref(prefs.theme);
+  applyPalette(prefs.palette);
+  applyContrast(prefs.highContrast);
+  state.haptics = prefs.haptics;
+  state.sounds = prefs.sounds;
+  state.quizCountsAsKnown = prefs.quizCountsAsKnown;
+  state.ttsRate = prefs.ttsRate;
+  if (prefs.language !== state.language) applyLanguage(prefs.language);
+  state.maxReviewsPerDay = prefs.maxReviewsPerDay;
+  state.dailyGoal = prefs.dailyGoal;
+  if (IS_SERVER) {
+    state.loadBalance = prefs.loadBalance;
+    state.easyDays = prefs.easyDays.slice();
+    state.targetRecall = prefs.targetRecall;
+    state.adaptMemory = prefs.adaptMemory;
+    state.reminders = prefs.reminders;
+  }
+  _refreshDashHeroCards();
+  // A changed review cap changes what Study Setup matches (and whether Start is enabled).
+  if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
+  renderPrefSummaries();
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
@@ -12909,14 +13020,37 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
     var cachedPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
     localStorage.setItem("fc-preferences", JSON.stringify(Object.assign({}, cachedPrefs, prefs)));
   } catch (_) {}
+  if (!IS_SERVER) { flashPrefsSaved(); return; }
   fetch("/api/auth/preferences", {
     method: "PUT",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(prefs)
-  }).catch(function() {});
-  closeModal("preferences");
-});
+    body: sent
+  }).then(function(res) {
+    if (!res.ok) throw new Error(res.status);
+    flashPrefsSaved();
+  }).catch(function() {
+    // Not marked as sent, so the next change, or closing Preferences, tries again.
+    if (prefsLastSent === sent) prefsLastSent = null;
+    showToast(t("common.networkError"), "error");
+  });
+}
+
+function schedulePrefsSave(delay) {
+  clearTimeout(prefsSaveTimer);
+  prefsSaveTimer = setTimeout(savePrefsNow, delay);
+}
+
+// Taps wait a moment so pressing A+ four times sends one request, not four. Typing waits
+// longer, so "150" is not saved as 1, then 15.
+(function() {
+  var modal = document.getElementById("modal-preferences");
+  var skip = "[data-no-dirty], .pref-nav-row, #pref-back, .modal-close, #pref-tts-test, #btn-reminder-test, #btn-replay-tutorial";
+  ["click", "change"].forEach(function(type) {
+    modal.addEventListener(type, function(e) { if (!e.target.closest(skip)) schedulePrefsSave(300); });
+  });
+  modal.addEventListener("input", function(e) { if (!e.target.closest(skip)) schedulePrefsSave(800); });
+})();
 
 /* ============================
    DASHBOARD METRICS MODAL
@@ -13059,7 +13193,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-memory", "pref-reminders", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-memory", "pref-reminders", "pref-api-tokens", "pref-backup", "pref-nav-memory", "pref-nav-reminders", "pref-nav-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }

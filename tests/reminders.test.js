@@ -241,6 +241,7 @@ test("phone layout: the reminder settings fit at 320px", async function() {
     const r = await page.evaluate(function() {
       document.getElementById("modal-overlay").classList.remove("hidden");
       document.getElementById("modal-preferences").classList.remove("hidden");
+      document.getElementById("modal-preferences").dataset.page = "reminders";
       document.getElementById("pref-reminders-on").checked = true;
       document.getElementById("pref-reminder-status").textContent =
         "To get reminders on iPhone, add the app to your Home Screen first: tap Share, then \"Add to Home Screen\", and open it from there.";

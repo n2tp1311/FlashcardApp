@@ -188,11 +188,13 @@ test("imports have plain names, show progress, and errors stay until dismissed",
   assert.match(server, /imported: \{ classes: classes\.length, lessons: importedLessons, cards: importedCards, classIds \}/);
 });
 
-test("Preferences is in four sections, and the data one hides with its rows in local mode", function() {
-  const groups = html.match(/<h4 class="pref-group"[^>]*data-i18n="(pref\.group\w+)"/g) || [];
-  assert.equal(groups.length, 4);
-  assert.match(app, /"pref-backup", "pref-group-data"/);
-  ["Appearance", "Study", "Sound", "Data"].forEach(function(g) { assert.ok(tr("vi", "pref.group" + g), g); });
+test("Preferences is a list of seven topics, and the server-only ones hide in local mode", function() {
+  const pages = html.match(/<section class="pref-page" data-page="\w+"/g) || [];
+  const rows = html.match(/<button type="button" class="pref-nav-row" data-page="\w+"/g) || [];
+  assert.equal(pages.length, 7);
+  assert.equal(rows.length, 7, "every page has a row in the list");
+  assert.match(app, /"pref-backup", "pref-nav-memory", "pref-nav-reminders", "pref-nav-data"/);
+  ["Appearance", "Plan", "Memory", "Reminders", "Sound", "Data"].forEach(function(g) { assert.ok(tr("vi", "pref.group" + g), g); });
 });
 
 test("on a phone the lesson header moves Select into the menu and shortens the due button", function() {

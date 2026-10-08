@@ -112,7 +112,7 @@ test("High contrast is a saved preference, applied before first paint", function
   assert.match(html, /_p\.highContrast===true\)document\.documentElement\.setAttribute\("data-contrast","high"\)/);
   assert.match(app, /palette: palette, highContrast: highContrast,/, "Save does not persist highContrast");
   assert.match(app, /applyContrast\(prefs\.highContrast\)/, "applyPrefs ignores highContrast");
-  assert.match(app, /applyContrast\(prefsSnapshot\.highContrast\)/, "Cancel does not revert the preview");
+  assert.match(app, /applyContrast\(prefs\.highContrast\);\n  state\.haptics/, "autosave does not apply highContrast");
   for (const key of ["pref.highContrast", "pref.highContrastHint"]) {
     assert.equal(app.split('"' + key + '"').length - 1, 2, key + " needs an English and a Vietnamese string");
   }

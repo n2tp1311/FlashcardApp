@@ -271,7 +271,7 @@ test("the status line under the switch", function() {
 });
 
 test("the choice and the switch are saved, loaded and server-only, with every string in both languages", function() {
-  assert.match(appJs, /prefs\.targetRecall = state\.targetRecall;\s*prefs\.adaptMemory = state\.adaptMemory;/);
+  assert.match(appJs, /prefs\.targetRecall = memoryChoiceDraft;\s*prefs\.adaptMemory = document\.getElementById\("pref-adapt-memory"\)\.checked;/);
   assert.match(appJs, /state\.targetRecall = nearestMemoryChoice\(prefs\.targetRecall\);/);
   assert.match(appJs, /typeof prefs\.adaptMemory === "boolean"/);
   assert.match(appJs, /"pref-workload", "pref-memory", (?:"pref-reminders", )?"pref-api-tokens"/);
@@ -295,6 +295,7 @@ test("on a 320px phone the three choices and the status line fit the Preferences
     const r = await page.evaluate(function([ch, st]) {
       document.getElementById("modal-overlay").classList.remove("hidden");
       document.getElementById("modal-preferences").classList.remove("hidden");
+      document.getElementById("modal-preferences").dataset.page = "memory";
       document.getElementById("pref-memory-choices").innerHTML = ch;
       document.getElementById("pref-memory-status").innerHTML = st;
       document.getElementById("pref-memory").scrollIntoView();
