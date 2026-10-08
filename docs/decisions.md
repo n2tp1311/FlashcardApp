@@ -1123,3 +1123,9 @@ Update, same day: dark mode got the ledges too. The glow came from a ledge light
 
 Reverted, same day: the three meters went back to blue, green and amber. In one hue at three strengths they differed only in brightness and could not be told apart at a glance, which mattered more than the green/amber collision with "good" and "warning".
 
+## 2026-10-09 — In light mode the card back is light
+
+Every light palette had a near-black card back, inherited from when the back was a fixed slate. In a pale, raised UI it was the one dark slab on screen and did not match any theme's mood. The user compared a light back tinted with the palette's accent against a dark back mixed from the accent, and chose the light one for every light palette. Each block's back is computed from its own tokens (surface plus 10% primary, border plus 45% primary, the page's text and text2), written as hex so the palette contrast test still checks the back's text in every palette.
+
+Cost: front and back now differ only by a tint, not by light and dark, so the flip is a quieter change. The flip animation and the different content carry it.
+
