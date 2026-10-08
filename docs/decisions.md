@@ -1121,3 +1121,5 @@ Cost: the ledge is light mode only, as with the buttons — in dark mode a ledge
 
 Update, same day: dark mode got the ledges too. The glow came from a ledge lighter than the page; one cut from the page darkened toward black (`color-mix(var(--bg) 55%, #000)`) reads as depth. Of a subtle and a strong (pure black, lighter borders) variant the user chose the subtle one.
 
+Reverted, same day: the three meters went back to blue, green and amber. In one hue at three strengths they differed only in brightness and could not be told apart at a glance, which mattered more than the green/amber collision with "good" and "warning".
+
