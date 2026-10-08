@@ -188,7 +188,10 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
       body: JSON.stringify({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, grant_type: "authorization_code" })
     });
     const tokens = await tokenRes.json();
-    if (!tokens.access_token) throw new Error("No access token");
+    // Google's reason (invalid_client: wrong secret; redirect_uri_mismatch; invalid_grant: a
+    // used or expired code) is the whole diagnosis, and "No access token" alone hid it.
+    if (!tokens.access_token)
+      throw new Error("No access token: " + (tokens.error || tokenRes.status) + (tokens.error_description ? " - " + tokens.error_description : ""));
 
     // Get user profile
     const profileRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
