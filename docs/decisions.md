@@ -1071,3 +1071,15 @@ Costs:
 
 "KnowledgeApp changes" was the longest sidebar label. The user chose "Updates" (*Cập nhật*) from four short names. Only the label changed. The screen title and the home banner still name KnowledgeApp, so the source stays clear once you are there. The cost: "Updates" alone could be read as app updates until you open it.
 
+## 2026-10-08 — Preferences is a list of topics and saves as you go
+
+Preferences had grown to about 25 settings in one sheet ending in Save; Study alone held nine. On a phone that was a long scroll, and closing without Save threw changes away. The user chose A from a preview of three layouts: a Settings-style list where each topic opens its own page. B split the sheet into tabs, but Study still scrolled. C folded the sections in place, which was still long once Study was open. Study became three topics with plain names: Daily plan, Memory, Reminders.
+
+The user also chose saving as you go over keeping Save. Reminders already registered the device the moment its switch was turned on, so half of that topic never waited for Save anyway. Theme and text size already previewed live, so the old Cancel had to undo them.
+
+Costs:
+- No Cancel. A change you regret has to be changed back by hand. The previous value is easy to restore for most settings, since each is one tap.
+- More requests: one per pause in editing instead of one per visit. Taps are batched for 0.3 s and typing for 0.8 s, and nothing is sent when the form has not changed.
+- With the three server-only topics, the list is a little taller than a small phone's screen. It fits in the offline app.
+- The page shown is an attribute on the dialog (`data-page`), so the layout is plain CSS and the existing phone layout tests only have to set it.
+
