@@ -128,3 +128,16 @@ test("every light palette sets its own shadows", function() {
   }
   assert.match(css, /:root:not\(\[data-theme="dark"\]\) \.btn-primary,/);
 });
+
+test("light mode has one elevation: every edged surface on the home page stands on a ledge", function() {
+  assert.match(css, /:root:not\(\[data-theme="dark"\]\) \{ --ledge: /);
+  assert.match(css, /:root:not\(\[data-theme="dark"\]\) :is\(\.dash-tile, \.class-card, \.upstream-banner\) \{ border-width: 2px; box-shadow: 0 4px 0 var\(--ledge\); \}/);
+  assert.match(css, /:root:not\(\[data-theme="dark"\]\) :is\(\.nav-search-bar, \.sort-select, \.sort-dir-btn, \.view-toggle, #btn-toggle-archived, #btn-tag-filter-toggle\) \{ border-width: 2px; box-shadow: 0 3px 0 var\(--ledge\); \}/);
+});
+
+test("the home dashboard takes its colours from the palette, not fixed hues", function() {
+  assert.doesNotMatch(css, /\.dash-[\w-]+[^{]*\{[^}]*(#2f5f8f|#8fb4e0)/i);
+  assert.doesNotMatch(css, /acc-pill\.acc-\w+\s*\{[^}]*rgba\(/);
+  assert.match(html, /id="sidebar-upstream-badge" class="due-badge is-count/);
+  assert.match(html, /id="sidebar-vocabulary-badge" class="due-badge is-count/);
+});
