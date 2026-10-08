@@ -201,7 +201,8 @@ function vapidKeys(db, webpush) {
 // Apple's push service rejects a subject that is not a real https URL or mailto address.
 function vapidSubject() {
   if (process.env.VAPID_SUBJECT) return process.env.VAPID_SUBJECT;
-  if (/^https:\/\//.test(process.env.APP_URL || "")) return process.env.APP_URL;
+  const url = process.env.APP_URL && require("../config/env").appUrl();
+  if (url && url.startsWith("https://")) return url;
   const mail = process.env.SMTP_FROM || process.env.GMAIL_USER;
   const addr = mail && /[^\s<>]+@[^\s<>]+/.exec(mail);
   return addr ? "mailto:" + addr[0] : "mailto:reminders@flashcardapp.invalid";

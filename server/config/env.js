@@ -1,6 +1,16 @@
 "use strict";
 
+// The public address, for links in emails and the Google sign-in return address. Set on
+// Railway as "flashcardapp.up.railway.app" without the scheme, it sent Google a return
+// address it rejects ("Error 400: invalid_request"), so a bare host gets https://.
+function appUrl() {
+  const raw = (process.env.APP_URL || "").trim().replace(/\/+$/, "");
+  if (!raw) return `http://localhost:${process.env.PORT || 3000}`;
+  return /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
+}
+
 module.exports = {
+  appUrl,
   PORT:            process.env.PORT            || 3000,
   SESSION_SECRET:  process.env.SESSION_SECRET  || "fc-dev-secret-change-in-prod",
   APP_URL:         process.env.APP_URL         || null,

@@ -7,6 +7,7 @@ const db       = require("../db");
 const { sendPasswordReset } = require("../services/mailer");
 const { requireAuth } = require("../middleware/auth");
 const { rateLimit } = require("../middleware/rateLimit");
+const { appUrl } = require("../config/env");
 const router   = express.Router();
 
 const loginLimiter = rateLimit({
@@ -107,7 +108,7 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
   db.prepare("INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?,?,?)")
     .run(token, user.id, expiresAt);
 
-  const baseUrl  = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`;
+  const baseUrl  = appUrl();
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
   try {
@@ -151,7 +152,7 @@ router.post("/reset-password", resetPasswordLimiter, (req, res) => {
 // GET /api/auth/google
 router.get("/google", (req, res) => {
   const clientId    = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = `${process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`}/api/auth/google/callback`;
+  const redirectUri = `${appUrl()}/api/auth/google/callback`;
   if (!clientId) return res.status(503).send("Google OAuth not configured (missing GOOGLE_CLIENT_ID)");
 
   // Store linkMode in session if requested (linking existing account)
@@ -177,7 +178,7 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
 
   const clientId     = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri  = `${process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`}/api/auth/google/callback`;
+  const redirectUri  = `${appUrl()}/api/auth/google/callback`;
 
   try {
     // Exchange code for tokens
