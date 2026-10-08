@@ -31,7 +31,7 @@ test("no route reads APP_URL directly", function() {
 test("a failed Google sign-in says why in the message, as a bare code", function() {
   const auth = fs.readFileSync(path.join(__dirname, "..", "server/routes/auth.js"), "utf8");
   assert.match(auth, /err\.reason = tokens\.error \|\| "token_" \+ tokenRes\.status;/);
-  assert.match(auth, /\/\^\[a-z0-9_\]\{1,40\}\$\/\.test\(e\.reason \|\| ""\) \? e\.reason : "server_error"/);
+  assert.match(auth, /"server_" \+ String\(e\.message \|\| "error"\)/);
   const app = fs.readFileSync(path.join(__dirname, "..", "client/app.js"), "utf8");
   assert.match(app, /if \(reason && \/\^\[a-z0-9_\]\{1,40\}\$\/\.test\(reason\)\) msg \+= " \(" \+ reason \+ "\)";/);
 });

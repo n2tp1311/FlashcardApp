@@ -237,7 +237,10 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
     console.error("[google-oauth]", e.message);
     // Google's error code, shown with the message, so a failure can be diagnosed without the
     // server logs. Codes only (invalid_client, redirect_uri_mismatch), never the description.
-    const reason = /^[a-z0-9_]{1,40}$/.test(e.reason || "") ? e.reason : "server_error";
+    // Anything else (a network or database error) is summarised from its message, which names
+    // a failure, not data: "fetch failed", "UNIQUE constraint failed: users.email".
+    const reason = /^[a-z0-9_]{1,40}$/.test(e.reason || "") ? e.reason
+      : ("server_" + String(e.message || "error").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")).slice(0, 40);
     res.redirect("/?auth_error=google_failed&reason=" + reason);
   }
 });
