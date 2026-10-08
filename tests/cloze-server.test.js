@@ -163,3 +163,17 @@ test("search finds a cloze card by its words", async function() {
     assert.ok(JSON.stringify(body).includes("bagging"));
   } finally { l.close(); }
 });
+
+test("layout moves a gap card with its term card into the new lesson", async function() {
+  const r = await call("PUT", "/api/integrations/knowledge/classes/k1/layout", { lessons: [
+    { title: "7. Regularization", external_ids: ["s:2357", "s:2357:cz1"] },
+    { title: "7b. Dropout", external_ids: ["s:17", "s:17:cz1", "s:17:cz2"] }
+  ] });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.invalid, 0);
+  const rows = db.prepare(
+    "SELECT ca.external_id, l.title FROM cards ca JOIN lessons l ON l.id = ca.lesson_id WHERE ca.external_id LIKE 's:17%' ORDER BY ca.sort_order"
+  ).all();
+  assert.deepEqual(rows.map(x => x.external_id), ["s:17", "s:17:cz1", "s:17:cz2"]);
+  assert.ok(rows.every(x => x.title === "7b. Dropout"));
+});

@@ -428,7 +428,8 @@ router.put("/classes/:id/layout", (req, res) => {
       t.external_ids.forEach(ext => {
         const c = byExt.get(ext);
         if (!c) out.not_found++;
-        else if (c.format !== "term-def") out.invalid++;
+        // Gap cards are named right after their term card, so they move with it.
+        else if (c.format !== "term-def" && c.format !== "cloze") out.invalid++;
         else cards.push(c);
       });
       return { title: t.title.trim(), cards, lessonId: null };
