@@ -138,8 +138,11 @@ test("both modes have one elevation: every edged surface on the home page stands
   assert.match(css, /:root :is\(\.nav-search-bar, \.sort-select, \.sort-dir-btn, \.view-toggle, #btn-toggle-archived, #btn-tag-filter-toggle\) \{ border-width: 2px; box-shadow: 0 3px 0 var\(--ledge\); \}/);
 });
 
-test("the home dashboard takes its colours from the palette, not fixed hues", function() {
-  assert.doesNotMatch(css, /\.dash-[\w-]+[^{]*\{[^}]*(#2f5f8f|#8fb4e0)/i);
+test("the home dashboard keeps its meter hues and takes the rest from the palette", function() {
+  assert.doesNotMatch(css, /\.dash-spark[\w-]*[^{]*\{[^}]*(#2f5f8f|#8fb4e0)/i);
+  // The three meters keep their own hues so they can be told apart at a glance.
+  assert.match(css, /\.dash-meter\.is-new \.dash-meter-track i \{ background: var\(--success\); \}/);
+  assert.match(css, /\.dash-meter\.is-review \.dash-meter-track i \{ background: var\(--warning\); \}/);
   assert.doesNotMatch(css, /acc-pill\.acc-\w+\s*\{[^}]*rgba\(/);
   assert.match(html, /id="sidebar-upstream-badge" class="due-badge is-count/);
   assert.match(html, /id="sidebar-vocabulary-badge" class="due-badge is-count/);

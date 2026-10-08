@@ -3035,12 +3035,14 @@ code {
 .dash-meter-label { display: inline-flex; align-items: center; gap: 7px; }
 .dash-meter-track { height: 6px; border-radius: 3px; background: var(--surface2); margin-top: 5px; overflow: hidden; }
 .dash-meter-track i { display: block; height: 100%; border-radius: 3px; transform-origin: left; transition: transform var(--bar-fill-transition); }
-/* One hue in steps of the palette's primary: green and amber here read as "good" and
-   "warning", which a count of new cards is not. */
-.dash-meter svg { color: var(--text2); }
-.dash-meter.is-time .dash-meter-track i { background: var(--primary); }
-.dash-meter.is-new .dash-meter-track i { background: color-mix(in srgb, var(--primary) 70%, var(--surface)); }
-.dash-meter.is-review .dash-meter-track i { background: color-mix(in srgb, var(--primary) 45%, var(--surface)); }
+.dash-meter.is-time svg { color: #2f5f8f; } /* the session-end Time tile's blue */
+.dash-meter.is-time .dash-meter-track i { background: #2f5f8f; }
+:root[data-theme="dark"] .dash-meter.is-time svg { color: #8fb4e0; }
+:root[data-theme="dark"] .dash-meter.is-time .dash-meter-track i { background: #8fb4e0; }
+.dash-meter.is-new svg { color: var(--success); }
+.dash-meter.is-new .dash-meter-track i { background: var(--success); }
+.dash-meter.is-review svg { color: var(--warning); }
+.dash-meter.is-review .dash-meter-track i { background: var(--warning); }
 .dash-spark { display: block; width: 100%; height: 56px; overflow: visible; }
 .dash-spark-area { fill: color-mix(in srgb, var(--primary) 14%, transparent); }
 .dash-spark-line { fill: none; stroke: var(--primary); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
