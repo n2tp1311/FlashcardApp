@@ -212,6 +212,13 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_attempts_user_created ON attempts(
 // Migration: add preferences JSON column to users
 try { db.exec("ALTER TABLE users ADD COLUMN preferences TEXT"); } catch (_) {}
 
+// Google sign-in columns. CREATE TABLE IF NOT EXISTS leaves a users table made before them
+// untouched, and the production one was: every Google sign-in failed with "no such column:
+// google_id". SQLite cannot add a UNIQUE column, so uniqueness is a unique index.
+try { db.exec("ALTER TABLE users ADD COLUMN google_id TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE users ADD COLUMN avatar_url TEXT"); } catch (_) {}
+try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id)"); } catch (_) {}
+
 // Migration: add level column to classes for manual course ordering
 try { db.exec("ALTER TABLE classes ADD COLUMN level INTEGER"); } catch (_) {}
 
