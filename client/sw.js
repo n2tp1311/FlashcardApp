@@ -45,3 +45,26 @@ self.addEventListener("fetch", function(e) {
     return caches.match(key).then(function(hit) { return hit || Response.error(); });
   }));
 });
+
+// Study reminders (server/lib/reminders.js). The payload is { title, body, url }; the tag
+// makes a new reminder replace an unread one rather than stack under it.
+self.addEventListener("push", function(e) {
+  var data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (_) {}
+  e.waitUntil(self.registration.showNotification(data.title || "Flashcards", {
+    body: data.body || "", icon: "/logo.svg", badge: "/logo.svg", tag: "study-reminder",
+    data: { url: data.url || "/" }
+  }));
+});
+
+// Tapping a reminder focuses the app if it is open, otherwise opens it.
+self.addEventListener("notificationclick", function(e) {
+  e.notification.close();
+  var url = (e.notification.data && e.notification.data.url) || "/";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function(list) {
+    for (var i = 0; i < list.length; i++) {
+      if (new URL(list[i].url).origin === self.location.origin && "focus" in list[i]) return list[i].focus();
+    }
+    return self.clients.openWindow(url);
+  }));
+});

@@ -88,6 +88,7 @@ app.use("/api",         require("./routes/lessons"));
 app.use("/api",         require("./routes/cards"));
 app.use("/api/attempts",require("./routes/attempts"));
 app.use("/api/memory",  require("./routes/memory"));
+app.use("/api/reminders", require("./routes/reminders"));
 app.use("/api/stats",   require("./routes/stats"));
 const { exportRouter, importRouter } = require("./routes/exportImport");
 app.use("/api/export",  exportRouter);
@@ -153,6 +154,22 @@ app.listen(PORT, () => {
 });
 
 startEventLoopWatchdog();
+
+// Study reminders: one check a minute (lib/reminders.js). A failure is logged and the next
+// minute tries again; it must never take the server down.
+{
+  const reminders = require("./lib/reminders");
+  let running = false;
+  setInterval(function() {
+    if (running) return;
+    let p;
+    try { p = reminders.webPush(db); } catch (e) { return; }
+    running = true;
+    reminders.runReminders(db, Math.floor(Date.now() / 1000), p.send)
+      .catch(function(e) { console.error("[reminders]", e && e.message); })
+      .finally(function() { running = false; });
+  }, 60 * 1000);
+}
 
 setInterval(function() {
   db.prepare("DELETE FROM sessions WHERE expired <= ?").run(Math.floor(Date.now() / 1000));

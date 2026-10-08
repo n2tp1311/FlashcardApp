@@ -274,7 +274,7 @@ test("the choice and the switch are saved, loaded and server-only, with every st
   assert.match(appJs, /prefs\.targetRecall = state\.targetRecall;\s*prefs\.adaptMemory = state\.adaptMemory;/);
   assert.match(appJs, /state\.targetRecall = nearestMemoryChoice\(prefs\.targetRecall\);/);
   assert.match(appJs, /typeof prefs\.adaptMemory === "boolean"/);
-  assert.match(appJs, /"pref-workload", "pref-memory", "pref-api-tokens"/);
+  assert.match(appJs, /"pref-workload", "pref-memory", (?:"pref-reminders", )?"pref-api-tokens"/);
   assert.match(indexHtml, /id="pref-memory-choices" role="radiogroup"/);
   assert.match(indexHtml, /id="pref-adapt-memory"/);
   assert.doesNotMatch(appJs + indexHtml, /pref-target-recall|pref\.model\w+|trainMemory/, "the first version's slider and model panel are gone");

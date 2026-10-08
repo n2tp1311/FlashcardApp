@@ -863,6 +863,32 @@
         <p class="pref-hint" data-i18n="pref.adaptHint">Learns how fast you forget from your answers, and times reviews to match.</p>
         <div class="memory-status" id="pref-memory-status" aria-live="polite"></div>
       </div>
+      <div id="pref-reminders">
+        <div class="pref-row">
+          <label class="form-label" for="pref-reminders-on" data-i18n="pref.reminders">Remind me to study</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-reminders-on">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="reminder-options" id="pref-reminder-options">
+          <div class="pref-row">
+            <label class="form-label" for="pref-reminder-time" data-i18n="pref.reminderTime">Every day at</label>
+            <input type="time" class="form-input reminder-time" id="pref-reminder-time" value="20:00">
+          </div>
+          <p class="pref-hint" data-i18n="pref.reminderHint">Only on days with cards to review, and not if you have already studied.</p>
+          <div class="pref-row">
+            <label class="form-label" for="pref-reminder-streak" data-i18n="pref.reminderStreak">Save my streak in the evening</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="pref-reminder-streak">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <p class="pref-hint" data-i18n="pref.reminderStreakHint">One more nudge in the evening, only if you have not studied today and your streak would end.</p>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-reminder-test" data-i18n="pref.reminderTest">Send a test reminder</button>
+        </div>
+        <p class="reminder-status" id="pref-reminder-status" aria-live="polite"></p>
+      </div>
       <div class="pref-row">
         <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
         <button type="button" class="btn btn-sm btn-ghost" id="btn-replay-tutorial" data-i18n="tutorial.replay">Show tutorial</button>

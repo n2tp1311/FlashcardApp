@@ -434,6 +434,32 @@ try {
   )`);
 } catch (_) {}
 
+// Study reminders (lib/reminders.js). push_subscriptions: one row per device that turned
+// reminders on; the endpoint is unique because a browser keeps one per site, and a second
+// account signing in on it takes it over. reminder_log: one row per reminder sent, so the
+// once-a-minute check sends each at most once a day. app_secrets holds the VAPID keys when
+// the environment does not: they must outlive restarts or every subscription stops working.
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id         INTEGER PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint   TEXT NOT NULL UNIQUE,
+    p256dh     TEXT NOT NULL,
+    auth       TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id)"); } catch (_) {}
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS reminder_log (
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind    TEXT NOT NULL,
+    day     TEXT NOT NULL,
+    PRIMARY KEY (user_id, kind, day)
+  )`);
+} catch (_) {}
+try { db.exec("CREATE TABLE IF NOT EXISTS app_secrets (name TEXT PRIMARY KEY, value TEXT NOT NULL)"); } catch (_) {}
+
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
 const _prepare = db.prepare.bind(db);

@@ -193,6 +193,19 @@ Object.assign(TRANSLATIONS.en, {
   "pref.adaptWaiting": "Starts after {n} more answers.",
   "pref.adaptSoon": "Adapting after your next answer.",
   "pref.adaptDone": "Adapted to you on {date}, from {n} answers.",
+  "pref.reminders": "Remind me to study",
+  "pref.reminderTime": "Every day at",
+  "pref.reminderHint": "Only on days with cards to review, and not if you have already studied.",
+  "pref.reminderStreak": "Save my streak in the evening",
+  "pref.reminderStreakHint": "One more nudge in the evening, only if you have not studied today and your streak would end.",
+  "pref.reminderTest": "Send a test reminder",
+  "pref.reminderSent": "Sent. It should arrive in a few seconds.",
+  "pref.reminderNoDevice": "This device is not set up yet. Turn reminders off and on again.",
+  "pref.reminderFailed": "Could not set up reminders on this device. Try again later.",
+  "pref.reminderBlocked": "Notifications are blocked for this site. Allow them in your browser settings, then try again.",
+  "pref.reminderUnsupported": "This browser cannot show reminders.",
+  "pref.reminderIphone": "To get reminders on iPhone, add the app to your Home Screen first: tap Share, then \"Add to Home Screen\", and open it from there.",
+  "pref.reminderSaveHint": "Press Save to keep this setting.",
   "pref.adaptStandard": "Checked on {date}: the standard schedule already fits you, so it is kept.",
   "pref.adaptRetry": "Tries again after {n} more answers.",
   "pref.noLimit": "No limit",
@@ -1212,6 +1225,19 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.adaptWaiting": "Bắt đầu sau {n} câu trả lời nữa.",
   "pref.adaptSoon": "Sẽ thích ứng sau câu trả lời tiếp theo.",
   "pref.adaptDone": "Đã thích ứng với bạn ngày {date}, từ {n} câu trả lời.",
+  "pref.reminders": "Nhắc tôi học",
+  "pref.reminderTime": "Mỗi ngày lúc",
+  "pref.reminderHint": "Chỉ vào những ngày có thẻ cần ôn, và không nhắc nếu bạn đã học.",
+  "pref.reminderStreak": "Giữ chuỗi ngày học vào buổi tối",
+  "pref.reminderStreakHint": "Thêm một lời nhắc buổi tối, chỉ khi hôm nay bạn chưa học và chuỗi ngày học sắp mất.",
+  "pref.reminderTest": "Gửi thử một lời nhắc",
+  "pref.reminderSent": "Đã gửi. Lời nhắc sẽ đến sau vài giây.",
+  "pref.reminderNoDevice": "Thiết bị này chưa được thiết lập. Hãy tắt rồi bật lại nhắc nhở.",
+  "pref.reminderFailed": "Không thể thiết lập nhắc nhở trên thiết bị này. Hãy thử lại sau.",
+  "pref.reminderBlocked": "Thông báo đang bị chặn cho trang này. Hãy cho phép trong cài đặt trình duyệt rồi thử lại.",
+  "pref.reminderUnsupported": "Trình duyệt này không hiển thị được lời nhắc.",
+  "pref.reminderIphone": "Để nhận nhắc nhở trên iPhone, hãy thêm ứng dụng vào Màn hình chính trước: chạm Chia sẻ, chọn \"Thêm vào MH chính\", rồi mở ứng dụng từ đó.",
+  "pref.reminderSaveHint": "Nhấn Lưu để giữ cài đặt này.",
   "pref.adaptStandard": "Đã kiểm tra ngày {date}: lịch chuẩn đã hợp với bạn nên được giữ nguyên.",
   "pref.adaptRetry": "Sẽ thử lại sau {n} câu trả lời nữa.",
   "pref.noLimit": "Không giới hạn",
@@ -3067,6 +3093,7 @@ var state = {
   easyDays: [0, 0, 0, 0, 0, 0, 0],
   targetRecall: 90,
   adaptMemory: true,
+  reminders: { on: false, time: "20:00", streak: true },
   fontScale: 1,
   ttsRate: 0.9,
   language: (function() {
@@ -11709,6 +11736,9 @@ var SQLiteAdapter = (function() {
     getSrsDistribution: function(days) { return req("GET", "/stats/srs-distribution" + (days ? "?days=" + days : "")); },
     getFutureDue: function(tz) { return req("GET", "/stats/future-due" + (tz != null ? "?tz=" + encodeURIComponent(tz) : "")); },
     getMemory: function() { return req("GET", "/memory"); },
+    getReminders: function() { return req("GET", "/reminders"); },
+    subscribeReminders: function(subscription, tz) { return req("POST", "/reminders/subscribe", { subscription: subscription, tz: tz }); },
+    testReminder: function() { return req("POST", "/reminders/test"); },
     getAchievements: function() { return req("GET", "/achievements"); },
     recordStudyEvent: function(kind, ref) { return req("POST", "/achievements/events", { kind: kind, ref: ref }); },
     getToday: function() { return req("GET", "/stats/today"); },
@@ -11946,6 +11976,9 @@ function applyPrefs(prefs) {
   }
   if (typeof prefs.adaptMemory === "boolean") {
     state.adaptMemory = prefs.adaptMemory;
+  }
+  if (prefs.reminders && typeof prefs.reminders === "object") {
+    state.reminders = normalizeReminders(prefs.reminders);
   }
   if (prefs.dashMetricConfig && typeof prefs.dashMetricConfig === "object") {
     state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, prefs.dashMetricConfig);
@@ -12361,7 +12394,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-haptics").checked = state.haptics;
   document.getElementById("pref-sounds").checked = state.sounds;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
-  if (IS_SERVER) { openWorkloadPrefs(); openMemoryPrefs(); }
+  if (IS_SERVER) { openWorkloadPrefs(); openMemoryPrefs(); openReminderPrefs(); }
   document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
   prefFontLabel();
   prefRateLabel(state.ttsRate);
@@ -12625,6 +12658,104 @@ document.getElementById("pref-memory-choices").addEventListener("click", functio
 
 document.getElementById("pref-adapt-memory").addEventListener("change", renderMemory);
 
+// ── Study reminders (server/lib/reminders.js) ──
+// Turning the switch on asks for notification permission and registers this device with
+// the server straight away, because the browser only allows the permission prompt inside a
+// tap. The settings themselves (on, time, streak) are saved with Save, like the rest.
+
+function normalizeReminders(r) {
+  return { on: r.on === true, time: /^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) ? r.time : "20:00", streak: r.streak !== false };
+}
+
+function readReminderPrefs() {
+  return normalizeReminders({
+    on: document.getElementById("pref-reminders-on").checked,
+    time: document.getElementById("pref-reminder-time").value,
+    streak: document.getElementById("pref-reminder-streak").checked
+  });
+}
+
+function pushSupported() {
+  return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+}
+
+// iPhone and iPad Safari only offer push to a web app opened from the Home Screen.
+function needsHomeScreen() {
+  var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var standalone = navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  return ios && !standalone;
+}
+
+function reminderStatus(key) {
+  document.getElementById("pref-reminder-status").textContent = key ? t(key) : "";
+}
+
+function renderReminderPrefs() {
+  var on = document.getElementById("pref-reminders-on").checked;
+  document.getElementById("pref-reminder-options").classList.toggle("hidden", !on);
+}
+
+function openReminderPrefs() {
+  var r = state.reminders;
+  var toggle = document.getElementById("pref-reminders-on");
+  toggle.checked = r.on;
+  document.getElementById("pref-reminder-time").value = r.time;
+  document.getElementById("pref-reminder-streak").checked = r.streak;
+  reminderStatus(null);
+  toggle.disabled = false;
+  if (needsHomeScreen()) { toggle.disabled = !r.on; reminderStatus("pref.reminderIphone"); }
+  else if (!pushSupported()) { toggle.disabled = !r.on; reminderStatus("pref.reminderUnsupported"); }
+  else if (r.on && Notification.permission === "denied") reminderStatus("pref.reminderBlocked");
+  renderReminderPrefs();
+}
+
+function urlB64ToBytes(b64) {
+  var s = (b64 + "===".slice((b64.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/");
+  var raw = atob(s), out = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+// Resolves to null when this device is registered, or to the message key explaining why not.
+function subscribeThisDevice() {
+  if (!pushSupported()) return Promise.resolve("pref.reminderUnsupported");
+  return Notification.requestPermission().then(function(perm) {
+    if (perm !== "granted") return "pref.reminderBlocked";
+    return store.getReminders().then(function(info) {
+      if (!info.available || !info.publicKey) return "pref.reminderFailed";
+      return navigator.serviceWorker.ready.then(function(reg) {
+        return reg.pushManager.getSubscription().then(function(existing) {
+          return existing || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToBytes(info.publicKey) });
+        });
+      }).then(function(sub) {
+        return store.subscribeReminders(sub.toJSON(), new Date().getTimezoneOffset()).then(function() { return null; });
+      });
+    });
+  }).catch(function() { return "pref.reminderFailed"; });
+}
+
+document.getElementById("pref-reminders-on").addEventListener("change", function(e) {
+  var toggle = e.target;
+  renderReminderPrefs();
+  if (!toggle.checked) { reminderStatus("pref.reminderSaveHint"); return; }
+  reminderStatus(null);
+  toggle.disabled = true;
+  subscribeThisDevice().then(function(problem) {
+    toggle.disabled = false;
+    if (problem) { toggle.checked = false; renderReminderPrefs(); }
+    reminderStatus(problem || "pref.reminderSaveHint");
+  });
+});
+
+document.getElementById("btn-reminder-test").addEventListener("click", function(e) {
+  var btn = e.currentTarget;
+  btn.disabled = true;
+  store.testReminder().then(function(res) {
+    reminderStatus(res && res.sent > 0 ? "pref.reminderSent" : "pref.reminderNoDevice");
+  }).catch(function() { reminderStatus("pref.reminderFailed"); })
+    .then(function() { btn.disabled = false; });
+});
+
 document.getElementById("pref-daily-goal").addEventListener("click", function(e) {
   var pill = e.target.closest(".pill");
   if (!pill) return;
@@ -12723,6 +12854,10 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
     state.adaptMemory = document.getElementById("pref-adapt-memory").checked;
     prefs.targetRecall = state.targetRecall;
     prefs.adaptMemory = state.adaptMemory;
+    state.reminders = readReminderPrefs();
+    prefs.reminders = state.reminders;
+    // Where the user is now, so a reminder set for 8:00 PM follows them when they travel.
+    prefs.reminderTz = new Date().getTimezoneOffset();
   }
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
@@ -12881,7 +13016,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-memory", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-memory", "pref-reminders", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }

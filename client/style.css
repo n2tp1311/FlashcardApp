@@ -4521,6 +4521,11 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .memory-status:empty { display: none; }
 .memory-status .pref-hint { margin: 0; }
 .memory-line { margin: 0; font-size: 0.8125rem; color: var(--text2); line-height: 1.45; }
+.reminder-options { display: grid; gap: 0; }
+.reminder-options #btn-reminder-test { justify-self: start; margin-bottom: 12px; }
+.reminder-time { width: auto; min-width: 7.5em; flex: 0 0 auto; }
+.reminder-status { margin: 0 0 16px; font-size: 0.8125rem; color: var(--text2); line-height: 1.45; overflow-wrap: anywhere; }
+.reminder-status:empty { display: none; }
 .memory-line.good { color: var(--success-soft-text); font-weight: 600; }
 .memory-progress { height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
 .memory-progress i { display: block; height: 100%; background: var(--primary); }
