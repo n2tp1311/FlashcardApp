@@ -1119,3 +1119,5 @@ The dashboard's colours went the same way. A fixed blue for time, green for new 
 
 Cost: the ledge is light mode only, as with the buttons — in dark mode a ledge reads as a glow — so the two modes differ in depth, by design.
 
+Update, same day: dark mode got the ledges too. The glow came from a ledge lighter than the page; one cut from the page darkened toward black (`color-mix(var(--bg) 55%, #000)`) reads as depth. Of a subtle and a strong (pure black, lighter borders) variant the user chose the subtle one.
+
