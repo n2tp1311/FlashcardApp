@@ -1131,22 +1131,26 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 }
 .btn-outline:hover:not(:disabled) { background: var(--primary-light); }
 /* Light mode reads flat without it: a 2px edge and a 3px ledge under the main buttons, which
-   sink on press, give them the solid feel of the session-end tiles. Dark mode has the
-   contrast already, and a ledge there reads as a glow. */
+   sink on press, give them the solid feel of the session-end tiles. Dark mode takes its
+   ledge from the page instead, below, since a primary-tinted one there reads as a glow. */
 :root:not([data-theme="dark"]) .btn-primary,
 :root:not([data-theme="dark"]) .btn-outline { border-width: 2px; box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 30%, transparent); }
 :root:not([data-theme="dark"]) .btn-primary { border-color: color-mix(in srgb, var(--primary-soft-text) 45%, transparent); }
 :root:not([data-theme="dark"]) .btn-primary.btn-full, :root:not([data-theme="dark"]) .modal-footer .btn-primary { border-color: var(--primary-fill); }
 :root:not([data-theme="dark"]) .btn-primary:active:not(:disabled),
 :root:not([data-theme="dark"]) .btn-outline:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 color-mix(in srgb, var(--primary) 30%, transparent); }
-/* One elevation in light mode: everything with an edge stands on a ledge -- tiles, class
-   cards, the search bar, the sort row. Half the page raised and half flat read as two
-   designs; text-only actions stay flat because they have no edge to stand on. */
-:root:not([data-theme="dark"]) { --ledge: color-mix(in srgb, var(--text) 16%, var(--border)); }
-:root:not([data-theme="dark"]) :is(.dash-tile, .class-card, .upstream-banner) { border-width: 2px; box-shadow: 0 4px 0 var(--ledge); }
-:root:not([data-theme="dark"]) .class-card:hover { box-shadow: 0 6px 0 var(--ledge); }
-:root:not([data-theme="dark"]) :is(.nav-search-bar, .sort-select, .sort-dir-btn, .view-toggle, #btn-toggle-archived, #btn-tag-filter-toggle) { border-width: 2px; box-shadow: 0 3px 0 var(--ledge); }
-:root:not([data-theme="dark"]) .dash-studytime-card .dash-tile { box-shadow: none; }
+/* One elevation: everything with an edge stands on a ledge -- tiles, class cards, the
+   search bar, the sort row. Half the page raised and half flat read as two designs;
+   text-only actions stay flat because they have no edge to stand on. In dark mode the ledge
+   is the page darkened, never lightened: a pale ledge under a dark tile reads as a glow. */
+:root { --ledge: color-mix(in srgb, var(--text) 16%, var(--border)); }
+:root[data-theme="dark"] { --ledge: color-mix(in srgb, var(--bg) 55%, #000); }
+:root :is(.dash-tile, .class-card, .upstream-banner) { border-width: 2px; box-shadow: 0 4px 0 var(--ledge); }
+:root .class-card:hover { box-shadow: 0 6px 0 var(--ledge); }
+:root :is(.nav-search-bar, .sort-select, .sort-dir-btn, .view-toggle, #btn-toggle-archived, #btn-tag-filter-toggle) { border-width: 2px; box-shadow: 0 3px 0 var(--ledge); }
+:root .dash-studytime-card .dash-tile { box-shadow: none; }
+:root[data-theme="dark"] :is(.btn-primary, .btn-outline) { border-width: 2px; box-shadow: 0 3px 0 var(--ledge); }
+:root[data-theme="dark"] :is(.btn-primary, .btn-outline):active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--ledge); }
 .due-badge.is-count { background: var(--primary-light); color: var(--primary); }
 
 .btn-success {
@@ -2158,6 +2162,7 @@ code {
   background: var(--surface);
   border: 2px solid var(--border);
 }
+:root[data-theme="dark"] .fc-front { box-shadow: 0 5px 0 var(--ledge); }
 :root:not([data-theme="dark"]) .fc-front { border-color: color-mix(in srgb, var(--primary) 40%, var(--border)); box-shadow: 0 5px 0 color-mix(in srgb, var(--primary) 30%, var(--border)); }
 
 .fc-back {

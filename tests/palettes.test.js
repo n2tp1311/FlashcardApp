@@ -129,10 +129,13 @@ test("every light palette sets its own shadows", function() {
   assert.match(css, /:root:not\(\[data-theme="dark"\]\) \.btn-primary,/);
 });
 
-test("light mode has one elevation: every edged surface on the home page stands on a ledge", function() {
-  assert.match(css, /:root:not\(\[data-theme="dark"\]\) \{ --ledge: /);
-  assert.match(css, /:root:not\(\[data-theme="dark"\]\) :is\(\.dash-tile, \.class-card, \.upstream-banner\) \{ border-width: 2px; box-shadow: 0 4px 0 var\(--ledge\); \}/);
-  assert.match(css, /:root:not\(\[data-theme="dark"\]\) :is\(\.nav-search-bar, \.sort-select, \.sort-dir-btn, \.view-toggle, #btn-toggle-archived, #btn-tag-filter-toggle\) \{ border-width: 2px; box-shadow: 0 3px 0 var\(--ledge\); \}/);
+test("both modes have one elevation: every edged surface on the home page stands on a ledge", function() {
+  assert.match(css, /:root \{ --ledge: /);
+  // In dark mode the ledge is darker than the page, never lighter, or it reads as a glow.
+  assert.match(css, /:root\[data-theme="dark"\] \{ --ledge: color-mix\(in srgb, var\(--bg\) \d+%, #000\); \}/);
+  assert.match(css, /:root :is\(\.dash-tile, \.class-card, \.upstream-banner\) \{ border-width: 2px; box-shadow: 0 4px 0 var\(--ledge\); \}/);
+  assert.match(css, /:root\[data-theme="dark"\] :is\(\.btn-primary, \.btn-outline\) \{ border-width: 2px; box-shadow: 0 3px 0 var\(--ledge\); \}/);
+  assert.match(css, /:root :is\(\.nav-search-bar, \.sort-select, \.sort-dir-btn, \.view-toggle, #btn-toggle-archived, #btn-tag-filter-toggle\) \{ border-width: 2px; box-shadow: 0 3px 0 var\(--ledge\); \}/);
 });
 
 test("the home dashboard takes its colours from the palette, not fixed hues", function() {
