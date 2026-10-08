@@ -77,13 +77,27 @@ test("a learned class shows one check in the grid card's top-right corner and in
   await page.close();
 });
 
-test("a mastered class shows the solid double check, which steps aside for the hover buttons", async function() {
+test("a mastered class shows the solid double check, and the hover buttons line up beside it", async function() {
+  for (const p of [{ known: 3, total: 240, mastery: mastery(240, 0, 0) }, { known: 3, total: 240, mastery: mastery(60, 170, 10) }]) {
+    const page = await render(p);
+    await page.hover("#card");
+    await page.waitForTimeout(250);
+    const r = await page.evaluate(function() {
+      const m = document.getElementById("cls-done-c1"), a = document.querySelector(".class-card-actions");
+      const mb = m.getBoundingClientRect(), ab = a.getBoundingClientRect();
+      const hit = document.elementFromPoint(mb.left + mb.width / 2, mb.top + mb.height / 2);
+      return { opacity: getComputedStyle(m).opacity, actions: getComputedStyle(a).opacity, gap: mb.left - ab.right, hitIsMedal: !!hit && !!hit.closest("#cls-done-c1") };
+    });
+    assert.ok(Number(r.opacity) >= 0.75, "not faded away: " + r.opacity);
+    assert.equal(r.actions, "1");
+    assert.ok(r.gap >= 4, "buttons end left of the badge: " + JSON.stringify(r));
+    assert.ok(r.hitIsMedal, "the pointer reaches the badge, so its tip shows");
+    await page.close();
+  }
   const page = await render({ known: 3, total: 240, mastery: mastery(240, 0, 0) });
   const grid = await medal(page, "cls-done-c1");
   assert.match(grid.cls, /is-mastered/);
   assert.equal(grid.label, "class.masteredTooltip");
-  await page.hover("#card");
-  await page.waitForFunction(function() { return getComputedStyle(document.getElementById("cls-done-c1")).opacity === "0"; });
   await page.close();
 });
 
@@ -111,4 +125,24 @@ test("on a phone, where the card's buttons are always shown, the medallion sits 
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("cls-done-c1")).opacity), "1");
     await page.close();
   }
+});
+
+test("on a touch screen the badge's tap area is finger-sized while it looks the same", async function() {
+  const page = await browser.newPage({ viewport: { width: 375, height: 500 }, hasTouch: true, isMobile: true });
+  await page.setContent('<meta name="viewport" content="width=device-width"><div class="class-grid" style="padding:16px"><div class="class-card" id="card"><div class="class-card-actions">' +
+    '<button class="icon-btn">A</button><button class="icon-btn">E</button><button class="icon-btn">D</button></div>' +
+    '<span class="class-done-medal hidden" id="cls-done-c1" role="img"></span><span class="class-icon" style="width:28px;height:28px"></span>' +
+    '<div class="class-name">Linear Algebra</div></div></div>');
+  await page.addStyleTag({ path: path.join(root, "client", "style.css") });
+  await page.addScriptTag({ content: "function t(k) { return k; }" + icons + ["classDoneLevel", "classGoalText", "setClassDoneMedal"].map(extract).join("") });
+  await page.evaluate(function() { setClassDoneMedal("c1", { known: 3, total: 240, mastery: { mastered: 60, known: 170, learning: 10, new: 0 } }); });
+  const r = await page.evaluate(function() {
+    const m = document.getElementById("cls-done-c1"), b = m.getBoundingClientRect(), a = getComputedStyle(m, "::after");
+    const edge = document.elementFromPoint(b.left + b.width / 2, b.bottom + 8);
+    return { size: b.width, after: a.content, inset: a.inset, pos: a.position, edgeHits: !!edge && !!edge.closest("#cls-done-c1"), hit: edge && (edge.tagName + "." + edge.className) };
+  });
+  assert.ok(r.size <= 22, "looks the same: " + r.size);
+  assert.notEqual(r.after, "none");
+  assert.ok(r.edgeHits, "a tap 8px outside the badge still reaches it: " + JSON.stringify(r));
+  await page.close();
 });

@@ -61,9 +61,10 @@ test("the medallion's tooltip names its level, in both languages", function() {
   assert.doesNotMatch(app, /"class\.complete":/);
 });
 
-test("the medallion hides under the hover buttons in the grid card's corner", function() {
+test("the hover buttons make room for the badge instead of covering it", function() {
   const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
-  assert.match(css, /\.class-card:hover \.class-done-medal \{ opacity: 0; \}/);
+  assert.doesNotMatch(css, /\.class-card:hover \.class-done-medal \{ opacity: 0; \}/);
+  assert.match(css, /\.class-card\.has-medal \.class-card-actions \{ right: 46px; \}/);
 });
 
 test("the empty badge names what is left: new cards, cards in Learning, or both", function() {

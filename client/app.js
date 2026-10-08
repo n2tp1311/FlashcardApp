@@ -3955,6 +3955,8 @@ function setClassDoneMedal(classId, p) {
   var level = classDoneLevel(p);
   var goal = !level && p && p.total > 0;
   el.classList.toggle("hidden", !level && !goal);
+  var card = el.closest(".class-card");
+  if (card) card.classList.toggle("has-medal", !!(level || goal));
   el.classList.remove("is-learned", "is-mastered", "is-goal");
   if (!level && !goal) { el.innerHTML = ""; el.removeAttribute("title"); el.removeAttribute("aria-label"); return; }
   var tip = goal ? classGoalText(p)

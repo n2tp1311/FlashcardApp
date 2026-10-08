@@ -3072,8 +3072,16 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .class-pin { display: inline-flex; vertical-align: -1px; margin-right: 5px; color: var(--primary); }
 .class-pin svg { display: block; }
 
-/* The edit and delete buttons take this corner on hover. */
-.class-card:hover .class-done-medal { opacity: 0; }
+/* The badge keeps the corner and the hover buttons line up to its left, so its tip can be
+   reached; when they shared the corner, the buttons covered it. */
+.class-card.has-medal .class-card-actions { right: 46px; }
+/* A tap shows the badge's tip; at 20px on a phone it is too small to hit, so on touch
+   screens an invisible ring makes the target about 44px. */
+@media (hover: none) {
+  .class-done-medal:not(.hidden) { position: relative; }
+  .class-card .class-done-medal { position: absolute; z-index: 1; }
+  .class-done-medal::after { content: ""; position: absolute; inset: -12px; border-radius: 50%; }
+}
 
 .mastery-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--border); }
 .mastery-bar i { display: block; height: 100%; }
@@ -3392,7 +3400,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .class-card .class-done-medal.is-learned { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--success) 45%, transparent), 0 0 0 2px var(--surface); }
   .class-card .class-done-medal svg { width: 11px; height: 11px; }
   .class-card .class-done-medal.is-goal { background: var(--surface); }
-  .class-card:hover .class-done-medal { opacity: 1; }
+  .class-card.has-medal .class-card-actions { right: 10px; }
   /* A fourth always-visible button would push the row into the icon; pinning is in the
      class's menu on a phone. */
   .class-pin-btn { display: none; }
