@@ -88,16 +88,16 @@ test("a card falling back takes the medallion away", async function() {
   await page.close();
 });
 
-test("on a phone, where the card's buttons are always shown, the medallion sits clear of them", async function() {
-  for (const width of [375, 600]) {
+test("on a phone, where the card's buttons are always shown, the medallion sits on the icon, clear of them", async function() {
+  for (const width of [375, 481, 520, 600]) {
     const page = await render({ known: 3, total: 240, mastery: mastery(240, 0, 0) }, width);
     const r = await page.evaluate(function() {
       const box = (el) => el.getBoundingClientRect();
       const m = box(document.getElementById("cls-done-c1")), a = box(document.querySelector(".class-card-actions")), i = box(document.querySelector(".class-icon"));
-      return { gapToActions: a.left - m.right, gapToIcon: m.left - i.right, opacity: getComputedStyle(document.querySelector(".class-card-actions")).opacity };
+      return { gapToActions: a.left - m.right, onIcon: m.left < i.right && m.top < i.bottom, opacity: getComputedStyle(document.querySelector(".class-card-actions")).opacity };
     });
     assert.equal(r.opacity, "1", "buttons always visible at " + width);
-    assert.ok(r.gapToActions > 0 && r.gapToIcon > 0, width + ": " + JSON.stringify(r));
+    assert.ok(r.gapToActions > 0 && r.onIcon, width + ": " + JSON.stringify(r));
     await page.hover("#card");
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("cls-done-c1")).opacity), "1");
     await page.close();

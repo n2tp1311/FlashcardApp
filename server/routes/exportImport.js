@@ -273,8 +273,8 @@ importRouter.post("/", requireAuth, importLimiter, (req, res) => {
       idMap[cls.id] = newId;
       imported.classes++;
       db.prepare(
-        "INSERT OR IGNORE INTO classes (id, user_id, name, color, icon, sort_order, level, archived, created_at, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "book", cls.sort_order || 0, cls.level ?? null, cls.archived ? 1 : 0, cls.created_at || Math.floor(Date.now()/1000), cls.tags || null);
+        "INSERT OR IGNORE INTO classes (id, user_id, name, color, icon, sort_order, level, archived, created_at, tags, pinned_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ).run(newId, userId, cls.name, cls.color || "#2563eb", cls.icon || "book", cls.sort_order || 0, cls.level ?? null, cls.archived ? 1 : 0, cls.created_at || Math.floor(Date.now()/1000), cls.tags || null, Number.isInteger(cls.pinned_at) ? cls.pinned_at : null);
     });
 
     lessons.forEach(les => {

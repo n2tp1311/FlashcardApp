@@ -3041,6 +3041,10 @@ code {
 .class-done-medal.is-mastered { background: var(--success-fill); color: #fff; }
 .class-card .class-done-medal { position: absolute; top: 14px; right: 14px; }
 .class-list-row .class-done-medal { width: 22px; height: 22px; }
+/* Pinned: a small pin before the class name. */
+.class-pin { display: inline-flex; vertical-align: -1px; margin-right: 5px; color: var(--primary); }
+.class-pin svg { display: block; }
+
 /* The edit and delete buttons take this corner on hover. */
 .class-card:hover .class-done-medal { opacity: 0; }
 
@@ -3355,10 +3359,15 @@ code {
      icons are unreachable on touch, and 28px/4px targets are easy to mis-tap). */
   .icon-btn { width: 40px; height: 40px; }
   .class-card-actions, .lesson-actions { opacity: 1; }
-  /* The always-visible actions now own the top-right corner, so the medallion sits beside
-     the class icon instead; a 2-column card at 600px still leaves room between the two. */
-  .class-card .class-done-medal { top: 21px; left: 58px; right: auto; }
+  /* The always-visible actions own the top-right corner and, on a 2-column card near 480px,
+     reach almost to the icon, so the medallion sits on the icon's corner instead. */
+  .class-card .class-done-medal { top: 36px; left: 36px; right: auto; width: 20px; height: 20px; box-shadow: 0 0 0 2px var(--surface); }
+  .class-card .class-done-medal.is-learned { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--success) 45%, transparent), 0 0 0 2px var(--surface); }
+  .class-card .class-done-medal svg { width: 11px; height: 11px; }
   .class-card:hover .class-done-medal { opacity: 1; }
+  /* A fourth always-visible button would push the row into the icon; pinning is in the
+     class's menu on a phone. */
+  .class-pin-btn { display: none; }
   .class-card-actions, .lesson-actions, .card-actions { gap: 10px; }
 
   /* M15: lesson titles were mid-word ellipsizing even for realistic-length titles —

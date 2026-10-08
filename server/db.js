@@ -217,6 +217,8 @@ try { db.exec("ALTER TABLE classes ADD COLUMN level INTEGER"); } catch (_) {}
 
 // Migration: add archived flag to classes — archived classes are excluded from due/review aggregation
 try { db.exec("ALTER TABLE classes ADD COLUMN archived INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+// Pinned classes stay at the top of Home whatever the sort, in the order they were pinned.
+try { db.exec("ALTER TABLE classes ADD COLUMN pinned_at INTEGER"); } catch (_) {}
 
 // Migration: add last_seen_at to card_states for per-card visit tracking
 try { db.exec("ALTER TABLE card_states ADD COLUMN last_seen_at INTEGER"); } catch (_) {}

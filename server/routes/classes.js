@@ -132,12 +132,12 @@ router.put("/:id", requireAuth, (req, res) => {
   const cls = db.prepare("SELECT * FROM classes WHERE id = ? AND user_id = ?")
     .get(req.params.id, req.session.userId);
   if (!cls) return res.status(404).json({ error: "Not found" });
-  const { name, color, icon, sort_order, level, archived } = req.body;
+  const { name, color, icon, sort_order, level, archived, pinned } = req.body;
   const tags = req.body.tags === undefined ? null : normalizeTags(req.body.tags);
   if (req.body.tags !== undefined && tags === null)
     return res.status(400).json({ error: "tags must be an array of strings" });
   db.prepare(
-    "UPDATE classes SET name = ?, color = ?, icon = ?, sort_order = ?, level = ?, archived = ?, tags = ? WHERE id = ?"
+    "UPDATE classes SET name = ?, color = ?, icon = ?, sort_order = ?, level = ?, archived = ?, tags = ?, pinned_at = ? WHERE id = ?"
   ).run(
     name        ?? cls.name,
     color       ?? cls.color,
@@ -146,6 +146,7 @@ router.put("/:id", requireAuth, (req, res) => {
     normalizeLevel(level, cls.level),
     archived != null ? (archived ? 1 : 0) : cls.archived,
     tags === null ? cls.tags : JSON.stringify(tags),
+    pinned == null ? cls.pinned_at : pinned ? (cls.pinned_at || Date.now()) : null,
     req.params.id
   );
   res.json(parseClassTags(db.prepare("SELECT * FROM classes WHERE id = ?").get(req.params.id)));

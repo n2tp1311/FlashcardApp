@@ -28,6 +28,9 @@ function scaleXStyle(scale) {
 var ICON_EDIT     = svgIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>');
 var ICON_DELETE   = svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>');
 var ICON_ARCHIVE  = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>');
+var ICON_PIN_INNER = '<line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>';
+var ICON_PIN = svgIcon(ICON_PIN_INNER);
+var ICON_UNPIN = svgIcon(ICON_PIN_INNER + '<line x1="2" y1="2" x2="22" y2="22"/>');
 var ICON_UNARCHIVE = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="12" y1="17" x2="12" y2="11"/><polyline points="9 14 12 11 15 14"/>');
 var ICON_CHECK    = svgIcon('<polyline points="20 6 9 17 4 12"/>');
 var ICON_LAYOUT_LIST = svgIcon('<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>', 16);
@@ -380,6 +383,13 @@ Object.assign(TRANSLATIONS.en, {
   "common.loading": "Loading...",
   "common.archive": "Archive",
   "common.unarchive": "Unarchive",
+  "common.pin": "Pin to top",
+  "common.unpin": "Unpin",
+  "class.pinned": "Pinned: stays at the top whatever the sort",
+  "class.pinClass": "Pin Class",
+  "class.unpinClass": "Unpin Class",
+  "toast.pinned": "Pinned \"{name}\".",
+  "toast.unpinned": "Unpinned \"{name}\".",
   "common.edit": "Edit",
   "common.delete": "Delete",
   "home.emptyArchived": "No archived classes.",
@@ -1346,6 +1356,13 @@ Object.assign(TRANSLATIONS.vi, {
   "common.loading": "Đang tải...",
   "common.archive": "Lưu trữ",
   "common.unarchive": "Bỏ lưu trữ",
+  "common.pin": "Ghim lên đầu",
+  "common.unpin": "Bỏ ghim",
+  "class.pinned": "Đã ghim: luôn ở đầu, dù sắp xếp thế nào",
+  "class.pinClass": "Ghim lớp",
+  "class.unpinClass": "Bỏ ghim lớp",
+  "toast.pinned": "Đã ghim \"{name}\".",
+  "toast.unpinned": "Đã bỏ ghim \"{name}\".",
   "common.edit": "Sửa",
   "common.delete": "Xóa",
   "home.emptyArchived": "Không có lớp nào đã lưu trữ.",
@@ -2429,6 +2446,10 @@ var LocalStorageAdapter = (function() {
         var idx = list.findIndex(function(c) { return c.id === id; });
         if (idx === -1) return null;
         if (fields.tags !== undefined) fields = Object.assign({}, fields, { tags: normalizeTagsArray(fields.tags) });
+        if (fields.pinned !== undefined) {
+          fields = Object.assign({}, fields, { pinned_at: fields.pinned ? (list[idx].pinned_at || Date.now()) : null });
+          delete fields.pinned;
+        }
         Object.assign(list[idx], fields);
         save(KEY_CLASSES, list);
         return list[idx];
@@ -3356,7 +3377,15 @@ var CLASS_COLORS = [
    HOME SCREEN — Class List
    ============================ */
 
+// Pinned classes come first in the order they were pinned and ignore the chosen sort; the
+// point of pinning is that a class stays put while the rest are reordered.
 function sortClasses(classes, key, dir) {
+  var pinned = classes.filter(function(c) { return c.pinned_at; })
+    .sort(function(a, b) { return a.pinned_at - b.pinned_at; });
+  return pinned.concat(sortUnpinnedClasses(classes.filter(function(c) { return !c.pinned_at; }), key, dir));
+}
+
+function sortUnpinnedClasses(classes, key, dir) {
   var d = dir === "desc" ? -1 : 1;
   var copy = classes.slice();
   copy.sort(function(a, b) {
@@ -3603,6 +3632,26 @@ function toggleClassArchived(cls) {
   });
 }
 
+function toggleClassPinned(cls) {
+  var pinning = !cls.pinned_at;
+  return store.updateClass(cls.id, { pinned: pinning }).then(function() {
+    showToast(t(pinning ? "toast.pinned" : "toast.unpinned", { name: cls.name }));
+    return renderHome();
+  }, function(err) {
+    showToast(t("toast.saveFailed", { message: err.message }), "error");
+  });
+}
+
+function classPinHtml(cls) {
+  if (!cls.pinned_at) return '';
+  var tip = escHtml(t("class.pinned"));
+  return '<span class="class-pin" title="' + tip + '" aria-label="' + tip + '" role="img">' + svgIcon(ICON_PIN_INNER, 13) + '</span>';
+}
+
+function classPinButtonHtml(cls) {
+  return '<button class="icon-btn class-pin-btn" title="' + (cls.pinned_at ? t("common.unpin") : t("common.pin")) + '" data-cls-pin="' + cls.id + '">' + (cls.pinned_at ? ICON_UNPIN : ICON_PIN) + '</button>';
+}
+
 // "Level" is the default class-sort criterion but was never shown anywhere on the card
 // itself — folded into the existing lesson-count meta line rather than a new badge.
 function formatClassMeta(cls, lessonCount) {
@@ -3619,7 +3668,7 @@ function _renderClassGridCard(cls, container) {
     '<div class="class-card-accent" style="background:' + cls.color + '"></div>' +
     '<span class="class-done-medal hidden" id="cls-done-' + cls.id + '" role="img"></span>' +
     '<span class="class-icon">' + classIconHtml(cls.icon, 28) + '</span>' +
-    '<div class="class-name">' + escHtml(cls.name) + '</div>' +
+    '<div class="class-name">' + classPinHtml(cls) + escHtml(cls.name) + '</div>' +
     '<div class="class-meta" id="cls-meta-' + cls.id + '">' + t("common.loading") + '</div>' +
     (cls.tags && cls.tags.length
       ? '<div class="class-tags">' + cls.tags.map(function(tg) { return '<span class="class-tag-chip">' + escHtml(tg) + '</span>'; }).join('') + '</div>'
@@ -3631,15 +3680,20 @@ function _renderClassGridCard(cls, container) {
       '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
     '</div>' +
     '<div class="class-card-actions">' +
+      classPinButtonHtml(cls) +
       '<button class="icon-btn" title="' + (cls.archived ? t("common.unarchive") : t("common.archive")) + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
       '<button class="icon-btn" title="' + t("common.edit") + '" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
       '<button class="icon-btn danger" title="' + t("common.delete") + '" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
     '</div>';
   onLongPress(card, function() { longPressSelectClass(cls.id); });
   card.addEventListener("click", function(e) {
-    if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive]")) return;
+    if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive],[data-cls-pin]")) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
     openClass(cls.id);
+  });
+  card.querySelector("[data-cls-pin]").addEventListener("click", function(e) {
+    e.stopPropagation();
+    toggleClassPinned(cls);
   });
   card.querySelector("[data-cls-archive]").addEventListener("click", function(e) {
     e.stopPropagation();
@@ -3677,7 +3731,7 @@ function _renderClassListRow(cls, container) {
     '<div class="class-list-colorbar" style="background:' + cls.color + '"></div>' +
     '<span class="class-list-icon">' + classIconHtml(cls.icon, 22) + '</span>' +
     '<div class="class-list-info">' +
-      '<div class="class-list-name">' + escHtml(cls.name) + '</div>' +
+      '<div class="class-list-name">' + classPinHtml(cls) + escHtml(cls.name) + '</div>' +
       '<div class="class-list-meta" id="cls-meta-' + cls.id + '">' + t("common.loading") + '</div>' +
       (cls.tags && cls.tags.length
         ? '<div class="class-tags">' + cls.tags.map(function(tg) { return '<span class="class-tag-chip">' + escHtml(tg) + '</span>'; }).join('') + '</div>'
@@ -3693,6 +3747,7 @@ function _renderClassListRow(cls, container) {
       '<span class="class-done-medal hidden" id="cls-done-' + cls.id + '" role="img"></span>' +
       (state.homeSelectMode ? '' :
         '<div class="class-list-actions">' +
+          classPinButtonHtml(cls) +
           '<button class="icon-btn" title="' + (cls.archived ? t("common.unarchive") : t("common.archive")) + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
           '<button class="icon-btn" title="' + t("common.edit") + '" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
           '<button class="icon-btn danger" title="' + t("common.delete") + '" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
@@ -3700,9 +3755,14 @@ function _renderClassListRow(cls, container) {
     '</div>';
   onLongPress(row, function() { longPressSelectClass(cls.id); });
   row.addEventListener("click", function(e) {
-    if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive]")) return;
+    if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive],[data-cls-pin]")) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
     openClass(cls.id);
+  });
+  var pinBtn = row.querySelector("[data-cls-pin]");
+  if (pinBtn) pinBtn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    toggleClassPinned(cls);
   });
   var archiveBtn = row.querySelector("[data-cls-archive]");
   var editBtn = row.querySelector("[data-cls-edit]");
@@ -3888,6 +3948,7 @@ function openClass(classId) {
     var nameEl = document.getElementById("class-detail-name");
     nameEl.innerHTML = classIconHtml(cls.icon) + " " + escHtml(cls.name) +
       (cls.archived ? ' <span class="archived-badge">' + t("archive.archived") + '</span>' : "");
+    document.getElementById("btn-pin-class").innerHTML = (cls.pinned_at ? ICON_UNPIN : ICON_PIN) + " " + t(cls.pinned_at ? "class.unpinClass" : "class.pinClass");
     document.getElementById("btn-archive-class").innerHTML = (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + " " + (cls.archived ? t("class.unarchiveClass") : t("class.archiveClass"));
     setSelectMode(false);
     document.getElementById("lesson-sort-select").value = state.currentLessonSort;
@@ -4058,6 +4119,12 @@ document.getElementById("btn-new-class").addEventListener("click", openNewClass)
 document.getElementById("btn-class-back").addEventListener("click", function() { renderHome(); showScreen("home"); saveScreenState("home"); });
 document.getElementById("btn-edit-class").addEventListener("click", function() {
   if (state.currentClass) openEditClass(state.currentClass.id);
+});
+document.getElementById("btn-pin-class").addEventListener("click", function() {
+  if (!state.currentClass) return;
+  toggleClassPinned(state.currentClass).then(function() {
+    if (state.currentClass) openClass(state.currentClass.id);
+  });
 });
 document.getElementById("btn-archive-class").addEventListener("click", function() {
   if (!state.currentClass) return;
