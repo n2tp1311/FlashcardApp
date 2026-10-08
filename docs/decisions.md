@@ -1001,6 +1001,10 @@ The user asked for a speaker in Quiz mode that reads the term only. The answer o
 
 The user asked for a badge on a class with every card known and picked option B from a preview. A corner seal (A) would share the corner where the edit and archive buttons appear on hover, and a gold edge (C) is loud on a Home grid of many classes. B changes only the line that already measured progress: the bar turns success green and the text becomes "Complete". It is computed from the same known count each time, not stored, so it can be lost; "known" is a flag a later Still learning grade clears, and a badge that outlived it would claim something untrue. Rounding had shown 239 of 240 as 100%, which next to a Complete pill reads as a bug, so an incomplete class tops out at 99%.
 
+## 2026-10-08 — An unearned class badge shows as an empty badge that says what earns it
+
+A class whose cards had all been studied had no check, because 9 were answered wrong and went back to Learning, and nothing said why. Of a line under the bar, an empty badge with a tip, and a hover tip on the bar, the user chose the empty badge. Its weakness is that a tip needs hover, so a tap on the badge shows the tip as a toast instead of opening the class; on a desktop grid card the hover buttons cover the badge, so the mastery line's tooltip carries the same sentence. It shows on every class with cards, not only nearly finished ones, so the corner means the same thing on every card.
+
 ## 2026-10-08 — Reminders are web push, sent only when they matter, plus an evening streak saver
 
 Of a daily reminder alone, a daily reminder plus a streak saver, and a choice of push or email, the user chose the reminder plus the streak saver at 8:00 PM. Both are conditional: a reminder on a day with nothing due, or after studying, teaches people to ignore the next one, so the daily one needs cards due and no answer since local midnight, and the streak one needs a streak that skipping today would actually end (rest days count). Email was left out: it needs no setup but is easy to ignore, and push works everywhere except an iPhone browser tab, where the setting says to add the app to the Home Screen.
