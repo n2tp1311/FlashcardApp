@@ -1148,6 +1148,25 @@
     </div>
   </div>
 
+  <!-- Card Form Modal (Cloze): edit only; gap cards come from KnowledgeApp -->
+  <div id="modal-card-cloze" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-card-cloze-title">
+    <div class="modal-header">
+      <h3 id="modal-card-cloze-title" data-i18n="card.editCloze">Edit gap card</h3>
+      <button class="modal-close" data-modal="card-cloze" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label" for="card-cloze-input" data-i18n="cloze.sentence">Sentence</label>
+      <textarea id="card-cloze-input" class="form-textarea" rows="4"></textarea>
+      <p class="form-hint" data-i18n="cloze.help">Hidden words are written {{c1::word}}. Every c1 is hidden together on this card.</p>
+      <div class="preview-label" data-i18n="form.previewColon">Preview:</div>
+      <div id="card-cloze-preview" class="latex-preview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="card-cloze" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-card-cloze" data-i18n="common.save">Save</button>
+    </div>
+  </div>
+
   <!-- Card Form Modal (MCQ) -->
   <div id="modal-card-mcq" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-card-mcq-title">
     <div class="modal-header">

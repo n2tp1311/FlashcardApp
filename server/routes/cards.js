@@ -1,5 +1,6 @@
 "use strict";
 
+const { validClozeText } = require("../lib/cloze");
 const express = require("express");
 const path    = require("path");
 const fs      = require("fs");
@@ -43,6 +44,8 @@ function unlinkUpload(imageUrl) {
 }
 
 function validateCardData(format, data) {
+  if (format === "cloze" && !validClozeText(data.text))
+    return "cloze requires text with at least one {{c1::answer}} gap";
   if (format === "image-def") {
     if (!data.imageUrl || typeof data.imageUrl !== "string" || !data.imageUrl.startsWith("/uploads/"))
       return "image-def requires imageUrl starting with /uploads/";

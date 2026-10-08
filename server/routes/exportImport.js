@@ -1,5 +1,6 @@
 "use strict";
 
+const { validClozeText } = require("../lib/cloze");
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
@@ -34,6 +35,8 @@ const flashcardExportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, me
 const flashcardImportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: "Too many flashcard import requests. Try again later.", keyFn: byUser });
 
 const VALID_LESSON_FORMATS = ["term-def", "mcq", "true-false", "image-def"];
+// A cloze card sits in a term-def lesson; there are no cloze lessons.
+const VALID_CARD_FORMATS = VALID_LESSON_FORMATS.concat("cloze");
 
 // Same per-format checks as POST /api/lessons/:lessonId/cards and its /bulk sibling in
 // cards.js (not shared via import — cards.js doesn't export them, and this is the only other
@@ -41,6 +44,8 @@ const VALID_LESSON_FORMATS = ["term-def", "mcq", "true-false", "image-def"];
 // /uploads/ path + text def, true-false needs a statement + "true"/"false" correct value.
 // term-def has no per-format check here either, matching those two existing routes.
 function validateCardForImport(format, data) {
+  if (format === "cloze" && !(data && validClozeText(data.text)))
+    return "cloze requires text with at least one {{c1::answer}} gap";
   if (format === "mcq") {
     if (!data || !data.question || !data.correct || !Array.isArray(data.distractors) ||
         data.distractors.length < 1 || data.distractors.length > 4)
@@ -290,7 +295,7 @@ importRouter.post("/", requireAuth, importLimiter, (req, res) => {
 
     cards.forEach(card => {
       const lessonId = idMap[card.lesson_id];
-      if (!lessonId || !VALID_LESSON_FORMATS.includes(card.format) || !card.data || typeof card.data !== "object") return;
+      if (!lessonId || !VALID_CARD_FORMATS.includes(card.format) || !card.data || typeof card.data !== "object") return;
       const newId = genId();
       idMap[card.id] = newId;
       imported.cards++;
@@ -370,8 +375,8 @@ importRouter.post("/flashcards", requireAuth, flashcardImportLimiter, (req, res)
         return res.status(400).json({ error: "class " + i + " lesson " + j + ": cards must be an array" });
       for (let k = 0; k < lesson.cards.length; k++) {
         const card = lesson.cards[k];
-        if (!card || !VALID_LESSON_FORMATS.includes(card.format))
-          return res.status(400).json({ error: "class " + i + " lesson " + j + " card " + k + ": format must be term-def, mcq, true-false, or image-def" });
+        if (!card || !VALID_CARD_FORMATS.includes(card.format))
+          return res.status(400).json({ error: "class " + i + " lesson " + j + " card " + k + ": format must be term-def, mcq, true-false, image-def or cloze" });
         const cardErr = validateCardForImport(card.format, card.data);
         if (cardErr) return res.status(400).json({ error: "class " + i + " lesson " + j + " card " + k + ": " + cardErr });
         if (card.external_id !== undefined &&

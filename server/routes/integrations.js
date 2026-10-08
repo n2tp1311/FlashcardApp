@@ -12,6 +12,7 @@ const { cardFromState } = require("../fsrs");
 const { userScheduler } = require("../lib/memory");
 const { requireApiToken } = require("../middleware/apiToken");
 const { resetLeech } = require("../lib/leech");
+const { validClozeText } = require("../lib/cloze");
 const { rateLimit, byApiUser } = require("../middleware/rateLimit");
 const router  = express.Router();
 
@@ -45,18 +46,33 @@ function isText(v) {
   return typeof v === "string" && v.trim().length > 0 && v.length <= MAX_TEXT_LEN;
 }
 
+// A card's text arrives either as term + def or, for a cloze card, as `cloze`: one sentence
+// with {{c1::…}} gaps. The two never mix on one item.
+function cardText(item) {
+  if (item.cloze !== undefined)
+    return item.term === undefined && item.def === undefined && validClozeText(item.cloze)
+      ? { cloze: item.cloze.trim() } : null;
+  return isText(item.term) && isText(item.def) ? { term: item.term.trim(), def: item.def.trim() } : null;
+}
+
+function cardRow(text) {
+  return text.cloze !== undefined
+    ? { format: "cloze", data: JSON.stringify({ text: text.cloze }) }
+    : { format: "term-def", data: JSON.stringify({ term: text.term, def: text.def }) };
+}
+
 function validateEvent(ev) {
   if (!ev || !EVENT_TYPES.includes(ev.type)) return "type must be one of " + EVENT_TYPES.join(", ");
   if (!isId(ev.external_id)) return "external_id required";
   if (ev.type === "updated" || ev.type === "restored") {
-    if (!isText(ev.term) || !isText(ev.def)) return "term and def required";
+    if (!cardText(ev)) return "term and def, or cloze with a {{c1::…}} gap, required";
   }
   if (ev.type === "split") {
     if (!Array.isArray(ev.cards) || ev.cards.length < 1 || ev.cards.length > MAX_SPLIT_CARDS)
       return "cards must be an array of 1-" + MAX_SPLIT_CARDS;
     for (const c of ev.cards) {
-      if (!c || !isId(c.external_id) || !isText(c.term) || !isText(c.def))
-        return "each split card needs external_id, term and def";
+      if (!c || !isId(c.external_id) || !cardText(c))
+        return "each split card needs external_id, and term and def or cloze";
     }
   }
   return null;
@@ -71,13 +87,14 @@ function cardsForExternalId(userId, externalId) {
   ).all(userId, externalId);
 }
 
-function applyUpdate(card, term, def, now, userId) {
-  if (card.format !== "term-def") return false;
+function applyUpdate(card, text, now, userId) {
+  const cloze = text.cloze !== undefined;
+  if (card.format !== (cloze ? "cloze" : "term-def")) return false;
   let old;
   try { old = JSON.parse(card.data); } catch (_) { old = {}; }
   const trimmed = v => (typeof v === "string" ? v.trim() : v);
-  if (trimmed(old.term) === term && trimmed(old.def) === def) return false;
-  const nextData = JSON.stringify({ ...old, term, def });
+  if (cloze ? trimmed(old.text) === text.cloze : trimmed(old.term) === text.term && trimmed(old.def) === text.def) return false;
+  const nextData = JSON.stringify(cloze ? { ...old, text: text.cloze } : { ...old, term: text.term, def: text.def });
   const prev = card.upstream_prev_data ?? card.data;
   if (prev === nextData) {
     db.prepare(
@@ -104,7 +121,7 @@ function applyDeleted(card, now) {
   return true;
 }
 
-function applyRestored(card, term, def, now, userId) {
+function applyRestored(card, text, now, userId) {
   let changed = false;
   if (card.upstream_change === "deleted") {
     const next = card.upstream_prev_data == null ? null : "updated";
@@ -113,7 +130,7 @@ function applyRestored(card, term, def, now, userId) {
     card = { ...card, upstream_change: next };
     changed = true;
   }
-  return applyUpdate(card, term, def, now, userId) || changed;
+  return applyUpdate(card, text, now, userId) || changed;
 }
 
 // Rewrites the lesson's order densely (0..n-1) with new cards placed after their anchors.
@@ -139,8 +156,9 @@ function placeInLesson(lessonId, anchored, tail) {
       return;
     }
     const id = genId();
-    db.prepare("INSERT INTO cards (id, lesson_id, format, data, sort_order, external_id) VALUES (?, ?, 'term-def', ?, ?, ?)")
-      .run(id, lessonId, JSON.stringify({ term: entry.item.term.trim(), def: entry.item.def.trim() }), i, entry.item.external_id);
+    const row = cardRow(cardText(entry.item));
+    db.prepare("INSERT INTO cards (id, lesson_id, format, data, sort_order, external_id) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(id, lessonId, row.format, row.data, i, entry.item.external_id);
     placed.push({ item: entry.item, id });
   });
   return placed;
@@ -223,9 +241,9 @@ router.post("/events", (req, res) => {
         let touched = 0;
         cards.forEach(card => {
           let changed = false;
-          if (ev.type === "updated")  changed = applyUpdate(card, ev.term.trim(), ev.def.trim(), now, userId);
+          if (ev.type === "updated")  changed = applyUpdate(card, cardText(ev), now, userId);
           if (ev.type === "deleted")  changed = applyDeleted(card, now);
-          if (ev.type === "restored") changed = applyRestored(card, ev.term.trim(), ev.def.trim(), now, userId);
+          if (ev.type === "restored") changed = applyRestored(card, cardText(ev), now, userId);
           if (ev.type === "split")    changed = applySplit(card, ev.cards);
           if (changed) touched++;
         });
@@ -524,6 +542,9 @@ router.get("/classes/:id/cards", (req, res) => {
     if (r.format === "term-def") {
       if (typeof data.term !== "string" || typeof data.def !== "string") return;
       card.term = data.term; card.def = data.def;
+    } else if (r.format === "cloze") {
+      if (typeof data.text !== "string") return;
+      card.cloze = data.text;
     } else {
       card.data = data;
     }
@@ -636,6 +657,8 @@ router.post("/convert-cards", (req, res) => {
             : { status: "invalid", error: "card is already term-def; send an updated event to change its text" };
         } else if (card.format === "image-def") {
           out = { status: "invalid", error: "image-def cards are not converted: the image would be lost" };
+        } else if (card.format === "cloze") {
+          out = { status: "invalid", error: "cloze cards are not converted: they sit beside a term-def card already" };
         } else {
           db.prepare("UPDATE cards SET format = 'term-def', data = ?, converted_from = COALESCE(converted_from, ?) WHERE id = ?")
             .run(JSON.stringify({ term, def }), JSON.stringify({ format: card.format, data: JSON.parse(card.data) }), card.id);
@@ -649,7 +672,7 @@ router.post("/convert-cards", (req, res) => {
       });
 
       touched.forEach(lessonId => {
-        const left = db.prepare("SELECT COUNT(*) AS n FROM cards WHERE lesson_id = ? AND format != 'term-def'").get(lessonId).n;
+        const left = db.prepare("SELECT COUNT(*) AS n FROM cards WHERE lesson_id = ? AND format NOT IN ('term-def', 'cloze')").get(lessonId).n;
         if (left === 0) {
           const changed = db.prepare("UPDATE lessons SET format = 'term-def' WHERE id = ? AND format != 'term-def'").run(lessonId);
           if (changed.changes) lessonsConverted.push(lessonId);
@@ -664,7 +687,7 @@ router.post("/convert-cards", (req, res) => {
 });
 
 // POST /api/integrations/knowledge/add-cards
-//   { class_id, cards: [{external_id, term, def, lesson_id? | after_card_id? | new_lesson_title?}] }
+//   { class_id, cards: [{external_id, term, def | cloze, lesson_id? | after_card_id? | new_lesson_title?}] }
 // Adds into an existing class. One transaction per request; replay-safe because an
 // external_id already in the class is `exists`, and a new lesson is only created
 // when at least one card will actually go into it.
@@ -676,8 +699,8 @@ router.post("/add-cards", (req, res) => {
     return res.status(400).json({ error: "cards must be an array of 1-" + MAX_ADD_CARDS });
   for (let i = 0; i < items.length; i++) {
     const c = items[i];
-    if (!c || !isId(c.external_id) || !isText(c.term) || !isText(c.def))
-      return res.status(400).json({ error: "card " + i + ": external_id, term and def required" });
+    if (!c || !isId(c.external_id) || !cardText(c))
+      return res.status(400).json({ error: "card " + i + ": external_id, and term and def or cloze, required" });
     if (c.new_lesson_title != null) {
       const t = typeof c.new_lesson_title === "string" ? c.new_lesson_title.trim() : "";
       if (!t || t.length > MAX_TITLE_LEN || c.lesson_id != null || c.after_card_id != null)

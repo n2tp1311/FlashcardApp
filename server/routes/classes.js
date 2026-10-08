@@ -1,5 +1,6 @@
 "use strict";
 
+const { clozePlain } = require("../lib/cloze");
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
@@ -35,6 +36,7 @@ function extractCardText(format, data) {
   if (format === "mcq") return truncate(data.question) + " — " + truncate(data.correct);
   if (format === "true-false") return truncate(data.statement);
   if (format === "image-def") return truncate(data.def);
+  if (format === "cloze") return truncate(clozePlain(data.text));
   return "";
 }
 

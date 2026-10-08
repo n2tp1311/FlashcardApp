@@ -647,6 +647,12 @@ Object.assign(TRANSLATIONS.en, {
   "format.mcq": "MCQ",
   "format.trueFalse": "True/False",
   "format.imageDef": "Image↔Def",
+  "format.cloze": "Fill the gap",
+  "cloze.blank": "blank",
+  "cloze.blankHint": "blank, hint: {hint}",
+  "cloze.sentence": "Sentence",
+  "cloze.help": "Hidden words are written {{c1::word}}. Every c1 is hidden together on this card.",
+  "card.editCloze": "Edit gap card",
   "count.cards": "{n} cards",
   "count.cards_one": "{n} card",
   "confirm.deleteLesson": "Delete lesson \"{title}\" and all its cards? Your study history and stats are kept.",
@@ -1055,6 +1061,7 @@ Object.assign(TRANSLATIONS.en, {
   "validate.enterClassName": "Please enter a class name.",
   "validate.enterLessonTitle": "Please enter a lesson title.",
   "validate.fillTermDef": "Please fill in both term and definition.",
+  "validate.clozeGap": "Hide at least one word with {{c1::word}}.",
   "validate.fillMcq": "Please fill in the question, correct answer, and 1–4 wrong answers.",
   "validate.enterStatement": "Please enter a statement.",
   "validate.selectTrueFalse": "Please select True or False.",
@@ -1692,6 +1699,12 @@ Object.assign(TRANSLATIONS.vi, {
   "format.mcq": "Trắc nghiệm",
   "format.trueFalse": "Đúng/Sai",
   "format.imageDef": "Hình↔Định nghĩa",
+  "format.cloze": "Điền vào chỗ trống",
+  "cloze.blank": "chỗ trống",
+  "cloze.blankHint": "chỗ trống, gợi ý: {hint}",
+  "cloze.sentence": "Câu",
+  "cloze.help": "Từ bị ẩn được viết {{c1::từ}}. Mọi c1 trên thẻ này được ẩn cùng lúc.",
+  "card.editCloze": "Sửa thẻ điền chỗ trống",
   "count.cards": "{n} thẻ",
   "confirm.deleteLesson": "Xóa bài học \"{title}\" cùng toàn bộ thẻ ghi nhớ? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "alert.noCardsDue": "Hiện chưa có thẻ nào đến hạn ôn tập.",
@@ -2091,6 +2104,7 @@ Object.assign(TRANSLATIONS.vi, {
   "validate.enterClassName": "Vui lòng nhập tên lớp.",
   "validate.enterLessonTitle": "Vui lòng nhập tiêu đề bài học.",
   "validate.fillTermDef": "Vui lòng nhập cả thuật ngữ và định nghĩa.",
+  "validate.clozeGap": "Hãy ẩn ít nhất một từ bằng {{c1::từ}}.",
   "validate.fillMcq": "Vui lòng nhập câu hỏi, đáp án đúng và 1–4 đáp án sai.",
   "validate.enterStatement": "Vui lòng nhập câu phát biểu.",
   "validate.selectTrueFalse": "Vui lòng chọn Đúng hoặc Sai.",
@@ -2418,10 +2432,67 @@ function speakText(text) {
   speakWith(clean, state.ttsRate);
 }
 
+// Cloze cards keep one sentence with gaps in Anki's syntax, {{c1::answer}} or
+// {{c1::answer::hint}}. A card hides its c1 gaps and shows any other number as plain text:
+// KnowledgeApp sends one sentence per gap, each its own card with its own schedule. The
+// sentence is rendered piece by piece rather than by searching renderLatex's output for the
+// gap, because renderLatex defers until KaTeX has loaded and the gap would not be there yet.
+var CLOZE_RE = /\{\{c(\d+)::([\s\S]*?)(?:::([\s\S]*?))?\}\}/g;
+
+function clozeSegments(text) {
+  var out = [], last = 0, m;
+  text = typeof text === "string" ? text : "";
+  function plain(str) {
+    if (!str) return;
+    // Joined so a shown c2 does not cut a sentence's math in two.
+    if (out.length && !out[out.length - 1].gap) out[out.length - 1].text += str;
+    else out.push({ text: str });
+  }
+  CLOZE_RE.lastIndex = 0;
+  while ((m = CLOZE_RE.exec(text))) {
+    plain(text.slice(last, m.index));
+    if (m[1] === "1") out.push({ gap: true, answer: m[2], hint: m[3] || "" });
+    else plain(m[2]);
+    last = CLOZE_RE.lastIndex;
+  }
+  plain(text.slice(last));
+  return out;
+}
+
+function clozeAnswer(text) {
+  return clozeSegments(text).filter(function(p) { return p.gap; })
+    .map(function(p) { return p.answer.trim(); }).join(" … ");
+}
+
+function clozePlain(text, hide) {
+  return clozeSegments(text).map(function(p) {
+    if (!p.gap) return p.text;
+    return hide ? "[" + (p.hint || "…") + "]" : p.answer;
+  }).join("");
+}
+
+function renderCloze(text, el, reveal) {
+  el.innerHTML = "";
+  clozeSegments(text).forEach(function(p) {
+    var span = document.createElement("span");
+    if (!p.gap) {
+      renderLatex(p.text, span);
+    } else {
+      span.className = "cloze-gap" + (reveal ? " revealed" : "");
+      if (reveal) renderLatex(p.answer, span);
+      else {
+        span.textContent = p.hint ? "[" + p.hint + "]" : "[…]";
+        span.setAttribute("aria-label", p.hint ? t("cloze.blankHint", { hint: p.hint }) : t("cloze.blank"));
+      }
+    }
+    el.appendChild(span);
+  });
+}
+
 // What the quiz speaker reads: the card's term and nothing else -- not the question wording,
 // not the options. A card without a term (multiple choice, true/false, image) has no button.
 function quizSpeechText(card) {
-  if (!card || !card.data || card.format === "mcq" || card.format === "true-false" || card.format === "image-def") return "";
+  if (!card || !card.data || card.format === "mcq" || card.format === "true-false" || card.format === "image-def" || card.format === "cloze") return "";
   var term = typeof card.data.term === "string" ? card.data.term.trim() : "";
   if (term && window.getVocabularySpeechText) term = window.getVocabularySpeechText(term);
   return term;
@@ -2972,6 +3043,7 @@ var LocalStorageAdapter = (function() {
           else if (ca.format === "mcq")        displayText = d && d.question  ? d.question  : null;
           else if (ca.format === "true-false") displayText = d && d.statement ? d.statement : null;
           else if (ca.format === "image-def")  displayText = d && d.def       ? d.def       : null;
+          else if (ca.format === "cloze")      displayText = d && d.text      ? clozePlain(d.text, false) : null;
           if (!displayText || displayText.toLowerCase().indexOf(ql) === -1) continue;
           cards.push({ id: ca.id, lesson_id: lesson.id, format: ca.format,
                        display_text: displayText, lesson_title: lesson.title,
@@ -3420,7 +3492,7 @@ function syncInert() {
 
 // Dialogs whose input would be lost by closing them. Manage Presets and Preferences aren't
 // here: they keep each change as it is made.
-var DIRTY_GUARDED = ["class", "lesson", "card-termdef", "card-mcq", "card-tf", "card-imagedef",
+var DIRTY_GUARDED = ["class", "lesson", "card-termdef", "card-mcq", "card-tf", "card-imagedef", "card-cloze",
   "bulk", "bulk-import", "vocabulary-add", "dash-metrics"];
 
 // A cheap "did the user change anything": field values, selected pickers, previews, and
@@ -4533,6 +4605,7 @@ function formatLabel(format) {
   return format === "term-def" ? t("format.termDef")
     : format === "mcq" ? t("format.mcq")
     : format === "true-false" ? t("format.trueFalse")
+    : format === "cloze" ? t("format.cloze")
     : t("format.imageDef");
 }
 
@@ -6127,6 +6200,9 @@ function renderCards() {
       } else if (card.format === "true-false") {
         renderLatex(card.data.statement, termEl);
         defEl.textContent = "✓ " + (card.data.correct === "true" ? t("common.true") : t("common.false"));
+      } else if (card.format === "cloze") {
+        renderCloze(card.data.text, termEl, false);
+        renderLatex("✓ " + clozeAnswer(card.data.text), defEl);
       } else {
         renderLatex(card.data.question, termEl);
         renderLatex("✓ " + card.data.correct, defEl);
@@ -6435,6 +6511,10 @@ function openEditCard(cardId, presetCard, fromStudy) {
       document.getElementById("card-image-drop-label").classList.add("hidden");
       document.getElementById("card-imagedef-input").value = card.data.def;
       openModal("card-imagedef");
+    } else if (card.format === "cloze") {
+      document.getElementById("card-cloze-input").value = card.data.text;
+      renderCloze(card.data.text, document.getElementById("card-cloze-preview"), true);
+      openModal("card-cloze");
     } else {
       document.getElementById("modal-card-mcq-title").textContent = t("card.editCard");
       document.getElementById("card-q-input").value      = card.data.question;
@@ -6481,7 +6561,8 @@ function offerLeech(card, res) {
 function openLeechPrompt(card, fromStudy) {
   state.leechPrompt = { card: card, fromStudy: fromStudy };
   var termEl = document.getElementById("leech-card-term");
-  var prompt = card.data && (card.data.term || card.data.statement || card.data.question);
+  var prompt = card.data && (card.format === "cloze" ? clozePlain(card.data.text, true)
+    : card.data.term || card.data.statement || card.data.question);
   termEl.classList.toggle("hidden", !prompt);
   if (prompt) renderLatex(prompt, termEl);
   document.getElementById("leech-body").textContent = t("leech.body", { n: card.leech_lapses || 8 });
@@ -6548,6 +6629,34 @@ document.getElementById("btn-save-card-termdef").addEventListener("click", funct
     return p.then(function() {
       closeModal("card-termdef");
       if (editingId) syncEditedCardIntoStudySession(editingId, data);
+      renderCards();
+      if (getActiveScreen() === "upstream") renderUpstream();
+    });
+  });
+});
+
+(function() {
+  var timer = null;
+  var input = document.getElementById("card-cloze-input");
+  input.addEventListener("input", function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() { renderCloze(input.value, document.getElementById("card-cloze-preview"), true); }, 300);
+  });
+})();
+
+// Only editing: cloze cards come from KnowledgeApp, and there is no Add for them yet.
+document.getElementById("btn-save-card-cloze").addEventListener("click", function() {
+  var input = document.getElementById("card-cloze-input");
+  var text = input.value.trim();
+  if (!clozeAnswer(text)) { showFieldError(input, t("validate.clozeGap")); return; }
+  var data = { text: text };
+  var editingId = state.editingCardId;
+  var editingLessonId = state.editingCardLessonId;
+  if (!editingId) return;
+  withBusy(this, function() {
+    return store.updateCard(editingId, editingLessonId, { data: data }).then(function() {
+      closeModal("card-cloze");
+      syncEditedCardIntoStudySession(editingId, data);
       renderCards();
       if (getActiveScreen() === "upstream") renderUpstream();
     });
@@ -8282,7 +8391,7 @@ function vocabularySelectionTargets() {
     if (!card) return [];
     var data = card.data || {};
     var explanation = document.querySelector("#quiz-explanation .explanation-body");
-    var question = data.question || data.statement || data.term || "";
+    var question = data.question || data.statement || data.term || (card.format === "cloze" ? clozePlain(data.text, true) : "");
     var targets = [
       { root: document.getElementById("quiz-question"), context: question },
       { root: explanation, context: data.explanation || "" }
@@ -8653,6 +8762,14 @@ function renderFlashcard() {
     frontEl.appendChild(fcImg);
     renderLatex(card.data.def, backEl);
     frontAudioBtn.parentNode.style.visibility = "hidden";
+  } else if (card.format === "cloze") {
+    // The back is the whole sentence again with the gap filled, so the answer is read in
+    // its place; Write mode and the hint check the hidden words alone.
+    state.studyFrontText = clozePlain(card.data.text, true);
+    state.studyBackText  = clozeAnswer(card.data.text);
+    renderCloze(card.data.text, frontEl, false);
+    renderCloze(card.data.text, backEl, true);
+    frontAudioBtn.parentNode.style.visibility = "";
   } else {
     front = card.data.question;
     back  = card.data.correct;
@@ -9296,14 +9413,16 @@ function setQuizScoreDisplay() {
 // Distractors come from the session and then the open lesson; with too few, the question
 // shows fewer choices rather than "—" padding, which gave the answer away.
 function quizDistractors(card, field) {
+  var value = typeof field === "function" ? field : function(c) { return c.data && c.data[field]; };
   var seen = {};
-  seen[card.data[field]] = true;
+  seen[value(card)] = true;
   var pool = [];
   state.quizCards.concat(state.quizPool || [], state.currentLessonCards || []).forEach(function(c) {
-    if (c.id === card.id || c.format !== card.format || !c.data || !c.data[field]) return;
-    if (seen[c.data[field]]) return;
-    seen[c.data[field]] = true;
-    pool.push(c.data[field]);
+    if (c.id === card.id || c.format !== card.format) return;
+    var v = value(c);
+    if (!v || seen[v]) return;
+    seen[v] = true;
+    pool.push(v);
   });
   return shuffle(pool).slice(0, 3);
 }
@@ -9314,6 +9433,11 @@ function buildQuizOptions(card) {
   }
   if (card.format === "mcq") {
     return shuffle([card.data.correct].concat(card.data.distractors));
+  }
+  // Cloze: what fills the other sentences' gaps.
+  if (card.format === "cloze") {
+    var clozeOf = function(c) { return c.data && clozeAnswer(c.data.text); };
+    return shuffle([clozeOf(card)].concat(quizDistractors(card, clozeOf)));
   }
   // term-def and image-def: the other cards' definitions are the wrong answers.
   return shuffle([card.data.def].concat(quizDistractors(card, "def")));
@@ -9396,6 +9520,8 @@ function renderQuizCard() {
     qImg.style.maxHeight = "200px";
     qImg.style.objectFit = "contain";
     qEl.appendChild(qImg);
+  } else if (card.format === "cloze") {
+    renderCloze(card.data.text, qEl, false);
   } else {
     renderLatex(card.data.term, qEl);
   }
@@ -9468,6 +9594,7 @@ function answerQuiz(selectedIdx) {
   var correct = card.format === "mcq" ? card.data.correct :
     card.format === "true-false" ? (card.data.correct === "true" ? t("common.true") : t("common.false")) :
     card.format === "image-def" ? card.data.def :
+    card.format === "cloze" ? clozeAnswer(card.data.text) :
     card.data.def;
   var selectedVal = opts[selectedIdx];
   var isCorrect   = selectedVal === correct;
@@ -10308,6 +10435,9 @@ function buildStatsCardEl(card, stats) {
   } else if (card.format === "image-def") {
     qEl.textContent = t("card.imagePlaceholder");
     renderLatex(card.data.def, aEl);
+  } else if (card.format === "cloze") {
+    renderCloze(card.data.text, qEl, false);
+    renderLatex(clozeAnswer(card.data.text), aEl);
   } else {
     renderLatex(card.data.question, qEl);
     renderLatex(card.data.correct,  aEl);
@@ -10362,6 +10492,7 @@ function renderCardHistory(cardId) {
     if (card.format === "term-def") renderLatex(data.term, promptEl);
     else if (card.format === "true-false") renderLatex(data.statement, promptEl);
     else if (card.format === "image-def") promptEl.textContent = t("card.imagePlaceholder");
+    else if (card.format === "cloze") renderCloze(data.text, promptEl, false);
     else renderLatex(data.question || "", promptEl);
     historyPanel.innerHTML = "";
     var heading = document.createElement("div");
@@ -11298,6 +11429,8 @@ function renderBulkImportPreview(raw) {
         renderLatex(card.data.term, termEl);
       } else if (card.format === "true-false") {
         renderLatex(card.data.statement, termEl);
+      } else if (card.format === "cloze") {
+        renderCloze(card.data.text, termEl, false);
       } else {
         renderLatex(card.data.question, termEl);
       }
@@ -13805,7 +13938,8 @@ var CARD_SAVE_MODALS = [
   { modal: "modal-card-termdef",  btn: "btn-save-card-termdef" },
   { modal: "modal-card-mcq",      btn: "btn-save-card-mcq" },
   { modal: "modal-card-tf",       btn: "btn-save-card-tf" },
-  { modal: "modal-card-imagedef", btn: "btn-save-card-imagedef" }
+  { modal: "modal-card-imagedef", btn: "btn-save-card-imagedef" },
+  { modal: "modal-card-cloze",    btn: "btn-save-card-cloze" }
 ];
 
 document.addEventListener("keydown", function(e) {
