@@ -5,6 +5,7 @@ const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { scheduler, ratingFor, cardFromState } = require("../fsrs");
 const { snapshotState, restoredState, undoRefusal, STATE_FIELDS } = require("../lib/undo");
+const { LEECH_LAPSES } = require("../lib/leech");
 const router  = express.Router();
 
 function genId() {
@@ -109,7 +110,13 @@ router.post("/", requireAuth, (req, res) => {
     ).run(cardId, userId, dueAt, nextCard.stability, nextCard.difficulty, nextCard.state,
           nextCard.reps, nextCard.lapses, nextCard.learning_steps, now, lastCorrectSource);
 
-    return { ok: true, srs_due_at: dueAt, capped: capped, notDue: false };
+    // became_leech only on the answer that crosses the threshold, so the study screen asks once.
+    const base = (db.prepare("SELECT leech_base FROM card_states WHERE card_id = ? AND user_id = ?").get(cardId, userId) || {}).leech_base || 0;
+    const prevLapses = (stateRow && stateRow.fsrs_lapses) || 0;
+    const becameLeech = nextCard.lapses > prevLapses && nextCard.lapses - base === LEECH_LAPSES;
+
+    return { ok: true, srs_due_at: dueAt, capped: capped, notDue: false,
+             lapses: Math.max(0, nextCard.lapses - base), became_leech: becameLeech };
   })();
 
   recordDueZero(userId);

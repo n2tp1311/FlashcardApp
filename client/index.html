@@ -512,6 +512,7 @@
         <button class="pill" data-value="needsRecall" data-i18n="setup.needsRecall">Needs Recall</button>
         <button class="pill" data-value="learning" data-i18n="setup.stillLearning">Learning</button>
         <button class="pill" data-value="updated" data-i18n="setup.updated" id="setup-filter-updated">Updated</button>
+        <button class="pill" data-value="leeches" data-i18n="setup.leeches" id="setup-filter-leeches">Leeches</button>
       </div>
       <p class="setup-filter-hint" id="setup-filter-hint">Study all cards</p>
     </div>
@@ -903,6 +904,22 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="vocabulary-add" data-i18n="common.cancel">Cancel</button>
       <button type="button" class="btn btn-primary" id="btn-vocabulary-add-save" data-i18n="vocabulary.add">Add word</button>
+    </div>
+  </div>
+
+  <div id="modal-leech" class="modal modal-leech hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="leech-title" aria-describedby="leech-body">
+    <div class="modal-header">
+      <h3 id="leech-title"><span class="leech-pill" data-i18n="leech.tag">Leech</span> <span data-i18n="leech.title">This card isn't sticking</span></h3>
+      <button class="modal-close" data-modal="leech" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="leech-card-term" id="leech-card-term"></div>
+      <p class="leech-body" id="leech-body"></p>
+    </div>
+    <div class="modal-footer leech-actions">
+      <button class="btn btn-ghost" data-modal="leech" data-i18n="leech.keepStudying">Keep studying</button>
+      <button type="button" class="btn btn-outline hidden" id="btn-leech-rewrite" data-i18n="leech.askRewrite">Ask KnowledgeApp to rewrite</button>
+      <button type="button" class="btn btn-primary" id="btn-leech-edit" data-i18n="leech.editCard">Edit card</button>
     </div>
   </div>
 

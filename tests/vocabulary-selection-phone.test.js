@@ -19,6 +19,8 @@ async function studyScreen(width, height) {
   const page = await browser.newPage({ viewport: { width, height }, hasTouch: true, isMobile: true });
   await page.route("**/*.js", (r) => r.abort());
   await page.goto("file://" + path.join(root, "client", "index.html"));
+  // index.html links /style.css, which a file:// page cannot resolve.
+  await page.addStyleTag({ path: path.join(root, "client", "style.css") });
   await page.addScriptTag({ content: place });
   await page.evaluate(function() {
     document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
@@ -52,6 +54,7 @@ test("on a desktop the chip stays in the flow under the card", async function() 
   const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
   await page.route("**/*.js", (r) => r.abort());
   await page.goto("file://" + path.join(root, "client", "index.html"));
+  await page.addStyleTag({ path: path.join(root, "client", "style.css") });
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("fc-selection-action")).position), "static");
   await page.close();
 });

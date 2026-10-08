@@ -231,6 +231,20 @@ Object.assign(TRANSLATIONS.en, {
   "vocabulary.duplicateFetched": "‘{word}’ is already in your vocabulary deck with the same context. Add a different context to save another meaning.",
   "setup.updated": "Updated",
   "setup.hintUpdated": "Cards KnowledgeApp changed since you last reviewed them",
+  "setup.leeches": "Leeches",
+  "setup.hintLeeches": "Cards you have forgotten 8 or more times since they were last edited. Edit them, or study them on their own.",
+  "leech.tag": "Leech",
+  "leech.tagCount": "Leech · forgot {n}×",
+  "leech.tooltip": "Forgotten {n} times since this card was last edited. Click for options.",
+  "leech.rewriteRequested": "Rewrite requested",
+  "leech.rewriteRequestedTooltip": "KnowledgeApp will rewrite this card on its next run. Editing it yourself cancels the request.",
+  "leech.title": "This card isn't sticking",
+  "leech.body": "You've forgotten it {n} times. Reviewing it again rarely helps. Shortening it, splitting it, or adding an example usually does.",
+  "leech.editCard": "Edit card",
+  "leech.askRewrite": "Ask KnowledgeApp to rewrite",
+  "leech.rewriteAlreadyRequested": "Rewrite requested",
+  "leech.keepStudying": "Keep studying",
+  "toast.rewriteRequested": "KnowledgeApp will rewrite this card on its next run.",
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
@@ -1206,6 +1220,20 @@ Object.assign(TRANSLATIONS.vi, {
   "vocabulary.duplicateFetched": "‘{word}’ đã có trong bộ từ vựng với cùng ngữ cảnh. Thêm ngữ cảnh khác để lưu nghĩa khác.",
   "setup.updated": "Đã cập nhật",
   "setup.hintUpdated": "Thẻ KnowledgeApp đã thay đổi kể từ lần bạn xem lại gần nhất",
+  "setup.leeches": "Thẻ khó nhớ",
+  "setup.hintLeeches": "Thẻ bạn đã quên từ 8 lần trở lên kể từ lần sửa gần nhất. Hãy sửa chúng, hoặc học riêng.",
+  "leech.tag": "Khó nhớ",
+  "leech.tagCount": "Khó nhớ · quên {n} lần",
+  "leech.tooltip": "Đã quên {n} lần kể từ lần sửa thẻ gần nhất. Bấm để xem lựa chọn.",
+  "leech.rewriteRequested": "Đã yêu cầu viết lại",
+  "leech.rewriteRequestedTooltip": "KnowledgeApp sẽ viết lại thẻ này ở lần chạy tới. Tự sửa thẻ sẽ huỷ yêu cầu.",
+  "leech.title": "Thẻ này chưa vào đầu",
+  "leech.body": "Bạn đã quên thẻ này {n} lần. Ôn thêm hiếm khi giúp được. Rút gọn, tách nhỏ hoặc thêm ví dụ thường hiệu quả hơn.",
+  "leech.editCard": "Sửa thẻ",
+  "leech.askRewrite": "Nhờ KnowledgeApp viết lại",
+  "leech.rewriteAlreadyRequested": "Đã yêu cầu viết lại",
+  "leech.keepStudying": "Tiếp tục học",
+  "toast.rewriteRequested": "KnowledgeApp sẽ viết lại thẻ này ở lần chạy tới.",
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
@@ -5907,7 +5935,7 @@ function renderCards() {
       var pct = stats.total > 0 ? Math.round(stats.correct / stats.total * 100) : null;
       var pillLabel = stats.total === 0 ? t("difficulty.new")
         : difficultyLabel(stats.level) + " · " + pct + "%";
-      var diffPill = '<span class="diff-pill ' + stats.level + '">' + pillLabel + '</span>';
+      var diffPill = '<span class="diff-pill ' + stats.level + '">' + pillLabel + '</span>' + leechPillHtml(card);
 
       var termEl = document.createElement("div");
       var defEl  = document.createElement("div");
@@ -5993,6 +6021,8 @@ function renderCards() {
         item.querySelector("[data-card-edit]").addEventListener("click", function() {
           openEditCard(card.id);
         });
+        var leechBtn = item.querySelector("[data-card-leech]");
+        if (leechBtn) leechBtn.addEventListener("click", function() { openLeechPrompt(card, false); });
         item.querySelector("[data-card-del]").addEventListener("click", function() {
           confirmDelete(t("confirm.deleteCard"), function() {
             store.deleteCard(card.id, state.currentLesson.id).then(renderCards);
@@ -6251,6 +6281,68 @@ function openEditCard(cardId, presetCard, fromStudy) {
   });
 }
 
+// Leeches (server/lib/leech.js): the server flags a card forgotten 8 times since its last edit
+// and says so on the one answer that crosses the line, so the prompt shows once per leech.
+// Nothing is suspended or rescheduled: the fix is a better card, by hand or by KnowledgeApp.
+function leechPillHtml(card) {
+  if (card.rewrite_pending)
+    return '<button type="button" class="leech-pill is-pending" data-card-leech="' + escHtml(card.id) + '" title="' +
+      escHtml(t("leech.rewriteRequestedTooltip")) + '">' + escHtml(t("leech.rewriteRequested")) + '</button>';
+  if (!card.is_leech) return "";
+  return '<button type="button" class="leech-pill" data-card-leech="' + escHtml(card.id) + '" title="' +
+    escHtml(t("leech.tooltip", { n: card.leech_lapses })) + '">' + escHtml(t("leech.tagCount", { n: card.leech_lapses })) + '</button>';
+}
+
+function canRewriteInKnowledge(card) {
+  return IS_SERVER && !!card.external_id && card.format === "term-def";
+}
+
+function clearLeech(card) {
+  card.is_leech = false;
+  card.leech_lapses = 0;
+  card.rewrite_pending = false;
+}
+
+function offerLeech(card, res) {
+  card.is_leech = true;
+  card.leech_lapses = res.lapses;
+  openLeechPrompt(card, true);
+}
+
+function openLeechPrompt(card, fromStudy) {
+  state.leechPrompt = { card: card, fromStudy: fromStudy };
+  var termEl = document.getElementById("leech-card-term");
+  var prompt = card.data && (card.data.term || card.data.statement || card.data.question);
+  termEl.classList.toggle("hidden", !prompt);
+  if (prompt) renderLatex(prompt, termEl);
+  document.getElementById("leech-body").textContent = t("leech.body", { n: card.leech_lapses || 8 });
+  var rewrite = document.getElementById("btn-leech-rewrite");
+  rewrite.classList.toggle("hidden", !canRewriteInKnowledge(card));
+  rewrite.disabled = !!card.rewrite_pending;
+  rewrite.textContent = t(card.rewrite_pending ? "leech.rewriteAlreadyRequested" : "leech.askRewrite");
+  openModal("leech");
+}
+
+document.getElementById("btn-leech-edit").addEventListener("click", function() {
+  var p = state.leechPrompt;
+  if (!p) return;
+  closeModal("leech");
+  openEditCard(p.card.id, p.card, p.fromStudy);
+});
+
+document.getElementById("btn-leech-rewrite").addEventListener("click", function() {
+  var p = state.leechPrompt;
+  if (!p) return;
+  withBusy(this, function() {
+    return store.requestCardRewrite(p.card.id).then(function() {
+      p.card.rewrite_pending = true;
+      closeModal("leech");
+      showToast(t("toast.rewriteRequested"));
+      if (getActiveScreen() === "lesson") renderCards();
+    });
+  });
+});
+
 // After saving an edit, the lesson card list (if visible) is refreshed via renderCards() as
 // before — but if the edit was opened from mid-Flashcard/Quiz session, that in-memory array
 // won't pick up the change until the session restarts unless we patch it here too.
@@ -6259,11 +6351,13 @@ function syncEditedCardIntoStudySession(cardId, data) {
   var fcCard = state.studyCards && state.studyCards.find(function(c) { return c.id === cardId; });
   if (fcCard) {
     fcCard.data = data;
+    clearLeech(fcCard);
     if (state.studyCards[state.studyIndex] === fcCard) renderFlashcard();
   }
   var quizCard = state.quizCards && state.quizCards.find(function(c) { return c.id === cardId; });
   if (quizCard) {
     quizCard.data = data;
+    clearLeech(quizCard);
     if (state.quizCards[state.quizIndex] === quizCard) renderQuizCard();
   }
 }
@@ -6999,7 +7093,8 @@ var FILTER_HINT_KEYS = {
   due:         "setup.hintDue",
   needsRecall: "setup.hintNeedsRecall",
   learning:    "setup.hintLearning",
-  updated:     "setup.hintUpdated"
+  updated:     "setup.hintUpdated",
+  leeches:     "setup.hintLeeches"
 };
 
 var MODE_HINT_KEYS = {
@@ -7787,6 +7882,8 @@ function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday, ign
   } else if (filter === "updated") {
     // Removed-from-source cards need a decision on the review screen, not studying.
     return cards.filter(function(c) { return c.upstream_change === "updated"; });
+  } else if (filter === "leeches") {
+    return cards.filter(function(c) { return c.is_leech; });
   }
   return cards;
 }
@@ -8848,6 +8945,7 @@ function markCard(known, grade, forceRetype) {
     if (res && res.srs_due_at != null && state.fcUndoneAttempt !== undo.attemptId) {
       card.srs_due_at = res.srs_due_at;
     }
+    if (res && res.became_leech && state.fcUndoneAttempt !== undo.attemptId) offerLeech(card, res);
   }).catch(function(err) {
     showToast(t("toast.saveFailed", { message: err.message }), "error");
   });
@@ -9190,6 +9288,7 @@ function answerQuiz(selectedIdx) {
       resultEntry.notDue = true;
       if (state.quizCards[state.quizIndex] === card) showQuizHint("quiz-notdue-hint", "study.notDueHint");
     }
+    if (res && res.became_leech) offerLeech(card, res);
   }).catch(function(err) {
     showToast(t("toast.saveFailed", { message: err.message }), "error");
   });
@@ -11566,6 +11665,7 @@ var SQLiteAdapter = (function() {
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
 
     acknowledgeCardUpdate: function(id) { return req("POST", "/cards/" + id + "/acknowledge-update"); },
+    requestCardRewrite: function(id) { return req("POST", "/cards/" + id + "/rewrite-request"); },
     // The server caps each request at 1000 ids, so larger selections go in sequential batches.
     acknowledgeCardUpdates: function(ids) {
       var p = Promise.resolve();
@@ -12542,7 +12642,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }

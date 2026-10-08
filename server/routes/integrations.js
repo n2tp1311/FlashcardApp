@@ -10,6 +10,7 @@ const db      = require("../db");
 const { forEachBatch } = require("../lib/batch");
 const { scheduler, cardFromState } = require("../fsrs");
 const { requireApiToken } = require("../middleware/apiToken");
+const { resetLeech } = require("../lib/leech");
 const { rateLimit, byApiUser } = require("../middleware/rateLimit");
 const router  = express.Router();
 
@@ -91,6 +92,8 @@ function applyUpdate(card, term, def, now, userId) {
       "UPDATE card_states SET srs_due_at = ? WHERE card_id = ? AND user_id = ? AND srs_due_at IS NOT NULL AND srs_due_at > ?"
     ).run(now, card.id, userId, now);
   }
+  // New wording, so the lapses that made it a leech belong to the old text.
+  resetLeech(db, card.id);
   return true;
 }
 
@@ -839,6 +842,49 @@ router.post("/vocabulary/:id/complete", (req, res) => {
     console.error("[integrations] vocabulary completion failed:", e.message);
     res.status(500).json({ error: "internal error" });
   }
+});
+
+// GET /api/integrations/knowledge/rewrites — leeches the user asked KnowledgeApp to rewrite.
+// The card's current text goes along so the rewrite starts from what the user is studying.
+router.get("/rewrites", (req, res) => {
+  const rawLimit = req.query.limit == null ? "20" : req.query.limit;
+  const limit = Number(rawLimit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100)
+    return res.status(400).json({ error: "limit must be an integer from 1 to 100" });
+
+  const rows = db.prepare(
+    "SELECT rr.id, rr.lapses, rr.created_at, cards.external_id, cards.data " +
+    "FROM rewrite_requests rr JOIN cards ON cards.id = rr.card_id " +
+    "JOIN lessons ON lessons.id = cards.lesson_id JOIN classes ON classes.id = lessons.class_id " +
+    "WHERE rr.user_id = ? AND classes.user_id = ? AND rr.status = 'pending' " +
+    "ORDER BY rr.created_at, rr.id LIMIT ?"
+  ).all(req.userId, req.userId, limit);
+  const requests = rows.map(r => {
+    let data;
+    try { data = JSON.parse(r.data); } catch (_) { data = {}; }
+    return { id: r.id, external_id: r.external_id, term: data.term || "", def: data.def || "",
+             lapses: r.lapses, created_at: r.created_at };
+  });
+  res.json({ requests });
+});
+
+const REWRITE_OUTCOMES = ["rewritten", "unchanged", "missing"];
+
+// POST /api/integrations/knowledge/rewrites/:id/complete — KnowledgeApp is done with a request.
+// The new text itself arrives as an ordinary "updated" sync event, which also resets the
+// card's leech count; this only closes the request so it stops showing as pending.
+router.post("/rewrites/:id/complete", (req, res) => {
+  const outcome = (req.body || {}).outcome;
+  if (!REWRITE_OUTCOMES.includes(outcome))
+    return res.status(400).json({ error: "outcome must be one of " + REWRITE_OUTCOMES.join(", ") });
+  const request = db.prepare("SELECT id, status, outcome FROM rewrite_requests WHERE id = ? AND user_id = ?")
+    .get(req.params.id, req.userId);
+  if (!request) return res.status(404).json({ error: "Rewrite request not found" });
+  if (request.status === "completed") return res.json({ status: "already", outcome: request.outcome });
+  db.prepare(
+    "UPDATE rewrite_requests SET status = 'completed', outcome = ?, completed_at = unixepoch() WHERE id = ? AND status = 'pending'"
+  ).run(outcome, request.id);
+  res.json({ status: "completed", outcome });
 });
 
 module.exports = router;

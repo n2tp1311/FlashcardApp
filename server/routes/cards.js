@@ -7,6 +7,7 @@ const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { previewIntervals } = require("../fsrs");
 const { forEachBatch } = require("../lib/batch");
+const { isLeech, lapsesSinceEdit, resetLeech } = require("../lib/leech");
 const router  = express.Router();
 
 const UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads");
@@ -29,6 +30,9 @@ function attachFsrsPreview(row) {
   row.fsrs_preview_hard  = preview.hard;
   row.fsrs_preview_good  = preview.good;
   row.fsrs_preview_easy  = preview.easy;
+  row.is_leech = isLeech(row);
+  row.leech_lapses = lapsesSinceEdit(row);
+  row.rewrite_pending = !!row.rewrite_pending;
   return row;
 }
 
@@ -104,7 +108,8 @@ router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   const cards = db.prepare(
     "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
     "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
-    "cs.fsrs_learning_steps, cs.fsrs_last_review_at " +
+    "cs.fsrs_learning_steps, cs.fsrs_last_review_at, cs.leech_base, " +
+    "EXISTS (SELECT 1 FROM rewrite_requests rr WHERE rr.card_id = cards.id AND rr.status = 'pending') AS rewrite_pending " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
     "WHERE cards.lesson_id = ? " +
@@ -136,7 +141,8 @@ router.post("/cards/by-lessons", requireAuth, (req, res) => {
   const cards = db.prepare(
     "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
     "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
-    "cs.fsrs_learning_steps, cs.fsrs_last_review_at " +
+    "cs.fsrs_learning_steps, cs.fsrs_last_review_at, cs.leech_base, " +
+    "EXISTS (SELECT 1 FROM rewrite_requests rr WHERE rr.card_id = cards.id AND rr.status = 'pending') AS rewrite_pending " +
     "FROM cards " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
     `WHERE cards.lesson_id IN (${ph}) ` +
@@ -235,11 +241,36 @@ router.put("/cards/:id", requireAuth, (req, res) => {
       sort_order ?? existing.sort_order,
       req.params.id
     );
-  if (data)
+  if (data) {
     db.prepare("UPDATE cards SET upstream_change = NULL, upstream_changed_at = NULL, upstream_prev_data = NULL WHERE id = ?")
       .run(req.params.id);
+    // Editing a leech is the fix: its count starts again, and a rewrite still waiting in
+    // KnowledgeApp's queue would overwrite the user's own wording.
+    if (JSON.stringify(data) !== existing.data) {
+      resetLeech(db, req.params.id);
+      db.prepare("DELETE FROM rewrite_requests WHERE card_id = ? AND status = 'pending'").run(req.params.id);
+    }
+  }
   const updated = db.prepare("SELECT * FROM cards WHERE id = ?").get(req.params.id);
   res.json({ ...updated, data: JSON.parse(updated.data) });
+});
+
+// POST /api/cards/:id/rewrite-request — ask KnowledgeApp to rewrite a card that keeps being
+// forgotten. Only a card synced from KnowledgeApp can be rewritten there; asking twice keeps
+// the one request.
+router.post("/cards/:id/rewrite-request", requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  if (!ownCard(req.params.id, userId)) return res.status(404).json({ error: "Not found" });
+  const card = db.prepare("SELECT id, external_id, format FROM cards WHERE id = ?").get(req.params.id);
+  if (!card.external_id || card.format !== "term-def")
+    return res.status(409).json({ error: "Only cards from KnowledgeApp can be rewritten there", code: "notLinked" });
+  const pending = db.prepare("SELECT id FROM rewrite_requests WHERE card_id = ? AND status = 'pending'").get(card.id);
+  if (pending) return res.json({ id: pending.id, status: "pending" });
+  const state = db.prepare("SELECT fsrs_lapses, leech_base FROM card_states WHERE card_id = ? AND user_id = ?").get(card.id, userId);
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  db.prepare("INSERT INTO rewrite_requests (id, user_id, card_id, lapses) VALUES (?, ?, ?, ?)")
+    .run(id, userId, card.id, lapsesSinceEdit(state));
+  res.status(201).json({ id, status: "pending" });
 });
 
 // POST /api/cards/:id/acknowledge-update

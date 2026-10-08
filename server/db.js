@@ -377,6 +377,25 @@ try {
 } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_vocabulary_requests_user_status ON vocabulary_requests(user_id, status, created_at)"); } catch (_) {}
 
+// Leeches (lib/leech.js): lapses are counted from leech_base, moved up when the card's text
+// changes. A rewrite request asks KnowledgeApp to rewrite a linked leech; the new text comes
+// back through the normal sync events, and KnowledgeApp then marks the request done.
+try { db.exec("ALTER TABLE card_states ADD COLUMN leech_base INTEGER NOT NULL DEFAULT 0"); } catch (_) {}
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS rewrite_requests (
+    id           TEXT PRIMARY KEY,
+    user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    card_id      TEXT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    lapses       INTEGER NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','completed')),
+    outcome      TEXT,
+    created_at   INTEGER NOT NULL DEFAULT (unixepoch()),
+    completed_at INTEGER
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_rewrite_requests_user_status ON rewrite_requests(user_id, status, created_at)"); } catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_rewrite_requests_card ON rewrite_requests(card_id)"); } catch (_) {}
+
 // Achievements. Most are worked out from attempts and card states; these record the few
 // things nothing else stores. typed: the answer was typed in Flashcard & Write (Writer).
 // study_events: one row per (kind, ref) -- a day the due list was emptied (due_zero), a quiz
