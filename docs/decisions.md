@@ -1093,3 +1093,13 @@ Costs:
 - What you write is not saved. It only has to be written to do its work, and keeping it would need a column and a place to show it.
 - Flashcards only: a quiz answer already shows the passage, and MCQ cards have their own explanation.
 
+## 2026-10-08 — Gap cards come from KnowledgeApp, one gap per card, beside the term card
+
+Cloze cards ask the detail a term card does not ("what does dropout prevent?"). The preview offered one card per gap or one card for all gaps; the user chose one per gap, as Anki does, because each hidden word is remembered at its own rate and so needs its own schedule. For where they come from, the user chose to let KnowledgeApp pick the sentences and the words to hide and add them alongside the existing term cards, rather than replace those cards or only do it for new books.
+
+- **Anki's `{{c1::…}}` syntax, stored in `data.text`.** It is the format people already know, it imports and exports as plain text, and KnowledgeApp can write it without a second encoding.
+- **A card hides only `c1`.** KnowledgeApp sends one sentence per gap, so a card never has to know which of several gaps it stands for. A `c2` that arrives anyway is shown as text, not lost.
+- **The sentence is rendered piece by piece.** `renderLatex` defers until KaTeX loads, so finding the gap in its output afterwards would sometimes find nothing. The cost: a gap inside `$…$` math cannot work, and KnowledgeApp has to keep gaps out of math.
+- **No cloze lesson format.** Gap cards sit in the term-def lesson next to their term card, which is where they are useful. Every format check that says "lesson is term-def" still holds; the convert step that turns a lesson into term-def ignores cloze cards.
+- **Edit only, no Add yet.** The select-and-Hide editor in the preview is a piece of its own. Until then gap cards come from KnowledgeApp, and editing the `{{c1::…}}` text by hand is enough to fix one.
+
