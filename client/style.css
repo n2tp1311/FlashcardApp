@@ -4566,6 +4566,14 @@ code {
     clip-path: inset(0 -100vmax);
   }
   .fc-retype-wrap { scroll-margin-bottom: 180px; }
+  /* Below the card it would sit behind the sticky grade row; float it just above the row. */
+  #fc-selection-action {
+    position: fixed; left: 0; right: 0; z-index: 6; margin: 0;
+    bottom: var(--selection-action-bottom, 0px);
+    padding-bottom: 10px;
+    pointer-events: none;
+  }
+  #fc-selection-action .btn { pointer-events: auto; box-shadow: var(--shadow-lg); }
 }
 
 /* Study headers: the progress bar is centred on the page, over the card and options below it.

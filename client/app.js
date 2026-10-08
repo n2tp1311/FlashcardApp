@@ -8034,6 +8034,15 @@ function vocabularySelectionTargets() {
   return [];
 }
 
+// On a phone the grade row is sticky at the bottom and the card runs under it, so a chip in
+// its place below the card is hidden behind the grades. The phone CSS floats it instead, and
+// this tells it where the grade row starts.
+function placeVocabularySelectionAction(action) {
+  var nav = action.parentNode && action.parentNode.querySelector(".fc-nav");
+  var above = nav ? Math.max(0, window.innerHeight - nav.getBoundingClientRect().top) : 0;
+  action.style.setProperty("--selection-action-bottom", above + "px");
+}
+
 function updateVocabularySelectionAction() {
   var selection = window.getSelection();
   if (!IS_SERVER || !selection || !selection.rangeCount) {
@@ -8063,6 +8072,7 @@ function updateVocabularySelectionAction() {
     button.textContent = t("study.saveWord");
   }
   action.classList.remove("hidden");
+  placeVocabularySelectionAction(action);
 }
 
 function saveSelectedVocabularyWord() {
