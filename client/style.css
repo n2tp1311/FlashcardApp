@@ -386,6 +386,90 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --card-back-text: #ececda; --card-back-dim: #b9bccb;
 }
 
+/* Five brighter themes in the manner of popular apps (PancakeSwap, Uniswap, Duolingo,
+   Linear, Spotify) under their own names. Their signature accents are too pale to read as
+   text on white, so in light mode each is a shade darker than the original. */
+:root[data-palette="candy"]:not([data-theme="dark"]) {
+  --bg: #f3eefa; --surface: #fdfbff; --surface2: #ebe4f6; --border: #d8cdea;
+  --text: #280d5f; --text2: #56437e; --text3: #665490;
+  --primary: #066e78; --primary-hover: color-mix(in srgb, #066e78 82%, #000); --primary-light: #d9f4f6;
+  --primary-fill: #077580; --primary-fill-hover: color-mix(in srgb, #077580 82%, #000);
+  --card-back: #2d1b55; --card-back-border: #4a3577; --card-back-input: #24154a;
+  --card-back-text: #f3eefe; --card-back-dim: #c3b6e0;
+}
+:root[data-palette="candy"][data-theme="dark"] {
+  --bg: #0f0b17; --surface: #1d1a27; --surface2: #2a2638; --border: #3d3651;
+  --text: #ece4fb; --text2: #c9bfe3; --text3: #ada2c8;
+  --primary: #3ad5e0; --primary-hover: color-mix(in srgb, #3ad5e0 82%, #fff); --primary-light: #123c42;
+  --primary-fill: #077580; --primary-fill-hover: color-mix(in srgb, #077580 82%, #000);
+  --card-back: #2d1b55; --card-back-border: #4a3577; --card-back-input: #24154a;
+  --card-back-text: #ece4fb; --card-back-dim: #c3b6e0;
+}
+:root[data-palette="bubblegum"]:not([data-theme="dark"]) {
+  --bg: #fbf7fb; --surface: #ffffff; --surface2: #f5edf5; --border: #e8dce8;
+  --text: #222222; --text2: #5c5c5c; --text3: #666666;
+  --primary: #b4129f; --primary-hover: color-mix(in srgb, #b4129f 82%, #000); --primary-light: #fde3fe;
+  --primary-fill: #b4129f; --primary-fill-hover: color-mix(in srgb, #b4129f 82%, #000);
+  --card-back: #2a1029; --card-back-border: #4a2347; --card-back-input: #220c21;
+  --card-back-text: #f6e8f6; --card-back-dim: #d3b5d1;
+}
+:root[data-palette="bubblegum"][data-theme="dark"] {
+  --bg: #131313; --surface: #1b1b1b; --surface2: #242424; --border: #333333;
+  --text: #ececec; --text2: #bdbdbd; --text3: #a3a3a3;
+  --primary: #fc72ff; --primary-hover: color-mix(in srgb, #fc72ff 82%, #fff); --primary-light: #3d1a40;
+  --primary-fill: #b4129f; --primary-fill-hover: color-mix(in srgb, #b4129f 82%, #000);
+  --card-back: #2a1029; --card-back-border: #4a2347; --card-back-input: #220c21;
+  --card-back-text: #f6e8f6; --card-back-dim: #d3b5d1;
+}
+:root[data-palette="meadow"]:not([data-theme="dark"]) {
+  --bg: #f7f7f7; --surface: #ffffff; --surface2: #eef1ea; --border: #e0e3dc;
+  --text: #3c3c3c; --text2: #555555; --text3: #666666;
+  --primary: #367608; --primary-hover: color-mix(in srgb, #367608 82%, #000); --primary-light: #e3f6d2;
+  --primary-fill: #3a7d0a; --primary-fill-hover: color-mix(in srgb, #3a7d0a 82%, #000);
+  --card-back: #1a2b32; --card-back-border: #37464f; --card-back-input: #131f24;
+  --card-back-text: #eef5f9; --card-back-dim: #b9c7ce;
+}
+:root[data-palette="meadow"][data-theme="dark"] {
+  --bg: #131f24; --surface: #1a2b32; --surface2: #22363e; --border: #37464f;
+  --text: #eaf2f6; --text2: #c8d4da; --text3: #a6b5bc;
+  --primary: #89e219; --primary-hover: color-mix(in srgb, #89e219 82%, #fff); --primary-light: #24421d;
+  --primary-fill: #3a7d0a; --primary-fill-hover: color-mix(in srgb, #3a7d0a 82%, #000);
+  --card-back: #22363e; --card-back-border: #3f525b; --card-back-input: #1a2b32;
+  --card-back-text: #eaf2f6; --card-back-dim: #b9c7ce;
+}
+:root[data-palette="indigo"]:not([data-theme="dark"]) {
+  --bg: #f4f5f8; --surface: #fcfcfd; --surface2: #eceef3; --border: #dcdfe6;
+  --text: #1b1c22; --text2: #4d5060; --text3: #5f6272;
+  --primary: #4f5ac4; --primary-hover: color-mix(in srgb, #4f5ac4 82%, #000); --primary-light: #e6e8fa;
+  --primary-fill: #4f5ac4; --primary-fill-hover: color-mix(in srgb, #4f5ac4 82%, #000);
+  --card-back: #1c1d2b; --card-back-border: #343650; --card-back-input: #15161f;
+  --card-back-text: #eceefa; --card-back-dim: #b4b7d3;
+}
+:root[data-palette="indigo"][data-theme="dark"] {
+  --bg: #0f1011; --surface: #18191b; --surface2: #222326; --border: #2e3035;
+  --text: #eceef0; --text2: #c4c6cc; --text3: #9a9ca5;
+  --primary: #8b93f0; --primary-hover: color-mix(in srgb, #8b93f0 82%, #fff); --primary-light: #262a4a;
+  --primary-fill: #4f5ac4; --primary-fill-hover: color-mix(in srgb, #4f5ac4 82%, #000);
+  --card-back: #1f2133; --card-back-border: #383b58; --card-back-input: #18191b;
+  --card-back-text: #eceefa; --card-back-dim: #b4b7d3;
+}
+:root[data-palette="pulse"]:not([data-theme="dark"]) {
+  --bg: #f6f6f6; --surface: #ffffff; --surface2: #ececec; --border: #dedede;
+  --text: #121212; --text2: #4d4d4d; --text3: #5e5e5e;
+  --primary: #117a37; --primary-hover: color-mix(in srgb, #117a37 82%, #000); --primary-light: #dcf5e4;
+  --primary-fill: #117a37; --primary-fill-hover: color-mix(in srgb, #117a37 82%, #000);
+  --card-back: #181818; --card-back-border: #3e3e3e; --card-back-input: #121212;
+  --card-back-text: #ececec; --card-back-dim: #b3b3b3;
+}
+:root[data-palette="pulse"][data-theme="dark"] {
+  --bg: #121212; --surface: #181818; --surface2: #282828; --border: #3e3e3e;
+  --text: #ececec; --text2: #b3b3b3; --text3: #a7a7a7;
+  --primary: #1ed760; --primary-hover: color-mix(in srgb, #1ed760 82%, #fff); --primary-light: #173d24;
+  --primary-fill: #117a37; --primary-fill-hover: color-mix(in srgb, #117a37 82%, #000);
+  --card-back: #282828; --card-back-border: #454545; --card-back-input: #181818;
+  --card-back-text: #ececec; --card-back-dim: #b3b3b3;
+}
+
 /* Heatmap — GitHub's exact contribution graph greens */
 
 /* ==============================
@@ -473,6 +557,31 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --text: #f8f8f2; --text2: #d0d2dc; --text3: #a3aacd; --card-back-text: #fafaf5;
   --card-back-dim: #d0d2dc; --primary: #d3b5fd;
   --primary-hover: color-mix(in srgb, #d3b5fd 82%, #fff);
+}
+:root[data-palette="candy"][data-theme="dark"][data-contrast="high"] {
+  --text: #f8f5ff; --text2: #ddd5f2; --text3: #c2b8dd; --card-back-text: #faf7ff;
+  --card-back-dim: #ddd3f2; --primary: #5cf3fc;
+  --primary-hover: color-mix(in srgb, #5cf3fc 82%, #fff);
+}
+:root[data-palette="bubblegum"][data-theme="dark"][data-contrast="high"] {
+  --text: #fafafa; --text2: #d9d9d9; --text3: #bfbfbf; --card-back-text: #fdf8fd;
+  --card-back-dim: #e6cfe4; --primary: #fd9cff;
+  --primary-hover: color-mix(in srgb, #fd9cff 82%, #fff);
+}
+:root[data-palette="meadow"][data-theme="dark"][data-contrast="high"] {
+  --text: #f8fbfd; --text2: #dde6ea; --text3: #c0ccd2; --card-back-text: #fafcfd;
+  --card-back-dim: #d5e0e5; --primary: #a8f53f;
+  --primary-hover: color-mix(in srgb, #a8f53f 82%, #fff);
+}
+:root[data-palette="indigo"][data-theme="dark"][data-contrast="high"] {
+  --text: #f9fafb; --text2: #dcdee3; --text3: #bbbdc5; --card-back-text: #f9f9fe;
+  --card-back-dim: #d2d5ee; --primary: #aab0ff;
+  --primary-hover: color-mix(in srgb, #aab0ff 82%, #fff);
+}
+:root[data-palette="pulse"][data-theme="dark"][data-contrast="high"] {
+  --text: #fafafa; --text2: #d4d4d4; --text3: #c2c2c2; --card-back-text: #fafafa;
+  --card-back-dim: #d4d4d4; --primary: #4cf585;
+  --primary-hover: color-mix(in srgb, #4cf585 82%, #fff);
 }
 
 [data-theme="dark"] .heat-1 { background: #0e4429; }
@@ -1853,6 +1962,11 @@ code {
 .palette-pill[data-value="everforest"] { --sw-bg: #2d353b; --sw-accent: #bed1a2; }
 .palette-pill[data-value="tokyonight"] { --sw-bg: #1a1b26; --sw-accent: #82a8f7; }
 .palette-pill[data-value="dracula"] { --sw-bg: #282a36; --sw-accent: #cbaaf9; }
+.palette-pill[data-value="candy"] { --sw-bg: #f3eefa; --sw-accent: #077580; }
+.palette-pill[data-value="bubblegum"] { --sw-bg: #fbf7fb; --sw-accent: #b4129f; }
+.palette-pill[data-value="meadow"] { --sw-bg: #f7f7f7; --sw-accent: #58a700; }
+.palette-pill[data-value="indigo"] { --sw-bg: #0f1011; --sw-accent: #8b93f0; }
+.palette-pill[data-value="pulse"] { --sw-bg: #121212; --sw-accent: #1ed760; }
 .font-scale-row .tf-pct-label { font-size: 0.875rem; font-weight: 600; color: var(--primary); min-width: 44px; text-align: center; }
 .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }

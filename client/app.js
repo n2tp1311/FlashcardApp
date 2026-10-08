@@ -163,6 +163,11 @@ Object.assign(TRANSLATIONS.en, {
   "pref.palette.everforest": "Everforest",
   "pref.palette.tokyonight": "Tokyo Night",
   "pref.palette.dracula": "Dracula",
+  "pref.palette.candy": "Candy",
+  "pref.palette.bubblegum": "Bubblegum",
+  "pref.palette.meadow": "Meadow",
+  "pref.palette.indigo": "Indigo",
+  "pref.palette.pulse": "Pulse",
   "pref.haptics": "Vibration feedback",
   "pref.sounds": "Sound effects",
   "pref.soundsHint": "A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.",
@@ -1215,6 +1220,11 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.palette.everforest": "Everforest",
   "pref.palette.tokyonight": "Tokyo Night",
   "pref.palette.dracula": "Dracula",
+  "pref.palette.candy": "Kẹo ngọt",
+  "pref.palette.bubblegum": "Kẹo cao su",
+  "pref.palette.meadow": "Đồng cỏ",
+  "pref.palette.indigo": "Chàm",
+  "pref.palette.pulse": "Nhịp xanh",
   "pref.haptics": "Phản hồi rung",
   "pref.sounds": "Hiệu ứng âm thanh",
   "pref.soundsHint": "Tiếng marimba khi câu trả lời trắc nghiệm hoặc câu gõ lại đúng, tiếng gõ trầm khi sai.",
@@ -12107,7 +12117,7 @@ function syncThemeColor() {
 
 // Palette is independent of light/dark: each one defines both modes in style.css.
 // "parchment" is the default and has no attribute, so an unknown stored value falls back to it.
-var PALETTES = ["parchment", "sage", "slate", "sepia", "plum", "harbour", "serika", "nord", "gruvbox", "solarized", "catppuccin", "rosepine", "everforest", "tokyonight", "dracula"];
+var PALETTES = ["parchment", "sage", "slate", "sepia", "plum", "harbour", "serika", "nord", "gruvbox", "solarized", "catppuccin", "rosepine", "everforest", "tokyonight", "dracula", "candy", "bubblegum", "meadow", "indigo", "pulse"];
 
 function paletteFromPrefs(prefs) {
   return PALETTES.indexOf(prefs.palette) >= 0 ? prefs.palette : "parchment";
