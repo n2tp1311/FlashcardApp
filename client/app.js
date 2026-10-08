@@ -169,6 +169,16 @@ Object.assign(TRANSLATIONS.en, {
   "pref.speed": "Speed",
   "pref.testSpeed": "Test speed",
   "pref.maxReviewsPerDay": "Max reviews per day",
+  "pref.loadBalance": "Spread reviews evenly",
+  "pref.loadBalanceHint": "Moves each due date by a day or two toward a quieter day. Your memory of the card is barely affected.",
+  "pref.easyDays": "Easy days",
+  "pref.easyDaysHint": "Tap a day to cycle Normal, Light and Minimum. Light gets about half the usual reviews; Minimum only cards that cannot move to another day.",
+  "pref.easyNormal": "Normal",
+  "pref.easyLight": "Light",
+  "pref.easyMinimum": "Min",
+  "pref.easyDayLabel": "{day}: {level}",
+  "pref.forecastTitle": "Due in the next 14 days",
+  "pref.forecastBar": "{date}: {n} due",
   "pref.noLimit": "No limit",
   "pref.maxReviewsInvalid": "Enter a whole number (0 or more), or leave it empty for no limit.",
   "pref.apiTokens": "API tokens",
@@ -1162,6 +1172,16 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.speed": "Tốc độ",
   "pref.testSpeed": "Nghe thử tốc độ",
   "pref.maxReviewsPerDay": "Số lượt ôn tối đa mỗi ngày",
+  "pref.loadBalance": "Dàn đều lượt ôn",
+  "pref.loadBalanceHint": "Dời mỗi ngày đến hạn một hoặc hai ngày sang ngày vắng hơn. Gần như không ảnh hưởng đến việc bạn nhớ thẻ.",
+  "pref.easyDays": "Ngày nhẹ",
+  "pref.easyDaysHint": "Chạm vào một ngày để đổi giữa Bình thường, Nhẹ và Tối thiểu. Ngày Nhẹ có khoảng một nửa lượt ôn thường lệ; Tối thiểu chỉ có những thẻ không dời sang ngày khác được.",
+  "pref.easyNormal": "Thường",
+  "pref.easyLight": "Nhẹ",
+  "pref.easyMinimum": "Tối thiểu",
+  "pref.easyDayLabel": "{day}: {level}",
+  "pref.forecastTitle": "Đến hạn trong 14 ngày tới",
+  "pref.forecastBar": "{date}: {n} thẻ đến hạn",
   "pref.noLimit": "Không giới hạn",
   "pref.maxReviewsInvalid": "Nhập số nguyên từ 0 trở lên, hoặc để trống nếu không giới hạn.",
   "pref.apiTokens": "Mã API",
@@ -3011,6 +3031,8 @@ var state = {
   sounds: true,
   dailyGoal: 20,
   quizCountsAsKnown: false,
+  loadBalance: true,
+  easyDays: [0, 0, 0, 0, 0, 0, 0],
   fontScale: 1,
   ttsRate: 0.9,
   language: (function() {
@@ -11610,6 +11632,8 @@ var SQLiteAdapter = (function() {
       if (f.grade) body.grade = f.grade;
       if (f.durationMs != null) body.durationMs = f.durationMs;
       if (f.typed) body.typed = true;
+      // Load balancing counts days in the user's local time (server/lib/workload.js).
+      body.tz = new Date().getTimezoneOffset();
       return queuedWrite({ method: "POST", path: "/attempts", body: body });
     },
     // Queued behind the answer it undoes, so offline the two replay in order. The empty body
@@ -11649,7 +11673,7 @@ var SQLiteAdapter = (function() {
     getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
     getCardHistory: function(cardId) { return req("GET", "/stats/card-history/" + encodeURIComponent(cardId)); },
     getSrsDistribution: function(days) { return req("GET", "/stats/srs-distribution" + (days ? "?days=" + days : "")); },
-    getFutureDue: function() { return req("GET", "/stats/future-due"); },
+    getFutureDue: function(tz) { return req("GET", "/stats/future-due" + (tz != null ? "?tz=" + encodeURIComponent(tz) : "")); },
     getAchievements: function() { return req("GET", "/achievements"); },
     recordStudyEvent: function(kind, ref) { return req("POST", "/achievements/events", { kind: kind, ref: ref }); },
     getToday: function() { return req("GET", "/stats/today"); },
@@ -11875,6 +11899,12 @@ function applyPrefs(prefs) {
   }
   if (typeof prefs.quizCountsAsKnown === "boolean") {
     state.quizCountsAsKnown = prefs.quizCountsAsKnown;
+  }
+  if (typeof prefs.loadBalance === "boolean") {
+    state.loadBalance = prefs.loadBalance;
+  }
+  if (Array.isArray(prefs.easyDays) && prefs.easyDays.length === 7) {
+    state.easyDays = prefs.easyDays.map(function(v) { return v === 1 || v === 2 ? v : 0; });
   }
   if (prefs.dashMetricConfig && typeof prefs.dashMetricConfig === "object") {
     state.dashMetricConfig = Object.assign({}, DEFAULT_DASH_METRIC_CONFIG, prefs.dashMetricConfig);
@@ -12290,6 +12320,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-haptics").checked = state.haptics;
   document.getElementById("pref-sounds").checked = state.sounds;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
+  if (IS_SERVER) openWorkloadPrefs();
   document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
   prefFontLabel();
   prefRateLabel(state.ttsRate);
@@ -12396,6 +12427,82 @@ document.getElementById("pref-theme").addEventListener("click", function(e) {
   applyThemePref(pill.dataset.value);
 });
 
+// Load balancing and easy days (server/lib/workload.js). The scheduler does the work at
+// answer time; this is only the settings and a 14-day forecast in the user's local days,
+// so a day marked light can be seen against how many cards already fall on it.
+var EASY_LEVEL_KEYS = ["pref.easyNormal", "pref.easyLight", "pref.easyMinimum"];
+var EASY_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+var easyDaysDraft = [0, 0, 0, 0, 0, 0, 0];
+var workloadForecast = null;
+
+function weekdayName(dow, style) {
+  // 2023-01-01 was a Sunday.
+  var d = new Date(2023, 0, 1 + dow);
+  try { return d.toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US", { weekday: style }); }
+  catch (_) { return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dow]; }
+}
+
+function renderEasyDays() {
+  document.getElementById("pref-easy-days").innerHTML = EASY_DAY_ORDER.map(function(dow) {
+    var level = easyDaysDraft[dow];
+    return '<button type="button" class="easy-day level-' + level + '" data-day="' + dow + '" data-value="' + level +
+      '" data-dirty-text aria-label="' + escHtml(t("pref.easyDayLabel", { day: weekdayName(dow, "long"), level: t(EASY_LEVEL_KEYS[level]) })) + '">' +
+      escHtml(weekdayName(dow, "short")) + '<small>' + escHtml(t(EASY_LEVEL_KEYS[level])) + '</small></button>';
+  }).join("");
+}
+
+// days: [{ day: "YYYY-MM-DD", cnt }] from /stats/future-due, already in local days.
+function workloadBars(days, easyDays, today) {
+  var byDay = {};
+  (days || []).forEach(function(r) { byDay[r.day] = r.cnt; });
+  var out = [];
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    out.push({ date: d, n: byDay[key] || 0, level: easyDays[d.getDay()] });
+  }
+  return out;
+}
+
+function renderWorkloadForecast() {
+  var bars = document.getElementById("pref-forecast-bars");
+  var axis = document.getElementById("pref-forecast-axis");
+  if (!workloadForecast) { bars.innerHTML = ""; axis.innerHTML = ""; document.getElementById("pref-forecast-total").textContent = ""; return; }
+  var list = workloadBars(workloadForecast, easyDaysDraft, new Date());
+  var max = Math.max.apply(null, list.map(function(b) { return b.n; }).concat([1]));
+  var total = list.reduce(function(s, b) { return s + b.n; }, 0);
+  document.getElementById("pref-forecast-total").textContent = String(total);
+  bars.innerHTML = list.map(function(b) {
+    var label = t("pref.forecastBar", { date: b.date.toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US", { weekday: "short", month: "short", day: "numeric" }), n: b.n });
+    return '<span class="workload-bar level-' + b.level + '" style="height:' + Math.max(2, Math.round(b.n / max * 100)) + '%" title="' + escHtml(label) + '"></span>';
+  }).join("");
+  axis.innerHTML = list.map(function(b) {
+    return '<span class="level-' + b.level + '">' + escHtml(weekdayName(b.date.getDay(), "narrow")) + '</span>';
+  }).join("");
+}
+
+function openWorkloadPrefs() {
+  document.getElementById("pref-load-balance").checked = state.loadBalance;
+  easyDaysDraft = state.easyDays.slice();
+  renderEasyDays();
+  renderWorkloadForecast();
+  store.getFutureDue(new Date().getTimezoneOffset()).then(function(r) {
+    workloadForecast = (r && r.days) || [];
+    renderWorkloadForecast();
+  }).catch(function() {});
+}
+
+document.getElementById("pref-easy-days").addEventListener("click", function(e) {
+  var btn = e.target.closest(".easy-day");
+  if (!btn) return;
+  var dow = parseInt(btn.dataset.day, 10);
+  easyDaysDraft[dow] = (easyDaysDraft[dow] + 1) % 3;
+  renderEasyDays();
+  renderWorkloadForecast();
+  var again = document.querySelector('#pref-easy-days [data-day="' + dow + '"]');
+  if (again) again.focus();
+});
+
 document.getElementById("pref-daily-goal").addEventListener("click", function(e) {
   var pill = e.target.closest(".pill");
   if (!pill) return;
@@ -12485,6 +12592,12 @@ document.getElementById("btn-save-preferences").addEventListener("click", functi
   // A changed review cap changes what Study Setup matches (and whether Start is enabled).
   if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
   var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, sounds: sounds, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, dailyGoal: dailyGoal, quizCountsAsKnown: quizCountsAsKnown };
+  if (IS_SERVER) {
+    state.loadBalance = document.getElementById("pref-load-balance").checked;
+    state.easyDays = easyDaysDraft.slice();
+    prefs.loadBalance = state.loadBalance;
+    prefs.easyDays = state.easyDays;
+  }
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.
@@ -12642,7 +12755,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-api-tokens", "pref-backup", "pref-group-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }

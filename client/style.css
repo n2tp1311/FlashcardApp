@@ -4485,6 +4485,24 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .fc-upstream-badge { position: absolute; top: 40px; right: 12px; }
 .pref-tokens { border-top: 1px solid var(--border); padding-top: 12px; }
 .pref-hint { font-size: 0.75rem; color: var(--text2); margin: 4px 0 8px; }
+
+/* Easy days: seven chips, Monday first, each cycling Normal / Light / Minimum. */
+.easy-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.easy-day { font: inherit; font-size: 0.75rem; font-weight: 700; padding: 6px 0 5px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); display: grid; gap: 2px; justify-items: center; cursor: pointer; min-width: 0; }
+.easy-day small { font-size: 0.5625rem; font-weight: 500; color: var(--text3); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.easy-day.level-1 { background: var(--warning-light); color: var(--warning); border-color: transparent; }
+.easy-day.level-1 small { color: var(--warning); }
+.easy-day.level-2 { background: var(--surface2); color: var(--text3); border-style: dashed; }
+.easy-day:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.workload-forecast { display: grid; gap: 4px; margin-bottom: 16px; }
+.workload-forecast-head { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.workload-bars { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; align-items: end; height: 64px; border-bottom: 1px solid var(--border); }
+.workload-bar { display: block; background: var(--primary); opacity: 0.75; border-radius: 3px 3px 0 0; }
+.workload-bar.level-1 { opacity: 0.4; }
+.workload-bar.level-2 { opacity: 0.2; }
+.workload-axis { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; font-size: 0.5625rem; color: var(--text3); text-align: center; }
+.workload-axis .level-1 { color: var(--warning); font-weight: 700; }
+.workload-axis .level-2 { font-weight: 700; }
 .pref-token-list { list-style: none; margin: 0 0 8px; padding: 0; }
 .pref-token-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 0.8125rem; }
 .pref-token-info { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }

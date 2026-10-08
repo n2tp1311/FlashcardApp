@@ -1,6 +1,7 @@
 "use strict";
 
 const express = require("express");
+const { normalizeTz } = require("../lib/workload");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { computeStreak, weekRow, addDays } = require("../lib/streak");
@@ -664,16 +665,19 @@ router.get("/srs-distribution", requireAuth, (req, res) => {
 // Cards already due or overdue count toward today, and archived classes are left out, so the
 // Today bar agrees with the "Due for Review" count instead of reading "nothing due" beside it.
 const FUTURE_DUE_WINDOW_DAYS = 14;
+// ?tz= (Date#getTimezoneOffset minutes) groups by the user's local days, which is how the
+// workload preview lines bars up with the easy days; without it the days are UTC as elsewhere.
 router.get("/future-due", requireAuth, (req, res) => {
+  const shift = -normalizeTz(Number(req.query.tz)) * 60;
   const rows = db.prepare(
-    "SELECT CASE WHEN cs.srs_due_at <= strftime('%s','now') THEN date('now') " +
-    "ELSE date(cs.srs_due_at,'unixepoch') END AS day, COUNT(*) AS cnt " +
+    "SELECT CASE WHEN cs.srs_due_at <= strftime('%s','now') THEN date(strftime('%s','now') + ?, 'unixepoch') " +
+    "ELSE date(cs.srs_due_at + ?, 'unixepoch') END AS day, COUNT(*) AS cnt " +
     "FROM card_states cs JOIN cards ca ON ca.id = cs.card_id " +
     "JOIN lessons l ON l.id = ca.lesson_id JOIN classes c ON c.id = l.class_id " +
     "WHERE cs.user_id = ? AND c.user_id = ? AND c.archived = 0 " +
     "AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= strftime('%s','now') + ? " +
     "GROUP BY day"
-  ).all(req.session.userId, req.session.userId, FUTURE_DUE_WINDOW_DAYS * 86400);
+  ).all(shift, shift, req.session.userId, req.session.userId, FUTURE_DUE_WINDOW_DAYS * 86400);
   res.json({ days: rows, windowDays: FUTURE_DUE_WINDOW_DAYS });
 });
 

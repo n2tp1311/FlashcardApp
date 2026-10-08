@@ -4,7 +4,8 @@ const { FSRS, generatorParameters, createEmptyCard, Rating, State } = require("t
 
 // Cap at 1 year to match the old fixed-step ladder's behavior — FSRS defaults to a much
 // longer max (100 years), which would be a surprising jump for this app's small user base.
-const scheduler = new FSRS(generatorParameters({ maximum_interval: 365 }));
+const MAX_INTERVAL = 365;
+const scheduler = new FSRS(generatorParameters({ maximum_interval: MAX_INTERVAL }));
 
 // Maps this app's (correct, grade, source) onto an FSRS rating. Quiz-mode recognition is
 // weaker evidence of recall than active recall, so an ungraded quiz-correct answer is rated
@@ -50,4 +51,4 @@ function previewIntervals(stateRow, nowDate) {
   };
 }
 
-module.exports = { scheduler, ratingFor, cardFromState, previewIntervals, Rating, State };
+module.exports = { MAX_INTERVAL, scheduler, ratingFor, cardFromState, previewIntervals, Rating, State };

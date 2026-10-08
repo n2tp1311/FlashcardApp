@@ -3,7 +3,8 @@
 const express = require("express");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
-const { scheduler, ratingFor, cardFromState } = require("../fsrs");
+const { scheduler, ratingFor, cardFromState, MAX_INTERVAL, State } = require("../fsrs");
+const { balanceDue, normalizeTz, settingsFrom } = require("../lib/workload");
 const { snapshotState, restoredState, undoRefusal, STATE_FIELDS } = require("../lib/undo");
 const { LEECH_LAPSES } = require("../lib/leech");
 const router  = express.Router();
@@ -32,9 +33,28 @@ function clampDuration(durationMs) {
   return Math.min(Math.max(0, durationMs), MAX_DURATION_MS);
 }
 
+// Only review intervals are balanced: learning steps are minutes, and moving one by a day
+// would undo what the step is for.
+function balancedDue(userId, cardId, now, dueAt, tz) {
+  const row = db.prepare("SELECT preferences FROM users WHERE id = ?").get(userId);
+  let prefs = {};
+  try { prefs = JSON.parse((row && row.preferences) || "{}"); } catch (_) {}
+  const settings = settingsFrom(prefs);
+  if (!settings.enabled) return dueAt;
+  // Wide enough for any fuzz range around this interval; the range itself is at most ±21 days.
+  const span = dueAt - now + 30 * 86400;
+  const dueTimes = db.prepare(
+    "SELECT cs.srs_due_at FROM card_states cs JOIN cards ca ON ca.id = cs.card_id " +
+    "JOIN lessons l ON l.id = ca.lesson_id JOIN classes c ON c.id = l.class_id " +
+    "WHERE cs.user_id = ? AND c.user_id = ? AND c.archived = 0 AND cs.card_id != ? " +
+    "AND cs.srs_due_at > ? AND cs.srs_due_at <= ?"
+  ).all(userId, userId, cardId, now, now + span).map(r => r.srs_due_at);
+  return balanceDue({ now, dueAt, maxInterval: MAX_INTERVAL, tzOffset: normalizeTz(tz), settings, dueTimes });
+}
+
 // POST /api/attempts
 router.post("/", requireAuth, (req, res) => {
-  const { cardId, correct, source, grade, durationMs, clientId, typed } = req.body;
+  const { cardId, correct, source, grade, durationMs, clientId, typed, tz } = req.body;
   if (!cardId || correct === undefined || !source)
     return res.status(400).json({ error: "cardId, correct, source required" });
   if (clientId !== undefined && (typeof clientId !== "string" || !/^c[a-z0-9]{20}$/.test(clientId)))
@@ -86,7 +106,8 @@ router.post("/", requireAuth, (req, res) => {
     const rating = ratingFor(correct, grade, source);
     const fsrsCard = cardFromState(stateRow, nowDate);
     const nextCard = scheduler.next(fsrsCard, nowDate, rating).card;
-    const dueAt = Math.floor(nextCard.due.getTime() / 1000);
+    let dueAt = Math.floor(nextCard.due.getTime() / 1000);
+    if (nextCard.state === State.Review) dueAt = balancedDue(userId, cardId, now, dueAt, tz);
 
     // Quiz recognition can't earn as long an interval as an equivalent flashcard/recall
     // answer, by construction of the Hard-vs-Good rating mapping in ../fsrs.js — surfaced to
