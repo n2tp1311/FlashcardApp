@@ -1103,3 +1103,6 @@ Cloze cards ask the detail a term card does not ("what does dropout prevent?"). 
 - **No cloze lesson format.** Gap cards sit in the term-def lesson next to their term card, which is where they are useful. Every format check that says "lesson is term-def" still holds; the convert step that turns a lesson into term-def ignores cloze cards.
 - **Edit only, no Add yet.** The select-and-Hide editor in the preview is a piece of its own. Until then gap cards come from KnowledgeApp, and editing the `{{c1::…}}` text by hand is enough to fix one.
 
+## 2026-10-08 — App-style palettes take the look, not the name
+
+The user asked for a PancakeSwap look, then for more in that vein. They are palettes, not a new kind of theme: colours only, no rounder cards or other fonts, because a palette is the one place the app already lets the look change and the contrast tests already cover it. Each gets its own name (Candy, Bubblegum, Meadow, Indigo, Pulse) rather than the app's, since copying the style is fine but borrowing the brand is not. The signature accents (PancakeSwap teal, Uniswap pink, Duolingo green) are too pale to read as text on white, so in light mode each is darker than the original; the bright version stays in dark mode. Plain dark text is off-white rather than white so that high contrast still has room to be brighter, which the test requires.
