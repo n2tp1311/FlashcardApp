@@ -12372,6 +12372,8 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
       google_already_linked: t("auth.googleAlreadyLinked")
     };
     var msg = msgs[params.get("auth_error")] || t("auth.genericError");
+    var reason = params.get("reason");
+    if (reason && /^[a-z0-9_]{1,40}$/.test(reason)) msg += " (" + reason + ")";
     showAuthError("login", msg);
     showAuthPanel("login");
     history.replaceState({}, "", "/");

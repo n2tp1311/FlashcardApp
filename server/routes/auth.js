@@ -190,8 +190,11 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
     const tokens = await tokenRes.json();
     // Google's reason (invalid_client: wrong secret; redirect_uri_mismatch; invalid_grant: a
     // used or expired code) is the whole diagnosis, and "No access token" alone hid it.
-    if (!tokens.access_token)
-      throw new Error("No access token: " + (tokens.error || tokenRes.status) + (tokens.error_description ? " - " + tokens.error_description : ""));
+    if (!tokens.access_token) {
+      const err = new Error("No access token: " + (tokens.error || tokenRes.status) + (tokens.error_description ? " - " + tokens.error_description : ""));
+      err.reason = tokens.error || "token_" + tokenRes.status;
+      throw err;
+    }
 
     // Get user profile
     const profileRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
@@ -199,6 +202,7 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
     });
     const profile = await profileRes.json();
     const { id: googleId, email, name, picture } = profile;
+    if (!googleId || !email) throw Object.assign(new Error("No id or email in the Google profile"), { reason: "no_profile" });
 
     // Link mode: attach Google account to currently logged-in user
     const linkUserId = req.session.googleLinkUserId;
@@ -231,7 +235,10 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
     res.redirect("/");
   } catch (e) {
     console.error("[google-oauth]", e.message);
-    res.redirect("/?auth_error=google_failed");
+    // Google's error code, shown with the message, so a failure can be diagnosed without the
+    // server logs. Codes only (invalid_client, redirect_uri_mismatch), never the description.
+    const reason = /^[a-z0-9_]{1,40}$/.test(e.reason || "") ? e.reason : "server_error";
+    res.redirect("/?auth_error=google_failed&reason=" + reason);
   }
 });
 
