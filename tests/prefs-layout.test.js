@@ -44,7 +44,7 @@ const shown = (page, sel) => page.evaluate((s) => { const el = document.querySel
 test("there is no Save button and nothing asks before closing", function() {
   assert.doesNotMatch(html, /btn-save-preferences/);
   assert.doesNotMatch(app, /"preferences", "dash-metrics"\]|prefsSnapshot|reminderSaveHint/);
-  for (const k of ["pref.saved", "pref.groupPlan", "pref.groupMemory", "pref.groupReminders", "pref.sumGoal", "pref.sumOff", "pref.sumData"]) {
+  for (const k of ["pref.saved", "pref.groupPlan", "pref.groupMemory", "pref.groupReminders"]) {
     assert.equal(app.split('"' + k + '":').length - 1, 2, k + " needs an English and a Vietnamese string");
   }
 });
@@ -55,13 +55,12 @@ test("phone: the list fits one screen, a topic opens its page, Back returns to t
       const modal = document.getElementById("modal-preferences");
       const body = modal.querySelector(".modal-body");
       return { page: modal.dataset.page || null, scrolls: body.scrollHeight > body.clientHeight + 1,
-               fits: modal.getBoundingClientRect().bottom <= innerHeight,
-               sum: document.getElementById("pref-sum-appearance").textContent };
+               fits: modal.getBoundingClientRect().bottom <= innerHeight };
     });
     assert.equal(list.page, null);
     assert.equal(list.scrolls, false, "the topic list scrolls on a phone");
     assert.ok(list.fits);
-    assert.ok(list.sum.length > 0, "each row says what is set now");
+    assert.equal(await page.locator(".pref-nav-row small").count(), 0, "rows carry no summary line");
     assert.equal(await shown(page, ".pref-pages"), false);
     // The offline app has no server for these.
     for (const id of ["#pref-nav-memory", "#pref-nav-reminders", "#pref-nav-data"]) assert.equal(await shown(page, id), false, id);
@@ -90,7 +89,6 @@ test("a change is kept straight away and shows Saved; closing keeps it too", asy
     await page.waitForFunction(() => document.getElementById("pref-saved").classList.contains("show"));
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("fc-preferences")));
     assert.equal(stored.fontScale, 1.2);
-    assert.match(await page.textContent("#pref-sum-appearance"), /Larger text/);
 
     await page.click("#pref-back");
     await page.click("#pref-nav-plan");

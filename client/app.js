@@ -122,20 +122,6 @@ Object.assign(TRANSLATIONS.en, {
   "pref.groupPlan": "Daily plan",
   "pref.groupMemory": "Memory",
   "pref.groupReminders": "Reminders",
-  "pref.sumGoal": "Goal {n}",
-  "pref.sumNoGoal": "No daily goal",
-  "pref.sumMax": "At most {n} a day",
-  "pref.sumSpread": "Spread evenly",
-  "pref.sumAdapting": "Adapting to you",
-  "pref.sumOff": "Off",
-  "pref.sumStreak": "Streak saver",
-  "pref.sumSoundsOn": "Sounds on",
-  "pref.sumSoundsOff": "Sounds off",
-  "pref.sumSpeed": "Speech {n}×",
-  "pref.sumTextLarger": "Larger text",
-  "pref.sumContrast": "High contrast",
-  "pref.sumTextSmaller": "Smaller text",
-  "pref.sumData": "Backup · API tokens",
   "tutorial.title": "Quick tour",
   "tutorial.preferenceLabel": "Getting started",
   "tutorial.replay": "Show tutorial",
@@ -1188,20 +1174,6 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.groupPlan": "Kế hoạch mỗi ngày",
   "pref.groupMemory": "Trí nhớ",
   "pref.groupReminders": "Nhắc nhở",
-  "pref.sumGoal": "Mục tiêu {n}",
-  "pref.sumNoGoal": "Không đặt mục tiêu",
-  "pref.sumMax": "Tối đa {n} mỗi ngày",
-  "pref.sumSpread": "Dàn đều",
-  "pref.sumAdapting": "Theo trí nhớ của bạn",
-  "pref.sumOff": "Tắt",
-  "pref.sumStreak": "Giữ chuỗi",
-  "pref.sumSoundsOn": "Bật âm thanh",
-  "pref.sumSoundsOff": "Tắt âm thanh",
-  "pref.sumSpeed": "Giọng đọc {n}×",
-  "pref.sumTextLarger": "Chữ lớn hơn",
-  "pref.sumContrast": "Tương phản cao",
-  "pref.sumTextSmaller": "Chữ nhỏ hơn",
-  "pref.sumData": "Sao lưu · Mã API",
   "tutorial.title": "Hướng dẫn nhanh",
   "tutorial.preferenceLabel": "Bắt đầu sử dụng",
   "tutorial.replay": "Xem hướng dẫn",
@@ -12676,37 +12648,6 @@ document.getElementById("pref-home").addEventListener("click", function(e) {
 });
 document.getElementById("pref-back").addEventListener("click", function() { showPrefsPage(null); });
 
-function prefsReminderTime(hhmm) {
-  var parts = hhmm.split(":");
-  try {
-    return new Date(2023, 0, 1, +parts[0], +parts[1]).toLocaleTimeString(state.language === "vi" ? "vi-VN" : "en-US", { hour: "numeric", minute: "2-digit" });
-  } catch (_) { return hhmm; }
-}
-
-// Each row in the list says what is set now, so most visits need not open the page.
-function renderPrefSummaries() {
-  var themeKeys = { light: "pref.themeLight", dark: "pref.themeDark", system: "pref.themeSystem" };
-  var look = [t(themeKeys[state.themePref] || "pref.themeSystem"), t("pref.palette." + state.palette)];
-  if (state.highContrast) look.push(t("pref.sumContrast"));
-  if (state.fontScale > 1) look.push(t("pref.sumTextLarger"));
-  else if (state.fontScale < 1) look.push(t("pref.sumTextSmaller"));
-  var plan = [state.dailyGoal ? t("pref.sumGoal", { n: state.dailyGoal }) : t("pref.sumNoGoal")];
-  if (state.maxReviewsPerDay !== null && state.maxReviewsPerDay !== undefined) plan.push(t("pref.sumMax", { n: state.maxReviewsPerDay }));
-  if (IS_SERVER && state.loadBalance) plan.push(t("pref.sumSpread"));
-  var memory = MEMORY_CHOICES.filter(function(c) { return c.value === state.targetRecall; })[0];
-  var r = state.reminders;
-  var sums = {
-    appearance: look.join(" · "),
-    language: state.language === "vi" ? "Tiếng Việt" : "English",
-    plan: plan.join(" · "),
-    memory: [memory ? t(memory.key) : "", state.adaptMemory ? t("pref.sumAdapting") : ""].filter(Boolean).join(" · "),
-    reminders: r.on ? [prefsReminderTime(r.time), r.streak ? t("pref.sumStreak") : ""].filter(Boolean).join(" · ") : t("pref.sumOff"),
-    sound: [t(state.sounds ? "pref.sumSoundsOn" : "pref.sumSoundsOff"), t("pref.sumSpeed", { n: state.ttsRate.toFixed(1) })].join(" · "),
-    data: t("pref.sumData")
-  };
-  Object.keys(sums).forEach(function(k) { document.getElementById("pref-sum-" + k).textContent = sums[k]; });
-}
-
 document.getElementById("btn-open-preferences").addEventListener("click", function() {
   closeAllDropdowns();
   setPillGroup("pref-theme", state.themePref);
@@ -12734,7 +12675,6 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   }
   clearTimeout(prefsSaveTimer);
   prefsLastSent = JSON.stringify(readPrefsForm());
-  renderPrefSummaries();
   showPrefsPage(PREFS_WIDE.matches ? "appearance" : null);
   openModal("preferences");
 });
@@ -13206,7 +13146,6 @@ function savePrefsNow() {
   _refreshDashHeroCards();
   // A changed review cap changes what Study Setup matches (and whether Start is enabled).
   if (getActiveScreen() === "setup" && state.setupDataPromise) state.setupDataPromise.then(updateSetupMatchCount);
-  renderPrefSummaries();
   // Merge into the cached blob rather than overwriting it — a plain overwrite would drop
   // studyPresets (and any other field this handler doesn't know about) from the local cache
   // until the next server fetch re-syncs it.

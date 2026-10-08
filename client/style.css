@@ -4866,11 +4866,12 @@ button.leech-pill:hover { filter: brightness(0.96); }
 }
 .pref-saved { margin-left: auto; margin-right: 8px; font-size: 0.8125rem; color: var(--success); opacity: 0; transition: opacity 0.2s; }
 .pref-saved.show { opacity: 1; }
-.pref-home { display: flex; flex-direction: column; gap: 14px; }
-.pref-nav-group { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.pref-home { display: flex; flex-direction: column; gap: 20px; }
+/* flex: none -- in the scrolling list a shrunk group clips its own rows instead of scrolling. */
+.pref-nav-group { flex: none; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .pref-nav-group > * + * { border-top: 1px solid var(--border); }
 .pref-nav-row {
-  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 12px 16px;
   background: none; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer;
 }
 .pref-nav-row:hover { background: var(--surface2); }
@@ -4879,15 +4880,14 @@ button.leech-pill:hover { filter: brightness(0.96); }
   width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none;
   background: var(--primary-light); color: var(--primary);
 }
-.pref-nav-text { display: grid; flex: 1; min-width: 0; font-size: 0.9375rem; font-weight: 500; }
-.pref-nav-sum { color: var(--text2); font-size: 0.78rem; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pref-nav-sum:empty { display: none; }
+.pref-nav-text { flex: 1; min-width: 0; font-size: 0.9375rem; font-weight: 500; }
 .pref-nav-chev { color: var(--text3); flex: none; }
-.pref-nav-toggle { margin: 0; padding: 8px 12px; min-height: 56px; }
+.pref-nav-toggle { margin: 0; padding: 12px 16px; min-height: 56px; }
 .pref-nav-toggle .form-label { flex-shrink: 1; min-width: 0; }
-.pref-nav-group > .pref-nav-toggle + .pref-hint { border-top: 0; margin: -6px 0 0; padding: 0 12px 10px; }
+.pref-nav-group > .pref-nav-toggle:has(+ .pref-hint) { padding-bottom: 4px; }
+.pref-nav-group > .pref-nav-toggle + .pref-hint { border-top: 0; margin: 0; padding: 0 16px 14px; line-height: 1.45; }
 .pref-page { display: none; }
-.pref-page > .pref-group { margin: 0 0 12px; font-size: 1.05rem; color: var(--text); border: 0; padding: 0; }
+.pref-page > .pref-group { margin: 0 0 20px; font-size: 1.05rem; color: var(--text); border: 0; padding: 0; }
 #modal-preferences[data-page="appearance"] .pref-page[data-page="appearance"],
 #modal-preferences[data-page="language"] .pref-page[data-page="language"],
 #modal-preferences[data-page="plan"] .pref-page[data-page="plan"],
@@ -4904,10 +4904,10 @@ button.leech-pill:hover { filter: brightness(0.96); }
 @media (min-width: 720px) {
   #modal-preferences { max-width: 780px; height: min(640px, 90dvh); }
   #modal-preferences .prefs-body {
-    display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 20px; flex: 1 1 auto; overflow: hidden;
+    display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; flex: 1 1 auto; overflow: hidden;
   }
   .pref-home, .pref-pages { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
-  .pref-nav-row { min-height: 48px; }
+  .pref-nav-row, .pref-nav-toggle { min-height: 52px; }
 }
 
 /* "Why?" on a flashcard: the reason box, then the passage under what you wrote. */
