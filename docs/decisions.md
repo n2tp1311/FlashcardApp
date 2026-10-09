@@ -1129,3 +1129,13 @@ Every light palette had a near-black card back, inherited from when the back was
 
 Cost: front and back now differ only by a tint, not by light and dark, so the flip is a quieter change. The flip animation and the different content carry it.
 
+## 2026-10-09 — Gap-fill passages: one card, a word bank, a suggested grade
+
+A cloze card hides one detail in one sentence; a passage asks the learner to rebuild how several terms of a lesson fit together. The user compared typing, a word bank and per-gap menus and chose the word bank: on a phone it is tapping, not typing, and the wrong words make it more than elimination.
+
+The passage is one card with one schedule, not one card per gap as with cloze. The gaps are meant to be seen together, and splitting them would show the same passage several times a session. The cost is that a passage with one weak gap is rescheduled as a whole.
+
+Check takes Show answer's place, and Space, so the study loop keeps one key and one button. The grade is suggested, not set: the number of mistakes outlines Know It, Hard or Learning, and the learner may override it, because a wrong word picked by a slip is not the same as not knowing it.
+
+Quizzes leave passages out until they have their own question type; offered as multiple choice, the passage would give its own answers away.
+
