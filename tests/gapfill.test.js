@@ -55,7 +55,7 @@ const bankIndex = (page, word) => page.evaluate((w) => state.gf.bank.indexOf(w),
 test("every string the passage uses exists in English and Vietnamese", function() {
   for (const k of ["format.gapfill", "gapfill.title", "gapfill.gaps", "gapfill.check", "gapfill.progress", "gapfill.result",
                    "gapfill.suggested", "gapfill.empty", "gapfill.filled", "gapfill.right", "gapfill.wrong", "gapfill.help",
-                   "gapfill.notInQuiz", "card.editGapfill", "validate.gapfillGaps"])
+                   "gapfill.passage", "gapfill.wrongWords", "gapfill.wrongWordsHint", "validate.gapfillWrong", "card.editGapfill", "validate.gapfillGaps"])
     assert.equal(app.split('"' + k + '":').length - 1, 2, k);
 });
 
@@ -159,10 +159,40 @@ test("the next card is a plain flip card again", async function() {
   });
 });
 
-test("the quiz leaves passages out", async function() {
+test("the quiz asks one gap of a passage, the others filled in, with the passage's own wrong words", async function() {
   await withApp(async (page) => {
-    await page.evaluate((card) => { state.quizCards = [card]; startQuiz(); }, PASSAGE);
-    assert.match(await page.evaluate(() => document.body.innerText), /studied as flashcards/);
+    const r = await page.evaluate((card) => {
+      state.quizCards = [card];
+      startQuiz();
+      state.quizGaps[card.id] = 1;
+      renderQuizCard();
+      return {
+        question: document.getElementById("quiz-question").textContent,
+        options: [...document.querySelectorAll("#quiz-options .opt-text")].map((o) => o.textContent).sort()
+      };
+    }, PASSAGE);
+    assert.equal(r.question, "Dropout trains an ensemble of subnetworks by removing […]; it prevents co-adaptation.");
+    // The answer, both wrong words, and one word that fills another gap.
+    assert.equal(r.options.length, 4);
+    assert.deepEqual(r.options.filter((o) => o !== "ensemble" && o !== "co-adaptation"), ["batch norm", "learning rate", "units"]);
+    const idx = await page.evaluate(() => state.quizOptions.indexOf("units"));
+    await page.evaluate((i) => answerQuiz(i), idx);
+    assert.equal(await page.evaluate(() => state.quizResults[0].correct), true);
+    await page.evaluate(() => { state.quizIndex = 0; renderQuizCard(); });
+    assert.equal(await page.evaluate(() => state.quizGaps.g1), 1, "a replay asks the same gap");
+  });
+});
+
+test("a passage's quiz gap is drawn once and stays inside the passage", async function() {
+  await withApp(async (page) => {
+    const r = await page.evaluate((card) => {
+      const seen = new Set();
+      for (let i = 0; i < 40; i++) { state.quizGaps = {}; seen.add(quizGapIndex(card)); }
+      const first = quizGapIndex(card);
+      return { seen: [...seen].sort(), stable: quizGapIndex(card) === first };
+    }, PASSAGE);
+    assert.deepEqual(r.seen, [0, 1, 2]);
+    assert.equal(r.stable, true);
   });
 });
 
@@ -172,6 +202,12 @@ test("edit: the dialog keeps the wrong words and refuses a passage with one gap"
     await page.waitForSelector("#modal-card-cloze:not(.hidden)");
     assert.equal(await page.textContent("#modal-card-cloze-title"), "Edit passage");
     assert.equal(await page.evaluate(() => document.querySelectorAll("#card-cloze-preview .cloze-gap.revealed").length), 3);
+    assert.equal(await page.textContent("#card-cloze-label"), "Passage");
+    assert.equal(await page.inputValue("#card-gapfill-wrong"), "batch norm, learning rate");
+    await page.fill("#card-gapfill-wrong", "a, b, c, d, e, f, g");
+    await page.click("#btn-save-card-cloze");
+    assert.match(await page.evaluate(() => document.body.innerText), /Up to 6 wrong words/);
+    await page.fill("#card-gapfill-wrong", "batch norm");
     await page.fill("#card-cloze-input", "Dropout prevents {{c1::co-adaptation}}.");
     await page.click("#btn-save-card-cloze");
     assert.match(await page.evaluate(() => document.body.innerText), /2 to 8 gaps/);

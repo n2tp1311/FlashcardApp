@@ -12,7 +12,7 @@ const { cardFromState } = require("../fsrs");
 const { userScheduler } = require("../lib/memory");
 const { requireApiToken } = require("../middleware/apiToken");
 const { resetLeech } = require("../lib/leech");
-const { validClozeText } = require("../lib/cloze");
+const { validClozeText, validGapfill } = require("../lib/cloze");
 const { rateLimit, byApiUser } = require("../middleware/rateLimit");
 const router  = express.Router();
 
@@ -46,9 +46,17 @@ function isText(v) {
   return typeof v === "string" && v.trim().length > 0 && v.length <= MAX_TEXT_LEN;
 }
 
-// A card's text arrives either as term + def or, for a cloze card, as `cloze`: one sentence
-// with {{c1::…}} gaps. The two never mix on one item.
+// A card's text arrives as term + def, as `cloze` (one sentence with {{c1::…}} gaps), or as
+// `gapfill` (a passage, {text, distractors?, title?}). The kinds never mix on one item.
 function cardText(item) {
+  if (item.gapfill !== undefined) {
+    const g = item.gapfill;
+    if (item.term !== undefined || item.def !== undefined || item.cloze !== undefined || !validGapfill(g)) return null;
+    const out = { text: g.text.trim() };
+    if (g.title !== undefined && g.title.trim()) out.title = g.title.trim();
+    if (g.distractors !== undefined) out.distractors = g.distractors.map(w => w.trim());
+    return { gapfill: out };
+  }
   if (item.cloze !== undefined)
     return item.term === undefined && item.def === undefined && validClozeText(item.cloze)
       ? { cloze: item.cloze.trim() } : null;
@@ -56,6 +64,7 @@ function cardText(item) {
 }
 
 function cardRow(text) {
+  if (text.gapfill !== undefined) return { format: "gapfill", data: JSON.stringify(text.gapfill) };
   return text.cloze !== undefined
     ? { format: "cloze", data: JSON.stringify({ text: text.cloze }) }
     : { format: "term-def", data: JSON.stringify({ term: text.term, def: text.def }) };
@@ -65,14 +74,14 @@ function validateEvent(ev) {
   if (!ev || !EVENT_TYPES.includes(ev.type)) return "type must be one of " + EVENT_TYPES.join(", ");
   if (!isId(ev.external_id)) return "external_id required";
   if (ev.type === "updated" || ev.type === "restored") {
-    if (!cardText(ev)) return "term and def, or cloze with a {{c1::…}} gap, required";
+    if (!cardText(ev)) return "term and def, cloze with a {{c1::…}} gap, or gapfill with 2-8 gaps, required";
   }
   if (ev.type === "split") {
     if (!Array.isArray(ev.cards) || ev.cards.length < 1 || ev.cards.length > MAX_SPLIT_CARDS)
       return "cards must be an array of 1-" + MAX_SPLIT_CARDS;
     for (const c of ev.cards) {
       if (!c || !isId(c.external_id) || !cardText(c))
-        return "each split card needs external_id, and term and def or cloze";
+        return "each split card needs external_id, and term and def, cloze or gapfill";
     }
   }
   return null;
@@ -88,13 +97,16 @@ function cardsForExternalId(userId, externalId) {
 }
 
 function applyUpdate(card, text, now, userId) {
-  const cloze = text.cloze !== undefined;
-  if (card.format !== (cloze ? "cloze" : "term-def")) return false;
+  const cloze = text.cloze !== undefined, gapfill = text.gapfill !== undefined;
+  if (card.format !== (gapfill ? "gapfill" : cloze ? "cloze" : "term-def")) return false;
   let old;
   try { old = JSON.parse(card.data); } catch (_) { old = {}; }
   const trimmed = v => (typeof v === "string" ? v.trim() : v);
-  if (cloze ? trimmed(old.text) === text.cloze : trimmed(old.term) === text.term && trimmed(old.def) === text.def) return false;
-  const nextData = JSON.stringify(cloze ? { ...old, text: text.cloze } : { ...old, term: text.term, def: text.def });
+  // A passage is replaced whole: its wrong words and title belong to its text.
+  const nextData = gapfill ? JSON.stringify(text.gapfill)
+    : JSON.stringify(cloze ? { ...old, text: text.cloze } : { ...old, term: text.term, def: text.def });
+  if (gapfill ? card.data === nextData
+      : cloze ? trimmed(old.text) === text.cloze : trimmed(old.term) === text.term && trimmed(old.def) === text.def) return false;
   const prev = card.upstream_prev_data ?? card.data;
   if (prev === nextData) {
     db.prepare(
@@ -429,7 +441,7 @@ router.put("/classes/:id/layout", (req, res) => {
         const c = byExt.get(ext);
         if (!c) out.not_found++;
         // Gap cards are named right after their term card, so they move with it.
-        else if (c.format !== "term-def" && c.format !== "cloze") out.invalid++;
+        else if (c.format !== "term-def" && c.format !== "cloze" && c.format !== "gapfill") out.invalid++;
         else cards.push(c);
       });
       return { title: t.title.trim(), cards, lessonId: null };
@@ -546,6 +558,9 @@ router.get("/classes/:id/cards", (req, res) => {
     } else if (r.format === "cloze") {
       if (typeof data.text !== "string") return;
       card.cloze = data.text;
+    } else if (r.format === "gapfill") {
+      if (typeof data.text !== "string") return;
+      card.gapfill = data;
     } else {
       card.data = data;
     }
@@ -660,6 +675,8 @@ router.post("/convert-cards", (req, res) => {
           out = { status: "invalid", error: "image-def cards are not converted: the image would be lost" };
         } else if (card.format === "cloze") {
           out = { status: "invalid", error: "cloze cards are not converted: they sit beside a term-def card already" };
+        } else if (card.format === "gapfill") {
+          out = { status: "invalid", error: "gapfill passages are not converted: they sit beside term-def cards already" };
         } else {
           db.prepare("UPDATE cards SET format = 'term-def', data = ?, converted_from = COALESCE(converted_from, ?) WHERE id = ?")
             .run(JSON.stringify({ term, def }), JSON.stringify({ format: card.format, data: JSON.parse(card.data) }), card.id);
@@ -673,7 +690,7 @@ router.post("/convert-cards", (req, res) => {
       });
 
       touched.forEach(lessonId => {
-        const left = db.prepare("SELECT COUNT(*) AS n FROM cards WHERE lesson_id = ? AND format NOT IN ('term-def', 'cloze')").get(lessonId).n;
+        const left = db.prepare("SELECT COUNT(*) AS n FROM cards WHERE lesson_id = ? AND format NOT IN ('term-def', 'cloze', 'gapfill')").get(lessonId).n;
         if (left === 0) {
           const changed = db.prepare("UPDATE lessons SET format = 'term-def' WHERE id = ? AND format != 'term-def'").run(lessonId);
           if (changed.changes) lessonsConverted.push(lessonId);
@@ -688,7 +705,7 @@ router.post("/convert-cards", (req, res) => {
 });
 
 // POST /api/integrations/knowledge/add-cards
-//   { class_id, cards: [{external_id, term, def | cloze, lesson_id? | after_card_id? | new_lesson_title?}] }
+//   { class_id, cards: [{external_id, term, def | cloze | gapfill, lesson_id? | after_card_id? | new_lesson_title?}] }
 // Adds into an existing class. One transaction per request; replay-safe because an
 // external_id already in the class is `exists`, and a new lesson is only created
 // when at least one card will actually go into it.
@@ -701,7 +718,7 @@ router.post("/add-cards", (req, res) => {
   for (let i = 0; i < items.length; i++) {
     const c = items[i];
     if (!c || !isId(c.external_id) || !cardText(c))
-      return res.status(400).json({ error: "card " + i + ": external_id, and term and def or cloze, required" });
+      return res.status(400).json({ error: "card " + i + ": external_id, and term and def, cloze or gapfill, required" });
     if (c.new_lesson_title != null) {
       const t = typeof c.new_lesson_title === "string" ? c.new_lesson_title.trim() : "";
       if (!t || t.length > MAX_TITLE_LEN || c.lesson_id != null || c.after_card_id != null)

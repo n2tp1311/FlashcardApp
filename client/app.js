@@ -650,8 +650,11 @@ Object.assign(TRANSLATIONS.en, {
   "gapfill.filled": "Gap {n}: {word}. Tap to clear",
   "gapfill.right": "Gap {n}: {word}, right",
   "gapfill.wrong": "Gap {n}: wrong, the answer is {word}",
+  "gapfill.passage": "Passage",
+  "gapfill.wrongWords": "Wrong words in the bank",
+  "gapfill.wrongWordsHint": "Separate with commas, up to 6.",
+  "validate.gapfillWrong": "Up to 6 wrong words, each under 100 characters.",
   "gapfill.help": "Each gap is written {{c1::word}}, {{c2::word}} and so on; every gap is hidden at once and filled from the word bank.",
-  "gapfill.notInQuiz": "Fill-the-gaps passages are studied as flashcards, not in a quiz.",
   "card.editGapfill": "Edit passage",
   "cloze.blank": "blank",
   "cloze.blankHint": "blank, hint: {hint}",
@@ -1708,8 +1711,11 @@ Object.assign(TRANSLATIONS.vi, {
   "gapfill.filled": "Chỗ trống {n}: {word}. Chạm để bỏ",
   "gapfill.right": "Chỗ trống {n}: {word}, đúng",
   "gapfill.wrong": "Chỗ trống {n}: sai, đáp án là {word}",
+  "gapfill.passage": "Đoạn văn",
+  "gapfill.wrongWords": "Từ gây nhiễu trong ngân hàng từ",
+  "gapfill.wrongWordsHint": "Cách nhau bằng dấu phẩy, tối đa 6 từ.",
+  "validate.gapfillWrong": "Tối đa 6 từ gây nhiễu, mỗi từ dưới 100 ký tự.",
   "gapfill.help": "Mỗi chỗ trống viết là {{c1::từ}}, {{c2::từ}}…; mọi chỗ trống được ẩn cùng lúc và điền từ ngân hàng từ.",
-  "gapfill.notInQuiz": "Đoạn văn điền từ được học ở chế độ thẻ, không có trong quiz.",
   "card.editGapfill": "Sửa đoạn văn",
   "cloze.blank": "chỗ trống",
   "cloze.blankHint": "chỗ trống, gợi ý: {hint}",
@@ -6532,6 +6538,9 @@ function openEditCard(cardId, presetCard, fromStudy) {
       document.getElementById("modal-card-cloze-title").textContent = t(passage ? "card.editGapfill" : "card.editCloze");
       document.getElementById("card-cloze-help").textContent = t(passage ? "gapfill.help" : "cloze.help");
       document.getElementById("card-cloze-input").value = card.data.text;
+      document.getElementById("card-gapfill-extra").classList.toggle("hidden", !passage);
+      document.getElementById("card-cloze-label").textContent = t(passage ? "gapfill.passage" : "cloze.sentence");
+      document.getElementById("card-gapfill-wrong").value = passage ? (card.data.distractors || []).join(", ") : "";
       renderCloze(card.data.text, document.getElementById("card-cloze-preview"), true, passage);
       openModal("card-cloze");
     } else {
@@ -6672,7 +6681,13 @@ document.getElementById("btn-save-card-cloze").addEventListener("click", functio
   var passage = !!editing && editing.format === "gapfill";
   var gaps = clozeSegments(text, passage).filter(function(p) { return p.gap; }).length;
   if (passage ? gaps < 2 || gaps > 8 : !gaps) { showFieldError(input, t(passage ? "validate.gapfillGaps" : "validate.clozeGap")); return; }
-  var data = passage ? Object.assign({}, editing.data, { text: text }) : { text: text };
+  var data = { text: text };
+  if (passage) {
+    var wrongInput = document.getElementById("card-gapfill-wrong");
+    var wrong = wrongInput.value.split(",").map(function(w) { return w.trim(); }).filter(Boolean);
+    if (wrong.length > 6 || wrong.some(function(w) { return w.length > 100; })) { showFieldError(wrongInput, t("validate.gapfillWrong")); return; }
+    data = Object.assign({}, editing.data, { text: text, distractors: wrong });
+  }
   var editingId = state.editingCardId;
   var editingLessonId = state.editingCardLessonId;
   if (!editingId) return;
@@ -8414,7 +8429,7 @@ function vocabularySelectionTargets() {
     if (!card) return [];
     var data = card.data || {};
     var explanation = document.querySelector("#quiz-explanation .explanation-body");
-    var question = data.question || data.statement || data.term || (card.format === "cloze" ? clozePlain(data.text, true) : "");
+    var question = data.question || data.statement || data.term || (card.format === "cloze" || card.format === "gapfill" ? clozePlain(quizClozeText(card), true) : "");
     var targets = [
       { root: document.getElementById("quiz-question"), context: question },
       { root: explanation, context: data.explanation || "" }
@@ -9620,9 +9635,7 @@ document.getElementById("btn-fc-back").addEventListener("click", function() {
    ============================ */
 
 function startQuiz() {
-  // Gap-fill passages have no single right option to pick; they are studied as flashcards.
-  state.quizCards = (state.quizCards || []).filter(function(c) { return c.format !== "gapfill"; });
-  if (!state.quizCards.length) { showToast(t("gapfill.notInQuiz")); return; }
+  state.quizGaps = {};
   state.quizIndex  = 0;
   state.quizScore  = 0;
   state.quizResults = [];
@@ -9658,6 +9671,24 @@ function quizDistractors(card, field) {
   return shuffle(pool).slice(0, 3);
 }
 
+// A passage is asked one gap at a time: the rest stay filled in as context. The gap is drawn
+// once per session and kept, so Prev/Next replays the same question.
+function quizGapIndex(card) {
+  var gaps = state.quizGaps || (state.quizGaps = {});
+  if (gaps[card.id] == null) gaps[card.id] = Math.floor(Math.random() * Math.max(1, clozeSegments(card.data.text, true).filter(function(p) { return p.gap; }).length));
+  return gaps[card.id];
+}
+
+// The quiz question as a cloze sentence: a passage's chosen gap becomes c1 and the others c2,
+// which renderCloze shows as plain text.
+function quizClozeText(card) {
+  if (card.format !== "gapfill") return card.data.text;
+  var k = 0, chosen = quizGapIndex(card);
+  return card.data.text.replace(CLOZE_RE, function(_m, _n, answer) {
+    return "{{c" + (k++ === chosen ? 1 : 2) + "::" + answer + "}}";
+  });
+}
+
 function buildQuizOptions(card) {
   if (card.format === "true-false") {
     return [t("common.true"), t("common.false")];
@@ -9669,6 +9700,17 @@ function buildQuizOptions(card) {
   if (card.format === "cloze") {
     var clozeOf = function(c) { return c.data && clozeAnswer(c.data.text); };
     return shuffle([clozeOf(card)].concat(quizDistractors(card, clozeOf)));
+  }
+  // Passage: its own wrong words first, topped up with what fills its other gaps, never with
+  // another passage's words, which would be wrong for a reason the learner cannot see.
+  if (card.format === "gapfill") {
+    var answer = clozeAnswer(quizClozeText(card));
+    var seen = {}, wrong = [];
+    seen[answer.toLowerCase()] = true;
+    shuffle((card.data.distractors || []).slice()).concat(shuffle(clozeSegments(card.data.text, true)
+      .filter(function(p) { return p.gap; }).map(function(p) { return p.answer.trim(); })))
+      .forEach(function(w) { if (wrong.length < 3 && !seen[w.toLowerCase()]) { seen[w.toLowerCase()] = true; wrong.push(w); } });
+    return shuffle([answer].concat(wrong));
   }
   // term-def and image-def: the other cards' definitions are the wrong answers.
   return shuffle([card.data.def].concat(quizDistractors(card, "def")));
@@ -9751,8 +9793,8 @@ function renderQuizCard() {
     qImg.style.maxHeight = "200px";
     qImg.style.objectFit = "contain";
     qEl.appendChild(qImg);
-  } else if (card.format === "cloze") {
-    renderCloze(card.data.text, qEl, false);
+  } else if (card.format === "cloze" || card.format === "gapfill") {
+    renderCloze(quizClozeText(card), qEl, false);
   } else {
     renderLatex(card.data.term, qEl);
   }
@@ -9825,7 +9867,7 @@ function answerQuiz(selectedIdx) {
   var correct = card.format === "mcq" ? card.data.correct :
     card.format === "true-false" ? (card.data.correct === "true" ? t("common.true") : t("common.false")) :
     card.format === "image-def" ? card.data.def :
-    card.format === "cloze" ? clozeAnswer(card.data.text) :
+    card.format === "cloze" || card.format === "gapfill" ? clozeAnswer(quizClozeText(card)) :
     card.data.def;
   var selectedVal = opts[selectedIdx];
   var isCorrect   = selectedVal === correct;
