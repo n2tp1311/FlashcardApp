@@ -1139,3 +1139,5 @@ Check takes Show answer's place, and Space, so the study loop keeps one key and 
 
 Quizzes leave passages out until they have their own question type; offered as multiple choice, the passage would give its own answers away.
 
+Update, same day: quizzes ask a passage one gap at a time, the other gaps filled in. All gaps at once as multiple choice would give the answers away; one gap with the passage as context is an ordinary question. Wrong choices come from the passage's own wrong words first, which were written for it, and never from another passage, whose words could be wrong for a reason the learner cannot see. Cost: a quiz checks one gap of a passage per session, not all of them.
+
