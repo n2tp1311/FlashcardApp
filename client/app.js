@@ -639,6 +639,20 @@ Object.assign(TRANSLATIONS.en, {
   "format.trueFalse": "True/False",
   "format.imageDef": "Image↔Def",
   "format.cloze": "Fill the gap",
+  "format.gapfill": "Fill the gaps",
+  "gapfill.title": "Fill the gaps",
+  "gapfill.gaps": "{n} gaps",
+  "gapfill.check": "Check",
+  "gapfill.progress": "{n} of {total} filled · tap a word to place it, tap a gap to clear it",
+  "gapfill.result": "{n} of {total} right",
+  "gapfill.suggested": "Suggested: {grade}",
+  "gapfill.empty": "Gap {n}, empty",
+  "gapfill.filled": "Gap {n}: {word}. Tap to clear",
+  "gapfill.right": "Gap {n}: {word}, right",
+  "gapfill.wrong": "Gap {n}: wrong, the answer is {word}",
+  "gapfill.help": "Each gap is written {{c1::word}}, {{c2::word}} and so on; every gap is hidden at once and filled from the word bank.",
+  "gapfill.notInQuiz": "Fill-the-gaps passages are studied as flashcards, not in a quiz.",
+  "card.editGapfill": "Edit passage",
   "cloze.blank": "blank",
   "cloze.blankHint": "blank, hint: {hint}",
   "cloze.sentence": "Sentence",
@@ -1053,6 +1067,7 @@ Object.assign(TRANSLATIONS.en, {
   "validate.enterLessonTitle": "Please enter a lesson title.",
   "validate.fillTermDef": "Please fill in both term and definition.",
   "validate.clozeGap": "Hide at least one word with {{c1::word}}.",
+  "validate.gapfillGaps": "A passage needs 2 to 8 gaps, written {{c1::word}}, {{c2::word}}…",
   "validate.fillMcq": "Please fill in the question, correct answer, and 1–4 wrong answers.",
   "validate.enterStatement": "Please enter a statement.",
   "validate.selectTrueFalse": "Please select True or False.",
@@ -1682,6 +1697,20 @@ Object.assign(TRANSLATIONS.vi, {
   "format.trueFalse": "Đúng/Sai",
   "format.imageDef": "Hình↔Định nghĩa",
   "format.cloze": "Điền vào chỗ trống",
+  "format.gapfill": "Điền từ vào đoạn văn",
+  "gapfill.title": "Điền từ vào chỗ trống",
+  "gapfill.gaps": "{n} chỗ trống",
+  "gapfill.check": "Kiểm tra",
+  "gapfill.progress": "Đã điền {n}/{total} · chạm một từ để điền, chạm chỗ trống để bỏ",
+  "gapfill.result": "Đúng {n}/{total}",
+  "gapfill.suggested": "Gợi ý: {grade}",
+  "gapfill.empty": "Chỗ trống {n}, chưa điền",
+  "gapfill.filled": "Chỗ trống {n}: {word}. Chạm để bỏ",
+  "gapfill.right": "Chỗ trống {n}: {word}, đúng",
+  "gapfill.wrong": "Chỗ trống {n}: sai, đáp án là {word}",
+  "gapfill.help": "Mỗi chỗ trống viết là {{c1::từ}}, {{c2::từ}}…; mọi chỗ trống được ẩn cùng lúc và điền từ ngân hàng từ.",
+  "gapfill.notInQuiz": "Đoạn văn điền từ được học ở chế độ thẻ, không có trong quiz.",
+  "card.editGapfill": "Sửa đoạn văn",
   "cloze.blank": "chỗ trống",
   "cloze.blankHint": "chỗ trống, gợi ý: {hint}",
   "cloze.sentence": "Câu",
@@ -2087,6 +2116,7 @@ Object.assign(TRANSLATIONS.vi, {
   "validate.enterLessonTitle": "Vui lòng nhập tiêu đề bài học.",
   "validate.fillTermDef": "Vui lòng nhập cả thuật ngữ và định nghĩa.",
   "validate.clozeGap": "Hãy ẩn ít nhất một từ bằng {{c1::từ}}.",
+  "validate.gapfillGaps": "Đoạn văn cần từ 2 đến 8 chỗ trống, viết {{c1::từ}}, {{c2::từ}}…",
   "validate.fillMcq": "Vui lòng nhập câu hỏi, đáp án đúng và 1–4 đáp án sai.",
   "validate.enterStatement": "Vui lòng nhập câu phát biểu.",
   "validate.selectTrueFalse": "Vui lòng chọn Đúng hoặc Sai.",
@@ -2421,8 +2451,9 @@ function speakText(text) {
 // gap, because renderLatex defers until KaTeX has loaded and the gap would not be there yet.
 var CLOZE_RE = /\{\{c(\d+)::([\s\S]*?)(?:::([\s\S]*?))?\}\}/g;
 
-function clozeSegments(text) {
-  var out = [], last = 0, m;
+// `all`: every gap number is hidden (a gap-fill passage), not only c1 (a cloze card).
+function clozeSegments(text, all) {
+  var out = [], last = 0, m, k = 0;
   text = typeof text === "string" ? text : "";
   function plain(str) {
     if (!str) return;
@@ -2433,7 +2464,7 @@ function clozeSegments(text) {
   CLOZE_RE.lastIndex = 0;
   while ((m = CLOZE_RE.exec(text))) {
     plain(text.slice(last, m.index));
-    if (m[1] === "1") out.push({ gap: true, answer: m[2], hint: m[3] || "" });
+    if (all || m[1] === "1") out.push({ gap: true, answer: m[2], hint: all ? "" : m[3] || "", index: k++ });
     else plain(m[2]);
     last = CLOZE_RE.lastIndex;
   }
@@ -2441,21 +2472,21 @@ function clozeSegments(text) {
   return out;
 }
 
-function clozeAnswer(text) {
-  return clozeSegments(text).filter(function(p) { return p.gap; })
+function clozeAnswer(text, all) {
+  return clozeSegments(text, all).filter(function(p) { return p.gap; })
     .map(function(p) { return p.answer.trim(); }).join(" … ");
 }
 
-function clozePlain(text, hide) {
-  return clozeSegments(text).map(function(p) {
+function clozePlain(text, hide, all) {
+  return clozeSegments(text, all).map(function(p) {
     if (!p.gap) return p.text;
     return hide ? "[" + (p.hint || "…") + "]" : p.answer;
   }).join("");
 }
 
-function renderCloze(text, el, reveal) {
+function renderCloze(text, el, reveal, all) {
   el.innerHTML = "";
-  clozeSegments(text).forEach(function(p) {
+  clozeSegments(text, all).forEach(function(p) {
     var span = document.createElement("span");
     if (!p.gap) {
       renderLatex(p.text, span);
@@ -2474,7 +2505,7 @@ function renderCloze(text, el, reveal) {
 // What the quiz speaker reads: the card's term and nothing else -- not the question wording,
 // not the options. A card without a term (multiple choice, true/false, image) has no button.
 function quizSpeechText(card) {
-  if (!card || !card.data || card.format === "mcq" || card.format === "true-false" || card.format === "image-def" || card.format === "cloze") return "";
+  if (!card || !card.data || card.format === "mcq" || card.format === "true-false" || card.format === "image-def" || card.format === "cloze" || card.format === "gapfill") return "";
   var term = typeof card.data.term === "string" ? card.data.term.trim() : "";
   if (term && window.getVocabularySpeechText) term = window.getVocabularySpeechText(term);
   return term;
@@ -3025,7 +3056,7 @@ var LocalStorageAdapter = (function() {
           else if (ca.format === "mcq")        displayText = d && d.question  ? d.question  : null;
           else if (ca.format === "true-false") displayText = d && d.statement ? d.statement : null;
           else if (ca.format === "image-def")  displayText = d && d.def       ? d.def       : null;
-          else if (ca.format === "cloze")      displayText = d && d.text      ? clozePlain(d.text, false) : null;
+          else if (ca.format === "cloze" || ca.format === "gapfill") displayText = d && d.text ? clozePlain(d.text, false, ca.format === "gapfill") : null;
           if (!displayText || displayText.toLowerCase().indexOf(ql) === -1) continue;
           cards.push({ id: ca.id, lesson_id: lesson.id, format: ca.format,
                        display_text: displayText, lesson_title: lesson.title,
@@ -4588,6 +4619,7 @@ function formatLabel(format) {
     : format === "mcq" ? t("format.mcq")
     : format === "true-false" ? t("format.trueFalse")
     : format === "cloze" ? t("format.cloze")
+    : format === "gapfill" ? t("format.gapfill")
     : t("format.imageDef");
 }
 
@@ -6182,9 +6214,10 @@ function renderCards() {
       } else if (card.format === "true-false") {
         renderLatex(card.data.statement, termEl);
         defEl.textContent = "✓ " + (card.data.correct === "true" ? t("common.true") : t("common.false"));
-      } else if (card.format === "cloze") {
-        renderCloze(card.data.text, termEl, false);
-        renderLatex("✓ " + clozeAnswer(card.data.text), defEl);
+      } else if (card.format === "cloze" || card.format === "gapfill") {
+        var allGaps = card.format === "gapfill";
+        renderCloze(card.data.text, termEl, false, allGaps);
+        renderLatex("✓ " + clozeAnswer(card.data.text, allGaps), defEl);
       } else {
         renderLatex(card.data.question, termEl);
         renderLatex("✓ " + card.data.correct, defEl);
@@ -6493,9 +6526,13 @@ function openEditCard(cardId, presetCard, fromStudy) {
       document.getElementById("card-image-drop-label").classList.add("hidden");
       document.getElementById("card-imagedef-input").value = card.data.def;
       openModal("card-imagedef");
-    } else if (card.format === "cloze") {
+    } else if (card.format === "cloze" || card.format === "gapfill") {
+      state.editingCloze = card;
+      var passage = card.format === "gapfill";
+      document.getElementById("modal-card-cloze-title").textContent = t(passage ? "card.editGapfill" : "card.editCloze");
+      document.getElementById("card-cloze-help").textContent = t(passage ? "gapfill.help" : "cloze.help");
       document.getElementById("card-cloze-input").value = card.data.text;
-      renderCloze(card.data.text, document.getElementById("card-cloze-preview"), true);
+      renderCloze(card.data.text, document.getElementById("card-cloze-preview"), true, passage);
       openModal("card-cloze");
     } else {
       document.getElementById("modal-card-mcq-title").textContent = t("card.editCard");
@@ -6543,7 +6580,7 @@ function offerLeech(card, res) {
 function openLeechPrompt(card, fromStudy) {
   state.leechPrompt = { card: card, fromStudy: fromStudy };
   var termEl = document.getElementById("leech-card-term");
-  var prompt = card.data && (card.format === "cloze" ? clozePlain(card.data.text, true)
+  var prompt = card.data && (card.format === "cloze" || card.format === "gapfill" ? clozePlain(card.data.text, true, card.format === "gapfill")
     : card.data.term || card.data.statement || card.data.question);
   termEl.classList.toggle("hidden", !prompt);
   if (prompt) renderLatex(prompt, termEl);
@@ -6622,7 +6659,8 @@ document.getElementById("btn-save-card-termdef").addEventListener("click", funct
   var input = document.getElementById("card-cloze-input");
   input.addEventListener("input", function() {
     clearTimeout(timer);
-    timer = setTimeout(function() { renderCloze(input.value, document.getElementById("card-cloze-preview"), true); }, 300);
+    var passage = !!state.editingCloze && state.editingCloze.format === "gapfill";
+    timer = setTimeout(function() { renderCloze(input.value, document.getElementById("card-cloze-preview"), true, passage); }, 300);
   });
 })();
 
@@ -6630,8 +6668,11 @@ document.getElementById("btn-save-card-termdef").addEventListener("click", funct
 document.getElementById("btn-save-card-cloze").addEventListener("click", function() {
   var input = document.getElementById("card-cloze-input");
   var text = input.value.trim();
-  if (!clozeAnswer(text)) { showFieldError(input, t("validate.clozeGap")); return; }
-  var data = { text: text };
+  var editing = state.editingCloze;
+  var passage = !!editing && editing.format === "gapfill";
+  var gaps = clozeSegments(text, passage).filter(function(p) { return p.gap; }).length;
+  if (passage ? gaps < 2 || gaps > 8 : !gaps) { showFieldError(input, t(passage ? "validate.gapfillGaps" : "validate.clozeGap")); return; }
+  var data = passage ? Object.assign({}, editing.data, { text: text }) : { text: text };
   var editingId = state.editingCardId;
   var editingLessonId = state.editingCardLessonId;
   if (!editingId) return;
@@ -8647,14 +8688,15 @@ function renderFlashcard() {
   // Optional "type before flip" scratchpad, on for the whole session in Flashcard & Write
   // mode (state.typeToCompare, set once in startStudy()) — reset per card, not tied to
   // grading in any way; purely a self-comparison aid.
+  var isGapfill = card.format === "gapfill";
   var typeInput = document.getElementById("fc-type-input");
-  typeInput.classList.toggle("hidden", !state.typeToCompare);
+  typeInput.classList.toggle("hidden", !state.typeToCompare || isGapfill);
   typeInput.value = "";
   typeInput.disabled = false;
   document.getElementById("fc-your-guess").classList.add("hidden");
   // Auto-focus only when the mode has it on — the user picked Flashcard & Write specifically to type on
   // every card, so this saves a click; when it's off the input isn't even visible.
-  if (state.typeToCompare) typeInput.focus();
+  if (state.typeToCompare && !isGapfill) typeInput.focus();
   state.fcHintSteps = 0;
   document.getElementById("fc-type-hint-text").innerHTML = "";
   document.getElementById("fc-hint-cap").classList.add("hidden");
@@ -8752,6 +8794,11 @@ function renderFlashcard() {
     renderCloze(card.data.text, frontEl, false);
     renderCloze(card.data.text, backEl, true);
     frontAudioBtn.parentNode.style.visibility = "";
+  } else if (isGapfill) {
+    state.studyFrontText = clozePlain(card.data.text, true, true);
+    state.studyBackText  = clozeAnswer(card.data.text, true);
+    frontEl.innerHTML = "";
+    backEl.innerHTML = "";
   } else {
     front = card.data.question;
     back  = card.data.correct;
@@ -8764,7 +8811,18 @@ function renderFlashcard() {
   }
 
   document.getElementById("fc-type-hint-row").classList.toggle("hidden",
-    !state.typeToCompare || !hintAvailable(state.studyBackText));
+    !state.typeToCompare || isGapfill || !hintAvailable(state.studyBackText));
+
+  // A gap-fill passage replaces the flip card: its front is the exercise, and Check takes
+  // the place of Show answer.
+  document.getElementById("fc-scene").classList.toggle("hidden", isGapfill);
+  document.getElementById("fc-gapfill").classList.toggle("hidden", !isGapfill);
+  document.getElementById("fc-reveal-label").textContent = t(isGapfill ? "gapfill.check" : "study.showAnswer");
+  ["btn-fc-learning", "btn-fc-hard", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
+    document.getElementById(id).classList.remove("rate-suggest");
+  });
+  state.gf = isGapfill ? newGapfill(card) : null;
+  renderGapfill();
 
   var expContainer = document.getElementById("fc-explanation");
   expContainer.innerHTML = "";
@@ -8822,6 +8880,192 @@ function renderFlashcard() {
   document.getElementById("btn-fc-next").innerHTML = i === cards.length - 1 ? t("study.finish") : t("study.next") + " " + ICON_ARROW_RIGHT;
 }
 
+/* ---- Gap fill: a passage whose gaps are filled from a word bank ---- */
+
+function gapfillWords(card) {
+  var answers = clozeSegments(card.data.text, true).filter(function(p) { return p.gap; })
+    .map(function(p) { return p.answer.trim(); });
+  return { answers: answers, bank: shuffle(answers.concat((card.data.distractors || []).map(function(w) { return w.trim(); }))) };
+}
+
+function newGapfill(card) {
+  var w = gapfillWords(card);
+  // fill[k] is the bank index placed in gap k, or -1.
+  return { cardId: card.id, answers: w.answers, bank: w.bank,
+           fill: w.answers.map(function() { return -1; }), target: 0, checked: false };
+}
+
+function gapfillSame(a, b) {
+  return a.replace(/\s+/g, " ").trim().toLowerCase() === b.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+// 0 wrong: Know It. 1 wrong: Hard. More: Learning. The learner still picks the grade.
+function gapfillSuggestion(wrong) {
+  return wrong === 0 ? "btn-fc-known" : wrong === 1 ? "btn-fc-hard" : "btn-fc-learning";
+}
+
+function gapfillNextEmpty(st) {
+  if (st.fill[st.target] === -1) return st.target;
+  return st.fill.indexOf(-1);
+}
+
+function placeGapfillWord(bankIndex) {
+  var st = state.gf;
+  if (!st || st.checked || st.fill.indexOf(bankIndex) !== -1 || bankIndex >= st.bank.length) return;
+  var k = gapfillNextEmpty(st);
+  if (k === -1) return;
+  st.fill[k] = bankIndex;
+  haptic("tick");
+  st.target = st.fill.indexOf(-1) === -1 ? 0 : st.fill.indexOf(-1);
+  renderGapfill();
+}
+
+function clearGapfillGap(k) {
+  var st = state.gf;
+  if (!st || st.checked) return;
+  st.fill[k] = -1;
+  st.target = k;
+  renderGapfill();
+}
+
+function checkGapfill() {
+  var st = state.gf;
+  if (!st || st.checked || st.fill.indexOf(-1) !== -1) return;
+  st.checked = true;
+  var wrong = st.fill.filter(function(b, k) { return !gapfillSame(st.bank[b], st.answers[k]); }).length;
+  st.wrong = wrong;
+  haptic(wrong ? "error" : "success");
+  playSound(wrong ? "wrong" : "correct");
+  renderGapfill();
+  if (!state.studyHasFlippedCard) {
+    state.studyHasFlippedCard = true;
+    setMarkButtonsEnabled(true);
+    setAwaitingReveal(false);
+  }
+  document.getElementById(gapfillSuggestion(wrong)).classList.add("rate-suggest");
+  var expContainer = document.getElementById("fc-explanation");
+  expContainer.classList.toggle("hidden", expContainer.innerHTML === "");
+}
+
+function gapfillKey(e) {
+  var st = state.gf;
+  if (!st || st.checked || e.metaKey || e.ctrlKey || e.altKey) return false;
+  if (e.key === "Backspace") {
+    var last = -1;
+    st.fill.forEach(function(b, k) { if (b !== -1) last = k; });
+    if (last !== -1) clearGapfillGap(last);
+    return true;
+  }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 9) { placeGapfillWord(n - 1); return true; }
+  return false;
+}
+
+function renderGapfill() {
+  var el = document.getElementById("fc-gapfill");
+  var st = state.gf;
+  var revealBtn = document.getElementById("btn-fc-reveal");
+  if (!st) { el.innerHTML = ""; revealBtn.disabled = false; return; }
+  var card = state.studyCards[state.studyIndex];
+  var filled = st.fill.filter(function(b) { return b !== -1; }).length;
+  revealBtn.disabled = filled < st.answers.length;
+  el.innerHTML = "";
+
+  var head = document.createElement("div");
+  head.className = "gf-head";
+  var title = document.createElement("span");
+  title.textContent = t("gapfill.title");
+  var meta = document.createElement("span");
+  meta.textContent = (card.data.title ? card.data.title + " · " : "") + t("gapfill.gaps", { n: st.answers.length });
+  head.appendChild(title);
+  head.appendChild(meta);
+  el.appendChild(head);
+
+  var text = document.createElement("div");
+  text.className = "gf-text";
+  var next = st.checked ? -1 : gapfillNextEmpty(st);
+  clozeSegments(card.data.text, true).forEach(function(p) {
+    if (!p.gap) {
+      var span = document.createElement("span");
+      renderLatex(p.text, span);
+      text.appendChild(span);
+      return;
+    }
+    var k = p.index, b = st.fill[k];
+    var gap = document.createElement(st.checked ? "span" : "button");
+    if (!st.checked) { gap.type = "button"; gap.dataset.gap = k; }
+    gap.className = "gf-blank";
+    if (st.checked) {
+      var right = gapfillSame(st.bank[b], st.answers[k]);
+      gap.classList.add(right ? "is-right" : "is-wrong");
+      if (right) renderLatex(st.answers[k], gap);
+      else {
+        var was = document.createElement("s");
+        renderLatex(st.bank[b], was);
+        var fix = document.createElement("b");
+        renderLatex(st.answers[k], fix);
+        gap.appendChild(was);
+        gap.appendChild(fix);
+      }
+      gap.setAttribute("aria-label", t(right ? "gapfill.right" : "gapfill.wrong", { n: k + 1, word: st.answers[k] }));
+    } else if (b !== -1) {
+      gap.classList.add("is-filled");
+      renderLatex(st.bank[b], gap);
+      gap.setAttribute("aria-label", t("gapfill.filled", { n: k + 1, word: st.bank[b] }));
+    } else {
+      if (k === next) gap.classList.add("is-next");
+      gap.textContent = String(k + 1);
+      gap.setAttribute("aria-label", t("gapfill.empty", { n: k + 1 }));
+    }
+    text.appendChild(gap);
+  });
+  el.appendChild(text);
+
+  if (!st.checked) {
+    var bank = document.createElement("div");
+    bank.className = "gf-bank";
+    st.bank.forEach(function(word, i) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "gf-chip";
+      chip.dataset.word = i;
+      var used = st.fill.indexOf(i) !== -1;
+      if (used) { chip.classList.add("is-used"); chip.disabled = true; chip.setAttribute("aria-hidden", "true"); }
+      renderLatex(word, chip);
+      bank.appendChild(chip);
+    });
+    el.appendChild(bank);
+  }
+
+  var foot = document.createElement("div");
+  foot.className = "gf-foot";
+  if (st.checked) {
+    var result = document.createElement("span");
+    result.className = "gf-result";
+    result.textContent = t("gapfill.result", { n: st.answers.length - st.wrong, total: st.answers.length });
+    var hint = document.createElement("span");
+    hint.textContent = t("gapfill.suggested", { grade: t({ "btn-fc-known": "study.knowIt", "btn-fc-hard": "study.hard", "btn-fc-learning": "study.learning" }[gapfillSuggestion(st.wrong)]) });
+    foot.appendChild(result);
+    foot.appendChild(hint);
+  } else {
+    var progress = document.createElement("span");
+    progress.textContent = t("gapfill.progress", { n: filled, total: st.answers.length });
+    foot.appendChild(progress);
+  }
+  el.appendChild(foot);
+}
+
+document.getElementById("fc-gapfill").addEventListener("click", function(e) {
+  var chip = e.target.closest(".gf-chip");
+  if (chip) { placeGapfillWord(parseInt(chip.dataset.word, 10)); return; }
+  var gap = e.target.closest("button.gf-blank");
+  if (gap) {
+    var k = parseInt(gap.dataset.gap, 10);
+    if (state.gf && state.gf.fill[k] !== -1) clearGapfillGap(k);
+    else if (state.gf) { state.gf.target = k; renderGapfill(); }
+  }
+});
+
 function renderFcDots() {
   var dots = document.getElementById("fc-dots");
   dots.innerHTML = "";
@@ -8865,6 +9109,8 @@ function renderFcDots() {
 document.getElementById("fc-scene").addEventListener("click", function() {
   // Forced-retype drill pending — don't let the user flip away from the reinforcement step.
   if (state.fcForcedRetype) return;
+  // Show answer and Space arrive here too; for a gap-fill passage they mean Check.
+  if (state.gf) { checkGapfill(); return; }
   // A click still fires after a text-selection drag (mousedown+mouseup on the
   // same element) — skip the flip so selecting text to copy/translate doesn't flip the card.
   var sel = window.getSelection();
@@ -9287,7 +9533,7 @@ function markCard(known, grade, forceRetype) {
   var advanceDelay = stillNotDue ? 1200 : 400;
   // In Flashcard & Write mode, Learning/Hard triggers a forced retype of the answer before
   // advancing — the two grades signaling the card didn't stick, so it's worth reinforcing.
-  if (forceRetype && state.typeToCompare) {
+  if (forceRetype && state.typeToCompare && card.format !== "gapfill") {
     beginForcedRetype(advanceDelay);
   } else {
     scheduleFlashcardAdvance(advanceDelay);
@@ -9374,6 +9620,9 @@ document.getElementById("btn-fc-back").addEventListener("click", function() {
    ============================ */
 
 function startQuiz() {
+  // Gap-fill passages have no single right option to pick; they are studied as flashcards.
+  state.quizCards = (state.quizCards || []).filter(function(c) { return c.format !== "gapfill"; });
+  if (!state.quizCards.length) { showToast(t("gapfill.notInQuiz")); return; }
   state.quizIndex  = 0;
   state.quizScore  = 0;
   state.quizResults = [];
@@ -10417,9 +10666,9 @@ function buildStatsCardEl(card, stats) {
   } else if (card.format === "image-def") {
     qEl.textContent = t("card.imagePlaceholder");
     renderLatex(card.data.def, aEl);
-  } else if (card.format === "cloze") {
-    renderCloze(card.data.text, qEl, false);
-    renderLatex(clozeAnswer(card.data.text), aEl);
+  } else if (card.format === "cloze" || card.format === "gapfill") {
+    renderCloze(card.data.text, qEl, false, card.format === "gapfill");
+    renderLatex(clozeAnswer(card.data.text, card.format === "gapfill"), aEl);
   } else {
     renderLatex(card.data.question, qEl);
     renderLatex(card.data.correct,  aEl);
@@ -10474,7 +10723,7 @@ function renderCardHistory(cardId) {
     if (card.format === "term-def") renderLatex(data.term, promptEl);
     else if (card.format === "true-false") renderLatex(data.statement, promptEl);
     else if (card.format === "image-def") promptEl.textContent = t("card.imagePlaceholder");
-    else if (card.format === "cloze") renderCloze(data.text, promptEl, false);
+    else if (card.format === "cloze" || card.format === "gapfill") renderCloze(data.text, promptEl, false, card.format === "gapfill");
     else renderLatex(data.question || "", promptEl);
     historyPanel.innerHTML = "";
     var heading = document.createElement("div");
@@ -11411,8 +11660,8 @@ function renderBulkImportPreview(raw) {
         renderLatex(card.data.term, termEl);
       } else if (card.format === "true-false") {
         renderLatex(card.data.statement, termEl);
-      } else if (card.format === "cloze") {
-        renderCloze(card.data.text, termEl, false);
+      } else if (card.format === "cloze" || card.format === "gapfill") {
+        renderCloze(card.data.text, termEl, false, card.format === "gapfill");
       } else {
         renderLatex(card.data.question, termEl);
       }
@@ -14063,6 +14312,8 @@ document.addEventListener("keydown", function(e) {
     // keydown handling runs — without it, the digit that triggered the shortcut gets typed
     // into the just-focused retype box as its default action. Applied to all four grading
     // keys for consistency, though only 1/2 can currently reach a focused input this way.
+    // Before Check, digits pick words from the bank and Backspace takes the last one back.
+    else if (gapfillKey(e)) e.preventDefault();
     else if (e.key === "1") { e.preventDefault(); document.getElementById("btn-fc-learning").click(); }
     else if (e.key === "2") { e.preventDefault(); document.getElementById("btn-fc-hard").click(); }
     else if (e.key === "3") { e.preventDefault(); document.getElementById("btn-fc-known").click(); }

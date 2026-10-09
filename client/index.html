@@ -616,6 +616,7 @@
       </div>
     </div>
   </div>
+  <div class="gf hidden" id="fc-gapfill"></div>
   <div id="fc-selection-action" class="fc-selection-action hidden">
     <button type="button" class="btn btn-sm btn-primary" id="btn-save-selected-word" data-i18n="study.saveWord">Save as English word</button>
   </div>
@@ -627,7 +628,7 @@
   <div class="fc-nav">
     <button class="btn btn-outline btn-lg" id="btn-fc-prev" data-i18n="study.prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Prev</button>
     <div class="fc-mark-btns" id="fc-mark-btns">
-      <button type="button" class="btn btn-primary btn-mark fc-reveal-btn" id="btn-fc-reveal" data-i18n="study.showAnswer">Show answer</button>
+      <button type="button" class="btn btn-primary btn-mark fc-reveal-btn" id="btn-fc-reveal"><span id="fc-reveal-label" data-i18n="study.showAnswer">Show answer</span></button>
       <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Learning (1)" data-i18n-title="study.stillLearningHint" data-i18n="study.learning"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Learning<span class="mark-int" id="fc-int-learning"></span></button>
       <button class="btn btn-warning btn-mark" id="btn-fc-hard" title="Hard (2)" data-i18n-title="study.hardHint" data-i18n="study.hard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg> Hard<span class="mark-int" id="fc-int-hard"></span></button>
       <button class="btn btn-success btn-mark" id="btn-fc-known" title="Know It (3)" data-i18n-title="study.knowItHint" data-i18n="study.knowIt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Know It<span class="mark-int" id="fc-int-known"></span></button>
@@ -1162,7 +1163,7 @@
     <div class="modal-body">
       <label class="form-label" for="card-cloze-input" data-i18n="cloze.sentence">Sentence</label>
       <textarea id="card-cloze-input" class="form-textarea" rows="4"></textarea>
-      <p class="form-hint" data-i18n="cloze.help">Hidden words are written {{c1::word}}. Every c1 is hidden together on this card.</p>
+      <p class="form-hint" id="card-cloze-help" data-i18n="cloze.help">Hidden words are written {{c1::word}}. Every c1 is hidden together on this card.</p>
       <div class="preview-label" data-i18n="form.previewColon">Preview:</div>
       <div id="card-cloze-preview" class="latex-preview"></div>
     </div>

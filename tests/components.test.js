@@ -18,7 +18,7 @@ test("the grade row is one Show answer button until the card is flipped", functi
   assert.match(css, /\.fc-mark-btns\.awaiting-reveal \.btn-mark:not\(\.fc-reveal-btn\) \{ display: none; \}/);
   assert.match(app, /setMarkButtonsEnabled\(false\);\n  setAwaitingReveal\(true\);/, "a new card must start awaiting the reveal");
   assert.match(app, /setMarkButtonsEnabled\(true\);\n    setAwaitingReveal\(false\);/, "the first flip must show the grades");
-  assert.equal(app.split('"study.showAnswer"').length - 1, 2, "Show answer needs English and Vietnamese");
+  assert.equal(app.split('"study.showAnswer":').length - 1, 2, "Show answer needs English and Vietnamese");
 });
 
 test("selected options are tonal and the screen's main action is filled", function() {

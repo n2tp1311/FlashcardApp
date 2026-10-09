@@ -5121,3 +5121,43 @@ button.leech-pill:hover { filter: brightness(0.96); }
   font-weight: 600; line-height: 1.35;
 }
 .cloze-gap.revealed { min-width: 0; text-align: inherit; background: var(--success-light); color: var(--success); border-bottom-color: var(--success); }
+
+/* Gap fill: the passage stands where the flip card would, on the same raised face. Gaps are
+   slots in the line (dashed until filled, the next one outlined); the bank's words are keys
+   standing on a ledge, and a used one leaves its empty socket so the bank does not reflow. */
+.gf {
+  background: var(--surface); border: 2px solid color-mix(in srgb, var(--primary) 40%, var(--border)); border-radius: var(--radius);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--primary) 30%, var(--border)); padding: 28px 32px 24px; display: grid; gap: 22px;
+  margin-bottom: 16px;
+}
+:root[data-theme="dark"] .gf { border-color: var(--border); box-shadow: 0 5px 0 var(--ledge); }
+.gf-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: .8125rem; color: var(--text2); font-weight: 600; }
+.gf-text { font-size: 1.125rem; line-height: 2.3; color: var(--text); max-width: 62ch; overflow-wrap: anywhere; }
+.gf-blank {
+  display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; min-width: 7.5em; min-height: 1.9em; padding: 0 .6em; margin: 0 .15em;
+  border-radius: 8px; border: 2px dashed color-mix(in srgb, var(--primary) 45%, var(--border)); background: color-mix(in srgb, var(--primary-light) 50%, var(--surface));
+  color: var(--text2); font: inherit; font-size: .95em; line-height: 1.3; cursor: pointer;
+}
+.gf-blank.is-next { border-style: solid; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+.gf-blank.is-filled { border-style: solid; border-color: var(--border); background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 2px 0 var(--ledge); }
+.gf-blank.is-right { cursor: default; border: 2px solid color-mix(in srgb, var(--success) 45%, transparent); background: var(--success-soft); color: var(--success-soft-text); font-weight: 600; }
+.gf-blank.is-wrong { cursor: default; border: 2px solid color-mix(in srgb, var(--danger) 45%, transparent); background: var(--danger-soft); color: var(--danger-soft-text); font-weight: 600; gap: .45em; }
+.gf-blank.is-wrong s { opacity: .75; font-weight: 500; }
+.gf-blank.is-wrong b { color: var(--success-soft-text); background: var(--success-soft); padding: 0 .35em; border-radius: 4px; }
+.gf-bank { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 18px; border-top: 1px solid var(--border); }
+.gf-chip {
+  font: inherit; font-size: .95rem; font-weight: 600; padding: 8px 14px; min-height: 44px; border-radius: var(--radius); border: 2px solid var(--border);
+  background: var(--surface); color: var(--text); box-shadow: 0 3px 0 var(--ledge); cursor: pointer;
+}
+.gf-chip:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--ledge); }
+.gf-chip.is-used { color: transparent; background: var(--surface2); border-style: dashed; box-shadow: none; cursor: default; }
+.gf-foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 12px; font-size: .875rem; color: var(--text2); }
+.gf-result { font-size: 1rem; font-weight: 700; color: var(--text); }
+/* The grade the gap count points to; the learner still chooses. */
+.btn-mark.rate-suggest { outline: 3px solid var(--primary); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .gf { padding: 20px 18px 18px; gap: 18px; }
+  .gf-text { font-size: 1.0625rem; line-height: 2.2; }
+  .gf-blank { min-width: 6em; }
+}
+@media (prefers-reduced-motion: reduce) { .gf-chip:active:not(:disabled) { transform: none; } }

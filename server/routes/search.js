@@ -11,6 +11,7 @@ const CARD_TEXT =
   "WHEN 'true-false' THEN json_extract(ca.data, '$.statement') " +
   "WHEN 'image-def'  THEN json_extract(ca.data, '$.def') " +
   "WHEN 'cloze'      THEN json_extract(ca.data, '$.text') " +
+  "WHEN 'gapfill'    THEN json_extract(ca.data, '$.text') " +
   "ELSE NULL END";
 
 router.get("/", requireAuth, (req, res) => {

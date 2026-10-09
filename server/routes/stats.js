@@ -604,7 +604,7 @@ router.get("/analytics/export", requireAuth, function(req, res) {
   rows.forEach(function(row) {
     var data;
     try { data = JSON.parse(row.card_data); } catch(_) { data = {}; }
-    var front = row.card_format === "image-def" ? "[image]" : (data.term || data.question || data.statement || "");
+    var front = row.card_format === "image-def" ? "[image]" : (data.term || data.question || data.statement || data.text || "");
     var durationSec = row.duration_ms != null ? Math.round(row.duration_ms / 1000) : "";
     lines.push([csvField(row.date), csvField(row.hour), csvField(row.class_name), csvField(row.lesson), csvField(front),
       csvField(row.mode), row.result === 1 ? "correct" : "incorrect", durationSec].join(","));
