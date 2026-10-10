@@ -204,10 +204,11 @@ test("only a finished round of a saved cram is recorded, once", () => {
   assert.equal(calls.length, 1);
 });
 
-test("saved crams are wired: screen, modal, Home, select bar, server-only, every string translated", () => {
-  for (const id of ["screen-cram", "modal-cram", "home-crams", "btn-cram-selected", "btn-cram-start", "cram-date"])
+test("saved crams are wired: screen, modal, Home, server-only, every string translated", () => {
+  for (const id of ["screen-cram", "modal-cram", "home-crams", "btn-cram-start", "cram-date"])
     assert.ok(html.includes('id="' + id + '"'), id);
-  assert.match(app, /btn-cram-selected"\)\.classList\.toggle\("hidden", !IS_SERVER\)/);
+  // The learner took "Cram for a test" off the lesson select bar.
+  assert.ok(!html.includes('id="btn-cram-selected"') && !app.includes("btn-cram-selected"));
   assert.match(app, /if \(!IS_SERVER \|\| !store\.getCrams\)/);
   assert.match(app, /cram: "results\.backToCram"/);
   assert.match(app, /else if \(target === "cram"\) renderCram\(\);/);

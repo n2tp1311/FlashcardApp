@@ -4906,8 +4906,6 @@ function updateSelectBar() {
   var n = state.selectedLessonIds.length;
   document.getElementById("select-count").textContent = t("common.nSelected", { n: n });
   document.getElementById("btn-study-selected").disabled = n === 0;
-  document.getElementById("btn-cram-selected").disabled = n === 0;
-  document.getElementById("btn-cram-selected").classList.toggle("hidden", !IS_SERVER);
   document.getElementById("btn-delete-selected-lessons").disabled = n === 0;
   var total = (state.currentClassLessons || []).length;
   document.getElementById("select-all-lessons").checked = total > 0 && n === total;
@@ -8107,11 +8105,6 @@ document.getElementById("btn-cram-save").addEventListener("click", function() {
   }).catch(function(err) {
     cramModalError(err.message);
   }).then(function() { btn.disabled = false; });
-});
-
-document.getElementById("btn-cram-selected").addEventListener("click", function() {
-  var ids = state.selectedLessonIds.slice();
-  if (ids.length) openCramModal({ lessonIds: ids });
 });
 
 document.getElementById("btn-cram-start").addEventListener("click", function() {
