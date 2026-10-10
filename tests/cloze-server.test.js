@@ -177,3 +177,24 @@ test("layout moves a gap card with its term card into the new lesson", async fun
   assert.deepEqual(rows.map(x => x.external_id), ["s:17", "s:17:cz1", "s:17:cz2"]);
   assert.ok(rows.every(x => x.title === "7b. Dropout"));
 });
+
+test("remove-cards deletes the listed cards of that class outright, with their reviews, and leaves no tombstone", async () => {
+  db.exec(`
+    INSERT INTO classes (id, user_id, name) VALUES ('k9', 'u1', 'Other');
+    INSERT INTO lessons (id, class_id, title, format) VALUES ('l9', 'k9', 'Other', 'term-def');
+    INSERT INTO cards (id, lesson_id, format, data, sort_order, external_id) VALUES
+      ('g1', 'l1', 'cloze', '{"text":"{{c1::Dropout}} disables units."}', 2, 's:17:g1'),
+      ('g9', 'l9', 'cloze', '{"text":"{{c1::x}} y."}', 0, 's:99:g1');
+  `);
+  const post = (body, user = "u1") => fetch(base + "/api/integrations/knowledge/remove-cards", {
+    method: "POST", headers: { "Content-Type": "application/json", "x-user": user }, body: JSON.stringify(body) });
+  assert.equal((await post({ class_id: "k1", external_ids: [] })).status, 400);
+  assert.equal((await post({ class_id: "k1", external_ids: ["s:17:g1"] }, "u2")).status, 404);
+  const tombs = db.prepare("SELECT count(*) AS n FROM external_card_deletions").get().n;
+  // A card in another class is out of reach even when named.
+  const r = await post({ class_id: "k1", external_ids: ["s:17:g1", "s:99:g1", "s:nope"] });
+  assert.deepEqual(await r.json(), { removed: 1, not_found: 2 });
+  assert.equal(db.prepare("SELECT count(*) AS n FROM cards WHERE id = 'g1'").get().n, 0);
+  assert.equal(db.prepare("SELECT count(*) AS n FROM cards WHERE id IN ('g9', 'c1')").get().n, 2);
+  assert.equal(db.prepare("SELECT count(*) AS n FROM external_card_deletions").get().n, tombs);
+});

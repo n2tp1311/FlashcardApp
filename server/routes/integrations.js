@@ -23,6 +23,7 @@ const MAX_ID_LEN = 128;
 const MAX_TEXT_LEN = 20000;
 const MAX_LINK_CARDS = 2000;
 const MAX_ADD_CARDS = 500;
+const MAX_REMOVE_CARDS = 1000;
 const MAX_CONVERT_CARDS = 500;
 const MAX_TITLE_LEN = 200;
 const MAX_SOURCES = 500;
@@ -846,6 +847,29 @@ router.get("/vocabulary", (req, res) => {
 });
 
 // POST /api/integrations/knowledge/vocabulary/:id/complete — add the enriched word to its deck.
+// POST /remove-cards { class_id, external_ids }: delete cards KnowledgeApp made, outright,
+// with their reviews. A `deleted` event only flags a card for the learner to confirm; this is
+// for a kind of card the learner asked KnowledgeApp to take back as a whole (retired gap cards).
+// No deletion tombstone: the learner gave no verdict on any one card, so none goes back.
+router.post("/remove-cards", (req, res) => {
+  const body = req.body || {};
+  const ids = body.external_ids;
+  if (!isId(body.class_id)) return res.status(400).json({ error: "class_id required" });
+  if (!Array.isArray(ids) || ids.length < 1 || ids.length > MAX_REMOVE_CARDS || !ids.every(isId))
+    return res.status(400).json({ error: "external_ids must be an array of 1-" + MAX_REMOVE_CARDS + " ids" });
+  const cls = ownClass(req.userId, body.class_id);
+  if (!cls) return res.status(404).json({ error: "Not found" });
+  let removed = 0, notFound = 0;
+  db.transaction(() => {
+    const stmt = db.prepare("DELETE FROM cards WHERE external_id = ? AND lesson_id IN (SELECT id FROM lessons WHERE class_id = ?)");
+    ids.forEach(ext => {
+      const n = stmt.run(ext, cls.id).changes;
+      if (n) removed += n; else notFound++;
+    });
+  })();
+  res.json({ removed, not_found: notFound });
+});
+
 router.post("/vocabulary/:id/complete", (req, res) => {
   const body = req.body || {};
   const fields = [
