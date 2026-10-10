@@ -430,6 +430,7 @@ Object.assign(TRANSLATIONS.en, {
   "sort.sortBy": "Sort by",
   "sort.level": "Level",
   "sort.nameAZ": "Name (A–Z)",
+  "sort.bookOrder": "Book order",
   "sort.dueCount": "Due count",
   "sort.dateAdded": "Date added",
   "sort.lastActivity": "Last activity",
@@ -1499,6 +1500,7 @@ Object.assign(TRANSLATIONS.vi, {
   "sort.sortBy": "Sắp xếp theo",
   "sort.level": "Cấp độ",
   "sort.nameAZ": "Tên (A–Z)",
+  "sort.bookOrder": "Thứ tự trong sách",
   "sort.dueCount": "Số thẻ cần ôn",
   "sort.dateAdded": "Ngày thêm",
   "sort.lastActivity": "Hoạt động gần nhất",
@@ -3247,7 +3249,7 @@ var state = {
 
   // Lesson sort preference (persisted in localStorage)
   currentLessonSort: (function() {
-    try { return localStorage.getItem("fc-lesson-sort") || "date_added"; } catch (_) { return "date_added"; }
+    try { return localStorage.getItem("fc-lesson-sort") || "book_order"; } catch (_) { return "book_order"; }
   }()),
 
   // Class sort preference (persisted in localStorage)
@@ -3258,7 +3260,10 @@ var state = {
     try { return localStorage.getItem("fc-class-sort-dir") || "asc"; } catch (_) { return "asc"; }
   }()),
   currentLessonSortDir: (function() {
-    try { return localStorage.getItem("fc-lesson-sort-dir") || "desc"; } catch (_) { return "desc"; }
+    // Book order reads first-to-last; the older default sorts kept newest-first.
+    try {
+      return localStorage.getItem("fc-lesson-sort-dir") || (localStorage.getItem("fc-lesson-sort") ? "desc" : "asc");
+    } catch (_) { return "asc"; }
   }()),
 
   // Home view toggle: "grid" or "list" (persisted)
@@ -4250,6 +4255,11 @@ function openClass(classId) {
 document.getElementById("lesson-sort-select").addEventListener("change", function() {
   state.currentLessonSort = this.value;
   try { localStorage.setItem("fc-lesson-sort", this.value); } catch (_) {}
+  if (this.value === "book_order" && state.currentLessonSortDir !== "asc") {
+    state.currentLessonSortDir = "asc";
+    try { localStorage.setItem("fc-lesson-sort-dir", "asc"); } catch (_) {}
+    document.getElementById("lesson-sort-dir").innerHTML = ICON_CHEVRON_UP;
+  }
   renderLessons();
 });
 
@@ -4531,7 +4541,11 @@ function sortLessons(lessons, dueInfo, key, dir) {
   var copy = lessons.slice();
   copy.sort(function(a, b) {
     var r;
-    if (key === "date_added") {
+    if (key === "book_order") {
+      // sort_order is the order the source set (KnowledgeApp's layout puts lessons in chapter order);
+      // created_at breaks ties because sort_order is count-based and can repeat.
+      r = (a.sort_order || 0) - (b.sort_order || 0) || (a.created_at || 0) - (b.created_at || 0);
+    } else if (key === "date_added") {
       r = (a.created_at || 0) - (b.created_at || 0);
     } else if (key === "name") {
       // Numeric, so "2. Summarizing" comes before "10. Combining" in a numbered course.
@@ -4647,7 +4661,7 @@ function _renderLessonItems(lessons, accMap) {
   var lessonIds = filtered.map(function(l) { return l.id; });
 
   store.getDueLessons(lessonIds).then(function(dueInfo) {
-    var sortKey = state.currentLessonSort || "date_added";
+    var sortKey = state.currentLessonSort || "book_order";
     filtered = sortLessons(filtered, dueInfo, sortKey, state.currentLessonSortDir);
     var now = Math.floor(Date.now() / 1000);
 
