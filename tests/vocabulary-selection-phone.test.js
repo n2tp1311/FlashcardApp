@@ -58,3 +58,16 @@ test("on a desktop the chip stays in the flow under the card", async function() 
   assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById("fc-selection-action")).position), "static");
   await page.close();
 });
+
+test("on a phone the Saved confirmation is opaque, so the flip hint under it does not show through", async function() {
+  const page = await studyScreen(390, 844);
+  const r = await page.evaluate(function() {
+    const button = document.getElementById("btn-save-selected-word");
+    button.disabled = true;
+    const style = getComputedStyle(button);
+    return { opacity: style.opacity, background: style.backgroundColor };
+  });
+  assert.equal(r.opacity, "1", JSON.stringify(r));
+  assert.ok(!/rgba\(.*,\s*0(\.\d+)?\)$/.test(r.background), "background is not translucent: " + JSON.stringify(r));
+  await page.close();
+});

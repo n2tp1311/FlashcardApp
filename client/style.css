@@ -4842,6 +4842,9 @@ button.leech-pill:hover { filter: brightness(0.96); }
     pointer-events: none;
   }
   #fc-selection-action .btn { pointer-events: auto; box-shadow: var(--shadow-lg); }
+  /* Floating over the card, the half-transparent disabled state let the "Tap or click to
+     flip" hint show through the "Saved" confirmation. */
+  #fc-selection-action .btn:disabled { opacity: 1; background: var(--surface2); color: var(--text2); }
 }
 
 /* Study headers: the progress bar is centred on the page, over the card and options below it.
