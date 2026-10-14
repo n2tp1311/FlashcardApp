@@ -1141,3 +1141,15 @@ Quizzes leave passages out until they have their own question type; offered as m
 
 Update, same day: quizzes ask a passage one gap at a time, the other gaps filled in. All gaps at once as multiple choice would give the answers away; one gap with the passage as context is an ordinary question. Wrong choices come from the passage's own wrong words first, which were written for it, and never from another passage, whose words could be wrong for a reason the learner cannot see. Cost: a quiz checks one gap of a passage per session, not all of them.
 
+## 2026-10-14 — Stats from a rollup kept by triggers, not recomputed on each read
+
+Measured on a synthetic account the size of the real one (80k cards, 120k attempts): `/api/stats/analytics` took 0.98 s and `/api/stats/dashboard` 0.38 s, and node-sqlite3-wasm is synchronous, so for that long the server answered nobody. Seven of analytics' queries and four of dashboard's rescanned the same attempts, by user and date, for each chart.
+
+`attempt_daily` holds those attempts summed per user, UTC day, source, grade and correct: about 3k rows for 120k attempts, and the heatmap query fell from 182 ms to 1 ms. It is derived data in the sense of *Designing Data-Intensive Applications*: attempts stays the source of truth and `lib/attemptDaily.rebuild` recomputes the table from it, and the test holds the incrementally kept table equal to a rebuild after inserts, undo deletes, edits, a duplicate import and an account delete.
+
+**Triggers, not route code.** Attempts are written by grading, deleted by undo, re-sent by the full-account import (`INSERT OR IGNORE`) and removed by an account's cascade delete. Updating the rollup in each route would leave the next writer to remember it; a trigger runs inside whichever transaction wrote the attempt, so the two cannot diverge. Cost: a migration that rebuilds `attempts` drops the triggers with the old table and must call `attemptDaily.install` again; `db.js` says so where the migration is. The write cost was too small to measure, about 15 ms per graded attempt either way, nearly all of it the commit's fsync.
+
+**Whole days, not seconds.** Analytics used to count back `days × 86400` seconds from now, which cut the oldest heatmap day partway (331 of its 1,024 attempts in the measurement); the dashboard had already switched to calendar days for the same reason. Weeks are now seven UTC days counted back from today, so a bucket edge can move by up to a day. The dashboard's figures came out identical to before.
+
+**No index for the per-card queries.** The lesson breakdown and the struggling lessons need each attempt's card, which the rollup drops. An index on `(user_id, card_id, created_at, correct)` brought the breakdown to 73 ms, but node-sqlite3-wasm's planner, with no statistics, also chose it for the dashboard's `ORDER BY created_at DESC LIMIT` query, 1 ms to 159 ms, and the dashboard got slower overall. Summing per card before joining, with the existing indexes, took the breakdown from 287 to 145 ms. Struggling lessons stays as it was: grouping it in SQL did not make it faster, and it is now most of analytics' remaining half second.
+
