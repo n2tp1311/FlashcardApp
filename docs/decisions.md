@@ -1173,5 +1173,13 @@ The holder now writes `owner.json` (pid, host, start time) into the lock directo
 
 **Why a heartbeat and not only the pid.** On Railway each deploy is a new container with a new hostname, and the old one's pid says nothing about it. Cost: after an unclean stop the next container can wait up to 10 s before opening, within the 30 s healthcheck. A shorter window would risk treating a holder that blocked its event loop for a few seconds as dead; with WAL that should no longer happen, and on Railway a second host cannot mount the volume anyway.
 
-**Why the stop handler removes the lock itself.** `db.close()` does not release it: the routes prepare statements (323 of them) without finalizing them, so `close_v2` leaves the connection a zombie and the lock directory stays. Every write is already in the WAL, so the exiting holder removes the directory directly. Finalizing statements is a separate fix: they also hold WASM memory until the process exits.
+**Why the stop handler removes the lock itself.** `db.close()` does not release it: the routes prepare statements (323 of them) without finalizing them, so `close_v2` leaves the connection a zombie and the lock directory stays. Every write is already in the WAL, so the exiting holder removes the directory directly. Finalizing them was the next fix (below); the handler still removes the lock, in case any statement is left open.
+
+## 2026-10-15 — Every statement is finalized
+
+node-sqlite3-wasm has no finalizer: a prepared statement stays in SQLite until `finalize()` is called or the connection closes. `db.js` wraps `db.prepare` so routes can pass spread arguments, and the wrapper never finalized, so each of the 323 `db.prepare(...)` call sites left a statement behind on every request. Measured on a small table: about 2.6 KB per statement, and every later call slows in proportion to how many are open -- after 16k, a read took 136 us instead of 6 and a write 232 us. The server only stayed usable because each deploy restarts it. It also kept `db.close()` from releasing the database lock.
+
+The wrapper now prepares, runs and finalizes a statement on each `run`, `get` or `all`, including when the call throws. A statement kept in a variable and run in a loop is re-prepared each time: about 6 us a call against 2 us for reusing one, which is nothing next to a request. A cache of prepared statements would save that and was not worth it: it needs resetting after each `get` through a private method, eviction for SQL built per call, and finalizing before every close and table rebuild -- the earlier "database table is locked" failure in migrations came from an open statement.
+
+The test loads the real `db.js` on a database whose `prepare` counts statements left open, and holds it at zero through the migrations, the wrapper (including a throwing call) and real dashboard and analytics requests. With the old wrapper all four cases fail.
 

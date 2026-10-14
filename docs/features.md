@@ -97,6 +97,7 @@
 - gzip/brotli response compression — biggest win on `GET /api/export`, which can run several MB as JSON for a long-lived account; runs off the main thread (zlib's async binding), so it doesn't reintroduce the blocking risk the rest of this reliability work addresses
 - SQLite runs in WAL with `synchronous=NORMAL` (with `locking_mode=EXCLUSIVE`, which this WASM build needs for WAL). A KnowledgeApp sync of 500 events went from 7.5 s to 0.1 s, and the longest wait of any other request during it from 7.9 s to 0.07 s. Start once with `DB_JOURNAL_MODE=delete` before rolling back past this change: older code cannot open a WAL file
 - A start clears the database lock only when its holder is gone: dead pid on this host, or a heartbeat older than 10 s from another. A second server on the same data refuses to start instead of writing the file alongside the first
+- Every prepared statement is finalized after use. Before, each request left its statements open: about 2.6 KB each, and every query slowed as they piled up (a read at 136 us instead of 6 after 16k)
 
 ## Study
 - Flashcard mode (flip, mark known/learning)
