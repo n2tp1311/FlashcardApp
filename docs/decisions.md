@@ -1212,3 +1212,13 @@ So the cause is removed instead of fought. `syncBackTrap()` runs after every scr
 
 Cost: on Android, Back on Home with no dialog open now leaves the app, the platform's normal behaviour, where before it did nothing. Swiping back on other screens still runs iOS's own animation over a snapshot of the screen before; that was not reported, and the trap still turns it into the app's Back. The test drives the trap in a real browser history and reads `navigation.currentEntry.index`; with the trap always wanted, as before, five of its eight cases fail.
 
+
+## 2026-10-15 — Home moves once, when it is shown
+
+The user asked for a livelier Home and picked "Motion" from three previews (motion, colour, illustration). Colour and illustration would have changed how every screen looks. Motion leaves the layout as it is and changes only how the numbers arrive.
+
+The motion is one entrance, played when Home is shown. Bars, ring and numbers start empty and settle on their real values, which also shows that they are measurements. It does not play on a metrics-settings redraw, because there the movement would only get in the way of seeing what the setting changed. The goal burst runs once a day. If it ran on every return to Home it would become wallpaper. The only thing that loops is the flame, and only while there is a streak to keep alive.
+
+Each keyframe states only where it starts, so the animation ends on whatever value the markup set: the bar's inline `scaleX`, the ring's offset, the dot's normal size. No end values are copied into the CSS, so none can drift out of step with the data. Reduced motion shows the final state at once. The test caught the reduced-motion rule for the week dots losing on specificity to the rule that starts them, so the dots still popped. It now names the same `.is-done`/`.is-rest` classes.
+
+Cost: about 1 s of movement on every visit to Home. Count-up numbers read 0 for a moment to anyone who looks closely at the first frame.
