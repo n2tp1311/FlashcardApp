@@ -1197,3 +1197,10 @@ There was no backup of the database beyond what each user could download as JSON
 **Failure is loud.** Backups usually fail by stopping quietly. Every pull that fails raises a macOS notification, and so does a server copy more than two days old, which is how a broken server-side backup would show. A copy is written under a temporary name and renamed only after its check, on both sides, so a cut-short copy is never taken for a good one.
 
 **Not covered.** Uploaded images (`data/uploads`), so a restored database can point at missing images. Restoring is by hand: stop the service, put the copy in place as `data/flashcards.db` with no `-wal` beside it, start.
+
+## 2026-10-15 — Phone Home bar hides on scroll instead of floating
+
+The user's screenshot showed the pinned Home bar floating: it stuck at `top: env(safe-area-inset-top)` inside the 16px (28px under 600px) gutters, so the stats chart and class cards scrolled through the strip above it, under the clock, and past both of its sides. They asked to drop it rather than keep it like that, and chose from four previews (not pinned; pinned edge to edge; edge to edge and hidden while scrolling down; pinned slim with a blur): the hiding one.
+
+It keeps the bar's buttons one short scroll up away without spending ~96px of the screen on it while reading the list, which is what pinned edge to edge would cost. The cost is motion, and that bringing back search or New class needs a scroll up. A scroll of under 6px is ignored, so the jitter at the end of a fling does not flicker it. It does not hide while it holds focus or its menu is open: a keyboard user would otherwise tab through a bar off screen. The side margins are `calc(50% - 50vw)` rather than the gutter widths, so the bar reaches the edges whatever the gutters add up to at a given width.
+
