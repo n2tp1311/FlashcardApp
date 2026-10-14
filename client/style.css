@@ -988,7 +988,35 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 
   .home-main { padding: 0 16px max(80px, calc(60px + env(safe-area-inset-bottom, 0px))); }
   .btn-hamburger { display: flex; }
-  .home-header { position: sticky; top: env(safe-area-inset-top, 0px); }
+  /* Pinned at top: env(safe-area-inset-top) inside the 16px gutter, the bar floated: cards
+     scrolled past in the gap above it, under the clock, and down both sides. It now spans
+     edge to edge and reaches up under the status bar with its own background, and it slides
+     away while scrolling down and back on any scroll up (app.js, initHomeHeaderAutoHide),
+     so it costs no height while reading the list. The negative top margin cancels the
+     screen's safe-area padding so the resting layout is where it was; the side margins
+     reach the screen edges whatever the gutters add up to (28px below 600px wide), and the
+     side padding puts the buttons back where they were. */
+  .home-header {
+    position: sticky;
+    top: 0;
+    margin: calc(-1 * env(safe-area-inset-top, 0px)) calc(50% - 50vw) 20px;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) calc(50vw - 50%) 14px;
+    transition: translate 0.22s ease;
+  }
+  .home-header.header-away { translate: 0 -100%; }
+  /* The clock and battery sit over the page; with the bar away this keeps cards from
+     scrolling under them. Above the bar (8) so it slides out beneath, below the sidebar (20). */
+  #screen-home.active::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: env(safe-area-inset-top, 0px);
+    background: var(--bg);
+    z-index: 9;
+  }
+}
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .home-header { transition: none; }
 }
 
 /* ============================

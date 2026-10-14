@@ -14526,6 +14526,40 @@ window.addEventListener("popstate", function() {
 });
 
 /* ============================
+   HOME HEADER AUTO-HIDE (phone)
+   ============================ */
+// On a phone the Home bar slides away while scrolling down and returns on any scroll up,
+// so the class list gets the whole screen without the bar floating over it (style.css,
+// .header-away). It stays while its own menu is open or it holds focus, so a keyboard
+// user is never left tabbing through a bar they cannot see.
+function initHomeHeaderAutoHide() {
+  var header = document.querySelector("#screen-home .home-header");
+  if (!header) return;
+  var phone = window.matchMedia("(max-width: 767px)");
+  var last = window.scrollY, ticking = false;
+  var STEP = 6;
+
+  function show() { header.classList.remove("header-away"); }
+  function update() {
+    ticking = false;
+    var y = window.scrollY, d = y - last;
+    if (!phone.matches || getActiveScreen() !== "home" || y <= header.offsetHeight) { show(); last = y; return; }
+    if (Math.abs(d) < STEP) return;
+    var menu = document.getElementById("user-dropdown-menu");
+    var held = header.contains(document.activeElement) || (menu && !menu.classList.contains("hidden"));
+    if (d > 0 && !held) header.classList.add("header-away");
+    else if (d < 0) show();
+    last = y;
+  }
+  window.addEventListener("scroll", function() {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  header.addEventListener("focusin", show);
+  phone.addEventListener("change", show);
+}
+initHomeHeaderAutoHide();
+
+/* ============================
    PULL-TO-REFRESH (mobile)
    ============================ */
 (function() {
