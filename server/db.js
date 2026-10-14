@@ -3,6 +3,7 @@
 const path = require("path");
 const fs   = require("fs");
 const { Database } = require("node-sqlite3-wasm");
+const attemptDaily = require("./lib/attemptDaily");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -539,6 +540,22 @@ runMigration("fsrs_backfill_from_srs_step", function() {
     "  ORDER BY a.created_at DESC LIMIT 1" +
     ") WHERE last_correct_source IS NULL"
   );
+});
+
+// attempt_daily: the rollup the heatmap, trends, grade mix and study time read instead of
+// rescanning attempts (lib/attemptDaily.js says why it is kept by triggers). Own
+// BEGIN/ROLLBACK: runMigration swallows errors, and triggers without the backfill would
+// silently undercount every chart from then on. A later migration that rebuilds attempts
+// drops the triggers with the old table and must call attemptDaily.install again.
+runMigration("attempt_daily_rollup", function() {
+  try {
+    db.exec("BEGIN");
+    attemptDaily.install(db);
+    db.exec("COMMIT");
+  } catch (e) {
+    try { db.exec("ROLLBACK"); } catch (_) {}
+    throw e;
+  }
 });
 
 module.exports = db;

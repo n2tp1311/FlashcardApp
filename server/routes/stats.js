@@ -10,6 +10,9 @@ const { aboveAverageRun } = require("../lib/aboveAvg");
 const { MASTERED_INTERVAL_SEC, MASTERED_SQL } = require("../lib/mastery");
 const router  = express.Router();
 
+// Whole weeks back from today on attempt_daily's UTC days: today and the six days before are 0.
+const WEEKS_AGO = "CAST((julianday(date('now')) - julianday(day)) / 7 AS INTEGER)";
+
 function computeStats(attempts) {
   if (!attempts.length) return { total: 0, correct: 0, blended: 0, level: "new" };
   const total   = attempts.length;
@@ -265,7 +268,9 @@ router.get("/dashboard", requireAuth, (req, res) => {
     "SELECT COUNT(*) AS n FROM cards ca JOIN lessons l ON ca.lesson_id = l.id JOIN classes c ON l.class_id = c.id WHERE c.user_id = ? AND c.archived = 0"
   ).get(uid).n;
   const totalSessions = db.prepare("SELECT COUNT(*) AS n FROM quiz_sessions WHERE user_id = ?").get(uid).n;
-  const attRow        = db.prepare("SELECT COUNT(*) AS total, SUM(correct) AS correct_count FROM attempts WHERE user_id = ?").get(uid);
+  const attRow        = db.prepare(
+    "SELECT SUM(cnt) AS total, SUM(CASE WHEN correct = 1 THEN cnt ELSE 0 END) AS correct_count FROM attempt_daily WHERE user_id = ?"
+  ).get(uid);
 
   // Due for review — lessons with at least 1 card whose srs_due_at has passed
   const allLessons = db.prepare(
@@ -337,21 +342,23 @@ router.get("/dashboard", requireAuth, (req, res) => {
   const windowDays = (!isNaN(parsedWindowDays) && parsedWindowDays > 0)
     ? Math.min(90, Math.max(7, parsedWindowDays))
     : null;
-  const windowClause = windowDays ? "AND date(created_at, 'unixepoch') >= date('now', ?)" : "";
+  const windowClause = windowDays ? "AND day >= date('now', ?)" : "";
   const windowParams = windowDays ? [uid, "-" + windowDays + " days"] : [uid];
 
+  // Study time from the attempt_daily rollup; a day whose attempts carry no duration has
+  // samples = 0 and stays out, as SUM(duration_ms) IS NULL kept it out before.
   const totalMsRow = db.prepare(
-    `SELECT SUM(duration_ms) AS total FROM attempts WHERE user_id = ? ${windowClause}`
+    `SELECT SUM(ms) AS total FROM attempt_daily WHERE user_id = ? ${windowClause}`
   ).get(...windowParams);
 
   const studyTimeStatsRow = db.prepare(`
     SELECT AVG(ms) AS avg, MIN(ms) AS min, MAX(ms) AS max, COUNT(*) AS trackedDays
     FROM (
-      SELECT SUM(duration_ms) AS ms
-      FROM attempts
+      SELECT SUM(ms) AS ms
+      FROM attempt_daily
       WHERE user_id = ? ${windowClause}
-      GROUP BY date(created_at, 'unixepoch')
-      HAVING ms IS NOT NULL
+      GROUP BY day
+      HAVING SUM(samples) > 0
     )
   `).get(...windowParams);
 
@@ -361,7 +368,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
   // 7-day window still draws a 30-day average.
   const sparkDays = windowDays || 30;
   const dayRows = db.prepare(
-    "SELECT date(created_at, 'unixepoch') AS day, SUM(duration_ms) AS ms FROM attempts " +
+    "SELECT day, CASE WHEN SUM(samples) > 0 THEN SUM(ms) END AS ms FROM attempt_daily " +
     "WHERE user_id = ? GROUP BY day"
   ).all(uid);
   const dayMs = new Map(dayRows.map(r => [r.day, r.ms || 0]));
@@ -405,21 +412,20 @@ router.get("/analytics", requireAuth, function(req, res) {
   var parsedDays = parseInt(req.query.days, 10);
   var days = Math.min(90, Math.max(7, isNaN(parsedDays) ? 60 : parsedDays));
   var secs = days * 86400;
+  // Day-level charts read the attempt_daily rollup (lib/attemptDaily.js), so the window is
+  // whole UTC days and a week is seven of them counted back from today, not 604,800
+  // seconds back from this instant: a bucket edge can move by up to a day.
+  var since = "-" + days + " days";
 
   var heatmapRows = db.prepare(
-    "SELECT date(created_at,'unixepoch') AS day, COUNT(*) AS cnt, SUM(duration_ms) AS ms " +
-    "FROM attempts " +
-    "WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
-    "GROUP BY day"
-  ).all(uid, secs);
+    "SELECT day, SUM(cnt) AS cnt, CASE WHEN SUM(samples) > 0 THEN SUM(ms) END AS ms " +
+    "FROM attempt_daily WHERE user_id=? AND day >= date('now', ?) GROUP BY day"
+  ).all(uid, since);
 
   var weeklyRows = db.prepare(
-    "SELECT CAST((strftime('%s','now') - created_at) / 604800 AS INTEGER) AS weeks_ago, " +
-    "COUNT(*) AS cnt, SUM(CASE WHEN correct=1 THEN 1 ELSE 0 END) AS correct " +
-    "FROM attempts " +
-    "WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
-    "GROUP BY weeks_ago"
-  ).all(uid, secs);
+    "SELECT " + WEEKS_AGO + " AS weeks_ago, SUM(cnt) AS cnt, SUM(CASE WHEN correct=1 THEN cnt ELSE 0 END) AS correct " +
+    "FROM attempt_daily WHERE user_id=? AND day >= date('now', ?) GROUP BY weeks_ago"
+  ).all(uid, since);
 
   // New-card introduction pace over time: each card's first-ever attempt (across all of the
   // user's history, not just this window) is the day it was "new" to them. Same underlying
@@ -437,16 +443,18 @@ router.get("/analytics", requireAuth, function(req, res) {
     GROUP BY weeks_ago
   `).all(uid, secs);
 
+  // Summed per card first, then joined: joining every attempt to its card, lesson and class
+  // cost three lookups per attempt (287 -> 145 ms on a 120k-attempt account). An index on
+  // (user_id, card_id, ...) halved it again, but node-sqlite3-wasm's planner then chose it
+  // for the dashboard's ORDER BY created_at LIMIT query, 1 ms -> 159 ms, so there is none.
   var lessonRows = db.prepare(
     "SELECT l.id, l.title, cl.name AS class_name, " +
-    "COUNT(a.id) AS total_attempts, " +
-    "SUM(CASE WHEN a.correct=1 THEN 1 ELSE 0 END) AS correct_attempts " +
-    "FROM lessons l " +
+    "SUM(a.n) AS total_attempts, SUM(a.c) AS correct_attempts " +
+    "FROM (SELECT card_id, COUNT(*) AS n, SUM(correct) AS c FROM attempts WHERE user_id=? GROUP BY card_id) a " +
+    "JOIN cards c ON c.id=a.card_id " +
+    "JOIN lessons l ON l.id=c.lesson_id " +
     "JOIN classes cl ON cl.id=l.class_id AND cl.user_id=? AND cl.archived=0 " +
-    "LEFT JOIN cards c ON c.lesson_id=l.id " +
-    "LEFT JOIN attempts a ON a.card_id=c.id AND a.user_id=? " +
     "GROUP BY l.id " +
-    "HAVING total_attempts > 0 " +
     "ORDER BY (correct_attempts * 1.0 / total_attempts) ASC"
   ).all(uid, uid);
 
@@ -457,19 +465,17 @@ router.get("/analytics", requireAuth, function(req, res) {
     return { weeks_ago: r.weeks_ago, total: r.cnt, correct: r.correct || 0 };
   });
   var gradeDistribution = db.prepare(
-    "SELECT source, grade, correct, COUNT(*) AS cnt FROM attempts " +
-    "WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
+    "SELECT source, NULLIF(grade, '') AS grade, correct, SUM(cnt) AS cnt FROM attempt_daily " +
+    "WHERE user_id=? AND day >= date('now', ?) " +
     "GROUP BY source, grade, correct ORDER BY source, grade"
-  ).all(uid, secs);
+  ).all(uid, since);
 
   // Only attempts with measured duration contribute. Older attempts and quiz sessions
   // without timing data are excluded rather than treated as zero-second reviews.
   var reviewTimeWeeklyRows = db.prepare(
-    "SELECT CAST((strftime('%s','now') - created_at) / 604800 AS INTEGER) AS weeks_ago, " +
-    "COUNT(duration_ms) AS samples, AVG(duration_ms) AS avg_ms " +
-    "FROM attempts WHERE user_id=? AND created_at >= strftime('%s','now') - ? " +
-    "AND duration_ms IS NOT NULL GROUP BY weeks_ago"
-  ).all(uid, secs);
+    "SELECT " + WEEKS_AGO + " AS weeks_ago, SUM(samples) AS samples, SUM(ms) * 1.0 / SUM(samples) AS avg_ms " +
+    "FROM attempt_daily WHERE user_id=? AND day >= date('now', ?) AND samples > 0 GROUP BY weeks_ago"
+  ).all(uid, since);
 
   // Card history is fetched on demand by /card-history/:cardId; avoid shipping every
   // attempt row with each dashboard request.
