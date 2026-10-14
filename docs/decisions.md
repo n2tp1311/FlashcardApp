@@ -1153,3 +1153,15 @@ Measured on a synthetic account the size of the real one (80k cards, 120k attemp
 
 **No index for the per-card queries.** The lesson breakdown and the struggling lessons need each attempt's card, which the rollup drops. An index on `(user_id, card_id, created_at, correct)` brought the breakdown to 73 ms, but node-sqlite3-wasm's planner, with no statistics, also chose it for the dashboard's `ORDER BY created_at DESC LIMIT` query, 1 ms to 159 ms, and the dashboard got slower overall. Summing per card before joining, with the existing indexes, took the breakdown from 287 to 145 ms. Struggling lessons stays as it was: grouping it in SQL did not make it faster, and it is now most of analytics' remaining half second.
 
+## 2026-10-15 — WAL with synchronous=NORMAL, behind an exclusive lock
+
+A KnowledgeApp sync posts up to 500 events, each applied in its own transaction so one bad event does not undo the rest. With SQLite's default rollback journal every commit fsyncs several times, and node-sqlite3-wasm runs on the event loop: measured on a laptop SSD, 500 `updated` events took 7.5 s, and a `/health` request sent during them waited 7.9 s. Railway's volume is slower than that SSD, which fits the 502s ("Application failed to respond") seen during large syncs. With WAL and `synchronous=NORMAL` the same sync took 0.1 s and the longest wait 0.07 s; WAL alone, still syncing every commit, was 2.4 s.
+
+We kept one transaction per event rather than batching the request into one: at 0.1 s there is nothing left worth the savepoint bookkeeping.
+
+**The cost of NORMAL.** In WAL mode NORMAL syncs at checkpoints, not at each commit, so a power cut or host crash can lose the commits since the last checkpoint. The file stays consistent. A process crash or restart loses nothing: a write followed by `kill -9` was there on reopen, with `integrity_check` ok. For flashcard reviews, a few seconds of possible loss on a host failure is a better trade than a server that stops answering during every sync.
+
+**Why EXCLUSIVE.** WAL needs shared memory, and this WASM build has no VFS for it. Without `locking_mode=EXCLUSIVE`, `PRAGMA journal_mode=WAL` quietly answers "delete". With it, WAL works, and no second process can open the file while the server runs. That is also a guard against the kind of two-writer access that may have caused the 2026-07-24 local corruption.
+
+**Rolling back.** WAL is recorded in the database file. node-sqlite3-wasm then cannot open it without EXCLUSIVE, so code from before this change fails with "unable to open database file". Starting once with `DB_JOURNAL_MODE=delete` converts the file back; tested both ways, with the data intact.
+
