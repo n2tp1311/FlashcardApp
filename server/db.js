@@ -14,6 +14,30 @@ try { fs.rmSync(lockPath, { recursive: true, force: true }); } catch (_) {}
 
 const db = new Database(path.join(DATA_DIR, "flashcards.db"));
 
+// Write-ahead log, synced at checkpoints rather than at every commit. With the default
+// rollback journal each commit cost several fsyncs, and node-sqlite3-wasm is synchronous,
+// so a KnowledgeApp sync of 500 events -- one transaction each -- held the whole server
+// for ~7.8 s on a laptop SSD (17 ms with this), longer on Railway's volume, where it
+// ended in 502s. The cost of synchronous=NORMAL: a power cut or host crash can lose the
+// last commits since a checkpoint; the file stays consistent, and a process crash or
+// restart loses nothing. WAL needs shared memory that this WASM build has no VFS for,
+// so it is on only with locking_mode=EXCLUSIVE -- without it journal_mode quietly stays
+// "delete" -- which keeps any second process out of the file while the server runs.
+//
+// WAL is recorded in the file itself, and node-sqlite3-wasm cannot open a WAL file
+// without EXCLUSIVE: code from before this change fails with "unable to open database
+// file". Before rolling back past it, start once with DB_JOURNAL_MODE=delete, which
+// turns the file back into a rollback-journal database.
+db.exec("PRAGMA locking_mode = EXCLUSIVE");
+if (process.env.DB_JOURNAL_MODE === "delete") {
+  db.get("PRAGMA journal_mode = DELETE");
+  db.exec("PRAGMA locking_mode = NORMAL");
+} else {
+  const journal = db.get("PRAGMA journal_mode = WAL").journal_mode;
+  if (journal !== "wal") console.error("[db] journal_mode is " + journal + ", not wal: every commit will fsync");
+  db.exec("PRAGMA synchronous = NORMAL");
+}
+
 db.exec("PRAGMA foreign_keys = ON");
 
 db.exec(`
