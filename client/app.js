@@ -3321,6 +3321,7 @@ function showScreen(id) {
   var el = document.getElementById("screen-" + id);
   if (el) { el.classList.add("active"); window.scrollTo(0, 0); }
   syncSidebar(id);
+  syncBackTrap();
 }
 
 // Which screens show the sidebar: "home" docks it from 768px as before, "page" from 1024px,
@@ -3512,6 +3513,7 @@ function syncInert() {
   });
   var topId = modalStack.length ? "modal-" + modalStack[modalStack.length - 1].id : null;
   document.querySelectorAll("#modal-overlay > .modal").forEach(function(m) { m.inert = m.id !== topId; });
+  syncBackTrap();
 }
 
 // Dialogs whose input would be lost by closing them. Manage Presets and Preferences aren't
@@ -12868,7 +12870,7 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
       initUserNav();
       try { localStorage.removeItem("fc-last-screen"); } catch (_) {}
       renderSharedWithMe();
-      history.replaceState({}, "", "/");
+      history.replaceState(history.state, "", "/");
       restoreLastScreen();
     }).catch(function() { showAuthError("reset", t("common.networkError")); });
   });
@@ -12888,10 +12890,10 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
     if (reason && /^[a-z0-9_]{1,40}$/.test(reason)) msg += " (" + reason + ")";
     showAuthError("login", msg);
     showAuthPanel("login");
-    history.replaceState({}, "", "/");
+    history.replaceState(history.state, "", "/");
   }
   if (params.get("google_linked") === "1") {
-    history.replaceState({}, "", "/");
+    history.replaceState(history.state, "", "/");
     showToast(t("auth.googleLinked"));
   }
 })();
@@ -14511,19 +14513,45 @@ function fcCloseTopModal() {
   if (m && !m.classList.contains("hidden")) { hideLayer(m); return; }
 }
 
-history.pushState({ fc: true }, "");
-window.addEventListener("popstate", function() {
-  history.pushState({ fc: true }, "");  // re-arm so the next Back is also trapped
-  if (fcAnyOverlayOpen()) { fcCloseTopModal(); return; }
+// Back trap: one extra history entry, so a browser Back, Android's Back or iOS's edge swipe
+// closes the top dialog or leaves the screen instead of the app. It exists only while
+// there is somewhere in-app to go back to -- a screen with a Back button, or an open
+// dialog. It used to be pushed at load and kept forever, so Home always had an entry
+// behind it: iOS then armed its own edge-swipe-back there, slid the page right and showed
+// that entry's blank snapshot, a white screen, and preventDefault on the edge cannot stop
+// that gesture (decisions.md 2026-07-23). With nothing behind Home, iOS has nothing to
+// swipe back to.
+var backTrap = { armed: false, pendingPops: 0 };
+function syncBackTrap() {
+  if (!backTrap) return;  // called by showScreen before this file has run this far
+  // A history.back() still on its way would pop an entry pushed now; wait for it.
+  if (backTrap.pendingPops > 0) return;
+  var want = !!SCREEN_BACK_BTN[getActiveScreen()] || fcAnyOverlayOpen();
+  if (want && !backTrap.armed) {
+    history.pushState({ fc: true }, "");
+    backTrap.armed = true;
+  } else if (!want && backTrap.armed) {
+    backTrap.armed = false;
+    backTrap.pendingPops++;
+    history.back();
+  }
+}
+window.addEventListener("popstate", function(e) {
+  if (backTrap.pendingPops > 0) { backTrap.pendingPops--; syncBackTrap(); return; }
+  // Forward onto the trap entry (iOS's swipe from the right edge): nothing to do but
+  // step back off it if it is not wanted.
+  if (e.state && e.state.fc) { backTrap.armed = true; syncBackTrap(); return; }
+  backTrap.armed = false;
+  if (fcAnyOverlayOpen()) { fcCloseTopModal(); syncBackTrap(); return; }
   var screen = getActiveScreen();
   var backId = SCREEN_BACK_BTN[screen];
   var b = backId && document.getElementById(backId);
-  // On home/auth (no back button) there's nothing to go back to in-app — stay put.
-  if (!b) return;
   // iPhone's edge swipe is the easy way to leave a session by accident.
-  if (screen === "flashcard" || screen === "quiz") confirmLeaveStudy(function() { b.click(); });
-  else b.click();
+  if (b && (screen === "flashcard" || screen === "quiz")) confirmLeaveStudy(function() { b.click(); });
+  else if (b) b.click();
+  syncBackTrap();
 });
+syncBackTrap();
 
 /* ============================
    HOME HEADER AUTO-HIDE (phone)

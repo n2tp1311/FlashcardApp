@@ -40,6 +40,6 @@ test("linking Google, from Preferences or by a first Google sign-in to an email 
   const auth = fs.readFileSync(path.join(__dirname, "..", "server/routes/auth.js"), "utf8");
   assert.equal(auth.split('res.redirect("/?google_linked=1")').length - 1, 2);
   const app = fs.readFileSync(path.join(__dirname, "..", "client/app.js"), "utf8");
-  assert.match(app, /params\.get\("google_linked"\) === "1"\) \{\s*history\.replaceState\(\{\}, "", "\/"\);\s*showToast\(t\("auth\.googleLinked"\)\);/);
+  assert.match(app, /params\.get\("google_linked"\) === "1"\) \{\s*history\.replaceState\(history\.state, "", "\/"\);\s*showToast\(t\("auth\.googleLinked"\)\);/);
   assert.equal(app.split('"auth.googleLinked":').length - 1, 2, "English and Vietnamese");
 });
