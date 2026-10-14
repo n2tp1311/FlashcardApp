@@ -1175,6 +1175,9 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 :root[data-theme="dark"] { --ledge: color-mix(in srgb, var(--bg) 55%, #000); }
 :root :is(.dash-tile, .class-card, .upstream-banner) { border-width: 2px; box-shadow: 0 4px 0 var(--ledge); }
 :root .class-card:hover { box-shadow: 0 6px 0 var(--ledge); }
+/* A press sinks the card onto its ledge, like the buttons: the ledge is what makes it read as
+   something to push. */
+:root .class-card:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ledge); transition-duration: 0.06s; }
 :root :is(.nav-search-bar, .sort-select, .sort-dir-btn, .view-toggle, #btn-toggle-archived, #btn-tag-filter-toggle) { border-width: 2px; box-shadow: 0 3px 0 var(--ledge); }
 :root .dash-studytime-card .dash-tile { box-shadow: none; }
 :root[data-theme="dark"] :is(.btn-primary, .btn-outline) { border-width: 2px; box-shadow: 0 3px 0 var(--ledge); }
@@ -3060,6 +3063,45 @@ code {
 .dash-tile-big.is-streak svg { color: var(--warning); align-self: center; width: 22px; height: 22px; }
 .dash-tile-num { font-size: 1.875rem; font-weight: 800; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
 .dash-tile-unit { font-size: 0.8125rem; color: var(--text2); }
+
+/* Home's entrance (playHomeEntrance). Each keyframe gives only its start, so it ends on the
+   value the markup set: the bar's inline scaleX, the ring's offset, the dot's resting size. */
+.dash-tile-big.is-lit svg { animation: flame-flicker 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes flame-flicker {
+  0%, 100% { transform: scale(1) rotate(0); }
+  30% { transform: scale(1.08, 0.94) rotate(-3deg); }
+  60% { transform: scale(0.96, 1.06) rotate(2deg); }
+}
+.dash-hero-card.is-entering .dash-meter-track i { animation: meter-fill 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.dash-hero-card.is-entering .dash-meter:nth-child(2) .dash-meter-track i { animation-delay: 0.1s; }
+.dash-hero-card.is-entering .dash-meter:nth-child(3) .dash-meter-track i { animation-delay: 0.2s; }
+@keyframes meter-fill { from { transform: scaleX(0); } }
+.dash-hero-card.is-entering .goal-ring-arc { animation: ring-draw 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes ring-draw { from { stroke-dashoffset: var(--ring-c); } }
+.dash-hero-card.is-entering :is(.dash-week-dot.is-done, .dash-week-dot.is-rest) { animation: dot-pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.dash-hero-card.is-entering .dash-week-day:nth-child(2) .dash-week-dot { animation-delay: 0.05s; }
+.dash-hero-card.is-entering .dash-week-day:nth-child(3) .dash-week-dot { animation-delay: 0.1s; }
+.dash-hero-card.is-entering .dash-week-day:nth-child(4) .dash-week-dot { animation-delay: 0.15s; }
+.dash-hero-card.is-entering .dash-week-day:nth-child(5) .dash-week-dot { animation-delay: 0.2s; }
+.dash-hero-card.is-entering .dash-week-day:nth-child(6) .dash-week-dot { animation-delay: 0.25s; }
+.dash-hero-card.is-entering .dash-week-day:nth-child(7) .dash-week-dot { animation-delay: 0.3s; }
+@keyframes dot-pop { from { transform: scale(0); } }
+.dash-goal { position: relative; }
+.goal-spark { position: absolute; left: 28px; top: 50%; width: 0; height: 0; pointer-events: none; }
+.goal-spark i {
+  position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--success); animation: goal-spark 0.9s 0.6s ease-out both;
+}
+.goal-spark i:nth-child(even) { background: var(--warning); }
+@keyframes goal-spark {
+  from { transform: rotate(var(--a)) translateY(0) scale(1); opacity: 1; }
+  to { transform: rotate(var(--a)) translateY(-40px) scale(0.3); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-tile-big.is-lit svg, .dash-hero-card.is-entering :is(.dash-meter-track i, .goal-ring-arc, .dash-week-dot.is-done, .dash-week-dot.is-rest) { animation: none; }
+  .goal-spark { display: none; }
+  :root .class-card:active { transform: none; }
+}
 .dash-meters { display: grid; gap: 10px; }
 .dash-meter-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.8125rem; color: var(--text2); }
 .dash-meter-top b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }

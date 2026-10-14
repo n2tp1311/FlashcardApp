@@ -3689,6 +3689,7 @@ function renderHomeCharts() {
     var grid = document.getElementById("home-summary-grid");
     grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary, newCardEstimate, dash.today);
     section.classList.remove("hidden");
+    playHomeEntrance(grid);
   }).catch(function() { section.classList.add("hidden"); });
 }
 
@@ -10416,7 +10417,7 @@ function heroStreakTile(streak, today, run, withAchievements) {
     : '';
   return '<section class="dash-tile">' +
     '<h3 class="dash-tile-h">' + escHtml(t("hero.streak")) + '</h3>' +
-    '<div class="dash-tile-big is-streak">' + ICON_FLAME + '<span class="dash-tile-num">' + escHtml(String(streak)) + '</span>' +
+    '<div class="dash-tile-big is-streak' + (streak > 0 ? ' is-lit' : '') + '">' + ICON_FLAME + '<span class="dash-tile-num">' + escHtml(String(streak)) + '</span>' +
       '<span class="dash-tile-unit">' + escHtml(t("hero.days")) + '</span></div>' +
     heroWeekHtml(today) + heroAboveAvgHtml(run) + caption + ach +
   '</section>';
@@ -10537,13 +10538,62 @@ function studySparkline(daily, avgMs, allTime) {
 
 var GOAL_RING_R = 22;
 
+// Home's stats arrive with one entrance: bars fill, the ring draws, done days pop (CSS, keyed
+// on .is-entering) and the big numbers count up. Only renderHomeCharts plays it -- a metrics
+// config rerender swaps the card in place and stays still, so changing a setting does not
+// replay a show. Reduced motion gets the final state at once.
+function playHomeEntrance(grid) {
+  var hero = grid.querySelector(".dash-hero-card");
+  if (!hero) return;
+  hero.classList.add("is-entering");
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  hero.querySelectorAll(".dash-tile-num, .goal-ring text").forEach(countUpNumber);
+  goalSparkOnce(hero);
+}
+
+// Whole numbers only: a duration or the ring's tick is left as it is.
+function countUpNumber(el) {
+  var end = Number(el.textContent);
+  if (!(end > 1) || end % 1 !== 0) return;
+  var start = performance.now(), ms = 700;
+  el.textContent = "0";
+  function step(now) {
+    var p = Math.min((now - start) / ms, 1);
+    el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Meeting the goal is celebrated once a day; every later visit that day shows the green
+// ring alone, or the burst becomes wallpaper.
+function goalSparkOnce(hero) {
+  var ring = hero.querySelector(".goal-ring.met");
+  if (!ring) return;
+  var day = new Date().toDateString();
+  try {
+    if (localStorage.getItem("fc-goal-spark-day") === day) return;
+    localStorage.setItem("fc-goal-spark-day", day);
+  } catch (_) { /* storage blocked: celebrate anyway */ }
+  var burst = document.createElement("span");
+  burst.className = "goal-spark";
+  burst.setAttribute("aria-hidden", "true");
+  for (var i = 0; i < 8; i++) {
+    var dot = document.createElement("i");
+    dot.style.setProperty("--a", (i * 45) + "deg");
+    burst.appendChild(dot);
+  }
+  ring.parentNode.insertBefore(burst, ring);
+  setTimeout(function() { burst.remove(); }, 1200);
+}
+
 function dailyGoalRing(done, goal) {
   var c = 2 * Math.PI * GOAL_RING_R;
   var offset = c * (1 - Math.min(done / goal, 1));
   return '<svg class="goal-ring' + (done >= goal ? ' met' : '') + '" viewBox="0 0 56 56" aria-hidden="true">' +
     '<circle class="goal-ring-track" cx="28" cy="28" r="' + GOAL_RING_R + '"/>' +
     '<circle class="goal-ring-arc" cx="28" cy="28" r="' + GOAL_RING_R + '" style="stroke-dasharray:' + c.toFixed(2) +
-      ';stroke-dashoffset:' + offset.toFixed(2) + '"/>' +
+      ';stroke-dashoffset:' + offset.toFixed(2) + ';--ring-c:' + c.toFixed(2) + '"/>' +
     '<text x="28" y="28">' + (done >= goal ? "✓" : done) + '</text>' +
   '</svg>';
 }
