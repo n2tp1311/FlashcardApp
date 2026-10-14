@@ -1215,7 +1215,7 @@ Cost: on Android, Back on Home with no dialog open now leaves the app, the platf
 
 ## 2026-10-15 — Home moves once, when it is shown
 
-The user asked for a livelier Home and picked "Motion" from three previews (motion, colour, illustration). Colour and illustration would have changed how every screen looks. Motion leaves the layout as it is and changes only how the numbers arrive.
+The user asked for a livelier Home and picked "Motion" from three previews (motion; each class in its own colour; study-first, with the next session leading Home). The other two would have changed how Home looks or what it puts first. Motion leaves the layout as it is and changes only how the numbers arrive.
 
 The motion is one entrance, played when Home is shown. Bars, ring and numbers start empty and settle on their real values, which also shows that they are measurements. It does not play on a metrics-settings redraw, because there the movement would only get in the way of seeing what the setting changed. The goal burst runs once a day. If it ran on every return to Home it would become wallpaper. The only thing that loops is the flame, and only while there is a streak to keep alive.
 
