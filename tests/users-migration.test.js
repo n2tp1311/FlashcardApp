@@ -23,6 +23,7 @@ test("an old users table gains google_id and avatar_url, and google_id stays uni
         } };
       }
       if (request === "fs") return { ...fs, rmSync() {}, mkdirSync() {}, existsSync: () => true };
+      if (request === "./lib/dbLock") return { claim() {}, hold() { return function() {}; } };
     }
     return realLoad.call(this, request, parent, isMain);
   };

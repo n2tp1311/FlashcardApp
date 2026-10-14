@@ -4,15 +4,17 @@ const path = require("path");
 const fs   = require("fs");
 const { Database } = require("node-sqlite3-wasm");
 const attemptDaily = require("./lib/attemptDaily");
+const dbLock = require("./lib/dbLock");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-// Remove stale lock left by a crashed process
-const lockPath = path.join(DATA_DIR, "flashcards.db.lock");
-try { fs.rmSync(lockPath, { recursive: true, force: true }); } catch (_) {}
+// A lock left by a process that died is cleared; one whose holder is alive stops this
+// start instead (lib/dbLock.js).
+const DB_FILE = path.join(DATA_DIR, "flashcards.db");
+dbLock.claim(DB_FILE);
 
-const db = new Database(path.join(DATA_DIR, "flashcards.db"));
+const db = new Database(DB_FILE);
 
 // Write-ahead log, synced at checkpoints rather than at every commit. With the default
 // rollback journal each commit cost several fsyncs, and node-sqlite3-wasm is synchronous,
@@ -36,6 +38,26 @@ if (process.env.DB_JOURNAL_MODE === "delete") {
   const journal = db.get("PRAGMA journal_mode = WAL").journal_mode;
   if (journal !== "wal") console.error("[db] journal_mode is " + journal + ", not wal: every commit will fsync");
   db.exec("PRAGMA synchronous = NORMAL");
+
+  // The exclusive lock is held from the journal_mode pragma on; record who holds it, and
+  // let go of it on a normal stop so the next start need not wait for the heartbeat to age.
+  const release = dbLock.hold(DB_FILE, {
+    onLost: function() {
+      console.error("[db] another process took over " + DB_FILE + "; stopping before it is written twice");
+      process.exit(1);
+    }
+  });
+  // db.close() does not remove the lock here: routes prepare statements without
+  // finalizing them, so close_v2 only marks the connection a zombie. Every write is in the
+  // WAL already, and this process is the holder and is exiting, so it removes the lock itself.
+  const stop = function() {
+    release();
+    try { db.close(); } catch (e) { console.error("[db] close", e.message); }
+    fs.rmSync(DB_FILE + ".lock", { recursive: true, force: true });
+    process.exit(0);
+  };
+  process.once("SIGTERM", stop);
+  process.once("SIGINT", stop);
 }
 
 db.exec("PRAGMA foreign_keys = ON");

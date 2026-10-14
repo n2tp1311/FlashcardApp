@@ -19,6 +19,7 @@ Module._load = function(request, parent, isMain) {
       return { Database: class extends Database { constructor() { super(); } } };
     }
     if (request === "fs") return { ...fs, rmSync() {}, mkdirSync() {}, existsSync: () => true };
+    if (request === "./lib/dbLock") return { claim() {}, hold() { return function() {}; } };
   }
   return realLoad.call(this, request, parent, isMain);
 };
