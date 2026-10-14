@@ -1183,3 +1183,19 @@ The wrapper now prepares, runs and finalizes a statement on each `run`, `get` or
 
 The test loads the real `db.js` on a database whose `prepare` counts statements left open, and holds it at zero through the migrations, the wrapper (including a throwing call) and real dashboard and analytics requests. With the old wrapper all four cases fail.
 
+
+
+## 2026-10-15 — Nightly backups: a copy on the volume, and one off it
+
+There was no backup of the database beyond what each user could download as JSON from Preferences, and that holds one account and cannot be restored in place (2026-09-30). The database lives on one Railway volume.
+
+**Two places, for two kinds of loss.** Copies on the volume (seven, one per UTC day) cover a bad migration or a mistaken delete: the day before is still there. They die with the volume, so the owner's Mac pulls the newest each night and keeps 30. The pull cannot be a push from the server, which has nowhere to push to.
+
+**VACUUM INTO, from inside the server's connection.** Under `locking_mode=EXCLUSIVE` nothing else may open the file, and copying the file bytes would miss whatever is still in the WAL. `VACUUM INTO` writes a consistent, compacted copy, WAL included, without a checkpoint. It runs on the event loop: measured 0.39 s for a 51 MB database. Checking the copy with `integrity_check` cost another 1.2 s, `quick_check` 0.14 s, so the server runs `quick_check` and the Mac, where time costs nothing, runs the full check before keeping a copy. 18:00 UTC is 01:00 in Vietnam, clear of study and of KnowledgeApp's guide sync at 02:00.
+
+**A separate secret.** The file holds every account, so a user's session or KnowledgeApp API token must not open it. `BACKUP_TOKEN` exists only in Railway's variables and the owner's `~/.config/flashcardapp/backup-token`; it travels in a header, never in a URL or on a command line, is compared in constant time, and the route is rate-limited to ten tries an hour per address. Without the variable the route answers 404.
+
+**Failure is loud.** Backups usually fail by stopping quietly. Every pull that fails raises a macOS notification, and so does a server copy more than two days old, which is how a broken server-side backup would show. A copy is written under a temporary name and renamed only after its check, on both sides, so a cut-short copy is never taken for a good one.
+
+**Not covered.** Uploaded images (`data/uploads`), so a restored database can point at missing images. Restoring is by hand: stop the service, put the copy in place as `data/flashcards.db` with no `-wal` beside it, start.
+\n
