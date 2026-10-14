@@ -1204,3 +1204,11 @@ The user's screenshot showed the pinned Home bar floating: it stuck at `top: env
 
 It keeps the bar's buttons one short scroll up away without spending ~96px of the screen on it while reading the list, which is what pinned edge to edge would cost. The cost is motion, and that bringing back search or New class needs a scroll up. A scroll of under 6px is ignored, so the jitter at the end of a fling does not flicker it. It does not hide while it holds focus or its menu is open: a keyboard user would otherwise tab through a bar off screen. The side margins are `calc(50% - 50vw)` rather than the gutter widths, so the bar reaches the edges whatever the gutters add up to at a given width.
 
+## 2026-10-15 — The Back trap exists only where Back has somewhere to go
+
+A swipe from the left edge of Home still slid the whole page right onto a white screen (the user's screenshot), three months after the 2026-07-23 attempts. The cause named then was right and the fix was not: the Back trap pushed a history entry at load and re-pushed it after every Back, so Home always had an entry behind it. iOS arms its own edge-swipe-back whenever there is one, and for a same-document entry it shows a blank snapshot. `preventDefault` on a touchmove near the edge does not stop that recognizer.
+
+So the cause is removed instead of fought. `syncBackTrap()` runs after every screen change and every dialog open or close (`showScreen`, `syncInert`) and keeps the trap entry only while there is something for Back to do: a screen with a Back button, or an open dialog. Returning Home steps back off the entry with `history.back()`. A screen change made while that step is still in flight waits for it, since an entry pushed meanwhile would be the one popped. A step forward onto the old entry (iOS's swipe from the right edge, which the stepped-back entry makes possible) is stepped straight back off.
+
+Cost: on Android, Back on Home with no dialog open now leaves the app, the platform's normal behaviour, where before it did nothing. Swiping back on other screens still runs iOS's own animation over a snapshot of the screen before; that was not reported, and the trap still turns it into the app's Back. The test drives the trap in a real browser history and reads `navigation.currentEntry.index`; with the trap always wanted, as before, five of its eight cases fail.
+
