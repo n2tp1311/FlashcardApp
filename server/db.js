@@ -47,9 +47,9 @@ if (process.env.DB_JOURNAL_MODE === "delete") {
       process.exit(1);
     }
   });
-  // db.close() does not remove the lock here: routes prepare statements without
-  // finalizing them, so close_v2 only marks the connection a zombie. Every write is in the
-  // WAL already, and this process is the holder and is exiting, so it removes the lock itself.
+  // db.close() removes the lock only if every statement has been finalized; one left open
+  // makes close_v2 a zombie close that keeps it. Every write is in the WAL already, and this
+  // process is the holder and is exiting, so it removes the lock itself either way.
   const stop = function() {
     release();
     try { db.close(); } catch (e) { console.error("[db] close", e.message); }
@@ -184,7 +184,9 @@ function runMigration(name, fn) {
     try { applied = check.get(name); } finally { check.finalize(); }
     if (applied) return;
     fn();
-    db.prepare("INSERT OR IGNORE INTO schema_migrations (name) VALUES (?)").run(name);
+    // db.run finalizes its statement; migrations before the shim below would otherwise
+    // leave this one open, with the effect described above.
+    db.run("INSERT OR IGNORE INTO schema_migrations (name) VALUES (?)", [name]);
   } catch (_) {
     try { db.exec("PRAGMA foreign_keys = ON"); } catch (__) {}
   }
@@ -516,18 +518,28 @@ try { db.exec("CREATE TABLE IF NOT EXISTS app_secrets (name TEXT PRIMARY KEY, va
 
 // Shim: node-sqlite3-wasm requires array binding for multiple params.
 // Wrap db.prepare so statements accept spread args like better-sqlite3.
+//
+// Each call prepares, runs and finalizes its own statement. node-sqlite3-wasm has no
+// finalizer: a statement never finalized stays in SQLite until the connection closes, and
+// the routes call db.prepare() on every request. Measured: about 2.6 KB each, and every
+// later call slows in proportion to how many are open -- 16k left a read at 136 us instead
+// of 6, a write at 232 us -- and close() cannot release the database. Re-preparing costs
+// about 4 us a call over reusing one statement, which is why there is no cache to manage.
 const _prepare = db.prepare.bind(db);
+function toArg(args) {
+  if (args.length === 0) return [];
+  if (args.length === 1) return args[0];  // single value/array/object → passthrough
+  return args;                             // multiple spread args → wrap as array
+}
 db.prepare = function(sql) {
-  const stmt = _prepare(sql);
-  function toArg(args) {
-    if (args.length === 0) return [];
-    if (args.length === 1) return args[0];  // single value/array/object → passthrough
-    return args;                             // multiple spread args → wrap as array
+  function once(method, args) {
+    const stmt = _prepare(sql);
+    try { return stmt[method](toArg(args)); } finally { stmt.finalize(); }
   }
   return {
-    run: (...args) => stmt.run(toArg(args)),
-    get: (...args) => stmt.get(toArg(args)),
-    all: (...args) => stmt.all(toArg(args)),
+    run: (...args) => once("run", args),
+    get: (...args) => once("get", args),
+    all: (...args) => once("all", args),
   };
 };
 
