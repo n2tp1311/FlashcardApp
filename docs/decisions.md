@@ -1184,7 +1184,6 @@ The wrapper now prepares, runs and finalizes a statement on each `run`, `get` or
 The test loads the real `db.js` on a database whose `prepare` counts statements left open, and holds it at zero through the migrations, the wrapper (including a throwing call) and real dashboard and analytics requests. With the old wrapper all four cases fail.
 
 
-
 ## 2026-10-15 — Nightly backups: a copy on the volume, and one off it
 
 There was no backup of the database beyond what each user could download as JSON from Preferences, and that holds one account and cannot be restored in place (2026-09-30). The database lives on one Railway volume.
@@ -1198,4 +1197,3 @@ There was no backup of the database beyond what each user could download as JSON
 **Failure is loud.** Backups usually fail by stopping quietly. Every pull that fails raises a macOS notification, and so does a server copy more than two days old, which is how a broken server-side backup would show. A copy is written under a temporary name and renamed only after its check, on both sides, so a cut-short copy is never taken for a good one.
 
 **Not covered.** Uploaded images (`data/uploads`), so a restored database can point at missing images. Restoring is by hand: stop the service, put the copy in place as `data/flashcards.db` with no `-wal` beside it, start.
-\n
