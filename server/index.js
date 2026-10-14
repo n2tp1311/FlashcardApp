@@ -68,6 +68,8 @@ app.get("/health", healthLimiter, (req, res) => {
 
 // Mounted before the session middleware: token-authenticated, so it must never create a session.
 app.use("/api/integrations/knowledge", require("./routes/integrations"));
+const BACKUPS = path.join(DATA, "backups");
+app.use("/api/backup", require("./routes/backup")(BACKUPS));
 
 app.use(session({
   store: new SQLiteSessionStore(),
@@ -174,3 +176,22 @@ startEventLoopWatchdog();
 setInterval(function() {
   db.prepare("DELETE FROM sessions WHERE expired <= ?").run(Math.floor(Date.now() / 1000));
 }, 24 * 60 * 60 * 1000);
+
+// Nightly database copy (lib/backup.js), checked every ten minutes and at start. A
+// failure is logged and retried at the next check; it must never take the server down.
+{
+  const backup = require("./lib/backup");
+  const hour = Number(process.env.BACKUP_HOUR_UTC || 18);
+  const check = function() {
+    try {
+      if (!backup.due(BACKUPS, Date.now(), hour)) return;
+      const t = Date.now();
+      const file = backup.snapshot(db, BACKUPS, Date.now());
+      if (file) console.log("[backup] wrote " + path.basename(file) + " in " + (Date.now() - t) + " ms");
+    } catch (e) {
+      console.error("[backup]", e && e.message);
+    }
+  };
+  setTimeout(check, 60 * 1000).unref();
+  setInterval(check, 10 * 60 * 1000).unref();
+}
