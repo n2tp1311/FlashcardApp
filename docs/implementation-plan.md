@@ -713,16 +713,16 @@ Text in math:     $\text{MSE} = \text{Bias}^2 + \text{Var}$
 
 ---
 
-### 5.14 Haptic Feedback (Android)
+### 5.14 Haptic Feedback (Android, iPhone)
 
 | Aspect | Spec |
 |---|---|
-| Helper | `haptic(name)` in app.js — returns early unless `state.haptics` and `navigator.vibrate`; `try/catch` around the call (per-OEM Android implementations, user-activation rule) |
+| Helper | `haptic(name)` in app.js — returns early unless `state.haptics`; `navigator.vibrate` where it exists, else on iPhone `iphoneTaps()` (a hidden `<input switch>` toggled through its label); `try/catch` around the call (per-OEM Android implementations, user-activation rule) |
 | Patterns | `tick` 10 · `select` 18 · `success` 24 · `warn` 30 · `error` [12,70,12] · `danger` [24,50,24] · `complete` [18,60,18,60,36] |
 | Hooks | flip, prev/next/shuffle/dot-jump, `markCard`, swipe arm + cancel, forced-retype begin/match/mismatch, LaTeX confirm, `answerQuiz` (correct vs wrong), quiz nav, session summary + quiz results, long-press select, edge-swipe back, search-modal swipe-close, pull-to-refresh commit, delete confirmation |
 | Not hooked | `advanceFlashcard` (auto-fires on a timer), render functions, modal open/close (called programmatically), per-keystroke and `touchmove`/`touchstart` handlers |
 | Preference | `preferences.haptics`, boolean, default true, synced per account; no server change needed (the prefs PUT merges arbitrary keys) |
-| Platform | Android only — iOS exposes no Vibration API; desktop no-ops. Hint line under the toggle when `navigator.vibrate` is missing |
+| Platform | Android vibrates; iPhone ticks on iOS 18+ through the switch; iPad and desktop no-op. Hint line under the toggle when neither applies |
 
 ### 5.15 First-run tutorial (server mode)
 
