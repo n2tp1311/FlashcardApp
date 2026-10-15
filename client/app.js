@@ -171,7 +171,7 @@ Object.assign(TRANSLATIONS.en, {
   "pref.haptics": "Vibration feedback",
   "pref.sounds": "Sound effects",
   "pref.soundsHint": "A marimba note when a quiz answer or a retyped answer is right, a low knock when it is wrong.",
-  "pref.hapticsUnsupported": "This browser can't vibrate — iPhone and iPad never can. The setting still syncs to your Android devices.",
+  "pref.hapticsUnsupported": "This browser can't vibrate. iPhone ticks on iOS 18 and later, Android vibrates; the setting syncs to both.",
   "pref.quizCountsAsKnown": "Quiz answers count as Know It",
   "pref.quizCountsAsKnownHint": "Right answers move cards on like Know It, wrong ones like Learning. Off: only flashcards move cards on.",
   "pref.language": "Language",
@@ -1258,7 +1258,7 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.haptics": "Phản hồi rung",
   "pref.sounds": "Hiệu ứng âm thanh",
   "pref.soundsHint": "Tiếng marimba khi câu trả lời trắc nghiệm hoặc câu gõ lại đúng, tiếng gõ trầm khi sai.",
-  "pref.hapticsUnsupported": "Trình duyệt này không rung được — iPhone và iPad thì không bao giờ rung. Tùy chọn vẫn được đồng bộ sang các thiết bị Android của bạn.",
+  "pref.hapticsUnsupported": "Trình duyệt này không rung được. iPhone rung nhẹ từ iOS 18 trở lên, Android thì rung; tùy chọn được đồng bộ sang cả hai.",
   "pref.quizCountsAsKnown": "Trả lời Trắc nghiệm được tính là Đã thuộc",
   "pref.quizCountsAsKnownHint": "Trả lời đúng được tính như Đã thuộc, trả lời sai như Đang học. Tắt: thẻ chỉ tiến bộ qua Thẻ ghi nhớ.",
   "pref.language": "Ngôn ngữ",
@@ -12118,15 +12118,52 @@ var HAPTIC_PATTERNS = {
   complete: [18, 60, 18, 60, 36]
 };
 
-// Android only in practice: iOS Safari exposes no Vibration API at all, and desktop browsers
-// that do expose it have no vibrator — both end up a no-op, so no pointer/mobile gate on top.
+// iPad has no Taptic Engine, so only the iPhone gets the switch tick below.
+var IPHONE_TAPS = /iPhone|iPod/.test(navigator.userAgent);
+var iphoneTapLabel = null;
+
+// iOS Safari has no Vibration API, but since iOS 18 toggling an <input switch> plays a
+// system tick, and clicking its label from script does too while a tap is being handled.
+// The pattern's pulses become that many ticks; their lengths can't be expressed.
+function iphoneTaps(pattern) {
+  if (!iphoneTapLabel) {
+    iphoneTapLabel = document.createElement("label");
+    iphoneTapLabel.setAttribute("aria-hidden", "true");
+    iphoneTapLabel.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none";
+    var input = document.createElement("input");
+    input.type = "checkbox";
+    input.setAttribute("switch", "");
+    input.tabIndex = -1;
+    iphoneTapLabel.appendChild(input);
+    // The synthetic clicks must not reach document-level handlers that close menus on an
+    // outside click.
+    iphoneTapLabel.addEventListener("click", function(e) { e.stopPropagation(); });
+    document.body.appendChild(iphoneTapLabel);
+  }
+  var pulses = Array.isArray(pattern) ? Math.ceil(pattern.length / 2) : 1;
+  for (var i = 0; i < pulses; i++) {
+    if (i === 0) iphoneTap(); else setTimeout(iphoneTap, i * 90);
+  }
+}
+function iphoneTap() {
+  // A label click focuses its input, which would close the keyboard under a retyped answer.
+  var had = document.activeElement;
+  iphoneTapLabel.click();
+  if (had && had !== document.activeElement && had.focus) had.focus({ preventScroll: true });
+}
+
+// Desktop browsers that expose the Vibration API have no vibrator, so it is a no-op there
+// and needs no pointer/mobile gate on top.
 function haptic(name) {
-  if (!state.haptics || !navigator.vibrate) return;
+  if (!state.haptics) return;
   var pattern = HAPTIC_PATTERNS[name];
   if (!pattern) return;
   // Spec'd to return false rather than throw, but it fronts per-OEM Android implementations
   // and a user-activation rule — feedback must never break the interaction that caused it.
-  try { navigator.vibrate(pattern); } catch (_) {}
+  try {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+    else if (IPHONE_TAPS) iphoneTaps(pattern);
+  } catch (_) {}
 }
 
 // Answer sounds: the Marimba set the user picked from five previews. Synthesized with Web
@@ -13152,7 +13189,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   document.getElementById("pref-sounds").checked = state.sounds;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
   if (IS_SERVER) { openWorkloadPrefs(); openMemoryPrefs(); openReminderPrefs(); }
-  document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate);
+  document.getElementById("pref-haptics-hint").classList.toggle("hidden", !!navigator.vibrate || IPHONE_TAPS);
   prefFontLabel();
   prefRateLabel(state.ttsRate);
   setPrefLang(state.language === "vi" ? "vi" : "en");
