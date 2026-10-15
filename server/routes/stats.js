@@ -386,7 +386,8 @@ router.get("/dashboard", requireAuth, (req, res) => {
       lessons:      totalLessons,
       cards:        totalCards,
       quizSessions: totalSessions,
-      attempts:     attRow.total
+      // SUM over no rows is NULL, which Home printed as "null Attempts" on a new account.
+      attempts:     attRow.total || 0
     },
     accuracy:          { correct: attRow.correct_count || 0, total: attRow.total || 0 },
     dueForReview,

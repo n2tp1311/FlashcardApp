@@ -114,6 +114,13 @@ test("the day's new-card goal still counts the new cards already learnt today", 
   assert.equal(est.estimatedNewCards, 3);
 });
 
+test("a new account's dashboard counts zero answers, not null", async () => {
+  db.exec("INSERT INTO users (id, email, name) VALUES ('u9', 'z@x', 'Z')");
+  const r = await fetch(base + "/api/stats/dashboard", { headers: { "x-user": "u9" } });
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).summary.attempts, 0);
+});
+
 // The Today tile's button, built by app.js's own functions under the real stylesheet.
 const app = fs.readFileSync(path.join(root, "client", "app.js"), "utf8");
 function fn(name) {
