@@ -297,6 +297,12 @@
 - `GET /api/stats/week-recap`; closing the sheet any way calls `POST /api/stats/week-recap/seen { week }`, which stores `weekRecapSeen` in the account's preferences, so it opens once per week across devices.
 - Not shown after a week with no study, off Home, or over another dialog such as the tutorial. Home asks once per page load.
 
+## Resume an unfinished session (server mode only)
+- A flashcard session left part way (Exit, a closed tab, iOS closing the app in the background) comes back on Home: the Today tile's Study now button becomes "Continue · 5 cards left", with the lesson and the time left under it, and a "Drop it and start a new session" link below. `tests/resume-session.test.js`
+- Saved in localStorage (`fc-resume-<user id>`) after every grade and every undo: card ids in order, the grades so far, which cards were new, the lessons and the time spent. Not saved before the first grade, with fewer than three cards left, or for Quiz and cram sessions.
+- It lasts until the UTC day turns (the streak's day), another session starts, or it is finished or dropped.
+- Resuming reloads the cards by id, so an edit made meanwhile shows and a deleted card is skipped, and opens on the first card not yet graded. The summary counts the whole session, time included. If a lesson in it was deleted the saved session is dropped with a notice; a network failure keeps it for another try.
+
 ## Dashboard — Period Selector
 
 - Four period pills (7d / 30d / 60d / 90d) above the heatmap control the analytics window; choice persisted in `fc-dash-period`; switching a period re-fetches only analytics (not the full dashboard) and updates heatmap, weekly trend, and heatmap title

@@ -1270,3 +1270,10 @@ At most three extras, so a session that earns everything does not bury the summa
 A lesson counts as finished by this session only if one of its cards was new at the start and answered in it. Asking the server "which lessons became complete after time T" needed a timestamp from the client's clock or an extra round trip at session start; the cards the session introduced are already known on the client. Only the user's own lessons are checked, so a shared class's titles cannot be probed through the endpoint.
 
 The record counts answers, not distinct cards, because `attempt_daily` (kept by triggers) gives earlier days' totals in one cheap query, and the Today numbers count answers too. The 20-answer floor is a judgement, not a measurement: below it a "record" is just the first few days of use.
+
+## 2026-10-15 — An unfinished session is saved on the device, not the account
+
+Resume keeps the session in localStorage rather than on the server. Every grade is already saved to the account as it is made, so what is lost on a close is only the session's shape: which cards, in what order, how far along. That is worth keeping for the rest of a day on the device it was started on, and not worth a table, a route and a sync story for a session started on the phone and continued on the laptop. The cost is exactly that: a session does not follow the user to another device.
+
+It expires when the UTC day turns, because tomorrow's due cards are a different session and the streak's day is the day the rest of the app uses. Only ids are stored; resuming reloads the cards, so an edit is never undone by a stale copy. Quiz is left out because its questions and distractors are built per session and a half quiz does not rebuild faithfully; cram is left out because its rounds re-order cards as they are answered. With two cards or fewer left the button is not worth showing, so nothing is saved.
+
