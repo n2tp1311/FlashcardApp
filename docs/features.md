@@ -285,6 +285,7 @@
 - The counts come from numbers Home already loads (the due total, today's reviews and new cards, the new-card estimate), so the button costs no request until pressed. The time is the count times the median flashcard answer time.
 - With nothing due and the day's new cards learnt, it reads "All done for today", with "Learn 10 more new cards" while untouched cards remain. With due cards left past the review cap it says how many wait for tomorrow.
 - The day's new-card estimate counts the new cards already learnt today towards its cap; capped by the untouched pool alone it shrank as it was met ("New cards 6 / 0").
+- A switch under the button, Flashcards | Quiz, picks how to go through the same cards. The time under the button follows the chosen mode's median answer time (a quiz answer takes longer). The choice is saved as `studyNowMode` in the account's preferences, so every device opens on it; flashcards for anyone who never picks. A quiz session is not saved for Continue.
 
 ## Home stats card while loading (server mode only)
 - The first load shows a grey placeholder of three tiles at the card's last measured height (`fc-home-hero-h-phone` / `-wide` in localStorage), so the class list under it stays where it will end up. `tests/home-skeleton.test.js`

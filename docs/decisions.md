@@ -1277,3 +1277,7 @@ Resume keeps the session in localStorage rather than on the server. Every grade 
 
 It expires when the UTC day turns, because tomorrow's due cards are a different session and the streak's day is the day the rest of the app uses. Only ids are stored; resuming reloads the cards, so an edit is never undone by a stale copy. Quiz is left out because its questions and distractors are built per session and a half quiz does not rebuild faithfully; cram is left out because its rounds re-order cards as they are answered. With two cards or fewer left the button is not worth showing, so nothing is saved.
 
+## 2026-10-15 — Study now's mode is a visible switch, remembered in the account
+
+Study now always started flashcards; some days the user wants a quiz on the same cards. Of three placements previewed (a switch under the button, a split button with a menu, a sheet on every tap) the switch was chosen: the choice is visible, and starting still takes one tap. It is stored in the account's preferences rather than on the device, because it is a habit, not a property of one phone. The cost is a few lines of height in the Today tile. Both time estimates are rendered with the button, so switching never waits for the network.
+
