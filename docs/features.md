@@ -287,6 +287,11 @@
 - The day's new-card estimate counts the new cards already learnt today towards its cap; capped by the untouched pool alone it shrank as it was met ("New cards 6 / 0").
 - A switch under the button, Flashcards | Quiz, picks how to go through the same cards. The time under the button follows the chosen mode's median answer time (a quiz answer takes longer). The choice is saved as `studyNowMode` in the account's preferences, so every device opens on it; flashcards for anyone who never picks. A quiz session is not saved for Continue.
 
+## Home top card on a wide screen (server mode only)
+- When the card is at least 480px wide, Today moves to the top and spans it, and the other two tiles (streak and the study-time window, or the due tile on the Dashboard) share the row below. From 680px Today is a band: goal, Study now and the mode switch on the left, the three meters on the right. `tests/hero-wide-layout.test.js`
+- Narrower (a phone) the tiles stack in their usual order: streak, Today, window. With a tile hidden from the gear, the one left takes the whole row under Today.
+- Measured on the card's width with a container query, not the window's, because the sidebar takes part of the window. The order change is visual only; screen readers and Tab keep the phone's order.
+
 ## Home stats card while loading (server mode only)
 - The first load shows a grey placeholder of three tiles at the card's last measured height (`fc-home-hero-h-phone` / `-wide` in localStorage), so the class list under it stays where it will end up. `tests/home-skeleton.test.js`
 - A refresh keeps the previous card on screen until the new one replaces it; there is no blank and no placeholder in between. A failed refresh keeps the old card; a failed first load hides the section.

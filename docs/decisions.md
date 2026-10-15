@@ -1281,3 +1281,7 @@ It expires when the UTC day turns, because tomorrow's due cards are a different 
 
 Study now always started flashcards; some days the user wants a quiz on the same cards. Of three placements previewed (a switch under the button, a split button with a menu, a sheet on every tap) the switch was chosen: the choice is visible, and starting still takes one tap. It is stored in the account's preferences rather than on the device, because it is a habit, not a property of one phone. The cost is a few lines of height in the Today tile. Both time estimates are rendered with the button, so switching never waits for the network.
 
+## 2026-10-16 — Home's top card: Today as a band on wide screens
+
+Three equal columns took the tallest tile's height (Today, after Study now and its mode switch were added), leaving the streak and 30-day tiles with a large empty area on a desktop. Of three layouts previewed, Today as a full-width band with the other two halved below was chosen: no tile has dead space, and Study now is the first thing on the page. Today-left with the other two stacked on the right was rejected after measuring it: the stacked pair is taller than Today, so the empty space only moved. The cost is that the visual order on a wide screen (Today first) differs from the phone and from the DOM order; `order` was used rather than reordering the markup so the phone, which most study happens on, keeps its order for keyboard and screen readers too.
+
