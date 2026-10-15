@@ -94,7 +94,7 @@ test("the hero card is three tiles: streak, today, study-time window", function(
   const ctx = load(20);
   ctx.state.maxReviewsPerDay = 300;
   const out = hero(ctx, { count: 281, week: week, activity: activity });
-  assert.equal((out.match(/<section class="dash-tile"/g) || []).length, 3);
+  assert.equal((out.match(/<section class="dash-tile[ "]/g) || []).length, 3);
   assert.match(out, /hero\.streak[\s\S]*hero\.today[\s\S]*hero\.lastDays\|n=30/);
   assert.match(out, /<span class="dash-tile-num">108<\/span>/);
   assert.match(out, /<b>44 \/ 57<\/b>/);
@@ -137,7 +137,7 @@ test("the week row marks each day and explains rest days only when one is in pla
 test("without today data (local mode) there is no Today tile and no week row", function() {
   const ctx = load(20);
   const out = hero(ctx, undefined);
-  assert.equal((out.match(/<section class="dash-tile"/g) || []).length, 2);
+  assert.equal((out.match(/<section class="dash-tile[ "]/g) || []).length, 2);
   assert.doesNotMatch(out, /dash-week/);
   assert.equal(ctx.heroWeekHtml({ count: 3 }), "");
 });

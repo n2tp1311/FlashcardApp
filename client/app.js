@@ -3765,10 +3765,12 @@ function homeHeroHeightKey() { return "fc-home-hero-h-" + (window.innerWidth < 7
 function homeHeroSkeleton() {
   var h = 0;
   try { h = parseInt(localStorage.getItem(homeHeroHeightKey()), 10) || 0; } catch (_) {}
-  var tile = '<section class="dash-tile"><i class="sk sk-h"></i><i class="sk sk-big"></i><i class="sk"></i><i class="sk sk-short"></i></section>';
+  var bars = '<i class="sk sk-h"></i><i class="sk sk-big"></i><i class="sk"></i><i class="sk sk-short"></i>';
+  var tile = '<section class="dash-tile">' + bars + '</section>';
+  // The middle one is Today's shape, so a wide screen's placeholder is the band the card becomes.
   return '<div class="dash-hero-card is-skeleton" role="status" aria-label="' + escHtml(t("common.loading")) + '"' +
     (h > 0 && h < 3000 ? ' style="height:' + h + 'px;overflow:hidden"' : '') + '>' +
-    '<div class="dash-hero-tiles">' + tile + tile + tile + '</div></div>';
+    '<div class="dash-hero-tiles">' + tile + '<section class="dash-tile is-today">' + bars + '</section>' + tile + '</div></div>';
 }
 
 function renderHomeCharts() {
@@ -10668,9 +10670,13 @@ function heroTodayTile(today, newCardEstimate, studyTime) {
   var newGoal = newCardEstimate ? newCardEstimate.estimatedNewCards : null;
   var cap = state.maxReviewsPerDay;
   var hasCap = cap !== null && cap !== undefined;
-  return '<section class="dash-tile">' +
-    '<h3 class="dash-tile-h">' + escHtml(t("hero.today")) + '</h3>' + head +
-    (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today)) +
+  // Two groups, so a wide screen can lay the tile out as a band: the goal and the button on the
+  // left, the meters on the right. On a phone they stack as before.
+  return '<section class="dash-tile is-today">' +
+    '<h3 class="dash-tile-h">' + escHtml(t("hero.today")) + '</h3>' +
+    '<div class="dash-today-main">' + head +
+      (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today)) +
+    '</div>' +
     '<div class="dash-meters">' +
       heroMeter("time", ICON_TODAY_TIME, "hero.studied", formatStudyDuration(a.studyMs),
         avgMs > 0 ? a.studyMs / avgMs : null, avgMs > 0 ? t("hero.studiedHint", { time: formatStudyDuration(avgMs) }) : null) +

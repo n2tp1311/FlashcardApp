@@ -3063,6 +3063,25 @@ code {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start;
 }
+.dash-today-main { display: grid; gap: 14px; min-width: 0; }
+/* Wide: Today becomes a full-width band on top (goal and button left, meters right) and the
+   other two share the row below. Three equal columns all took Today's height, which left the
+   streak and the 30-day tiles half empty. A container query, because the card's width depends
+   on the sidebar, not only the window. Visual order only: the DOM keeps the phone's order. */
+.dash-hero-card { container-type: inline-size; }
+@container (min-width: 480px) {
+  .dash-hero-tiles:has(> .is-today) { grid-template-columns: 1fr 1fr; }
+  .dash-hero-tiles > .is-today { grid-column: 1 / -1; order: -1; }
+  /* With a tile hidden from the gear, the one left beside Today takes the whole row. */
+  .dash-hero-tiles:has(> .dash-tile:nth-child(2):last-child) > .dash-tile { grid-column: 1 / -1; }
+}
+/* The band's two halves need room each; below this Today stacks inside its full-width row. */
+@container (min-width: 680px) {
+  .dash-hero-tiles > .is-today { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 32px; }
+  .dash-hero-tiles > .is-today > .dash-tile-h { grid-column: 1 / -1; }
+  .dash-hero-tiles > .is-today > .dash-meters { align-self: center; }
+  .dash-hero-card.is-skeleton .dash-hero-tiles > .is-today { grid-template-columns: 1fr; }
+}
 .dash-tile .dash-hero-settings-btn { top: 8px; right: 8px; }
 .dash-tile:has(> .dash-hero-settings-btn) .dash-tile-h { padding-right: 28px; }
 .dash-tile-h {
