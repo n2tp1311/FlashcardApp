@@ -3700,10 +3700,28 @@ function sortUnpinnedClasses(classes, key, dir) {
   return copy;
 }
 
+// The stats card keeps its place while Home loads, so the class list under it does not jump:
+// a refresh leaves the last card up until the new one replaces it, and a first load shows a
+// placeholder as tall as the card was last time at this width.
+function homeHeroHeightKey() { return "fc-home-hero-h-" + (window.innerWidth < 768 ? "phone" : "wide"); }
+
+function homeHeroSkeleton() {
+  var h = 0;
+  try { h = parseInt(localStorage.getItem(homeHeroHeightKey()), 10) || 0; } catch (_) {}
+  var tile = '<section class="dash-tile"><i class="sk sk-h"></i><i class="sk sk-big"></i><i class="sk"></i><i class="sk sk-short"></i></section>';
+  return '<div class="dash-hero-card is-skeleton" role="status" aria-label="' + escHtml(t("common.loading")) + '"' +
+    (h > 0 && h < 3000 ? ' style="height:' + h + 'px;overflow:hidden"' : '') + '>' +
+    '<div class="dash-hero-tiles">' + tile + tile + tile + '</div></div>';
+}
+
 function renderHomeCharts() {
   if (!IS_SERVER) return;
   var section = document.getElementById("home-charts-section");
-  document.getElementById("home-summary-grid").innerHTML = "";
+  var holder = document.getElementById("home-summary-grid");
+  if (!holder.querySelector(".dash-hero-card")) {
+    holder.innerHTML = homeHeroSkeleton();
+    section.classList.remove("hidden");
+  }
   // Isolated .catch so a new-card-estimate failure can't blank out the rest of the board.
   var newCardEstimatePromise = store.getNewCardEstimate().catch(function() { return null; });
   Promise.all([store.getDashboard(state.studyTimeWindowDays), newCardEstimatePromise]).then(function(results) {
@@ -3712,8 +3730,13 @@ function renderHomeCharts() {
     state.studyNowDue = dueTotal(dash.dueForReview);
     grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary, newCardEstimate, dash.today);
     section.classList.remove("hidden");
+    var hero = grid.querySelector(".dash-hero-card");
+    try { if (hero) localStorage.setItem(homeHeroHeightKey(), String(Math.round(hero.getBoundingClientRect().height))); } catch (_) {}
     playHomeEntrance(grid);
-  }).catch(function() { section.classList.add("hidden"); });
+  }).catch(function() {
+    // A card from the last load is still true enough to keep; a placeholder is not.
+    if (holder.querySelector(".is-skeleton")) { holder.innerHTML = ""; section.classList.add("hidden"); }
+  });
 }
 
 function dueTotal(lessons) {
@@ -12553,6 +12576,8 @@ function showAuthPanel(which) {
 
 function showAuthScreen() {
   currentUser = null;
+  // The next account must not see this one's numbers while its own load.
+  document.getElementById("home-summary-grid").innerHTML = "";
   showAuthPanel("login");
   document.getElementById("login-email").value = "";
   document.getElementById("login-password").value = "";

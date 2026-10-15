@@ -189,7 +189,8 @@ test("adapting fits on its own, is used when it beats the defaults, and the swit
   assert.ok(row.fsrs_preview_good > 0, "the button previews come from the same scheduler");
 
   prefs({ adaptMemory: false });
-  assert.equal(await answerDays("u1-c1"), standardDays, "off ignores the stored model");
+  // answerDays reads the clock after the reply, so a second can tick between the two calls.
+  assert.ok(Math.abs(await answerDays("u1-c1") - standardDays) < 2 / 86400, "off ignores the stored model");
   assert.ok(M.readUser(db, "u1").model, "but keeps it for when it is turned back on");
 });
 

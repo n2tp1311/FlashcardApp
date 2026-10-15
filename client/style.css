@@ -3043,6 +3043,15 @@ code {
   text-align: center;
   padding-right: 30px;
 }
+/* Home's loading placeholder (homeHeroSkeleton): the card's tiles with grey bars, pulsing. */
+.dash-hero-card.is-skeleton .dash-hero-tiles { height: 100%; }
+.dash-hero-card.is-skeleton .dash-tile { gap: 12px; min-height: 160px; }
+.sk { display: block; height: 12px; width: 70%; border-radius: var(--radius-sm); background: var(--surface2); animation: sk-pulse 1.4s ease-in-out infinite; }
+.sk-h { width: 35%; }
+.sk-big { height: 30px; width: 45%; }
+.sk-short { width: 50%; }
+@keyframes sk-pulse { 50% { opacity: 0.5; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
 .dash-hero-countdown { font-size: 0.6875rem; color: var(--text2); opacity: 0.85; }
 
 /* Hero card: three tiles (streak, today, study-time window), then a line of library counts. */
