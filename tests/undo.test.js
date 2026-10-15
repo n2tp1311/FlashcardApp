@@ -50,8 +50,9 @@ test("undoing a grade puts the session back: log, known map, time and due date",
   };
   const ctx = { state: state };
   vm.createContext(ctx);
-  vm.runInContext(extract("restoreGradedCard"), ctx);
+  vm.runInContext("var resumeSaves = 0; function saveResumeSession() { resumeSaves++; }" + extract("restoreGradedCard"), ctx);
   const index = ctx.restoreGradedCard({ card: card, prevKnown: undefined, prevLog: undefined, prevDue: null, sessionMs: 5000 });
+  assert.equal(ctx.resumeSaves, 1, "the saved session forgets the undone grade too");
   assert.equal(index, 1);
   assert.deepEqual(Object.keys(state.studyKnownMap), []);
   assert.deepEqual(JSON.parse(JSON.stringify(state.studySessionLog)), { b: "known" });

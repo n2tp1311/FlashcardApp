@@ -859,6 +859,11 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.minutes": "~{n} min",
   "studyNow.underMinute": "<1 min",
   "studyNow.title": "Study now",
+  "resume.go": "Continue · {n} cards left",
+  "resume.go_one": "Continue · 1 card left",
+  "resume.lessons": "{n} lessons",
+  "resume.drop": "Drop it and start a new session",
+  "resume.gone": "That session's cards are no longer there",
   "studyNow.doneTitle": "All done for today",
   "studyNow.doneSub": "Nothing is due",
   "studyNow.capTitle": "Today's review limit reached",
@@ -1946,6 +1951,10 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.minutes": "~{n} phút",
   "studyNow.underMinute": "<1 phút",
   "studyNow.title": "Học ngay",
+  "resume.go": "Học tiếp · còn {n} thẻ",
+  "resume.lessons": "{n} bài",
+  "resume.drop": "Bỏ và bắt đầu phiên mới",
+  "resume.gone": "Các thẻ của phiên đó không còn nữa",
   "studyNow.doneTitle": "Xong hết hôm nay",
   "studyNow.doneSub": "Không còn thẻ nào đến hạn",
   "studyNow.capTitle": "Đã đạt giới hạn ôn hôm nay",
@@ -7853,6 +7862,7 @@ document.addEventListener("click", function(e) {
 // were graded, the new-vs-review split, and a status breakdown, all from state.studySessionLog.
 function showFlashcardSummary() {
   haptic("complete");
+  clearResumeSession();
   // Each card once, so the skipped count and "retry the ones you missed" do not see repeats.
   if (state.cram) state.studyCards = uniqueCards(state.studyCards);
   var log = state.studySessionLog || {};
@@ -8449,6 +8459,7 @@ function launchStudy(filtered, mode, order) {
     showToast(t("study.noCardsMatchFilter"));
     return;
   }
+  clearResumeSession();
 
   state.studyMode = mode;
   state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
@@ -9694,6 +9705,7 @@ function markCard(known, grade, forceRetype) {
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known).catch(function() {});
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
+  saveResumeSession();
   if (card.upstream_change === "updated") {
     card.upstream_change = null;
     setUpstreamCount((state.upstreamCount || 0) - 1);
@@ -9765,6 +9777,7 @@ function restoreGradedCard(undo) {
   var id = undo.card.id;
   if (undo.prevKnown === undefined) delete state.studyKnownMap[id]; else state.studyKnownMap[id] = undo.prevKnown;
   if (undo.prevLog === undefined) delete state.studySessionLog[id]; else state.studySessionLog[id] = undo.prevLog;
+  saveResumeSession();
   if (undo.sessionMs) {
     state.sessionMs = Math.max(0, (state.sessionMs || 0) - undo.sessionMs);
     var at = (state.sessionDurations || []).lastIndexOf(undo.sessionMs);
@@ -10650,7 +10663,7 @@ function heroTodayTile(today, newCardEstimate, studyTime) {
   var hasCap = cap !== null && cap !== undefined;
   return '<section class="dash-tile">' +
     '<h3 class="dash-tile-h">' + escHtml(t("hero.today")) + '</h3>' + head +
-    studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today) +
+    (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today)) +
     '<div class="dash-meters">' +
       heroMeter("time", ICON_TODAY_TIME, "hero.studied", formatStudyDuration(a.studyMs),
         avgMs > 0 ? a.studyMs / avgMs : null, avgMs > 0 ? t("hero.studiedHint", { time: formatStudyDuration(avgMs) }) : null) +
@@ -10681,6 +10694,111 @@ function studyNowPlan(today, newCardEstimate, dueTotal) {
     uncapped: reviewsLeft === Infinity
   };
 }
+
+// An unfinished flashcard session, saved on this device after every grade so that closing
+// the app (or iOS closing it in the background) loses nothing. It lasts until the day turns
+// (the streak's UTC day), another session starts, or it is finished or dropped. Only card ids
+// are kept; resuming reloads the cards, so an edit made meanwhile shows.
+var RESUME_MIN_LEFT = 3;
+
+function resumeKey() { return "fc-resume-" + (currentUser ? currentUser.id : "local"); }
+
+function saveResumeSession() {
+  var log = state.studySessionLog || {};
+  var cards = state.studyCards || [];
+  var mode = state.studyMode;
+  var left = cards.filter(function(c) { return !log[c.id]; }).length;
+  var ok = !state.cram && (mode === "flashcard" || mode === "flashcard-write") && state.studyScope &&
+    left >= RESUME_MIN_LEFT && left < cards.length;
+  try {
+    if (!ok) { localStorage.removeItem(resumeKey()); return; }
+    var scope = state.studyScope;
+    localStorage.setItem(resumeKey(), JSON.stringify({
+      v: 1, day: new Date().toISOString().slice(0, 10), mode: mode,
+      ids: cards.map(function(c) { return c.id; }), log: log,
+      newIds: Object.keys(state.studySessionNewSet || {}),
+      lessonIds: scope.lessonIds, title: scope.title || "",
+      lessons: (scope.lessons || []).map(function(l) { return { id: l.id, title: l.title }; }),
+      sessionMs: state.sessionMs || 0
+    }));
+  } catch (_) {}
+}
+
+function clearResumeSession() {
+  try { localStorage.removeItem(resumeKey()); } catch (_) {}
+}
+
+function readResumeSession() {
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(resumeKey()) || "null"); } catch (_) {}
+  if (!saved || saved.v !== 1 || !Array.isArray(saved.ids) || !Array.isArray(saved.lessonIds)) return null;
+  if (saved.day !== new Date().toISOString().slice(0, 10)) { clearResumeSession(); return null; }
+  saved.left = saved.ids.filter(function(id) { return !saved.log[id]; }).length;
+  return saved.left > 0 ? saved : null;
+}
+
+function resumeSessionHtml(today) {
+  var saved = readResumeSession();
+  if (!saved) return "";
+  // The lessons say what it was; a Study now session's title is only "Study now".
+  var name = saved.lessons.length === 1 ? saved.lessons[0].title :
+    saved.lessons.length ? t("resume.lessons", { n: saved.lessons.length }) : saved.title;
+  var ms = saved.left * ((today && today.medianMs && today.medianMs.flashcard) || ETA_FALLBACK_MS.flashcard);
+  return '<button type="button" class="study-now" data-resume>' +
+      '<span class="study-now-play" aria-hidden="true"></span>' +
+      '<span class="study-now-lbl"><b>' + escHtml(t("resume.go", { n: saved.left })) + '</b>' +
+      '<small>' + escHtml(name + " · " + (ms < 60000 ? t("studyNow.underMinute") : t("studyNow.minutes", { n: Math.round(ms / 60000) }))) + '</small></span></button>' +
+    '<button type="button" class="study-now-drop" data-resume-drop>' + escHtml(t("resume.drop")) + '</button>';
+}
+
+function resumeStudySession(btn) {
+  var saved = readResumeSession();
+  if (!saved || btn.classList.contains("is-loading")) return;
+  var from = getActiveScreen();
+  btn.classList.add("is-loading");
+  store.getBulkCards(saved.lessonIds).then(function(cards) {
+    var byId = {};
+    cards.forEach(function(c) { byId[c.id] = c; });
+    var list = saved.ids.map(function(id) { return byId[id]; }).filter(Boolean);
+    var log = {};
+    list.forEach(function(c) { if (saved.log[c.id]) log[c.id] = saved.log[c.id]; });
+    var index = list.findIndex(function(c) { return !log[c.id]; });
+    if (index < 0) { clearResumeSession(); _refreshDashHeroCards(); showToast(t("resume.gone")); return; }
+    var knownMap = {};
+    list.forEach(function(c) { if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true; });
+    return store.getDifficultyMap(list.map(function(c) { return c.id; })).then(function(statsMap) {
+      if (getActiveScreen() !== from) return;
+      state.studyScope = { lessonIds: saved.lessonIds, lessons: saved.lessons, returnScreen: from, title: saved.title };
+      state.studyKnownMap = knownMap;
+      state.studyStatsMap = statsMap;
+      state.setupSnapshot = null;
+      state.studyMode = saved.mode;
+      state.cram = null;
+      state.studyCards = list;
+      state.studyIndex = index;
+      state.studyFlipped = false;
+      state.typeToCompare = saved.mode === "flashcard-write";
+      state.studySessionLog = log;
+      state.studySessionNewSet = {};
+      (saved.newIds || []).forEach(function(id) { state.studySessionNewSet[id] = true; });
+      store.markCardsSeen(list.map(function(c) { return c.id; }));
+      startFlashcards();
+      // After beginStudySession(), which zeroes it: the summary counts the time before too.
+      state.sessionMs = saved.sessionMs || 0;
+    });
+  }).catch(function(err) {
+    // The bulk load refuses the lot when one lesson was deleted: the session cannot come back.
+    // Anything else (offline) leaves it saved for another try.
+    if (err && err.status === 404) { clearResumeSession(); _refreshDashHeroCards(); showToast(t("resume.gone")); return; }
+    showToast(t("setup.loadFailed"), "error");
+  }).then(function() { btn.classList.remove("is-loading"); });
+}
+
+document.addEventListener("click", function(e) {
+  var btn = e.target.closest("[data-resume]");
+  if (btn) { resumeStudySession(btn); return; }
+  if (e.target.closest("[data-resume-drop]")) { clearResumeSession(); _refreshDashHeroCards(); }
+});
 
 function studyNowHtml(plan, today) {
   if (!plan) return '';

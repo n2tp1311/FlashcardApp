@@ -28,6 +28,7 @@ function load(goal) {
     "function formatStudyDuration(ms) { return Math.round(ms / 60000) + ' min'; }" +
     "function _streakResetCountdownText() { return 'resets'; }" +
     "function _dashMetricHint() { return 'hint'; }" +
+    "function resumeSessionHtml() { return ''; }" +
     ["dailyGoalRing", "weekdayLabel", "heroWeekHtml", "streakTimeHeroCard", "heroStreakTile", "heroTodayTile",
      "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml", "studyNowPlan", "studyNowHtml"].map(extract).join(""), ctx);
   return ctx;

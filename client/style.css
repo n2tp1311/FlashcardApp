@@ -3171,6 +3171,8 @@ code {
   padding: 6px 12px; font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 .study-now-more:hover { border-color: var(--primary); }
+.study-now-drop { justify-self: center; align-self: center; border: 0; background: none; color: var(--primary); font: inherit; font-size: 0.8125rem; font-weight: 700; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+.study-now-drop:hover { background: var(--surface2); }
 @media (prefers-reduced-motion: reduce) { .study-now:active { transform: none; } }
 .dash-goal-title { font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .dash-goal-sub { font-size: 0.8125rem; color: var(--text2); }
