@@ -113,7 +113,7 @@ test("reduced motion shows the end state at once, with no burst and a still flam
 });
 
 test("only a fresh Home plays it, and a pressed class card sinks onto its ledge", function() {
-  assert.match(fn("renderHomeCharts"), /grid\.innerHTML = streakTimeHeroCard[\s\S]*playHomeEntrance\(grid\);\n  \}\)\.catch/);
+  assert.match(fn("renderHomeCharts"), /grid\.innerHTML = streakTimeHeroCard[\s\S]*playHomeEntrance\(grid\);\n(    .*\n)*  \}\)\.catch/);
   assert.ok(!fn("_refreshDashHeroCards").includes("playHomeEntrance"), "a settings change does not replay the show");
   assert.match(css, /:root \.class-card:active \{ transform: translateY\(3px\); box-shadow: 0 1px 0 var\(--ledge\);/);
   assert.match(fn("heroStreakTile"), /is-streak' \+ \(streak > 0 \? ' is-lit' : ''\)/);

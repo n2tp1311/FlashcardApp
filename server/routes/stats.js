@@ -4,7 +4,7 @@ const express = require("express");
 const { normalizeTz } = require("../lib/workload");
 const db      = require("../db");
 const { requireAuth } = require("../middleware/auth");
-const { computeStreak, weekRow, addDays } = require("../lib/streak");
+const { computeStreak, weekRow, weekStart, addDays } = require("../lib/streak");
 const { summarizeToday } = require("../lib/today");
 const { aboveAverageRun } = require("../lib/aboveAvg");
 const { MASTERED_INTERVAL_SEC, MASTERED_SQL } = require("../lib/mastery");
@@ -826,6 +826,71 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
     recentAttempts: recentTotal,
     accuracyMultiplier
   });
+});
+
+// GET /api/stats/week-recap — last week (Monday to Sunday, on the streak's UTC days) against
+// the week before, for the sheet Home shows once a week. "Top class" is the class with the most
+// answers: when a card became mastered is not recorded, so mastery gained can't be counted.
+function weekNumbers(uid, monday) {
+  const from = Date.parse(monday + "T00:00:00Z") / 1000, to = from + 7 * 86400;
+  const days = db.prepare(
+    "SELECT DISTINCT date(created_at, 'unixepoch') AS day FROM attempts WHERE user_id = ? AND created_at >= ? AND created_at < ?"
+  ).all(uid, from, to).map(r => r.day);
+  const answers = db.prepare(
+    "SELECT COUNT(*) AS n FROM attempts WHERE user_id = ? AND created_at >= ? AND created_at < ?"
+  ).get(uid, from, to).n;
+  const newCards = db.prepare(
+    "SELECT COUNT(*) AS n FROM (SELECT MIN(created_at) AS first FROM attempts WHERE user_id = ? GROUP BY card_id) " +
+    "WHERE first >= ? AND first < ?"
+  ).get(uid, from, to).n;
+  return { from, to, days, studyDays: days.length, answers, newCards };
+}
+
+router.get("/week-recap", requireAuth, (req, res) => {
+  const uid = req.session.userId;
+  const today = new Date().toISOString().slice(0, 10);
+  const week = addDays(weekStart(today), -7);
+  const cur = weekNumbers(uid, week);
+  const prev = weekNumbers(uid, addDays(week, -7));
+  const top = db.prepare(
+    "SELECT c.id, c.name, COUNT(*) AS answers FROM attempts a " +
+    "JOIN cards ca ON ca.id = a.card_id JOIN lessons l ON l.id = ca.lesson_id JOIN classes c ON c.id = l.class_id " +
+    "WHERE a.user_id = ? AND a.created_at >= ? AND a.created_at < ? GROUP BY c.id ORDER BY answers DESC, c.name LIMIT 1"
+  ).get(uid, cur.from, cur.to);
+  let topClass = null;
+  if (top) {
+    const firsts = db.prepare(
+      "SELECT COUNT(*) AS n FROM (SELECT a.card_id, MIN(a.created_at) AS first FROM attempts a " +
+      "JOIN cards ca ON ca.id = a.card_id JOIN lessons l ON l.id = ca.lesson_id " +
+      "WHERE a.user_id = ? AND l.class_id = ? GROUP BY a.card_id) WHERE first >= ? AND first < ?"
+    ).get(uid, top.id, cur.from, cur.to).n;
+    topClass = { id: top.id, name: top.name, answers: top.answers, newCards: firsts };
+  }
+  const user = db.prepare("SELECT preferences FROM users WHERE id = ?").get(uid);
+  let prefs = {};
+  try { prefs = JSON.parse((user && user.preferences) || "{}") || {}; } catch (_) {}
+  res.json({
+    week,
+    days: Array.from({ length: 7 }, (_, i) => cur.days.includes(addDays(week, i))),
+    studyDays: cur.studyDays, answers: cur.answers, newCards: cur.newCards,
+    prev: { studyDays: prev.studyDays, answers: prev.answers, newCards: prev.newCards },
+    topClass,
+    seen: prefs.weekRecapSeen === week
+  });
+});
+
+// POST /api/stats/week-recap/seen { week } — stored with the account, so a recap closed on
+// the phone does not open again on the laptop.
+router.post("/week-recap/seen", requireAuth, (req, res) => {
+  const week = req.body && req.body.week;
+  if (typeof week !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(week)) return res.status(400).json({ error: "week must be YYYY-MM-DD" });
+  const uid = req.session.userId;
+  const user = db.prepare("SELECT preferences FROM users WHERE id = ?").get(uid);
+  let prefs = {};
+  try { prefs = JSON.parse((user && user.preferences) || "{}") || {}; } catch (_) {}
+  prefs.weekRecapSeen = week;
+  db.prepare("UPDATE users SET preferences = ? WHERE id = ?").run(JSON.stringify(prefs), uid);
+  res.json({ ok: true });
 });
 
 module.exports = router;

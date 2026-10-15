@@ -3296,6 +3296,37 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .leech-pill.is-pending { background: var(--surface2); color: var(--text2); }
 #leech-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .modal-leech { max-width: 440px; }
+
+/* Weekly recap: a centred dialog on a wide screen, a sheet from the bottom edge on a phone. */
+.modal-week-recap { max-width: 420px; }
+.modal-week-recap .modal-body { gap: 14px; padding-top: 20px; }
+.modal-week-recap .modal-footer { border-top: 0; padding-top: 4px; }
+.modal-week-recap .modal-footer .btn { flex: 1; justify-content: center; }
+.modal-week-recap .dash-week { max-width: none; }
+.sheet-grab { display: none; }
+.recap-title { font-size: 1.15rem; font-weight: 700; text-wrap: balance; }
+.recap-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.recap-num { display: grid; gap: 1px; align-content: start; }
+.recap-num b { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.recap-num small { color: var(--text2); font-size: 0.75rem; }
+.recap-delta { font-size: 0.75rem; font-weight: 700; color: var(--text3); }
+.recap-delta.is-up { color: var(--success); }
+.recap-vs { margin: -6px 0 0; font-size: 0.75rem; color: var(--text3); }
+.recap-top { display: grid; gap: 2px; padding: 10px 12px; border-radius: 8px; background: var(--primary-light); font-size: 0.875rem; }
+.recap-top b { overflow-wrap: anywhere; }
+.recap-top small { color: var(--text2); }
+@media (max-width: 767px) {
+  #modal-overlay > .modal-week-recap {
+    align-self: end; max-width: none; width: calc(100% + 32px); margin: 0 -16px -16px;
+    border-radius: 20px 20px 0 0; padding-bottom: env(safe-area-inset-bottom);
+  }
+  .modal-week-recap .sheet-grab { display: block; align-self: center; width: 40px; height: 5px; border-radius: 3px; background: var(--border); margin-top: 10px; flex: none; }
+  @starting-style { #modal-overlay > .modal-week-recap:not(.hidden) { transform: translateY(100%); opacity: 1; } }
+  #modal-overlay > .modal-week-recap { transition: transform 0.28s cubic-bezier(.2,.8,.2,1); }
+}
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  #modal-overlay > .modal-week-recap { transition: none; }
+}
 .leech-card-term { font-weight: 600; padding: 10px 12px; border-radius: var(--radius); background: var(--surface2); margin-bottom: 10px; overflow-wrap: anywhere; }
 .leech-body { margin: 0; color: var(--text2); line-height: 1.5; }
 .leech-actions { flex-wrap: wrap; }

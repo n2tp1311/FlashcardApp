@@ -854,6 +854,16 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.capTitle": "Today's review limit reached",
   "studyNow.capSub": "{n} more due, left for tomorrow",
   "studyNow.more": "Learn {n} more new cards",
+  "recap.title": "Last week you studied {n} days",
+  "recap.title_one": "Last week you studied 1 day",
+  "recap.days": "days studied",
+  "recap.answers": "answers",
+  "recap.newCards": "new cards",
+  "recap.same": "same",
+  "recap.vs": "Against the week before.",
+  "recap.top": "Most studied: {name}",
+  "recap.topSub": "{answers} answers · {newCards} new cards",
+  "recap.start": "Start the new week",
   "summary.new": "New",
   "summary.review": "Review",
   "summary.skippedNote": "{n} cards skipped (not graded)",
@@ -1922,6 +1932,15 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.capTitle": "Đã đạt giới hạn ôn hôm nay",
   "studyNow.capSub": "Còn {n} thẻ đến hạn, để ngày mai",
   "studyNow.more": "Học thêm {n} thẻ mới",
+  "recap.title": "Tuần trước bạn học {n} ngày",
+  "recap.days": "ngày học",
+  "recap.answers": "lượt trả lời",
+  "recap.newCards": "thẻ mới",
+  "recap.same": "không đổi",
+  "recap.vs": "So với tuần trước đó.",
+  "recap.top": "Học nhiều nhất: {name}",
+  "recap.topSub": "{answers} lượt trả lời · {newCards} thẻ mới",
+  "recap.start": "Bắt đầu tuần mới",
   "summary.new": "Mới",
   "summary.review": "Ôn tập",
   "summary.skippedNote": "{n} thẻ đã bỏ qua (chưa chấm điểm)",
@@ -3577,6 +3596,9 @@ function closeModal(id) {
   var modal = document.getElementById("modal-" + id);
   if (!modal) return;
   if (id === "tutorial" && !modal.classList.contains("hidden")) markTutorialSeen();
+  if (id === "week-recap" && !modal.classList.contains("hidden") && state.weekRecapWeek) {
+    store.markWeekRecapSeen(state.weekRecapWeek).catch(function() {});
+  }
   if (id === "preferences") savePrefsNow();
   // Blur first so a pending edit that commits on focusout (preset rename) still lands.
   if (modal.contains(document.activeElement)) document.activeElement.blur();
@@ -3733,6 +3755,7 @@ function renderHomeCharts() {
     var hero = grid.querySelector(".dash-hero-card");
     try { if (hero) localStorage.setItem(homeHeroHeightKey(), String(Math.round(hero.getBoundingClientRect().height))); } catch (_) {}
     playHomeEntrance(grid);
+    maybeShowWeekRecap();
   }).catch(function() {
     // A card from the last load is still true enough to keep; a placeholder is not.
     if (holder.querySelector(".is-skeleton")) { holder.innerHTML = ""; section.classList.add("hidden"); }
@@ -10737,6 +10760,51 @@ function weekdayLabel(day) {
 
 // This week's row, from GET /api/stats/today (also embedded in the dashboard response).
 // Server mode only: the streak and the day boundary live there.
+// A fall is shown in grey, never red: a lighter week is not a mistake.
+function weekRecapDelta(cur, prev, percent) {
+  var diff = cur - prev;
+  if (!diff) return '<span class="recap-delta">' + escHtml(t("recap.same")) + '</span>';
+  var text = percent && prev > 0 ? Math.abs(Math.round(diff / prev * 100)) + "%" : String(Math.abs(diff));
+  return '<span class="recap-delta' + (diff > 0 ? ' is-up' : '') + '">' + (diff > 0 ? "+" : "−") + escHtml(text) + '</span>';
+}
+
+function weekRecapHtml(r) {
+  var dots = r.days.map(function(on, i) {
+    var day = new Date(Date.parse(r.week + "T00:00:00Z") + i * 86400000).toISOString().slice(0, 10);
+    var label = weekdayLabel(day);
+    return '<div class="dash-week-day" role="listitem" aria-label="' + escHtml(label + ": " + t(on ? "week.done" : "week.missed")) + '">' +
+      '<span class="dash-week-name">' + escHtml(label) + '</span>' +
+      '<span class="dash-week-dot is-' + (on ? 'done' : 'missed') + '">' + (on ? "✓" : "") + '</span></div>';
+  }).join("");
+  function num(value, label, delta) {
+    return '<div class="recap-num"><b>' + escHtml(String(value)) + '</b><small>' + escHtml(label) + '</small>' + delta + '</div>';
+  }
+  return '<h3 class="recap-title" id="week-recap-title">' + escHtml(t("recap.title", { n: r.studyDays })) + '</h3>' +
+    '<div class="dash-week" role="list">' + dots + '</div>' +
+    '<div class="recap-nums">' +
+      num(r.studyDays + "/7", t("recap.days"), weekRecapDelta(r.studyDays, r.prev.studyDays, false)) +
+      num(r.answers, t("recap.answers"), weekRecapDelta(r.answers, r.prev.answers, true)) +
+      num(r.newCards, t("recap.newCards"), weekRecapDelta(r.newCards, r.prev.newCards, false)) +
+    '</div>' +
+    '<p class="recap-vs">' + escHtml(t("recap.vs")) + '</p>' +
+    (r.topClass ? '<div class="recap-top"><b>' + escHtml(t("recap.top", { name: r.topClass.name })) + '</b>' +
+      '<small>' + escHtml(t("recap.topSub", { answers: r.topClass.answers, newCards: r.topClass.newCards })) + '</small></div>' : '');
+}
+
+// Once per page load, on Home, with no other dialog open. Closing it any way marks the week
+// seen on the account, so it does not come back on this or another device.
+function maybeShowWeekRecap() {
+  if (!IS_SERVER || state.weekRecapChecked) return;
+  state.weekRecapChecked = true;
+  store.getWeekRecap().then(function(r) {
+    if (!r || r.seen || !r.studyDays) return;
+    if (getActiveScreen() !== "home" || modalStack.length) return;
+    state.weekRecapWeek = r.week;
+    document.getElementById("week-recap-body").innerHTML = weekRecapHtml(r);
+    openModal("week-recap");
+  }).catch(function() {});
+}
+
 function heroWeekHtml(today) {
   if (!today || !Array.isArray(today.week)) return "";
   var hasRest = today.restAvailableToday || today.week.some(function(d) { return d.status === "rest"; });
@@ -12518,6 +12586,8 @@ var SQLiteAdapter = (function() {
     writesSettled: function() { return writeChain; },
     getReviewsToday: function() { return req("GET", "/stats/reviews-today"); },
     getNewCardEstimate: function() { return req("GET", "/stats/new-card-estimate"); },
+    getWeekRecap: function() { return req("GET", "/stats/week-recap"); },
+    markWeekRecapSeen: function(week) { return req("POST", "/stats/week-recap/seen", { week: week }); },
     getTrend: function(type, id) { return req("GET", "/stats/trend?scope=" + type + "&id=" + id); },
     getClassAccuracy: function() { return req("GET", "/stats/accuracy/classes"); },
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
