@@ -1260,3 +1260,13 @@ The user picked the sheet from three previews (a dismissible card on Home, a she
 The preview promised "the class that advanced most: +24 mastered". That number cannot be computed: mastery is a current state in `card_states`, and when a card became mastered is not recorded. So the recap names the class with the most answers last week, with its answers and new cards. Adding a mastery history to count it properly was not worth a schema change for one line.
 
 The seen week lives in the account's preferences rather than localStorage, so a recap closed on the phone does not open again on the laptop. Weeks use the streak's UTC days, not the user's time zone, so the recap's days agree with the week row and streak; for the user in UTC+7 that means a week turns over at 07:00 Monday. The count says "answers" rather than "reviews", because it includes first answers to new cards.
+
+## 2026-10-15 — Session complete: what it adds, and what it does not count
+
+The user picked all three additions from the preview: a medal card, "almost there", and milestones that are not achievements. Proposing this, I said the summary did not announce achievements at all; it already showed new tiers as lines, so this builds on that rather than adding it.
+
+At most three extras, so a session that earns everything does not bury the summary. The order puts what happened (a medal, a finished lesson, a record) before what nearly happened, and "almost there" appears only without a new medal, since next to one it reads as a consolation.
+
+A lesson counts as finished by this session only if one of its cards was new at the start and answered in it. Asking the server "which lessons became complete after time T" needed a timestamp from the client's clock or an extra round trip at session start; the cards the session introduced are already known on the client. Only the user's own lessons are checked, so a shared class's titles cannot be probed through the endpoint.
+
+The record counts answers, not distinct cards, because `attempt_daily` (kept by triggers) gives earlier days' totals in one cheap query, and the Today numbers count answers too. The 20-answer floor is a judgement, not a measurement: below it a "record" is just the first few days of use.
