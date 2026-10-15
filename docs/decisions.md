@@ -1222,3 +1222,11 @@ The motion is one entrance, played when Home is shown. Bars, ring and numbers st
 Each keyframe states only where it starts, so the animation ends on whatever value the markup set: the bar's inline `scaleX`, the ring's offset, the dot's normal size. No end values are copied into the CSS, so none can drift out of step with the data. Reduced motion shows the final state at once. The test caught the reduced-motion rule for the week dots losing on specificity to the rule that starts them, so the dots still popped. It now names the same `.is-done`/`.is-rest` classes.
 
 Cost: about 1 s of movement on every visit to Home. Count-up numbers read 0 for a moment to anyone who looks closely at the first frame.
+
+## 2026-10-15 — No Back trap on iPhone and iPad
+
+The day after the Home fix the user sent a screenshot of a completely blank screen in candy dark's background (#0f0b17): they had finished a session and gone back, the blank stayed for a long time, and the next time the app hung. Tapping the summary's Back button worked in every engine tried (WebKit and Chromium, iPhone emulation, to a lesson and to Home). A left-edge swipe was the remaining path. The summary still had the trap entry behind it, so iOS ran its own swipe-back onto that entry's snapshot, which is blank for a same-document entry and drawn in the page background. At the same time the app's edge swipe went back too, and the popstate handler then pushed a new entry while iOS was still showing the snapshot.
+
+Keeping the entry only where there is somewhere to go back to (the fix before this one) still leaves every screen with a Back button open to this gesture. On iOS the trap is therefore off entirely, and the app's edge swipe is the only Back. It now takes its screens from `SCREEN_BACK_BTN`, not its own shorter list, which had left out the summary, results, setup and cram, so a swipe there did nothing once the native one was gone. Leaving a quiz part-way asks first, as the popstate path did.
+
+Cost: in Safari on iOS (not the Home Screen app) the browser's own Back button now leaves the app instead of going back a screen. Not verified on a device: headless WebKit runs no native swipe gesture, so the test checks that no entry is ever pushed under an iPhone user agent, and that the edge swipe reads the shared map.
