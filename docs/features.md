@@ -279,6 +279,13 @@
 
 - Diff-pills now show `"Easy · 80%"` format (level + % accuracy) for cards that have attempt history; shows `"New"` for cards with no attempts
 
+## Study now (server mode only)
+- A button in the Today tile, on Home and the Dashboard: "Study now · 34 cards", with "28 to review · 6 new · ~12 min" under it. One tap starts a flashcard session without Study Setup, and Back returns to the screen it was pressed on. `tests/study-now.test.js`
+- It holds every due card in classes that aren't archived, most overdue first, as many as Max reviews per day still allows, then the new cards today's estimate has left, in course order (class, lesson, card). `POST /api/cards/study-now { reviews, newCards }`; `reviews: null` means no cap.
+- The counts come from numbers Home already loads (the due total, today's reviews and new cards, the new-card estimate), so the button costs no request until pressed. The time is the count times the median flashcard answer time.
+- With nothing due and the day's new cards learnt, it reads "All done for today", with "Learn 10 more new cards" while untouched cards remain. With due cards left past the review cap it says how many wait for tomorrow.
+- The day's new-card estimate counts the new cards already learnt today towards its cap; capped by the untouched pool alone it shrank as it was met ("New cards 6 / 0").
+
 ## Dashboard — Period Selector
 
 - Four period pills (7d / 30d / 60d / 90d) above the heatmap control the analytics window; choice persisted in `fc-dash-period`; switching a period re-fetches only analytics (not the full dashboard) and updates heatmap, weekly trend, and heatmap title

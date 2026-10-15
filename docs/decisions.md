@@ -1230,3 +1230,13 @@ The day after the Home fix the user sent a screenshot of a completely blank scre
 Keeping the entry only where there is somewhere to go back to (the fix before this one) still leaves every screen with a Back button open to this gesture. On iOS the trap is therefore off entirely, and the app's edge swipe is the only Back. It now takes its screens from `SCREEN_BACK_BTN`, not its own shorter list, which had left out the summary, results, setup and cram, so a swipe there did nothing once the native one was gone. Leaving a quiz part-way asks first, as the popstate path did.
 
 Cost: in Safari on iOS (not the Home Screen app) the browser's own Back button now leaves the app instead of going back a screen. Not verified on a device: headless WebKit runs no native swipe gesture, so the test checks that no entry is ever pushed under an iPhone user agent, and that the edge swipe reads the shared map.
+
+## 2026-10-15 — Study now builds its session on the server, sized by the client
+
+The user picked the Today-tile placement from three previews (top of Home, inside the Today tile, a bar pinned to the bottom). In the Today tile the button sits next to the goal ring it fills.
+
+Building the session on the client would have meant fetching every card of every lesson, which for a library ingested from whole books is thousands of cards to use a few dozen. So the server picks the cards (`POST /api/cards/study-now`): due cards by `srs_due_at`, then never-touched cards in course order. The client says how many of each, because it already holds the review cap, today's reviews and the new-card estimate that the Today meters show, and the button has to promise the same numbers the meters show. `reviews: null` means no cap, so a card that comes due between drawing Home and pressing the button is still included.
+
+Due cards come first and are not interleaved with new ones: overdue reviews are what a missed day costs, and new cards are optional. New cards go in course order, not shuffled, because a book's chapters build on each other.
+
+The estimate fix came out of the end-to-end run. After learning the last six new cards, the meter read "6 / 0": the goal was capped by the never-touched pool, which those six had just left. Study now subtracts today's new cards from that goal, so the same bug would have under-filled sessions on small libraries.
