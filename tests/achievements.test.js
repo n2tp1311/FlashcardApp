@@ -251,7 +251,7 @@ test("wiring: sidebar, screen, back paths, strip, events and the typed flag", fu
   assert.doesNotMatch(html, /dash-ach-strip/);
   assert.match(app, /"sidebar-vocabulary-link", "sidebar-achievements-link"\]\.forEach/);
   assert.match(app, /achievements: "btn-achievements-back"/);
-  assert.match(app, /"achievements": "btn-achievements-back"/);
+  assert.match(app, /SCREEN_BACK_BTN\[screen\] && document.getElementById\(SCREEN_BACK_BTN\[screen\]\)/);  // the edge swipe uses the same map
   assert.match(app, /screen === "achievements"\) \{\s*if \(e\.key === "Escape"\)/);
   // The Dashboard shows them in the Streak tile, filled once the hero card is drawn.
   assert.match(extract("renderDashboard"), /streakTimeHeroCard\([^)]*\{ due: d\.dueForReview \|\| \[\], futureDue: futureDue \}\);\s*renderDashAchievements\(\);/);

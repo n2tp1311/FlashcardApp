@@ -14571,12 +14571,17 @@ function fcCloseTopModal() {
 // that entry's blank snapshot, a white screen, and preventDefault on the edge cannot stop
 // that gesture (decisions.md 2026-07-23). With nothing behind Home, iOS has nothing to
 // swipe back to.
-var backTrap = { armed: false, pendingPops: 0 };
+// On iPhone and iPad there is no trap at all. Any entry behind a screen gives iOS the same
+// gesture: it slid the session summary aside onto a blank page in the theme's background,
+// which stayed for seconds, while the app's own edge swipe went back as well. There the
+// app's edge swipe (the touch handlers below) is the only Back, and iOS has none to run.
+var backTrap = { armed: false, pendingPops: 0,
+  off: /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) };
 function syncBackTrap() {
   if (!backTrap) return;  // called by showScreen before this file has run this far
   // A history.back() still on its way would pop an entry pushed now; wait for it.
   if (backTrap.pendingPops > 0) return;
-  var want = !!SCREEN_BACK_BTN[getActiveScreen()] || fcAnyOverlayOpen();
+  var want = !backTrap.off && (!!SCREEN_BACK_BTN[getActiveScreen()] || fcAnyOverlayOpen());
   if (want && !backTrap.armed) {
     history.pushState({ fc: true }, "");
     backTrap.armed = true;
@@ -14866,20 +14871,13 @@ initHomeHeaderAutoHide();
         openSidebar();
         return;
       }
-      var backMap = {
-        "class": "btn-class-back",
-        "lesson": "btn-lesson-back",
-        "quiz": "btn-quiz-back",
-        "stats": "btn-stats-back",
-        "dashboard": "btn-dashboard-back",
-        "upstream": "btn-upstream-back",
-        "vocabulary": "btn-vocabulary-back",
-        "achievements": "btn-achievements-back"
-      };
-      var btn = backMap[screen];
-      if (btn) {
-        var el = document.getElementById(btn);
-        if (el) { haptic("tick"); el.click(); }
+      // Every screen with a Back button: on iOS this is the only Back there is (backTrap.off),
+      // so the session summary, results and setup need it as much as the lists.
+      var el = SCREEN_BACK_BTN[screen] && document.getElementById(SCREEN_BACK_BTN[screen]);
+      if (el) {
+        haptic("tick");
+        if (screen === "quiz") confirmLeaveStudy(function() { el.click(); });
+        else el.click();
       }
     }
   }, { passive: true });

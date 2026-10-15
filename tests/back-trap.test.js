@@ -39,8 +39,8 @@ before(async function() {
 });
 after(async function() { if (browser) await browser.close(); if (server) server.close(); });
 
-async function page() {
-  const p = await browser.newPage();
+async function page(opts) {
+  const p = await browser.newPage(opts);
   await p.goto(url);
   await p.addScriptTag({ content: harness });
   return p;
@@ -117,6 +117,22 @@ test("forward onto the old entry from Home (a swipe from the right edge) steps s
   await settle(p);
   assert.deepEqual(await where(p), { index: 0, screen: "home", overlay: false, armed: false });
   await p.close();
+});
+
+test("on an iPhone there is never an entry, so iOS has no blank page to swipe back to", async function() {
+  const p = await page({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148" });
+  await p.evaluate(() => { showScreen("class"); showScreen("lesson"); openOverlay(); });
+  await settle(p);
+  assert.deepEqual(await where(p), { index: 0, screen: "lesson", overlay: true, armed: false });
+  await p.close();
+});
+
+test("the app's edge swipe goes back from every screen with a Back button, the summary included", function() {
+  const start = app.indexOf("// ─── 2. Edge back swipe");
+  const edge = app.slice(start, app.indexOf("// ─── 3.", start));
+  assert.match(edge, /SCREEN_BACK_BTN\[screen\]/);
+  assert.ok(!edge.includes("var backMap"), "no second, shorter list of screens");
+  assert.match(edge, /if \(screen === "quiz"\) confirmLeaveStudy/);
 });
 
 test("showScreen and syncInert keep the trap in step, and URL resets keep its marker", function() {
