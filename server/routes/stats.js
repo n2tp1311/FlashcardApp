@@ -735,7 +735,11 @@ function todayStats(uid) {
     restAvailableToday: s.restAvailableToday,
     week: weekRow(days, s.restDays, todayStr),
     medianMs,
-    activity: todayActivity(uid)
+    activity: todayActivity(uid),
+    // The busiest earlier day, so the session-complete screen can say when today beats it.
+    bestDay: db.prepare(
+      "SELECT day, SUM(cnt) AS count FROM attempt_daily WHERE user_id = ? AND day < ? GROUP BY day ORDER BY count DESC, day DESC LIMIT 1"
+    ).get(uid, todayStr) || null
   };
 }
 
@@ -891,6 +895,29 @@ router.post("/week-recap/seen", requireAuth, (req, res) => {
   prefs.weekRecapSeen = week;
   db.prepare("UPDATE users SET preferences = ? WHERE id = ?").run(JSON.stringify(prefs), uid);
   res.json({ ok: true });
+});
+
+// POST /api/stats/lessons-done { newIds } — of the lessons holding these cards (cards that were
+// new when a session began and were answered in it), the ones with no unanswered card left:
+// lessons that session finished.
+const LESSONS_DONE_MAX = 2000;
+router.post("/lessons-done", requireAuth, (req, res) => {
+  const ids = req.body && req.body.newIds;
+  if (!Array.isArray(ids) || ids.length > LESSONS_DONE_MAX || !ids.every(id => typeof id === "string")) {
+    return res.status(400).json({ error: "newIds must be an array of card ids" });
+  }
+  if (!ids.length) return res.json({ lessons: [] });
+  const uid = req.session.userId;
+  const lessons = db.prepare(
+    "SELECT DISTINCT l.id, l.title FROM cards ca JOIN lessons l ON l.id = ca.lesson_id JOIN classes c ON c.id = l.class_id " +
+    "WHERE ca.id IN (" + ids.map(() => "?").join(",") + ") AND c.user_id = ?"
+  ).all(...ids, uid);
+  const left = db.prepare(
+    "SELECT COUNT(*) AS total, SUM(CASE WHEN EXISTS (SELECT 1 FROM attempts a WHERE a.card_id = ca.id AND a.user_id = ?) THEN 0 ELSE 1 END) AS open " +
+    "FROM cards ca WHERE ca.lesson_id = ?"
+  );
+  res.json({ lessons: lessons.map(l => Object.assign(l, left.get(uid, l.id)))
+    .filter(l => l.total > 0 && !l.open).map(l => ({ id: l.id, title: l.title, cards: l.total })) });
 });
 
 module.exports = router;

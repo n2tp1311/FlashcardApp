@@ -841,6 +841,16 @@ Object.assign(TRANSLATIONS.en, {
   "done.streak": "Day streak {from} → {to}",
   "done.streakMilestone": "{n}-day streak!",
   "done.goalMet": "Daily goal reached: {n} cards today",
+  "done.newBadge": "New badge",
+  "done.seeBadges": "See badges",
+  "done.near": "Almost there: {name}",
+  "done.nearGain": "this session +{n}",
+  "done.lessonDone": "Lesson finished: {title}",
+  "done.lessonDoneSub": "All {n} of its cards learned",
+  "done.lessonDoneSub_one": "Its one card learned",
+  "done.lessonsDone": "{n} lessons finished",
+  "done.record": "New record: {n} answers in a day",
+  "done.recordSub": "Old record {old}, {date}",
   "eta.minutes": "~{n} min left",
   "eta.underMinute": "<1 min left",
   "studyNow.go": "Study now · {n} cards",
@@ -1919,6 +1929,15 @@ Object.assign(TRANSLATIONS.vi, {
   "done.streak": "Chuỗi ngày học {from} → {to}",
   "done.streakMilestone": "Chuỗi {n} ngày!",
   "done.goalMet": "Đã đạt mục tiêu ngày: {n} thẻ hôm nay",
+  "done.newBadge": "Huy hiệu mới",
+  "done.seeBadges": "Xem huy hiệu",
+  "done.near": "Sắp đạt: {name}",
+  "done.nearGain": "phiên này +{n}",
+  "done.lessonDone": "Xong bài: {title}",
+  "done.lessonDoneSub": "Đã học hết {n} thẻ của bài",
+  "done.lessonsDone": "Xong {n} bài",
+  "done.record": "Kỷ lục mới: {n} lượt trả lời trong một ngày",
+  "done.recordSub": "Kỷ lục cũ {old}, {date}",
   "eta.minutes": "còn ~{n} phút",
   "eta.underMinute": "còn <1 phút",
   "studyNow.go": "Học ngay · {n} thẻ",
@@ -6001,9 +6020,9 @@ function achNewlyEarned(before, items, max) {
 }
 
 function achSnapshot(data) {
-  var tiers = {};
-  data.items.forEach(function(it) { tiers[it.key] = it.tier; });
-  return { now: data.now, tiers: tiers };
+  var tiers = {}, values = {};
+  data.items.forEach(function(it) { tiers[it.key] = it.tier; values[it.key] = it.value; });
+  return { now: data.now, tiers: tiers, values: values };
 }
 
 function achTierName(medal) {
@@ -7714,7 +7733,79 @@ function sessionCheers(before, after, goal) {
   return lines;
 }
 
-function renderSessionDone(id, ratio, tiles) {
+// A record only counts once there is a record worth beating; on the second day of use any
+// session would set one.
+var RECORD_MIN_ANSWERS = 20;
+var NEAR_MIN_PROGRESS = 0.8;
+var SESSION_EXTRAS_MAX = 3;
+
+// What else the session reached, beyond the streak and goal lines: the best new medal as a
+// big card and any others as lines, lessons it finished, a new daily record, and, when no
+// medal came, the one closest to coming. At most three, so the buttons stay on a phone screen.
+function sessionExtras(earned, lessons, before, after, achBefore, achItems) {
+  var medals = earned.slice().sort(function(a, b) {
+    return achMedalTier(b.tier, b.tiers.length) - achMedalTier(a.tier, a.tiers.length);
+  });
+  var out = [];
+  if (medals.length) out.push({ kind: "badge", item: medals[0] });
+  if (lessons && lessons.length) out.push({ kind: "lessons", lessons: lessons });
+  var best = after && after.bestDay;
+  if (best && before && best.count >= RECORD_MIN_ANSWERS && before.count <= best.count && after.count > best.count) {
+    out.push({ kind: "record", count: after.count, old: best.count, day: best.day });
+  }
+  if (!medals.length && achItems) {
+    var near = achNextUp(achItems);
+    if (near && near.progress >= NEAR_MIN_PROGRESS) {
+      var was = achBefore && achBefore.values ? achBefore.values[near.key] : undefined;
+      // Only where the progress line counts the value itself; a streak shown as its current
+      // run, or a percentage, has no "+N" that would read right.
+      var gain = typeof was === "number" && near.show && near.show.cur === near.value ? near.value - was : 0;
+      out.push({ kind: "near", item: near, gain: gain > 0 ? gain : 0 });
+    }
+  }
+  medals.slice(1).forEach(function(it) { out.push({ kind: "medal", item: it }); });
+  return out.slice(0, SESSION_EXTRAS_MAX);
+}
+
+var SESSION_SPARKS = [[-64, -18], [64, -22], [-46, 30], [50, 32], [0, -44], [-76, 8], [78, 6], [0, 42]];
+
+function sessionExtraHtml(x) {
+  if (x.kind === "badge") {
+    var it = x.item, medal = achMedalTier(it.tier, it.tiers.length);
+    var name = t("ach." + it.key + ".name") + (it.tiers.length > 1 ? " · " + achTierName(medal) : "");
+    return '<div class="session-badge ach-t' + medal + '">' +
+      SESSION_SPARKS.map(function(p) { return '<i class="session-spark" style="--x:' + p[0] + 'px;--y:' + p[1] + 'px"></i>'; }).join("") +
+      '<span class="ach-medal">' + achIcon(it.key) + '</span>' +
+      '<span class="session-badge-kicker">' + escHtml(t("done.newBadge")) + '</span>' +
+      '<b>' + escHtml(name) + '</b>' +
+      '<small>' + escHtml(t("ach." + it.key + ".desc")) + '</small>' +
+      '<button type="button" class="session-badge-link" data-open-achievements>' + escHtml(t("done.seeBadges")) + '</button></div>';
+  }
+  if (x.kind === "medal") {
+    return '<div class="session-cheer cheer-ach"><span class="ach-medal ach-t' + achMedalTier(x.item.tier, x.item.tiers.length) + '">' + achIcon(x.item.key) + '</span>' +
+      '<span>' + escHtml(achEarnedLineText(x.item)) + '</span></div>';
+  }
+  var icon, title, sub;
+  if (x.kind === "lessons") {
+    icon = "✓";
+    var one = x.lessons.length === 1;
+    title = one ? t("done.lessonDone", { title: x.lessons[0].title }) : t("done.lessonsDone", { n: x.lessons.length });
+    sub = one ? t("done.lessonDoneSub", { n: x.lessons[0].cards }) : x.lessons.map(function(l) { return l.title; }).join(", ");
+  } else if (x.kind === "record") {
+    icon = "★";
+    title = t("done.record", { n: x.count });
+    sub = t("done.recordSub", { old: x.old, date: achDate(Date.parse(x.day + "T00:00:00Z") / 1000) });
+  } else {
+    return '<div class="session-near"><div class="session-near-row"><span class="ach-medal">' + achIcon(x.item.key) + '</span>' +
+      '<span class="session-extra-text"><b>' + escHtml(t("done.near", { name: t("ach." + x.item.key + ".name") })) + '</b>' +
+      '<small>' + escHtml(achProgressText(x.item) + (x.gain ? " · " + t("done.nearGain", { n: x.gain }) : "")) + '</small></span></div>' +
+      '<span class="session-near-bar" aria-hidden="true"><i style="width:' + Math.round(Math.min(1, x.item.progress) * 100) + '%"></i></span></div>';
+  }
+  return '<div class="session-milestone"><span class="session-milestone-icon" aria-hidden="true">' + icon + '</span>' +
+    '<span class="session-extra-text"><b>' + escHtml(title) + '</b><small>' + escHtml(sub) + '</small></span></div>';
+}
+
+function renderSessionDone(id, ratio, tiles, newIds) {
   var box = document.getElementById(id);
   box.innerHTML =
     '<div class="session-done-title">' + escHtml(sessionHeadline(ratio)) + '</div>' +
@@ -7727,31 +7818,36 @@ function renderSessionDone(id, ratio, tiles) {
     '<div class="session-cheers" aria-live="polite"></div>';
   var before = state.sessionTodayAtStart;
   var achBefore = state.sessionAchAtStart;
-  if (!IS_SERVER || !store.getToday || (!before && !achBefore)) return;
+  newIds = newIds || [];
+  if (!IS_SERVER || !store.getToday || (!before && !achBefore && !newIds.length)) return;
   var token = state.sessionToken;
   // The last answers may still be queued; read today's numbers only once they are written.
   store.writesSettled().then(function() {
     return Promise.all([
-      before ? store.getToday() : null,
-      achBefore ? refreshAchievements().catch(function() { return null; }) : null
+      store.getToday().catch(function() { return null; }),
+      achBefore ? refreshAchievements().catch(function() { return null; }) : null,
+      newIds.length && store.getLessonsDone ? store.getLessonsDone(newIds).catch(function() { return null; }) : null
     ]);
   }).then(function(res) {
     if (state.sessionToken !== token) return;
     var after = res[0];
-    var lines = after ? sessionCheers(before, after, state.dailyGoal) : [];
+    var lines = after && before ? sessionCheers(before, after, state.dailyGoal) : [];
     var earned = res[1] ? achNewlyEarned(achBefore, res[1].items, 3) : [];
-    if (!lines.length && !earned.length) return;
+    var extras = sessionExtras(earned, res[2] && res[2].lessons, before, after, achBefore, res[1] && res[1].items);
+    if (!lines.length && !extras.length) return;
     box.querySelector(".session-cheers").innerHTML = lines.map(function(l) {
       return '<div class="session-cheer cheer-' + l.kind + '">' +
         (l.kind === "goal" ? dailyGoalRing(after.count, state.dailyGoal) : '<span class="session-flame">' + ICON_FLAME + '</span>') +
         '<span>' + escHtml(l.text) + '</span></div>';
-    }).join('') + earned.map(function(it) {
-      return '<div class="session-cheer cheer-ach"><span class="ach-medal ach-t' + achMedalTier(it.tier, it.tiers.length) + '">' + achIcon(it.key) + '</span>' +
-        '<span>' + escHtml(achEarnedLineText(it)) + '</span></div>';
-    }).join('');
-    playSound("combo");
+    }).join('') + extras.map(sessionExtraHtml).join('');
+    // "Almost there" is a nudge, not an achievement: no fanfare for it alone.
+    if (lines.length || extras.some(function(x) { return x.kind !== "near"; })) playSound("combo");
   }).catch(function() {});
 }
+
+document.addEventListener("click", function(e) {
+  if (e.target.closest("[data-open-achievements]")) openAchievementsScreen();
+});
 
 // Shown when a flashcard session finishes normally (not on early Exit) — how many cards
 // were graded, the new-vs-review split, and a status breakdown, all from state.studySessionLog.
@@ -7774,7 +7870,7 @@ function showFlashcardSummary() {
     { label: t("done.cards"), value: total, tone: "gold" },
     { label: t("done.known"), value: (total ? Math.round(knownCount / total * 100) : 0) + "%", tone: "green" },
     { label: t("done.time"), value: formatSessionTime(state.sessionMs), tone: "blue" }
-  ]);
+  ], gradedIds.filter(function(id) { return state.studySessionNewSet[id]; }));
   document.getElementById("summary-new-count").textContent = newCount;
   document.getElementById("summary-review-count").textContent = total - newCount;
 
@@ -10183,7 +10279,7 @@ function showQuizResults() {
     { label: t("done.questions"), value: total, tone: "gold" },
     { label: t("done.bestRun"), value: state.quizBestStreak || 0, tone: "green" },
     { label: t("done.time"), value: formatSessionTime(state.sessionMs), tone: "blue" }
-  ]);
+  ], state.quizResults.filter(function(r) { return !r.card.last_studied_at; }).map(function(r) { return r.card.id; }));
   document.getElementById("results-detail").textContent = t("results.correctOutOf", { score: score, total: total });
 
   var grade;
@@ -12577,6 +12673,7 @@ var SQLiteAdapter = (function() {
     subscribeReminders: function(subscription, tz) { return req("POST", "/reminders/subscribe", { subscription: subscription, tz: tz }); },
     testReminder: function() { return req("POST", "/reminders/test"); },
     getAchievements: function() { return req("GET", "/achievements"); },
+    getLessonsDone: function(newIds) { return req("POST", "/stats/lessons-done", { newIds: newIds }); },
     recordStudyEvent: function(kind, ref) { return req("POST", "/achievements/events", { kind: kind, ref: ref }); },
     getToday: function() { return req("GET", "/stats/today"); },
     getCrams: function() { return req("GET", "/crams"); },

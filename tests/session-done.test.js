@@ -67,7 +67,7 @@ test("both end screens are wired, and the start snapshot is taken for both modes
   assert.match(extract("showFlashcardSummary"), /renderSessionDone\("summary-done"/);
   assert.match(extract("showQuizResults"), /renderSessionDone\("results-done"/);
   // Queued answers must land before today's numbers are re-read.
-  assert.match(extract("renderSessionDone"), /store\.writesSettled\(\)\.then\(function\(\) \{\s*return Promise\.all\(\[\s*before \? store\.getToday\(\) : null,\s*achBefore \? refreshAchievements\(\)/);
+  assert.match(extract("renderSessionDone"), /store\.writesSettled\(\)\.then\(function\(\) \{\s*return Promise\.all\(\[\s*store\.getToday\(\)\.catch\(function\(\) \{ return null; \}\),\s*achBefore \? refreshAchievements\(\)[^\n]*\n\s*newIds\.length && store\.getLessonsDone \? store\.getLessonsDone\(newIds\)/);
   for (const k of ["done.perfect", "done.streak", "done.streakMilestone", "done.goalMet", "done.bestRun"]) {
     assert.equal(app.split('"' + k + '":').length - 1, 2, k);
   }
