@@ -1240,3 +1240,9 @@ Building the session on the client would have meant fetching every card of every
 Due cards come first and are not interleaved with new ones: overdue reviews are what a missed day costs, and new cards are optional. New cards go in course order, not shuffled, because a book's chapters build on each other.
 
 The estimate fix came out of the end-to-end run. After learning the last six new cards, the meter read "6 / 0": the goal was capped by the never-touched pool, which those six had just left. Study now subtracts today's new cards from that goal, so the same bug would have under-filled sessions on small libraries.
+
+## 2026-10-15 — Home's stats card keeps its place while it loads
+
+`renderHomeCharts` emptied the card on every call and filled it when `/dashboard` answered, so the class list jumped down by the card's height (around 530px on a phone) every time Home opened. The placeholder is drawn at the height the real card last measured, stored per layout (phone or wide), because the card's height depends on the width and a fixed height would be wrong on one or the other. With no stored height it falls back to the tiles' minimum height, so the first launch on a device can still move a little.
+
+A refresh does not swap back to the placeholder: the old numbers are at most a session stale and are a better thing to look at than grey bars. For the same reason a failed refresh keeps them. Measured end to end on a local server: the class list's top was 1122px loaded, while waiting and after.

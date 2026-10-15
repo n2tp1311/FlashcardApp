@@ -286,6 +286,11 @@
 - With nothing due and the day's new cards learnt, it reads "All done for today", with "Learn 10 more new cards" while untouched cards remain. With due cards left past the review cap it says how many wait for tomorrow.
 - The day's new-card estimate counts the new cards already learnt today towards its cap; capped by the untouched pool alone it shrank as it was met ("New cards 6 / 0").
 
+## Home stats card while loading (server mode only)
+- The first load shows a grey placeholder of three tiles at the card's last measured height (`fc-home-hero-h-phone` / `-wide` in localStorage), so the class list under it stays where it will end up. `tests/home-skeleton.test.js`
+- A refresh keeps the previous card on screen until the new one replaces it; there is no blank and no placeholder in between. A failed refresh keeps the old card; a failed first load hides the section.
+- Signing out clears the card, so the next account never sees the last one's numbers. The placeholder pulse is still under reduced motion.
+
 ## Dashboard — Period Selector
 
 - Four period pills (7d / 30d / 60d / 90d) above the heatmap control the analytics window; choice persisted in `fc-dash-period`; switching a period re-fetches only analytics (not the full dashboard) and updates heatmap, weekly trend, and heatmap title
