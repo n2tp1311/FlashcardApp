@@ -1252,3 +1252,11 @@ A refresh does not swap back to the placeholder: the old numbers are at most a s
 The 2026-09-15 entry left iPhone without haptics because iOS has no Vibration API. Since iOS 18, Safari plays a system tick when an `<input type="checkbox" switch>` toggles, including when script clicks its label while a tap is being handled. That is the only haptic a web page can reach on iPhone without a native wrapper, and a wrapper (an App Store build) was not worth it for this.
 
 The cost is that every tick is the same: a pattern's lengths can't be expressed, only its count, so `error` is two ticks and `complete` three. A label click has two side effects that would have broken things silently, and both are handled: the click bubbles to document handlers that close menus on an outside click (stopped at the label), and it focuses the switch, which closes the keyboard under a retyped answer (focus is put back). Ticks fired outside a tap, like the swipe-threshold ones from `touchmove`, may not play; iOS gives no way to tell. Detection is by user agent and excludes iPad, which has no Taptic Engine. Not verified on a device: WebKit under Playwright toggles the switch but cannot tick.
+
+## 2026-10-15 — Weekly recap: a sheet, seen per account, most studied class instead of most mastered
+
+The user picked the sheet from three previews (a dismissible card on Home, a sheet once a week, a quiet line in the streak tile). It interrupts once a week, on the first Home after the card loads, and never over another dialog or mid-study.
+
+The preview promised "the class that advanced most: +24 mastered". That number cannot be computed: mastery is a current state in `card_states`, and when a card became mastered is not recorded. So the recap names the class with the most answers last week, with its answers and new cards. Adding a mastery history to count it properly was not worth a schema change for one line.
+
+The seen week lives in the account's preferences rather than localStorage, so a recap closed on the phone does not open again on the laptop. Weeks use the streak's UTC days, not the user's time zone, so the recap's days agree with the week row and streak; for the user in UTC+7 that means a week turns over at 07:00 Monday. The count says "answers" rather than "reviews", because it includes first answers to new cards.

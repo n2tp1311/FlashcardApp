@@ -291,6 +291,12 @@
 - A refresh keeps the previous card on screen until the new one replaces it; there is no blank and no placeholder in between. A failed refresh keeps the old card; a failed first load hides the section.
 - Signing out clears the card, so the next account never sees the last one's numbers. The placeholder pulse is still under reduced motion.
 
+## Weekly recap (server mode only)
+- On the first Home of a week, a sheet rises from the bottom (a centred dialog on a wide screen): "Last week you studied 5 days", the week's days as the Home week row draws them, days studied, answers and new cards with the change against the week before, and the class with the most answers. One button, "Start the new week". `tests/week-recap.test.js`
+- Weeks run Monday to Sunday on the same UTC days as the streak. New cards are cards first answered that week. A rise is green, a fall grey, never red.
+- `GET /api/stats/week-recap`; closing the sheet any way calls `POST /api/stats/week-recap/seen { week }`, which stores `weekRecapSeen` in the account's preferences, so it opens once per week across devices.
+- Not shown after a week with no study, off Home, or over another dialog such as the tutorial. Home asks once per page load.
+
 ## Dashboard — Period Selector
 
 - Four period pills (7d / 30d / 60d / 90d) above the heatmap control the analytics window; choice persisted in `fc-dash-period`; switching a period re-fetches only analytics (not the full dashboard) and updates heatmap, weekly trend, and heatmap title
