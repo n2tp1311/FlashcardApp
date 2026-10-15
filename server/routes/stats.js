@@ -806,11 +806,15 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
   ).get(uid, uid);
   const availableNewCards = availRow.n || 0;
 
+  // The goal is for the whole day, so the cards already introduced today count towards what
+  // it can be: they have left the never-touched pool, and capping by that pool alone shrank
+  // the goal as it was met ("New cards 6 / 0" after learning the last six).
+  const pool = availableNewCards + todayActivity(uid).newCards;
   const personalized = activeDays >= NEW_CARD_COLD_START_MIN_ACTIVE_DAYS;
   let estimatedNewCards = personalized
     ? Math.round(avgNewPerActiveDay * accuracyMultiplier)
-    : Math.min(NEW_CARD_COLD_START_DEFAULT, availableNewCards);
-  estimatedNewCards = Math.max(0, Math.min(estimatedNewCards, availableNewCards));
+    : Math.min(NEW_CARD_COLD_START_DEFAULT, pool);
+  estimatedNewCards = Math.max(0, Math.min(estimatedNewCards, pool));
 
   res.json({
     estimatedNewCards,

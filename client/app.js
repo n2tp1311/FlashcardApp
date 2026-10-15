@@ -843,6 +843,17 @@ Object.assign(TRANSLATIONS.en, {
   "done.goalMet": "Daily goal reached: {n} cards today",
   "eta.minutes": "~{n} min left",
   "eta.underMinute": "<1 min left",
+  "studyNow.go": "Study now · {n} cards",
+  "studyNow.reviews": "{n} to review",
+  "studyNow.new": "{n} new",
+  "studyNow.minutes": "~{n} min",
+  "studyNow.underMinute": "<1 min",
+  "studyNow.title": "Study now",
+  "studyNow.doneTitle": "All done for today",
+  "studyNow.doneSub": "Nothing is due",
+  "studyNow.capTitle": "Today's review limit reached",
+  "studyNow.capSub": "{n} more due, left for tomorrow",
+  "studyNow.more": "Learn {n} more new cards",
   "summary.new": "New",
   "summary.review": "Review",
   "summary.skippedNote": "{n} cards skipped (not graded)",
@@ -1900,6 +1911,17 @@ Object.assign(TRANSLATIONS.vi, {
   "done.goalMet": "Đã đạt mục tiêu ngày: {n} thẻ hôm nay",
   "eta.minutes": "còn ~{n} phút",
   "eta.underMinute": "còn <1 phút",
+  "studyNow.go": "Học ngay · {n} thẻ",
+  "studyNow.reviews": "{n} ôn",
+  "studyNow.new": "{n} mới",
+  "studyNow.minutes": "~{n} phút",
+  "studyNow.underMinute": "<1 phút",
+  "studyNow.title": "Học ngay",
+  "studyNow.doneTitle": "Xong hết hôm nay",
+  "studyNow.doneSub": "Không còn thẻ nào đến hạn",
+  "studyNow.capTitle": "Đã đạt giới hạn ôn hôm nay",
+  "studyNow.capSub": "Còn {n} thẻ đến hạn, để ngày mai",
+  "studyNow.more": "Học thêm {n} thẻ mới",
   "summary.new": "Mới",
   "summary.review": "Ôn tập",
   "summary.skippedNote": "{n} thẻ đã bỏ qua (chưa chấm điểm)",
@@ -3687,10 +3709,15 @@ function renderHomeCharts() {
   Promise.all([store.getDashboard(state.studyTimeWindowDays), newCardEstimatePromise]).then(function(results) {
     var dash = results[0], newCardEstimate = results[1];
     var grid = document.getElementById("home-summary-grid");
+    state.studyNowDue = dueTotal(dash.dueForReview);
     grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary, newCardEstimate, dash.today);
     section.classList.remove("hidden");
     playHomeEntrance(grid);
   }).catch(function() { section.classList.add("hidden"); });
+}
+
+function dueTotal(lessons) {
+  return (lessons || []).reduce(function(sum, l) { return sum + (l.dueCount || 0); }, 0);
 }
 
 function renderHome() {
@@ -8270,43 +8297,48 @@ function startStudy(count, filter, mode, order) {
       if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
     }
 
-    if (filtered.length === 0) {
-      showToast(t("study.noCardsMatchFilter"));
-      return;
-    }
-
-    state.studyMode = mode;
-    state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
-
-    // Record last_seen_at for all cards in this session (fire-and-forget)
-    store.markCardsSeen(filtered.map(function(c) { return c.id; }));
-
-    if (mode === "flashcard" || mode === "flashcard-write") {
-      state.studyCards = filtered;
-      state.studyIndex = 0;
-      state.studyFlipped = false;
-      // "Flashcard & Write" is Flashcard mode with the type-before-flip input forced on
-      // for the whole session — same cards, same grading buttons, same SRS behavior, only
-      // this one cosmetic difference. Previously a standalone Preferences toggle; now
-      // chosen per-session as its own mode instead (see docs/decisions.md).
-      state.typeToCompare = (mode === "flashcard-write");
-      // Session-scoped grading log for the end-of-session summary screen — keyed by
-      // cardId so re-grading the same card (via Prev/Next) counts once, at its latest
-      // status. "New" is snapshotted now, before any grading in this session can change
-      // it — a card with no prior attempts (last_studied_at unset) is new, else review.
-      state.studySessionLog = {};
-      state.studySessionNewSet = {};
-      filtered.forEach(function(c) { if (!c.last_studied_at) state.studySessionNewSet[c.id] = true; });
-      startFlashcards();
-    } else if (mode === "quiz") {
-      state.quizCards  = filtered;
-      state.quizPool   = null;
-      state.quizIndex  = 0;
-      state.quizScore  = 0;
-      state.quizResults = [];
-      startQuiz();
-    }
+    launchStudy(filtered, mode, order);
   });
+}
+
+// Starts a session on cards already chosen: Study Setup's Start, and Home's Study now.
+function launchStudy(filtered, mode, order) {
+  if (filtered.length === 0) {
+    showToast(t("study.noCardsMatchFilter"));
+    return;
+  }
+
+  state.studyMode = mode;
+  state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
+
+  // Record last_seen_at for all cards in this session (fire-and-forget)
+  store.markCardsSeen(filtered.map(function(c) { return c.id; }));
+
+  if (mode === "flashcard" || mode === "flashcard-write") {
+    state.studyCards = filtered;
+    state.studyIndex = 0;
+    state.studyFlipped = false;
+    // "Flashcard & Write" is Flashcard mode with the type-before-flip input forced on
+    // for the whole session — same cards, same grading buttons, same SRS behavior, only
+    // this one cosmetic difference. Previously a standalone Preferences toggle; now
+    // chosen per-session as its own mode instead (see docs/decisions.md).
+    state.typeToCompare = (mode === "flashcard-write");
+    // Session-scoped grading log for the end-of-session summary screen — keyed by
+    // cardId so re-grading the same card (via Prev/Next) counts once, at its latest
+    // status. "New" is snapshotted now, before any grading in this session can change
+    // it — a card with no prior attempts (last_studied_at unset) is new, else review.
+    state.studySessionLog = {};
+    state.studySessionNewSet = {};
+    filtered.forEach(function(c) { if (!c.last_studied_at) state.studySessionNewSet[c.id] = true; });
+    startFlashcards();
+  } else if (mode === "quiz") {
+    state.quizCards  = filtered;
+    state.quizPool   = null;
+    state.quizIndex  = 0;
+    state.quizScore  = 0;
+    state.quizResults = [];
+    startQuiz();
+  }
 }
 
 /* ============================
@@ -10476,6 +10508,7 @@ function heroTodayTile(today, newCardEstimate, studyTime) {
   var hasCap = cap !== null && cap !== undefined;
   return '<section class="dash-tile">' +
     '<h3 class="dash-tile-h">' + escHtml(t("hero.today")) + '</h3>' + head +
+    studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today) +
     '<div class="dash-meters">' +
       heroMeter("time", ICON_TODAY_TIME, "hero.studied", formatStudyDuration(a.studyMs),
         avgMs > 0 ? a.studyMs / avgMs : null, avgMs > 0 ? t("hero.studiedHint", { time: formatStudyDuration(avgMs) }) : null) +
@@ -10486,6 +10519,80 @@ function heroTodayTile(today, newCardEstimate, studyTime) {
     '</div>' +
   '</section>';
 }
+
+var STUDY_NOW_EXTRA = 10;
+
+// What Study now holds today: every due card the review cap still allows, then the new cards
+// the daily estimate has left. Built from numbers Home already has, so the button costs no
+// request until it is pressed.
+function studyNowPlan(today, newCardEstimate, dueTotal) {
+  var a = today.activity || { reviews: 0, newCards: 0 };
+  var cap = state.maxReviewsPerDay;
+  var reviewsLeft = cap === null || cap === undefined ? Infinity : Math.max(0, cap - a.reviews);
+  var reviews = Math.min(dueTotal, reviewsLeft);
+  var est = newCardEstimate || { estimatedNewCards: 0, availableNewCards: 0 };
+  return {
+    reviews: reviews,
+    newCards: Math.min(Math.max(0, est.estimatedNewCards - a.newCards), est.availableNewCards),
+    dueLeft: dueTotal - reviews,
+    extra: Math.min(STUDY_NOW_EXTRA, est.availableNewCards),
+    uncapped: reviewsLeft === Infinity
+  };
+}
+
+function studyNowHtml(plan, today) {
+  if (!plan) return '';
+  var n = plan.reviews + plan.newCards;
+  if (n > 0) {
+    var ms = n * ((today.medianMs && today.medianMs.flashcard) || ETA_FALLBACK_MS.flashcard);
+    var sub = [];
+    if (plan.reviews) sub.push(t("studyNow.reviews", { n: plan.reviews }));
+    if (plan.newCards) sub.push(t("studyNow.new", { n: plan.newCards }));
+    sub.push(ms < 60000 ? t("studyNow.underMinute") : t("studyNow.minutes", { n: Math.round(ms / 60000) }));
+    return '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '">' +
+      '<span class="study-now-play" aria-hidden="true"></span>' +
+      '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small>' + escHtml(sub.join(" · ")) + '</small></span></button>';
+  }
+  var capped = plan.dueLeft > 0;
+  return '<div class="study-now-done">' +
+    '<span class="study-now-tick" aria-hidden="true">✓</span>' +
+    '<span class="study-now-lbl"><b>' + escHtml(t(capped ? "studyNow.capTitle" : "studyNow.doneTitle")) + '</b>' +
+      '<small>' + escHtml(capped ? t("studyNow.capSub", { n: plan.dueLeft }) : t("studyNow.doneSub")) + '</small></span>' +
+    (!capped && plan.extra > 0 ? '<button type="button" class="study-now-more" data-study-now="0,' + plan.extra + '">' + escHtml(t("studyNow.more", { n: plan.extra })) + '</button>' : '') +
+  '</div>';
+}
+
+// The session skips Study Setup: flashcards, due cards most overdue first, then new cards in
+// course order. Back returns to the screen the button was on.
+function startStudyNow(btn) {
+  if (btn.classList.contains("is-loading")) return;
+  var parts = btn.dataset.studyNow.split(",");
+  var from = getActiveScreen();
+  btn.classList.add("is-loading");
+  store.getStudyNowCards(parts[0] === "all" ? null : Number(parts[0]), Number(parts[1])).then(function(res) {
+    if (!res.cards.length) { showToast(t("study.noCardsMatchFilter")); return; }
+    var knownMap = {};
+    res.cards.forEach(function(c) {
+      if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
+    });
+    return store.getDifficultyMap(res.cards.map(function(c) { return c.id; })).then(function(statsMap) {
+      if (getActiveScreen() !== from) return;  // left while it loaded
+      state.studyScope = { lessonIds: res.lessons.map(function(l) { return l.id; }), lessons: res.lessons,
+        returnScreen: from, title: t("studyNow.title") };
+      state.studyKnownMap = knownMap;
+      state.studyStatsMap = statsMap;
+      state.setupSnapshot = null;
+      launchStudy(res.cards, "flashcard", "in-order");
+    });
+  }).catch(function() {
+    showToast(t("setup.loadFailed"), "error");
+  }).then(function() { btn.classList.remove("is-loading"); });
+}
+
+document.addEventListener("click", function(e) {
+  var btn = e.target.closest("[data-study-now]");
+  if (btn) startStudyNow(btn);
+});
 
 // A count with nothing to measure it against (no estimate, no cap, no study history yet)
 // is shown without a bar, rather than a bar that means nothing.
@@ -10954,6 +11061,7 @@ function renderDashboard() {
 
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
+    state.studyNowDue = dueTotal(d.dueForReview);
     summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary, newCardEstimate, d.today, { due: d.dueForReview || [], futureDue: futureDue });
     renderDashAchievements();
     state._dashStudyTime = d.studyTime;
@@ -12270,6 +12378,7 @@ var SQLiteAdapter = (function() {
 
     getCards:      function(lessonId)   { return req("GET",  "/lessons/" + lessonId + "/cards"); },
     getBulkCards:  function(lessonIds)  { return req("POST", "/cards/by-lessons", { lessonIds: lessonIds }); },
+    getStudyNowCards: function(reviews, newCards) { return req("POST", "/cards/study-now", { reviews: reviews, newCards: newCards }); },
     createCard: function(f)        { return req("POST",   "/lessons/" + f.lessonId + "/cards", { format: f.format, data: f.data }); },
     createCards: function(list) {
       // Group by lessonId, one bulk call per lesson

@@ -163,6 +163,53 @@ router.post("/cards/by-lessons", requireAuth, (req, res) => {
   res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) }, sched)));
 });
 
+// POST /api/cards/study-now — Home's one-tap session across every class that isn't
+// archived: cards due now, most overdue first, then never-answered cards in course order
+// (class, lesson, card). The client sends how many of each fit today -- it already holds the
+// review cap, the reviews done and the new-card estimate -- and reviews: null means no cap.
+const STUDY_NOW_MAX = 2000;
+const STUDY_NOW_COLS =
+  "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
+  "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
+  "cs.fsrs_learning_steps, cs.fsrs_last_review_at, cs.leech_base, " +
+  "EXISTS (SELECT 1 FROM rewrite_requests rr WHERE rr.card_id = cards.id AND rr.status = 'pending') AS rewrite_pending " +
+  "FROM cards JOIN lessons l ON cards.lesson_id = l.id JOIN classes c ON l.class_id = c.id ";
+router.post("/cards/study-now", requireAuth, (req, res) => {
+  const count = (v) => Number.isInteger(v) && v >= 0 ? Math.min(v, STUDY_NOW_MAX) : null;
+  const reviews = req.body.reviews === null ? STUDY_NOW_MAX : count(req.body.reviews);
+  const fresh = count(req.body.newCards);
+  if (reviews === null || fresh === null)
+    return res.status(400).json({ error: "reviews and newCards must be whole numbers >= 0 (reviews may be null)" });
+
+  const userId = req.session.userId;
+  const now = Math.floor(Date.now() / 1000);
+  const due = reviews === 0 ? [] : db.prepare(STUDY_NOW_COLS +
+    "JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
+    "ORDER BY cs.srs_due_at, cards.id LIMIT ?"
+  ).all(userId, userId, now, reviews);
+  const unseen = fresh === 0 ? [] : db.prepare(STUDY_NOW_COLS +
+    "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 AND cs.card_id IS NULL " +
+    "ORDER BY c.sort_order, c.created_at, l.sort_order, l.created_at, cards.sort_order, cards.created_at LIMIT ?"
+  ).all(userId, userId, fresh);
+
+  const cards = due.concat(unseen);
+  const lastStudiedMap = batchLastStudiedAt(cards.map(c => c.id), userId);
+  const sched = userScheduler(db, userId);
+  const lessonIds = [...new Set(cards.map(c => c.lesson_id))];
+  const lessons = [];
+  forEachBatch(lessonIds, chunk => {
+    lessons.push(...db.prepare(
+      `SELECT id, title, class_id FROM lessons WHERE id IN (${chunk.map(() => "?").join(",")})`
+    ).all(...chunk));
+  });
+  res.json({
+    cards: cards.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data), last_studied_at: lastStudiedMap[r.id] ?? null }, sched)),
+    lessons
+  });
+});
+
 // POST /api/lessons/:lessonId/cards
 router.post("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   const lesson = ownLesson(req.params.lessonId, req.session.userId);

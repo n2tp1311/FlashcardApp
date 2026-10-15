@@ -3137,6 +3137,32 @@ code {
 }
 .dash-hero-library b { color: var(--text2); font-variant-numeric: tabular-nums; }
 .dash-goal { display: flex; align-items: center; gap: 12px; }
+/* Study now (studyNowHtml): the Today tile's one action, filled like Start Studying, standing
+   on a ledge that it sinks onto when pressed. */
+.study-now {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px;
+  border: 2px solid var(--primary-fill); border-radius: var(--radius); background: var(--primary-fill); color: #fff;
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--primary-fill) 55%, #000); font: inherit; text-align: left; cursor: pointer;
+  transition: transform 0.06s, box-shadow 0.06s, background var(--transition);
+}
+.study-now:hover { background: var(--primary-fill-hover); border-color: var(--primary-fill-hover); }
+.study-now:active { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--primary-fill) 55%, #000); }
+.study-now:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.study-now.is-loading, .study-now-more.is-loading { opacity: 0.6; pointer-events: none; }
+.study-now-play { width: 30px; height: 30px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.18); display: grid; place-items: center; }
+.study-now-play::before { content: ""; margin-left: 3px; border-left: 11px solid #fff; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+.study-now-lbl { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.study-now-lbl b { font-size: 1rem; }
+.study-now-lbl small { font-size: 0.8125rem; opacity: 0.9; }
+.study-now-done { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius); background: var(--surface2); }
+.study-now-done .study-now-lbl small { color: var(--text2); opacity: 1; }
+.study-now-tick { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: var(--success); background: color-mix(in srgb, var(--success) 18%, transparent); }
+.study-now-more {
+  border: 2px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text);
+  padding: 6px 12px; font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.study-now-more:hover { border-color: var(--primary); }
+@media (prefers-reduced-motion: reduce) { .study-now:active { transform: none; } }
 .dash-goal-title { font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .dash-goal-sub { font-size: 0.8125rem; color: var(--text2); }
 .goal-ring { width: 56px; height: 56px; flex: none; }

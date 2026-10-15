@@ -75,7 +75,7 @@ test("both session-end screens have the retry-missed button, bound to M", () => 
 test("a quiz retry of missed cards still draws wrong answers from the whole session", () => {
   assert.match(extract("quizDistractors"), /state\.quizCards\.concat\(state\.quizPool \|\| \[\], state\.currentLessonCards \|\| \[\]\)/);
   assert.match(app, /state\.quizPool = \(state\.quizPool \|\| \[\]\)\.concat\(state\.quizCards\);\s*state\.quizCards = shuffle\(missed\);/);
-  assert.match(extract("startStudy"), /state\.quizPool\s+= null;/);
+  assert.match(extract("launchStudy"), /state\.quizPool\s+= null;/);
 });
 
 test("the sources endpoint sets the passage only on this user's linked cards", () => {

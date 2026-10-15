@@ -29,7 +29,7 @@ function load(goal) {
     "function _streakResetCountdownText() { return 'resets'; }" +
     "function _dashMetricHint() { return 'hint'; }" +
     ["dailyGoalRing", "weekdayLabel", "heroWeekHtml", "streakTimeHeroCard", "heroStreakTile", "heroTodayTile",
-     "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml"].map(extract).join(""), ctx);
+     "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml", "studyNowPlan", "studyNowHtml"].map(extract).join(""), ctx);
   return ctx;
 }
 
