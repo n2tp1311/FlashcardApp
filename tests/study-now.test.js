@@ -125,16 +125,25 @@ const strings = {
   "studyNow.go": "Study now · {n} cards", "studyNow.reviews": "{n} to review", "studyNow.new": "{n} new",
   "studyNow.minutes": "~{n} min", "studyNow.underMinute": "<1 min", "studyNow.doneTitle": "All done for today",
   "studyNow.doneSub": "Nothing is due", "studyNow.capTitle": "Today's review limit reached",
-  "studyNow.capSub": "{n} more due, left for tomorrow", "studyNow.more": "Learn {n} more new cards"
+  "studyNow.capSub": "{n} more due, left for tomorrow", "studyNow.more": "Learn {n} more new cards",
+  "studyNow.modeLabel": "How to study", "studyNow.flashcard": "Flashcards", "studyNow.quiz": "Quiz"
 };
 const harness = `
-var state = { maxReviewsPerDay: null };
+var state = { maxReviewsPerDay: null, studyNowMode: "flashcard" };
+var IS_SERVER = true, puts = [];
+window.fetch = function(url, opts) { puts.push([url, opts.method, opts.body]); return Promise.resolve({ ok: true }); };
 var STRINGS = ${JSON.stringify(strings)};
 function t(k, p) { return (STRINGS[k] || k).replace(/\\{(\\w+)\\}/g, function(_, n) { return p[n]; }); }
 function escHtml(s) { return String(s); }
 var ETA_FALLBACK_MS = { flashcard: 10000, quiz: 15000 };
 var STUDY_NOW_EXTRA = 10;
-${fn("studyNowPlan")}${fn("studyNowHtml")}
+var STUDY_NOW_MODES = ["flashcard", "quiz"];
+${fn("studyNowMode")}${fn("studyNowModeHtml")}${fn("setStudyNowMode")}${fn("studyNowPlan")}${fn("studyNowHtml")}
+// app.js's delegate, as the wiring test pins it.
+document.addEventListener("click", function(e) {
+  var modeBtn = e.target.closest("[data-study-now-mode]");
+  if (modeBtn) setStudyNowMode(modeBtn.dataset.studyNowMode);
+});
 function tile(today, est, due, cap) {
   state.maxReviewsPerDay = cap;
   document.body.innerHTML = '<section class="dash-tile" style="width:340px">' + studyNowHtml(studyNowPlan(today, est, due), today) + '</section>';
@@ -152,15 +161,15 @@ test("the button counts reviews and new cards, and says how long from the median
   await p.setContent("<!doctype html><body></body>");
   await p.addStyleTag({ path: path.join(root, "client", "style.css") });
   await p.addScriptTag({ content: harness });
-  const today = (reviews, newCards) => ({ activity: { reviews, newCards }, medianMs: { flashcard: 20000 } });
+  const today = (reviews, newCards) => ({ activity: { reviews, newCards }, medianMs: { flashcard: 20000, quiz: null } });
   const est = { estimatedNewCards: 10, availableNewCards: 40 };
 
   let r = await p.evaluate(([a, b]) => tile(a, b, 28, null), [today(0, 4), est]);
-  assert.deepEqual(r, { text: "Study now · 34 cards 28 to review · 6 new · ~11 min", data: "all,6", filled: true });
+  assert.deepEqual(r, { text: "Study now · 34 cards 28 to review · 6 new · ~11 min Flashcards Quiz", data: "all,6", filled: true });
 
   // A cap counts what is left of it today; due cards past it wait for tomorrow.
   r = await p.evaluate(([a, b]) => tile(a, b, 28, 30), [today(25, 10), est]);
-  assert.deepEqual(r, { text: "Study now · 5 cards 5 to review · ~2 min", data: "5,0", filled: true });
+  assert.deepEqual(r, { text: "Study now · 5 cards 5 to review · ~2 min Flashcards Quiz", data: "5,0", filled: true });
   r = await p.evaluate(([a, b]) => tile(a, b, 28, 30), [today(30, 10), est]);
   assert.deepEqual(r, { text: "✓ Today's review limit reached 28 more due, left for tomorrow", data: null, filled: false });
 
@@ -172,13 +181,51 @@ test("the button counts reviews and new cards, and says how long from the median
   await p.close();
 });
 
+test("flashcards or quiz is a choice under the button: the time follows it, and it is remembered", async () => {
+  const p = await browser.newPage();
+  await p.route("http://sn.test/", (r) => r.fulfill({ contentType: "text/html", body: "<!doctype html><body></body>" }));
+  await p.goto("http://sn.test/");
+  await p.addStyleTag({ path: path.join(root, "client", "style.css") });
+  await p.addScriptTag({ content: harness });
+  const today = { activity: { reviews: 0, newCards: 0 }, medianMs: { flashcard: 20000, quiz: 30000 } };
+  const est = { estimatedNewCards: 10, availableNewCards: 40 };
+  const read = () => p.evaluate(() => ({
+    sub: document.querySelector(".study-now small").textContent,
+    pressed: [...document.querySelectorAll("[data-study-now-mode]")].map((b) => b.dataset.studyNowMode + "=" + b.getAttribute("aria-pressed")),
+    mode: state.studyNowMode, puts: puts.slice(), cached: JSON.parse(localStorage.getItem("fc-preferences") || "{}")
+  }));
+  await p.evaluate(([a, b]) => { localStorage.setItem("fc-preferences", '{"theme":"dark"}'); tile(a, b, 20, null); }, [today, est]);
+  let r = await read();
+  assert.equal(r.sub, "20 to review · 10 new · ~10 min");
+  assert.deepEqual(r.pressed, ["flashcard=true", "quiz=false"], "flashcards for anyone who never picked");
+
+  await p.click("[data-study-now-mode=quiz]");
+  r = await read();
+  assert.equal(r.sub, "20 to review · 10 new · ~15 min", "a quiz answer's own median");
+  assert.deepEqual(r.pressed, ["flashcard=false", "quiz=true"]);
+  assert.equal(r.mode, "quiz");
+  assert.deepEqual(r.puts, [["/api/auth/preferences", "PUT", '{"studyNowMode":"quiz"}']]);
+  assert.deepEqual(r.cached, { theme: "dark", studyNowMode: "quiz" }, "merged into the cached preferences");
+
+  // Pressing the chosen one again sends nothing; the next render opens on the choice.
+  await p.click("[data-study-now-mode=quiz]");
+  await p.evaluate(([a, b]) => tile(a, b, 20, null), [today, est]);
+  r = await read();
+  assert.equal(r.puts.length, 1);
+  assert.equal(r.sub, "20 to review · 10 new · ~15 min");
+  assert.deepEqual(r.pressed, ["flashcard=false", "quiz=true"]);
+  await p.close();
+});
+
 test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup and returns where it began", () => {
   assert.match(fn("renderHomeCharts"), /state\.studyNowDue = dueTotal\(dash\.dueForReview\);/);
   assert.match(app, /state\.studyNowDue = dueTotal\(d\.dueForReview\);\n    summaryGrid\.innerHTML = streakTimeHeroCard/);
   assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowPlan\(today, newCardEstimate, state\.studyNowDue\), today\)/);
   const start = fn("startStudyNow");
   assert.match(start, /returnScreen: from/);
-  assert.match(start, /launchStudy\(res\.cards, "flashcard", "in-order"\)/);
+  assert.match(start, /launchStudy\(res\.cards, studyNowMode\(\), "in-order"\)/);
+  assert.match(fn("applyPrefs"), /if \(prefs\.studyNowMode === "quiz" \|\| prefs\.studyNowMode === "flashcard"\) state\.studyNowMode = prefs\.studyNowMode;/);
+  assert.match(app, /var modeBtn = e\.target\.closest\("\[data-study-now-mode\]"\);\n  if \(modeBtn\) \{ setStudyNowMode\(modeBtn\.dataset\.studyNowMode\); return; \}/);
   assert.match(fn("startStudy"), /launchStudy\(filtered, mode, order\);/);
   assert.match(app, /getStudyNowCards: function\(reviews, newCards\) \{ return req\("POST", "\/cards\/study-now"/);
 });

@@ -854,6 +854,9 @@ Object.assign(TRANSLATIONS.en, {
   "eta.minutes": "~{n} min left",
   "eta.underMinute": "<1 min left",
   "studyNow.go": "Study now · {n} cards",
+  "studyNow.modeLabel": "How to study",
+  "studyNow.flashcard": "Flashcards",
+  "studyNow.quiz": "Quiz",
   "studyNow.reviews": "{n} to review",
   "studyNow.new": "{n} new",
   "studyNow.minutes": "~{n} min",
@@ -1946,6 +1949,9 @@ Object.assign(TRANSLATIONS.vi, {
   "eta.minutes": "còn ~{n} phút",
   "eta.underMinute": "còn <1 phút",
   "studyNow.go": "Học ngay · {n} thẻ",
+  "studyNow.modeLabel": "Kiểu học",
+  "studyNow.flashcard": "Flashcard",
+  "studyNow.quiz": "Quiz",
   "studyNow.reviews": "{n} ôn",
   "studyNow.new": "{n} mới",
   "studyNow.minutes": "~{n} phút",
@@ -3303,6 +3309,7 @@ var state = {
   highContrast: false,
   haptics: true,
   sounds: true,
+  studyNowMode: "flashcard",
   dailyGoal: 20,
   quizCountsAsKnown: false,
   loadBalance: true,
@@ -10800,18 +10807,63 @@ document.addEventListener("click", function(e) {
   if (e.target.closest("[data-resume-drop]")) { clearResumeSession(); _refreshDashHeroCards(); }
 });
 
+// Study now's two ways to go through the same cards. The choice is remembered in the account,
+// so the phone and the laptop agree; flashcards stay the default for anyone who never picks.
+var STUDY_NOW_MODES = ["flashcard", "quiz"];
+
+function studyNowMode() { return state.studyNowMode === "quiz" ? "quiz" : "flashcard"; }
+
+function studyNowModeHtml(mode) {
+  return '<div class="study-now-mode" role="group" aria-label="' + escHtml(t("studyNow.modeLabel")) + '">' +
+    STUDY_NOW_MODES.map(function(m) {
+      return '<button type="button" data-study-now-mode="' + m + '" aria-pressed="' + (m === mode) + '">' + escHtml(t("studyNow." + m)) + '</button>';
+    }).join("") + '</div>';
+}
+
+function setStudyNowMode(mode) {
+  if (STUDY_NOW_MODES.indexOf(mode) < 0 || mode === studyNowMode()) return;
+  state.studyNowMode = mode;
+  document.querySelectorAll("[data-study-now-mode]").forEach(function(b) {
+    b.setAttribute("aria-pressed", String(b.dataset.studyNowMode === mode));
+  });
+  document.querySelectorAll(".study-now[data-sub-" + mode + "] small").forEach(function(small) {
+    small.textContent = small.closest(".study-now").getAttribute("data-sub-" + mode);
+  });
+  try {
+    var cached = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
+    cached.studyNowMode = mode;
+    localStorage.setItem("fc-preferences", JSON.stringify(cached));
+  } catch (_) {}
+  if (IS_SERVER) {
+    fetch("/api/auth/preferences", {
+      method: "PUT",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studyNowMode: mode })
+    }).catch(function() {});
+  }
+}
+
 function studyNowHtml(plan, today) {
   if (!plan) return '';
   var n = plan.reviews + plan.newCards;
   if (n > 0) {
-    var ms = n * ((today.medianMs && today.medianMs.flashcard) || ETA_FALLBACK_MS.flashcard);
-    var sub = [];
-    if (plan.reviews) sub.push(t("studyNow.reviews", { n: plan.reviews }));
-    if (plan.newCards) sub.push(t("studyNow.new", { n: plan.newCards }));
-    sub.push(ms < 60000 ? t("studyNow.underMinute") : t("studyNow.minutes", { n: Math.round(ms / 60000) }));
-    return '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '">' +
+    var counts = [];
+    if (plan.reviews) counts.push(t("studyNow.reviews", { n: plan.reviews }));
+    if (plan.newCards) counts.push(t("studyNow.new", { n: plan.newCards }));
+    // Both lines are built now, so switching the mode changes the time without a reload: a quiz
+    // answer takes longer than a flip, and its own median says how much.
+    var subs = {};
+    STUDY_NOW_MODES.forEach(function(mode) {
+      var ms = n * ((today.medianMs && today.medianMs[mode]) || ETA_FALLBACK_MS[mode]);
+      subs[mode] = counts.concat(ms < 60000 ? t("studyNow.underMinute") : t("studyNow.minutes", { n: Math.round(ms / 60000) })).join(" · ");
+    });
+    var mode = studyNowMode();
+    return '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '"' +
+        ' data-sub-flashcard="' + escHtml(subs.flashcard) + '" data-sub-quiz="' + escHtml(subs.quiz) + '">' +
       '<span class="study-now-play" aria-hidden="true"></span>' +
-      '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small>' + escHtml(sub.join(" · ")) + '</small></span></button>';
+      '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small>' + escHtml(subs[mode]) + '</small></span></button>' +
+      studyNowModeHtml(mode);
   }
   var capped = plan.dueLeft > 0;
   return '<div class="study-now-done">' +
@@ -10822,8 +10874,8 @@ function studyNowHtml(plan, today) {
   '</div>';
 }
 
-// The session skips Study Setup: flashcards, due cards most overdue first, then new cards in
-// course order. Back returns to the screen the button was on.
+// The session skips Study Setup, in the chosen mode: due cards most overdue first, then new
+// cards in course order. Back returns to the screen the button was on.
 function startStudyNow(btn) {
   if (btn.classList.contains("is-loading")) return;
   var parts = btn.dataset.studyNow.split(",");
@@ -10842,7 +10894,7 @@ function startStudyNow(btn) {
       state.studyKnownMap = knownMap;
       state.studyStatsMap = statsMap;
       state.setupSnapshot = null;
-      launchStudy(res.cards, "flashcard", "in-order");
+      launchStudy(res.cards, studyNowMode(), "in-order");
     });
   }).catch(function() {
     showToast(t("setup.loadFailed"), "error");
@@ -10850,6 +10902,8 @@ function startStudyNow(btn) {
 }
 
 document.addEventListener("click", function(e) {
+  var modeBtn = e.target.closest("[data-study-now-mode]");
+  if (modeBtn) { setStudyNowMode(modeBtn.dataset.studyNowMode); return; }
   var btn = e.target.closest("[data-study-now]");
   if (btn) startStudyNow(btn);
 });
@@ -13000,6 +13054,7 @@ function applyPrefs(prefs) {
   if (typeof prefs.haptics === "boolean") {
     state.haptics = prefs.haptics;
   }
+  if (prefs.studyNowMode === "quiz" || prefs.studyNowMode === "flashcard") state.studyNowMode = prefs.studyNowMode;
   if (typeof prefs.fontScale === "number") {
     applyFontScale(prefs.fontScale);
   }

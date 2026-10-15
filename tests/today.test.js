@@ -29,8 +29,9 @@ function load(goal) {
     "function _streakResetCountdownText() { return 'resets'; }" +
     "function _dashMetricHint() { return 'hint'; }" +
     "function resumeSessionHtml() { return ''; }" +
+    "var STUDY_NOW_MODES = ['flashcard', 'quiz'];" +
     ["dailyGoalRing", "weekdayLabel", "heroWeekHtml", "streakTimeHeroCard", "heroStreakTile", "heroTodayTile",
-     "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml", "studyNowPlan", "studyNowHtml"].map(extract).join(""), ctx);
+     "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml", "studyNowMode", "studyNowModeHtml", "studyNowPlan", "studyNowHtml"].map(extract).join(""), ctx);
   return ctx;
 }
 

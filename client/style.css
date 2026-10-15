@@ -3171,6 +3171,10 @@ code {
   padding: 6px 12px; font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 .study-now-more:hover { border-color: var(--primary); }
+.study-now-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: var(--radius); background: var(--surface2); }
+.study-now-mode button { border: 0; background: none; color: var(--text2); font: inherit; font-size: 0.875rem; font-weight: 600; padding: 7px; border-radius: 8px; cursor: pointer; }
+.study-now-mode button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 0 var(--border); }
+.study-now-mode button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .study-now-drop { justify-self: center; align-self: center; border: 0; background: none; color: var(--primary); font: inherit; font-size: 0.8125rem; font-weight: 700; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
 .study-now-drop:hover { background: var(--surface2); }
 @media (prefers-reduced-motion: reduce) { .study-now:active { transform: none; } }
