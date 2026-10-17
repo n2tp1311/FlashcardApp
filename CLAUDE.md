@@ -20,6 +20,7 @@ After committing, update the relevant docs in `docs/`:
 - **`docs/features.md`** — add a bullet under the right section describing what was built
 - **`docs/implementation-plan.md`** — update §5 (spec tables) and §11 (build status) if the feature changes the spec or ships a planned item
 - **`docs/decisions.md`** — add an entry if a non-obvious choice was made (why this approach over alternatives)
+- **`docs/GUIDE.md`** — **every feature change, no exceptions**: how it works now and why (see below). `tests/guide-sync.test.js` fails while any code, `features.md` or `decisions.md` commit is not followed by a guide commit. A commit that changes nothing the guide describes (a pure refactor) says so with a line `Guide: unchanged` in its message
 
 Commit the docs update as a separate commit immediately after the feature commit.
 
@@ -32,8 +33,9 @@ nightly job (`scripts/nightly-guide.sh`, 02:00) refreshes that book when the com
 guide changed — so commit the guide and stop there; never ingest it a second time
 (a second ingest makes a second class and loses its progress).
 
-Whenever a change alters behaviour, update the guide in the docs commit that follows
-it. State why, name the cost, give measured numbers as measured. If you find the guide
+Every feature change -- added, changed or removed, however small -- updates the guide in
+the docs commit that follows it. A fix that changes what the learner sees or what is
+stored counts too. State why, name the cost, give measured numbers as measured. If you find the guide
 wrong, fix it and say so.
 
 | You changed | Update |

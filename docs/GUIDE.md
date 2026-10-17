@@ -1089,3 +1089,11 @@ a class in FlashcardApp itself. KnowledgeApp's nightly job refreshes that book a
 when the committed guide has changed since its last refresh, updating cards in place so
 their progress is kept. So a change to how the app works is not finished until this guide
 says so, in the same commit series as the code; `CLAUDE.md` maps code to sections.
+
+A rule alone was not trusted to hold, so `tests/guide-sync.test.js` reads git history:
+since the guide was added, every commit that touches `client/`, `server/`,
+`docs/features.md` or `docs/decisions.md` must be followed by a commit that touches this
+guide, or the suite fails. A pure refactor opts out with a `Guide: unchanged` line in its
+commit message. A forgotten update is repaired by a later guide commit, never by
+rewriting pushed history. The cost: the check knows a guide commit happened, not that it
+describes the change -- that part still rests on whoever writes it.
