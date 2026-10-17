@@ -23,6 +23,40 @@ After committing, update the relevant docs in `docs/`:
 
 Commit the docs update as a separate commit immediately after the feature commit.
 
+## Keep `docs/GUIDE.md` in sync
+
+`docs/GUIDE.md` explains how the system works now and *why* (`decisions.md` is the
+history, `features.md` the screen-by-screen list). It is ingested into KnowledgeApp as
+the book **FlashcardApp Guide** and studied as a FlashcardApp class. KnowledgeApp's
+nightly job (`scripts/nightly-guide.sh`, 02:00) refreshes that book when the committed
+guide changed — so commit the guide and stop there; never ingest it a second time
+(a second ingest makes a second class and loses its progress).
+
+Whenever a change alters behaviour, update the guide in the docs commit that follows
+it. State why, name the cost, give measured numbers as measured. If you find the guide
+wrong, fix it and say so.
+
+| You changed | Update |
+|---|---|
+| `server/index.js` setup, mode, file layout | §2 |
+| `server/db.js` schema, migrations, preferences | §3 |
+| card formats, `lib/cloze.js`, `vocabulary-term.js` | §4 |
+| `routes/attempts.js`, `ratingFor`, `lib/leech.js` | §5 |
+| `server/fsrs.js`, `lib/memory.js`, `lib/workload.js` | §6 |
+| `lib/undo.js`, `DELETE /api/attempts/:id` | §7 |
+| study setup, flashcard/quiz/cram flow, Study now, Resume, session end | §8 |
+| `lib/streak.js`, `lib/today.js`, `lib/aboveAvg.js`, daily goal, review cap | §9 |
+| `routes/stats.js`, `lib/attemptDaily.js`, `lib/mastery.js` | §10 |
+| `lib/achievements.js`, `study_events` | §11 |
+| client offline queue, `sw.js` | §12 |
+| `routes/integrations.js`, `middleware/apiToken.js` | §13 |
+| `lib/dbLock.js`, WAL, statement wrapper, watchdog, rate limits, `lib/backup.js` | §14 |
+| auth, sessions, tokens, import, push allowlist | §15 |
+| client structure, i18n, palettes, iOS behaviour, preferences screen | §16 |
+| `lib/reminders.js` | §17 |
+| sharing, export, import, bulk paste | §18 |
+| test patterns | §19 |
+
 ## Commit + push rules
 
 - Commit and push to `origin/main` after every feature — do not wait to be asked
