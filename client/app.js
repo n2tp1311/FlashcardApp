@@ -10012,6 +10012,9 @@ function renderQuizCard() {
   // later against whatever card the user has since navigated to via Prev/Next/delete.
   clearTimeout(state.quizAdvanceTimer);
   state.quizAdvanceTimer = null;
+  // A new question starts at the top: left scrolled down from the last answer, the
+  // finger that pressed Next landed on whichever option was now under it.
+  window.scrollTo(0, 0);
 
   var prevExp = document.getElementById("quiz-explanation");
   if (prevExp) prevExp.remove();
@@ -10206,9 +10209,10 @@ function answerQuiz(selectedIdx) {
 
   showQuizSheet(cheer);
 
-  // Only a correct answer with nothing to read moves on by itself; after a wrong answer or with
-  // an explanation, the user needs time to see the right option, so they press Next.
-  if (isCorrect && !hasExplanation) {
+  // Only a correct answer with nothing to read moves on by itself; after a wrong answer, or
+  // with an explanation or the book passage to read, the user presses Next. The passage
+  // used to count as nothing to read and was gone 1.2 s after it appeared.
+  if (isCorrect && !hasExplanation && !answerSource) {
     state.quizAdvanceTimer = setTimeout(function() {
       state.quizIndex++;
       renderQuizCard();
@@ -10216,6 +10220,20 @@ function answerQuiz(selectedIdx) {
   } else {
     showQuizNextButton();
   }
+  revealRightQuizOption();
+}
+
+// The answer sheet slides over the bottom of the screen, which on a phone is often where the
+// right option is: after a wrong answer the one thing worth seeing was under the sheet. The
+// column's bottom padding follows the sheet's real height so there is room to scroll it up.
+function revealRightQuizOption() {
+  var sheet = document.getElementById("quiz-sheet");
+  var right = document.querySelector("#quiz-options .quiz-opt.correct");
+  document.getElementById("screen-quiz").style.setProperty("--quiz-sheet-h", sheet.offsetHeight + "px");
+  if (!right) return;
+  var limit = window.innerHeight - sheet.offsetHeight - 12;
+  var over = right.getBoundingClientRect().bottom - limit;
+  if (over > 0) window.scrollBy(0, over);
 }
 
 var QUIZ_PRAISE_COUNT = 6, QUIZ_PRAISE_SUB_COUNT = 3, QUIZ_WRONG_COUNT = 3;

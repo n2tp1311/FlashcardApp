@@ -239,3 +239,53 @@ test("on a phone the grades are the bottom row and Prev/Next sit above them", as
     }, opts);
   }
 });
+
+const LONG = " — a longer option that wraps onto two or three lines on a small phone screen";
+const QUIZ4 = [1, 2, 3, 4].map((i) => ({
+  id: "q" + i, lesson_id: "l1", format: "mcq",
+  data: { question: "Question " + i + ": which statement about regularization is right?", correct: "Right answer " + i + LONG, distractors: ["Wrong A" + LONG, "Wrong B" + LONG, "Wrong C" + LONG] }
+}));
+
+test("after a wrong answer the right option is scrolled above the answer sheet; Next starts at the top", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(async function(cards) {
+      state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
+      state.quizCards = cards;
+      startQuiz();
+      const card = state.quizCards[0];
+      // Make the right answer the last option, the one the sheet covers.
+      const opts = state.quizOptions;
+      const wrong = opts.findIndex((o) => o !== card.data.correct);
+      const rightAt = opts.indexOf(card.data.correct);
+      if (rightAt !== opts.length - 1) { opts.splice(rightAt, 1); opts.push(card.data.correct); }
+      const els = document.querySelectorAll("#quiz-options .quiz-opt .opt-text");
+      opts.forEach((o, i) => { if (els[i]) els[i].textContent = o; });
+      answerQuiz(opts.findIndex((o) => o !== card.data.correct));
+      await new Promise((r) => setTimeout(r, 400));
+      const right = document.querySelector("#quiz-options .quiz-opt.correct").getBoundingClientRect();
+      const sheet = document.getElementById("quiz-sheet").getBoundingClientRect();
+      const out = { rightBottom: right.bottom, sheetTop: sheet.top, scrolled: scrollY };
+      document.getElementById("quiz-next-btn").click();
+      await new Promise((r) => setTimeout(r, 50));
+      out.afterNext = scrollY;
+      return out;
+    }, QUIZ4);
+    assert.ok(r.rightBottom <= r.sheetTop, JSON.stringify(r));
+    assert.equal(r.afterNext, 0);
+  }, { viewport: { width: 375, height: 667 } });
+});
+
+test("a right answer with the book passage under it waits for Next instead of moving on", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(async function(cards) {
+      cards = cards.map((c) => Object.assign({}, c, { source: "The passage from the book that the card was written from." }));
+      state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
+      state.quizCards = cards;
+      startQuiz();
+      answerQuiz(state.quizOptions.indexOf(state.quizCards[0].data.correct));
+      await new Promise((r) => setTimeout(r, 1500));
+      return { index: state.quizIndex, next: !!document.getElementById("quiz-next-btn"), source: !!document.getElementById("quiz-source") };
+    }, QUIZ4);
+    assert.deepEqual(r, { index: 0, next: true, source: true });
+  });
+});
