@@ -293,6 +293,8 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --primary-fill: #607578; --primary-fill-hover: color-mix(in srgb, #607578 82%, #000);
   --card-back: #474e5d; --card-back-border: #656b78; --card-back-input: #3b4252;
   --card-back-text: #dce3ea; --card-back-dim: #bcc7da;
+  /* Lighter than the shared dark red: the card back here is light enough to take it under 4.5:1. */
+  --danger: #f5aeb4;
 }
 :root[data-palette="gruvbox"]:not([data-theme="dark"]) {
   --bg: #e8dab4; --surface: #f9f5d7; --surface2: #ebdbb2; --border: #c3b394;
@@ -388,6 +390,7 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --primary-fill: #6e775c; --primary-fill-hover: color-mix(in srgb, #6e775c 82%, #000);
   --card-back: #3f484b; --card-back-border: #5a5f5c; --card-back-input: #343f44;
   --card-back-text: #ece5da; --card-back-dim: #bec7bd;
+  --danger: #f5aeb4;
 }
 :root[data-palette="tokyonight"]:not([data-theme="dark"]) {
   --bg: #d2d5e0; --surface: #eef0f5; --surface2: #d5d6db; --border: #b3b7ca;
@@ -578,7 +581,7 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 :root[data-palette="nord"][data-theme="dark"][data-contrast="high"] {
   --text: #f2f4f8; --text2: #cbd3e2; --text3: #acb5c3; --card-back-text: #f5f7f9;
   --card-back-dim: #cbd3e2; --primary: #96e8fc;
-  --primary-hover: color-mix(in srgb, #96e8fc 82%, #fff);
+  --primary-hover: color-mix(in srgb, #96e8fc 82%, #fff); --danger: #ffb3bb;
 }
 :root[data-palette="gruvbox"][data-theme="dark"][data-contrast="high"] {
   --text: #f8f6f1; --text2: #e0d9cc; --text3: #c4baab; --card-back-text: #faf9f5;
@@ -603,7 +606,7 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 :root[data-palette="everforest"][data-theme="dark"][data-contrast="high"] {
   --text: #f8f6f2; --text2: #d4dad3; --text3: #b3bcb5; --card-back-text: #faf8f5;
   --card-back-dim: #d4dad3; --primary: #c6fc77;
-  --primary-hover: color-mix(in srgb, #c6fc77 82%, #fff);
+  --primary-hover: color-mix(in srgb, #c6fc77 82%, #fff); --danger: #ffb3bb;
 }
 :root[data-palette="tokyonight"][data-theme="dark"][data-contrast="high"] {
   --text: #f1f3f8; --text2: #c8cde4; --text3: #a6abc9; --card-back-text: #f5f6fa;
@@ -2337,8 +2340,9 @@ code {
   font-size: 0.75rem;
   font-weight: 600;
 }
-.fc-retype-feedback-success { color: #4ade80; }
-.fc-retype-feedback-error { color: #f87171; }
+/* Tokens, not the dark-mode greens they were: on the light card back #4ade80 was 1.47:1. */
+.fc-retype-feedback-success { color: var(--success); }
+.fc-retype-feedback-error { color: var(--danger); }
 
 .toast {
   position: fixed;

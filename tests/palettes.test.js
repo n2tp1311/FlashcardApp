@@ -70,6 +70,8 @@ const PAIRS = [
   ["primary", "surface"], ["primary", "bg"], ["primary", "primary-light"],
   ["success", "surface"], ["danger", "surface"], ["warning", "surface"],
   ["card-back-text", "card-back"], ["card-back-dim", "card-back"],
+  // The retype check's Correct / Try again line sits on the card back.
+  ["success", "card-back"], ["danger", "card-back"],
   ["success-soft-text", "success-soft"], ["danger-soft-text", "danger-soft"],
   ["warning-soft-text", "warning-soft"], ["confident-soft-text", "confident-soft"],
 ];
