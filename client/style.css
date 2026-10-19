@@ -5002,6 +5002,11 @@ button.leech-pill:hover { filter: brightness(0.96); }
     box-shadow: 0 0 0 100vmax var(--bg);
     clip-path: inset(0 -100vmax);
   }
+  /* The grades take the bottom row, where the thumb rests, and Prev/Next the row above.
+     The other way round, Next sat 8px under Confident: a slip skipped a card ungraded, and
+     on the last card the same spot is Finish. */
+  #screen-flashcard .fc-mark-btns { order: 2; }
+  #screen-flashcard #btn-fc-prev, #screen-flashcard #btn-fc-next { padding-top: 6px; padding-bottom: 6px; min-height: 40px; }
   .fc-retype-wrap { scroll-margin-bottom: 180px; }
   /* Below the card it would sit behind the sticky grade row; float it just above the row. */
   #fc-selection-action {
@@ -5037,7 +5042,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
   #screen-flashcard .fc-dots { display: none; }
   .fc-scene { height: max(96px, calc(100dvh - 215px)); }
   .fc-nav { max-width: none; flex-wrap: nowrap; }
-  .fc-mark-btns { flex: 1; flex-basis: auto; order: 0; }
+  #screen-flashcard .fc-mark-btns { flex: 1; flex-basis: auto; order: 0; }
 }
 
 /* ============================

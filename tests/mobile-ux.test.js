@@ -219,3 +219,23 @@ test("typing Vietnamese: Enter during composition does not answer; curly quotes 
     assert.deepEqual(r.attrs, [["off", "off", "false", true], ["off", "off", "false", true], ["off", "off", "false", true]]);
   });
 });
+
+test("on a phone the grades are the bottom row and Prev/Next sit above them", async function() {
+  for (const opts of [{}, { webkit: true }]) {
+    await withApp(async function(page) {
+      const r = await page.evaluate(async function() {
+        state.currentLesson = { id: "l1", title: "Words", format: "term-def" };
+        state.studyCards = [1, 2, 3].map((i) => ({ id: "t" + i, lesson_id: "l1", format: "term-def", data: { term: "term " + i, def: "def " + i } }));
+        state.studyIndex = 0;
+        startFlashcards();
+        document.getElementById("fc-scene").click();
+        await new Promise((r) => setTimeout(r, 300));
+        const box = (id) => document.getElementById(id).getBoundingClientRect();
+        return { next: box("btn-fc-next").bottom, prev: box("btn-fc-prev").bottom, grade: box("btn-fc-easy").top, gradeBottom: box("btn-fc-easy").bottom, screen: innerHeight };
+      });
+      assert.ok(r.grade >= r.next && r.grade >= r.prev, JSON.stringify(r));
+      assert.ok(r.gradeBottom <= r.screen, "the grades stay on screen: " + JSON.stringify(r));
+      await page.screenshot({ path: path.join(root, "test-results", "fc-nav-phone" + (opts.webkit ? "-webkit" : "") + ".png") });
+    }, opts);
+  }
+});
