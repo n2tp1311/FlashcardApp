@@ -1056,6 +1056,11 @@ Most study happens on an iPhone, and several decisions are about it:
   edge-swipe-back onto a blank snapshot of the page. On iOS no entry is ever pushed and
   the app's own edge swipe (`SCREEN_BACK_BTN`) is the only Back; elsewhere an entry exists
   only while there is somewhere in-app to go back to (`syncBackTrap`).
+- **Vietnamese runs longer than English**, so a row of controls must wrap rather than
+  squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
+  "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The
+  heading no longer wraps, the row does, and under 430px "Sort by" is for screen readers
+  only.
 - **The grades are the bottom row** of the flashcard screen, Prev/Next the row above.
   Prev/Next used to be the bottom row, 8px under Confident: a slip skipped a card
   ungraded, and on the last card the same spot is Finish. Landscape keeps one row.
