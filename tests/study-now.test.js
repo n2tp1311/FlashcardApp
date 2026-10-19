@@ -227,7 +227,7 @@ test("flashcards or quiz is a choice under the button: the time follows it, and 
 test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup and returns where it began", () => {
   assert.match(fn("renderHomeCharts"), /state\.studyNowDue = dueTotal\(dash\.dueForReview\);/);
   assert.match(app, /state\.studyNowDue = dueTotal\(d\.dueForReview\);\n    summaryGrid\.innerHTML = streakTimeHeroCard/);
-  assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowPlan\(today, newCardEstimate, state\.studyNowDue\), today\)/);
+  assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowPlan\(today, newCardEstimate, state\.studyNowDue\), today, !!summary && summary\.cards === 0\)/);
   const start = fn("startStudyNow");
   assert.match(start, /returnScreen: from/);
   assert.match(start, /launchStudy\(res\.cards, studyNowMode\(\), "in-order"\)/);

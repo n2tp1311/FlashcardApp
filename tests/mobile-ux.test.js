@@ -366,6 +366,11 @@ test("a new account is invited to make a class, not told it is done; filters tha
       const fresh = box.textContent;
       box.innerHTML = studyNowHtml(plan, { medianMs: {} }, false);
       const done = box.textContent;
+      // Through the Home hero too, which is where the card total comes from.
+      state.studyNowDue = 0;
+      const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
+      box.innerHTML = streakTimeHeroCard(null, null, { cards: 0 }, null, today);
+      const hero = box.textContent;
       let opened = 0;
       document.getElementById("btn-new-class").addEventListener("click", () => opened++);
       showScreen("home");
@@ -377,11 +382,12 @@ test("a new account is invited to make a class, not told it is done; filters tha
       state.homeClasses = [{ id: "c1", name: "Stats", archived: 0 }];
       _renderClassItems([]);
       const filtered = { text: document.querySelector("#empty-home p").textContent, button: !document.getElementById("btn-empty-new-class").classList.contains("hidden") };
-      return { fresh, done, none, filtered, opened, lessonButton: !!document.querySelector("#empty-class [data-new-lesson]") };
+      return { fresh, done, hero, none, filtered, opened, lessonButton: !!document.querySelector("#empty-class [data-new-lesson]") };
     });
     assert.match(r.fresh, /No cards yet/);
     assert.match(r.fresh, /New Class/);
     assert.match(r.done, /All done for today/);
+    assert.match(r.hero, /No cards yet/);
     assert.deepEqual(r.none, { text: "No classes yet. Create your first class to get started.", button: true });
     assert.deepEqual(r.filtered, { text: "No classes match these filters.", button: false });
     assert.equal(r.opened, 1);

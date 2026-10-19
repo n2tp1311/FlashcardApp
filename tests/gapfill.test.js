@@ -70,6 +70,31 @@ test("every gap number is hidden in a passage, only c1 in a cloze card", async f
   });
 });
 
+// Write mode keeps its field focused; hidden while focused on the passage that follows, the
+// iPhone keyboard closed without a blur and a home-screen app kept the shorter viewport,
+// leaving the grade row stuck over the word bank.
+test("Write mode's field is blurred, not hidden while focused, when a passage follows", async function() {
+  await withApp(async (page) => {
+    const r = await page.evaluate((passage) => {
+      const word = { id: "w1", lesson_id: "l1", format: "term-def", data: { term: "dropout", def: "removes units" } };
+      state.typeToCompare = true;
+      state.studyCards = [word, passage];
+      state.studyIndex = 0;
+      // Twice: withApp opened on a passage, whose hidden flip card swallows the first focus.
+      renderFlashcard();
+      renderFlashcard();
+      const input = document.getElementById("fc-type-input");
+      const focusedFirst = document.activeElement === input;
+      let hiddenAtBlur = null;
+      input.addEventListener("blur", () => { hiddenAtBlur = input.classList.contains("hidden"); });
+      state.studyIndex = 1;
+      renderFlashcard();
+      return { focusedFirst, hiddenAtBlur, active: document.activeElement.id };
+    }, PASSAGE);
+    assert.deepEqual(r, { focusedFirst: true, hiddenAtBlur: false, active: "" });
+  });
+});
+
 test("the passage replaces the flip card; the bank holds the answers and the wrong words", async function() {
   await withApp(async (page) => {
     const r = await page.evaluate(() => ({

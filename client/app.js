@@ -8989,6 +8989,14 @@ function renderFlashcard() {
   state.studyCardShownAt = Date.now();
   document.getElementById("fc-notdue-hint").classList.add("hidden");
 
+  // A field hidden while it has focus closes the iPhone keyboard without a blur, and a
+  // home-screen app then keeps the keyboard's shorter viewport: the grade row stuck ~300pt
+  // up, over a gap-fill's word bank. Write mode refocuses its field below, in the same task,
+  // so its keyboard stays up.
+  var focused = document.activeElement;
+  if (focused && /^(INPUT|TEXTAREA)$/.test(focused.tagName) &&
+      document.getElementById("screen-flashcard").contains(focused)) focused.blur();
+
   // Defensive reset of the forced-retype drill, unconditionally — not just on success/exit —
   // so it can never leak nav-lock state into the next card or a future session. Must run
   // BEFORE setMarkButtonsEnabled(false) below: setFlashcardNavLocked(false) re-enables the
@@ -10701,7 +10709,7 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today, 
   var tiles = [];
   var run = on("aboveAvg") && studyTime ? studyTime.aboveAvg : null;
   if (on("streak") || run) tiles.push(heroStreakTile(on("streak") ? streak : null, today, run, !!dash));
-  if (today && today.activity) tiles.push(heroTodayTile(today, newCardEstimate, studyTime));
+  if (today && today.activity) tiles.push(heroTodayTile(today, newCardEstimate, studyTime, summary));
   if (dash) {
     tiles.push(heroDueTile(dash.due, dash.futureDue));
   } else {
@@ -10789,7 +10797,7 @@ function heroAboveAvgHtml(run) {
   '</div>';
 }
 
-function heroTodayTile(today, newCardEstimate, studyTime) {
+function heroTodayTile(today, newCardEstimate, studyTime, summary) {
   var a = today.activity;
   var goal = state.dailyGoal;
   var head = goal > 0
