@@ -8915,7 +8915,7 @@ function whyPanel(card) {
   el.querySelector("#btn-fc-why-check").addEventListener("click", function() { reveal(input.value.trim()); });
   // Enter checks; Shift+Enter is a new line. Esc leaves the field so study keys work again.
   input.addEventListener("keydown", function(e) {
-    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); reveal(input.value.trim()); }
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); reveal(input.value.trim()); }
     else if (e.key === "Escape") { e.stopPropagation(); input.blur(); }
   });
   return el;
@@ -9434,8 +9434,10 @@ document.getElementById("btn-fc-type-hint").addEventListener("click", function()
   haptic("tick");
   document.getElementById("fc-type-input").focus();
 });
+// Enter while an IME is composing (Telex/VNI on a phone keyboard, keyCode 229) confirms the
+// syllable, not the answer: answering then sent a half-typed word.
 document.getElementById("fc-type-input").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
+  if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) {
     e.preventDefault();
     // Also stop propagation, not just the default action — the flip below disables (and
     // therefore blurs) this input mid-keydown, and the same keystroke would otherwise still
@@ -9450,7 +9452,7 @@ document.getElementById("fc-retype-input").addEventListener("click", function(e)
   e.stopPropagation(); // mirrors #fc-type-input: don't let a click into the input bubble to #fc-scene and flip
 });
 document.getElementById("fc-retype-input").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
+  if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) {
     e.preventDefault();
     e.stopPropagation();
     submitForcedRetype();
@@ -9540,7 +9542,11 @@ function normalizeAnswerText(str) {
   // stored card text is precomposed — without unifying to one form first, two code-point
   // arrays that are visually and semantically identical can come out different lengths,
   // which the fuzzy-match code-point comparison below relies on being consistent.
-  return (str || "").normalize("NFC").trim().toLowerCase().replace(/\s+/g, " ");
+  // iOS types curly quotes and turns "--" into a dash (Smart Punctuation), so "don't" typed
+  // on a phone failed against the card's "don't". Fold them to the plain characters.
+  return (str || "").normalize("NFC").trim().toLowerCase().replace(/\s+/g, " ")
+    .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'").replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-").replace(/\u2026/g, "...");
 }
 
 // Splits by Unicode code point rather than UTF-16 code unit — a plain .length/charCodeAt

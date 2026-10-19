@@ -186,3 +186,36 @@ test("a sideways drag on a formula wider than the card scrolls it instead of gra
     assert.deepEqual(r, { wide: true, graded: 0, moved: "" });
   });
 });
+
+test("typing Vietnamese: Enter during composition does not answer; curly quotes and dashes match", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(function() {
+      state.currentLesson = { id: "l1", title: "Words", format: "term-def" };
+      state.studyCards = [{ id: "t1", lesson_id: "l1", format: "term-def", data: { term: "học", def: "to study" } }];
+      state.studyIndex = 0;
+      startFlashcards();
+      const input = document.getElementById("fc-type-input");
+      input.classList.remove("hidden"); input.disabled = false; input.focus();
+      let flips = 0;
+      document.getElementById("fc-scene").addEventListener("click", () => flips++, true);
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", isComposing: true, bubbles: true, cancelable: true }));
+      const ime = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true });
+      Object.defineProperty(ime, "keyCode", { get: () => 229 });
+      input.dispatchEvent(ime);
+      const composing = flips;
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+      return {
+        composing, after: flips,
+        quotes: normalizeAnswerText("Don’t “stop” — now…") === normalizeAnswerText("don't \"stop\" - now..."),
+        attrs: ["fc-type-input", "fc-retype-input", "search-input"].map((id) => {
+          const el = document.getElementById(id);
+          return [el.getAttribute("autocapitalize"), el.getAttribute("autocorrect"), el.getAttribute("spellcheck"), !!el.getAttribute("enterkeyhint")];
+        })
+      };
+    });
+    assert.equal(r.composing, 0, "Enter that confirms an IME syllable is not an answer");
+    assert.equal(r.after, 1);
+    assert.equal(r.quotes, true);
+    assert.deepEqual(r.attrs, [["off", "off", "false", true], ["off", "off", "false", true], ["off", "off", "false", true]]);
+  });
+});
