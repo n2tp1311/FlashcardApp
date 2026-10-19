@@ -68,3 +68,37 @@ test("an edge swipe over an edited dialog asks before discarding", async functio
     assert.deepEqual(r, { screen: "lesson", cloze: true });
   });
 });
+
+test("Home that cannot load its classes says why, offers Try again, and loads once back online", async function() {
+  await withApp(async function(page) {
+    await page.evaluate(function() {
+      window.__fail = true;
+      store.getClasses = function() { return window.__fail ? Promise.reject(new Error("offline")) : Promise.resolve([]); };
+      showScreen("home");
+      renderHome();
+    });
+    await page.waitForSelector("#home-load-failed:not(.hidden)");
+    assert.match(await page.textContent("#home-load-failed"), /Couldn't load your classes\.\s*Try again/);
+    await page.evaluate(function() { window.__fail = false; window.dispatchEvent(new Event("online")); });
+    await page.waitForSelector("#home-load-failed.hidden", { state: "attached" });
+    assert.equal(await page.isVisible("#empty-home"), true);
+  });
+});
+
+test("a list already on Home stays when a later reload fails", async function() {
+  await withApp(async function(page) {
+    await page.evaluate(function() {
+      store.getClasses = function() { return Promise.resolve([{ id: "c1", name: "Statistics", archived: 0 }]); };
+      showScreen("home");
+      renderHome();
+    });
+    await page.waitForFunction(() => document.querySelector("#class-list > *"));
+    await page.evaluate(function() {
+      store.getClasses = function() { return Promise.reject(new Error("offline")); };
+      renderHome();
+    });
+    await page.waitForTimeout(100);
+    assert.equal(await page.isVisible("#home-load-failed"), false);
+    assert.match(await page.textContent("#class-list"), /Statistics/);
+  });
+});

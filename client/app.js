@@ -427,6 +427,9 @@ Object.assign(TRANSLATIONS.en, {
   "home.classesSelectedCount": "{n} classes selected",
   "home.classesSelectedCount_one": "{n} class selected",
   "home.emptyDefault": "No classes yet. Create your first class to get started.",
+  "home.loadFailed": "Couldn't load your classes.",
+  "home.loadFailedOffline": "You're offline. Your classes will show when you're back online.",
+  "home.tryAgain": "Try again",
   "sort.sortBy": "Sort by",
   "sort.level": "Level",
   "sort.nameAZ": "Name (A–Z)",
@@ -1536,6 +1539,9 @@ Object.assign(TRANSLATIONS.vi, {
   "home.selectClasses": "Chọn lớp",
   "home.classesSelectedCount": "Đã chọn {n} lớp",
   "home.emptyDefault": "Chưa có lớp nào. Tạo lớp đầu tiên để bắt đầu.",
+  "home.loadFailed": "Không tải được các lớp.",
+  "home.loadFailedOffline": "Bạn đang ngoại tuyến. Các lớp sẽ hiện khi có mạng trở lại.",
+  "home.tryAgain": "Thử lại",
   "sort.sortBy": "Sắp xếp theo",
   "sort.level": "Cấp độ",
   "sort.nameAZ": "Tên (A–Z)",
@@ -3824,6 +3830,8 @@ function renderHome() {
     var filtered = _applyHomeFilter(classes);
 
     _renderClassItems(filtered);
+    document.getElementById("home-load-failed").classList.add("hidden");
+    state.homeLoadFailed = false;
 
     // Load accuracy async (server only)
     if (IS_SERVER && store.getClassAccuracy) {
@@ -3832,8 +3840,23 @@ function renderHome() {
         _applyClassAccuracy(accMap);
       }).catch(function() {});
     }
+  }).catch(function() {
+    // A list from earlier in this visit is still worth showing; an empty page with no
+    // word about why is not. Offline launches used to land on exactly that.
+    state.homeLoadFailed = true;
+    if (document.querySelector("#class-list > *")) return;
+    document.getElementById("empty-home").classList.add("hidden");
+    var box = document.getElementById("home-load-failed");
+    document.getElementById("home-load-failed-text").textContent =
+      t(navigator.onLine === false ? "home.loadFailedOffline" : "home.loadFailed");
+    box.classList.remove("hidden");
   });
 }
+
+document.getElementById("btn-home-retry").addEventListener("click", function() { renderHome(); });
+window.addEventListener("online", function() {
+  if (state.homeLoadFailed && getActiveScreen() === "home") renderHome();
+});
 
 function _updateHomeViewToggle() {
   document.querySelectorAll("#home-view-toggle .view-toggle-btn").forEach(function(btn) {
@@ -14176,7 +14199,18 @@ document.getElementById("btn-save-dash-metrics").addEventListener("click", funct
 
 // Choose adapter
 var store = IS_SERVER ? SQLiteAdapter : LocalStorageAdapter;
-if (IS_SERVER) window.addEventListener("online", SQLiteAdapter.flushPending);
+// Answers kept on the phone go as soon as there is a chance. "online" alone missed most of
+// them: iOS rarely fires it for a weak signal coming back, and an app reopened from the
+// background fires nothing at all, so they waited for the next answer or launch.
+if (IS_SERVER) {
+  window.addEventListener("online", SQLiteAdapter.flushPending);
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") SQLiteAdapter.flushPending();
+  });
+  setInterval(function() {
+    if (navigator.onLine !== false && document.visibilityState === "visible") SQLiteAdapter.flushPending();
+  }, 60000);
+}
 try {
   var flashToast = sessionStorage.getItem("fc-flash-toast");
   if (flashToast) { sessionStorage.removeItem("fc-flash-toast"); showToast(flashToast); }

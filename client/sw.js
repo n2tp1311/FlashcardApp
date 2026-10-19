@@ -1,9 +1,13 @@
 // Offline shell for the installed app. Network first for everything, so a deploy is picked
-// up on the next load; the cache only answers when the network does not. KaTeX is the one
+// up on the next load; the cache answers when the network does not, or has not within
+// NETWORK_WAIT_MS. On a weak signal a request neither fails nor answers, and waiting on it
+// left a white screen for as long as the phone held the connection open; the late answer
+// still refreshes the cache, so the next launch has it. KaTeX is the one
 // cache-first asset: versioned, large, and what turned every formula into raw "$\hat\beta$"
 // on a weak signal while it came from a CDN. The API is never cached: writes already queue
 // offline in the app, and a stale read would show progress that is not the server's.
 var CACHE = "fc-shell-v1";
+var NETWORK_WAIT_MS = 3000;
 var SHELL = ["/", "/app.js", "/style.css", "/vocabulary-term.js", "/logo.svg", "/manifest.json",
   "/vendor/katex/katex.min.js", "/vendor/katex/katex.min.css"];
 
@@ -38,12 +42,25 @@ self.addEventListener("fetch", function(e) {
   }
   // Navigations all store under "/": the app is one page whatever the path.
   var key = req.mode === "navigate" ? "/" : req;
-  e.respondWith(fetch(req).then(function(res) {
-    if (res.ok && res.type === "basic") { var copy = res.clone(); caches.open(CACHE).then(function(c) { c.put(key, copy); }); }
+  var net = fetch(req).then(function(res) {
+    if (res.ok && res.type === "basic") {
+      var copy = res.clone();
+      return caches.open(CACHE).then(function(c) { return c.put(key, copy); }).then(function() { return res; }, function() { return res; });
+    }
     return res;
-  }).catch(function() {
-    return caches.match(key).then(function(hit) { return hit || Response.error(); });
+  });
+  e.respondWith(new Promise(function(resolve) {
+    var answered = false;
+    function answer(res) { if (!answered) { answered = true; resolve(res); } }
+    net.then(answer, function() {
+      caches.match(key).then(function(hit) { answer(hit || Response.error()); });
+    });
+    // Too slow: the cached copy if there is one, otherwise keep waiting for the network.
+    setTimeout(function() {
+      caches.match(key).then(function(hit) { if (hit) answer(hit); });
+    }, NETWORK_WAIT_MS);
   }));
+  e.waitUntil(net.catch(function() {}));
 });
 
 // Study reminders (server/lib/reminders.js). The payload is { title, body, url }; the tag
