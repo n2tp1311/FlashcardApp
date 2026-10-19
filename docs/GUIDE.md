@@ -498,8 +498,13 @@ distractor pool, or two missed cards would make a two-option question.
 if a card's own `distractors` contains a correct statement, the quiz will show two right
 answers. Such a card has to be edited.
 
-A correct answer with no explanation moves on after 1.2 s; a wrong one, or any answer
-with an explanation, waits for Next. A bottom sheet answers each choice (praise, combos
+A correct answer with nothing to read moves on after 1.2 s; a wrong one, or any answer
+with an explanation or a book passage, waits for Next. The passage used to count as
+nothing to read and vanished 1.2 s after it appeared. After a wrong answer the right
+option is scrolled above the sheet (`revealRightQuizOption`): on a phone the sheet
+covered the lower options, so the one thing worth seeing was under it. Each new question
+starts at the top of the page, since a page left scrolled put a different option under
+the finger that had pressed Next. A bottom sheet answers each choice (praise, combos
 at 3, 5, 10 and every ten after, a calm line on a miss) and holds Next in the same place
 every time. It appears only in Quiz, where the app decides right from wrong: praising a
 flashcard self-grade would be praising the learner for their own button press.
