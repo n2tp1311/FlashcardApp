@@ -806,7 +806,7 @@ card order follow the book as KnowledgeApp lays it out, and a change to that ord
 there (`ka lessons`, then `ka sync --relayout`, which arrives through `layout` below);
 FlashcardApp does not reorder those cards by itself. Study now's "course order" (§8) is
 therefore the book's order. Reordering here by prerequisite links was measured and
-rejected (2026-10-19): of 38,044 links, 62% already point backwards in book order and 26%
+rejected (2026-10-19): of 38,044 links, 62% already follow book order and 26%
 point to a later lesson, but most of those reach more than ten lessons ahead and a sample
 of them was half word matches ("Kernel Trick" needing a convolution "Kernel") -- the rest
 were the book naming a concept before its chapter explains it, on purpose. Following them
