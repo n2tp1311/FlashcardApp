@@ -15301,7 +15301,14 @@ initHomeHeaderAutoHide();
 
   // ─── 1. Flashcard: right = known, left = learning ─────────────────────
   var scene = document.getElementById("fc-scene");
-  var fcStartX, fcStartY, fcDragging = false, fcDx = 0, fcArmed = false;
+  var fcStartX, fcStartY, fcDragging = false, fcDx = 0, fcArmed = false, fcInFormula = false;
+
+  // A sideways drag on a formula wider than the card is that formula scrolling, not a grade:
+  // the two are the same gesture, and the formula was graded instead of read.
+  function inWideFormula(el) {
+    var d = el && el.closest && el.closest(".katex-display");
+    return !!d && d.scrollWidth > d.clientWidth + 1;
+  }
 
   var knownHint = document.createElement("div");
   knownHint.className = "fc-swipe-hint fc-swipe-known";
@@ -15322,6 +15329,7 @@ initHomeHeaderAutoHide();
     fcDragging = false;
     fcDx = 0;
     fcArmed = false;
+    fcInFormula = inWideFormula(e.target);
   }, { passive: true });
 
   scene.addEventListener("touchmove", function(e) {
@@ -15341,6 +15349,7 @@ initHomeHeaderAutoHide();
       }
       return;
     }
+    if (fcInFormula) return;
     var dx = e.touches[0].clientX - fcStartX;
     var dy = e.touches[0].clientY - fcStartY;
     if (!fcDragging) {

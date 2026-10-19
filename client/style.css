@@ -2664,7 +2664,7 @@ code {
   margin-top: 1px;
 }
 
-.quiz-opt .opt-text { flex: 1; }
+.quiz-opt .opt-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 
 .quiz-opt.correct { background: var(--success-light); border-color: var(--success); }
 .quiz-opt.correct .opt-num { background: var(--success-fill); color: #fff; }
@@ -2785,6 +2785,7 @@ code {
 .explanation-panel[open] summary { border-bottom: 1px solid var(--primary); }
 .explanation-body {
   padding: 12px 16px;
+  overflow-wrap: anywhere;
   color: var(--text);
   line-height: 1.6;
   /* Fresh element every render (created via createElement, never reused/toggled in place),
@@ -3447,16 +3448,23 @@ button.leech-pill:hover { filter: brightness(0.96); }
 /* ============================
    KATEX OVERRIDES
    ============================ */
-.fc-front .katex-display,
-.fc-back .katex-display {
+/* Everywhere, not only on the card faces: a wide formula in a quiz question, option or
+   explanation pushed the whole study screen sideways on a phone (690px of page on 390).
+   It scrolls inside itself instead, and pan-x lets that scroll start on the swipe-to-grade
+   card, whose own touch-action is pan-y. */
+.katex-display {
   overflow-x: auto;
   overflow-y: hidden;
+  max-width: 100%;
   padding: 4px 0;
+  touch-action: pan-x pan-y;
 }
 
 .katex-display-wrapper {
   text-align: center;
   margin: 6px 0;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .katex { font-size: 1.05em; }

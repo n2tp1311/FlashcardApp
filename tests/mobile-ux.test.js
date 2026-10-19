@@ -2,12 +2,12 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 const express = require("express");
 const path = require("node:path");
-const { chromium } = require("playwright");
+const { chromium, webkit } = require("playwright");
 
 // Fixes from the 2026-10-19 mobile UX audit, each run in the real client on a phone-sized
 // page (no server: the store is stubbed where a test needs it).
 const root = path.join(__dirname, "..");
-let listener, base, browser;
+let listener, base, browser, safari;
 test.before(async function() {
   await new Promise((ok) => {
     const server = express();
@@ -16,10 +16,14 @@ test.before(async function() {
   });
   browser = await chromium.launch({ headless: true });
 });
-test.after(async function() { if (browser) await browser.close(); listener.close(); });
+test.after(async function() { if (browser) await browser.close(); if (safari) await safari.close(); listener.close(); });
 
+// opts.webkit: Safari's engine, for layout that Chromium lays out differently.
 async function withApp(fn, opts) {
-  const page = await browser.newPage(Object.assign({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" }, opts));
+  opts = Object.assign({}, opts);
+  let engine = browser;
+  if (opts.webkit) { delete opts.webkit; engine = safari || (safari = await webkit.launch({ headless: true })); }
+  const page = await engine.newPage(Object.assign({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" }, opts));
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   try {
@@ -129,5 +133,56 @@ test("Home reloads when the app returns after the UTC day changed or ten minutes
       return [afterLong, n];
     });
     assert.deepEqual(loads, [1, 1], "reloaded after the long absence, not after a quick glance away");
+  });
+});
+
+const WIDE = "$$\\hat{\\beta} = \\arg\\min_{\\beta} \\sum_{i=1}^{n} \\left(y_i - \\beta_0 - \\sum_{j=1}^{p} x_{ij}\\beta_j\\right)^2 + \\lambda \\sum_{j=1}^{p} \\beta_j^2 + \\alpha \\sum_{j=1}^{p} |\\beta_j|$$";
+const URL_TEXT = "See https://example.org/a/very/long/path/that/never/breaks/on/its/own/and/keeps/going/forever.html";
+const MCQ = [1, 2, 3].map((i) => ({
+  id: "m" + i, lesson_id: "l1", format: "mcq",
+  data: { question: "Which objective is ridge plus lasso? " + WIDE, correct: "Elastic net " + WIDE, distractors: ["Ridge " + WIDE, "Lasso"], explanation: URL_TEXT + " " + WIDE }
+}));
+
+test("a wide formula or a long URL in a quiz scrolls inside itself; the page never pans sideways", async function() {
+  await withApp(async function(page) {
+    await page.waitForFunction(() => typeof katex !== "undefined");
+    await page.evaluate(function(cards) {
+      state.currentLesson = { id: "l1", title: "Regression", format: "mcq" };
+      state.quizCards = cards;
+      startQuiz();
+    }, MCQ);
+    const width = () => page.evaluate(() => ({ page: document.documentElement.scrollWidth, screen: innerWidth }));
+    let w = await width();
+    assert.ok(w.page <= w.screen, JSON.stringify(w));
+    await page.evaluate(() => answerQuiz(state.quizOptions.indexOf("Lasso")));
+    await page.waitForTimeout(100);
+    w = await width();
+    assert.ok(w.page <= w.screen, "after answering, with the explanation: " + JSON.stringify(w));
+  }, { webkit: true });
+});
+
+test("a sideways drag on a formula wider than the card scrolls it instead of grading the card", async function() {
+  await withApp(async function(page) {
+    await page.waitForFunction(() => typeof katex !== "undefined");
+    const r = await page.evaluate(async function(wide) {
+      state.currentLesson = { id: "l1", title: "Regression", format: "term-def" };
+      state.studyCards = [{ id: "t1", lesson_id: "l1", format: "term-def", data: { term: "Elastic net", def: wide } }];
+      state.studyIndex = 0;
+      startFlashcards();
+      document.getElementById("fc-scene").click();
+      await new Promise((r) => setTimeout(r, 400));
+      let graded = 0;
+      document.getElementById("btn-fc-known").addEventListener("click", () => graded++, true);
+      const d = document.querySelector(".fc-back .katex-display");
+      const scene = document.getElementById("fc-scene");
+      function fire(type, x) {
+        const t = new Touch({ identifier: 2, target: d, clientX: x, clientY: 300 });
+        d.dispatchEvent(new TouchEvent(type, { touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true }));
+      }
+      fire("touchstart", 100); fire("touchmove", 160); fire("touchmove", 260); fire("touchend", 260);
+      await new Promise((r) => setTimeout(r, 400));
+      return { wide: d.scrollWidth > d.clientWidth, graded, moved: scene.style.transform };
+    }, WIDE);
+    assert.deepEqual(r, { wide: true, graded: 0, moved: "" });
   });
 });
