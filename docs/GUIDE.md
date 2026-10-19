@@ -721,8 +721,24 @@ replay the same queue — attempts de-duplicate, and the worst case is a stale k
 PUT winning. Undo goes through the same queue, so offline an answer and its undo replay
 in order.
 
+**When the queue drains:** on `online`, at login, before the next answer, when the app
+comes back to the screen (`visibilitychange`), and once a minute while it is on screen.
+`online` alone was not enough: iOS rarely fires it when a weak signal recovers, and an
+app reopened from the background fires nothing, so answers sat on the phone until the
+next session. A drain with an empty queue sends nothing, so the timer costs no requests.
+
+**Home says when it cannot load.** A failed class list used to leave Home blank with no
+message, which is what an offline launch looked like. It now says the app is offline (or
+that the classes could not load), offers Try again, and reloads on its own at `online`.
+A list already shown in this visit is kept rather than replaced by the message.
+
 **The service worker** (`client/sw.js`) keeps the app shell available offline:
-network-first for the app files, so a deploy shows on the next load; cache-first for
+network-first for the app files, so a deploy shows on the next load, but the network
+gets 3 seconds (`NETWORK_WAIT_MS`) before a cached copy answers instead. On a weak
+signal a request neither fails nor answers, and waiting on it was a white screen for as
+long as the phone held the connection; the late answer still refreshes the cache. The
+cost: a deploy can take one extra launch to show on a slow connection. With nothing
+cached the app keeps waiting rather than answer with an error; cache-first for
 `/vendor/` (KaTeX ships with the app, since loading it from a CDN on a weak signal left
 formulas as raw `$\hat\beta$`); and it never answers `/api`, `/auth`, `/uploads`,
 `/share` or `/reset-password`. It also shows reminder notifications (§17).
