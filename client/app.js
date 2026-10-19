@@ -3858,6 +3858,23 @@ window.addEventListener("online", function() {
   if (state.homeLoadFailed && getActiveScreen() === "home") renderHome();
 });
 
+// An installed app is reopened, not relaunched: iOS brings back the page as it was, so Home
+// kept yesterday's due count and streak past the 07:00 (UTC midnight) rollover. Reload it
+// when the UTC day changed or the app was away long enough for cards to fall due.
+var HOME_STALE_MS = 10 * 60 * 1000;
+var homeHiddenAt = null;
+function homeStaleOnReturn(hiddenAt, now) {
+  if (hiddenAt === null) return false;
+  return now - hiddenAt >= HOME_STALE_MS ||
+    new Date(hiddenAt).toISOString().slice(0, 10) !== new Date(now).toISOString().slice(0, 10);
+}
+document.addEventListener("visibilitychange", function() {
+  if (document.visibilityState === "hidden") { homeHiddenAt = Date.now(); return; }
+  var stale = homeStaleOnReturn(homeHiddenAt, Date.now());
+  homeHiddenAt = null;
+  if (stale && getActiveScreen() === "home" && !document.querySelector("#modal-overlay:not(.hidden)")) renderHome();
+});
+
 function _updateHomeViewToggle() {
   document.querySelectorAll("#home-view-toggle .view-toggle-btn").forEach(function(btn) {
     btn.classList.toggle("active", btn.dataset.view === state.homeView);

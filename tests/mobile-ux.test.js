@@ -102,3 +102,32 @@ test("a list already on Home stays when a later reload fails", async function() 
     assert.match(await page.textContent("#class-list"), /Statistics/);
   });
 });
+
+test("Home reloads when the app returns after the UTC day changed or ten minutes away", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(function() {
+      const t = Date.parse("2026-10-19T23:58:00Z");
+      return {
+        none: homeStaleOnReturn(null, t),
+        minute: homeStaleOnReturn(t, t + 60000),
+        midnight: homeStaleOnReturn(t, Date.parse("2026-10-20T00:01:00Z")),
+        tenMin: homeStaleOnReturn(Date.parse("2026-10-19T10:00:00Z"), Date.parse("2026-10-19T10:10:00Z"))
+      };
+    });
+    assert.deepEqual(r, { none: false, minute: false, midnight: true, tenMin: true });
+    const loads = await page.evaluate(async function() {
+      let n = 0;
+      store.getClasses = function() { n++; return Promise.resolve([]); };
+      showScreen("home");
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => window.__vis });
+      window.__vis = "hidden"; document.dispatchEvent(new Event("visibilitychange"));
+      homeHiddenAt -= 11 * 60 * 1000;
+      window.__vis = "visible"; document.dispatchEvent(new Event("visibilitychange"));
+      const afterLong = n;
+      window.__vis = "hidden"; document.dispatchEvent(new Event("visibilitychange"));
+      window.__vis = "visible"; document.dispatchEvent(new Event("visibilitychange"));
+      return [afterLong, n];
+    });
+    assert.deepEqual(loads, [1, 1], "reloaded after the long absence, not after a quick glance away");
+  });
+});
