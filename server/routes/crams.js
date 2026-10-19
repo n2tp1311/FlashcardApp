@@ -72,9 +72,9 @@ router.get("/", requireAuth, (req, res) => {
 // POST /api/crams  { name, lessonIds, testAt }
 router.post("/", requireAuth, (req, res) => {
   const { name, lessonIds, testAt } = req.body || {};
-  if (!validName(name)) return res.status(400).json({ error: "name required, at most " + MAX_NAME + " characters" });
+  if (!validName(name)) return res.status(400).json({ error: "name required, at most " + MAX_NAME + " characters", code: "cramName" });
   if (!isIdList(lessonIds, MAX_LESSONS)) return res.status(400).json({ error: "lessonIds must be 1-" + MAX_LESSONS + " lesson ids" });
-  if (!validTestAt(testAt)) return res.status(400).json({ error: "testAt must be a time within the next year" });
+  if (!validTestAt(testAt)) return res.status(400).json({ error: "testAt must be a time within the next year", code: "cramTestAt" });
   if (!ownsLessons(lessonIds, req.session.userId)) return res.status(404).json({ error: "Lesson not found" });
   const id = genId();
   db.prepare("INSERT INTO crams (id, user_id, name, lesson_ids, test_at) VALUES (?, ?, ?, ?, ?)")
@@ -92,11 +92,11 @@ router.patch("/:id", requireAuth, (req, res) => {
   const sets = [];
   const args = [];
   if (b.name !== undefined) {
-    if (!validName(b.name)) return res.status(400).json({ error: "name required, at most " + MAX_NAME + " characters" });
+    if (!validName(b.name)) return res.status(400).json({ error: "name required, at most " + MAX_NAME + " characters", code: "cramName" });
     sets.push("name = ?"); args.push(b.name.trim());
   }
   if (b.testAt !== undefined) {
-    if (!validTestAt(b.testAt)) return res.status(400).json({ error: "testAt must be a time within the next year" });
+    if (!validTestAt(b.testAt)) return res.status(400).json({ error: "testAt must be a time within the next year", code: "cramTestAt" });
     sets.push("test_at = ?"); args.push(b.testAt);
   }
   if (b.lessonIds !== undefined) {

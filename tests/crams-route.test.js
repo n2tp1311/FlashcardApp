@@ -80,7 +80,11 @@ test("bad input and other people's lessons are refused", async () => {
   assert.equal((await call("POST", "/api/crams", { name: "", lessonIds: ["L1"], testAt: t0 })).status, 400);
   assert.equal((await call("POST", "/api/crams", { name: "T", lessonIds: [], testAt: t0 })).status, 400);
   assert.equal((await call("POST", "/api/crams", { name: "T", lessonIds: ["L1", "L1"], testAt: t0 })).status, 400);
-  assert.equal((await call("POST", "/api/crams", { name: "T", lessonIds: ["L1"], testAt: t0 + 400 * 86400 })).status, 400);
+  const late = await call("POST", "/api/crams", { name: "T", lessonIds: ["L1"], testAt: t0 + 400 * 86400 });
+  assert.equal(late.status, 400);
+  // A code, so the client can say it in Vietnamese rather than show the English message.
+  assert.equal(late.body.code, "cramTestAt");
+  assert.equal((await call("POST", "/api/crams", { name: "", lessonIds: ["L1"], testAt: t0 })).body.code, "cramName");
   assert.equal((await call("POST", "/api/crams", { name: "T", lessonIds: ["L1"], testAt: "soon" })).status, 400);
   assert.equal((await call("POST", "/api/crams", { name: "T", lessonIds: ["X1"], testAt: t0 })).status, 404);
   const mine = (await call("POST", "/api/crams", { name: "T", lessonIds: ["L1"], testAt: t0 })).body;

@@ -306,3 +306,27 @@ test("the Home heading stays on one line in Vietnamese on a small phone", async 
     }, { webkit: true, viewport: { width, height: 800 } });
   }
 });
+
+test("Vietnamese: no English left in the markup that was missed, and errors stay in Vietnamese", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(function() {
+      applyLanguage("vi");
+      return {
+        nav: document.getElementById("sidebar").getAttribute("aria-label"),
+        alt: document.getElementById("card-image-preview").alt,
+        interleaved: document.getElementById("pill-order-interleaved").textContent.trim(),
+        suggest: document.getElementById("btn-suggest-tags").textContent,
+        codeless: serverError({ error: "Not found" }, "FALLBACK"),
+        coded: serverError({ error: "testAt must be a time within the next year", code: "cramTestAt" }, "FALLBACK"),
+        terms: [t("class.suggestTags"), t("studyNow.flashcard"), t("studyNow.quiz"), t("done.known"), t("leech.tag"), t("count.due", { n: 3 })]
+      };
+    });
+    assert.deepEqual(r, {
+      nav: "Điều hướng chính", alt: "Xem trước", interleaved: "Xen kẽ ✦", suggest: "Gợi ý nhãn",
+      codeless: "FALLBACK", coded: "Chọn thời gian thi trong vòng một năm tới.",
+      terms: ["Gợi ý nhãn", "Thẻ ghi nhớ", "Trắc nghiệm", "Đã thuộc", "Thẻ khó nhớ", "3 thẻ đến hạn"]
+    });
+    // English keeps the server's own words, which say more than the fallback.
+    assert.equal(await page.evaluate(() => { applyLanguage("en"); return serverError({ error: "Not found" }, "FALLBACK"); }), "Not found");
+  });
+});

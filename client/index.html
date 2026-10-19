@@ -85,7 +85,7 @@
 </div>
 
 <!-- ===== SIDEBAR: outside the screens so it can stay docked on desktop ===== -->
-<nav id="sidebar" class="sidebar" aria-label="Main navigation">
+<nav id="sidebar" class="sidebar" aria-label="Main navigation" data-i18n-aria="nav.main">
   <div class="sidebar-brand">
     <img src="/logo.svg" width="32" height="32" alt="" class="sidebar-brand-logo">
     <span class="sidebar-brand-text"><span class="brand-flash">Flash</span><span class="brand-cards">cards</span></span>
@@ -534,7 +534,7 @@
       <div class="pill-group" id="setup-order" role="group" aria-labelledby="setup-order-label">
         <button class="pill active" data-value="in-order" data-i18n="setup.inOrder">In Order</button>
         <button class="pill" data-value="shuffle" data-i18n="common.shuffle">Shuffle</button>
-        <button class="pill" id="pill-order-interleaved" data-value="interleaved" style="display:none">Interleaved ✦</button>
+        <button class="pill" id="pill-order-interleaved" data-value="interleaved" style="display:none"><span data-i18n="setup.interleaved">Interleaved</span> ✦</button>
         <button class="pill" data-value="cram" data-i18n="setup.cram">Cram</button>
       </div>
       <p class="setup-filter-hint hidden" id="setup-order-hint"></p>
@@ -1112,7 +1112,7 @@
       <!-- No data-i18n: text toggles between idle/busy via JS while a request may be in
            flight, same as #modal-class-title's dynamic New/Edit title — a static data-i18n
            binding would fight that and snap back to the idle label on a language switch. -->
-      <button type="button" class="btn btn-sm btn-outline hidden" id="btn-suggest-tags">Suggest tags</button>
+      <button type="button" class="btn btn-sm btn-outline hidden" id="btn-suggest-tags" data-i18n="class.suggestTags">Suggest tags</button>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="class" id="btn-cancel-class" data-i18n="common.cancel">Cancel</button>
@@ -1261,7 +1261,7 @@
       <input type="file" id="card-image-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
       <div id="card-image-drop" class="image-drop-zone">
         <span id="card-image-drop-label" data-i18n="imagedef.dropLabel">Click or drag image here (JPEG, PNG, GIF, WebP · max 5 MB)</span>
-        <img id="card-image-preview" class="image-preview hidden" src="" alt="Preview">
+        <img id="card-image-preview" class="image-preview hidden" src="" alt="Preview" data-i18n-alt="form.imagePreview">
       </div>
       <button type="button" class="btn btn-ghost btn-sm" id="btn-pick-image" style="align-self:flex-start;margin-top:4px" data-i18n="imagedef.chooseImage">Choose Image</button>
       <label class="form-label" style="margin-top:12px" data-i18n="imagedef.definitionBack">Definition (back)</label>

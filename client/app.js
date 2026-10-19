@@ -430,6 +430,8 @@ Object.assign(TRANSLATIONS.en, {
   "home.loadFailed": "Couldn't load your classes.",
   "home.loadFailedOffline": "You're offline. Your classes will show when you're back online.",
   "home.tryAgain": "Try again",
+  "nav.main": "Main navigation",
+  "form.imagePreview": "Preview",
   "sort.sortBy": "Sort by",
   "sort.level": "Level",
   "sort.nameAZ": "Name (A–Z)",
@@ -1177,6 +1179,10 @@ Object.assign(TRANSLATIONS.en, {
   "search.queryLabel": "Search query",
   "search.resultsLabel": "Search results",
   "error.requestFailed": "Something went wrong ({status}). Try again.",
+  "error.cramTestAt": "Choose a test time within the next year.",
+  "error.cramName": "Give the cram a name, up to 80 characters.",
+  "error.vocabSelection": "Select between 1 and 1000 characters to save.",
+  "error.vocabContext": "The text around the selection is too long to save.",
   "error.rateLimited": "Too many requests. Try again later.",
   "error.missingFields": "Please fill in all fields.",
   "error.passwordTooShort": "Password must be at least 6 characters.",
@@ -1322,7 +1328,7 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.adaptDone": "Đã thích ứng với bạn ngày {date}, từ {n} câu trả lời.",
   "pref.reminders": "Nhắc tôi học",
   "pref.reminderTime": "Mỗi ngày lúc",
-  "pref.reminderHint": "Chỉ vào những ngày có thẻ cần ôn, và không nhắc nếu bạn đã học.",
+  "pref.reminderHint": "Chỉ vào những ngày có thẻ đến hạn, và không nhắc nếu bạn đã học.",
   "pref.reminderStreak": "Giữ chuỗi ngày học vào buổi tối",
   "pref.reminderStreakHint": "Thêm một lời nhắc buổi tối, chỉ khi hôm nay bạn chưa học và chuỗi ngày học sắp mất.",
   "pref.reminderTest": "Gửi thử một lời nhắc",
@@ -1394,8 +1400,8 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintUpdated": "Thẻ KnowledgeApp đã thay đổi kể từ lần bạn xem lại gần nhất",
   "setup.leeches": "Thẻ khó nhớ",
   "setup.hintLeeches": "Thẻ bạn đã quên từ 8 lần trở lên kể từ lần sửa gần nhất. Hãy sửa chúng, hoặc học riêng.",
-  "leech.tag": "Khó nhớ",
-  "leech.tagCount": "Khó nhớ · quên {n} lần",
+  "leech.tag": "Thẻ khó nhớ",
+  "leech.tagCount": "Thẻ khó nhớ · quên {n} lần",
   "leech.tooltip": "Đã quên {n} lần kể từ lần sửa thẻ gần nhất. Bấm để xem lựa chọn.",
   "leech.rewriteRequested": "Đã yêu cầu viết lại",
   "leech.rewriteRequestedTooltip": "KnowledgeApp sẽ viết lại thẻ này ở lần chạy tới. Tự sửa thẻ sẽ huỷ yêu cầu.",
@@ -1494,7 +1500,7 @@ Object.assign(TRANSLATIONS.vi, {
   "ach.vocabInUse.desc": "Số từ bạn đã lưu và nay đã thành thạo.",
   "ach.toughOne.name": "Chinh phục thẻ khó",
   "ach.toughOne.desc": "Thẻ bị đánh dấu Đang học ba lần, sau đó trả lời Rất chắc chắn.",
-  "ach.leechCleared.name": "Vượt qua thẻ dai dẳng",
+  "ach.leechCleared.name": "Vượt qua thẻ khó nhớ",
   "ach.leechCleared.desc": "Một thẻ đã quên tám lần, nay trở lại ôn tập.",
   "ach.recallCleared.name": "Hết thẻ cần nhớ lại",
   "ach.recallCleared.desc": "Mục Cần nhớ lại trống: không còn thẻ chỉ đúng qua trắc nghiệm đến hạn.",
@@ -1542,11 +1548,13 @@ Object.assign(TRANSLATIONS.vi, {
   "home.loadFailed": "Không tải được các lớp.",
   "home.loadFailedOffline": "Bạn đang ngoại tuyến. Các lớp sẽ hiện khi có mạng trở lại.",
   "home.tryAgain": "Thử lại",
+  "nav.main": "Điều hướng chính",
+  "form.imagePreview": "Xem trước",
   "sort.sortBy": "Sắp xếp theo",
   "sort.level": "Cấp độ",
   "sort.nameAZ": "Tên (A–Z)",
   "sort.bookOrder": "Thứ tự trong sách",
-  "sort.dueCount": "Số thẻ cần ôn",
+  "sort.dueCount": "Số thẻ đến hạn",
   "sort.dateAdded": "Ngày thêm",
   "sort.lastActivity": "Hoạt động gần nhất",
   "sort.toggleDirection": "Đổi chiều sắp xếp",
@@ -1570,7 +1578,7 @@ Object.assign(TRANSLATIONS.vi, {
   "common.edit": "Sửa",
   "common.delete": "Xóa",
   "home.emptyArchived": "Không có lớp nào đã lưu trữ.",
-  "count.due": "{n} thẻ cần ôn",
+  "count.due": "{n} thẻ đến hạn",
   "count.lessons": "{n} bài học",
   "count.knownProgress": "{known} / {total} đã thuộc ({pct}%)",
   "mastery.text": "Thành thạo {pct}%",
@@ -1937,7 +1945,7 @@ Object.assign(TRANSLATIONS.vi, {
   "done.complete": "Hoàn thành phiên học",
   "done.cards": "Thẻ",
   "done.questions": "Câu hỏi",
-  "done.known": "Đã nhớ",
+  "done.known": "Đã thuộc",
   "done.bestRun": "Chuỗi đúng",
   "done.time": "Thời gian",
   "done.streak": "Chuỗi ngày học {from} → {to}",
@@ -1956,8 +1964,8 @@ Object.assign(TRANSLATIONS.vi, {
   "eta.underMinute": "còn <1 phút",
   "studyNow.go": "Học ngay · {n} thẻ",
   "studyNow.modeLabel": "Kiểu học",
-  "studyNow.flashcard": "Flashcard",
-  "studyNow.quiz": "Quiz",
+  "studyNow.flashcard": "Thẻ ghi nhớ",
+  "studyNow.quiz": "Trắc nghiệm",
   "studyNow.reviews": "{n} ôn",
   "studyNow.new": "{n} mới",
   "studyNow.minutes": "~{n} phút",
@@ -2199,7 +2207,7 @@ Object.assign(TRANSLATIONS.vi, {
   "class.tags": "Nhãn",
   "class.tagsPlaceholder": "vd: đại-số-tuyến-tính, ôn-thi",
   "class.tagsHint": "Cách nhau bằng dấu phẩy",
-  "class.suggestTags": "Gợi ý thẻ",
+  "class.suggestTags": "Gợi ý nhãn",
   "class.suggestingTags": "Đang gợi ý…",
   "validate.enterClassName": "Vui lòng nhập tên lớp.",
   "validate.enterLessonTitle": "Vui lòng nhập tiêu đề bài học.",
@@ -2263,6 +2271,10 @@ Object.assign(TRANSLATIONS.vi, {
   "search.queryLabel": "Nội dung tìm kiếm",
   "search.resultsLabel": "Kết quả tìm kiếm",
   "error.requestFailed": "Đã xảy ra lỗi ({status}). Hãy thử lại.",
+  "error.cramTestAt": "Chọn thời gian thi trong vòng một năm tới.",
+  "error.cramName": "Đặt tên cho đợt ôn thi, tối đa 80 ký tự.",
+  "error.vocabSelection": "Chọn từ 1 đến 1000 ký tự để lưu.",
+  "error.vocabContext": "Đoạn văn quanh phần đã chọn quá dài để lưu.",
   "error.rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
   "error.missingFields": "Vui lòng điền đầy đủ thông tin.",
   "error.passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự.",
@@ -2289,7 +2301,7 @@ Object.assign(TRANSLATIONS.vi, {
   "validate.fileTooLarge": "Tệp vượt quá giới hạn 5 MB.",
   "error.uploadFailed": "Tải lên thất bại",
   "error.uploadFailedWithMessage": "Tải lên thất bại: {message}",
-  "error.aiSuggestFailedWithMessage": "Không thể gợi ý thẻ: {message}",
+  "error.aiSuggestFailedWithMessage": "Không thể gợi ý nhãn: {message}",
   "study.noCardsMatchFilter": "Không có thẻ nào khớp với bộ lọc đã chọn.",
   "setup.reviewCapReached": "Có {due} thẻ đến hạn, nhưng đã hết lượt ôn hôm nay ({done}/{cap}). Tăng Số lượt ôn tối đa mỗi ngày trong Tùy chọn để học tiếp.",
   "common.copied": "Đã sao chép!",
@@ -2357,6 +2369,9 @@ function applyI18n(root) {
   });
   root.querySelectorAll("[data-i18n-aria]").forEach(function(el) {
     el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
+  });
+  root.querySelectorAll("[data-i18n-alt]").forEach(function(el) {
+    el.alt = t(el.getAttribute("data-i18n-alt"));
   });
   // Rich-HTML strings (embedded <strong>/<code>) can't go through the
   // textContent path above without losing their formatting.
@@ -3530,9 +3545,12 @@ function showToast(message, kind, action) {
 }
 
 // Server errors are English; the ones a user can cause carry a stable code we translate.
+// The server's own message is English; in Vietnamese it made toasts like "Không lưu được:
+// Not found", so there the translated fallback (with the status) stands in for it.
 function serverError(body, fallback) {
   var key = body && body.code ? "error." + body.code : null;
-  return key && TRANSLATIONS.en[key] !== undefined ? t(key) : (body && body.error) || fallback;
+  if (key && TRANSLATIONS.en[key] !== undefined) return t(key);
+  return (state.language !== "vi" && body && body.error) || fallback;
 }
 
 // A validation message under its field, focused so the user lands on what to fix.

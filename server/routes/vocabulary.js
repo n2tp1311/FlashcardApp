@@ -39,9 +39,9 @@ router.post("/", requireAuth, saveLimiter, (req, res) => {
   const contextText = typeof body.context_text === "string" ? body.context_text.trim() : "";
   const sourceCardId = typeof body.source_card_id === "string" ? body.source_card_id : null;
   if (!selectedText || selectedText.length > 1000)
-    return res.status(400).json({ error: "Select 1-1000 characters to save" });
+    return res.status(400).json({ error: "Select 1-1000 characters to save" , code: "vocabSelection" });
   if (contextText.length > 4000)
-    return res.status(400).json({ error: "Context must be at most 4000 characters" });
+    return res.status(400).json({ error: "Context must be at most 4000 characters" , code: "vocabContext" });
 
   let source = null;
   if (sourceCardId) {
