@@ -3408,7 +3408,33 @@ var state = {
    SCREEN NAVIGATION
    ============================ */
 
+// Back returns to where the list was. Every screen used to open at the top, so leaving
+// lesson 240 of a 300-lesson class meant scrolling 30,000px to find the next one.
+var scrollMemory = {};
+function screenScrollKey(id) {
+  if (id === "class") return state.currentClass ? "class:" + state.currentClass.id : null;
+  if (id === "lesson") return state.currentLesson ? "lesson:" + state.currentLesson.id : null;
+  return id === "home" ? "home" : null;
+}
+// The list renders after its data arrives, so keep trying until the page is tall enough,
+// for up to 3 s, and stop as soon as the learner scrolls themselves.
+function restoreScrollOnBack(id) {
+  var y = scrollMemory[screenScrollKey(id)] || 0;
+  if (!y) return;
+  var until = Date.now() + 3000, stopped = false;
+  function stop() { stopped = true; }
+  window.addEventListener("touchstart", stop, { once: true, passive: true });
+  window.addEventListener("wheel", stop, { once: true, passive: true });
+  (function attempt() {
+    if (stopped || getActiveScreen() !== id) return;
+    window.scrollTo(0, y);
+    if (window.scrollY < y - 2 && Date.now() < until) requestAnimationFrame(attempt);
+  })();
+}
+
 function showScreen(id) {
+  var leaving = screenScrollKey(getActiveScreen());
+  if (leaving) scrollMemory[leaving] = window.scrollY;
   if (id !== "upstream") flushUpstreamPending();
   if (id !== "flashcard" && document.getElementById("screen-flashcard").classList.contains("active")) {
     clearFlashcardTranslation();
@@ -4585,7 +4611,7 @@ document.getElementById("btn-save-class").addEventListener("click", function() {
 });
 
 document.getElementById("btn-new-class").addEventListener("click", openNewClass);
-document.getElementById("btn-class-back").addEventListener("click", function() { renderHome(); showScreen("home"); saveScreenState("home"); });
+document.getElementById("btn-class-back").addEventListener("click", function() { renderHome(); showScreen("home"); saveScreenState("home"); restoreScrollOnBack("home"); });
 document.getElementById("btn-edit-class").addEventListener("click", function() {
   if (state.currentClass) openEditClass(state.currentClass.id);
 });
@@ -6505,6 +6531,7 @@ document.getElementById("btn-lesson-back").addEventListener("click", function() 
   showScreen("class");
   saveScreenState("class", state.currentClass && state.currentClass.id);
   renderLessons();
+  restoreScrollOnBack("class");
 });
 
 document.getElementById("btn-edit-lesson").addEventListener("click", function() {

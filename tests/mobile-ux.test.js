@@ -330,3 +330,29 @@ test("Vietnamese: no English left in the markup that was missed, and errors stay
     assert.equal(await page.evaluate(() => { applyLanguage("en"); return serverError({ error: "Not found" }, "FALLBACK"); }), "Not found");
   });
 });
+
+test("Back from a lesson returns to the same place in a long class, even when the list loads late", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(async function() {
+      const fill = () => {
+        const list = document.getElementById("lesson-list");
+        list.innerHTML = "";
+        for (let i = 0; i < 300; i++) { const d = document.createElement("div"); d.style.height = "120px"; d.textContent = "Lesson " + i; list.appendChild(d); }
+      };
+      window.renderLessons = function() { document.getElementById("lesson-list").innerHTML = ""; setTimeout(fill, 200); };
+      state.currentClass = { id: "c1", name: "Big class" };
+      showScreen("class");
+      fill();
+      window.scrollTo(0, 24000);
+      const before = scrollY;
+      state.currentLesson = { id: "l240", title: "Lesson 240" };
+      showScreen("lesson");
+      const inLesson = scrollY;
+      document.getElementById("btn-lesson-back").click();
+      await new Promise((r) => setTimeout(r, 600));
+      return { before, inLesson, after: scrollY };
+    });
+    assert.equal(r.inLesson, 0, "a new screen still opens at the top");
+    assert.equal(r.after, r.before);
+  });
+});
