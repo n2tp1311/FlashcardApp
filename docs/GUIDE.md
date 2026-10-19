@@ -801,6 +801,19 @@ the server has no un-acknowledge).
 | `POST /remove-cards` | delete cards KnowledgeApp made, for a kind of card the learner asked to take back |
 | `GET /deletions?since=` | linked cards the learner deleted |
 
+**The study order of a KnowledgeApp class belongs to KnowledgeApp.** Lesson order and
+card order follow the book as KnowledgeApp lays it out, and a change to that order starts
+there (`ka lessons`, then `ka sync --relayout`, which arrives through `layout` below);
+FlashcardApp does not reorder those cards by itself. Study now's "course order" (§8) is
+therefore the book's order. Reordering here by prerequisite links was measured and
+rejected (2026-10-19): of 38,044 links, 62% already point backwards in book order and 26%
+point to a later lesson, but most of those reach more than ten lessons ahead and a sample
+of them was half word matches ("Kernel Trick" needing a convolution "Kernel") -- the rest
+were the book naming a concept before its chapter explains it, on purpose. Following them
+would pull chapter 18 into chapter 13. A knowledge map was considered at the same time and
+not built: Khan Academy and Duolingo both moved to a linear path, and this data's 2-D map
+positions carry little meaning.
+
 The rule behind all of them: **a card is moved or rewritten in place, never recreated**,
 so its id, schedule and answer history survive. `layout` reuses, for each target lesson,
 the existing lesson that already holds most of its cards (renamed if needed), removes
