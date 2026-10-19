@@ -430,6 +430,10 @@ Object.assign(TRANSLATIONS.en, {
   "home.loadFailed": "Couldn't load your classes.",
   "home.loadFailedOffline": "You're offline. Your classes will show when you're back online.",
   "home.tryAgain": "Try again",
+  "home.emptyFiltered": "No classes match these filters.",
+  "studyNow.noCardsTitle": "No cards yet",
+  "studyNow.noCardsSub": "Create a class and add cards to start studying.",
+  "studyNow.nothingLeft": "Nothing to study right now.",
   "nav.main": "Main navigation",
   "form.imagePreview": "Preview",
   "sort.sortBy": "Sort by",
@@ -1548,6 +1552,10 @@ Object.assign(TRANSLATIONS.vi, {
   "home.loadFailed": "Không tải được các lớp.",
   "home.loadFailedOffline": "Bạn đang ngoại tuyến. Các lớp sẽ hiện khi có mạng trở lại.",
   "home.tryAgain": "Thử lại",
+  "home.emptyFiltered": "Không có lớp nào khớp với bộ lọc này.",
+  "studyNow.noCardsTitle": "Chưa có thẻ nào",
+  "studyNow.noCardsSub": "Tạo một lớp và thêm thẻ để bắt đầu học.",
+  "studyNow.nothingLeft": "Hiện không có thẻ nào để học.",
   "nav.main": "Điều hướng chính",
   "form.imagePreview": "Xem trước",
   "sort.sortBy": "Sắp xếp theo",
@@ -4049,10 +4057,14 @@ function _renderClassItems(classes) {
   var empty = document.getElementById("empty-home");
   container.innerHTML = "";
 
+  // Filters can hide every class; "No classes yet" then told someone with twenty classes that
+  // they had none. Create class is offered only when there truly are none.
+  var inView = (state.homeClasses || []).filter(function(c) { return !!c.archived === state.showArchived; }).length;
+  document.getElementById("btn-empty-new-class").classList.toggle("hidden", state.showArchived || inView > 0);
   if (classes.length === 0) {
     empty.querySelector("p").textContent = state.showArchived
       ? t("home.emptyArchived")
-      : t("home.emptyDefault");
+      : inView > 0 ? t("home.emptyFiltered") : t("home.emptyDefault");
     empty.classList.remove("hidden");
     container.classList.add("hidden");
     return;
@@ -10795,7 +10807,7 @@ function heroTodayTile(today, newCardEstimate, studyTime) {
   return '<section class="dash-tile is-today">' +
     '<h3 class="dash-tile-h">' + escHtml(t("hero.today")) + '</h3>' +
     '<div class="dash-today-main">' + head +
-      (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today)) +
+      (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today, !!summary && summary.cards === 0)) +
     '</div>' +
     '<div class="dash-meters">' +
       heroMeter("time", ICON_TODAY_TIME, "hero.studied", formatStudyDuration(a.studyMs),
@@ -10970,9 +10982,18 @@ function setStudyNowMode(mode) {
   }
 }
 
-function studyNowHtml(plan, today) {
+function studyNowHtml(plan, today, noCards) {
   if (!plan) return '';
   var n = plan.reviews + plan.newCards;
+  // A new account has nothing due because it has nothing at all; "All done for today ✓"
+  // told someone who had not started that they had finished.
+  if (!n && noCards) {
+    return '<div class="study-now-done study-now-empty">' +
+      '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.noCardsTitle")) + '</b>' +
+        '<small>' + escHtml(t("studyNow.noCardsSub")) + '</small></span>' +
+      '<button type="button" class="study-now-more" data-new-class>' + escHtml(t("sidebar.newClass")) + '</button>' +
+    '</div>';
+  }
   if (n > 0) {
     var counts = [];
     if (plan.reviews) counts.push(t("studyNow.reviews", { n: plan.reviews }));
@@ -11008,7 +11029,7 @@ function startStudyNow(btn) {
   var from = getActiveScreen();
   btn.classList.add("is-loading");
   store.getStudyNowCards(parts[0] === "all" ? null : Number(parts[0]), Number(parts[1])).then(function(res) {
-    if (!res.cards.length) { showToast(t("study.noCardsMatchFilter")); return; }
+    if (!res.cards.length) { showToast(t("studyNow.nothingLeft")); return; }
     var knownMap = {};
     res.cards.forEach(function(c) {
       if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
@@ -11031,7 +11052,9 @@ document.addEventListener("click", function(e) {
   var modeBtn = e.target.closest("[data-study-now-mode]");
   if (modeBtn) { setStudyNowMode(modeBtn.dataset.studyNowMode); return; }
   var btn = e.target.closest("[data-study-now]");
-  if (btn) startStudyNow(btn);
+  if (btn) { startStudyNow(btn); return; }
+  if (e.target.closest("[data-new-class]")) document.getElementById("btn-new-class").click();
+  else if (e.target.closest("[data-new-lesson]")) document.getElementById("btn-new-lesson").click();
 });
 
 // A count with nothing to measure it against (no estimate, no cap, no study history yet)
