@@ -15389,24 +15389,27 @@ initHomeHeaderAutoHide();
   document.addEventListener("touchend", function(e) {
     if (!edgeActive) return;
     edgeActive = false;
-    if (getActiveScreen() === "flashcard") return;
     var dx = e.changedTouches[0].clientX - edgeStartX;
     var dy = e.changedTouches[0].clientY - edgeStartY;
-    if (dx > EDGE_THRESHOLD && Math.abs(dy) < dx * 0.6) {
-      var screen = getActiveScreen();
-      if (screen === "home") {
-        haptic("tick");
-        openSidebar();
-        return;
-      }
-      // Every screen with a Back button: on iOS this is the only Back there is (backTrap.off),
-      // so the session summary, results and setup need it as much as the lists.
-      var el = SCREEN_BACK_BTN[screen] && document.getElementById(SCREEN_BACK_BTN[screen]);
-      if (el) {
-        haptic("tick");
-        if (screen === "quiz") confirmLeaveStudy(function() { el.click(); });
-        else el.click();
-      }
+    if (!(dx > EDGE_THRESHOLD && Math.abs(dy) < dx * 0.6)) return;
+    // A dialog is what the learner is looking at, so Back closes it, as the browser's Back
+    // does -- through the unsaved-changes guard. Going back behind it moved the screen
+    // under an open card editor, and its Save then wrote to a lesson no longer shown.
+    if (fcAnyOverlayOpen()) { haptic("tick"); fcCloseTopModal(); return; }
+    var screen = getActiveScreen();
+    if (screen === "flashcard") return;
+    if (screen === "home") {
+      haptic("tick");
+      openSidebar();
+      return;
+    }
+    // Every screen with a Back button: on iOS this is the only Back there is (backTrap.off),
+    // so the session summary, results and setup need it as much as the lists.
+    var el = SCREEN_BACK_BTN[screen] && document.getElementById(SCREEN_BACK_BTN[screen]);
+    if (el) {
+      haptic("tick");
+      if (screen === "quiz") confirmLeaveStudy(function() { el.click(); });
+      else el.click();
     }
   }, { passive: true });
 
