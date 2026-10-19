@@ -1104,6 +1104,12 @@ Most study happens on an iPhone, and several decisions are about it:
   under an open card editor changed, and the editor's Save still wrote to the lesson that
   was no longer shown. The flashcard screen is the one screen it never leaves, because a
   swipe that starts at the edge there is also a swipe to grade.
+- **A focused field is blurred before the next card hides it.** Hidden while it had focus
+  (Flashcard & Write's answer field, when a gap-fill passage came next), the field closed
+  the iPhone keyboard without a blur, and the home-screen app kept the keyboard's shorter
+  viewport: the sticky grade row stayed about 300pt up, over the passage's word bank, until
+  the app was reopened. `renderFlashcard` now blurs it first; Write mode focuses its field
+  again in the same task, so on a word card the keyboard does not drop and come back.
 - **Haptics** use `navigator.vibrate` on Android; iOS has no Vibration API, so on iPhone
   the app clicks the label of a hidden `<input type="checkbox" switch>`, which plays a
   system tick on iOS 18+. Every tick is the same strength, so a pattern becomes a count.
