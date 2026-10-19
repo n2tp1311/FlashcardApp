@@ -466,6 +466,13 @@ There is no study direction setting: a card is always studied front to back.
     back before moving on, tolerating one typo (edit distance 1). An answer containing
     LaTeX gets an "I recalled it" button instead, since its stored text is `$…$`
     source the learner never sees.
+  - **Typing on a phone.** Curly quotes, dashes and "…" are folded to plain characters
+    before the comparison (`normalizeAnswerText`), because iOS Smart Punctuation types
+    `don’t` and a correct retype failed against the card's `don't`. Both boxes switch off
+    autocorrect, autocapitalize and spellcheck: autocorrect "fixed" a term into a
+    different word. Enter pressed while an IME is still composing (Telex or VNI,
+    `isComposing` or keyCode 229) confirms the syllable and does not answer. Before, it
+    sent half a Vietnamese word.
 - **Why?** On a KnowledgeApp card, the learner writes a few words on why the answer is
   right, then sees the book passage the card came from. Explaining before checking makes
   a miss stick better than re-reading. The passage is stored on the card (`cards.source`),
