@@ -289,3 +289,20 @@ test("a right answer with the book passage under it waits for Next instead of mo
     assert.deepEqual(r, { index: 0, next: true, source: true });
   });
 });
+
+test("the Home heading stays on one line in Vietnamese on a small phone", async function() {
+  for (const width of [375, 390]) {
+    await withApp(async function(page) {
+      const r = await page.evaluate(function() {
+        applyLanguage("vi");
+        showScreen("home");
+        const h = document.querySelector("#screen-home .home-section-title").getBoundingClientRect();
+        const select = document.getElementById("class-sort-select").getBoundingClientRect();
+        return { h: h.height, text: document.querySelector("#screen-home .home-section-title").textContent, page: document.documentElement.scrollWidth, select: select.right };
+      });
+      assert.equal(r.text, "Lớp của bạn");
+      assert.ok(r.h < 32, JSON.stringify(r));
+      assert.ok(r.page <= width && r.select <= width, JSON.stringify(r));
+    }, { webkit: true, viewport: { width, height: 800 } });
+  }
+});

@@ -961,6 +961,7 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
   font-weight: 700;
   color: var(--text);
   flex: 1;
+  white-space: nowrap;
 }
 .sort-controls {
   display: flex;
@@ -1363,9 +1364,18 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 .class-mastery .progress-mini-text { font-size: 0.8125rem; margin-top: 6px; }
 .lesson-sort-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 0 0 8px 0;
+}
+/* On a phone "Sort by" and a select as wide as "Hoạt động gần nhất" squeezed the heading
+   beside them to one word a line. The select says what it does, so the label is kept for
+   screen readers only, and the row wraps rather than squeeze anything. */
+@media (max-width: 430px) {
+  .lesson-sort-bar .sort-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
 }
 .sort-label { font-size: 0.8125rem; color: var(--text2); white-space: nowrap; }
 .sort-select {
