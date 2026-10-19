@@ -1036,6 +1036,19 @@ attributes. Hand-rolled because i18next and FormatJS expect a build step. Plural
 forms). `applyI18n` replaces only a button's last text node, so inline SVG icons survive
 a language switch.
 
+**Server messages are English, so Vietnamese never shows them.** `serverError()`
+translates a response's `code` (`error.<code>`); without one it used to show the
+server's `error` text, which in Vietnamese gave toasts like "Không lưu được: Not found".
+In Vietnamese a codeless error now shows the translated fallback with its status, and
+the validation errors a learner can trigger (cram name and test time, a vocabulary
+selection) carry codes. English still shows the server's words, which say more.
+
+**One word per idea in Vietnamese:** a card is *thẻ*, a tag is *nhãn* ("Gợi ý thẻ" read
+as "suggest cards"); due is *đến hạn*; a leech is *thẻ khó nhớ* (plain "Khó nhớ" looked
+like the Hard grade, *Khó*); the Know It grade and the session's known count are both
+*Đã thuộc*; Flashcards and Quiz are *Thẻ ghi nhớ* and *Trắc nghiệm* everywhere. Markup
+text, `aria-label` and `alt` carry `data-i18n`, `data-i18n-aria` or `data-i18n-alt`.
+
 ### Look
 
 Two independent preferences: **theme** (Light, Dark, Match device) and **palette**
