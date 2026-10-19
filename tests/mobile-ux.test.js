@@ -388,3 +388,22 @@ test("a new account is invited to make a class, not told it is done; filters tha
     assert.equal(r.lessonButton, true);
   });
 });
+
+test("Preferences: an invalid Max reviews does not stop other changes saving; the goal choices fit", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(async function() {
+      applyLanguage("vi");
+      document.getElementById("btn-open-preferences").click();
+      showPrefsPage("plan");
+      await new Promise((r) => setTimeout(r, 100));
+      const pills = [...document.querySelectorAll("#pref-daily-goal .pill")];
+      const dialog = document.getElementById("modal-preferences").getBoundingClientRect();
+      const fits = pills.every((p) => { const b = p.getBoundingClientRect(); return b.width > 0 && b.right <= dialog.right + 0.5; });
+      document.getElementById("pref-max-reviews").value = "1.5";
+      document.querySelector('#pref-daily-goal .pill[data-value="30"]').click();
+      savePrefsNow();
+      return { fits, goal: state.dailyGoal, error: !!document.getElementById("pref-max-reviews-error"), max: state.maxReviewsPerDay };
+    });
+    assert.deepEqual(r, { fits: true, goal: 30, error: true, max: null });
+  }, { viewport: { width: 375, height: 667 } });
+});

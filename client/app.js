@@ -14098,12 +14098,18 @@ document.getElementById("pref-tts-test").addEventListener("click", function() {
 var prefsSaveTimer = null;
 var prefsLastSent = null;
 
-function readPrefsForm() {
-  // Empty = no limit (null); 0 is a real "study nothing today" cap, so anything else that isn't
-  // a whole number is rejected rather than quietly becoming 0.
+// Empty = no limit (null); 0 is a real "study nothing today" cap, so anything else that isn't
+// a whole number is rejected rather than quietly becoming 0.
+function maxReviewsFieldInvalid() {
   var maxField = document.getElementById("pref-max-reviews");
-  var maxReviewsRaw = maxField.value.trim();
-  if (maxField.validity.badInput || (maxReviewsRaw !== "" && !/^\d+$/.test(maxReviewsRaw))) return null;
+  var raw = maxField.value.trim();
+  return maxField.validity.badInput || (raw !== "" && !/^\d+$/.test(raw));
+}
+
+// An invalid Max reviews keeps its saved value; it used to make this return nothing, so no
+// other change saved either, and closing the dialog dropped them all.
+function readPrefsForm() {
+  var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
   var theme = document.querySelector("#pref-theme .pill.active").dataset.value;
   var palette = document.querySelector("#pref-palette .pill.active").dataset.value;
   var highContrast = document.getElementById("pref-contrast").checked;
@@ -14112,7 +14118,7 @@ function readPrefsForm() {
   var quizCountsAsKnown = document.getElementById("pref-quiz-known").checked;
   var rate = parseFloat(document.getElementById("pref-rate-label").dataset.rate) || 0.9;
   var lang = document.getElementById("pref-lang-vi").classList.contains("active") ? "vi" : "en";
-  var maxReviews = maxReviewsRaw === "" ? null : parseInt(maxReviewsRaw, 10);
+  var maxReviews = maxReviewsFieldInvalid() ? state.maxReviewsPerDay : maxReviewsRaw === "" ? null : parseInt(maxReviewsRaw, 10);
   var goalPill = document.querySelector("#pref-daily-goal .pill.active");
   var dailyGoal = goalPill ? parseInt(goalPill.dataset.value, 10) : state.dailyGoal;
   var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, sounds: sounds, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, dailyGoal: dailyGoal, quizCountsAsKnown: quizCountsAsKnown };
@@ -14141,8 +14147,8 @@ function savePrefsNow() {
   prefsSaveTimer = null;
   var maxField = document.getElementById("pref-max-reviews");
   var prefs = readPrefsForm();
-  if (!prefs) { showFieldError(maxField, t("pref.maxReviewsInvalid")); return; }
-  clearFieldError(maxField);
+  if (maxReviewsFieldInvalid()) showFieldError(maxField, t("pref.maxReviewsInvalid"));
+  else clearFieldError(maxField);
   var sent = JSON.stringify(prefs);
   if (sent === prefsLastSent) return;
   prefsLastSent = sent;
