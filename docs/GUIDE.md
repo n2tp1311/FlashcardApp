@@ -199,6 +199,12 @@ session. The cost is that one weak gap reschedules the whole passage. The grade 
 suggested from the number of mistakes (Know It, Hard or Learning) and the learner may
 override it, since a slip is not the same as not knowing.
 
+The edit dialog takes the wrong words one per line, not as a comma list. Book words
+carry commas ("1,000", "however, the"), and the comma field split them on Save, so
+opening a passage and saving it rewrote the book's wording without anyone typing a
+character. An untouched field also gives back the stored list as it was, rather than a
+re-parsed copy of it.
+
 **Vocabulary terms** may end in IPA, `resilient /rɪˈzɪliənt/`
 (`client/vocabulary-term.js`). The headword is shown large with the IPA under it, and
 the speaker reads only the headword: a voice spells IPA out letter by letter.
