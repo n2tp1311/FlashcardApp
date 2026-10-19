@@ -1015,6 +1015,12 @@ Everything is global. `state` holds the session and screen state; `store` is eit
 `SQLiteAdapter` (server) or `LocalStorageAdapter` (local), with the same methods.
 `showScreen(id)` swaps screens; there is no URL routing, so the last list screen is saved
 in `localStorage["fc-last-screen"]` and restored on load.
+Each screen still opens at the top, but Back from a lesson to its class, or from a class
+to Home, returns to where the list was (`scrollMemory`, keyed by screen and class or
+lesson id). Every screen used to open at the top, so leaving lesson 240 of a 300-lesson
+class meant scrolling about 30,000px back to it. The list renders after its data
+arrives, so the restore keeps trying for up to 3 s and gives up the moment the learner
+scrolls.
 
 **Every string from a card or a user goes through `escHtml()`** before it reaches
 `innerHTML`. LaTeX (`$…$`) is rendered by KaTeX after the HTML is in place.
