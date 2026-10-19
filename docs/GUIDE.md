@@ -1119,6 +1119,10 @@ A list of topics (Appearance, Daily plan, Memory, Reminders, Sound & speech, Acc
 data) that **saves as you go**: 0.3 s after a tap, 0.8 s after typing, nothing sent when
 nothing changed. There is no Cancel, so a regretted change is undone by hand.
 
+**One bad field holds back only itself.** A Max reviews that is not a whole number keeps
+its saved value and shows its error, and every other change still saves. It used to stop
+the whole save, so nothing else stuck, and closing the dialog dropped every change.
+
 ---
 
 ## 17. Reminders
