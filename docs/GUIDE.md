@@ -1036,6 +1036,10 @@ Most study happens on an iPhone, and several decisions are about it:
   edge-swipe-back onto a blank snapshot of the page. On iOS no entry is ever pushed and
   the app's own edge swipe (`SCREEN_BACK_BTN`) is the only Back; elsewhere an entry exists
   only while there is somewhere in-app to go back to (`syncBackTrap`).
+- **Home reloads when the app comes back** after the UTC day changed or after 10 minutes
+  away (`homeStaleOnReturn`). iOS reopens an installed app as it was left, so Home kept
+  yesterday's due count and streak past the 07:00 rollover in Vietnam. A quicker glance
+  away does not reload, and neither does a return with a dialog open.
 - **The edge swipe closes an open dialog first**, through the same unsaved-changes guard
   as the dialog's Cancel. It used to ignore dialogs and go back behind them: the screen
   under an open card editor changed, and the editor's Save still wrote to the lesson that
