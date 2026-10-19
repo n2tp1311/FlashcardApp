@@ -538,6 +538,12 @@ chapters build on each other. A switch under the button chooses Flashcards or Qu
 remembered in the account's preferences (`studyNowMode`) because it is a habit, not a
 property of one phone.
 
+**An account with no cards is not "done".** With nothing due the tile reads "All done for
+today", which on a new account told someone who had not started that they had finished.
+With no cards at all (`summary.cards` is 0) it says "No cards yet" and offers New class.
+Likewise an empty Home says "No classes match these filters" when filters hide every
+class, and offers New class only when there are none. An empty class offers + Lesson.
+
 ### Resume
 
 A flashcard session left part way comes back on Home as "Continue · 5 cards left". It is
