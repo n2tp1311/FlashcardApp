@@ -1174,8 +1174,8 @@
       <p class="form-hint" id="card-cloze-help" data-i18n="cloze.help">Hidden words are written {{c1::word}}. Every c1 is hidden together on this card.</p>
       <div id="card-gapfill-extra" class="hidden">
         <label class="form-label" for="card-gapfill-wrong" data-i18n="gapfill.wrongWords">Wrong words in the bank</label>
-        <input id="card-gapfill-wrong" class="form-input" type="text" autocomplete="off">
-        <p class="form-hint" data-i18n="gapfill.wrongWordsHint">Separate with commas, up to 6.</p>
+        <textarea id="card-gapfill-wrong" class="form-textarea" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <p class="form-hint" data-i18n="gapfill.wrongWordsHint">One per line, up to 6.</p>
       </div>
       <div class="preview-label" data-i18n="form.previewColon">Preview:</div>
       <div id="card-cloze-preview" class="latex-preview"></div>

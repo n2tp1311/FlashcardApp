@@ -653,7 +653,7 @@ Object.assign(TRANSLATIONS.en, {
   "gapfill.wrong": "Gap {n}: wrong, the answer is {word}",
   "gapfill.passage": "Passage",
   "gapfill.wrongWords": "Wrong words in the bank",
-  "gapfill.wrongWordsHint": "Separate with commas, up to 6.",
+  "gapfill.wrongWordsHint": "One per line, up to 6.",
   "validate.gapfillWrong": "Up to 6 wrong words, each under 100 characters.",
   "gapfill.help": "Each gap is written {{c1::word}}, {{c2::word}} and so on; every gap is hidden at once and filled from the word bank.",
   "card.editGapfill": "Edit passage",
@@ -1754,7 +1754,7 @@ Object.assign(TRANSLATIONS.vi, {
   "gapfill.wrong": "Chỗ trống {n}: sai, đáp án là {word}",
   "gapfill.passage": "Đoạn văn",
   "gapfill.wrongWords": "Từ gây nhiễu trong ngân hàng từ",
-  "gapfill.wrongWordsHint": "Cách nhau bằng dấu phẩy, tối đa 6 từ.",
+  "gapfill.wrongWordsHint": "Mỗi dòng một từ, tối đa 6 từ.",
   "validate.gapfillWrong": "Tối đa 6 từ gây nhiễu, mỗi từ dưới 100 ký tự.",
   "gapfill.help": "Mỗi chỗ trống viết là {{c1::từ}}, {{c2::từ}}…; mọi chỗ trống được ẩn cùng lúc và điền từ ngân hàng từ.",
   "card.editGapfill": "Sửa đoạn văn",
@@ -6665,7 +6665,7 @@ function openEditCard(cardId, presetCard, fromStudy) {
       document.getElementById("card-cloze-input").value = card.data.text;
       document.getElementById("card-gapfill-extra").classList.toggle("hidden", !passage);
       document.getElementById("card-cloze-label").textContent = t(passage ? "gapfill.passage" : "cloze.sentence");
-      document.getElementById("card-gapfill-wrong").value = passage ? (card.data.distractors || []).join(", ") : "";
+      document.getElementById("card-gapfill-wrong").value = passage ? gapfillWrongText(card.data.distractors) : "";
       renderCloze(card.data.text, document.getElementById("card-cloze-preview"), true, passage);
       openModal("card-cloze");
     } else {
@@ -6798,6 +6798,17 @@ document.getElementById("btn-save-card-termdef").addEventListener("click", funct
   });
 })();
 
+// One wrong word per line: book words carry commas ("1,000", "however, the"), and the old
+// comma-separated field split them on save without a word from anyone. An untouched field
+// gives back the card's own list, so opening and saving never rewrites what the book said.
+function gapfillWrongText(list) {
+  return (list || []).join("\n");
+}
+function gapfillWrongWords(value, original) {
+  if (value === gapfillWrongText(original)) return (original || []).slice();
+  return value.split("\n").map(function(w) { return w.trim(); }).filter(Boolean);
+}
+
 // Only editing: cloze cards come from KnowledgeApp, and there is no Add for them yet.
 document.getElementById("btn-save-card-cloze").addEventListener("click", function() {
   var input = document.getElementById("card-cloze-input");
@@ -6809,7 +6820,7 @@ document.getElementById("btn-save-card-cloze").addEventListener("click", functio
   var data = { text: text };
   if (passage) {
     var wrongInput = document.getElementById("card-gapfill-wrong");
-    var wrong = wrongInput.value.split(",").map(function(w) { return w.trim(); }).filter(Boolean);
+    var wrong = gapfillWrongWords(wrongInput.value, editing.data.distractors);
     if (wrong.length > 6 || wrong.some(function(w) { return w.length > 100; })) { showFieldError(wrongInput, t("validate.gapfillWrong")); return; }
     data = Object.assign({}, editing.data, { text: text, distractors: wrong });
   }

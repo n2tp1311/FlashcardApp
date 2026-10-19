@@ -203,14 +203,40 @@ test("edit: the dialog keeps the wrong words and refuses a passage with one gap"
     assert.equal(await page.textContent("#modal-card-cloze-title"), "Edit passage");
     assert.equal(await page.evaluate(() => document.querySelectorAll("#card-cloze-preview .cloze-gap.revealed").length), 3);
     assert.equal(await page.textContent("#card-cloze-label"), "Passage");
-    assert.equal(await page.inputValue("#card-gapfill-wrong"), "batch norm, learning rate");
-    await page.fill("#card-gapfill-wrong", "a, b, c, d, e, f, g");
+    assert.equal(await page.inputValue("#card-gapfill-wrong"), "batch norm\nlearning rate");
+    await page.fill("#card-gapfill-wrong", "a\nb\nc\nd\ne\nf\ng");
     await page.click("#btn-save-card-cloze");
     assert.match(await page.evaluate(() => document.body.innerText), /Up to 6 wrong words/);
     await page.fill("#card-gapfill-wrong", "batch norm");
     await page.fill("#card-cloze-input", "Dropout prevents {{c1::co-adaptation}}.");
     await page.click("#btn-save-card-cloze");
     assert.match(await page.evaluate(() => document.body.innerText), /2 to 8 gaps/);
+  });
+});
+
+// The field was comma-separated, so "1,000" saved as "1" and "000" -- the book's wording
+// rewritten by opening a card and pressing Save.
+test("edit: wrong words with commas save exactly as the book wrote them", async function() {
+  await withApp(async (page) => {
+    const card = Object.assign({}, PASSAGE, { data: Object.assign({}, PASSAGE.data, { distractors: ["1,000", "however, the"] }) });
+    const sent = await page.evaluate(async (card) => {
+      const calls = [];
+      store.updateCard = function(id, lessonId, body) { calls.push(body.data.distractors); return Promise.resolve(); };
+      const tick = () => new Promise((r) => setTimeout(r, 50));
+      openEditCard(card.id, card);
+      await tick();
+      state.editingCardLessonId = card.lesson_id;
+      document.getElementById("btn-save-card-cloze").click();
+      await new Promise((r) => setTimeout(r, 50));
+      const field = document.getElementById("card-gapfill-wrong");
+      openEditCard(card.id, card);
+      await tick();
+      field.value = field.value + "\n  2,5 kg  \n";
+      document.getElementById("btn-save-card-cloze").click();
+      await new Promise((r) => setTimeout(r, 50));
+      return calls;
+    }, card);
+    assert.deepEqual(sent, [["1,000", "however, the"], ["1,000", "however, the", "2,5 kg"]]);
   });
 });
 
