@@ -1051,6 +1051,9 @@ Most study happens on an iPhone, and several decisions are about it:
   edge-swipe-back onto a blank snapshot of the page. On iOS no entry is ever pushed and
   the app's own edge swipe (`SCREEN_BACK_BTN`) is the only Back; elsewhere an entry exists
   only while there is somewhere in-app to go back to (`syncBackTrap`).
+- **The grades are the bottom row** of the flashcard screen, Prev/Next the row above.
+  Prev/Next used to be the bottom row, 8px under Confident: a slip skipped a card
+  ungraded, and on the last card the same spot is Finish. Landscape keeps one row.
 - **Home reloads when the app comes back** after the UTC day changed or after 10 minutes
   away (`homeStaleOnReturn`). iOS reopens an installed app as it was left, so Home kept
   yesterday's due count and streak past the 07:00 rollover in Vietnam. A quicker glance
