@@ -1067,6 +1067,12 @@ Dark mode has a separate High contrast option rather than a more saturated defau
 following GitHub and Material: saturated colour vibrates on grey, and near-white text
 halates for readers with astigmatism.
 
+The retype check's Correct / Try again line uses `--success` and `--danger`, and the test
+covers them on `--card-back`. It used fixed dark-mode greens and reds, `#4ade80` and
+`#f87171`, which measured 1.47:1 and 2.34:1 on the light card back. Nord and Everforest
+in dark mode get a lighter `--danger`, because their card backs are light enough to
+take the shared dark red under 4.5:1 (3.98:1 in Nord).
+
 ### Screens on a phone
 
 Most study happens on an iPhone, and several decisions are about it:
