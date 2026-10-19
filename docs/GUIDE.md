@@ -1020,6 +1020,11 @@ Most study happens on an iPhone, and several decisions are about it:
   edge-swipe-back onto a blank snapshot of the page. On iOS no entry is ever pushed and
   the app's own edge swipe (`SCREEN_BACK_BTN`) is the only Back; elsewhere an entry exists
   only while there is somewhere in-app to go back to (`syncBackTrap`).
+- **The edge swipe closes an open dialog first**, through the same unsaved-changes guard
+  as the dialog's Cancel. It used to ignore dialogs and go back behind them: the screen
+  under an open card editor changed, and the editor's Save still wrote to the lesson that
+  was no longer shown. The flashcard screen is the one screen it never leaves, because a
+  swipe that starts at the edge there is also a swipe to grade.
 - **Haptics** use `navigator.vibrate` on Android; iOS has no Vibration API, so on iPhone
   the app clicks the label of a hidden `<input type="checkbox" switch>`, which plays a
   system tick on iOS 18+. Every tick is the same strength, so a pattern becomes a count.
