@@ -1007,6 +1007,14 @@ in `localStorage["fc-last-screen"]` and restored on load.
 **Every string from a card or a user goes through `escHtml()`** before it reaches
 `innerHTML`. LaTeX (`$…$`) is rendered by KaTeX after the HTML is in place.
 
+**A display formula scrolls inside itself** (`.katex-display`, everywhere, not only on the
+card faces), and option text, explanations and book passages break long words and URLs.
+Before, a wide formula in a quiz question or explanation made the whole study screen
+wider than the phone (measured in WebKit: 458px of page on a 390px screen), so every
+drag panned the page. On the flashcard a sideways drag that starts on a formula wider
+than the card scrolls the formula and does not grade: the two are the same gesture, and
+the formula was graded instead of read.
+
 ### i18n
 
 `TRANSLATIONS.en` and `TRANSLATIONS.vi` are plain dictionaries; `t(key, vars)` looks a key
