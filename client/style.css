@@ -2389,8 +2389,11 @@ code {
   box-shadow: var(--shadow-lg);
   white-space: nowrap;
 }
+/* One line, cut with an ellipsis: an Updates card's name ran it past the screen edge and
+   took Undo with it. */
+#grade-undo-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .grade-undo-btn {
-  border: 0; border-radius: var(--radius-pill); padding: 6px 14px; min-height: 32px;
+  border: 0; border-radius: var(--radius-pill); padding: 6px 14px; min-height: 32px; flex-shrink: 0;
   background: color-mix(in srgb, var(--surface) 18%, transparent);
   color: var(--surface); font: inherit; font-weight: 600; cursor: pointer;
 }

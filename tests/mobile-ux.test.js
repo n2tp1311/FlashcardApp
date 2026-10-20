@@ -455,3 +455,19 @@ test("late cheers leave the session-end buttons on screen, at the same place", a
     }
   }, { viewport: { width: 375, height: 667 } });
 });
+
+// "Marked reviewed: <a long card name>" was one nowrap line, and pushed Undo past the right
+// edge of a 390px screen.
+test("a long undo message is cut short, and Undo stays on screen", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(function() {
+      showUndoBar("Marked reviewed: " + "relative frequency histogram of a quantitative variable ".repeat(3));
+      const btn = document.getElementById("btn-grade-undo").getBoundingClientRect();
+      const pill = document.getElementById("grade-undo").getBoundingClientRect();
+      return { btnRight: btn.right, btnWidth: btn.width, pillRight: pill.right, width: innerWidth };
+    });
+    assert.ok(r.btnRight <= r.width - 16, "Undo ends inside the screen: " + r.btnRight);
+    assert.ok(r.btnWidth >= 44, "Undo keeps its size: " + r.btnWidth);
+    assert.ok(r.pillRight <= r.width - 16);
+  });
+});
