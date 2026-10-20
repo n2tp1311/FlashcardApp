@@ -567,6 +567,18 @@ when the button is pressed, and split by whether they have a due date, so the se
 session costs no request. The cost: a learner who wants to quiz new cards has to go
 through Study Setup.
 
+**Which classes is a checklist above the button**, "All classes" or any set of them, saved
+in the account as `studyNowClasses`. The user studies several books at once and wanted to
+put one aside for a day without archiving it. The counts follow the pick: the due cards of
+the picked classes (from `dueForReview`, which already carries each lesson's class), and
+the day's new-card goal capped by the new cards those classes hold. The goal itself stays
+the day's: picking one class does not shrink how many new cards are worth learning today,
+only where they come from. `GET /api/stats/new-card-estimate` returns `byClass` (each class
+with its untouched cards, in course order) so the checklist and its counts cost no extra
+request, and the cards request carries `classIds`. A class deleted or archived since drops
+out of the pick; none left, or every class ticked, means all. It shows only with two
+classes or more.
+
 **An account with no cards is not "done".** With nothing due the tile reads "All done for
 today", which on a new account told someone who had not started that they had finished.
 With no cards at all (`summary.cards` is 0) it says "No cards yet" and offers New class.
