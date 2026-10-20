@@ -513,9 +513,14 @@ distractor pool, or two missed cards would make a two-option question.
 if a card's own `distractors` contains a correct statement, the quiz will show two right
 answers. Such a card has to be edited.
 
-A correct answer with nothing to read moves on after 1.2 s; a wrong one, or any answer
-with an explanation or a book passage, waits for Next. The passage used to count as
-nothing to read and vanished 1.2 s after it appeared. After a wrong answer the right
+Every answer moves on by itself: a correct one after 1.2 s, a wrong one after 2.5 s so the
+marked right option can be read (`QUIZ_ADVANCE_RIGHT_MS`, `QUIZ_ADVANCE_WRONG_MS`). It
+used to wait for Next after a wrong answer or whenever there was an explanation or a book
+passage to read, and since nearly every synced card carries a passage, the user pressed
+Next after almost every question and asked for it to go. Reading is opt-in instead:
+opening the explanation or the passage, or selecting a word to save, stops the timer
+(`pauseQuizAdvance`) and shows Next. The cost is that a learner who wants to reread a
+wrong answer has 2.5 s to tap one of those panels. After a wrong answer the right
 option is scrolled above the sheet (`revealRightQuizOption`): on a phone the sheet
 covered the lower options, so the one thing worth seeing was under it. Each new question
 starts at the top of the page, since a page left scrolled put a different option under
