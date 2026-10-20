@@ -830,7 +830,8 @@ The **Updates** screen lists flagged cards with a word-level diff of the old and
 text — except for fields containing LaTeX, where highlight spans cannot be threaded
 through KaTeX output and a diff of the raw source would show noise the learner never
 sees. Mark reviewed clears the flag (with a 6-second Undo, sent when it expires, because
-the server has no un-acknowledge).
+the server has no un-acknowledge). The Undo bar's text is one line cut with an ellipsis; a
+long card name had run it past the edge of a phone screen, taking the Undo button with it.
 
 ### Classes and lessons from KnowledgeApp's side
 
