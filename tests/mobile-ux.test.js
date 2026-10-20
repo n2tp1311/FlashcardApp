@@ -542,3 +542,31 @@ test("tapping a chart column, a line point, a grade segment or a heatmap day sho
     assert.deepEqual(await readout("w-stack"), ["Good: 7", "Oct 3: 12 min, 40 cards"]);
   });
 });
+
+// Only the 78x20 name applied a preset, with its 22px delete 4px away.
+test("a whole preset chip applies the preset, stays marked until a pill changes it, and holds no delete", async function() {
+  await withApp(async function(page) {
+    await page.evaluate(function() {
+      showScreen("setup");
+      state.studyScope = { lessons: [{ id: "l1" }] };
+      state.setupDataPromise = new Promise(function() {});
+      state.studyPresets = [{ id: "p1", name: "Due 25", count: "25", filter: "due", mode: "flashcard", order: "shuffle" },
+                            { id: "p2", name: "All", count: "all", filter: "all", mode: "quiz", order: "in-order" }];
+      renderSetupPresets();
+    });
+    assert.equal(await page.locator("#setup-presets-list .setup-preset-chip-remove").count(), 0);
+    const chip = page.locator('#setup-presets-list .setup-preset-chip[data-preset-id="p1"]');
+    const box = await chip.boundingBox();
+    assert.ok(box.height >= 40, "chip height " + box.height);
+    // The left edge, on the number badge, not the name.
+    await page.touchscreen.tap(box.x + 6, box.y + box.height / 2);
+    const after = await page.evaluate(() => ({
+      count: setupPillValue("setup-count"), filter: setupPillValue("setup-filter"),
+      pressed: [...document.querySelectorAll("#setup-presets-list .setup-preset-chip")].map(c => c.getAttribute("aria-pressed"))
+    }));
+    assert.deepEqual(after, { count: "25", filter: "due", pressed: ["true", "false"] });
+    await page.locator('#setup-count .pill[data-value="50"]').tap();
+    await page.waitForTimeout(20);
+    assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll("#setup-presets-list .setup-preset-chip.active")].length), 0);
+  });
+});

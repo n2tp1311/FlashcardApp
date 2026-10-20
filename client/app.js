@@ -7390,12 +7390,32 @@ function renderSetupPresets() {
   if (!list) return;
   list.innerHTML = state.studyPresets.map(function(preset, i) {
     var numBadge = i < 9 ? '<span class="setup-preset-chip-num">' + (i + 1) + '</span>' : '';
-    return '<span class="setup-preset-chip" data-preset-id="' + escHtml(preset.id) + '">' +
+    // The whole chip applies it. Only the 78x20 name did, with a 22px delete 4px away, so a
+    // slightly wide tap asked to delete the preset. Deleting lives in Manage presets.
+    return '<button type="button" class="setup-preset-chip" data-preset-id="' + escHtml(preset.id) + '" aria-pressed="false">' +
       numBadge +
-      '<span class="setup-preset-chip-name" data-preset-id="' + escHtml(preset.id) + '">' + escHtml(preset.name) + '</span>' +
-      '<button class="setup-preset-chip-remove" data-preset-id="' + escHtml(preset.id) + '" title="' + escHtml(t("common.delete")) + '">' + ICON_X + '</button>' +
-      '</span>';
+      '<span class="setup-preset-chip-name">' + escHtml(preset.name) + '</span>' +
+      '</button>';
   }).join("");
+  syncPresetChips();
+}
+
+// The chip of the preset in effect stays marked until a pill changes what it set.
+function setupPillValue(groupId) {
+  var on = document.querySelector("#" + groupId + " .pill.active");
+  return on ? on.dataset.value : null;
+}
+
+function syncPresetChips() {
+  var applied = state.appliedPreset;
+  var still = applied && ["setup-count", "setup-filter", "setup-mode", "setup-order"].every(function(g) {
+    return setupPillValue(g) === applied.values[g];
+  });
+  document.querySelectorAll("#setup-presets-list .setup-preset-chip").forEach(function(chip) {
+    var on = !!still && chip.dataset.presetId === applied.id;
+    chip.classList.toggle("active", on);
+    chip.setAttribute("aria-pressed", String(on));
+  });
 }
 
 function applyStudyPreset(preset) {
@@ -7413,6 +7433,8 @@ function applyStudyPreset(preset) {
   if (order === "cram" && mode === "quiz") order = "shuffle";
   setPillGroup("setup-order", order);
   setOrderHint(order);
+  state.appliedPreset = { id: preset.id, values: { "setup-count": String(preset.count), "setup-filter": preset.filter, "setup-mode": mode, "setup-order": order } };
+  syncPresetChips();
 
   var filterHint = document.getElementById("setup-filter-hint");
   var filterKey = FILTER_HINT_KEYS[preset.filter];
@@ -7450,23 +7472,15 @@ function resetSetupPresetSaveRow() {
 }
 
 document.getElementById("setup-presets-list").addEventListener("click", function(e) {
-  var removeBtn = e.target.closest(".setup-preset-chip-remove");
-  if (removeBtn) {
-    var presetId = removeBtn.dataset.presetId;
-    var preset = state.studyPresets.filter(function(p) { return p.id === presetId; })[0];
-    if (!preset) return;
-    confirmDelete(t("setup.deletePresetConfirm", { name: preset.name }), function() {
-      state.studyPresets = state.studyPresets.filter(function(p) { return p.id !== presetId; });
-      savePresetsToServer();
-      renderSetupPresets();
-    });
-    return;
-  }
-  var chipName = e.target.closest(".setup-preset-chip-name");
-  if (chipName) {
-    var preset2 = state.studyPresets.filter(function(p) { return p.id === chipName.dataset.presetId; })[0];
-    if (preset2) applyStudyPreset(preset2);
-  }
+  var chip = e.target.closest(".setup-preset-chip");
+  if (!chip) return;
+  var preset = state.studyPresets.filter(function(p) { return p.id === chip.dataset.presetId; })[0];
+  if (preset) applyStudyPreset(preset);
+});
+
+// After the pill's own handler, which may also move other groups (needsRecall forces Flashcard).
+document.addEventListener("click", function(e) {
+  if (state.appliedPreset && e.target.closest && e.target.closest("#screen-setup .pill")) setTimeout(syncPresetChips, 0);
 });
 
 document.getElementById("btn-setup-save-preset").addEventListener("click", function() {
