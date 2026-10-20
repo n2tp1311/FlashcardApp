@@ -167,7 +167,9 @@ router.post("/cards/by-lessons", requireAuth, (req, res) => {
 // archived: cards due now, most overdue first, then never-answered cards in course order
 // (class, lesson, card). The client sends how many of each fit today -- it already holds the
 // review cap, the reviews done and the new-card estimate -- and reviews: null means no cap.
+// classIds, when given, keeps it to the classes picked on Study now's checklist.
 const STUDY_NOW_MAX = 2000;
+const STUDY_NOW_MAX_CLASSES = 500;
 const STUDY_NOW_COLS =
   "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
   "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
@@ -180,19 +182,26 @@ router.post("/cards/study-now", requireAuth, (req, res) => {
   const fresh = count(req.body.newCards);
   if (reviews === null || fresh === null)
     return res.status(400).json({ error: "reviews and newCards must be whole numbers >= 0 (reviews may be null)" });
+  const classIds = req.body.classIds;
+  if (classIds !== undefined && classIds !== null &&
+      (!Array.isArray(classIds) || !classIds.length || classIds.length > STUDY_NOW_MAX_CLASSES ||
+       !classIds.every(id => typeof id === "string" && id.length <= 64)))
+    return res.status(400).json({ error: "classIds must be a non-empty list of class ids" });
+  const inClasses = classIds ? " AND c.id IN (" + classIds.map(() => "?").join(",") + ")" : "";
+  const classArgs = classIds || [];
 
   const userId = req.session.userId;
   const now = Math.floor(Date.now() / 1000);
   const due = reviews === 0 ? [] : db.prepare(STUDY_NOW_COLS +
     "JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
-    "WHERE c.user_id = ? AND c.archived = 0 AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ?" + inClasses + " " +
     "ORDER BY cs.srs_due_at, cards.id LIMIT ?"
-  ).all(userId, userId, now, reviews);
+  ).all(userId, userId, now, ...classArgs, reviews);
   const unseen = fresh === 0 ? [] : db.prepare(STUDY_NOW_COLS +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
-    "WHERE c.user_id = ? AND c.archived = 0 AND cs.card_id IS NULL " +
+    "WHERE c.user_id = ? AND c.archived = 0 AND cs.card_id IS NULL" + inClasses + " " +
     "ORDER BY c.sort_order, c.created_at, l.sort_order, l.created_at, cards.sort_order, cards.created_at LIMIT ?"
-  ).all(userId, userId, fresh);
+  ).all(userId, userId, ...classArgs, fresh);
 
   const cards = due.concat(unseen);
   const lastStudiedMap = batchLastStudiedAt(cards.map(c => c.id), userId);

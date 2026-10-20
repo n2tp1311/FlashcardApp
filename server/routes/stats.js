@@ -844,6 +844,15 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
     "WHERE c.user_id = ? AND c.archived = 0 AND cs.card_id IS NULL"
   ).get(uid, uid);
   const availableNewCards = availRow.n || 0;
+  // Per class, for Study now's class checklist: its names, and how many new cards each
+  // could add when only some classes are picked.
+  const byClass = db.prepare(
+    "SELECT c.id, c.name, COUNT(ca.id) - COUNT(cs.card_id) AS available FROM classes c " +
+    "LEFT JOIN lessons l ON l.class_id = c.id " +
+    "LEFT JOIN cards ca ON ca.lesson_id = l.id " +
+    "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 GROUP BY c.id ORDER BY c.sort_order, c.created_at"
+  ).all(uid, uid);
 
   // The goal is for the whole day, so the cards already introduced today count towards what
   // it can be: they have left the never-touched pool, and capping by that pool alone shrank
@@ -858,6 +867,7 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
   res.json({
     estimatedNewCards,
     availableNewCards,
+    byClass,
     personalized,
     avgNewPerActiveDay: Math.round(avgNewPerActiveDay * 10) / 10,
     activeDays,

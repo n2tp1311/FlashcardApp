@@ -865,6 +865,10 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.go": "Study now · {n} cards",
   "studyNow.modeLabel": "Review with",
   "studyNow.learnNew": "Learn {n} new cards",
+  "studyNow.allClasses": "All classes",
+  "studyNow.nClasses": "{n} classes",
+  "studyNow.classesLabel": "Classes to study",
+  "studyNow.classesDone": "Done",
   "studyNow.flashcard": "Flashcards",
   "studyNow.quiz": "Quiz",
   "studyNow.reviews": "{n} to review",
@@ -1975,6 +1979,10 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.go": "Học ngay · {n} thẻ",
   "studyNow.modeLabel": "Ôn bằng",
   "studyNow.learnNew": "Học {n} thẻ mới",
+  "studyNow.allClasses": "Tất cả các lớp",
+  "studyNow.nClasses": "{n} lớp",
+  "studyNow.classesLabel": "Các lớp sẽ học",
+  "studyNow.classesDone": "Xong",
   "studyNow.flashcard": "Thẻ ghi nhớ",
   "studyNow.quiz": "Trắc nghiệm",
   "studyNow.reviews": "{n} ôn",
@@ -3351,6 +3359,7 @@ var state = {
   haptics: true,
   sounds: true,
   studyNowMode: "flashcard",
+  studyNowClasses: null,
   dailyGoal: 20,
   quizCountsAsKnown: false,
   loadBalance: true,
@@ -3857,6 +3866,7 @@ function renderHomeCharts() {
     var dash = results[0], newCardEstimate = results[1];
     var grid = document.getElementById("home-summary-grid");
     state.studyNowDue = dueTotal(dash.dueForReview);
+    state.studyNowDueLessons = dash.dueForReview || [];
     grid.innerHTML = streakTimeHeroCard(dash.streak, dash.studyTime, dash.summary, newCardEstimate, dash.today);
     section.classList.remove("hidden");
     var hero = grid.querySelector(".dash-hero-card");
@@ -10904,7 +10914,7 @@ function heroTodayTile(today, newCardEstimate, studyTime, summary) {
   return '<section class="dash-tile is-today">' +
     '<h3 class="dash-tile-h">' + escHtml(t("hero.today")) + '</h3>' +
     '<div class="dash-today-main">' + head +
-      (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today, !!summary && summary.cards === 0)) +
+      (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowScopedPlan(today, newCardEstimate), today, !!summary && summary.cards === 0, studyNowClassesHtml(newCardEstimate))) +
     '</div>' +
     '<div class="dash-meters">' +
       heroMeter("time", ICON_TODAY_TIME, "hero.studied", formatStudyDuration(a.studyMs),
@@ -11064,23 +11074,106 @@ function setStudyNowMode(mode) {
   document.querySelectorAll(".study-now[data-sub-" + mode + "] small").forEach(function(small) {
     small.textContent = small.closest(".study-now").getAttribute("data-sub-" + mode);
   });
+  saveStudyNowPref("studyNowMode", mode);
+}
+
+function saveStudyNowPref(key, value) {
   try {
     var cached = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
-    cached.studyNowMode = mode;
+    cached[key] = value;
     localStorage.setItem("fc-preferences", JSON.stringify(cached));
   } catch (_) {}
   if (IS_SERVER) {
+    var body = {};
+    body[key] = value;
     fetch("/api/auth/preferences", {
       method: "PUT",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studyNowMode: mode })
+      body: JSON.stringify(body)
     }).catch(function() {});
   }
 }
 
-function studyNowHtml(plan, today, noCards) {
+// The classes Study now is kept to, picked on its checklist and remembered in the account.
+// Ids of classes since deleted or archived drop out; none left, or every class, is all.
+function studyNowPicked(est) {
+  var classes = (est && est.byClass) || [];
+  var picked = (state.studyNowClasses || []).filter(function(id) {
+    return classes.some(function(c) { return c.id === id; });
+  });
+  return picked.length && picked.length < classes.length ? picked : null;
+}
+
+// The plan for the picked classes only: their due cards, and the day's new-card goal capped
+// by the new cards they hold. The goal stays the day's, whichever classes it is spent on.
+function studyNowScopedPlan(today, est) {
+  var picked = studyNowPicked(est);
+  if (!picked) return studyNowPlan(today, est, state.studyNowDue);
+  var due = dueTotal((state.studyNowDueLessons || []).filter(function(l) { return picked.indexOf(l.class_id) >= 0; }));
+  var available = est.byClass.reduce(function(sum, c) { return sum + (picked.indexOf(c.id) >= 0 ? c.available : 0); }, 0);
+  var plan = studyNowPlan(today, Object.assign({}, est, { availableNewCards: available }), due);
+  plan.classIds = picked;
+  return plan;
+}
+
+function studyNowClassesHtml(est) {
+  var classes = (est && est.byClass) || [];
+  if (classes.length < 2) return "";
+  var picked = studyNowPicked(est);
+  var label = !picked ? t("studyNow.allClasses") :
+    picked.length === 1 ? classes.filter(function(c) { return c.id === picked[0]; })[0].name :
+    t("studyNow.nClasses", { n: picked.length });
+  var box = function(id, checked, name) {
+    return '<label class="study-now-pick"><input type="checkbox" data-sn-class="' + escHtml(id) + '"' + (checked ? " checked" : "") + '> <span>' + escHtml(name) + '</span></label>';
+  };
+  return '<div class="study-now-classes">' +
+    '<button type="button" class="study-now-classes-btn" data-study-now-classes aria-expanded="false">' +
+      '<span>' + escHtml(label) + '</span><span aria-hidden="true">▾</span></button>' +
+    '<div class="study-now-picker" role="group" aria-label="' + escHtml(t("studyNow.classesLabel")) + '" hidden>' +
+      box("", !picked, t("studyNow.allClasses")) +
+      classes.map(function(c) { return box(c.id, !!picked && picked.indexOf(c.id) >= 0, c.name); }).join("") +
+      '<button type="button" class="btn btn-primary btn-sm" data-study-now-classes-done>' + escHtml(t("studyNow.classesDone")) + '</button>' +
+    '</div></div>';
+}
+
+document.addEventListener("click", function(e) {
+  var open = e.target.closest("[data-study-now-classes]");
+  if (open) {
+    var picker = open.nextElementSibling;
+    picker.hidden = !picker.hidden;
+    open.setAttribute("aria-expanded", String(!picker.hidden));
+    return;
+  }
+  var done = e.target.closest("[data-study-now-classes-done]");
+  if (!done) return;
+  var ids = [];
+  done.parentNode.querySelectorAll("[data-sn-class]").forEach(function(box) {
+    if (box.checked && box.dataset.snClass) ids.push(box.dataset.snClass);
+  });
+  state.studyNowClasses = ids.length ? ids : null;
+  saveStudyNowPref("studyNowClasses", state.studyNowClasses);
+  _refreshDashHeroCards();
+});
+
+// "All classes" and a class exclude each other, and unticking the last class means all.
+document.addEventListener("change", function(e) {
+  var box = e.target.closest && e.target.closest("[data-sn-class]");
+  if (!box) return;
+  var boxes = box.closest(".study-now-picker").querySelectorAll("[data-sn-class]");
+  var all = boxes[0];
+  if (box === all) {
+    boxes.forEach(function(b) { b.checked = b === all; });
+  } else {
+    all.checked = false;
+    if (![].some.call(boxes, function(b) { return b.checked; })) all.checked = true;
+  }
+});
+
+function studyNowHtml(plan, today, noCards, classesHtml) {
   if (!plan) return '';
+  classesHtml = classesHtml || '';
+  var classAttr = plan.classIds ? ' data-classes="' + escHtml(JSON.stringify(plan.classIds)) + '"' : '';
   var n = plan.reviews + plan.newCards;
   // A new account has nothing due because it has nothing at all; "All done for today ✓"
   // told someone who had not started that they had finished.
@@ -11106,18 +11199,18 @@ function studyNowHtml(plan, today, noCards) {
       subs[mode] = counts.concat(ms < 60000 ? t("studyNow.underMinute") : t("studyNow.minutes", { n: Math.round(ms / 60000) })).join(" · ");
     });
     var mode = studyNowMode();
-    return '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '"' +
+    return classesHtml + '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '"' + classAttr +
         ' data-sub-flashcard="' + escHtml(subs.flashcard) + '" data-sub-quiz="' + escHtml(subs.quiz) + '">' +
       '<span class="study-now-play" aria-hidden="true"></span>' +
       '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small>' + escHtml(subs[mode]) + '</small></span></button>' +
       (plan.reviews ? studyNowModeHtml(mode) : '');
   }
   var capped = plan.dueLeft > 0;
-  return '<div class="study-now-done">' +
+  return classesHtml + '<div class="study-now-done">' +
     '<span class="study-now-tick" aria-hidden="true">✓</span>' +
     '<span class="study-now-lbl"><b>' + escHtml(t(capped ? "studyNow.capTitle" : "studyNow.doneTitle")) + '</b>' +
       '<small>' + escHtml(capped ? t("studyNow.capSub", { n: plan.dueLeft }) : t("studyNow.doneSub")) + '</small></span>' +
-    (!capped && plan.extra > 0 ? '<button type="button" class="study-now-more" data-study-now="0,' + plan.extra + '">' + escHtml(t("studyNow.more", { n: plan.extra })) + '</button>' : '') +
+    (!capped && plan.extra > 0 ? '<button type="button" class="study-now-more" data-study-now="0,' + plan.extra + '"' + classAttr + '>' + escHtml(t("studyNow.more", { n: plan.extra })) + '</button>' : '') +
   '</div>';
 }
 
@@ -11130,7 +11223,8 @@ function startStudyNow(btn) {
   var parts = btn.dataset.studyNow.split(",");
   var from = getActiveScreen();
   btn.classList.add("is-loading");
-  store.getStudyNowCards(parts[0] === "all" ? null : Number(parts[0]), Number(parts[1])).then(function(res) {
+  var classIds = btn.dataset.classes ? JSON.parse(btn.dataset.classes) : null;
+  store.getStudyNowCards(parts[0] === "all" ? null : Number(parts[0]), Number(parts[1]), classIds).then(function(res) {
     if (!res.cards.length) { showToast(t("studyNow.nothingLeft")); return; }
     return store.getDifficultyMap(res.cards.map(function(c) { return c.id; })).then(function(statsMap) {
       if (getActiveScreen() !== from) return;  // left while it loaded
@@ -11699,6 +11793,7 @@ function renderDashboard() {
     // Summary stat cards with streak first
     var summaryGrid = document.getElementById("dash-summary-grid");
     state.studyNowDue = dueTotal(d.dueForReview);
+    state.studyNowDueLessons = d.dueForReview || [];
     summaryGrid.innerHTML = streakTimeHeroCard(d.streak, d.studyTime, d.summary, newCardEstimate, d.today, { due: d.dueForReview || [], futureDue: futureDue });
     renderDashAchievements();
     state._dashStudyTime = d.studyTime;
@@ -13090,7 +13185,7 @@ var SQLiteAdapter = (function() {
 
     getCards:      function(lessonId)   { return req("GET",  "/lessons/" + lessonId + "/cards"); },
     getBulkCards:  function(lessonIds)  { return req("POST", "/cards/by-lessons", { lessonIds: lessonIds }); },
-    getStudyNowCards: function(reviews, newCards) { return req("POST", "/cards/study-now", { reviews: reviews, newCards: newCards }); },
+    getStudyNowCards: function(reviews, newCards, classIds) { return req("POST", "/cards/study-now", { reviews: reviews, newCards: newCards, classIds: classIds || null }); },
     createCard: function(f)        { return req("POST",   "/lessons/" + f.lessonId + "/cards", { format: f.format, data: f.data }); },
     createCards: function(list) {
       // Group by lessonId, one bulk call per lesson
@@ -13373,6 +13468,7 @@ function applyPrefs(prefs) {
     state.haptics = prefs.haptics;
   }
   if (prefs.studyNowMode === "quiz" || prefs.studyNowMode === "flashcard") state.studyNowMode = prefs.studyNowMode;
+  if (Array.isArray(prefs.studyNowClasses)) state.studyNowClasses = prefs.studyNowClasses.filter(function(id) { return typeof id === "string"; });
   if (typeof prefs.fontScale === "number") {
     applyFontScale(prefs.fontScale);
   }

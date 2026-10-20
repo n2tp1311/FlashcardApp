@@ -92,6 +92,20 @@ test("the counts the client sends are what it gets", async () => {
   assert.equal((await studyNow({ reviews: "5", newCards: 1 })).status, 400);
 });
 
+test("classIds keeps it to the picked classes; another user's class id finds nothing", async () => {
+  assert.deepEqual((await studyNow({ reviews: null, newCards: 10, classIds: ["k1"] })).body.cards.map((c) => c.id), ["due-new", "n1", "n2"]);
+  assert.deepEqual((await studyNow({ reviews: null, newCards: 10, classIds: ["k2", "k1"] })).body.cards.map((c) => c.id), ["due-old", "due-new", "n1", "n2", "n3"]);
+  assert.deepEqual((await studyNow({ reviews: null, newCards: 10, classIds: ["kX"] })).body.cards, []);
+  assert.deepEqual((await studyNow({ reviews: null, newCards: 10, classIds: null })).body.cards.length, 5);
+  for (const bad of [[], "k1", [1], ["x".repeat(65)]])
+    assert.equal((await studyNow({ reviews: null, newCards: 1, classIds: bad })).status, 400, JSON.stringify(bad));
+});
+
+test("the new-card estimate lists the classes, in course order, with the new cards each holds", async () => {
+  const est = await (await fetch(base + "/api/stats/new-card-estimate", { headers: { "x-user": "u1" } })).json();
+  assert.deepEqual(est.byClass, [{ id: "k1", name: "First", available: 2 }, { id: "k2", name: "Second", available: 1 }]);
+});
+
 test("another user gets only their own", async () => {
   assert.deepEqual((await studyNow({ reviews: null, newCards: 5 }, "u2")).body.cards.map((c) => c.id), ["theirs"]);
 });
@@ -145,7 +159,7 @@ function escHtml(s) { return String(s); }
 var ETA_FALLBACK_MS = { flashcard: 10000, quiz: 15000 };
 var STUDY_NOW_EXTRA = 10;
 var STUDY_NOW_MODES = ["flashcard", "quiz"];
-${fn("studyNowMode")}${fn("studyNowModeHtml")}${fn("setStudyNowMode")}${fn("studyNowPlan")}${fn("studyNowHtml")}
+${fn("studyNowMode")}${fn("studyNowModeHtml")}${fn("setStudyNowMode")}${fn("saveStudyNowPref")}${fn("studyNowPlan")}${fn("studyNowHtml")}
 // app.js's delegate, as the wiring test pins it.
 document.addEventListener("click", function(e) {
   var modeBtn = e.target.closest("[data-study-now-mode]");
@@ -230,9 +244,9 @@ test("flashcards or quiz is a choice under the button: the time follows it, and 
 });
 
 test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup and returns where it began", () => {
-  assert.match(fn("renderHomeCharts"), /state\.studyNowDue = dueTotal\(dash\.dueForReview\);/);
-  assert.match(app, /state\.studyNowDue = dueTotal\(d\.dueForReview\);\n    summaryGrid\.innerHTML = streakTimeHeroCard/);
-  assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowPlan\(today, newCardEstimate, state\.studyNowDue\), today, !!summary && summary\.cards === 0\)/);
+  assert.match(fn("renderHomeCharts"), /state\.studyNowDue = dueTotal\(dash\.dueForReview\);\n    state\.studyNowDueLessons = dash\.dueForReview \|\| \[\];/);
+  assert.match(app, /state\.studyNowDue = dueTotal\(d\.dueForReview\);\n    state\.studyNowDueLessons = d\.dueForReview \|\| \[\];\n    summaryGrid\.innerHTML = streakTimeHeroCard/);
+  assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowScopedPlan\(today, newCardEstimate\), today, !!summary && summary\.cards === 0, studyNowClassesHtml\(newCardEstimate\)\)/);
   const start = fn("startStudyNow");
   assert.match(start, /launchStudyNowCards\(due\.length \? due : fresh, res\.lessons, statsMap, from, due\.length \? studyNowMode\(\) : "flashcard"\)/);
   assert.match(fn("launchStudyNowCards"), /returnScreen: from/);
@@ -240,5 +254,5 @@ test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup
   assert.match(fn("applyPrefs"), /if \(prefs\.studyNowMode === "quiz" \|\| prefs\.studyNowMode === "flashcard"\) state\.studyNowMode = prefs\.studyNowMode;/);
   assert.match(app, /var modeBtn = e\.target\.closest\("\[data-study-now-mode\]"\);\n  if \(modeBtn\) \{ setStudyNowMode\(modeBtn\.dataset\.studyNowMode\); return; \}/);
   assert.match(fn("startStudy"), /launchStudy\(filtered, mode, order\);/);
-  assert.match(app, /getStudyNowCards: function\(reviews, newCards\) \{ return req\("POST", "\/cards\/study-now"/);
+  assert.match(app, /getStudyNowCards: function\(reviews, newCards, classIds\) \{ return req\("POST", "\/cards\/study-now"/);
 });

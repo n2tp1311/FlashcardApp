@@ -638,3 +638,52 @@ test("Study now reviews first in the chosen mode, then offers the new cards as f
       then: "flashcard", studyIds: ["q3", "q4"], mode: "flashcard" });
   });
 });
+
+test("Study now's class checklist narrows the counts, is remembered, and is sent with the cards request", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(async function() {
+      const puts = [];
+      const realFetch = window.fetch;
+      window.fetch = function(url, opts) { if (String(url).includes("/auth/preferences")) { puts.push(opts.body); return Promise.resolve({ ok: true }); } return realFetch.apply(this, arguments); };
+      const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
+      const est = { estimatedNewCards: 10, availableNewCards: 30,
+        byClass: [{ id: "k1", name: "Deep Learning", available: 25 }, { id: "k2", name: "Statistics", available: 5 }] };
+      state.studyNowClasses = null;
+      state.studyNowDue = 12;
+      state.studyNowDueLessons = [{ id: "l1", class_id: "k1", dueCount: 9 }, { id: "l2", class_id: "k2", dueCount: 3 }];
+      state._dashHeroData = { streak: null, studyTime: null, summary: { cards: 40 }, newCardEstimate: est, today: today };
+      showScreen("home");
+      const grid = document.getElementById("home-summary-grid");
+      grid.innerHTML = streakTimeHeroCard(null, null, { cards: 40 }, est, today);
+      for (let el = grid; el; el = el.parentElement) el.classList.remove("hidden");
+      const read = () => ({ chip: grid.querySelector("[data-study-now-classes]").textContent, go: grid.querySelector(".study-now b").textContent,
+        classes: grid.querySelector(".study-now").dataset.classes || null });
+      const out = { before: read() };
+      grid.querySelector("[data-study-now-classes]").click();
+      out.open = !grid.querySelector(".study-now-picker").hidden;
+      const box = grid.querySelector('[data-sn-class="k2"]');
+      box.click();
+      out.allAfterPick = grid.querySelector('[data-sn-class=""]').checked;
+      const tap = grid.querySelector(".study-now-pick").getBoundingClientRect().height;
+      grid.querySelector("[data-study-now-classes-done]").click();
+      out.after = read();
+      out.tap = tap;
+      out.saved = IS_SERVER ? puts : [JSON.stringify({ studyNowClasses: JSON.parse(localStorage.getItem("fc-preferences")).studyNowClasses })];
+      let sent = null;
+      store.getStudyNowCards = (a, b, c) => { sent = [a, b, c]; return Promise.resolve({ cards: [], lessons: [] }); };
+      startStudyNow(grid.querySelector(".study-now"));
+      await new Promise((r) => setTimeout(r, 20));
+      out.sent = sent;
+      window.fetch = realFetch;
+      return out;
+    });
+    assert.deepEqual(r.before, { chip: "All classes▾", go: "Study now · 22 cards", classes: null });
+    assert.equal(r.open, true);
+    assert.equal(r.allAfterPick, false, "picking a class unticks All classes");
+    assert.ok(r.tap >= 44, "rows are a thumb's height: " + r.tap);
+    // Statistics: its 3 due and the 5 new cards it holds, the day's goal of 10 capped by them.
+    assert.deepEqual(r.after, { chip: "Statistics▾", go: "Study now · 8 cards", classes: '["k2"]' });
+    assert.deepEqual(r.saved, ['{"studyNowClasses":["k2"]}']);
+    assert.deepEqual(r.sent, [null, 5, ["k2"]]);
+  });
+});
