@@ -96,6 +96,24 @@ test("pinned classes come first, in pin order, whatever the sort and direction",
   assert.equal(ids("date_added", "asc"), "bzam");
 });
 
+test("Study order sorts by the order set in Study now, pinned still first", function() {
+  const sort = sorter();
+  const ordered = [
+    { id: "a", created_at: 1, sort_order: 2 },
+    { id: "m", created_at: 3, sort_order: 0 },
+    { id: "b", created_at: 4, sort_order: 0, pinned_at: 100 },
+    { id: "c", created_at: 2, sort_order: 0 }
+  ];
+  assert.equal(sort(ordered, "study_order", "asc").map(c => c.id).join(""), "bcma");
+  assert.equal(sort(ordered, "study_order", "desc").map(c => c.id).join(""), "bamc");
+});
+
+test("Home offers the Study order sort, first in the list", function() {
+  const html = fs.readFileSync(path.join(__dirname, "../client/index.html"), "utf8");
+  const options = html.slice(html.indexOf('<select id="class-sort-select"'), html.indexOf("</select>", html.indexOf('<select id="class-sort-select"')));
+  assert.match(options, /^<select[^>]*>\s*<option value="study_order"/);
+});
+
 test("local mode turns pinned into pinned_at the same way the server does", async function() {
   const start = app.indexOf("    updateClass: function(id, fields) {");
   const body = app.slice(start + "    updateClass: ".length, app.indexOf("\n    },\n", start) + 6);

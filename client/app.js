@@ -444,6 +444,7 @@ Object.assign(TRANSLATIONS.en, {
   "sort.dueCount": "Due count",
   "sort.dateAdded": "Date added",
   "sort.lastActivity": "Last activity",
+  "sort.studyOrder": "Study order",
   "sort.toggleDirection": "Toggle sort direction",
   "home.tagFilterToggle": "Filter by tag",
   "archive.showArchived": "Show archived classes",
@@ -1585,6 +1586,7 @@ Object.assign(TRANSLATIONS.vi, {
   "sort.dueCount": "Số thẻ đến hạn",
   "sort.dateAdded": "Ngày thêm",
   "sort.lastActivity": "Hoạt động gần nhất",
+  "sort.studyOrder": "Thứ tự học",
   "sort.toggleDirection": "Đổi chiều sắp xếp",
   "home.tagFilterToggle": "Lọc theo nhãn",
   "archive.showArchived": "Hiện lớp đã lưu trữ",
@@ -3855,6 +3857,8 @@ function sortUnpinnedClasses(classes, key, dir) {
       r = (a.created_at || 0) - (b.created_at || 0);
     } else if (key === "last_activity") {
       r = (a.last_activity_at || 0) - (b.last_activity_at || 0);
+    } else if (key === "study_order") {
+      r = (a.sort_order || 0) - (b.sort_order || 0) || (a.created_at || 0) - (b.created_at || 0);
     } else {
       return 0;
     }
@@ -11285,6 +11289,14 @@ document.addEventListener("click", function(e) {
   if (est && order.join("\n") !== before.join("\n")) {
     est.byClass.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
     store.setClassOrder(order).catch(function() { showToast(t("studyNow.orderFailed"), "error"); });
+    // Home's "Study order" sort reads sort_order from the cached list; mirror the server's rewrite.
+    if (state.homeClasses) {
+      var rest = state.homeClasses.filter(function(c) { return order.indexOf(c.id) < 0; })
+        .sort(function(x, y) { return (x.sort_order || 0) - (y.sort_order || 0) || (x.created_at || 0) - (y.created_at || 0); });
+      state.homeClasses.forEach(function(c) { var i = order.indexOf(c.id); if (i >= 0) c.sort_order = i; });
+      rest.forEach(function(c, i) { c.sort_order = order.length + i; });
+      if (state.currentClassSort === "study_order") _renderHomeClassList();
+    }
   }
   _refreshDashHeroCards();
 });
