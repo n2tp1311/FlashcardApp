@@ -553,9 +553,19 @@ button must promise the numbers those meters show. `reviews: null` means no cap.
 
 Due cards come first and are not mixed with new ones: overdue reviews are what a missed
 day costs, new cards are optional. New cards keep course order, because a book's
-chapters build on each other. A switch under the button chooses Flashcards or Quiz,
-remembered in the account's preferences (`studyNowMode`) because it is a habit, not a
-property of one phone.
+chapters build on each other.
+
+**Reviews and new cards are two sessions.** The user quizzes to review and uses flashcards
+to learn new terms: a quiz on a card never seen tests a guess, and a flip card on a known
+one is slower than picking an answer. So the button starts the due cards in the mode the
+switch under it chooses (Flashcards or Quiz, remembered in the account's preferences as
+`studyNowMode` because it is a habit, not a property of one phone), and holds the new cards
+back. The reviews' summary then offers "Learn N new cards", which starts them as
+flashcards; Back to Home drops them. With nothing due the button goes straight to the new
+cards and the switch is hidden, since it has nothing to decide. The cards are fetched once,
+when the button is pressed, and split by whether they have a due date, so the second
+session costs no request. The cost: a learner who wants to quiz new cards has to go
+through Study Setup.
 
 **An account with no cards is not "done".** With nothing due the tile reads "All done for
 today", which on a new account told someone who had not started that they had finished.
