@@ -10343,17 +10343,22 @@ function answerQuiz(selectedIdx) {
 
   showQuizSheet(cheer);
 
-  // Every answer moves on by itself; pressing Next after each one was the user's complaint.
-  // A wrong answer waits longer so the marked right option can be read. Opening the
-  // explanation or the book passage, or selecting a word, stops the timer and shows Next.
-  state.quizAdvanceTimer = setTimeout(function() {
-    state.quizAdvanceTimer = null;
-    state.quizIndex++;
-    renderQuizCard();
-  }, isCorrect ? QUIZ_ADVANCE_RIGHT_MS : QUIZ_ADVANCE_WRONG_MS);
-  [document.getElementById("quiz-explanation"), answerSource].forEach(function(panel) {
-    if (panel) panel.addEventListener("toggle", pauseQuizAdvance);
-  });
+  // A right answer moves on by itself, even with a passage to read: pressing Next after
+  // every question was the user's complaint. A wrong answer waits for Next so the right
+  // option can be studied. Opening the explanation or the passage, or selecting a word,
+  // stops the timer and shows Next.
+  if (isCorrect) {
+    state.quizAdvanceTimer = setTimeout(function() {
+      state.quizAdvanceTimer = null;
+      state.quizIndex++;
+      renderQuizCard();
+    }, QUIZ_ADVANCE_MS);
+    [document.getElementById("quiz-explanation"), answerSource].forEach(function(panel) {
+      if (panel) panel.addEventListener("toggle", pauseQuizAdvance);
+    });
+  } else {
+    showQuizNextButton();
+  }
   revealRightQuizOption();
 }
 
@@ -10415,7 +10420,7 @@ function quizOptionResultClass(opt, idx, correctVal, selectedIdx) {
   return idx === selectedIdx ? "wrong" : "dimmed";
 }
 
-var QUIZ_ADVANCE_RIGHT_MS = 1200, QUIZ_ADVANCE_WRONG_MS = 2500;
+var QUIZ_ADVANCE_MS = 1200;
 
 function pauseQuizAdvance() {
   if (!state.quizAdvanceTimer) return;

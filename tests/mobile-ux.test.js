@@ -246,7 +246,7 @@ const QUIZ4 = [1, 2, 3, 4].map((i) => ({
   data: { question: "Question " + i + ": which statement about regularization is right?", correct: "Right answer " + i + LONG, distractors: ["Wrong A" + LONG, "Wrong B" + LONG, "Wrong C" + LONG] }
 }));
 
-test("after a wrong answer the right option is scrolled above the answer sheet, then the next question starts at the top", async function() {
+test("after a wrong answer the right option is scrolled above the answer sheet, waits for Next; the next question starts at the top", async function() {
   await withApp(async function(page) {
     const r = await page.evaluate(async function(cards) {
       state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
@@ -265,19 +265,21 @@ test("after a wrong answer the right option is scrolled above the answer sheet, 
       const right = document.querySelector("#quiz-options .quiz-opt.correct").getBoundingClientRect();
       const sheet = document.getElementById("quiz-sheet").getBoundingClientRect();
       const out = { rightBottom: right.bottom, sheetTop: sheet.top, scrolled: scrollY, nextShown: !!document.getElementById("quiz-next-btn") };
-      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_WRONG_MS));
+      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_MS + 300));
       out.index = state.quizIndex;
+      document.getElementById("quiz-next-btn").click();
+      await new Promise((r) => setTimeout(r, 50));
       out.afterNext = scrollY;
       return out;
     }, QUIZ4);
     assert.ok(r.rightBottom <= r.sheetTop, JSON.stringify(r));
-    assert.equal(r.nextShown, false, "a wrong answer moves on by itself");
-    assert.equal(r.index, 1);
+    assert.equal(r.nextShown, true, "a wrong answer waits for Next");
+    assert.equal(r.index, 0);
     assert.equal(r.afterNext, 0);
   }, { viewport: { width: 375, height: 667 } });
 });
 
-test("every quiz answer moves on by itself; opening the book passage stops it and shows Next", async function() {
+test("a right answer moves on by itself even with a passage; opening the passage stops it and shows Next", async function() {
   await withApp(async function(page) {
     const r = await page.evaluate(async function(cards) {
       cards = cards.map((c) => Object.assign({}, c, { source: "The passage from the book that the card was written from." }));
@@ -286,11 +288,11 @@ test("every quiz answer moves on by itself; opening the book passage stops it an
       startQuiz();
       answerQuiz(state.quizOptions.indexOf(state.quizCards[0].data.correct));
       const shownAt = !!document.getElementById("quiz-next-btn");
-      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_RIGHT_MS + 200));
+      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_MS + 200));
       const moved = state.quizIndex;
-      answerQuiz(state.quizOptions.findIndex((o) => o !== state.quizCards[1].data.correct));
+      answerQuiz(state.quizOptions.indexOf(state.quizCards[1].data.correct));
       document.querySelector("#quiz-source summary").click();
-      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_WRONG_MS + 200));
+      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_MS + 200));
       return { shownAt, moved, index: state.quizIndex, next: !!document.getElementById("quiz-next-btn") };
     }, QUIZ4);
     assert.deepEqual(r, { shownAt: false, moved: 1, index: 1, next: true });
