@@ -5409,7 +5409,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
 }
 :root[data-theme="dark"] .gf { border-color: var(--border); box-shadow: 0 5px 0 var(--ledge); }
 .gf-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: .8125rem; color: var(--text2); font-weight: 600; }
-.gf-text { font-size: 1.125rem; line-height: 2.3; color: var(--text); max-width: 62ch; overflow-wrap: anywhere; }
+.gf-text { font-size: 1.125rem; line-height: 2.3; color: var(--text); overflow-wrap: anywhere; }
 .gf-blank {
   display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; min-width: 7.5em; min-height: 1.9em; padding: 0 .6em; margin: 0 .15em;
   border-radius: 8px; border: 2px dashed color-mix(in srgb, var(--primary) 45%, var(--border)); background: color-mix(in srgb, var(--primary-light) 50%, var(--surface));

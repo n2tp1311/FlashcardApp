@@ -274,3 +274,19 @@ test("screenshots of a passage, phone and desktop", async function() {
     }, viewport);
   }
 });
+
+// It was capped at 62ch: on a laptop the passage stopped halfway across the card while the
+// word bank under it ran the full width.
+test("on a wide screen the passage runs the full width of the card, like the word bank", async function() {
+  await withApp(async (page) => {
+    await page.evaluate(() => {
+      state.gf.text = "word ".repeat(400);
+      document.querySelector("#fc-gapfill .gf-text").textContent = "word ".repeat(400);
+    });
+    const r = await page.evaluate(() => ({
+      text: document.querySelector("#fc-gapfill .gf-text").getBoundingClientRect().width,
+      bank: document.querySelector("#fc-gapfill .gf-bank").getBoundingClientRect().width
+    }));
+    assert.ok(r.text > 900 && Math.abs(r.text - r.bank) < 2, JSON.stringify(r));
+  }, { width: 1440, height: 900 });
+});
