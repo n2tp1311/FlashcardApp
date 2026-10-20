@@ -2117,6 +2117,18 @@ code {
   transform-origin: left;
   transition: transform var(--bar-fill-transition);
 }
+.progress-bar { position: relative; }
+.progress-bar.is-split { height: 6px; border-radius: 3px; }
+.pb-mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; pointer-events: none; }
+.pb-mark.is-mid { background: color-mix(in srgb, var(--surface) 70%, transparent); width: 1px; margin-left: 0; }
+.pb-mark.is-notch { width: 3px; margin-left: -1.5px; background: var(--bg); }
+.pb-done { position: absolute; left: 0; top: 0; bottom: 0; background: var(--success); pointer-events: none; }
+.pb-labels { display: grid; width: 100%; max-width: 300px; font-size: 0.6875rem; line-height: 1.2; color: var(--text2); column-gap: 6px; }
+.pb-labels[hidden] { display: none; }
+.pb-labels span { white-space: nowrap; }
+.pb-labels span:last-child { text-align: left; }
+.pb-labels .is-now { color: var(--text); font-weight: 600; }
+.pb-labels .is-done { color: var(--success); }
 
 .fc-toolbar {
   display: flex;

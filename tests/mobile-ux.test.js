@@ -621,6 +621,10 @@ test("Study now reviews first in the chosen mode, then offers the new cards as f
       startStudyNow(btn);
       await new Promise((r) => setTimeout(r, 100));
       const out = { first: getActiveScreen(), quizCount: state.quizCards.length };
+      const bar = (p) => ({ fill: document.getElementById(p + "-progress-fill").style.transform,
+        marks: [...document.querySelectorAll("#" + p + "-progress-fill ~ .pb-mark")].map((m) => m.className.replace("pb-mark is-", "") + "@" + m.style.left),
+        labels: document.getElementById(p + "-progress-labels").textContent, done: !!document.querySelector("#" + p + "-progress-fill ~ .pb-done") });
+      out.reviewBar = bar("quiz");
       for (let i = 0; i < 2; i++) {
         answerQuiz(state.quizOptions.findIndex((o) => o !== state.quizCards[state.quizIndex].data.correct));
         document.getElementById("quiz-next-btn").click();
@@ -630,10 +634,15 @@ test("Study now reviews first in the chosen mode, then offers the new cards as f
       out.learn = learn.classList.contains("hidden") ? null : learn.textContent;
       learn.click();
       out.then = getActiveScreen();
+      out.newBar = bar("fc");
       out.studyIds = state.studyCards.map((c) => c.id);
       out.mode = state.studyMode;
       return out;
     }, QUIZ4);
+    // One bar for the whole run: two reviews then two new cards, a notch between them.
+    assert.deepEqual(r.reviewBar, { fill: "scaleX(0.25)", marks: ["mid@25%", "notch@50%", "mid@75%"], labels: "Review 2New 2", done: false });
+    assert.deepEqual(r.newBar, { fill: "scaleX(0.75)", marks: ["mid@25%", "notch@50%", "mid@75%"], labels: "Reviewed ✓New 1/2", done: true });
+    delete r.reviewBar; delete r.newBar;
     assert.deepEqual(r, { first: "quiz", quizCount: 2, results: "results", learn: "Learn 2 new cards",
       then: "flashcard", studyIds: ["q3", "q4"], mode: "flashcard" });
   });

@@ -866,6 +866,10 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.go": "Study now · {n} cards",
   "studyNow.modeLabel": "Review with",
   "studyNow.learnNew": "Learn {n} new cards",
+  "studyNow.barReview": "Review {n}",
+  "studyNow.barReviewDone": "Reviewed ✓",
+  "studyNow.barNew": "New {n}",
+  "studyNow.barNewAt": "New {i}/{n}",
   "studyNow.allClasses": "All classes",
   "studyNow.nClasses": "{n} classes",
   "studyNow.classesLabel": "Classes to study",
@@ -1985,6 +1989,10 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.go": "Học ngay · {n} thẻ",
   "studyNow.modeLabel": "Ôn bằng",
   "studyNow.learnNew": "Học {n} thẻ mới",
+  "studyNow.barReview": "Ôn {n}",
+  "studyNow.barReviewDone": "Đã ôn ✓",
+  "studyNow.barNew": "Học mới {n}",
+  "studyNow.barNewAt": "Học mới {i}/{n}",
   "studyNow.allClasses": "Tất cả các lớp",
   "studyNow.nClasses": "{n} lớp",
   "studyNow.classesLabel": "Các lớp sẽ học",
@@ -7918,6 +7926,42 @@ function studyProgressText(position, total, remaining, source) {
   return position + " / " + total + (eta ? " · " + eta : "");
 }
 
+// The study bar. Inside a Study now run it spans both halves -- the reviews, then the new
+// cards the summary offers next -- with a notch where the new cards start and a tick at the
+// middle of each half, so the whole run is in view from the first card. Elsewhere it is one
+// session with a tick at its middle.
+function setStudyProgress(prefix, position, total) {
+  var fill = document.getElementById(prefix + "-progress-fill");
+  var bar = fill.parentNode;
+  var run = state.studyNowRun;
+  // A retry of the missed cards reuses the screen with fewer cards: the run no longer fits it.
+  var split = run && run.reviews > 0 && run.fresh > 0 && total === (run.phase === "new" ? run.fresh : run.reviews);
+  var whole = split ? run.reviews + run.fresh : total;
+  var before = split && run.phase === "new" ? run.reviews : 0;
+  fill.style.transform = scaleXStyle(whole ? (before + position) / whole : 0);
+  var marks = split ? [[run.reviews / 2, "mid"], [run.reviews, "notch"], [run.reviews + run.fresh / 2, "mid"]] : [[total / 2, "mid"]];
+  var html = marks.map(function(m) {
+    return '<i class="pb-mark is-' + m[1] + '" style="left:' + (whole ? m[0] / whole * 100 : 0).toFixed(2) + '%"></i>';
+  }).join("") + (split && run.phase === "new" ? '<i class="pb-done" style="width:' + (run.reviews / whole * 100).toFixed(2) + '%"></i>' : "");
+  bar.querySelectorAll(".pb-mark, .pb-done").forEach(function(el) { el.remove(); });
+  bar.insertAdjacentHTML("beforeend", html);
+  bar.classList.toggle("is-split", !!split);
+  var labels = document.getElementById(prefix + "-progress-labels");
+  if (!labels) {
+    labels = document.createElement("div");
+    labels.id = prefix + "-progress-labels";
+    labels.className = "pb-labels";
+    bar.after(labels);
+  }
+  labels.hidden = !split;
+  if (!split) { labels.innerHTML = ""; return; }
+  var review = run.phase === "new" ? t("studyNow.barReviewDone") : t("studyNow.barReview", { n: run.reviews });
+  var fresh = run.phase === "new" ? t("studyNow.barNewAt", { i: position, n: run.fresh }) : t("studyNow.barNew", { n: run.fresh });
+  labels.style.gridTemplateColumns = "minmax(max-content, " + run.reviews + "fr) minmax(max-content, " + run.fresh + "fr)";
+  labels.innerHTML = '<span class="' + (run.phase === "new" ? "is-done" : "is-now") + '">' + escHtml(review) + '</span>' +
+    '<span class="' + (run.phase === "new" ? "is-now" : "") + '">' + escHtml(fresh) + '</span>';
+}
+
 function formatSessionTime(ms) {
   var sec = Math.round((ms || 0) / 1000);
   return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
@@ -8671,6 +8715,9 @@ function launchStudy(filtered, mode, order) {
   }
   clearResumeSession();
   state.studyNowNext = null;
+  // Set by Study now just before it calls this; any other session starts without one.
+  state.studyNowRun = state.pendingStudyNowRun || null;
+  state.pendingStudyNowRun = null;
 
   state.studyMode = mode;
   state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
@@ -9156,11 +9203,12 @@ function renderFlashcard() {
     // The queue grows as cards come back, so its length means nothing; cards at their goal do.
     var cp = cramProgress(state.cram);
     document.getElementById("fc-progress-text").textContent = studyProgressText(cp.done, cp.total, cp.answersLeft, "flashcard");
-    document.getElementById("fc-progress-fill").style.transform = scaleXStyle(cp.total ? cp.done / cp.total : 0);
+    state.studyNowRun = null;
+    setStudyProgress("fc", cp.done, cp.total);
   } else {
     document.getElementById("fc-progress-text").textContent = studyProgressText(i + 1, cards.length,
       cards.length - Object.keys(state.studySessionLog || {}).length, "flashcard");
-    document.getElementById("fc-progress-fill").style.transform = scaleXStyle((i + 1) / cards.length);
+    setStudyProgress("fc", i + 1, cards.length);
   }
 
   // Lesson label (multi-lesson sessions)
@@ -10206,7 +10254,7 @@ function renderQuizCard() {
 
   document.getElementById("quiz-progress-text").textContent = studyProgressText(i + 1, total,
     total - state.quizResults.length, "quiz");
-  document.getElementById("quiz-progress-fill").style.transform = scaleXStyle((i + 1) / total);
+  setStudyProgress("quiz", i + 1, total);
   setQuizScoreDisplay();
 
   // Lesson label (multi-lesson sessions)
@@ -11318,7 +11366,8 @@ function startStudyNow(btn) {
       if (getActiveScreen() !== from) return;  // left while it loaded
       var due = res.cards.filter(function(c) { return c.srs_due_at != null; });
       var fresh = res.cards.filter(function(c) { return c.srs_due_at == null; });
-      var next = due.length && fresh.length ? { cards: fresh, lessons: res.lessons, statsMap: statsMap } : null;
+      var next = due.length && fresh.length ? { cards: fresh, lessons: res.lessons, statsMap: statsMap, reviews: due.length } : null;
+      state.pendingStudyNowRun = { reviews: due.length, fresh: fresh.length, phase: due.length ? "review" : "new" };
       launchStudyNowCards(due.length ? due : fresh, res.lessons, statsMap, from, due.length ? studyNowMode() : "flashcard");
       state.studyNowNext = next;
     });
@@ -11355,6 +11404,7 @@ function setLearnNewButton(prefix) {
   document.getElementById("btn-" + prefix + "-learn-new").addEventListener("click", function() {
     var next = state.studyNowNext;
     if (!next) return;
+    state.pendingStudyNowRun = { reviews: next.reviews, fresh: next.cards.length, phase: "new" };
     launchStudyNowCards(next.cards, next.lessons, next.statsMap, state.studyScope ? state.studyScope.returnScreen : "home", "flashcard");
   });
 });
