@@ -433,3 +433,25 @@ test("a screen reader hears only the face that shows: the answer waits for the f
     assert.doesNotMatch(after, /median/);
   });
 });
+
+// Cheers arrive after the answers are written, a second or so late, and once pushed Back to
+// Lesson from 560px to 1034px: below a phone's screen, and moving under a finger on its way.
+test("late cheers leave the session-end buttons on screen, at the same place", async function() {
+  await withApp(async function(page) {
+    for (const [screen, box, button] of [["results", "results-done", "btn-results-back"],
+                                         ["flashcard-summary", "summary-done", "btn-summary-back"]]) {
+      const r = await page.evaluate(function(a) {
+        showScreen(a.screen);
+        window.scrollTo(0, 0);
+        renderSessionDone(a.box, 0.9, [{ tone: "good", label: "Cards", value: 20 }, { tone: "good", label: "Right", value: 18 }]);
+        const btn = document.getElementById(a.button);
+        const before = btn.getBoundingClientRect().bottom;
+        document.querySelector("#" + a.box + " .session-cheers").innerHTML =
+          '<div class="session-cheer" style="height:120px">streak</div>'.repeat(5);
+        return { before, after: btn.getBoundingClientRect().bottom, inner: innerHeight };
+      }, { screen, box, button });
+      assert.ok(r.after <= r.inner, screen + ": the button is on screen (" + r.after + " > " + r.inner + ")");
+      assert.ok(Math.abs(r.after - r.before) < 1, screen + ": it did not move");
+    }
+  }, { viewport: { width: 375, height: 667 } });
+});

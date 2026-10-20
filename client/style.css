@@ -5019,6 +5019,22 @@ button.leech-pill:hover { filter: brightness(0.96); }
   /* The grades take the bottom row, where the thumb rests, and Prev/Next the row above.
      The other way round, Next sat 8px under Confident: a slip skipped a card ungraded, and
      on the last card the same spot is Finish. */
+  /* Session-end buttons pinned the same way. The cheers load after the answers are written,
+     a second or so late, and pushed Back to Lesson from 560px to 1034px: off screen, and
+     moving under a finger on its way. At the bottom from the start, nothing moves them. */
+  #screen-results, #screen-flashcard-summary { min-height: 100dvh; padding-bottom: 0; }
+  #screen-results .results-container, #screen-flashcard-summary .results-container { flex: 1; width: 100%; }
+  #screen-results .results-actions, #screen-flashcard-summary .results-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin-top: auto;
+    width: 100%;
+    background: var(--bg);
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 0 0 100vmax var(--bg);
+    clip-path: inset(0 -100vmax);
+  }
   #screen-flashcard .fc-mark-btns { order: 2; }
   #screen-flashcard #btn-fc-prev, #screen-flashcard #btn-fc-next { padding-top: 6px; padding-bottom: 6px; min-height: 40px; }
   .fc-retype-wrap { scroll-margin-bottom: 180px; }
