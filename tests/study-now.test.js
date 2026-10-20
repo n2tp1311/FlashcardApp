@@ -185,6 +185,10 @@ test("the button counts reviews and new cards, and says how long from the median
   assert.deepEqual(r, { text: "✓ All done for today Nothing is due Learn 10 more new cards", data: "0,10", filled: false });
   r = await p.evaluate(([a]) => tile(a, null, 0, null), [today(0, 0)]);
   assert.equal(r.text, "✓ All done for today Nothing is due");
+
+  // Only new cards: they are always flashcards, so there is no mode to pick.
+  r = await p.evaluate(([a, b]) => tile(a, b, 0, null), [today(0, 4), est]);
+  assert.deepEqual(r, { text: "Study now · 6 cards 6 new · ~2 min", data: "all,6", filled: true });
   await p.close();
 });
 
@@ -208,7 +212,8 @@ test("flashcards or quiz is a choice under the button: the time follows it, and 
 
   await p.click("[data-study-now-mode=quiz]");
   r = await read();
-  assert.equal(r.sub, "20 to review · 10 new · ~15 min", "a quiz answer's own median");
+  // 20 reviews at the quiz median and the 10 new cards still at the flashcard one.
+  assert.equal(r.sub, "20 to review · 10 new · ~13 min", "the reviews at a quiz answer's own median");
   assert.deepEqual(r.pressed, ["flashcard=false", "quiz=true"]);
   assert.equal(r.mode, "quiz");
   assert.deepEqual(r.puts, [["/api/auth/preferences", "PUT", '{"studyNowMode":"quiz"}']]);
@@ -219,7 +224,7 @@ test("flashcards or quiz is a choice under the button: the time follows it, and 
   await p.evaluate(([a, b]) => tile(a, b, 20, null), [today, est]);
   r = await read();
   assert.equal(r.puts.length, 1);
-  assert.equal(r.sub, "20 to review · 10 new · ~15 min");
+  assert.equal(r.sub, "20 to review · 10 new · ~13 min");
   assert.deepEqual(r.pressed, ["flashcard=false", "quiz=true"]);
   await p.close();
 });
@@ -229,8 +234,9 @@ test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup
   assert.match(app, /state\.studyNowDue = dueTotal\(d\.dueForReview\);\n    summaryGrid\.innerHTML = streakTimeHeroCard/);
   assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowPlan\(today, newCardEstimate, state\.studyNowDue\), today, !!summary && summary\.cards === 0\)/);
   const start = fn("startStudyNow");
-  assert.match(start, /returnScreen: from/);
-  assert.match(start, /launchStudy\(res\.cards, studyNowMode\(\), "in-order"\)/);
+  assert.match(start, /launchStudyNowCards\(due\.length \? due : fresh, res\.lessons, statsMap, from, due\.length \? studyNowMode\(\) : "flashcard"\)/);
+  assert.match(fn("launchStudyNowCards"), /returnScreen: from/);
+  assert.match(fn("launchStudyNowCards"), /launchStudy\(cards, mode, "in-order"\)/);
   assert.match(fn("applyPrefs"), /if \(prefs\.studyNowMode === "quiz" \|\| prefs\.studyNowMode === "flashcard"\) state\.studyNowMode = prefs\.studyNowMode;/);
   assert.match(app, /var modeBtn = e\.target\.closest\("\[data-study-now-mode\]"\);\n  if \(modeBtn\) \{ setStudyNowMode\(modeBtn\.dataset\.studyNowMode\); return; \}/);
   assert.match(fn("startStudy"), /launchStudy\(filtered, mode, order\);/);

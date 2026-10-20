@@ -863,7 +863,8 @@ Object.assign(TRANSLATIONS.en, {
   "eta.minutes": "~{n} min left",
   "eta.underMinute": "<1 min left",
   "studyNow.go": "Study now · {n} cards",
-  "studyNow.modeLabel": "How to study",
+  "studyNow.modeLabel": "Review with",
+  "studyNow.learnNew": "Learn {n} new cards",
   "studyNow.flashcard": "Flashcards",
   "studyNow.quiz": "Quiz",
   "studyNow.reviews": "{n} to review",
@@ -1972,7 +1973,8 @@ Object.assign(TRANSLATIONS.vi, {
   "eta.minutes": "còn ~{n} phút",
   "eta.underMinute": "còn <1 phút",
   "studyNow.go": "Học ngay · {n} thẻ",
-  "studyNow.modeLabel": "Kiểu học",
+  "studyNow.modeLabel": "Ôn bằng",
+  "studyNow.learnNew": "Học {n} thẻ mới",
   "studyNow.flashcard": "Thẻ ghi nhớ",
   "studyNow.quiz": "Trắc nghiệm",
   "studyNow.reviews": "{n} ôn",
@@ -7791,6 +7793,7 @@ window.addEventListener("resize", function() {
 // Return to wherever study was launched from (a lesson, or the class list for multi-lesson study)
 function returnFromStudy() {
   dismissGradeUndo();
+  state.studyNowNext = null;
   clearTimeout(state.fcAdvanceTimer);
   clearTimeout(state.quizAdvanceTimer);
   clearFlashcardTranslation();
@@ -8077,6 +8080,7 @@ function showFlashcardSummary() {
   }
 
   setMissedButton("summary", missedFlashcards(state.studyCards, log).length);
+  setLearnNewButton("summary");
 
   var cramNote = document.getElementById("summary-cram-note");
   if (state.cram) {
@@ -8637,6 +8641,7 @@ function launchStudy(filtered, mode, order) {
     return;
   }
   clearResumeSession();
+  state.studyNowNext = null;
 
   state.studyMode = mode;
   state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
@@ -10568,6 +10573,7 @@ function showQuizResults() {
   }
 
   setMissedButton("results", missedQuizCards(state.quizResults).length);
+  setLearnNewButton("results");
 
   setStudyBackLabels();
   showScreen("results");
@@ -11091,9 +11097,12 @@ function studyNowHtml(plan, today, noCards) {
     if (plan.newCards) counts.push(t("studyNow.new", { n: plan.newCards }));
     // Both lines are built now, so switching the mode changes the time without a reload: a quiz
     // answer takes longer than a flip, and its own median says how much.
+    // The mode is for the reviews only: new cards are always learnt as flashcards, after the
+    // reviews' summary (see startStudyNow).
     var subs = {};
+    var median = function(m) { return (today.medianMs && today.medianMs[m]) || ETA_FALLBACK_MS[m]; };
     STUDY_NOW_MODES.forEach(function(mode) {
-      var ms = n * ((today.medianMs && today.medianMs[mode]) || ETA_FALLBACK_MS[mode]);
+      var ms = plan.reviews * median(mode) + plan.newCards * median("flashcard");
       subs[mode] = counts.concat(ms < 60000 ? t("studyNow.underMinute") : t("studyNow.minutes", { n: Math.round(ms / 60000) })).join(" · ");
     });
     var mode = studyNowMode();
@@ -11101,7 +11110,7 @@ function studyNowHtml(plan, today, noCards) {
         ' data-sub-flashcard="' + escHtml(subs.flashcard) + '" data-sub-quiz="' + escHtml(subs.quiz) + '">' +
       '<span class="study-now-play" aria-hidden="true"></span>' +
       '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small>' + escHtml(subs[mode]) + '</small></span></button>' +
-      studyNowModeHtml(mode);
+      (plan.reviews ? studyNowModeHtml(mode) : '');
   }
   var capped = plan.dueLeft > 0;
   return '<div class="study-now-done">' +
@@ -11112,8 +11121,10 @@ function studyNowHtml(plan, today, noCards) {
   '</div>';
 }
 
-// The session skips Study Setup, in the chosen mode: due cards most overdue first, then new
-// cards in course order. Back returns to the screen the button was on.
+// The session skips Study Setup. Reviews come first, most overdue first, in the chosen mode;
+// the user quizzes to review and uses flashcards to learn, so the new cards (in course order)
+// are held back and offered on the reviews' summary as a flashcard session of their own.
+// With nothing due, Study now goes straight to the new cards.
 function startStudyNow(btn) {
   if (btn.classList.contains("is-loading")) return;
   var parts = btn.dataset.studyNow.split(",");
@@ -11121,23 +11132,50 @@ function startStudyNow(btn) {
   btn.classList.add("is-loading");
   store.getStudyNowCards(parts[0] === "all" ? null : Number(parts[0]), Number(parts[1])).then(function(res) {
     if (!res.cards.length) { showToast(t("studyNow.nothingLeft")); return; }
-    var knownMap = {};
-    res.cards.forEach(function(c) {
-      if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
-    });
     return store.getDifficultyMap(res.cards.map(function(c) { return c.id; })).then(function(statsMap) {
       if (getActiveScreen() !== from) return;  // left while it loaded
-      state.studyScope = { lessonIds: res.lessons.map(function(l) { return l.id; }), lessons: res.lessons,
-        returnScreen: from, title: t("studyNow.title") };
-      state.studyKnownMap = knownMap;
-      state.studyStatsMap = statsMap;
-      state.setupSnapshot = null;
-      launchStudy(res.cards, studyNowMode(), "in-order");
+      var due = res.cards.filter(function(c) { return c.srs_due_at != null; });
+      var fresh = res.cards.filter(function(c) { return c.srs_due_at == null; });
+      var next = due.length && fresh.length ? { cards: fresh, lessons: res.lessons, statsMap: statsMap } : null;
+      launchStudyNowCards(due.length ? due : fresh, res.lessons, statsMap, from, due.length ? studyNowMode() : "flashcard");
+      state.studyNowNext = next;
     });
   }).catch(function() {
     showToast(t("setup.loadFailed"), "error");
   }).then(function() { btn.classList.remove("is-loading"); });
 }
+
+function launchStudyNowCards(cards, lessons, statsMap, from, mode) {
+  var lessonIds = {};
+  cards.forEach(function(c) { lessonIds[c.lesson_id] = true; });
+  lessons = lessons.filter(function(l) { return lessonIds[l.id]; });
+  var knownMap = {};
+  cards.forEach(function(c) {
+    if (c.known !== null && c.known !== undefined) knownMap[c.id] = c.known === 1 || c.known === true;
+  });
+  state.studyScope = { lessonIds: lessons.map(function(l) { return l.id; }), lessons: lessons,
+    returnScreen: from, title: t("studyNow.title") };
+  state.studyKnownMap = knownMap;
+  state.studyStatsMap = statsMap;
+  state.setupSnapshot = null;
+  launchStudy(cards, mode, "in-order");
+}
+
+// On a Study now review session's summary: go on to the new cards it held back.
+function setLearnNewButton(prefix) {
+  var next = state.studyNowNext;
+  var btn = document.getElementById("btn-" + prefix + "-learn-new");
+  btn.classList.toggle("hidden", !next);
+  btn.textContent = next ? t("studyNow.learnNew", { n: next.cards.length }) : "";
+}
+
+["results", "summary"].forEach(function(prefix) {
+  document.getElementById("btn-" + prefix + "-learn-new").addEventListener("click", function() {
+    var next = state.studyNowNext;
+    if (!next) return;
+    launchStudyNowCards(next.cards, next.lessons, next.statsMap, state.studyScope ? state.studyScope.returnScreen : "home", "flashcard");
+  });
+});
 
 document.addEventListener("click", function(e) {
   var modeBtn = e.target.closest("[data-study-now-mode]");

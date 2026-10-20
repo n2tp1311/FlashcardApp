@@ -603,3 +603,38 @@ test("numbers and dates follow the app's language, not the phone's", async funct
     assert.equal(r.en.day, "Oct 19");
   }, { locale: "en-US" });
 });
+
+// The user quizzes to review and uses flashcards to learn: Study now runs the due cards in the
+// chosen mode, and the new ones wait on the summary as a flashcard session.
+test("Study now reviews first in the chosen mode, then offers the new cards as flashcards", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(async function(cards) {
+      const due = cards.slice(0, 2).map((c) => Object.assign({}, c, { srs_due_at: 1, last_studied_at: 1 }));
+      const fresh = cards.slice(2).map((c) => Object.assign({}, c, { format: "term", data: { term: "T " + c.id, def: "D " + c.id } }));
+      store.getStudyNowCards = () => Promise.resolve({ cards: due.concat(fresh), lessons: [{ id: "l1", title: "L", class_id: "c1" }] });
+      store.getDifficultyMap = () => Promise.resolve({});
+      state.studyNowMode = "quiz";
+      showScreen("home");
+      const btn = document.createElement("button");
+      btn.dataset.studyNow = "all,2";
+      document.body.appendChild(btn);
+      startStudyNow(btn);
+      await new Promise((r) => setTimeout(r, 100));
+      const out = { first: getActiveScreen(), quizCount: state.quizCards.length };
+      for (let i = 0; i < 2; i++) {
+        answerQuiz(state.quizOptions.findIndex((o) => o !== state.quizCards[state.quizIndex].data.correct));
+        document.getElementById("quiz-next-btn").click();
+      }
+      const learn = document.getElementById("btn-results-learn-new");
+      out.results = getActiveScreen();
+      out.learn = learn.classList.contains("hidden") ? null : learn.textContent;
+      learn.click();
+      out.then = getActiveScreen();
+      out.studyIds = state.studyCards.map((c) => c.id);
+      out.mode = state.studyMode;
+      return out;
+    }, QUIZ4);
+    assert.deepEqual(r, { first: "quiz", quizCount: 2, results: "results", learn: "Learn 2 new cards",
+      then: "flashcard", studyIds: ["q3", "q4"], mode: "flashcard" });
+  });
+});
