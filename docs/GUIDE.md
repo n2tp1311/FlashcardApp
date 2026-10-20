@@ -570,6 +570,17 @@ when the button is pressed, and split by whether they have a due date, so the se
 session costs no request. The cost: a learner who wants to quiz new cards has to go
 through Study Setup.
 
+**The study bar shows the whole run.** Since a Study now run is two sessions, the bar in
+each spans both: the reviews, then the new cards, with a notch where the new cards start
+and a tick at the middle of each half, and labels under it ("Review 35 · New 50", then
+"Reviewed ✓ · New 10/50" with the review half green). The user wanted to see the
+milestones from the first card -- how far the reviews go and when learning starts --
+rather than a bar that fills, empties and fills again. Study now passes the run to
+`launchStudy` through `state.pendingStudyNowRun`, because the first card renders inside
+that call; any other session starts with none. A retry of the missed cards has fewer cards
+than the run expects, so it shows the plain bar. Other sessions have one bar with a tick
+at its middle.
+
 **Which classes is a checklist above the button**, "All classes" or any set of them, saved
 in the account as `studyNowClasses`. The user studies several books at once and wanted to
 put one aside for a day without archiving it. The counts follow the pick: the due cards of
