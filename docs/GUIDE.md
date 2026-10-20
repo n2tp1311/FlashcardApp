@@ -595,34 +595,51 @@ at its middle. The text above names the part ("Review 1 / 20", "New 1 / 1"): a b
 plus the new cards to come at the flashcard median. A part under four cards gets no middle
 tick (`PB_MID_MIN_CARDS`); in a one-card half it sat against the notch like a glitch.
 
-**Which classes is a checklist above the button**, "All classes" or any set of them, saved
-in the account as `studyNowClasses`. The user studies several books at once and wanted to
-put one aside for a day without archiving it. The counts follow the pick: the due cards of
-the picked classes (from `dueForReview`, which already carries each lesson's class), and
-the day's new-card goal capped by the new cards those classes hold. The goal itself stays
-the day's: picking one class does not shrink how many new cards are worth learning today,
-only where they come from. `GET /api/stats/new-card-estimate` returns `byClass` (each class
-with its untouched cards, in course order) so the checklist and its counts cost no extra
-request, and the cards request carries `classIds`. A class deleted or archived since drops
-out of the pick; none left, or every class ticked, means all. It shows only with two
-classes or more.
+**Study now takes every class; a sheet sets their order.** Reviews come from every class
+that is not archived, and new cards from the top of the study order. The chip above the
+button names the class new cards come from next ("New cards from Deep Learning"), or reads
+"Study order" once every class is through its new cards, and opens a bottom sheet (a centred
+dialog on a wide screen, the week recap's styling) that only orders: each class has a handle,
+dragged with a finger or a mouse, or moved with the arrow keys on the focused handle. It
+shows only with two classes or more. `GET /api/stats/new-card-estimate` returns `byClass`
+(each class with its untouched cards, in `sort_order`), so the sheet costs no extra request.
 
-**The checklist is also the priority list.** Each class has a handle; dragging it (a finger
-or a mouse, or the arrow keys on the focused handle) sets which class new cards come from
-first. Done saves it with one `POST /api/classes/order`: the ids sent take the first places
-and the user's other classes (archived ones) follow in their old order, so every
-`sort_order` is rewritten without two classes sharing a place. That `sort_order` is the
-"class" in Study now's course order, so no new column was needed. Home's sort menu offers it
-as **Study order**, first in the list: having set an order, the user found Home still sorted by
-Level and nothing on the page showed it. Pinned classes still come first there, as under every
-sort. After Done, Home's cached class list takes the same rewrite the server makes, so the new
-order shows without a reload. Reviews are not reordered: an overdue card is overdue whichever book it is from. A
-class with no new cards left is marked Completed and sits below the rest, out of the drag,
-since there is nothing left for its place to decide; its reviews still come while it is
-ticked. The drag listens on the document rather than capturing the pointer on the handle:
-moving the row in the DOM detaches the handle for a moment, which releases a capture, and
-the first version stopped after one step. This orders classes against each other; the order
-inside a KnowledgeApp class stays the book's (below).
+The first version was a checklist with the order inside it, applied by Done, and saved as
+`studyNowClasses`. The user set an order, closed the panel by tapping its chip again, and
+the order was gone, because only Done saved; and they never used the pick, which only
+narrowed Study now to a few books. So the pick went (a `studyNowClasses` left in preferences
+is ignored; the server still accepts `classIds`, now unused) and **every move saves as it
+lands**: one `POST /api/classes/order` per drop or arrow step, chained so two quick moves
+reach the server in the order they were made. Closing the sheet any way keeps the order, and
+"Saved ✓" beside Done says so. The ids sent take the first places and the user's other
+classes (archived ones) follow in their old order, so every `sort_order` is rewritten
+without two classes sharing a place. That `sort_order` is the "class" in Study now's course
+order, so no new column was needed. Home's sort menu offers it as **Study order**, first in
+the list: having set an order, the user found Home still sorted by Level and nothing on the
+page showed it. Pinned classes still come first there, as under every sort. Each save also
+rewrites Home's cached class list the way the server does, so the new order shows without a
+reload. Reviews are not reordered: an overdue card is overdue whichever book it is from.
+
+**A class with no new cards left** is marked Completed and sits below the rest, out of the
+drag, since there is nothing left for its place to decide; its reviews still come. It keeps
+its own place in `sort_order`, though (`studyOrderMerged`): the dragged classes fill the
+places classes with new cards held, and a Completed one is sent where it was. Sent at the
+bottom, as the first version did, it lost where the user had put it, and when KnowledgeApp
+syncs new cards into a finished book it should come back there. New cards flow on without a
+step from the user: the cards query orders by class, so a top class with 3 left and a goal of
+20 gives those 3 and 17 from the next. The session that takes a class's last new cards says
+so on its end screen, "No new cards left in The Signal and The Noise" with "New cards now
+come from Advanced Analytics with Pyspark." under it (`classDoneExtra`, from the estimate
+fetched when the session began and again at its end; only after a session with new cards),
+placed after a new badge and before the other extras. The drag listens on the document
+rather than capturing the pointer on the handle: moving the row in the DOM detaches the
+handle for a moment, which releases a capture, and the first version stopped after one
+step. This orders classes against each other; the order inside a KnowledgeApp class stays
+the book's (below).
+
+The chip's container has `contain: inline-size`. Without it the label, which cannot wrap,
+set the minimum width of the Today tile: "New cards from Advanced Analytics with Pyspark"
+made the page 425px wide on a 390px phone instead of ending in "…".
 
 **An account with no cards is not "done".** With nothing due the tile reads "All done for
 today", which on a new account told someone who had not started that they had finished.
