@@ -801,3 +801,43 @@ test("in a Study now run the time left counts the new cards still to come, and t
     assert.equal(minutes(r.moreNew) - minutes(r.withNew), 5);
   });
 });
+
+test("the quiz answer sheet says when the card comes back, and what its interval was", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(async function(cards) {
+      const now = Math.floor(Date.now() / 1000);
+      const day = 86400;
+      // A card reviewed 12 days ago and due now; its previews as the server sends them.
+      const seen = (c) => Object.assign({}, c, { srs_due_at: now - 60, fsrs_last_review_at: now - 60 - 12 * day,
+        fsrs_preview_again: 600, fsrs_preview_hard: 15 * day, fsrs_preview_good: 30 * day });
+      let reply = null;
+      store.recordAttempt = () => new Promise((ok) => { reply = ok; });
+      state.quizCountsAsKnown = false;
+      state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
+      state.quizCards = [seen(cards[0]), seen(cards[1]), Object.assign({}, cards[2], { fsrs_preview_hard: 600 }), Object.assign({}, cards[3], { srs_due_at: now + day })];
+      startQuiz();
+      const next = () => document.getElementById("quiz-sheet-next").textContent;
+      const out = {};
+      answerQuiz(state.quizOptions.indexOf(state.quizCards[0].data.correct));
+      out.right = next();
+      reply({ ok: true, srs_due_at: now + 16 * day, notDue: false });
+      await new Promise((r) => setTimeout(r, 0));
+      out.rightServer = next();
+      pauseQuizAdvance(); document.getElementById("quiz-next-btn").click();
+      answerQuiz(state.quizOptions.findIndex((o) => o !== state.quizCards[1].data.correct));
+      out.wrong = next();
+      document.getElementById("quiz-next-btn").click();
+      answerQuiz(state.quizOptions.indexOf(state.quizCards[2].data.correct));
+      out.fresh = next();
+      pauseQuizAdvance(); document.getElementById("quiz-next-btn").click();
+      answerQuiz(state.quizOptions.indexOf(state.quizCards[3].data.correct));
+      out.notDue = next();
+      return out;
+    }, QUIZ4);
+    assert.equal(r.right, "Next review in 15d · was 12d");
+    assert.equal(r.rightServer, "Next review in 16d · was 12d", "the server's date wins once it arrives");
+    assert.equal(r.wrong, "Next review in 10 min · was 12d");
+    assert.equal(r.fresh, "Next review in 10 min", "a new card has no interval to compare");
+    assert.equal(r.notDue, "", "a card not due keeps its schedule");
+  });
+});

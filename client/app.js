@@ -866,6 +866,8 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.go": "Study now · {n} cards",
   "studyNow.modeLabel": "Review with",
   "studyNow.learnNew": "Learn {n} new cards",
+  "quiz.nextReview": "Next review in {time}",
+  "quiz.nextReviewWas": "was {time}",
   "studyNow.barReview": "Review {n}",
   "studyNow.barReviewDone": "Reviewed ✓",
   "studyNow.barNew": "New {n}",
@@ -1991,6 +1993,8 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.go": "Học ngay · {n} thẻ",
   "studyNow.modeLabel": "Ôn bằng",
   "studyNow.learnNew": "Học {n} thẻ mới",
+  "quiz.nextReview": "Ôn lại sau {time}",
+  "quiz.nextReviewWas": "trước đó {time}",
   "studyNow.barReview": "Ôn {n}",
   "studyNow.barReviewDone": "Đã ôn ✓",
   "studyNow.barNew": "Học mới {n}",
@@ -10397,7 +10401,13 @@ function answerQuiz(selectedIdx) {
   }
   if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
   addSessionTime(quizAttemptFields.durationMs);
+  cheer.next = quizNextReviewText(card, isCorrect);
   store.recordAttempt(quizAttemptFields).then(function(res) {
+    if (res && state.quizCards[state.quizIndex] === card) {
+      // A retry of a card answered minutes ago is not due on the server: nothing changed.
+      document.getElementById("quiz-sheet-next").textContent = res.notDue || !res.srs_due_at ? "" :
+        quizNextReviewText(card, isCorrect, res.srs_due_at - Math.floor(Date.now() / 1000));
+    }
     if (res && res.capped) {
       resultEntry.capped = true;
       if (state.quizCards[state.quizIndex] === card) showQuizHint("quiz-cap-hint", "quiz.cappedHint");
@@ -10500,11 +10510,28 @@ function quizEncouragement(isCorrect, streak, answered, total, lastPraise) {
   return { tone: "correct", title: t("enc.right" + praise), sub: sub, praise: praise };
 }
 
+// What this answer did to the schedule, on the answer sheet: the flip card shows each grade's
+// interval on its button, a quiz showed nothing, so a right answer's reward and a wrong one's
+// cost were invisible. First from the card's own previews (a right quiz answer is rated Hard,
+// or Good under "quiz answers count as Know It"; a wrong one Again), then corrected to the
+// server's due date, which may move a review a day to even out the load. A card not due yet
+// keeps its schedule and says nothing here; its own hint explains.
+function quizNextReviewText(card, isCorrect, seconds) {
+  var nowSec = Math.floor(Date.now() / 1000);
+  if (card.srs_due_at && card.srs_due_at > nowSec) return "";
+  if (seconds == null) seconds = isCorrect ? (state.quizCountsAsKnown ? card.fsrs_preview_good : card.fsrs_preview_hard) : card.fsrs_preview_again;
+  if (seconds == null) return "";
+  var was = card.srs_due_at && card.fsrs_last_review_at ? card.srs_due_at - card.fsrs_last_review_at : null;
+  return t("quiz.nextReview", { time: formatFsrsDuration(Math.max(0, seconds)) }) +
+    (was > 0 ? " · " + t("quiz.nextReviewWas", { time: formatFsrsDuration(was) }) : "");
+}
+
 function showQuizSheet(cheer) {
   var sheet = document.getElementById("quiz-sheet");
   sheet.className = "study-sheet study-sheet-" + cheer.tone;
   document.getElementById("quiz-sheet-title").textContent = cheer.title;
   document.getElementById("quiz-sheet-sub").textContent = cheer.sub;
+  document.getElementById("quiz-sheet-next").textContent = cheer.next || "";
   void sheet.offsetWidth; // restart the slide-up when the previous answer's sheet was still open
   sheet.classList.add("on");
   document.getElementById("screen-quiz").classList.add("sheet-open");

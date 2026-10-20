@@ -2770,6 +2770,8 @@ code {
 .study-sheet-combo   .study-sheet-title { color: var(--warning); }
 .study-sheet-wrong   .study-sheet-title { color: var(--danger); }
 .study-sheet-sub { color: var(--text2); font-size: 0.875rem; margin-top: 2px; }
+.study-sheet-next { color: var(--text); font-size: 0.8125rem; font-weight: 600; margin-top: 4px; }
+.study-sheet-next:empty { display: none; }
 /* Room below the explanation so the sheet never covers what the user is reading. */
 #screen-quiz.sheet-open .quiz-container { padding-bottom: calc(var(--quiz-sheet-h, 164px) + 16px); }
 
