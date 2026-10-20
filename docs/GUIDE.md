@@ -1118,6 +1118,10 @@ Most study happens on an iPhone, and several decisions are about it:
   silent: a "wrong" knock on the learner's own Learning would read as the app disagreeing.
 - **Dialogs** set `inert` on everything behind the top one rather than trapping Tab, which
   covers keyboard, pointer and screen reader in one attribute sweep.
+- **The card face turned away is `inert` and `aria-hidden`.** A flip only rotates the back
+  out of sight, so VoiceOver read the answer before the flip. `setFlashcardFaces` sets both
+  on whichever face is hidden: `inert` keeps Tab and taps out, `aria-hidden` covers readers
+  that do not honour `inert`. Speak (P) still works, because a script's `click()` is not a tap.
 
 ### Preferences
 
