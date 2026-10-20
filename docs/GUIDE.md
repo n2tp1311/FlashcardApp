@@ -579,7 +579,10 @@ rather than a bar that fills, empties and fills again. Study now passes the run 
 `launchStudy` through `state.pendingStudyNowRun`, because the first card renders inside
 that call; any other session starts with none. A retry of the missed cards has fewer cards
 than the run expects, so it shows the plain bar. Other sessions have one bar with a tick
-at its middle.
+at its middle. The text above names the part ("Review 1 / 20", "New 1 / 1"): a bare
+"1 / 20" read as if the new cards were in it. Its time left is the run's, the reviews left
+plus the new cards to come at the flashcard median. A part under four cards gets no middle
+tick (`PB_MID_MIN_CARDS`); in a one-card half it sat against the notch like a glitch.
 
 **Which classes is a checklist above the button**, "All classes" or any set of them, saved
 in the account as `studyNowClasses`. The user studies several books at once and wanted to
