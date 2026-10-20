@@ -1093,6 +1093,14 @@ like the Hard grade, *Khó*); the Know It grade and the session's known count ar
 *Đã thuộc*; Flashcards and Quiz are *Thẻ ghi nhớ* and *Trắc nghiệm* everywhere. Markup
 text, `aria-label` and `alt` carry `data-i18n`, `data-i18n-aria` or `data-i18n-alt`.
 
+**Numbers and dates follow the app's language, not the phone's.** `appLocale()` returns
+`vi-VN` or `en-US` and every `toLocaleString`/`toLocaleDateString` passes it. Left to the
+browser, a phone set to English printed "1,234" and "Oct 19" inside Vietnamese
+sentences, where a Vietnamese reader expects "1.234" and "19 Th10". Day-month order is a
+translation (`chart.dayMonth`), not a locale call, so the heatmap tip reads the right way
+round. The one exception is the cram clock in English, which keeps the phone's locale so
+the phone's 12/24-hour setting wins.
+
 ### Look
 
 Two independent preferences: **theme** (Light, Dark, Match device) and **palette**
