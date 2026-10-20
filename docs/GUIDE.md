@@ -579,6 +579,20 @@ request, and the cards request carries `classIds`. A class deleted or archived s
 out of the pick; none left, or every class ticked, means all. It shows only with two
 classes or more.
 
+**The checklist is also the priority list.** Each class has a handle; dragging it (a finger
+or a mouse, or the arrow keys on the focused handle) sets which class new cards come from
+first. Done saves it with one `POST /api/classes/order`: the ids sent take the first places
+and the user's other classes (archived ones) follow in their old order, so every
+`sort_order` is rewritten without two classes sharing a place. That `sort_order` is the
+"class" in Study now's course order, so no new column was needed; Home's sort menu does not
+use it. Reviews are not reordered: an overdue card is overdue whichever book it is from. A
+class with no new cards left is marked Completed and sits below the rest, out of the drag,
+since there is nothing left for its place to decide; its reviews still come while it is
+ticked. The drag listens on the document rather than capturing the pointer on the handle:
+moving the row in the DOM detaches the handle for a moment, which releases a capture, and
+the first version stopped after one step. This orders classes against each other; the order
+inside a KnowledgeApp class stays the book's (below).
+
 **An account with no cards is not "done".** With nothing due the tile reads "All done for
 today", which on a new account told someone who had not started that they had finished.
 With no cards at all (`summary.cards` is 0) it says "No cards yet" and offers New class.
