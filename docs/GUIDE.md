@@ -208,6 +208,9 @@ be read together, and splitting them would show the same passage several times a
 session. The cost is that one weak gap reschedules the whole passage. The grade is
 suggested from the number of mistakes (Know It, Hard or Learning) and the learner may
 override it, since a slip is not the same as not knowing.
+The passage runs the full width of the card, as the word bank under it does. It used to
+be capped at 62 characters a line for readability, which on a laptop left it stopping
+halfway across the card above a full-width bank; the card's own width is limit enough.
 
 The edit dialog takes the wrong words one per line, not as a comma list. Book words
 carry commas ("1,000", "however, the"), and the comma field split them on Save, so
