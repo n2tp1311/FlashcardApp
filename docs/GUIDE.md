@@ -449,6 +449,11 @@ Four choices, saveable as named presets (server-stored, reorderable, keys 1–9)
 - **Mode**: Flashcards, Flashcard & Write, Quiz.
 - **Order**: In Order, Shuffle, Interleaved (multi-lesson only), Cram.
 
+A preset chip is one button: a tap anywhere on it applies the preset, and it stays marked
+until a pill changes what it set. Only its 78x20 name used to apply it, with a 22px
+delete 4px away, so a slightly wide tap asked to delete it; deleting now lives only in
+Manage presets.
+
 **Shuffle** is weighted: a card's difficulty level, from its answer history, puts it in
 the pool three times (hard), twice (medium) or once, before de-duplication, which front-
 loads the hard ones. **Interleaved** groups cards by lesson, weighted-shuffles each
