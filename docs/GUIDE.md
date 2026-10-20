@@ -700,6 +700,17 @@ most 99%, so 239 of 240 never reads "100%".
 **Accuracy is observed, not predicted**: the weekly Accuracy chart is correct answers
 over all answers, not FSRS's predicted recall.
 
+**A list screen's bars come in one request.** Home asked twice per class (its lesson list,
+only to count it, and `GET /progress/class/:id`), 22 requests for six classes, and the class
+screen twice per lesson (every card, only to count them, and `GET /progress/lesson/:id`),
+a hundred for a fifty-lesson book, each a round trip on a phone connection. Now
+`GET /api/classes` carries `lesson_count`, the lesson list carries `card_count`, and
+`POST /progress/classes` and `POST /progress/lessons` answer for every id at once, from the
+same `classProgress`/`lessonProgress` the single routes use, and leave out ids that are not
+the user's. Home keeps what it loaded, so a re-sort or a filter asks nothing; coming back
+to Home loads it again. The offline store has no round trips to save and answers the batch
+calls one id at a time. POST because the id lists outgrow a URL; nothing is written.
+
 ---
 
 ## 11. Achievements
