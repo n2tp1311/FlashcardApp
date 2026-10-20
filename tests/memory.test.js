@@ -242,7 +242,7 @@ function client(t) {
   vm.createContext(ctx);
   const choices = appJs.slice(appJs.indexOf("var MEMORY_CHOICES = ["), appJs.indexOf("];", appJs.indexOf("var MEMORY_CHOICES = [")) + 2);
   vm.runInContext(choices, ctx);
-  for (const f of ["nearestMemoryChoice", "memoryPerDay", "memoryDate", "memoryChoicesHtml", "memoryStatusHtml"]) vm.runInContext(extract(f), ctx);
+  for (const f of ["appLocale", "nearestMemoryChoice", "memoryPerDay", "memoryDate", "memoryChoicesHtml", "memoryStatusHtml"]) vm.runInContext(extract(f), ctx);
   return ctx;
 }
 const info = (over) => Object.assign({ choice: 90, adapt: true, reviews: 900, minReviews: 400, nextFitAt: 400, model: null, lastFit: null,

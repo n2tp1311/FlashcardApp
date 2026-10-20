@@ -101,7 +101,7 @@ function t(k, p) { return k + (p ? "|" + Object.keys(p).map(function(x) { return
 function escHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
 ${block("ACH_ICONS")}${block("ACH_ICON_PATHS")}${block("ACH_UNITS")}
 ${v("RECORD_MIN_ANSWERS")}${v("NEAR_MIN_PROGRESS")}${v("SESSION_EXTRAS_MAX")}${v("SESSION_SPARKS")}
-${["achIcon", "achMedalTier", "achThresholdLabel", "achTierName", "achDate", "achCountText", "achProgressText", "achNextUp", "achEarnedLineText", "sessionExtras", "sessionExtraHtml"].map(fn).join("")}
+${["appLocale", "achIcon", "achMedalTier", "achThresholdLabel", "achTierName", "achDate", "achCountText", "achProgressText", "achNextUp", "achEarnedLineText", "sessionExtras", "sessionExtraHtml"].map(fn).join("")}
 function item(o) { return Object.assign({ key: "writer", tiers: [100, 500, 2000], value: 0, tier: 0, next: 100, progress: 0, show: { cur: 0, target: 100 }, earnedAt: null, lost: false }, o); }
 function show(xs) { document.body.innerHTML = '<div class="session-cheers" style="width:340px">' + xs.map(sessionExtraHtml).join("") + '</div>'; }
 `;

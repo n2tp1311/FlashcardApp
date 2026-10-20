@@ -16,12 +16,13 @@ function extract(name) {
 
 function load() {
   const ctx = {
+    state: { language: "en" },
     t: function(k, v) { return k + (v ? "|" + Object.keys(v).map(function(x) { return x + "=" + v[x]; }).join(",") : ""); },
     escHtml: function(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
   };
   vm.createContext(ctx);
   vm.runInContext("var CHART_PAD = { l: 34, r: 6, t: 8, b: 18 };" +
-    ["chartScale", "chartTick", "chartLabelIndices", "chartWeeks", "chartWeekLabel", "chartXAxis", "chartColumnsSvg",
+    ["appLocale", "chartScale", "chartTick", "chartLabelIndices", "chartWeeks", "chartWeekLabel", "chartXAxis", "chartColumnsSvg",
      "chartLineSvg", "chartHitRect", "chartKpisHtml", "futureDueBuckets", "gradeSegments"].map(extract).join(""), ctx);
   return ctx;
 }

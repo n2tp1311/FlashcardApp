@@ -972,6 +972,7 @@ Object.assign(TRANSLATIONS.en, {
   "chart.thisWeekShort": "This",
   "chart.lastWeekShort": "Last",
   "chart.weeksAgoShort": "{n}w",
+  "chart.dayMonth": "{month} {day}",
   "chart.dayShort": "{n}d",
   "chart.howYouAnswered": "How you answered",
   "chart.answersTitle": "{n} answers ({pct}% correct)",
@@ -2074,7 +2075,8 @@ Object.assign(TRANSLATIONS.vi, {
   "chart.perWeek": "mỗi tuần",
   "chart.thisWeekShort": "Nay",
   "chart.lastWeekShort": "Trước",
-  "chart.weeksAgoShort": "{n}t",
+  "chart.weeksAgoShort": "{n} tuần",
+  "chart.dayMonth": "{day} {month}",
   "chart.dayShort": "{n}n",
   "chart.howYouAnswered": "Cách bạn trả lời",
   "chart.answersTitle": "{n} lượt trả lời ({pct}% đúng)",
@@ -6110,7 +6112,7 @@ function achThresholdLabel(item, tier) {
 }
 
 function achDate(sec) {
-  return new Date(sec * 1000).toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US", { day: "numeric", month: "short" });
+  return new Date(sec * 1000).toLocaleDateString(appLocale(), { day: "numeric", month: "short" });
 }
 
 function achCountText(cur, target, unit) {
@@ -7375,6 +7377,12 @@ function updateSetupMatchCount(data) {
     : n < matched.length ? t("setup.studyCountOf", { n: n, total: matched.length })
     : t("setup.studyCount", { n: n });
   document.getElementById("btn-start-study").disabled = matched.length === 0;
+}
+
+// Dates and numbers follow the app's language, not the phone's: a phone set to English
+// showed "1,234" and "Oct 19" inside Vietnamese sentences, and a Vietnamese one the reverse.
+function appLocale() {
+  return state.language === "vi" ? "vi-VN" : "en-US";
 }
 
 function setPillGroup(groupId, value) {
@@ -11242,7 +11250,7 @@ function dailyGoalRing(done, goal) {
 
 function weekdayLabel(day) {
   try {
-    return new Date(day + "T00:00:00Z").toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US",
+    return new Date(day + "T00:00:00Z").toLocaleDateString(appLocale(),
       { weekday: "short", timeZone: "UTC" });
   } catch (_) { return day.slice(5); }
 }
@@ -11546,7 +11554,7 @@ function renderCardHistory(cardId) {
         : t("dashboard.gradeUngraded");
       var duration = attempt.duration_ms == null ? "—" : attempt.duration_ms < 60000
         ? t("unit.s", { n: Math.round(attempt.duration_ms / 1000) }) : formatStudyDuration(attempt.duration_ms);
-      row.textContent = date.toLocaleString() + " · " +
+      row.textContent = date.toLocaleString(appLocale()) + " · " +
         (attempt.correct ? t("stats.correct") : t("stats.incorrect")) + " · " +
         t("stats.mode." + attempt.source) + " · " + grade + " · " + duration;
       list.appendChild(row);
@@ -12130,16 +12138,16 @@ function chartKpisHtml(analytics, futureDue) {
   var s1 = tm[1] && tm[1].samples ? Math.round(tm[1].avg_ms / 1000) : null;
   var out = [
     // Answers compare as a percentage: 300 more means little against 3,000 and a lot against 100.
-    kpi(t("chart.kpiAnswers"), a0.toLocaleString(), a1 ? delta(Math.round(a0 / a1 * 100), 100, function(d) { return d + "%"; }, true) : delta(0, null)),
+    kpi(t("chart.kpiAnswers"), a0.toLocaleString(appLocale()), a1 ? delta(Math.round(a0 / a1 * 100), 100, function(d) { return d + "%"; }, true) : delta(0, null)),
     kpi(t("chart.kpiAccuracy"), acc0 == null ? "—" : acc0 + "%", acc0 != null && acc1 != null ? delta(acc0, acc1, function(d) { return t(d === 1 ? "chart.point" : "chart.points", { n: d }); }, true) : delta(0, null)),
-    kpi(t("chart.kpiNewCards"), n0.toLocaleString(), wk[1] ? delta(n0, n1, function(d) { return d.toLocaleString(); }, false) : delta(0, null)),
+    kpi(t("chart.kpiNewCards"), n0.toLocaleString(appLocale()), wk[1] ? delta(n0, n1, function(d) { return d.toLocaleString(appLocale()); }, false) : delta(0, null)),
     kpi(t("chart.kpiAnswerTime"), s0 == null ? "—" : t("unit.s", { n: s0 }), s0 != null && s1 != null ? delta(s0, s1, function(d) { return t("unit.s", { n: d }); }, false) : delta(0, null))
   ];
   if (futureDue && futureDue.days) {
     var buckets = futureDueBuckets(futureDue);
     var total = buckets.reduce(function(s, b) { return s + b.cnt; }, 0);
     var busiest = buckets.reduce(function(m, b) { return b.cnt > m.cnt ? b : m; }, buckets[0]);
-    out.push(kpi(t("chart.kpiDue", { n: futureDue.windowDays }), total.toLocaleString(),
+    out.push(kpi(t("chart.kpiDue", { n: futureDue.windowDays }), total.toLocaleString(appLocale()),
       total ? escHtml(t("chart.busiest", { n: busiest.cnt, when: busiest.n === 0 ? t("time.today").toLowerCase() : t("time.inDays", { n: busiest.n }) })) : ''));
   }
   return out.join('');
@@ -12176,11 +12184,11 @@ function renderGradeDistribution(rows, wrap) {
   }
   wrap.innerHTML = '<div class="chart-stack" role="img" aria-label="' + escHtml(t("chart.howYouAnswered")) + '">' +
     segs.map(function(s) {
-      var tip = s.label + ": " + s.cnt.toLocaleString();
+      var tip = s.label + ": " + s.cnt.toLocaleString(appLocale());
       return '<div class="chart-stack-seg grade-' + s.cls + '" style="flex:' + s.cnt + '" title="' + escHtml(tip) + '" data-tip="' + escHtml(tip) + '"></div>';
     }).join('') + '</div>' +
     '<div class="chart-legend">' + segs.map(function(s) {
-      return '<span><i class="grade-' + s.cls + '"></i>' + escHtml(s.label) + ' · ' + s.cnt.toLocaleString() +
+      return '<span><i class="grade-' + s.cls + '"></i>' + escHtml(s.label) + ' · ' + s.cnt.toLocaleString(appLocale()) +
         ' (' + Math.round(s.cnt / total * 100) + '%)</span>';
     }).join('') + '</div>';
 }
@@ -12260,7 +12268,7 @@ function renderHeatmap(rows, wrap, days) {
       var cell = padded[c * 7 + row];
       html += cell
         ? heatmapCellHtml(intensity(cell.cnt), t("dashboard.heatmapCellTooltip", {
-            date: MONTHS[cell.month] + " " + cell.day, duration: formatStudyDuration(cell.ms), n: cell.cnt }))
+            date: t("chart.dayMonth", { month: MONTHS[cell.month], day: cell.day }), duration: formatStudyDuration(cell.ms), n: cell.cnt }))
         : '<i class="heatmap-cell heat-empty"></i>';
     }
   }
@@ -13909,7 +13917,7 @@ var workloadForecast = null;
 function weekdayName(dow, style) {
   // 2023-01-01 was a Sunday.
   var d = new Date(2023, 0, 1 + dow);
-  try { return d.toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US", { weekday: style }); }
+  try { return d.toLocaleDateString(appLocale(), { weekday: style }); }
   catch (_) { return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dow]; }
 }
 
@@ -13944,7 +13952,7 @@ function renderWorkloadForecast() {
   var total = list.reduce(function(s, b) { return s + b.n; }, 0);
   document.getElementById("pref-forecast-total").textContent = String(total);
   bars.innerHTML = list.map(function(b) {
-    var label = t("pref.forecastBar", { date: b.date.toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US", { weekday: "short", month: "short", day: "numeric" }), n: b.n });
+    var label = t("pref.forecastBar", { date: b.date.toLocaleDateString(appLocale(), { weekday: "short", month: "short", day: "numeric" }), n: b.n });
     return '<span class="workload-bar level-' + b.level + '" style="height:' + Math.max(2, Math.round(b.n / max * 100)) + '%" title="' + escHtml(label) + '"></span>';
   }).join("");
   axis.innerHTML = list.map(function(b) {
@@ -13996,7 +14004,7 @@ function memoryPerDay(n) {
 }
 
 function memoryDate(ts) {
-  try { return new Date(ts * 1000).toLocaleDateString(state.language === "vi" ? "vi-VN" : "en-US", { day: "numeric", month: "short" }); }
+  try { return new Date(ts * 1000).toLocaleDateString(appLocale(), { day: "numeric", month: "short" }); }
   catch (_) { return ""; }
 }
 
@@ -14018,7 +14026,7 @@ function memoryStatusHtml(info, adapt) {
   if (!info) return "";
   if (!adapt) return '<p class="pref-hint">' + escHtml(t("pref.adaptOff")) + "</p>";
   var line = function(text, good) { return '<p class="memory-line' + (good ? " good" : "") + '">' + escHtml(text) + "</p>"; };
-  if (info.model) return line("✓ " + t("pref.adaptDone", { date: memoryDate(info.model.trainedAt), n: info.model.reviews.toLocaleString() }), true);
+  if (info.model) return line("✓ " + t("pref.adaptDone", { date: memoryDate(info.model.trainedAt), n: info.model.reviews.toLocaleString(appLocale()) }), true);
   if (info.reviews < info.minReviews) {
     var pct = Math.round(info.reviews / info.minReviews * 100);
     return '<div class="memory-progress" role="progressbar" aria-valuemin="0" aria-valuemax="' + info.minReviews +

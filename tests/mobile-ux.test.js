@@ -570,3 +570,27 @@ test("a whole preset chip applies the preset, stays marked until a pill changes 
     assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll("#setup-presets-list .setup-preset-chip.active")].length), 0);
   });
 });
+
+// A phone set to English showed "1,234" and "Oct 19" inside Vietnamese sentences.
+test("numbers and dates follow the app's language, not the phone's", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(function() {
+      applyLanguage("vi");
+      const box = document.createElement("div");
+      document.body.appendChild(box);
+      renderGradeDistribution([{ grade: "easy", cnt: 1234 }], box);
+      const vi = { locale: appLocale(), legend: box.querySelector(".chart-legend").textContent, week: chartWeekLabel(5),
+                   day: t("chart.dayMonth", { month: "Th10", day: 19 }) };
+      applyLanguage("en");
+      renderGradeDistribution([{ grade: "easy", cnt: 1234 }], box);
+      return { vi, en: { locale: appLocale(), legend: box.querySelector(".chart-legend").textContent, day: t("chart.dayMonth", { month: "Oct", day: 19 }) } };
+    });
+    assert.equal(r.vi.locale, "vi-VN");
+    assert.match(r.vi.legend, /1\.234/);
+    assert.equal(r.vi.week, "5 tuần");
+    assert.equal(r.vi.day, "19 Th10");
+    assert.equal(r.en.locale, "en-US");
+    assert.match(r.en.legend, /1,234/);
+    assert.equal(r.en.day, "Oct 19");
+  }, { locale: "en-US" });
+});

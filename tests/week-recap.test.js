@@ -134,7 +134,7 @@ function closeModal(id) {
 var store = { getWeekRecap: function() { return Promise.resolve(recap); }, markWeekRecapSeen: function(w) { seen.push(w); return Promise.resolve(); } };
 document.body.innerHTML = '<div id="modal-overlay" class="modal-overlay hidden">' + ${JSON.stringify(modal)} + '</div>';
 document.querySelector("[data-modal]").addEventListener("click", function() { closeModal("week-recap"); });
-${fn("weekdayLabel")}${fn("weekRecapDelta")}${fn("weekRecapHtml")}${fn("maybeShowWeekRecap")}
+${fn("appLocale")}${fn("weekdayLabel")}${fn("weekRecapDelta")}${fn("weekRecapHtml")}${fn("maybeShowWeekRecap")}
 `;
 
 let browser, page_server, url;

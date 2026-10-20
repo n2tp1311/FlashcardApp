@@ -165,7 +165,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 vm.runInContext(["ACH_ICONS", "ACH_ICON_PATHS", "ACH_UNITS"].map(extractVar).join("") +
-  ["achIcon", "achMedalTier", "achThresholdLabel", "achDate", "achCountText", "achProgressText", "achBadgeHtml",
+  ["appLocale", "achIcon", "achMedalTier", "achThresholdLabel", "achDate", "achCountText", "achProgressText", "achBadgeHtml",
    "achEarnedCount", "achNextUp", "achNewlyEarned", "achSnapshot"].map(extract).join(""), ctx);
 
 function item(over) {
