@@ -246,7 +246,7 @@ const QUIZ4 = [1, 2, 3, 4].map((i) => ({
   data: { question: "Question " + i + ": which statement about regularization is right?", correct: "Right answer " + i + LONG, distractors: ["Wrong A" + LONG, "Wrong B" + LONG, "Wrong C" + LONG] }
 }));
 
-test("after a wrong answer the right option is scrolled above the answer sheet; Next starts at the top", async function() {
+test("after a wrong answer the right option is scrolled above the answer sheet, then the next question starts at the top", async function() {
   await withApp(async function(page) {
     const r = await page.evaluate(async function(cards) {
       state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
@@ -264,18 +264,20 @@ test("after a wrong answer the right option is scrolled above the answer sheet; 
       await new Promise((r) => setTimeout(r, 400));
       const right = document.querySelector("#quiz-options .quiz-opt.correct").getBoundingClientRect();
       const sheet = document.getElementById("quiz-sheet").getBoundingClientRect();
-      const out = { rightBottom: right.bottom, sheetTop: sheet.top, scrolled: scrollY };
-      document.getElementById("quiz-next-btn").click();
-      await new Promise((r) => setTimeout(r, 50));
+      const out = { rightBottom: right.bottom, sheetTop: sheet.top, scrolled: scrollY, nextShown: !!document.getElementById("quiz-next-btn") };
+      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_WRONG_MS));
+      out.index = state.quizIndex;
       out.afterNext = scrollY;
       return out;
     }, QUIZ4);
     assert.ok(r.rightBottom <= r.sheetTop, JSON.stringify(r));
+    assert.equal(r.nextShown, false, "a wrong answer moves on by itself");
+    assert.equal(r.index, 1);
     assert.equal(r.afterNext, 0);
   }, { viewport: { width: 375, height: 667 } });
 });
 
-test("a right answer with the book passage under it waits for Next instead of moving on", async function() {
+test("every quiz answer moves on by itself; opening the book passage stops it and shows Next", async function() {
   await withApp(async function(page) {
     const r = await page.evaluate(async function(cards) {
       cards = cards.map((c) => Object.assign({}, c, { source: "The passage from the book that the card was written from." }));
@@ -283,10 +285,15 @@ test("a right answer with the book passage under it waits for Next instead of mo
       state.quizCards = cards;
       startQuiz();
       answerQuiz(state.quizOptions.indexOf(state.quizCards[0].data.correct));
-      await new Promise((r) => setTimeout(r, 1500));
-      return { index: state.quizIndex, next: !!document.getElementById("quiz-next-btn"), source: !!document.getElementById("quiz-source") };
+      const shownAt = !!document.getElementById("quiz-next-btn");
+      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_RIGHT_MS + 200));
+      const moved = state.quizIndex;
+      answerQuiz(state.quizOptions.findIndex((o) => o !== state.quizCards[1].data.correct));
+      document.querySelector("#quiz-source summary").click();
+      await new Promise((r) => setTimeout(r, QUIZ_ADVANCE_WRONG_MS + 200));
+      return { shownAt, moved, index: state.quizIndex, next: !!document.getElementById("quiz-next-btn") };
     }, QUIZ4);
-    assert.deepEqual(r, { index: 0, next: true, source: true });
+    assert.deepEqual(r, { shownAt: false, moved: 1, index: 1, next: true });
   });
 });
 

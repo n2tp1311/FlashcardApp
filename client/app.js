@@ -8846,10 +8846,7 @@ function updateVocabularySelectionAction() {
 
   vocabularySelectionText = text;
   vocabularySelection = target;
-  if (target.actionId === "quiz-selection-action" && state.quizAdvanceTimer) {
-    clearTimeout(state.quizAdvanceTimer);
-    showQuizNextButton();
-  }
+  if (target.actionId === "quiz-selection-action") pauseQuizAdvance();
   var action = document.getElementById(target.actionId);
   var button = document.getElementById(target.buttonId);
   if (!vocabularySavePending) {
@@ -10346,17 +10343,17 @@ function answerQuiz(selectedIdx) {
 
   showQuizSheet(cheer);
 
-  // Only a correct answer with nothing to read moves on by itself; after a wrong answer, or
-  // with an explanation or the book passage to read, the user presses Next. The passage
-  // used to count as nothing to read and was gone 1.2 s after it appeared.
-  if (isCorrect && !hasExplanation && !answerSource) {
-    state.quizAdvanceTimer = setTimeout(function() {
-      state.quizIndex++;
-      renderQuizCard();
-    }, 1200);
-  } else {
-    showQuizNextButton();
-  }
+  // Every answer moves on by itself; pressing Next after each one was the user's complaint.
+  // A wrong answer waits longer so the marked right option can be read. Opening the
+  // explanation or the book passage, or selecting a word, stops the timer and shows Next.
+  state.quizAdvanceTimer = setTimeout(function() {
+    state.quizAdvanceTimer = null;
+    state.quizIndex++;
+    renderQuizCard();
+  }, isCorrect ? QUIZ_ADVANCE_RIGHT_MS : QUIZ_ADVANCE_WRONG_MS);
+  [document.getElementById("quiz-explanation"), answerSource].forEach(function(panel) {
+    if (panel) panel.addEventListener("toggle", pauseQuizAdvance);
+  });
   revealRightQuizOption();
 }
 
@@ -10416,6 +10413,15 @@ function hideQuizSheet() {
 function quizOptionResultClass(opt, idx, correctVal, selectedIdx) {
   if (opt === correctVal) return "correct";
   return idx === selectedIdx ? "wrong" : "dimmed";
+}
+
+var QUIZ_ADVANCE_RIGHT_MS = 1200, QUIZ_ADVANCE_WRONG_MS = 2500;
+
+function pauseQuizAdvance() {
+  if (!state.quizAdvanceTimer) return;
+  clearTimeout(state.quizAdvanceTimer);
+  state.quizAdvanceTimer = null;
+  showQuizNextButton();
 }
 
 // Replaces the post-answer auto-advance with a manual Next, for when the user stops to read
