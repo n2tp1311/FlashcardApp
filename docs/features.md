@@ -398,6 +398,7 @@
 - At 480px and below the header search bar is a round search button (the placeholder no longer truncates to "Sea…"), and at 600px and below the search dialog opens full width at the top of the screen instead of floating mid-screen under the keyboard
 - At 480px and below a card row puts its number, status pill and edit/delete icons on a header line and gives the term and definition the full width below
 - Searches classes, lessons, and cards simultaneously with a single debounced query (200ms)
+- Case-insensitive in Vietnamese letters too ("định lý" finds "ĐỊNH LÝ"), however the keyboard composes the accents; accents themselves still count
 - Results grouped into three sections (Classes / Lessons / Cards), up to 5 per group
 - Match highlighted in blue within result titles; breadcrumb shows class name (lessons) or class › lesson (cards)
 - Card text extracted server-side via `json_extract` CASE expression covering all formats: term-def (term), mcq (question), true-false (statement), image-def (def)

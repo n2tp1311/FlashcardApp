@@ -171,6 +171,16 @@ runs once. Two traps were found here and are now written into the code:
   `UPDATE` silently bound nothing, and the migration was marked done. A
   pre-migration backup diff caught it.
 
+### Case-insensitive search in Vietnamese
+
+SQLite's `LOWER()` and `LIKE` fold ASCII letters only, so "Đ", "Ố" and "Ư" stayed upper
+case and a search for "định lý" missed "Định lý". `server/db.js` registers `fold()`,
+JavaScript's `toLowerCase()` after NFC (macOS and some keyboards send a vowel and its
+marks as separate code points), and `GET /api/search` uses it. It runs in JavaScript once
+per row: 105 ms against `LOWER()`'s 41 ms over 80k cards, measured. So a query that is all
+ASCII keeps `LOWER()`, which is enough because text matching an ASCII query is ASCII
+itself. Accents still count: "dinh ly" does not find "định lý".
+
 ---
 
 ## 4. Card formats
