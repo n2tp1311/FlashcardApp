@@ -512,3 +512,33 @@ test("Home and the class screen draw every count and bar from a single progress 
     assert.equal(r.lessonBar, "");
   });
 });
+
+// Exact values lived only in hover titles, which a phone never shows.
+test("tapping a chart column, a line point, a grade segment or a heatmap day shows its value under the chart", async function() {
+  await withApp(async function(page) {
+    await page.evaluate(function() {
+      const box = document.createElement("div");
+      box.id = "charts-test";
+      box.innerHTML = '<div id="w-col"></div><div id="w-line"></div><div id="w-stack"></div>';
+      document.body.prepend(box);
+      document.getElementById("w-col").innerHTML = chartColumnsSvg({ width: 340, values: [3, 0, 12], labels: ["Mon", "Tue", "Wed"], cls: "answers" });
+      document.getElementById("w-line").innerHTML = chartLineSvg({ width: 340, values: [50, null, 80], labels: ["W1", "W2", "W3"],
+        titles: ["W1: 50%", "W2", "W3: 80%"], min: 0, max: 100, ticks: [0, 50, 100], fmt: String, cls: "accuracy" });
+      document.getElementById("w-stack").innerHTML = '<div class="chart-stack">' + '<div class="chart-stack-seg" style="flex:1" data-tip="Good: 7"></div></div>' +
+        '<div class="heatmap" style="grid-template-columns:22px">' + heatmapCellHtml("heat-2", "Oct 3: 12 min, 40 cards") + '</div>';
+    });
+    const tapAt = async (sel, i) => { await page.locator(sel).nth(i).tap(); };
+    const readout = (wrap) => page.evaluate((w) => [...document.querySelectorAll("#" + w + " .chart-readout")].map(e => e.textContent), wrap);
+    // The empty column still answers: a 2px-wide bar, or no bar, was nothing to tap.
+    await tapAt("#w-col .chart-hit", 1);
+    assert.deepEqual(await readout("w-col"), ["Tue: 0"]);
+    await tapAt("#w-col .chart-hit", 2);
+    assert.deepEqual(await readout("w-col"), ["Wed: 12"]);
+    assert.equal(await page.locator("#w-col .chart-hit.is-picked").count(), 1);
+    await tapAt("#w-line .chart-hit", 1);
+    assert.deepEqual(await readout("w-line"), ["W3: 80%"]);
+    await tapAt("#w-stack .chart-stack-seg", 0);
+    await tapAt("#w-stack .heatmap-cell", 0);
+    assert.deepEqual(await readout("w-stack"), ["Good: 7", "Oct 3: 12 min, 40 cards"]);
+  });
+});

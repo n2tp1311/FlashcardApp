@@ -4402,6 +4402,12 @@ button.leech-pill:hover { filter: brightness(0.96); }
 :root[data-theme="dark"] .chart-area-time { fill: color-mix(in srgb, #8fb4e0 14%, transparent); }
 .chart-stack { display: flex; gap: 2px; height: 18px; border-radius: 5px; overflow: hidden; }
 .chart-stack-seg { min-width: 2px; }
+/* Tap targets and the value line under a chart (chartReadout in app.js). */
+.chart-hit { fill: transparent; cursor: pointer; }
+.chart-hit.is-picked { fill: color-mix(in srgb, var(--text) 8%, transparent); }
+.chart-stack-seg[data-tip], .heatmap-cell[data-tip] { cursor: pointer; }
+.chart-stack-seg.is-picked, .heatmap-cell.is-picked { outline: 2px solid var(--text); outline-offset: 1px; }
+.chart-readout { margin-top: 6px; min-height: 1.4em; font-size: 0.8125rem; color: var(--text); font-variant-numeric: tabular-nums; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
 .chart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .grade-again { background: #c0533f; }

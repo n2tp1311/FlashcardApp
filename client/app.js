@@ -12033,6 +12033,13 @@ function chartXAxis(labels, w, h) {
   }).join('');
 }
 
+// The whole column answers a tap, not just its bar or a 6px dot. Its value shows under the
+// chart (chartReadout); the <title> stays for a mouse.
+function chartHitRect(x, cw, h, tip) {
+  return '<rect class="chart-hit" x="' + x.toFixed(1) + '" y="0" width="' + cw.toFixed(1) + '" height="' + (h - CHART_PAD.b) +
+    '" data-tip="' + escHtml(tip) + '"><title>' + escHtml(tip) + '</title></rect>';
+}
+
 function chartColumnsSvg(o) {
   var w = Math.max(160, Math.round(o.width)), h = o.height || 150;
   var n = o.values.length, cw = (w - CHART_PAD.l - CHART_PAD.r) / n, bw = Math.max(2, Math.min(cw * 0.66, 28));
@@ -12048,8 +12055,10 @@ function chartColumnsSvg(o) {
     if (!v) return;
     var bh = plotH * v / scale.top;
     out += '<rect class="chart-bar chart-bar-' + o.cls + (i === o.hot ? ' is-hot' : '') + '" x="' + (CHART_PAD.l + cw * i + (cw - bw) / 2).toFixed(1) +
-      '" y="' + (h - CHART_PAD.b - bh).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2">' +
-      '<title>' + escHtml(o.titles ? o.titles[i] : o.labels[i] + ": " + v) + '</title></rect>';
+      '" y="' + (h - CHART_PAD.b - bh).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2"/>';
+  });
+  o.values.forEach(function(v, i) {
+    out += chartHitRect(CHART_PAD.l + cw * i, cw, h, o.titles ? o.titles[i] : o.labels[i] + ": " + v);
   });
   return out + chartXAxis(o.labels, w, h) + '</svg>';
 }
@@ -12074,8 +12083,10 @@ function chartLineSvg(o) {
     out += '<path class="chart-area chart-area-' + o.cls + '" d="M' + d + ' L' + pts[pts.length - 1].x.toFixed(1) + ' ' + floor + ' L' + pts[0].x.toFixed(1) + ' ' + floor + ' Z"/>' +
       '<path class="chart-line chart-line-' + o.cls + '" d="M' + d + '"/>';
     pts.forEach(function(p) {
-      out += '<circle class="chart-dot chart-dot-' + o.cls + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3"><title>' +
-        escHtml(o.titles ? o.titles[p.i] : o.labels[p.i]) + '</title></circle>';
+      out += '<circle class="chart-dot chart-dot-' + o.cls + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3"/>';
+    });
+    pts.forEach(function(p) {
+      out += chartHitRect(CHART_PAD.l + cw * p.i, cw, h, o.titles ? o.titles[p.i] : o.labels[p.i]);
     });
   }
   return out + chartXAxis(o.labels, w, h) + '</svg>';
@@ -12151,7 +12162,8 @@ function renderGradeDistribution(rows, wrap) {
   }
   wrap.innerHTML = '<div class="chart-stack" role="img" aria-label="' + escHtml(t("chart.howYouAnswered")) + '">' +
     segs.map(function(s) {
-      return '<div class="chart-stack-seg grade-' + s.cls + '" style="flex:' + s.cnt + '" title="' + escHtml(s.label + ": " + s.cnt) + '"></div>';
+      var tip = s.label + ": " + s.cnt.toLocaleString();
+      return '<div class="chart-stack-seg grade-' + s.cls + '" style="flex:' + s.cnt + '" title="' + escHtml(tip) + '" data-tip="' + escHtml(tip) + '"></div>';
     }).join('') + '</div>' +
     '<div class="chart-legend">' + segs.map(function(s) {
       return '<span><i class="grade-' + s.cls + '"></i>' + escHtml(s.label) + ' · ' + s.cnt.toLocaleString() +
@@ -12233,13 +12245,39 @@ function renderHeatmap(rows, wrap, days) {
     for (var c = 0; c < numCols; c++) {
       var cell = padded[c * 7 + row];
       html += cell
-        ? '<i class="heatmap-cell ' + intensity(cell.cnt) + '" title="' + escHtml(t("dashboard.heatmapCellTooltip", {
-            date: MONTHS[cell.month] + " " + cell.day, duration: formatStudyDuration(cell.ms), n: cell.cnt })) + '"></i>'
+        ? heatmapCellHtml(intensity(cell.cnt), t("dashboard.heatmapCellTooltip", {
+            date: MONTHS[cell.month] + " " + cell.day, duration: formatStudyDuration(cell.ms), n: cell.cnt }))
         : '<i class="heatmap-cell heat-empty"></i>';
     }
   }
   wrap.innerHTML = html + '</div>';
 }
+
+function heatmapCellHtml(cls, tip) {
+  return '<i class="heatmap-cell ' + cls + '" title="' + escHtml(tip) + '" data-tip="' + escHtml(tip) + '"></i>';
+}
+
+// Exact values were only in hover titles, which a phone never shows. A tap writes the
+// value into a line under the chart, and marks what was tapped.
+function chartReadout(target) {
+  var chart = target.closest(".chart-svg, .chart-stack, .heatmap");
+  if (!chart) return;
+  var line = chart.nextElementSibling;
+  if (!line || !line.classList.contains("chart-readout")) {
+    line = document.createElement("div");
+    line.className = "chart-readout";
+    line.setAttribute("aria-live", "polite");
+    chart.insertAdjacentElement("afterend", line);
+  }
+  chart.querySelectorAll(".is-picked").forEach(function(el) { el.classList.remove("is-picked"); });
+  target.classList.add("is-picked");
+  line.textContent = target.getAttribute("data-tip");
+}
+
+document.addEventListener("click", function(e) {
+  var tip = e.target.closest && e.target.closest("[data-tip]");
+  if (tip) chartReadout(tip);
+});
 
 function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
   if (maxWeeksAgo === undefined) maxWeeksAgo = 11;

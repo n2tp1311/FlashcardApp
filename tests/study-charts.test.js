@@ -22,7 +22,7 @@ function load() {
   vm.createContext(ctx);
   vm.runInContext("var CHART_PAD = { l: 34, r: 6, t: 8, b: 18 };" +
     ["chartScale", "chartTick", "chartLabelIndices", "chartWeeks", "chartWeekLabel", "chartXAxis", "chartColumnsSvg",
-     "chartLineSvg", "chartKpisHtml", "futureDueBuckets", "gradeSegments"].map(extract).join(""), ctx);
+     "chartLineSvg", "chartHitRect", "chartKpisHtml", "futureDueBuckets", "gradeSegments"].map(extract).join(""), ctx);
   return ctx;
 }
 
@@ -54,7 +54,8 @@ test("columns are drawn to scale at the container's pixel width, the hot one mar
   const ctx = load();
   const svg = ctx.chartColumnsSvg({ width: 300, labels: ["a", "b", "c"], values: [50, 0, 100], cls: "answers", hot: 2 });
   assert.match(svg, /width="300" height="150" viewBox="0 0 300 150"/);
-  assert.equal((svg.match(/<rect /g) || []).length, 2, "a zero draws no bar");
+  assert.equal((svg.match(/<rect class="chart-bar /g) || []).length, 2, "a zero draws no bar");
+  assert.equal((svg.match(/<rect class="chart-hit"/g) || []).length, 3, "every column, a zero too, answers a tap");
   // top 100 over a 124px plot: 50 is 62px tall, 100 is the full 124px
   assert.match(svg, /class="chart-bar chart-bar-answers" x="[\d.]+" y="70\.0" width="[\d.]+" height="62\.0"/);
   assert.match(svg, /class="chart-bar chart-bar-answers is-hot" x="[\d.]+" y="8\.0" width="[\d.]+" height="124\.0"/);
