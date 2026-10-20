@@ -3213,37 +3213,34 @@ code {
   padding: 6px 12px; font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 .study-now-more:hover { border-color: var(--primary); }
-.study-now-classes { position: relative; }
+/* Sized by its column, never by the chip: a long class name otherwise widened the whole page. */
+.study-now-classes { position: relative; contain: inline-size; }
 .study-now-classes-btn {
   display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 36px;
   border: 2px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text);
   padding: 4px 12px; font: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer;
 }
 .study-now-classes-btn span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.study-now-classes-btn:hover, .study-now-classes-btn[aria-expanded="true"] { border-color: var(--primary); }
+.study-now-classes-btn:hover { border-color: var(--primary); }
 .study-now-classes-btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-.study-now-picker {
-  display: grid; gap: 2px; margin-top: 6px; padding: 8px; max-height: 50vh; overflow-y: auto;
-  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
-}
-.study-now-picker[hidden] { display: none; }
-.study-now-all, .study-now-pick label { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; min-width: 0; }
-.study-now-all { padding: 0 6px; }
-.study-now-all input, .study-now-pick input { width: 18px; height: 18px; flex: none; accent-color: var(--primary); }
-.study-now-all span, .study-now-pick label span { min-width: 0; overflow-wrap: anywhere; }
-.study-now-hint { margin: 4px 6px; font-size: 0.8125rem; color: var(--text2); }
+/* The order sheet: a bottom sheet on a phone (from .modal-week-recap), a dialog on a wide screen. */
+.modal-study-order { max-height: 85vh; }
+.modal-study-order .modal-body { gap: 8px; padding-top: 8px; overflow-y: auto; min-height: 0; }
+.modal-study-order .modal-footer { align-items: center; justify-content: space-between; }
+.modal-study-order .modal-footer .btn { flex: none; }
+.study-order-saved { font-size: 0.8125rem; font-weight: 600; color: var(--success); }
+.study-now-hint { margin: 0; font-size: 0.8125rem; color: var(--text2); }
 .study-now-order { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.study-now-pick { display: flex; align-items: center; gap: 4px; padding-right: 8px; border-radius: 8px; background: var(--surface); }
-.study-now-pick label { flex: 1; }
-.study-now-pick small { flex: none; font-size: 0.75rem; color: var(--text2); }
-.study-now-pick.is-dragging { background: var(--surface2); box-shadow: 0 2px 8px color-mix(in srgb, var(--text) 18%, transparent); }
-.study-now-pick.is-done label span { color: var(--text2); }
+.study-now-pick { display: flex; align-items: center; gap: 6px; min-height: 48px; padding-right: 8px; border-radius: 8px; background: var(--surface); }
+.study-now-pick .sn-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.study-now-pick small { flex: none; font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.study-now-pick.is-dragging { background: var(--surface2); box-shadow: 0 2px 8px color-mix(in srgb, var(--text) 18%, transparent); position: relative; z-index: 1; }
+.study-now-pick.is-done .sn-name { color: var(--text2); }
 .study-now-pick.is-done small { color: var(--success); font-weight: 600; }
 .study-now-pick.is-done:first-of-type, .study-now-pick:not(.is-done) + .is-done { margin-top: 6px; border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; }
 .sn-handle { width: 36px; height: 44px; flex: none; display: grid; place-items: center; border: 0; background: none; color: var(--text2); cursor: grab; touch-action: none; border-radius: 8px; }
 .sn-handle:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
 .study-now-pick.is-dragging .sn-handle { cursor: grabbing; }
-.study-now-picker .btn { justify-self: end; margin-top: 4px; }
 .study-now-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: var(--radius); background: var(--surface2); }
 .study-now-mode button { border: 0; background: none; color: var(--text2); font: inherit; font-size: 0.875rem; font-weight: 600; padding: 7px; border-radius: 8px; cursor: pointer; }
 .study-now-mode button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 0 var(--border); }

@@ -649,16 +649,12 @@ test("Study now reviews first in the chosen mode, then offers the new cards as f
   });
 });
 
-test("Study now's class checklist narrows the counts, is remembered, and is sent with the cards request", async function() {
+test("Study now's chip names the top class with new cards and opens the order sheet; Study now takes every class", async function() {
   await withApp(async function(page) {
     const r = await page.evaluate(async function() {
-      const puts = [];
-      const realFetch = window.fetch;
-      window.fetch = function(url, opts) { if (String(url).includes("/auth/preferences")) { puts.push(opts.body); return Promise.resolve({ ok: true }); } return realFetch.apply(this, arguments); };
       const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
-      const est = { estimatedNewCards: 10, availableNewCards: 30,
-        byClass: [{ id: "k1", name: "Deep Learning", available: 25 }, { id: "k2", name: "Statistics", available: 5 }] };
-      state.studyNowClasses = null;
+      const est = { estimatedNewCards: 10, availableNewCards: 30, byClass: [
+        { id: "k0", name: "Finished Book", available: 0 }, { id: "k1", name: "Deep Learning", available: 25 }, { id: "k2", name: "Statistics", available: 5 }] };
       state.studyNowDue = 12;
       state.studyNowDueLessons = [{ id: "l1", class_id: "k1", dueCount: 9 }, { id: "l2", class_id: "k2", dueCount: 3 }];
       state._dashHeroData = { streak: null, studyTime: null, summary: { cards: 40 }, newCardEstimate: est, today: today };
@@ -666,46 +662,63 @@ test("Study now's class checklist narrows the counts, is remembered, and is sent
       const grid = document.getElementById("home-summary-grid");
       grid.innerHTML = streakTimeHeroCard(null, null, { cards: 40 }, est, today);
       for (let el = grid; el; el = el.parentElement) el.classList.remove("hidden");
-      const read = () => ({ chip: grid.querySelector("[data-study-now-classes]").textContent, go: grid.querySelector(".study-now b").textContent,
-        classes: grid.querySelector(".study-now").dataset.classes || null });
-      const out = { before: read() };
+      const out = { chip: grid.querySelector("[data-study-now-classes]").textContent, go: grid.querySelector(".study-now b").textContent };
       grid.querySelector("[data-study-now-classes]").click();
-      out.open = !grid.querySelector(".study-now-picker").hidden;
-      const box = grid.querySelector('[data-sn-class="k2"]');
-      box.click();
-      out.allAfterPick = grid.querySelector('[data-sn-class=""]').checked;
-      const tap = grid.querySelector(".study-now-pick").getBoundingClientRect().height;
-      grid.querySelector("[data-study-now-classes-done]").click();
-      out.after = read();
-      out.tap = tap;
-      out.saved = IS_SERVER ? puts : [JSON.stringify({ studyNowClasses: JSON.parse(localStorage.getItem("fc-preferences")).studyNowClasses })];
+      const sheet = document.getElementById("modal-study-order");
+      out.open = !sheet.classList.contains("hidden");
+      out.checkboxes = sheet.querySelectorAll("input").length;
+      out.tap = sheet.querySelector(".study-now-pick").getBoundingClientRect().height;
       let sent = null;
-      store.getStudyNowCards = (a, b, c) => { sent = [a, b, c]; return Promise.resolve({ cards: [], lessons: [] }); };
+      store.getStudyNowCards = function() { sent = [].slice.call(arguments); return Promise.resolve({ cards: [], lessons: [] }); };
+      sheet.querySelector('[data-modal="study-order"]').click();
+      out.closed = sheet.classList.contains("hidden");
       startStudyNow(grid.querySelector(".study-now"));
       await new Promise((r) => setTimeout(r, 20));
       out.sent = sent;
-      window.fetch = realFetch;
+      est.byClass.forEach((c) => { c.available = 0; });
+      grid.innerHTML = streakTimeHeroCard(null, null, { cards: 40 }, est, today);
+      out.allDoneChip = grid.querySelector("[data-study-now-classes]").textContent;
       return out;
     });
-    assert.deepEqual(r.before, { chip: "All classes▾", go: "Study now · 22 cards", classes: null });
+    assert.equal(r.chip, "New cards from Deep Learning▾", "a Completed class at the top is passed over");
+    assert.equal(r.go, "Study now · 22 cards", "reviews from every class, not a picked few");
     assert.equal(r.open, true);
-    assert.equal(r.allAfterPick, false, "picking a class unticks All classes");
+    assert.equal(r.checkboxes, 0, "the sheet orders classes; it does not pick them");
     assert.ok(r.tap >= 44, "rows are a thumb's height: " + r.tap);
-    // Statistics: its 3 due and the 5 new cards it holds, the day's goal of 10 capped by them.
-    assert.deepEqual(r.after, { chip: "Statistics▾", go: "Study now · 8 cards", classes: '["k2"]' });
-    assert.deepEqual(r.saved, ['{"studyNowClasses":["k2"]}']);
-    assert.deepEqual(r.sent, [null, 5, ["k2"]]);
+    assert.equal(r.closed, true);
+    assert.deepEqual(r.sent, [null, 10], "every due card, and the day's new-card goal");
+    assert.equal(r.allDoneChip, "Study order▾");
   });
 });
 
-test("Study now's classes are a priority list: drag by the handle or move with the arrow keys; Completed sits at the bottom", async function() {
+test("a long class name on Study now's chip is cut short, not widening the page", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(function() {
+      const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
+      const est = { estimatedNewCards: 10, availableNewCards: 30, byClass: [
+        { id: "k1", name: "Advanced Analytics with Pyspark: Patterns for Learning from Data at Scale", available: 25 }, { id: "k2", name: "Statistics", available: 5 }] };
+      state.studyNowDue = 3;
+      state.studyNowDueLessons = [];
+      state._dashHeroData = { summary: { cards: 40 }, newCardEstimate: est, today: today };
+      showScreen("home");
+      const grid = document.getElementById("home-summary-grid");
+      grid.innerHTML = streakTimeHeroCard(null, null, { cards: 40 }, est, today);
+      for (let el = grid; el; el = el.parentElement) el.classList.remove("hidden");
+      const label = grid.querySelector(".study-now-classes-btn span");
+      return { page: document.documentElement.scrollWidth, cut: label.scrollWidth > label.clientWidth };
+    });
+    assert.ok(r.page <= 390, "page is " + r.page + "px wide");
+    assert.equal(r.cut, true);
+  });
+});
+
+test("the order sheet saves every move as it lands, keeps a Completed class's place, and reopens in the saved order", async function() {
   await withApp(async function(page) {
     await page.evaluate(function() {
       const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
       const est = { estimatedNewCards: 10, availableNewCards: 30, byClass: [
         { id: "k0", name: "Finished Book", available: 0 }, { id: "k1", name: "Deep Learning", available: 25 },
         { id: "k2", name: "Statistics", available: 5 }, { id: "k3", name: "Guide", available: 2 }] };
-      state.studyNowClasses = null;
       state.studyNowDue = 0;
       state.studyNowDueLessons = [];
       state._dashHeroData = { summary: { cards: 40 }, newCardEstimate: est, today: today };
@@ -717,36 +730,43 @@ test("Study now's classes are a priority list: drag by the handle or move with t
       for (let el = grid; el; el = el.parentElement) el.classList.remove("hidden");
       grid.querySelector("[data-study-now-classes]").click();
     });
-    const rows = () => page.evaluate(() => [...document.querySelectorAll("#home-summary-grid .study-now-order li")].map((li) => li.dataset.classId + (li.classList.contains("is-done") ? ":done" : "")));
+    const rows = () => page.evaluate(() => [...document.querySelectorAll("#study-order-list li")].map((li) => li.dataset.classId + (li.classList.contains("is-done") ? ":done" : "")));
     assert.deepEqual(await rows(), ["k1", "k2", "k3", "k0:done"], "a class with no new cards left sinks to the bottom");
-    assert.equal(await page.locator('#home-summary-grid li[data-class-id="k0"] small').textContent(), "Completed");
-    assert.equal(await page.locator('#home-summary-grid li[data-class-id="k0"] [data-sn-handle]').count(), 0, "Completed is out of the drag");
+    assert.equal(await page.locator('#study-order-list li[data-class-id="k0"] small').textContent(), "Completed");
+    assert.equal(await page.locator('#study-order-list li[data-class-id="k0"] [data-sn-handle]').count(), 0, "Completed is out of the drag");
 
-    // Drag Guide to the top with the mouse, by its handle.
-    const handle = await page.locator('#home-summary-grid li[data-class-id="k3"] [data-sn-handle]').boundingBox();
-    const top = await page.locator('#home-summary-grid li[data-class-id="k1"]').boundingBox();
+    // Drag Guide to the top with the mouse, by its handle: saved on the drop.
+    const handle = await page.locator('#study-order-list li[data-class-id="k3"] [data-sn-handle]').boundingBox();
+    const top = await page.locator('#study-order-list li[data-class-id="k1"]').boundingBox();
     await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
     await page.mouse.down();
     await page.mouse.move(handle.x + handle.width / 2, top.y + 6, { steps: 8 });
     await page.mouse.up();
     assert.deepEqual(await rows(), ["k3", "k1", "k2", "k0:done"]);
 
-    // Past the last class still being learnt, a row stays above Completed.
-    await page.focus('#home-summary-grid li[data-class-id="k1"] [data-sn-handle]');
+    // Past the last class still being learnt, a row stays above Completed; each step saves.
+    await page.focus('#study-order-list li[data-class-id="k1"] [data-sn-handle]');
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("ArrowDown");
     assert.deepEqual(await rows(), ["k3", "k2", "k1", "k0:done"]);
+    await page.waitForFunction(() => document.getElementById("study-order-saved").textContent === "Saved ✓");
 
-    await page.click("#home-summary-grid [data-study-now-classes-done]");
-    const r = await page.evaluate(() => ({ orders: window.__orders, byClass: state._dashHeroData.newCardEstimate.byClass.map((c) => c.id) }));
-    assert.deepEqual(r.orders, [["k3", "k2", "k1", "k0"]]);
-    assert.deepEqual(r.byClass, ["k3", "k2", "k1", "k0"]);
+    // Closed without Done: the order is already saved.
+    await page.keyboard.press("Escape");
+    const r = await page.evaluate(() => ({ orders: window.__orders, byClass: state._dashHeroData.newCardEstimate.byClass.map((c) => c.id),
+      hidden: document.getElementById("modal-study-order").classList.contains("hidden"),
+      chip: document.querySelector("#home-summary-grid [data-study-now-classes]").textContent }));
+    assert.equal(r.hidden, true);
+    // Finished Book keeps the first place it held: new cards synced into it bring it back there.
+    assert.deepEqual(r.orders, [["k0", "k3", "k1", "k2"], ["k0", "k3", "k2", "k1"]], "the last ArrowDown hit Completed and changed nothing");
+    assert.deepEqual(r.byClass, ["k0", "k3", "k2", "k1"]);
+    assert.equal(r.chip, "New cards from Guide▾");
     await page.click("#home-summary-grid [data-study-now-classes]");
     assert.deepEqual(await rows(), ["k3", "k2", "k1", "k0:done"], "the new order is what opens next");
   }, { isMobile: false, hasTouch: false });
 });
 
-test("a finger drags a class up the priority list on a phone, without scrolling the page", async function() {
+test("a finger drags a class up the order sheet on a phone, without scrolling the page", async function() {
   await withApp(async function(page) {
     await page.evaluate(function() {
       const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
@@ -755,14 +775,17 @@ test("a finger drags a class up the priority list on a phone, without scrolling 
       state.studyNowDue = 0;
       state.studyNowDueLessons = [];
       state._dashHeroData = { summary: { cards: 40 }, newCardEstimate: est, today: today };
+      window.__orders = [];
+      store.setClassOrder = (ids) => { window.__orders.push(ids); return Promise.resolve({ ok: true }); };
       showScreen("home");
       const grid = document.getElementById("home-summary-grid");
       grid.innerHTML = streakTimeHeroCard(null, null, { cards: 40 }, est, today);
       for (let el = grid; el; el = el.parentElement) el.classList.remove("hidden");
       grid.querySelector("[data-study-now-classes]").click();
     });
-    const handle = await page.locator('#home-summary-grid li[data-class-id="k3"] [data-sn-handle]').boundingBox();
-    const top = await page.locator('#home-summary-grid li[data-class-id="k1"]').boundingBox();
+    await page.waitForTimeout(400);
+    const handle = await page.locator('#study-order-list li[data-class-id="k3"] [data-sn-handle]').boundingBox();
+    const top = await page.locator('#study-order-list li[data-class-id="k1"]').boundingBox();
     const cdp = await page.context().newCDPSession(page);
     const x = handle.x + handle.width / 2;
     const scrollBefore = await page.evaluate(() => scrollY);
@@ -771,8 +794,9 @@ test("a finger drags a class up the priority list on a phone, without scrolling 
       await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y }] });
     await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: top.y + 6 }] });
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    const r = await page.evaluate(() => ({ rows: [...document.querySelectorAll("#home-summary-grid .study-now-order li")].map((li) => li.dataset.classId), scroll: scrollY }));
+    const r = await page.evaluate(() => ({ rows: [...document.querySelectorAll("#study-order-list li")].map((li) => li.dataset.classId), scroll: scrollY, orders: window.__orders }));
     assert.deepEqual(r.rows, ["k3", "k1", "k2"]);
+    assert.deepEqual(r.orders, [["k3", "k1", "k2"]]);
     assert.equal(r.scroll, scrollBefore);
   });
 });

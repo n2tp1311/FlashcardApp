@@ -857,6 +857,9 @@ Object.assign(TRANSLATIONS.en, {
   "done.near": "Almost there: {name}",
   "done.nearGain": "this session +{n}",
   "done.lessonDone": "Lesson finished: {title}",
+  "done.classDone": "No new cards left in {name}",
+  "done.classDoneNext": "New cards now come from {name}.",
+  "done.classDoneAll": "Every class is through its new cards: Study now is reviews only.",
   "done.lessonDoneSub": "All {n} of its cards learned",
   "done.lessonDoneSub_one": "Its one card learned",
   "done.lessonsDone": "{n} lessons finished",
@@ -875,11 +878,10 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.barNewAt": "New {i}/{n}",
   "studyNow.barTextReview": "Review {i} / {n}",
   "studyNow.barTextNew": "New {i} / {n}",
-  "studyNow.allClasses": "All classes",
-  "studyNow.nClasses": "{n} classes",
-  "studyNow.classesLabel": "Classes to study",
+  "studyNow.orderTitle": "Study order",
+  "studyNow.orderChip": "New cards from {name}",
   "studyNow.classesDone": "Done",
-  "studyNow.orderHint": "Drag to set the order: new cards come from the top class first.",
+  "studyNow.orderHint": "Drag to set the order: new cards come from the top class first. Each move is saved.",
   "studyNow.move": "Move {name}",
   "studyNow.completed": "Completed",
   "studyNow.newLeft": "{n} new left",
@@ -1986,6 +1988,9 @@ Object.assign(TRANSLATIONS.vi, {
   "done.near": "Sắp đạt: {name}",
   "done.nearGain": "phiên này +{n}",
   "done.lessonDone": "Xong bài: {title}",
+  "done.classDone": "Đã học hết thẻ mới của {name}",
+  "done.classDoneNext": "Lần sau thẻ mới lấy từ {name}.",
+  "done.classDoneAll": "Mọi lớp đã hết thẻ mới: Study now chỉ còn phần ôn tập.",
   "done.lessonDoneSub": "Đã học hết {n} thẻ của bài",
   "done.lessonsDone": "Xong {n} bài",
   "done.record": "Kỷ lục mới: {n} lượt trả lời trong một ngày",
@@ -2003,11 +2008,10 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.barNewAt": "Học mới {i}/{n}",
   "studyNow.barTextReview": "Ôn {i} / {n}",
   "studyNow.barTextNew": "Học mới {i} / {n}",
-  "studyNow.allClasses": "Tất cả các lớp",
-  "studyNow.nClasses": "{n} lớp",
-  "studyNow.classesLabel": "Các lớp sẽ học",
+  "studyNow.orderTitle": "Thứ tự học",
+  "studyNow.orderChip": "Thẻ mới từ {name}",
   "studyNow.classesDone": "Xong",
-  "studyNow.orderHint": "Kéo để xếp thứ tự: thẻ mới lấy từ lớp trên cùng trước.",
+  "studyNow.orderHint": "Kéo để xếp thứ tự: thẻ mới lấy từ lớp trên cùng trước. Mỗi lần kéo đều được lưu.",
   "studyNow.move": "Di chuyển {name}",
   "studyNow.completed": "Đã học xong",
   "studyNow.newLeft": "Còn {n} thẻ mới",
@@ -3388,7 +3392,6 @@ var state = {
   haptics: true,
   sounds: true,
   studyNowMode: "flashcard",
-  studyNowClasses: null,
   dailyGoal: 20,
   quizCountsAsKnown: false,
   loadBalance: true,
@@ -7891,6 +7894,12 @@ function beginStudySession() {
       if (state.sessionToken === token) state.sessionTodayAtStart = today;
     }).catch(function() {});
   }
+  state.sessionClassesAtStart = null;
+  if (IS_SERVER && store.getNewCardEstimate) {
+    store.getNewCardEstimate().then(function(est) {
+      if (state.sessionToken === token && est) state.sessionClassesAtStart = est.byClass || null;
+    }).catch(function() {});
+  }
   state.sessionAchAtStart = null;
   if (IS_SERVER && store.getAchievements) {
     store.getAchievements().then(function(data) {
@@ -8055,6 +8064,18 @@ function sessionExtras(earned, lessons, before, after, achBefore, achItems) {
   return out.slice(0, SESSION_EXTRAS_MAX);
 }
 
+// The class this session took the last new cards from, and the one Study now moves on to.
+// Study now takes new cards top class first, so the first to run out is the one worth naming.
+function classDoneExtra(before, after) {
+  if (!before || !after) return null;
+  var had = {};
+  before.forEach(function(c) { if (c.available > 0) had[c.id] = true; });
+  var done = after.filter(function(c) { return had[c.id] && !c.available; })[0];
+  if (!done) return null;
+  var next = after.filter(function(c) { return c.available > 0; })[0];
+  return { kind: "classDone", name: done.name, next: next ? next.name : null };
+}
+
 var SESSION_SPARKS = [[-64, -18], [64, -22], [-46, 30], [50, 32], [0, -44], [-76, 8], [78, 6], [0, 42]];
 
 function sessionExtraHtml(x) {
@@ -8079,6 +8100,10 @@ function sessionExtraHtml(x) {
     var one = x.lessons.length === 1;
     title = one ? t("done.lessonDone", { title: x.lessons[0].title }) : t("done.lessonsDone", { n: x.lessons.length });
     sub = one ? t("done.lessonDoneSub", { n: x.lessons[0].cards }) : x.lessons.map(function(l) { return l.title; }).join(", ");
+  } else if (x.kind === "classDone") {
+    icon = "✓";
+    title = t("done.classDone", { name: x.name });
+    sub = x.next ? t("done.classDoneNext", { name: x.next }) : t("done.classDoneAll");
   } else if (x.kind === "record") {
     icon = "★";
     title = t("done.record", { n: x.count });
@@ -8106,6 +8131,7 @@ function renderSessionDone(id, ratio, tiles, newIds) {
     '<div class="session-cheers" aria-live="polite"></div>';
   var before = state.sessionTodayAtStart;
   var achBefore = state.sessionAchAtStart;
+  var classesBefore = state.sessionClassesAtStart;
   newIds = newIds || [];
   if (!IS_SERVER || !store.getToday || (!before && !achBefore && !newIds.length)) return;
   var token = state.sessionToken;
@@ -8114,7 +8140,8 @@ function renderSessionDone(id, ratio, tiles, newIds) {
     return Promise.all([
       store.getToday().catch(function() { return null; }),
       achBefore ? refreshAchievements().catch(function() { return null; }) : null,
-      newIds.length && store.getLessonsDone ? store.getLessonsDone(newIds).catch(function() { return null; }) : null
+      newIds.length && store.getLessonsDone ? store.getLessonsDone(newIds).catch(function() { return null; }) : null,
+      newIds.length && classesBefore ? store.getNewCardEstimate().catch(function() { return null; }) : null
     ]);
   }).then(function(res) {
     if (state.sessionToken !== token) return;
@@ -8122,6 +8149,11 @@ function renderSessionDone(id, ratio, tiles, newIds) {
     var lines = after && before ? sessionCheers(before, after, state.dailyGoal) : [];
     var earned = res[1] ? achNewlyEarned(achBefore, res[1].items, 3) : [];
     var extras = sessionExtras(earned, res[2] && res[2].lessons, before, after, achBefore, res[1] && res[1].items);
+    var classDone = res[3] && classDoneExtra(classesBefore, res[3].byClass);
+    if (classDone) {
+      extras.splice(extras[0] && extras[0].kind === "badge" ? 1 : 0, 0, classDone);
+      extras = extras.slice(0, SESSION_EXTRAS_MAX);
+    }
     if (!lines.length && !extras.length) return;
     box.querySelector(".session-cheers").innerHTML = lines.map(function(l) {
       return '<div class="session-cheer cheer-' + l.kind + '">' +
@@ -11030,7 +11062,7 @@ function heroTodayTile(today, newCardEstimate, studyTime, summary) {
   return '<section class="dash-tile is-today">' +
     '<h3 class="dash-tile-h">' + escHtml(t("hero.today")) + '</h3>' +
     '<div class="dash-today-main">' + head +
-      (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowScopedPlan(today, newCardEstimate), today, !!summary && summary.cards === 0, studyNowClassesHtml(newCardEstimate))) +
+      (resumeSessionHtml(today) || studyNowHtml(state.studyNowDue == null ? null : studyNowPlan(today, newCardEstimate, state.studyNowDue), today, !!summary && summary.cards === 0, studyNowOrderChipHtml(newCardEstimate))) +
     '</div>' +
     '<div class="dash-meters">' +
       heroMeter("time", ICON_TODAY_TIME, "hero.studied", formatStudyDuration(a.studyMs),
@@ -11211,95 +11243,78 @@ function saveStudyNowPref(key, value) {
   }
 }
 
-// The classes Study now is kept to, picked on its checklist and remembered in the account.
-// Ids of classes since deleted or archived drop out; none left, or every class, is all.
-function studyNowPicked(est) {
-  var classes = (est && est.byClass) || [];
-  var picked = (state.studyNowClasses || []).filter(function(id) {
-    return classes.some(function(c) { return c.id === id; });
-  });
-  return picked.length && picked.length < classes.length ? picked : null;
-}
-
-// The plan for the picked classes only: their due cards, and the day's new-card goal capped
-// by the new cards they hold. The goal stays the day's, whichever classes it is spent on.
-function studyNowScopedPlan(today, est) {
-  var picked = studyNowPicked(est);
-  if (!picked) return studyNowPlan(today, est, state.studyNowDue);
-  var due = dueTotal((state.studyNowDueLessons || []).filter(function(l) { return picked.indexOf(l.class_id) >= 0; }));
-  var available = est.byClass.reduce(function(sum, c) { return sum + (picked.indexOf(c.id) >= 0 ? c.available : 0); }, 0);
-  var plan = studyNowPlan(today, Object.assign({}, est, { availableNewCards: available }), due);
-  plan.classIds = picked;
-  return plan;
-}
-
-// The checklist is also the priority list: drag a class up and its new cards come first.
-// A class with no new cards left is Completed and sinks below the rest, out of the drag;
-// its reviews still come, if it is ticked.
-function studyNowClassesHtml(est) {
+// Study now takes every class: reviews from all of them, new cards from the top of the
+// study order. The chip names that class and opens the order screen.
+function studyNowOrderChipHtml(est) {
   var classes = (est && est.byClass) || [];
   if (classes.length < 2) return "";
-  var picked = studyNowPicked(est);
-  var label = !picked ? t("studyNow.allClasses") :
-    picked.length === 1 ? classes.filter(function(c) { return c.id === picked[0]; })[0].name :
-    t("studyNow.nClasses", { n: picked.length });
+  var next = classes.filter(function(c) { return c.available; })[0];
+  return '<div class="study-now-classes">' +
+    '<button type="button" class="study-now-classes-btn" data-study-now-classes aria-haspopup="dialog">' +
+      '<span>' + escHtml(next ? t("studyNow.orderChip", { name: next.name }) : t("studyNow.orderTitle")) + '</span><span aria-hidden="true">▾</span></button>' +
+    '</div>';
+}
+
+// A class with no new cards left is Completed and sinks below the rest, out of the drag:
+// there is nothing left for its place to decide.
+function studyOrderListHtml(classes) {
   var row = function(c) {
     var done = !c.available;
     return '<li class="study-now-pick' + (done ? ' is-done' : '') + '" data-class-id="' + escHtml(c.id) + '">' +
       (done ? '<span class="sn-handle" aria-hidden="true"></span>' :
         '<button type="button" class="sn-handle" data-sn-handle aria-label="' + escHtml(t("studyNow.move", { name: c.name })) + '">' + ICON_GRIP + '</button>') +
-      '<label><input type="checkbox" data-sn-class="' + escHtml(c.id) + '"' + (picked && picked.indexOf(c.id) >= 0 ? " checked" : "") + '> ' +
-        '<span>' + escHtml(c.name) + '</span></label>' +
+      '<span class="sn-name">' + escHtml(c.name) + '</span>' +
       '<small>' + escHtml(done ? t("studyNow.completed") : t("studyNow.newLeft", { n: c.available })) + '</small></li>';
   };
-  return '<div class="study-now-classes">' +
-    '<button type="button" class="study-now-classes-btn" data-study-now-classes aria-expanded="false">' +
-      '<span>' + escHtml(label) + '</span><span aria-hidden="true">▾</span></button>' +
-    '<div class="study-now-picker" role="group" aria-label="' + escHtml(t("studyNow.classesLabel")) + '" hidden>' +
-      '<label class="study-now-all"><input type="checkbox" data-sn-class=""' + (!picked ? " checked" : "") + '> <span>' + escHtml(t("studyNow.allClasses")) + '</span></label>' +
-      '<p class="study-now-hint">' + escHtml(t("studyNow.orderHint")) + '</p>' +
-      '<ol class="study-now-order">' +
-        classes.filter(function(c) { return c.available; }).map(row).join("") +
-        classes.filter(function(c) { return !c.available; }).map(row).join("") +
-      '</ol>' +
-      '<button type="button" class="btn btn-primary btn-sm" data-study-now-classes-done>' + escHtml(t("studyNow.classesDone")) + '</button>' +
-    '</div></div>';
+  return classes.filter(function(c) { return c.available; }).map(row).join("") +
+    classes.filter(function(c) { return !c.available; }).map(row).join("");
+}
+
+function openStudyOrder() {
+  var est = state._dashHeroData && state._dashHeroData.newCardEstimate;
+  if (!est || !est.byClass) return;
+  document.getElementById("study-order-list").innerHTML = studyOrderListHtml(est.byClass);
+  openModal("study-order");
+}
+
+// The whole order to save: the dragged classes fill the places classes with new cards held,
+// and a Completed class keeps its own place. Sending them at the bottom would lose where the
+// user had it, and new cards synced into it later should bring it back there.
+function studyOrderMerged(byClass, active) {
+  var next = 0;
+  return byClass.map(function(c) { return c.available ? active[next++] : c.id; });
 }
 
 document.addEventListener("click", function(e) {
-  var open = e.target.closest("[data-study-now-classes]");
-  if (open) {
-    var picker = open.nextElementSibling;
-    picker.hidden = !picker.hidden;
-    open.setAttribute("aria-expanded", String(!picker.hidden));
-    return;
-  }
-  var done = e.target.closest("[data-study-now-classes-done]");
-  if (!done) return;
-  var panel = done.parentNode;
-  var ids = [];
-  panel.querySelectorAll("[data-sn-class]").forEach(function(box) {
-    if (box.checked && box.dataset.snClass) ids.push(box.dataset.snClass);
-  });
-  state.studyNowClasses = ids.length ? ids : null;
-  saveStudyNowPref("studyNowClasses", state.studyNowClasses);
+  if (e.target.closest("[data-study-now-classes]")) openStudyOrder();
+});
+
+// Every move is saved as it lands, so closing the screen any way keeps the order. Saves
+// are chained: two quick moves must reach the server in the order they were made.
+var studyOrderSaving = Promise.resolve();
+function saveStudyOrder(list) {
   var est = state._dashHeroData && state._dashHeroData.newCardEstimate;
-  var order = [].map.call(panel.querySelectorAll(".study-now-order li"), function(li) { return li.dataset.classId; });
-  var before = est ? est.byClass.map(function(c) { return c.id; }) : order;
-  if (est && order.join("\n") !== before.join("\n")) {
-    est.byClass.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
-    store.setClassOrder(order).catch(function() { showToast(t("studyNow.orderFailed"), "error"); });
-    // Home's "Study order" sort reads sort_order from the cached list; mirror the server's rewrite.
-    if (state.homeClasses) {
-      var rest = state.homeClasses.filter(function(c) { return order.indexOf(c.id) < 0; })
-        .sort(function(x, y) { return (x.sort_order || 0) - (y.sort_order || 0) || (x.created_at || 0) - (y.created_at || 0); });
-      state.homeClasses.forEach(function(c) { var i = order.indexOf(c.id); if (i >= 0) c.sort_order = i; });
-      rest.forEach(function(c, i) { c.sort_order = order.length + i; });
-      if (state.currentClassSort === "study_order") _renderHomeClassList();
-    }
+  if (!est) return;
+  var active = [].filter.call(list.children, function(li) { return !li.classList.contains("is-done"); })
+    .map(function(li) { return li.dataset.classId; });
+  var order = studyOrderMerged(est.byClass, active);
+  if (order.join("\n") === est.byClass.map(function(c) { return c.id; }).join("\n")) return;
+  est.byClass.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+  var savedNote = document.getElementById("study-order-saved");
+  savedNote.textContent = "";
+  studyOrderSaving = studyOrderSaving.then(function() { return store.setClassOrder(order); })
+    .then(function() { savedNote.textContent = t("pref.saved") + " ✓"; })
+    .catch(function() { showToast(t("studyNow.orderFailed"), "error"); });
+  // Home's "Study order" sort reads sort_order from the cached list; mirror the server's rewrite.
+  if (state.homeClasses) {
+    var rest = state.homeClasses.filter(function(c) { return order.indexOf(c.id) < 0; })
+      .sort(function(x, y) { return (x.sort_order || 0) - (y.sort_order || 0) || (x.created_at || 0) - (y.created_at || 0); });
+    state.homeClasses.forEach(function(c) { var i = order.indexOf(c.id); if (i >= 0) c.sort_order = i; });
+    rest.forEach(function(c, i) { c.sort_order = order.length + i; });
+    if (state.currentClassSort === "study_order") _renderHomeClassList();
   }
   _refreshDashHeroCards();
-});
+}
 
 // Drag by the handle, with a finger or a mouse; arrow keys on the handle do the same. Only
 // among the classes still being learnt: Completed ones stay at the bottom.
@@ -11330,6 +11345,7 @@ document.addEventListener("pointerdown", function(e) {
   function up(ev) {
     if (ev.pointerId !== e.pointerId) return;
     li.classList.remove("is-dragging");
+    saveStudyOrder(list);
     document.removeEventListener("pointermove", move);
     document.removeEventListener("pointerup", up);
     document.removeEventListener("pointercancel", up);
@@ -11347,26 +11363,12 @@ document.addEventListener("keydown", function(e) {
   if (e.key === "ArrowUp") moveStudyNowRow(li, li.previousElementSibling, false);
   else moveStudyNowRow(li, li.nextElementSibling, true);
   handle.focus();
-});
-
-// "All classes" and a class exclude each other, and unticking the last class means all.
-document.addEventListener("change", function(e) {
-  var box = e.target.closest && e.target.closest("[data-sn-class]");
-  if (!box) return;
-  var boxes = box.closest(".study-now-picker").querySelectorAll("[data-sn-class]");
-  var all = boxes[0];
-  if (box === all) {
-    boxes.forEach(function(b) { b.checked = b === all; });
-  } else {
-    all.checked = false;
-    if (![].some.call(boxes, function(b) { return b.checked; })) all.checked = true;
-  }
+  saveStudyOrder(li.parentNode);
 });
 
 function studyNowHtml(plan, today, noCards, classesHtml) {
   if (!plan) return '';
   classesHtml = classesHtml || '';
-  var classAttr = plan.classIds ? ' data-classes="' + escHtml(JSON.stringify(plan.classIds)) + '"' : '';
   var n = plan.reviews + plan.newCards;
   // A new account has nothing due because it has nothing at all; "All done for today ✓"
   // told someone who had not started that they had finished.
@@ -11392,7 +11394,7 @@ function studyNowHtml(plan, today, noCards, classesHtml) {
       subs[mode] = counts.concat(ms < 60000 ? t("studyNow.underMinute") : t("studyNow.minutes", { n: Math.round(ms / 60000) })).join(" · ");
     });
     var mode = studyNowMode();
-    return classesHtml + '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '"' + classAttr +
+    return classesHtml + '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '"' +
         ' data-sub-flashcard="' + escHtml(subs.flashcard) + '" data-sub-quiz="' + escHtml(subs.quiz) + '">' +
       '<span class="study-now-play" aria-hidden="true"></span>' +
       '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small>' + escHtml(subs[mode]) + '</small></span></button>' +
@@ -11403,7 +11405,7 @@ function studyNowHtml(plan, today, noCards, classesHtml) {
     '<span class="study-now-tick" aria-hidden="true">✓</span>' +
     '<span class="study-now-lbl"><b>' + escHtml(t(capped ? "studyNow.capTitle" : "studyNow.doneTitle")) + '</b>' +
       '<small>' + escHtml(capped ? t("studyNow.capSub", { n: plan.dueLeft }) : t("studyNow.doneSub")) + '</small></span>' +
-    (!capped && plan.extra > 0 ? '<button type="button" class="study-now-more" data-study-now="0,' + plan.extra + '"' + classAttr + '>' + escHtml(t("studyNow.more", { n: plan.extra })) + '</button>' : '') +
+    (!capped && plan.extra > 0 ? '<button type="button" class="study-now-more" data-study-now="0,' + plan.extra + '">' + escHtml(t("studyNow.more", { n: plan.extra })) + '</button>' : '') +
   '</div>';
 }
 
@@ -11416,8 +11418,7 @@ function startStudyNow(btn) {
   var parts = btn.dataset.studyNow.split(",");
   var from = getActiveScreen();
   btn.classList.add("is-loading");
-  var classIds = btn.dataset.classes ? JSON.parse(btn.dataset.classes) : null;
-  store.getStudyNowCards(parts[0] === "all" ? null : Number(parts[0]), Number(parts[1]), classIds).then(function(res) {
+  store.getStudyNowCards(parts[0] === "all" ? null : Number(parts[0]), Number(parts[1])).then(function(res) {
     if (!res.cards.length) { showToast(t("studyNow.nothingLeft")); return; }
     return store.getDifficultyMap(res.cards.map(function(c) { return c.id; })).then(function(statsMap) {
       if (getActiveScreen() !== from) return;  // left while it loaded
@@ -13664,7 +13665,6 @@ function applyPrefs(prefs) {
     state.haptics = prefs.haptics;
   }
   if (prefs.studyNowMode === "quiz" || prefs.studyNowMode === "flashcard") state.studyNowMode = prefs.studyNowMode;
-  if (Array.isArray(prefs.studyNowClasses)) state.studyNowClasses = prefs.studyNowClasses.filter(function(id) { return typeof id === "string"; });
   if (typeof prefs.fontScale === "number") {
     applyFontScale(prefs.fontScale);
   }

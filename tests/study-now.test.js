@@ -260,7 +260,7 @@ test("flashcards or quiz is a choice under the button: the time follows it, and 
 test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup and returns where it began", () => {
   assert.match(fn("renderHomeCharts"), /state\.studyNowDue = dueTotal\(dash\.dueForReview\);\n    state\.studyNowDueLessons = dash\.dueForReview \|\| \[\];/);
   assert.match(app, /state\.studyNowDue = dueTotal\(d\.dueForReview\);\n    state\.studyNowDueLessons = d\.dueForReview \|\| \[\];\n    summaryGrid\.innerHTML = streakTimeHeroCard/);
-  assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowScopedPlan\(today, newCardEstimate\), today, !!summary && summary\.cards === 0, studyNowClassesHtml\(newCardEstimate\)\)/);
+  assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowPlan\(today, newCardEstimate, state\.studyNowDue\), today, !!summary && summary\.cards === 0, studyNowOrderChipHtml\(newCardEstimate\)\)/);
   const start = fn("startStudyNow");
   assert.match(start, /launchStudyNowCards\(due\.length \? due : fresh, res\.lessons, statsMap, from, due\.length \? studyNowMode\(\) : "flashcard"\)/);
   assert.match(fn("launchStudyNowCards"), /returnScreen: from/);

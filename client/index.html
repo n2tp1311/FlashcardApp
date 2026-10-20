@@ -1021,6 +1021,21 @@
     </div>
   </div>
 
+  <div id="modal-study-order" class="modal modal-week-recap modal-study-order hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="study-order-title">
+    <span class="sheet-grab" aria-hidden="true"></span>
+    <div class="modal-header">
+      <h3 id="study-order-title" data-i18n="studyNow.orderTitle">Study order</h3>
+    </div>
+    <div class="modal-body">
+      <p class="study-now-hint" data-i18n="studyNow.orderHint">Drag to set the order: new cards come from the top class first. Each move is saved.</p>
+      <ol class="study-now-order" id="study-order-list"></ol>
+    </div>
+    <div class="modal-footer">
+      <span class="study-order-saved" id="study-order-saved" aria-live="polite"></span>
+      <button type="button" class="btn btn-primary" data-modal="study-order" data-i18n="studyNow.classesDone">Done</button>
+    </div>
+  </div>
+
   <div id="modal-leech" class="modal modal-leech hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="leech-title" aria-describedby="leech-body">
     <div class="modal-header">
       <h3 id="leech-title"><span class="leech-pill" data-i18n="leech.tag">Leech</span> <span data-i18n="leech.title">This card isn't sticking</span></h3>

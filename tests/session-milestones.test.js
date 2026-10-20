@@ -101,7 +101,7 @@ function t(k, p) { return k + (p ? "|" + Object.keys(p).map(function(x) { return
 function escHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
 ${block("ACH_ICONS")}${block("ACH_ICON_PATHS")}${block("ACH_UNITS")}
 ${v("RECORD_MIN_ANSWERS")}${v("NEAR_MIN_PROGRESS")}${v("SESSION_EXTRAS_MAX")}${v("SESSION_SPARKS")}
-${["appLocale", "achIcon", "achMedalTier", "achThresholdLabel", "achTierName", "achDate", "achCountText", "achProgressText", "achNextUp", "achEarnedLineText", "achDecimals", "sessionExtras", "sessionExtraHtml"].map(fn).join("")}
+${["appLocale", "achIcon", "achMedalTier", "achThresholdLabel", "achTierName", "achDate", "achCountText", "achProgressText", "achNextUp", "achEarnedLineText", "achDecimals", "sessionExtras", "sessionExtraHtml", "classDoneExtra"].map(fn).join("")}
 function item(o) { return Object.assign({ key: "writer", tiers: [100, 500, 2000], value: 0, tier: 0, next: 100, progress: 0, show: { cur: 0, target: 100 }, earnedAt: null, lost: false }, o); }
 function show(xs) { document.body.innerHTML = '<div class="session-cheers" style="width:340px">' + xs.map(sessionExtraHtml).join("") + '</div>'; }
 `;
@@ -122,6 +122,27 @@ async function page(reduced) {
   await p.addScriptTag({ content: harness });
   return p;
 }
+
+test("the end screen names the class whose new cards ran out, and where new cards come from next", async () => {
+  const p = await page(false);
+  const r = await p.evaluate(() => {
+    const before = [{ id: "k0", name: "Old", available: 0 }, { id: "k1", name: "Signal", available: 3 }, { id: "k2", name: "Pyspark", available: 17 }];
+    const after = [{ id: "k0", name: "Old", available: 0 }, { id: "k1", name: "Signal", available: 0 }, { id: "k2", name: "Pyspark", available: 17 }];
+    const last = [{ id: "k1", name: "Signal", available: 0 }];
+    const x = classDoneExtra(before, after);
+    show([x]);
+    return { x, html: document.body.textContent,
+      none: classDoneExtra(before, before), long: classDoneExtra(after, after), all: classDoneExtra([{ id: "k1", name: "Signal", available: 3 }], last),
+      noSnapshot: classDoneExtra(null, after) };
+  });
+  assert.deepEqual(r.x, { kind: "classDone", name: "Signal", next: "Pyspark" });
+  assert.match(r.html, /done\.classDone\|name=Signal/);
+  assert.match(r.html, /done\.classDoneNext\|name=Pyspark/);
+  assert.equal(r.none, null, "nothing ran out");
+  assert.equal(r.long, null, "a class done before this session is not news");
+  assert.deepEqual(r.all, { kind: "classDone", name: "Signal", next: null });
+  assert.equal(r.noSnapshot, null);
+});
 
 test("which extras, in what order, and never more than three", async () => {
   const p = await page(false);
