@@ -870,6 +870,8 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.barReviewDone": "Reviewed ✓",
   "studyNow.barNew": "New {n}",
   "studyNow.barNewAt": "New {i}/{n}",
+  "studyNow.barTextReview": "Review {i} / {n}",
+  "studyNow.barTextNew": "New {i} / {n}",
   "studyNow.allClasses": "All classes",
   "studyNow.nClasses": "{n} classes",
   "studyNow.classesLabel": "Classes to study",
@@ -1993,6 +1995,8 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.barReviewDone": "Đã ôn ✓",
   "studyNow.barNew": "Học mới {n}",
   "studyNow.barNewAt": "Học mới {i}/{n}",
+  "studyNow.barTextReview": "Ôn {i} / {n}",
+  "studyNow.barTextNew": "Học mới {i} / {n}",
   "studyNow.allClasses": "Tất cả các lớp",
   "studyNow.nClasses": "{n} lớp",
   "studyNow.classesLabel": "Các lớp sẽ học",
@@ -7930,7 +7934,9 @@ function studyProgressText(position, total, remaining, source) {
 // cards the summary offers next -- with a notch where the new cards start and a tick at the
 // middle of each half, so the whole run is in view from the first card. Elsewhere it is one
 // session with a tick at its middle.
-function setStudyProgress(prefix, position, total) {
+var PB_MID_MIN_CARDS = 4;
+
+function setStudyProgress(prefix, position, total, remaining, source) {
   var fill = document.getElementById(prefix + "-progress-fill");
   var bar = fill.parentNode;
   var run = state.studyNowRun;
@@ -7939,7 +7945,9 @@ function setStudyProgress(prefix, position, total) {
   var whole = split ? run.reviews + run.fresh : total;
   var before = split && run.phase === "new" ? run.reviews : 0;
   fill.style.transform = scaleXStyle(whole ? (before + position) / whole : 0);
-  var marks = split ? [[run.reviews / 2, "mid"], [run.reviews, "notch"], [run.reviews + run.fresh / 2, "mid"]] : [[total / 2, "mid"]];
+  // A half of a few cards is a sliver; a middle tick in it sat against the notch like a glitch.
+  var marks = (split ? [[run.reviews / 2, "mid", run.reviews], [run.reviews, "notch", Infinity], [run.reviews + run.fresh / 2, "mid", run.fresh]] : [[total / 2, "mid", total]])
+    .filter(function(m) { return m[2] >= PB_MID_MIN_CARDS; });
   var html = marks.map(function(m) {
     return '<i class="pb-mark is-' + m[1] + '" style="left:' + (whole ? m[0] / whole * 100 : 0).toFixed(2) + '%"></i>';
   }).join("") + (split && run.phase === "new" ? '<i class="pb-done" style="width:' + (run.reviews / whole * 100).toFixed(2) + '%"></i>' : "");
@@ -7955,6 +7963,16 @@ function setStudyProgress(prefix, position, total) {
   }
   labels.hidden = !split;
   if (!split) { labels.innerHTML = ""; return; }
+  // The count is the part being studied, named, and the time left is the whole run's: "1 / 20"
+  // alone read as if the new cards were in it. New cards are flashcards, at that median.
+  var later = 0;
+  if (run.phase === "review") {
+    var medians = state.sessionTodayAtStart && state.sessionTodayAtStart.medianMs;
+    later = run.fresh * ((medians && medians.flashcard) || ETA_FALLBACK_MS.flashcard);
+  }
+  var eta = formatTimeLeft(estimateTimeLeftMs(remaining, source) + later);
+  document.getElementById(prefix + "-progress-text").textContent =
+    t(run.phase === "new" ? "studyNow.barTextNew" : "studyNow.barTextReview", { i: position, n: total }) + (eta ? " · " + eta : "");
   var review = run.phase === "new" ? t("studyNow.barReviewDone") : t("studyNow.barReview", { n: run.reviews });
   var fresh = run.phase === "new" ? t("studyNow.barNewAt", { i: position, n: run.fresh }) : t("studyNow.barNew", { n: run.fresh });
   labels.style.gridTemplateColumns = "minmax(max-content, " + run.reviews + "fr) minmax(max-content, " + run.fresh + "fr)";
@@ -9208,7 +9226,7 @@ function renderFlashcard() {
   } else {
     document.getElementById("fc-progress-text").textContent = studyProgressText(i + 1, cards.length,
       cards.length - Object.keys(state.studySessionLog || {}).length, "flashcard");
-    setStudyProgress("fc", i + 1, cards.length);
+    setStudyProgress("fc", i + 1, cards.length, cards.length - Object.keys(state.studySessionLog || {}).length, "flashcard");
   }
 
   // Lesson label (multi-lesson sessions)
@@ -10254,7 +10272,7 @@ function renderQuizCard() {
 
   document.getElementById("quiz-progress-text").textContent = studyProgressText(i + 1, total,
     total - state.quizResults.length, "quiz");
-  setStudyProgress("quiz", i + 1, total);
+  setStudyProgress("quiz", i + 1, total, total - state.quizResults.length, "quiz");
   setQuizScoreDisplay();
 
   // Lesson label (multi-lesson sessions)

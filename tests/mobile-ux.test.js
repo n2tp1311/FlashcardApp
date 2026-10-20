@@ -621,7 +621,7 @@ test("Study now reviews first in the chosen mode, then offers the new cards as f
       startStudyNow(btn);
       await new Promise((r) => setTimeout(r, 100));
       const out = { first: getActiveScreen(), quizCount: state.quizCards.length };
-      const bar = (p) => ({ fill: document.getElementById(p + "-progress-fill").style.transform,
+      const bar = (p) => ({ text: document.getElementById(p + "-progress-text").textContent.split(" · ")[0], fill: document.getElementById(p + "-progress-fill").style.transform,
         marks: [...document.querySelectorAll("#" + p + "-progress-fill ~ .pb-mark")].map((m) => m.className.replace("pb-mark is-", "") + "@" + m.style.left),
         labels: document.getElementById(p + "-progress-labels").textContent, done: !!document.querySelector("#" + p + "-progress-fill ~ .pb-done") });
       out.reviewBar = bar("quiz");
@@ -640,8 +640,9 @@ test("Study now reviews first in the chosen mode, then offers the new cards as f
       return out;
     }, QUIZ4);
     // One bar for the whole run: two reviews then two new cards, a notch between them.
-    assert.deepEqual(r.reviewBar, { fill: "scaleX(0.25)", marks: ["mid@25%", "notch@50%", "mid@75%"], labels: "Review 2New 2", done: false });
-    assert.deepEqual(r.newBar, { fill: "scaleX(0.75)", marks: ["mid@25%", "notch@50%", "mid@75%"], labels: "Reviewed ✓New 1/2", done: true });
+    // Halves of two cards are too short for a middle tick: only the notch.
+    assert.deepEqual(r.reviewBar, { text: "Review 1 / 2", fill: "scaleX(0.25)", marks: ["notch@50%"], labels: "Review 2New 2", done: false });
+    assert.deepEqual(r.newBar, { text: "New 1 / 2", fill: "scaleX(0.75)", marks: ["notch@50%"], labels: "Reviewed ✓New 1/2", done: true });
     delete r.reviewBar; delete r.newBar;
     assert.deepEqual(r, { first: "quiz", quizCount: 2, results: "results", learn: "Learn 2 new cards",
       then: "flashcard", studyIds: ["q3", "q4"], mode: "flashcard" });
@@ -773,5 +774,30 @@ test("a finger drags a class up the priority list on a phone, without scrolling 
     const r = await page.evaluate(() => ({ rows: [...document.querySelectorAll("#home-summary-grid .study-now-order li")].map((li) => li.dataset.classId), scroll: scrollY }));
     assert.deepEqual(r.rows, ["k3", "k1", "k2"]);
     assert.equal(r.scroll, scrollBefore);
+  });
+});
+
+test("in a Study now run the time left counts the new cards still to come, and ticks need four cards", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(function(cards) {
+      const many = (n) => Array.from({ length: n }, (_, i) => Object.assign({}, cards[i % 4], { id: "r" + i }));
+      state.studyScope = { lessonIds: ["l1"], lessons: [], returnScreen: "home", title: "Study now" };
+      state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
+      state.pendingStudyNowRun = { reviews: 20, fresh: 1, phase: "review" };
+      launchStudy(many(20), "quiz", "in-order");
+      const marks = () => [...document.querySelectorAll("#quiz-progress-fill ~ .pb-mark")].map((m) => m.className.replace("pb-mark is-", ""));
+      const out = { withNew: document.getElementById("quiz-progress-text").textContent, marks: marks() };
+      state.pendingStudyNowRun = { reviews: 20, fresh: 30, phase: "review" };
+      launchStudy(many(20), "quiz", "in-order");
+      out.moreNew = document.getElementById("quiz-progress-text").textContent;
+      out.marksBoth = marks();
+      return out;
+    }, QUIZ4);
+    assert.equal(r.withNew.split(" · ")[0], "Review 1 / 20");
+    assert.deepEqual(r.marks, ["mid", "notch"], "no middle tick in a one-card half");
+    assert.deepEqual(r.marksBoth, ["mid", "notch", "mid"]);
+    const minutes = (s) => Number(/~(\d+)/.exec(s)[1]);
+    // Thirty more flashcards at the fallback 10 s add five minutes to the twenty reviews' time.
+    assert.equal(minutes(r.moreNew) - minutes(r.withNew), 5);
   });
 });
