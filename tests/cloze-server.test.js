@@ -165,6 +165,27 @@ test("search finds a cloze card by its words", async function() {
   } finally { l.close(); }
 });
 
+// SQLite folds ASCII only; "Đ" and "Ố" stayed upper case and the search missed them.
+test("search ignores case in Vietnamese letters, typed composed or decomposed", async function() {
+  db.prepare("INSERT INTO lessons (id, class_id, title, format) VALUES ('lvi', 'k1', ?, 'term-def')").run("ĐỊNH LÝ Số Lớn");
+  const search = express();
+  search.use("/api/search", require(path.join(root, "server/routes/search.js")));
+  const l = await new Promise(ok => { const s = search.listen(0, "127.0.0.1", () => ok(s)); });
+  try {
+    for (const q of ["định lý số", "định lý số".normalize("NFD"), "ĐỊNH LÝ", "LỚN"]) {
+      const r = await fetch("http://127.0.0.1:" + l.address().port + "/api/search?q=" + encodeURIComponent(q), { headers: { "x-user": "u1" } });
+      const body = await r.json();
+      assert.deepEqual(body.lessons.map(x => x.id), ["lvi"], q);
+    }
+    // An ASCII query takes the LOWER() path and still finds the ASCII part.
+    const r = await fetch("http://127.0.0.1:" + l.address().port + "/api/search?q=nh%20l", { headers: { "x-user": "u1" } });
+    assert.deepEqual((await r.json()).lessons.map(x => x.id), ["lvi"]);
+  } finally {
+    l.close();
+    db.prepare("DELETE FROM lessons WHERE id = 'lvi'").run();
+  }
+});
+
 test("layout moves a gap card with its term card into the new lesson", async function() {
   const r = await call("PUT", "/api/integrations/knowledge/classes/k1/layout", { lessons: [
     { title: "7. Regularization", external_ids: ["s:2357", "s:2357:cz1"] },

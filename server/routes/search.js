@@ -19,11 +19,15 @@ router.get("/", requireAuth, (req, res) => {
   if (q.length < 2) return res.json({ classes: [], lessons: [], cards: [] });
 
   const uid  = req.session.userId;
-  const like = "%" + q.toLowerCase() + "%";
+  const like = "%" + q.normalize("NFC").toLowerCase() + "%";
+  // fold() (server/db.js) folds every letter but runs in JS once per row: 105 ms against
+  // LOWER()'s 41 ms over 80k cards, measured. Text that matches an ASCII query is ASCII
+  // there, so LOWER() is enough for one.
+  const fold = /[^\x00-\x7f]/.test(q) ? "fold" : "LOWER";
 
   const classes = db.prepare(
     "SELECT id, name, icon, color FROM classes " +
-    "WHERE user_id = ? AND (LOWER(name) LIKE ? OR LOWER(tags) LIKE ?) " +
+    "WHERE user_id = ? AND (" + fold + "(name) LIKE ? OR " + fold + "(tags) LIKE ?) " +
     "ORDER BY sort_order, created_at LIMIT 5"
   ).all(uid, like, like);
 
@@ -31,7 +35,7 @@ router.get("/", requireAuth, (req, res) => {
     "SELECT l.id, l.class_id, l.title, l.format, " +
     "c.name AS class_name, c.icon AS class_icon " +
     "FROM lessons l JOIN classes c ON l.class_id = c.id " +
-    "WHERE c.user_id = ? AND LOWER(l.title) LIKE ? " +
+    "WHERE c.user_id = ? AND " + fold + "(l.title) LIKE ? " +
     "ORDER BY l.created_at DESC LIMIT 5"
   ).all(uid, like);
 
@@ -43,7 +47,7 @@ router.get("/", requireAuth, (req, res) => {
     "FROM cards ca " +
     "JOIN lessons l ON ca.lesson_id = l.id " +
     "JOIN classes c ON l.class_id = c.id " +
-    "WHERE c.user_id = ? AND LOWER(COALESCE(" + CARD_TEXT + ", '')) LIKE ? LIMIT 5"
+    "WHERE c.user_id = ? AND " + fold + "(COALESCE(" + CARD_TEXT + ", '')) LIKE ? LIMIT 5"
   ).all(uid, like);
 
   res.json({ classes, lessons, cards });

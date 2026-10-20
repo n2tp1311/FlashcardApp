@@ -30,6 +30,13 @@ const db = new Database(DB_FILE);
 // without EXCLUSIVE: code from before this change fails with "unable to open database
 // file". Before rolling back past it, start once with DB_JOURNAL_MODE=delete, which
 // turns the file back into a rollback-journal database.
+// SQLite's LOWER() and LIKE fold ASCII only: "Đ", "Ố" or "Ư" stayed upper case, and a
+// search for "định lý" missed a card titled "Định lý". NFC too, because macOS and some
+// keyboards send a vowel and its marks as separate code points.
+db.function("fold", function(text) {
+  return text == null ? null : String(text).normalize("NFC").toLowerCase();
+}, { deterministic: true });
+
 db.exec("PRAGMA locking_mode = EXCLUSIVE");
 if (process.env.DB_JOURNAL_MODE === "delete") {
   db.get("PRAGMA journal_mode = DELETE");
