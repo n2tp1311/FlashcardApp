@@ -101,7 +101,7 @@ function t(k, p) { return k + (p ? "|" + Object.keys(p).map(function(x) { return
 function escHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
 ${block("ACH_ICONS")}${block("ACH_ICON_PATHS")}${block("ACH_UNITS")}
 ${v("RECORD_MIN_ANSWERS")}${v("NEAR_MIN_PROGRESS")}${v("SESSION_EXTRAS_MAX")}${v("SESSION_SPARKS")}
-${["appLocale", "achIcon", "achMedalTier", "achThresholdLabel", "achTierName", "achDate", "achCountText", "achProgressText", "achNextUp", "achEarnedLineText", "sessionExtras", "sessionExtraHtml"].map(fn).join("")}
+${["appLocale", "achIcon", "achMedalTier", "achThresholdLabel", "achTierName", "achDate", "achCountText", "achProgressText", "achNextUp", "achEarnedLineText", "achDecimals", "sessionExtras", "sessionExtraHtml"].map(fn).join("")}
 function item(o) { return Object.assign({ key: "writer", tiers: [100, 500, 2000], value: 0, tier: 0, next: 100, progress: 0, show: { cur: 0, target: 100 }, earnedAt: null, lost: false }, o); }
 function show(xs) { document.body.innerHTML = '<div class="session-cheers" style="width:340px">' + xs.map(sessionExtraHtml).join("") + '</div>'; }
 `;
@@ -142,6 +142,9 @@ test("which extras, in what order, and never more than three", async () => {
   assert.deepEqual(await kinds(`[], null, null, null, null, [${far}]`), []);
   assert.deepEqual(await kinds(`[${silver}], null, null, null, null, [${near}]`), ["badge:writer"]);
   assert.equal(await p.evaluate(`sessionExtras([], null, null, null, { values: { longTermCards: 456 } }, [${near}])[0].gain`), 12);
+  // Hours carry a decimal; the difference must not show floating-point noise.
+  const hours = `item({ key: "hours", tiers: [10, 100], tier: 1, value: 99.9, next: 100, progress: 0.999, show: { cur: 99.9, target: 100 } })`;
+  assert.equal(await p.evaluate(`sessionExtras([], null, null, null, { values: { hours: 99.7 } }, [${hours}])[0].gain`), 0.2);
   // Everything at once: three, the card and the milestones first.
   assert.deepEqual(await kinds(`[${bronze}, ${silver}, item({ key: "cardFixer", tiers: [1, 10], tier: 1 })], [{ id: "l", title: "Ch 3", cards: 20 }], ${today(70, 86, 71)}, null, [${near}]`),
     ["badge:writer", "lessons", "record"]);

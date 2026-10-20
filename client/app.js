@@ -7952,6 +7952,11 @@ var SESSION_EXTRAS_MAX = 3;
 // What else the session reached, beyond the streak and goal lines: the best new medal as a
 // big card and any others as lines, lessons it finished, a new daily record, and, when no
 // medal came, the one closest to coming. At most three, so the buttons stay on a phone screen.
+function achDecimals(n) {
+  var m = typeof n === "number" && isFinite(n) ? /\.(\d+)$/.exec(String(n)) : null;
+  return m ? Math.min(m[1].length, 6) : 0;
+}
+
 function sessionExtras(earned, lessons, before, after, achBefore, achItems) {
   var medals = earned.slice().sort(function(a, b) {
     return achMedalTier(b.tier, b.tiers.length) - achMedalTier(a.tier, a.tiers.length);
@@ -7969,7 +7974,10 @@ function sessionExtras(earned, lessons, before, after, achBefore, achItems) {
       var was = achBefore && achBefore.values ? achBefore.values[near.key] : undefined;
       // Only where the progress line counts the value itself; a streak shown as its current
       // run, or a percentage, has no "+N" that would read right.
-      var gain = typeof was === "number" && near.show && near.show.cur === near.value ? near.value - was : 0;
+      // Rounded to the values' own decimals: hours come as 99.9, and 99.9 - 99.7 in floating
+      // point printed "+0.20000000000000284".
+      var places = Math.max(achDecimals(near.value), achDecimals(was));
+      var gain = typeof was === "number" && near.show && near.show.cur === near.value ? Number((near.value - was).toFixed(places)) : 0;
       out.push({ kind: "near", item: near, gain: gain > 0 ? gain : 0 });
     }
   }
