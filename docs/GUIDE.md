@@ -566,6 +566,11 @@ rest-day rule, and a client-side guess would disagree with Home the first time e
 changed. The cost is a request at each end; offline, the lines are left out rather than
 guessed. At most three extras are shown, what happened before what nearly happened.
 
+Those lines arrive a second or so after the screen, so on a phone the buttons are pinned
+to the bottom of the screen from the start. Below the content, the late lines pushed Back to
+Lesson from 560px to 1034px down a 667px screen, moving it out from under a finger on its
+way to tap. The cost is a strip of screen the buttons always hold: two rows on Results.
+
 ---
 
 ## 9. The daily numbers

@@ -96,6 +96,7 @@
 - The retype check's Correct / Try again line uses the theme's success and danger colours and passes 4.5:1 on the card back in every palette and mode (it was 1.47:1 in light mode). `tests/palettes.test.js`
 - Flashcard & Write → a gap-fill passage on iPhone: Prev, Next and Check stay at the bottom of the screen instead of floating over the word bank after the keyboard closes. `tests/gapfill.test.js`
 - Flashcards with VoiceOver: only the face that shows is read; the answer waits for the flip. `tests/mobile-ux.test.js`
+- Results and Session Complete on a phone: the buttons stay at the bottom of the screen, so the streak and medal lines that load late no longer push them off screen. `tests/mobile-ux.test.js`
 - Preferences → Daily plan: the daily goal choices sit on their own row under the label, so 50 is no longer cut off on a phone (hidden entirely in Vietnamese). `tests/mobile-ux.test.js`
 - Back from a lesson to its class, or from a class to Home, returns to the same place in the list instead of the top. `tests/mobile-ux.test.js`
 - Home reloads when the installed app comes back from the background after the UTC day changed or after 10 minutes away, so due counts and the streak are not yesterday's. `tests/mobile-ux.test.js`
