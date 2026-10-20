@@ -49,7 +49,8 @@ test("an incomplete class never reads 100%", function() {
 });
 
 test("both the grid card and the list row carry the medallion and the shared progress setter", function() {
-  assert.equal(app.split('store.getProgress("class", cls.id).then(function(p) { setClassProgress(cls.id, p); });').length - 1, 2);
+  assert.equal(app.split('  setClassLessonCount(cls);\n').length - 1, 2);
+  assert.match(extract("loadClassProgress"), /setClassProgress\(id, map\[id\]\)/);
   assert.equal(app.split('<span class="class-done-medal hidden" id="cls-done-\' + cls.id + \'" role="img"></span>').length - 1, 2);
   assert.match(extract("setClassProgress"), /setClassDoneMedal\(classId, p\);[^]*if \(p\.mastery\) \{\s*renderMasteryBar\(wrap, p\);[^]*?return;\s*\}/);
 });

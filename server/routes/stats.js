@@ -197,6 +197,29 @@ const lessonMastery = (lessonId, userId) => masteryCounts("c.lesson_id = ?", les
 const classMastery = (classId, userId) =>
   masteryCounts("c.lesson_id IN (SELECT id FROM lessons WHERE class_id = ?)", classId, userId);
 
+function lessonProgress(lessonId, userId) {
+  const total = db.prepare("SELECT COUNT(*) as n FROM cards WHERE lesson_id = ?").get(lessonId).n;
+  const known = db.prepare(
+    "SELECT COUNT(*) as n FROM card_states cs " +
+    "JOIN cards ON cs.card_id = cards.id " +
+    "WHERE cards.lesson_id = ? AND cs.user_id = ? AND cs.known = 1"
+  ).get(lessonId, userId).n;
+  return { total, known, mastery: lessonMastery(lessonId, userId) };
+}
+
+function classProgress(classId, userId) {
+  const total = db.prepare(
+    "SELECT COUNT(*) as n FROM cards c JOIN lessons l ON c.lesson_id = l.id WHERE l.class_id = ?"
+  ).get(classId).n;
+  const known = db.prepare(
+    "SELECT COUNT(*) as n FROM card_states cs " +
+    "JOIN cards ON cs.card_id = cards.id " +
+    "JOIN lessons ON cards.lesson_id = lessons.id " +
+    "WHERE lessons.class_id = ? AND cs.user_id = ? AND cs.known = 1"
+  ).get(classId, userId).n;
+  return { total, known, mastery: classMastery(classId, userId) };
+}
+
 // GET /api/stats/progress/lesson/:id
 router.get("/progress/lesson/:id", requireAuth, (req, res) => {
   const lesson = db.prepare(
@@ -204,15 +227,21 @@ router.get("/progress/lesson/:id", requireAuth, (req, res) => {
   ).get(req.params.id, req.session.userId);
   if (!lesson) return res.status(404).json({ error: "Not found" });
 
-  const total = db.prepare("SELECT COUNT(*) as n FROM cards WHERE lesson_id = ?")
-    .get(req.params.id).n;
-  const known = db.prepare(
-    "SELECT COUNT(*) as n FROM card_states cs " +
-    "JOIN cards ON cs.card_id = cards.id " +
-    "WHERE cards.lesson_id = ? AND cs.user_id = ? AND cs.known = 1"
-  ).get(req.params.id, req.session.userId).n;
+  res.json(lessonProgress(req.params.id, req.session.userId));
+});
 
-  res.json({ total, known, mastery: lessonMastery(req.params.id, req.session.userId) });
+// POST /api/stats/progress/lessons  { ids: [...] } -> { [id]: { total, known, mastery } }
+// A class screen's bars in one request, as /progress/classes does for Home.
+router.post("/progress/lessons", requireAuth, (req, res) => {
+  const ids = req.body && req.body.ids;
+  if (!Array.isArray(ids) || ids.some(id => typeof id !== "string")) return res.status(400).json({ error: "ids must be an array of strings" });
+  const uid = req.session.userId;
+  const own = db.prepare("SELECT l.id FROM lessons l JOIN classes c ON l.class_id = c.id WHERE l.id = ? AND c.user_id = ?");
+  const out = {};
+  ids.slice(0, 1000).forEach(id => {
+    if (!out[id] && own.get(id, uid)) out[id] = lessonProgress(id, uid);
+  });
+  res.json(out);
 });
 
 // GET /api/stats/progress/class/:id
@@ -221,17 +250,22 @@ router.get("/progress/class/:id", requireAuth, (req, res) => {
     .get(req.params.id, req.session.userId);
   if (!cls) return res.status(404).json({ error: "Not found" });
 
-  const total = db.prepare(
-    "SELECT COUNT(*) as n FROM cards c JOIN lessons l ON c.lesson_id = l.id WHERE l.class_id = ?"
-  ).get(req.params.id).n;
-  const known = db.prepare(
-    "SELECT COUNT(*) as n FROM card_states cs " +
-    "JOIN cards ON cs.card_id = cards.id " +
-    "JOIN lessons ON cards.lesson_id = lessons.id " +
-    "WHERE lessons.class_id = ? AND cs.user_id = ? AND cs.known = 1"
-  ).get(req.params.id, req.session.userId).n;
+  res.json(classProgress(req.params.id, req.session.userId));
+});
 
-  res.json({ total, known, mastery: classMastery(req.params.id, req.session.userId) });
+// POST /api/stats/progress/classes  { ids: [...] } -> { [id]: { total, known, mastery } }
+// Every class on Home in one request; one per class made Home's first paint wait on a queue
+// of them over a phone connection. Classes that are not the user's are left out.
+router.post("/progress/classes", requireAuth, (req, res) => {
+  const ids = req.body && req.body.ids;
+  if (!Array.isArray(ids) || ids.some(id => typeof id !== "string")) return res.status(400).json({ error: "ids must be an array of strings" });
+  const uid = req.session.userId;
+  const out = {};
+  const own = db.prepare("SELECT id FROM classes WHERE id = ? AND user_id = ?");
+  ids.slice(0, 500).forEach(id => {
+    if (!out[id] && own.get(id, uid)) out[id] = classProgress(id, uid);
+  });
+  res.json(out);
 });
 
 // POST /api/stats/difficulty-map  { cardIds: [...] }

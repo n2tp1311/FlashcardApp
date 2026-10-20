@@ -36,13 +36,15 @@ router.get("/classes/:classId/lessons", requireAuth, (req, res) => {
   // single 3-way join below — it never needed attempts data, but the old query forced
   // SQLite to fan every card out across all its attempts just to read c.created_at.
   const modifiedRows = db.prepare(`
-    SELECT lesson_id, MAX(created_at) AS last_modified_at
+    SELECT lesson_id, MAX(created_at) AS last_modified_at, COUNT(*) AS card_count
     FROM cards
     WHERE lesson_id IN (${placeholders})
     GROUP BY lesson_id
   `).all(...lessonIds);
   const lastModifiedByLesson = {};
-  modifiedRows.forEach(r => { lastModifiedByLesson[r.lesson_id] = r.last_modified_at; });
+  // card_count: the class screen fetched each lesson's whole card list to print its length.
+  const cardCountByLesson = {};
+  modifiedRows.forEach(r => { lastModifiedByLesson[r.lesson_id] = r.last_modified_at; cardCountByLesson[r.lesson_id] = r.card_count; });
 
   // last_interacted_at: latest attempt by this user on any card in the lesson set.
   // CROSS JOIN (not JOIN) pins the join order — SQLite's planner otherwise drives this
@@ -62,7 +64,8 @@ router.get("/classes/:classId/lessons", requireAuth, (req, res) => {
   const rows = lessons.map(lesson => ({
     ...lesson,
     last_modified_at: lastModifiedByLesson[lesson.id] ?? null,
-    last_interacted_at: lastInteractedByLesson[lesson.id] ?? null
+    last_interacted_at: lastInteractedByLesson[lesson.id] ?? null,
+    card_count: cardCountByLesson[lesson.id] || 0
   }));
 
   res.json(rows);

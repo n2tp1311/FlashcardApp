@@ -74,8 +74,11 @@ router.get("/", requireAuth, (req, res) => {
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = db.prepare(
     "SELECT cl.*, CASE WHEN cl.archived = 1 THEN 0 ELSE COALESCE(dc.due_count, 0) END AS due_count, " +
-      "la.last_activity_at AS last_activity_at, COALESCE(uc.upstream_count, 0) AS upstream_count " +
+      "la.last_activity_at AS last_activity_at, COALESCE(uc.upstream_count, 0) AS upstream_count, " +
+      "COALESCE(lc.lesson_count, 0) AS lesson_count " +
     "FROM classes cl " +
+    // Home printed "N lessons" from a lesson list fetched once per class: 22 requests for 6.
+    "LEFT JOIN (SELECT class_id, COUNT(*) AS lesson_count FROM lessons GROUP BY class_id) lc ON lc.class_id = cl.id " +
     "LEFT JOIN (" +
       "SELECT l.class_id, COUNT(*) AS due_count " +
       "FROM cards ca " +

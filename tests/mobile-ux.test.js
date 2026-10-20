@@ -471,3 +471,44 @@ test("a long undo message is cut short, and Undo stays on screen", async functio
     assert.ok(r.pillRight <= r.width - 16);
   });
 });
+
+// Home asked twice per class (its lessons, to count them, and its progress) and the class
+// screen twice per lesson (every card, to count them, and its progress).
+test("Home and the class screen draw every count and bar from a single progress request", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(async function() {
+      const calls = { lessons: 0, cards: 0, one: 0, classes: 0, lessonBatch: 0 };
+      const prog = { total: 4, known: 1 };
+      store.getLessons = function() { calls.lessons++; return Promise.resolve([]); };
+      store.getCards = function() { calls.cards++; return Promise.resolve([]); };
+      store.getProgress = function() { calls.one++; return Promise.resolve(prog); };
+      store.getClassesProgress = function(ids) { calls.classes++; const m = {}; ids.forEach(id => { m[id] = prog; }); return Promise.resolve(m); };
+      store.getLessonsProgress = function(ids) { calls.lessonBatch++; const m = {}; ids.forEach(id => { m[id] = prog; }); return Promise.resolve(m); };
+      store.getClasses = function() {
+        return Promise.resolve([1, 2, 3, 4, 5, 6].map(i => ({ id: "k" + i, name: "Class " + i, archived: 0, lesson_count: i })));
+      };
+      const tick = () => new Promise(ok => setTimeout(ok, 50));
+      showScreen("home");
+      renderHome();
+      await tick();
+      const meta = document.getElementById("cls-meta-k3").textContent;
+      const bar = document.getElementById("cls-prog-wrap-k3").style.display;
+      _renderHomeClassList();
+      await tick();
+      const afterResort = calls.classes;
+
+      store.getDueLessons = function() { return Promise.resolve({ due: [], dueCounts: {}, schedule: {} }); };
+      state.lessonFilter = "all";
+      _renderLessonItems([1, 2, 3].map(i => ({ id: "l" + i, class_id: "k1", title: "Lesson " + i, format: "term-def", card_count: i * 10 })), {});
+      await tick();
+      return { calls, meta, bar, afterResort, lessonMeta: document.getElementById("les-meta-l2").textContent,
+               lessonBar: document.getElementById("les-prog-wrap-l2").style.display };
+    });
+    assert.deepEqual(r.calls, { lessons: 0, cards: 0, one: 0, classes: 1, lessonBatch: 1 });
+    assert.match(r.meta, /3/);
+    assert.equal(r.bar, "");
+    assert.equal(r.afterResort, 1, "a re-sort reuses the progress Home loaded");
+    assert.match(r.lessonMeta, /20/);
+    assert.equal(r.lessonBar, "");
+  });
+});

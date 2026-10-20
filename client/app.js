@@ -3096,6 +3096,14 @@ var LocalStorageAdapter = (function() {
       });
       return Promise.resolve({ total: total, known: known });
     },
+    getClassesProgress: function(ids) { return this._progressMap("class", ids); },
+    getLessonsProgress: function(ids) { return this._progressMap("lesson", ids); },
+    _progressMap: function(type, ids) {
+      var self = this, out = {};
+      return Promise.all(ids.map(function(id) {
+        return self.getProgress(type, id).then(function(p) { out[id] = p; });
+      })).then(function() { return out; });
+    },
 
     // --- Export / Import ---
     exportAll: function() {
@@ -3868,6 +3876,7 @@ function renderHome() {
   _updateHomeViewToggle();
   store.getClasses().then(function(classes) {
     state.homeClasses = classes;
+    state._classProgressMap = null;
     renderSidebarClasses(classes.filter(function(c) { return !c.archived; }));
     renderUpstreamIndicators(classes);
     classes = sortClasses(classes, state.currentClassSort, state.currentClassSortDir);
@@ -4079,12 +4088,39 @@ function _renderClassItems(classes) {
     container.className = "class-grid";
     classes.forEach(function(cls) { _renderClassGridCard(cls, container); });
   }
+  loadClassProgress(classes);
   if (state.homeSelectMode) {
     // Selection follows what's on screen: drop classes the new filter hides.
     var shown = classes.map(function(c) { return c.id; });
     state.selectedClassIds = state.selectedClassIds.filter(function(id) { return shown.indexOf(id) !== -1; });
     _syncClassSelectionUI();
   }
+}
+
+// The server sends lesson_count with the classes; the offline store does not, and counts.
+function setClassLessonCount(cls) {
+  function show(n) {
+    var meta = document.getElementById("cls-meta-" + cls.id);
+    if (meta) meta.textContent = formatClassMeta(cls, n);
+  }
+  if (typeof cls.lesson_count === "number") show(cls.lesson_count);
+  else store.getLessons(cls.id).then(function(lessons) { show(lessons.length); });
+}
+
+// Every class's progress bar in one request; one per class queued 2N requests behind Home's
+// first paint. A re-sort or filter reuses what renderHome loaded instead of asking again.
+function loadClassProgress(classes) {
+  var cache = state._classProgressMap || {};
+  var missing = [];
+  classes.forEach(function(c) {
+    if (cache[c.id]) setClassProgress(c.id, cache[c.id]);
+    else missing.push(c.id);
+  });
+  if (!missing.length) return;
+  store.getClassesProgress(missing).then(function(map) {
+    state._classProgressMap = Object.assign(state._classProgressMap || {}, map);
+    missing.forEach(function(id) { if (map[id]) setClassProgress(id, map[id]); });
+  }).catch(function() {});
 }
 
 // Re-sorts, re-filters or switches view using the classes already loaded, so the page doesn't
@@ -4184,11 +4220,7 @@ function _renderClassGridCard(cls, container) {
   });
   container.appendChild(card);
 
-  store.getLessons(cls.id).then(function(lessons) {
-    var meta = document.getElementById("cls-meta-" + cls.id);
-    if (meta) meta.textContent = formatClassMeta(cls, lessons.length);
-  });
-  store.getProgress("class", cls.id).then(function(p) { setClassProgress(cls.id, p); });
+  setClassLessonCount(cls);
   // Apply cached accuracy immediately if available
   if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
     _setClassAccuracyPill(cls.id, state._classAccuracyMap[cls.id]);
@@ -4257,11 +4289,7 @@ function _renderClassListRow(cls, container) {
   });
   container.appendChild(row);
 
-  store.getLessons(cls.id).then(function(lessons) {
-    var meta = document.getElementById("cls-meta-" + cls.id);
-    if (meta) meta.textContent = formatClassMeta(cls, lessons.length);
-  });
-  store.getProgress("class", cls.id).then(function(p) { setClassProgress(cls.id, p); });
+  setClassLessonCount(cls);
   if (state._classAccuracyMap && state._classAccuracyMap[cls.id]) {
     _setClassAccuracyPill(cls.id, state._classAccuracyMap[cls.id]);
   }
@@ -4852,6 +4880,28 @@ function formatLabel(format) {
     : t("format.imageDef");
 }
 
+function setLessonCardCount(lessonId, n) {
+  var meta = document.getElementById("les-meta-" + lessonId);
+  if (meta) meta.textContent = t("count.cards", { n: n });
+}
+
+function setLessonProgress(lessonId, p) {
+  if (!p || p.total === 0) return;
+  var wrap = document.getElementById("les-prog-wrap-" + lessonId);
+  var fill = document.getElementById("les-prog-fill-" + lessonId);
+  var text = document.getElementById("les-prog-text-" + lessonId);
+  if (!wrap) return;
+  var pct = Math.round(p.known / p.total * 100);
+  wrap.style.display = "";
+  if (p.mastery) {
+    renderMasteryBar(wrap, p);
+    return;
+  }
+  fill.style.transform = scaleXStyle(pct / 100);
+  text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
+  text.title = t("class.knownTooltip");
+}
+
 function _renderLessonItems(lessons, accMap) {
   var list = document.getElementById("lesson-list");
   var empty = document.getElementById("empty-class");
@@ -4950,27 +5000,15 @@ function _renderLessonItems(lessons, accMap) {
         });
       }
       list.appendChild(item);
-      store.getCards(lesson.id).then(function(cards) {
-        var meta = document.getElementById("les-meta-" + lesson.id);
-        if (meta) meta.textContent = t("count.cards", { n: cards.length });
-      });
-      store.getProgress("lesson", lesson.id).then(function(p) {
-        if (!p || p.total === 0) return;
-        var wrap = document.getElementById("les-prog-wrap-" + lesson.id);
-        var fill = document.getElementById("les-prog-fill-" + lesson.id);
-        var text = document.getElementById("les-prog-text-" + lesson.id);
-        if (!wrap) return;
-        var pct = Math.round(p.known / p.total * 100);
-        wrap.style.display = "";
-        if (p.mastery) {
-          renderMasteryBar(wrap, p);
-          return;
-        }
-        fill.style.transform = scaleXStyle(pct / 100);
-        text.textContent = t("count.knownProgress", { known: p.known, total: p.total, pct: pct });
-        text.title = t("class.knownTooltip");
-      });
+      // The server sends card_count; the offline store counts.
+      if (typeof lesson.card_count === "number") setLessonCardCount(lesson.id, lesson.card_count);
+      else store.getCards(lesson.id).then(function(cards) { setLessonCardCount(lesson.id, cards.length); });
     });
+    // Every bar in one request: a request per lesson, plus one for its whole card list just
+    // to print the count, was a hundred for a fifty-lesson book.
+    store.getLessonsProgress(filtered.map(function(l) { return l.id; })).then(function(map) {
+      Object.keys(map).forEach(function(id) { setLessonProgress(id, map[id]); });
+    }).catch(function() {});
   });
 }
 
@@ -13004,6 +13042,8 @@ var SQLiteAdapter = (function() {
     },
 
     getProgress: function(type, id) { return req("GET", "/stats/progress/" + type + "/" + id); },
+    getClassesProgress: function(ids) { return req("POST", "/stats/progress/classes", { ids: ids }); },
+    getLessonsProgress: function(ids) { return req("POST", "/stats/progress/lessons", { ids: ids }); },
     getDashboard: function(days) { return req("GET", "/stats/dashboard" + (days ? "?days=" + days : "")); },
     getAnalytics: function(days) { return req("GET", "/stats/analytics?days=" + (days || 60)); },
     getCardHistory: function(cardId) { return req("GET", "/stats/card-history/" + encodeURIComponent(cardId)); },
