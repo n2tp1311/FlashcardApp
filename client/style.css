@@ -3213,10 +3213,22 @@ code {
   border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
 }
 .study-now-picker[hidden] { display: none; }
-.study-now-pick { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 6px; border-radius: 8px; cursor: pointer; }
-.study-now-pick:hover { background: var(--surface2); }
-.study-now-pick input { width: 18px; height: 18px; flex: none; accent-color: var(--primary); }
-.study-now-pick span { min-width: 0; overflow-wrap: anywhere; }
+.study-now-all, .study-now-pick label { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; min-width: 0; }
+.study-now-all { padding: 0 6px; }
+.study-now-all input, .study-now-pick input { width: 18px; height: 18px; flex: none; accent-color: var(--primary); }
+.study-now-all span, .study-now-pick label span { min-width: 0; overflow-wrap: anywhere; }
+.study-now-hint { margin: 4px 6px; font-size: 0.8125rem; color: var(--text2); }
+.study-now-order { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.study-now-pick { display: flex; align-items: center; gap: 4px; padding-right: 8px; border-radius: 8px; background: var(--surface); }
+.study-now-pick label { flex: 1; }
+.study-now-pick small { flex: none; font-size: 0.75rem; color: var(--text2); }
+.study-now-pick.is-dragging { background: var(--surface2); box-shadow: 0 2px 8px color-mix(in srgb, var(--text) 18%, transparent); }
+.study-now-pick.is-done label span { color: var(--text2); }
+.study-now-pick.is-done small { color: var(--success); font-weight: 600; }
+.study-now-pick.is-done:first-of-type, .study-now-pick:not(.is-done) + .is-done { margin-top: 6px; border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; }
+.sn-handle { width: 36px; height: 44px; flex: none; display: grid; place-items: center; border: 0; background: none; color: var(--text2); cursor: grab; touch-action: none; border-radius: 8px; }
+.sn-handle:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
+.study-now-pick.is-dragging .sn-handle { cursor: grabbing; }
 .study-now-picker .btn { justify-self: end; margin-top: 4px; }
 .study-now-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: var(--radius); background: var(--surface2); }
 .study-now-mode button { border: 0; background: none; color: var(--text2); font: inherit; font-size: 0.875rem; font-weight: 600; padding: 7px; border-radius: 8px; cursor: pointer; }

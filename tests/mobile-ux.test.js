@@ -687,3 +687,82 @@ test("Study now's class checklist narrows the counts, is remembered, and is sent
     assert.deepEqual(r.sent, [null, 5, ["k2"]]);
   });
 });
+
+test("Study now's classes are a priority list: drag by the handle or move with the arrow keys; Completed sits at the bottom", async function() {
+  await withApp(async function(page) {
+    await page.evaluate(function() {
+      const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
+      const est = { estimatedNewCards: 10, availableNewCards: 30, byClass: [
+        { id: "k0", name: "Finished Book", available: 0 }, { id: "k1", name: "Deep Learning", available: 25 },
+        { id: "k2", name: "Statistics", available: 5 }, { id: "k3", name: "Guide", available: 2 }] };
+      state.studyNowClasses = null;
+      state.studyNowDue = 0;
+      state.studyNowDueLessons = [];
+      state._dashHeroData = { summary: { cards: 40 }, newCardEstimate: est, today: today };
+      window.__orders = [];
+      store.setClassOrder = (ids) => { window.__orders.push(ids); return Promise.resolve({ ok: true }); };
+      showScreen("home");
+      const grid = document.getElementById("home-summary-grid");
+      grid.innerHTML = streakTimeHeroCard(null, null, { cards: 40 }, est, today);
+      for (let el = grid; el; el = el.parentElement) el.classList.remove("hidden");
+      grid.querySelector("[data-study-now-classes]").click();
+    });
+    const rows = () => page.evaluate(() => [...document.querySelectorAll("#home-summary-grid .study-now-order li")].map((li) => li.dataset.classId + (li.classList.contains("is-done") ? ":done" : "")));
+    assert.deepEqual(await rows(), ["k1", "k2", "k3", "k0:done"], "a class with no new cards left sinks to the bottom");
+    assert.equal(await page.locator('#home-summary-grid li[data-class-id="k0"] small').textContent(), "Completed");
+    assert.equal(await page.locator('#home-summary-grid li[data-class-id="k0"] [data-sn-handle]').count(), 0, "Completed is out of the drag");
+
+    // Drag Guide to the top with the mouse, by its handle.
+    const handle = await page.locator('#home-summary-grid li[data-class-id="k3"] [data-sn-handle]').boundingBox();
+    const top = await page.locator('#home-summary-grid li[data-class-id="k1"]').boundingBox();
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handle.x + handle.width / 2, top.y + 6, { steps: 8 });
+    await page.mouse.up();
+    assert.deepEqual(await rows(), ["k3", "k1", "k2", "k0:done"]);
+
+    // Past the last class still being learnt, a row stays above Completed.
+    await page.focus('#home-summary-grid li[data-class-id="k1"] [data-sn-handle]');
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown");
+    assert.deepEqual(await rows(), ["k3", "k2", "k1", "k0:done"]);
+
+    await page.click("#home-summary-grid [data-study-now-classes-done]");
+    const r = await page.evaluate(() => ({ orders: window.__orders, byClass: state._dashHeroData.newCardEstimate.byClass.map((c) => c.id) }));
+    assert.deepEqual(r.orders, [["k3", "k2", "k1", "k0"]]);
+    assert.deepEqual(r.byClass, ["k3", "k2", "k1", "k0"]);
+    await page.click("#home-summary-grid [data-study-now-classes]");
+    assert.deepEqual(await rows(), ["k3", "k2", "k1", "k0:done"], "the new order is what opens next");
+  }, { isMobile: false, hasTouch: false });
+});
+
+test("a finger drags a class up the priority list on a phone, without scrolling the page", async function() {
+  await withApp(async function(page) {
+    await page.evaluate(function() {
+      const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
+      const est = { estimatedNewCards: 10, availableNewCards: 30, byClass: [
+        { id: "k1", name: "Deep Learning", available: 25 }, { id: "k2", name: "Statistics", available: 5 }, { id: "k3", name: "Guide", available: 2 }] };
+      state.studyNowDue = 0;
+      state.studyNowDueLessons = [];
+      state._dashHeroData = { summary: { cards: 40 }, newCardEstimate: est, today: today };
+      showScreen("home");
+      const grid = document.getElementById("home-summary-grid");
+      grid.innerHTML = streakTimeHeroCard(null, null, { cards: 40 }, est, today);
+      for (let el = grid; el; el = el.parentElement) el.classList.remove("hidden");
+      grid.querySelector("[data-study-now-classes]").click();
+    });
+    const handle = await page.locator('#home-summary-grid li[data-class-id="k3"] [data-sn-handle]').boundingBox();
+    const top = await page.locator('#home-summary-grid li[data-class-id="k1"]').boundingBox();
+    const cdp = await page.context().newCDPSession(page);
+    const x = handle.x + handle.width / 2;
+    const scrollBefore = await page.evaluate(() => scrollY);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: handle.y + handle.height / 2 }] });
+    for (let y = handle.y + handle.height / 2; y > top.y + 6; y -= 10)
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y }] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: top.y + 6 }] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    const r = await page.evaluate(() => ({ rows: [...document.querySelectorAll("#home-summary-grid .study-now-order li")].map((li) => li.dataset.classId), scroll: scrollY }));
+    assert.deepEqual(r.rows, ["k3", "k1", "k2"]);
+    assert.equal(r.scroll, scrollBefore);
+  });
+});

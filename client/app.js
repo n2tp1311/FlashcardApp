@@ -46,6 +46,7 @@ var ICON_CHEVRON_UP   = svgIcon('<polyline points="18 15 12 9 6 15"/>');
 var ICON_CHEVRON_DOWN = svgIcon('<polyline points="6 9 12 15 18 9"/>');
 var ICON_ARROW_LEFT   = svgIcon('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>');
 var ICON_ARROW_RIGHT  = svgIcon('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>');
+var ICON_GRIP = svgIcon('<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>', 18);
 var ICON_LIGHTBULB    = svgIcon('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/>');
 
 /* ============================
@@ -869,6 +870,11 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.nClasses": "{n} classes",
   "studyNow.classesLabel": "Classes to study",
   "studyNow.classesDone": "Done",
+  "studyNow.orderHint": "Drag to set the order: new cards come from the top class first.",
+  "studyNow.move": "Move {name}",
+  "studyNow.completed": "Completed",
+  "studyNow.newLeft": "{n} new left",
+  "studyNow.orderFailed": "Couldn't save the class order",
   "studyNow.flashcard": "Flashcards",
   "studyNow.quiz": "Quiz",
   "studyNow.reviews": "{n} to review",
@@ -1983,6 +1989,11 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.nClasses": "{n} lớp",
   "studyNow.classesLabel": "Các lớp sẽ học",
   "studyNow.classesDone": "Xong",
+  "studyNow.orderHint": "Kéo để xếp thứ tự: thẻ mới lấy từ lớp trên cùng trước.",
+  "studyNow.move": "Di chuyển {name}",
+  "studyNow.completed": "Đã học xong",
+  "studyNow.newLeft": "Còn {n} thẻ mới",
+  "studyNow.orderFailed": "Không lưu được thứ tự lớp",
   "studyNow.flashcard": "Thẻ ghi nhớ",
   "studyNow.quiz": "Trắc nghiệm",
   "studyNow.reviews": "{n} ôn",
@@ -11117,6 +11128,9 @@ function studyNowScopedPlan(today, est) {
   return plan;
 }
 
+// The checklist is also the priority list: drag a class up and its new cards come first.
+// A class with no new cards left is Completed and sinks below the rest, out of the drag;
+// its reviews still come, if it is ticked.
 function studyNowClassesHtml(est) {
   var classes = (est && est.byClass) || [];
   if (classes.length < 2) return "";
@@ -11124,15 +11138,25 @@ function studyNowClassesHtml(est) {
   var label = !picked ? t("studyNow.allClasses") :
     picked.length === 1 ? classes.filter(function(c) { return c.id === picked[0]; })[0].name :
     t("studyNow.nClasses", { n: picked.length });
-  var box = function(id, checked, name) {
-    return '<label class="study-now-pick"><input type="checkbox" data-sn-class="' + escHtml(id) + '"' + (checked ? " checked" : "") + '> <span>' + escHtml(name) + '</span></label>';
+  var row = function(c) {
+    var done = !c.available;
+    return '<li class="study-now-pick' + (done ? ' is-done' : '') + '" data-class-id="' + escHtml(c.id) + '">' +
+      (done ? '<span class="sn-handle" aria-hidden="true"></span>' :
+        '<button type="button" class="sn-handle" data-sn-handle aria-label="' + escHtml(t("studyNow.move", { name: c.name })) + '">' + ICON_GRIP + '</button>') +
+      '<label><input type="checkbox" data-sn-class="' + escHtml(c.id) + '"' + (picked && picked.indexOf(c.id) >= 0 ? " checked" : "") + '> ' +
+        '<span>' + escHtml(c.name) + '</span></label>' +
+      '<small>' + escHtml(done ? t("studyNow.completed") : t("studyNow.newLeft", { n: c.available })) + '</small></li>';
   };
   return '<div class="study-now-classes">' +
     '<button type="button" class="study-now-classes-btn" data-study-now-classes aria-expanded="false">' +
       '<span>' + escHtml(label) + '</span><span aria-hidden="true">▾</span></button>' +
     '<div class="study-now-picker" role="group" aria-label="' + escHtml(t("studyNow.classesLabel")) + '" hidden>' +
-      box("", !picked, t("studyNow.allClasses")) +
-      classes.map(function(c) { return box(c.id, !!picked && picked.indexOf(c.id) >= 0, c.name); }).join("") +
+      '<label class="study-now-all"><input type="checkbox" data-sn-class=""' + (!picked ? " checked" : "") + '> <span>' + escHtml(t("studyNow.allClasses")) + '</span></label>' +
+      '<p class="study-now-hint">' + escHtml(t("studyNow.orderHint")) + '</p>' +
+      '<ol class="study-now-order">' +
+        classes.filter(function(c) { return c.available; }).map(row).join("") +
+        classes.filter(function(c) { return !c.available; }).map(row).join("") +
+      '</ol>' +
       '<button type="button" class="btn btn-primary btn-sm" data-study-now-classes-done>' + escHtml(t("studyNow.classesDone")) + '</button>' +
     '</div></div>';
 }
@@ -11147,13 +11171,69 @@ document.addEventListener("click", function(e) {
   }
   var done = e.target.closest("[data-study-now-classes-done]");
   if (!done) return;
+  var panel = done.parentNode;
   var ids = [];
-  done.parentNode.querySelectorAll("[data-sn-class]").forEach(function(box) {
+  panel.querySelectorAll("[data-sn-class]").forEach(function(box) {
     if (box.checked && box.dataset.snClass) ids.push(box.dataset.snClass);
   });
   state.studyNowClasses = ids.length ? ids : null;
   saveStudyNowPref("studyNowClasses", state.studyNowClasses);
+  var est = state._dashHeroData && state._dashHeroData.newCardEstimate;
+  var order = [].map.call(panel.querySelectorAll(".study-now-order li"), function(li) { return li.dataset.classId; });
+  var before = est ? est.byClass.map(function(c) { return c.id; }) : order;
+  if (est && order.join("\n") !== before.join("\n")) {
+    est.byClass.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+    store.setClassOrder(order).catch(function() { showToast(t("studyNow.orderFailed"), "error"); });
+  }
   _refreshDashHeroCards();
+});
+
+// Drag by the handle, with a finger or a mouse; arrow keys on the handle do the same. Only
+// among the classes still being learnt: Completed ones stay at the bottom.
+function moveStudyNowRow(li, target, after) {
+  if (!target || target === li || target.classList.contains("is-done")) return;
+  target.parentNode.insertBefore(li, after ? target.nextSibling : target);
+}
+
+document.addEventListener("pointerdown", function(e) {
+  var handle = e.target.closest && e.target.closest("[data-sn-handle]");
+  if (!handle) return;
+  e.preventDefault();
+  var li = handle.closest("li");
+  var list = li.parentNode;
+  li.classList.add("is-dragging");
+  // Listened for on the document, not captured on the handle: moving the row in the DOM
+  // detaches the handle for a moment, and that releases a pointer capture mid-drag.
+  function move(ev) {
+    if (ev.pointerId !== e.pointerId) return;
+    var rows = [].filter.call(list.children, function(r) { return r !== li && !r.classList.contains("is-done"); });
+    for (var k = 0; k < rows.length; k++) {
+      var box = rows[k].getBoundingClientRect();
+      if (ev.clientY < box.top || ev.clientY > box.bottom) continue;
+      moveStudyNowRow(li, rows[k], ev.clientY > box.top + box.height / 2);
+      break;
+    }
+  }
+  function up(ev) {
+    if (ev.pointerId !== e.pointerId) return;
+    li.classList.remove("is-dragging");
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", up);
+    document.removeEventListener("pointercancel", up);
+  }
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", up);
+  document.addEventListener("pointercancel", up);
+});
+
+document.addEventListener("keydown", function(e) {
+  var handle = e.target.closest && e.target.closest("[data-sn-handle]");
+  if (!handle || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+  e.preventDefault();
+  var li = handle.closest("li");
+  if (e.key === "ArrowUp") moveStudyNowRow(li, li.previousElementSibling, false);
+  else moveStudyNowRow(li, li.nextElementSibling, true);
+  handle.focus();
 });
 
 // "All classes" and a class exclude each other, and unticking the last class means all.
@@ -13185,6 +13265,7 @@ var SQLiteAdapter = (function() {
 
     getCards:      function(lessonId)   { return req("GET",  "/lessons/" + lessonId + "/cards"); },
     getBulkCards:  function(lessonIds)  { return req("POST", "/cards/by-lessons", { lessonIds: lessonIds }); },
+    setClassOrder: function(ids) { return req("POST", "/classes/order", { ids: ids }); },
     getStudyNowCards: function(reviews, newCards, classIds) { return req("POST", "/cards/study-now", { reviews: reviews, newCards: newCards, classIds: classIds || null }); },
     createCard: function(f)        { return req("POST",   "/lessons/" + f.lessonId + "/cards", { format: f.format, data: f.data }); },
     createCards: function(list) {

@@ -37,6 +37,7 @@ const server = express();
 server.use(express.json());
 server.use("/api", require(path.join(root, "server/routes/cards.js")));
 server.use("/api/stats", require(path.join(root, "server/routes/stats.js")));
+server.use("/api/classes", require(path.join(root, "server/routes/classes.js")));
 
 const now = Math.floor(Date.now() / 1000);
 db.exec(`
@@ -104,6 +105,19 @@ test("classIds keeps it to the picked classes; another user's class id finds not
 test("the new-card estimate lists the classes, in course order, with the new cards each holds", async () => {
   const est = await (await fetch(base + "/api/stats/new-card-estimate", { headers: { "x-user": "u1" } })).json();
   assert.deepEqual(est.byClass, [{ id: "k1", name: "First", available: 2 }, { id: "k2", name: "Second", available: 1 }]);
+});
+
+test("the priority order puts the given classes first, keeps the rest after, and new cards follow it", async () => {
+  const order = (ids, user = "u1") => fetch(base + "/api/classes/order", { method: "POST",
+    headers: { "content-type": "application/json", "x-user": user }, body: JSON.stringify({ ids }) });
+  assert.equal((await order(["k2", "k1"])).status, 200);
+  assert.deepEqual(db.prepare("SELECT id FROM classes WHERE user_id = 'u1' ORDER BY sort_order").all().map((r) => r.id), ["k2", "k1", "kA"]);
+  assert.deepEqual((await studyNow({ reviews: 0, newCards: 10 })).body.cards.map((c) => c.id), ["n3", "n1", "n2"]);
+  const est = await (await fetch(base + "/api/stats/new-card-estimate", { headers: { "x-user": "u1" } })).json();
+  assert.deepEqual(est.byClass.map((c) => c.id), ["k2", "k1"]);
+  assert.equal((await order(["kX"])).status, 404, "another user's class");
+  for (const bad of [[], ["k1", "k1"], "k1", [3]]) assert.equal((await order(bad)).status, 400, JSON.stringify(bad));
+  assert.equal((await order(["k1", "k2"])).status, 200);
 });
 
 test("another user gets only their own", async () => {

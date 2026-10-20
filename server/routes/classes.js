@@ -133,6 +133,27 @@ router.post("/", requireAuth, (req, res) => {
 });
 
 // PUT /api/classes/:id
+// POST /api/classes/order — Study now's priority list. The ids given take the first places
+// in that order; the user's other classes (archived ones, say) follow in their old order, so
+// one request rewrites every sort_order without collisions. sort_order is the "class" in
+// Study now's course order: new cards come from the top class first.
+const MAX_ORDER_IDS = 500;
+router.post("/order", requireAuth, (req, res) => {
+  const ids = req.body && req.body.ids;
+  if (!Array.isArray(ids) || !ids.length || ids.length > MAX_ORDER_IDS ||
+      !ids.every(id => typeof id === "string" && id.length <= 64) || new Set(ids).size !== ids.length)
+    return res.status(400).json({ error: "ids must be a list of distinct class ids" });
+  const userId = req.session.userId;
+  const all = db.prepare("SELECT id FROM classes WHERE user_id = ? ORDER BY sort_order, created_at").all(userId).map(r => r.id);
+  const owned = new Set(all);
+  if (!ids.every(id => owned.has(id))) return res.status(404).json({ error: "Not found" });
+  const given = new Set(ids);
+  const order = ids.concat(all.filter(id => !given.has(id)));
+  const set = db.prepare("UPDATE classes SET sort_order = ? WHERE id = ? AND user_id = ?");
+  db.transaction(() => { order.forEach((id, i) => set.run(i, id, userId)); })();
+  res.json({ ok: true });
+});
+
 router.put("/:id", requireAuth, (req, res) => {
   const cls = db.prepare("SELECT * FROM classes WHERE id = ? AND user_id = ?")
     .get(req.params.id, req.session.userId);
