@@ -99,6 +99,7 @@
 - Results and Session Complete on a phone: the buttons stay at the bottom of the screen, so the streak and medal lines that load late no longer push them off screen. `tests/mobile-ux.test.js`
 - Undo bar (grades, Updates → Mark reviewed): a long message is cut with an ellipsis, so Undo stays on screen. `tests/mobile-ux.test.js`
 - Home and the class screen load each class's or lesson's count and progress bar in one request for the whole list, instead of two per class or lesson. `tests/list-requests.test.js`, `tests/mobile-ux.test.js`
+- Charts (Dashboard, Charts tab, Stats): tap a column, a point, a grade segment or a heatmap day to read its exact value in a line under the chart. `tests/mobile-ux.test.js`
 - Preferences → Daily plan: the daily goal choices sit on their own row under the label, so 50 is no longer cut off on a phone (hidden entirely in Vietnamese). `tests/mobile-ux.test.js`
 - Back from a lesson to its class, or from a class to Home, returns to the same place in the list instead of the top. `tests/mobile-ux.test.js`
 - Home reloads when the installed app comes back from the background after the UTC day changed or after 10 minutes away, so due counts and the streak are not yesterday's. `tests/mobile-ux.test.js`

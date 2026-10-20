@@ -1131,6 +1131,11 @@ Most study happens on an iPhone, and several decisions are about it:
   under an open card editor changed, and the editor's Save still wrote to the lesson that
   was no longer shown. The flashcard screen is the one screen it never leaves, because a
   swipe that starts at the edge there is also a swipe to grade.
+- **Chart values answer a tap.** Exact numbers were only in hover titles, which a phone
+  never shows. Every column of a column or line chart has a transparent, full-height hit
+  area (a 2px bar, a 6px dot or a zero with no bar at all was nothing to tap), and grade
+  segments and heatmap days carry the same `data-tip`. A tap writes that text into a line
+  under the chart and outlines what was tapped; the `<title>` stays for a mouse.
 - **A focused field is blurred before the next card hides it.** Hidden while it had focus
   (Flashcard & Write's answer field, when a gap-fill passage came next), the field closed
   the iPhone keyboard without a blur, and the home-screen app kept the keyboard's shorter
