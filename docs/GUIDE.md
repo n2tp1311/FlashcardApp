@@ -782,6 +782,9 @@ volume; nothing rewards cramming (there is no "most cards in a day").
   and Card fixer are client events, since only the client sees them; the worst a forged
   one does is award itself a badge.
 - Sessions are inferred from 10-minute gaps, because attempts carry no session id.
+- The session end's "Almost there ... this session +N" subtracts the value before the
+  session from the value after, rounded to the decimals the values carry. Hours come with
+  one decimal, and 99.9 − 99.7 in floating point printed "+0.20000000000000284".
 
 ---
 
