@@ -516,6 +516,17 @@ distractor pool, or two missed cards would make a two-option question.
 if a card's own `distractors` contains a correct statement, the quiz will show two right
 answers. Such a card has to be edited.
 
+**The answer sheet says what the answer did to the schedule**: "Next review in 15d · was
+12d" after a right answer, "Next review in 10 min · was 12d" after a wrong one. The flip
+card shows each grade's interval on its button; a quiz showed nothing, so the learner
+could not see a right answer's reward or a wrong one's cost. The line is filled at once
+from the card's previews (a right quiz answer is rated Hard, or Good when quiz answers
+count as Know It; a wrong one Again; `quizNextReviewText`), then replaced by the server's
+due date when the answer is saved, since load balancing may move a review by a day. "Was"
+is the interval the card had been given (due date minus last review); a new card has none.
+A card not due yet keeps its schedule, so the line stays empty and the not-due hint
+explains.
+
 A correct answer moves on by itself after 1.2 s (`QUIZ_ADVANCE_MS`); a wrong one waits for
 Next, so the right option can be studied for as long as it takes. A correct answer used to
 wait too whenever there was an explanation or a book passage, and since nearly every synced
