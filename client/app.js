@@ -8978,6 +8978,18 @@ function whyPanel(card) {
   return el;
 }
 
+// The face turned away is only rotated out of sight, so VoiceOver read the answer before
+// the flip; inert drops it from Tab and pointer too, aria-hidden from readers that ignore inert.
+function setFlashcardFaces(flipped) {
+  var card = document.getElementById("fc-card");
+  card.classList.toggle("flipped", flipped);
+  [[".fc-front", flipped], [".fc-back", !flipped]].forEach(function(f) {
+    var face = card.querySelector(f[0]);
+    face.inert = f[1];
+    face.setAttribute("aria-hidden", f[1] ? "true" : "false");
+  });
+}
+
 function renderFlashcard() {
   hideVocabularySelectionAction(true);
   clearFlashcardTranslation();
@@ -9075,7 +9087,7 @@ function renderFlashcard() {
   state.studyFlipped = false;
   var fcCardEl = document.getElementById("fc-card");
   fcCardEl.style.transition = "none";
-  fcCardEl.classList.remove("flipped");
+  setFlashcardFaces(false);
   void fcCardEl.offsetHeight; // force reflow so transition:none takes effect before it's cleared
   fcCardEl.style.transition = "";
   // Swipe-to-grade leaves #fc-scene translated off-screen after its fly-off animation (see
@@ -9454,7 +9466,7 @@ document.getElementById("fc-scene").addEventListener("click", function() {
   hideVocabularySelectionAction(true);
   clearFlashcardTranslation();
   state.studyFlipped = !state.studyFlipped;
-  document.getElementById("fc-card").classList.toggle("flipped", state.studyFlipped);
+  setFlashcardFaces(state.studyFlipped);
   if (state.studyFlipped && !state.studyHasFlippedCard) {
     state.studyHasFlippedCard = true;
     setMarkButtonsEnabled(true);

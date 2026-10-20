@@ -413,3 +413,23 @@ test("Preferences: an invalid Max reviews does not stop other changes saving; th
     assert.deepEqual(r, { fits: true, goal: 30, error: true, max: null });
   }, { viewport: { width: 375, height: 667 } });
 });
+
+test("a screen reader hears only the face that shows: the answer waits for the flip", async function() {
+  await withApp(async function(page) {
+    await page.evaluate(function() {
+      state.currentLesson = { id: "l1", title: "Stats", format: "term-def" };
+      state.typeToCompare = false;
+      state.studyCards = [{ id: "c1", lesson_id: "l1", format: "term-def", data: { term: "median", def: "the middle value" } }];
+      state.studyIndex = 0;
+      startFlashcards();
+    });
+    const read = () => page.locator("#fc-card").ariaSnapshot();
+    const before = await read();
+    assert.match(before, /median/);
+    assert.doesNotMatch(before, /middle value/);
+    await page.click("#fc-scene");
+    const after = await read();
+    assert.match(after, /middle value/);
+    assert.doesNotMatch(after, /median/);
+  });
+});
