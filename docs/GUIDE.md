@@ -612,8 +612,11 @@ or a mouse, or the arrow keys on the focused handle) sets which class new cards 
 first. Done saves it with one `POST /api/classes/order`: the ids sent take the first places
 and the user's other classes (archived ones) follow in their old order, so every
 `sort_order` is rewritten without two classes sharing a place. That `sort_order` is the
-"class" in Study now's course order, so no new column was needed; Home's sort menu does not
-use it. Reviews are not reordered: an overdue card is overdue whichever book it is from. A
+"class" in Study now's course order, so no new column was needed. Home's sort menu offers it
+as **Study order**, first in the list: having set an order, the user found Home still sorted by
+Level and nothing on the page showed it. Pinned classes still come first there, as under every
+sort. After Done, Home's cached class list takes the same rewrite the server makes, so the new
+order shows without a reload. Reviews are not reordered: an overdue card is overdue whichever book it is from. A
 class with no new cards left is marked Completed and sits below the rest, out of the drag,
 since there is nothing left for its place to decide; its reviews still come while it is
 ticked. The drag listens on the document rather than capturing the pointer on the handle:
