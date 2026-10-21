@@ -628,6 +628,17 @@ page showed it. Pinned classes still come first there, as under every sort. Each
 rewrites Home's cached class list the way the server does, so the new order shows without a
 reload. Reviews are not reordered: an overdue card is overdue whichever book it is from.
 
+**A new card is one with no due date** (`UNSCHEDULED_SQL` in `lib/mastery.js`), not one
+with no `card_states` row. Showing a card without grading it writes `last_seen_at`, and
+toggling Know It writes `known`; both create a row with no schedule. Counted by the row
+alone, such a card was neither new nor due: Study now never offered it, the class read
+Completed, and the class's mastery bar still showed it as New (AI-300 had a quarter of its
+cards in that state). Study now, the new-card estimate and its per-class counts all use the
+one rule. It keys on `srs_due_at`, not `fsrs_stability`, because the due query keys on
+`srs_due_at` too, so no card can be both due and new in one session. The mastery bar keeps
+the scheduler's own rule (`cardFromState`: no stability means new); the two differ only for
+an imported row with a due date and no stability, which comes up as due.
+
 **A class with no new cards left** is marked Completed and sits below the rest, out of the
 drag, since there is nothing left for its place to decide; its reviews still come. It keeps
 its own place in `sort_order`, though (`studyOrderMerged`): the dragged classes fill the
