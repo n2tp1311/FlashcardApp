@@ -516,6 +516,15 @@ distractor pool, or two missed cards would make a two-option question.
 if a card's own `distractors` contains a correct statement, the quiz will show two right
 answers. Such a card has to be edited.
 
+**The answer sheet sits on the visible bottom edge**, wherever the page is scrolled. In the
+Home Screen app on iOS 26 it floated about 120px up with the question showing under it: iOS
+can leave the visual viewport offset from the layout viewport (visualViewport.offsetTop
+stays above 0, reported after the keyboard closes), and a fixed element is placed against the
+layout one. `syncVvShift()` sets `--vv-shift` to the visible bottom minus the layout bottom,
+on every visualViewport resize and scroll and when the sheet opens, and the sheet's
+`translate` moves it down by that. It is 0 wherever the two agree. It was fixed blind: no
+desktop browser reproduces the offset, so the test checks the arithmetic, not the phone.
+
 **The question card says what each answer would do to the schedule**, before it is
 answered: a small line at its bottom edge, "✗ 10 min ✓ 15d" (`#quiz-outcomes`; screen
 readers hear "If right: back in 15d"). Wrong comes first, as the flip card's grade buttons
