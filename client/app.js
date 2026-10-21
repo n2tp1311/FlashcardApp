@@ -10566,12 +10566,13 @@ function quizOutcomeHtml(ok, seconds) {
   var time = formatFsrsDuration(Math.max(0, seconds));
   var label = t(ok ? "quiz.ifRight" : "quiz.ifWrong", { time: time });
   return '<span class="quiz-out quiz-out-' + (ok ? "ok" : "bad") + '" role="img" aria-label="' + escHtml(label) + '" title="' + escHtml(label) + '">' +
-    (ok ? "✓ " : "✗ ") + escHtml(time) + '</span>';
+    (ok ? ICON_CHECK : ICON_X) + escHtml(time) + '</span>';
 }
 
 function setQuizOutcomes(times, answeredCorrect) {
   var el = document.getElementById("quiz-outcomes");
-  el.innerHTML = times ? quizOutcomeHtml(true, times.right) + quizOutcomeHtml(false, times.wrong) : "";
+  // Wrong on the left, right on the right, as the flip card's grade buttons run Again to Easy.
+  el.innerHTML = times ? quizOutcomeHtml(false, times.wrong) + quizOutcomeHtml(true, times.right) : "";
   if (times && answeredCorrect != null) markQuizOutcome(answeredCorrect);
 }
 

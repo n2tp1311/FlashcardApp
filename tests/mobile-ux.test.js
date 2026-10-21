@@ -840,8 +840,9 @@ test("the quiz card shows when it comes back if right and if wrong, before the a
       state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
       state.quizCards = [seen(cards[0]), seen(cards[1]), Object.assign({}, cards[2], { srs_due_at: now + day, fsrs_preview_hard: 600, fsrs_preview_again: 60 })];
       startQuiz();
-      const read = () => [...document.querySelectorAll("#quiz-outcomes .quiz-out")].map((o) => o.textContent + (o.classList.contains("is-on") ? ":on" : o.classList.contains("is-off") ? ":off" : ""));
-      const out = { before: read(), label: document.querySelector("#quiz-outcomes .quiz-out").getAttribute("aria-label") };
+      const read = () => [...document.querySelectorAll("#quiz-outcomes .quiz-out")].map((o) => (o.querySelector("svg line") ? "✗ " : o.querySelector("svg polyline") ? "✓ " : "") + o.textContent + (o.classList.contains("is-on") ? ":on" : o.classList.contains("is-off") ? ":off" : ""));
+      const out = { before: read(), label: document.querySelector("#quiz-outcomes .quiz-out-ok").getAttribute("aria-label"),
+        glyphs: /[✓✗]/.test(document.getElementById("quiz-outcomes").textContent) };
       answerQuiz(state.quizOptions.indexOf(state.quizCards[0].data.correct));
       out.right = read();
       reply({ ok: true, srs_due_at: now + 16 * day, notDue: false });
@@ -860,15 +861,16 @@ test("the quiz card shows when it comes back if right and if wrong, before the a
       out.asKnown = read();
       return out;
     }, QUIZ4);
-    assert.deepEqual(r.before, ["✓ 15d", "✗ 10 min"]);
+    assert.deepEqual(r.before, ["✗ 10 min", "✓ 15d"]);
     assert.equal(r.label, "If right: back in 15d");
-    assert.deepEqual(r.right, ["✓ 15d:on", "✗ 10 min:off"]);
-    assert.deepEqual(r.rightServer, ["✓ 16d:on", "✗ 10 min:off"], "the server's date wins once it arrives");
+    assert.equal(r.glyphs, false, "drawn as the app's icons, not ✓ ✗ characters in a fallback font");
+    assert.deepEqual(r.right, ["✗ 10 min:off", "✓ 15d:on"]);
+    assert.deepEqual(r.rightServer, ["✗ 10 min:off", "✓ 16d:on"], "the server's date wins once it arrives");
     assert.doesNotMatch(r.sheet, /15d|16d|was/, "the sheet no longer repeats it");
-    assert.deepEqual(r.wrong, ["✓ 15d:off", "✗ 10 min:on"]);
+    assert.deepEqual(r.wrong, ["✗ 10 min:on", "✓ 15d:off"]);
     assert.deepEqual(r.notDue, [], "a card not due keeps its schedule");
     assert.equal(r.notDuePad, "28px");
-    assert.deepEqual(r.replay, ["✓ 15d:on", "✗ 10 min:off"], "a replayed card shows what its answer did");
-    assert.deepEqual(r.asKnown, ["✓ 1 mo", "✗ 10 min"], "quiz answers counted as Know It are rated Good");
+    assert.deepEqual(r.replay, ["✗ 10 min:off", "✓ 15d:on"], "a replayed card shows what its answer did");
+    assert.deepEqual(r.asKnown, ["✗ 10 min", "✓ 1 mo"], "quiz answers counted as Know It are rated Good");
   });
 });

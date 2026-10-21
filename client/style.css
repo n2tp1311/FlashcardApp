@@ -2637,6 +2637,9 @@ code {
 .quiz-outcomes { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; justify-content: center; gap: 16px; font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
 .quiz-outcomes:empty { display: none; }
 .quiz-question-wrap:has(.quiz-outcomes:not(:empty)) { padding-bottom: 36px; }
+/* The app's icons, not the ✓ ✗ characters: those fell back to a symbol font that matched nothing else. */
+.quiz-out { display: inline-flex; align-items: center; gap: 3px; }
+.quiz-out svg { width: 1em; height: 1em; flex: none; }
 .quiz-out-ok { color: var(--success); }
 .quiz-out-bad { color: var(--danger); }
 .quiz-out.is-on { font-weight: 700; }
