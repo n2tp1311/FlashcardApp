@@ -333,6 +333,8 @@ Object.assign(TRANSLATIONS.en, {
   "ach.tier1": "bronze",
   "ach.tier2": "silver",
   "ach.tier3": "gold",
+  "ach.tier4": "platinum",
+  "ach.tier5": "diamond",
   "ach.earnedLine": "{name} earned",
   "ach.earnedTierLine": "{name} · {tier}, {threshold}",
   "ach.newCount": "{n} new",
@@ -351,6 +353,11 @@ Object.assign(TRANSLATIONS.en, {
   "ach.unit.reviews": "reviews",
   "ach.unit.min": "min",
   "ach.unit.classes": "classes",
+  "ach.unit.times": "times",
+  "ach.unit.months": "months",
+  "ach.unit.books": "books",
+  "ach.unit.sessions": "sessions",
+  "ach.unit.passages": "passages",
   "ach.group.showingUp": "Showing up",
   "ach.group.mastery": "Mastery",
   "ach.group.effort": "Effort",
@@ -365,51 +372,67 @@ Object.assign(TRANSLATIONS.en, {
   "ach.aboveAverage.name": "Above your average",
   "ach.aboveAverage.desc": "Study longer than your 30-day average, day after day.",
   "ach.comeback.name": "Comeback",
-  "ach.comeback.desc": "Come back after a week or more away, then study three days running.",
+  "ach.comeback.desc": "Times you came back after a week or more away and studied three days running.",
   "ach.steadyRhythm.name": "Steady rhythm",
-  "ach.steadyRhythm.desc": "Study five days a week, four weeks in a row.",
+  "ach.steadyRhythm.desc": "Weeks in a row with five or more study days.",
   "ach.dueZero.name": "Due zero",
   "ach.dueZero.desc": "Clear every due card, on consecutive days.",
   "ach.classMastered.name": "Class mastered",
-  "ach.classMastered.desc": "Every card in a class mastered: due 21 days or more out.",
+  "ach.classMastered.desc": "Classes with every card mastered: due 21 days or more out.",
   "ach.lessonMastered.name": "Lesson mastered",
   "ach.lessonMastered.desc": "Lessons with every card mastered.",
   "ach.longTermCards.name": "Cards in long-term memory",
   "ach.longTermCards.desc": "Cards mastered: due 21 days or more out.",
   "ach.longMemory.name": "Long memory",
-  "ach.longMemory.desc": "90% right over your last 50 reviews of cards unseen for a month.",
+  "ach.longMemory.desc": "Reviews of cards unseen for a month, while your last 50 of them hold 90% right.",
   "ach.vocabInUse.name": "Vocabulary in use",
   "ach.vocabInUse.desc": "Words you saved, now mastered.",
   "ach.toughOne.name": "Tough one tamed",
   "ach.toughOne.desc": "Cards marked Learning three times, later answered Confident.",
   "ach.leechCleared.name": "Leech cleared",
-  "ach.leechCleared.desc": "A card forgotten eight times, back in review.",
+  "ach.leechCleared.desc": "Cards forgotten eight times, now back in review.",
   "ach.recallCleared.name": "Recall cleared",
-  "ach.recallCleared.desc": "Needs Recall emptied: no card known only from quizzes is due.",
+  "ach.recallCleared.desc": "Days you emptied Needs Recall: no card known only from quizzes was due.",
   "ach.writer.name": "Writer",
   "ach.writer.desc": "Answers typed in Write mode.",
   "ach.deepSession.name": "Deep session",
-  "ach.deepSession.desc": "One session of 25 minutes or more, with no break over 10 minutes.",
+  "ach.deepSession.desc": "Sessions of 25 minutes or more, with no break over 10 minutes.",
   "ach.hoursStudied.name": "Hours studied",
   "ach.hoursStudied.desc": "Time spent answering cards.",
   "ach.recallFirst.name": "Recall over recognition",
-  "ach.recallFirst.desc": "A week of 30+ answers, 70% of them flashcards rather than quizzes.",
+  "ach.recallFirst.desc": "Weeks of 30+ answers, 70% of them flashcards rather than quizzes.",
   "ach.mixedPractice.name": "Mixed practice",
-  "ach.mixedPractice.desc": "One session that mixes three or more classes.",
+  "ach.mixedPractice.desc": "Sessions that mix three or more classes.",
   "ach.secondLook.name": "Second look",
-  "ach.secondLook.desc": "Go back to a quiz question you got wrong.",
+  "ach.secondLook.desc": "Quiz questions you went back to after getting them wrong.",
   "ach.cardFixer.name": "Card fixer",
-  "ach.cardFixer.desc": "Edit a card while studying it.",
+  "ach.cardFixer.desc": "Cards edited while studying them.",
   "ach.wordCollector.name": "Word collector",
   "ach.wordCollector.desc": "Words saved to your vocabulary inbox.",
   "ach.explorer.name": "Explorer",
-  "ach.explorer.desc": "Study three or more classes in one week.",
+  "ach.explorer.desc": "Weeks in which you studied three or more classes.",
   "ach.builder.name": "Builder",
   "ach.builder.desc": "Cards you made yourself.",
   "ach.fromTheBook.name": "From the book",
-  "ach.fromTheBook.desc": "Study a card made from a book in KnowledgeApp.",
+  "ach.fromTheBook.desc": "Books from KnowledgeApp you have studied cards from.",
   "ach.freshStart.name": "Fresh start",
   "ach.freshStart.desc": "Cards you made that graduated to review.",
+  "ach.fullMonth.name": "Full month",
+  "ach.fullMonth.desc": "Study every day of a calendar month.",
+  "ach.deepMemory.name": "Deep memory",
+  "ach.deepMemory.desc": "Cards whose next review is three months or more away.",
+  "ach.cardsLearned.name": "Cards learned",
+  "ach.cardsLearned.desc": "New cards you have learned, in total.",
+  "ach.chapterDone.name": "Chapter done",
+  "ach.chapterDone.desc": "Lessons with every card learned at least once.",
+  "ach.bookDone.name": "Book done",
+  "ach.bookDone.desc": "Books from KnowledgeApp with every card learned at least once.",
+  "ach.sharpSession.name": "Sharp session",
+  "ach.sharpSession.desc": "Sessions of 20+ quiz answers, 90% of them right.",
+  "ach.secondChance.name": "Second chance",
+  "ach.secondChance.desc": "Cards missed, then answered right later in the same session.",
+  "ach.passageSolved.name": "Passage solved",
+  "ach.passageSolved.desc": "Fill-the-gaps passages with every gap right.",
   "nav.selectClasses": "Select Classes",
   "sidebar.yourClasses": "Your Classes",
   "sidebar.newClass": "New Class",
@@ -1478,6 +1501,8 @@ Object.assign(TRANSLATIONS.vi, {
   "ach.tier1": "đồng",
   "ach.tier2": "bạc",
   "ach.tier3": "vàng",
+  "ach.tier4": "bạch kim",
+  "ach.tier5": "kim cương",
   "ach.earnedLine": "Đạt {name}",
   "ach.earnedTierLine": "{name} · {tier}, {threshold}",
   "ach.newCount": "{n} mới",
@@ -1496,6 +1521,11 @@ Object.assign(TRANSLATIONS.vi, {
   "ach.unit.reviews": "lượt ôn",
   "ach.unit.min": "phút",
   "ach.unit.classes": "lớp",
+  "ach.unit.times": "lần",
+  "ach.unit.months": "tháng",
+  "ach.unit.books": "cuốn",
+  "ach.unit.sessions": "phiên",
+  "ach.unit.passages": "đoạn",
   "ach.group.showingUp": "Chuyên cần",
   "ach.group.mastery": "Thành thạo",
   "ach.group.effort": "Nỗ lực",
@@ -1510,51 +1540,67 @@ Object.assign(TRANSLATIONS.vi, {
   "ach.aboveAverage.name": "Vượt mức trung bình",
   "ach.aboveAverage.desc": "Học lâu hơn mức trung bình 30 ngày, ngày này qua ngày khác.",
   "ach.comeback.name": "Trở lại",
-  "ach.comeback.desc": "Quay lại sau một tuần trở lên, rồi học ba ngày liền.",
+  "ach.comeback.desc": "Số lần quay lại sau một tuần trở lên rồi học ba ngày liền.",
   "ach.steadyRhythm.name": "Nhịp đều đặn",
-  "ach.steadyRhythm.desc": "Học năm ngày mỗi tuần, bốn tuần liền.",
+  "ach.steadyRhythm.desc": "Số tuần liền học từ năm ngày mỗi tuần.",
   "ach.dueZero.name": "Không còn thẻ đến hạn",
   "ach.dueZero.desc": "Ôn hết thẻ đến hạn, nhiều ngày liên tiếp.",
   "ach.classMastered.name": "Thành thạo một lớp",
-  "ach.classMastered.desc": "Mọi thẻ trong một lớp đều thành thạo: hạn ôn từ 21 ngày trở lên.",
+  "ach.classMastered.desc": "Số lớp có mọi thẻ đều thành thạo: hạn ôn từ 21 ngày trở lên.",
   "ach.lessonMastered.name": "Thành thạo bài học",
   "ach.lessonMastered.desc": "Số bài có mọi thẻ đều thành thạo.",
   "ach.longTermCards.name": "Thẻ trong trí nhớ dài hạn",
   "ach.longTermCards.desc": "Số thẻ thành thạo: hạn ôn từ 21 ngày trở lên.",
   "ach.longMemory.name": "Trí nhớ bền",
-  "ach.longMemory.desc": "Đúng 90% trong 50 lượt ôn gần nhất của thẻ đã một tháng không gặp.",
+  "ach.longMemory.desc": "Số lượt ôn thẻ đã một tháng không gặp, khi 50 lượt gần nhất đúng từ 90%.",
   "ach.vocabInUse.name": "Từ vựng đã thuộc",
   "ach.vocabInUse.desc": "Số từ bạn đã lưu và nay đã thành thạo.",
   "ach.toughOne.name": "Chinh phục thẻ khó",
   "ach.toughOne.desc": "Thẻ bị đánh dấu Đang học ba lần, sau đó trả lời Rất chắc chắn.",
   "ach.leechCleared.name": "Vượt qua thẻ khó nhớ",
-  "ach.leechCleared.desc": "Một thẻ đã quên tám lần, nay trở lại ôn tập.",
+  "ach.leechCleared.desc": "Số thẻ đã quên tám lần, nay trở lại ôn tập.",
   "ach.recallCleared.name": "Hết thẻ cần nhớ lại",
-  "ach.recallCleared.desc": "Mục Cần nhớ lại trống: không còn thẻ chỉ đúng qua trắc nghiệm đến hạn.",
+  "ach.recallCleared.desc": "Số ngày mục Cần nhớ lại trống: không còn thẻ chỉ đúng qua trắc nghiệm đến hạn.",
   "ach.writer.name": "Người viết",
   "ach.writer.desc": "Số câu trả lời gõ trong chế độ Viết.",
   "ach.deepSession.name": "Phiên học sâu",
-  "ach.deepSession.desc": "Một phiên từ 25 phút trở lên, không nghỉ quá 10 phút.",
+  "ach.deepSession.desc": "Số phiên từ 25 phút trở lên, không nghỉ quá 10 phút.",
   "ach.hoursStudied.name": "Số giờ học",
   "ach.hoursStudied.desc": "Thời gian bạn đã trả lời thẻ.",
   "ach.recallFirst.name": "Nhớ lại hơn nhận diện",
-  "ach.recallFirst.desc": "Một tuần từ 30 câu trả lời, 70% là thẻ ghi nhớ thay vì trắc nghiệm.",
+  "ach.recallFirst.desc": "Số tuần từ 30 câu trả lời, 70% là thẻ ghi nhớ thay vì trắc nghiệm.",
   "ach.mixedPractice.name": "Luyện tập xen kẽ",
-  "ach.mixedPractice.desc": "Một phiên trộn từ ba lớp trở lên.",
+  "ach.mixedPractice.desc": "Số phiên trộn từ ba lớp trở lên.",
   "ach.secondLook.name": "Xem lại",
-  "ach.secondLook.desc": "Quay lại một câu trắc nghiệm bạn đã trả lời sai.",
+  "ach.secondLook.desc": "Số câu trắc nghiệm bạn quay lại xem sau khi trả lời sai.",
   "ach.cardFixer.name": "Sửa thẻ",
-  "ach.cardFixer.desc": "Sửa một thẻ ngay khi đang học.",
+  "ach.cardFixer.desc": "Số thẻ bạn sửa ngay khi đang học.",
   "ach.wordCollector.name": "Sưu tầm từ",
   "ach.wordCollector.desc": "Số từ đã lưu vào hộp từ vựng.",
   "ach.explorer.name": "Nhà khám phá",
-  "ach.explorer.desc": "Học từ ba lớp trở lên trong một tuần.",
+  "ach.explorer.desc": "Số tuần bạn học từ ba lớp trở lên.",
   "ach.builder.name": "Người tạo thẻ",
   "ach.builder.desc": "Số thẻ bạn tự tạo.",
   "ach.fromTheBook.name": "Từ trong sách",
-  "ach.fromTheBook.desc": "Học một thẻ tạo từ sách trong KnowledgeApp.",
+  "ach.fromTheBook.desc": "Số sách từ KnowledgeApp bạn đã học thẻ.",
   "ach.freshStart.name": "Khởi đầu mới",
   "ach.freshStart.desc": "Số thẻ bạn tạo đã chuyển sang ôn tập.",
+  "ach.fullMonth.name": "Tháng trọn vẹn",
+  "ach.fullMonth.desc": "Học mọi ngày trong một tháng dương lịch.",
+  "ach.deepMemory.name": "Nhớ sâu",
+  "ach.deepMemory.desc": "Số thẻ có lịch ôn tiếp theo từ 3 tháng trở lên.",
+  "ach.cardsLearned.name": "Thẻ đã học",
+  "ach.cardsLearned.desc": "Tổng số thẻ mới bạn đã học qua.",
+  "ach.chapterDone.name": "Xong một chương",
+  "ach.chapterDone.desc": "Số bài có mọi thẻ đã học qua ít nhất một lần.",
+  "ach.bookDone.name": "Xong một cuốn sách",
+  "ach.bookDone.desc": "Số sách từ KnowledgeApp có mọi thẻ đã học qua ít nhất một lần.",
+  "ach.sharpSession.name": "Phiên sắc bén",
+  "ach.sharpSession.desc": "Số phiên có từ 20 câu trắc nghiệm, đúng từ 90%.",
+  "ach.secondChance.name": "Cơ hội thứ hai",
+  "ach.secondChance.desc": "Thẻ trả lời sai, rồi trả lời đúng ngay trong cùng phiên.",
+  "ach.passageSolved.name": "Giải đoạn văn",
+  "ach.passageSolved.desc": "Số đoạn văn điền từ đúng hết mọi chỗ trống.",
   "nav.selectClasses": "Chọn lớp",
   "sidebar.yourClasses": "Lớp của bạn",
   "sidebar.newClass": "Lớp mới",
@@ -6098,7 +6144,9 @@ var ACH_ICONS = {
   longTermCards: "brain", longMemory: "bars", vocabInUse: "abc", toughOne: "mtn", leechCleared: "bug",
   recallCleared: "recall", writer: "pen", deepSession: "clock", hoursStudied: "hour",
   recallFirst: "head", mixedPractice: "mix", secondLook: "eye", cardFixer: "wrench",
-  wordCollector: "words", explorer: "compass", builder: "build", fromTheBook: "shelf", freshStart: "seed"
+  wordCollector: "words", explorer: "compass", builder: "build", fromTheBook: "shelf", freshStart: "seed",
+  fullMonth: "calfull", deepMemory: "anchor", cardsLearned: "stack", chapterDone: "chapter", bookDone: "books",
+  sharpSession: "bolt", secondChance: "retry", passageSolved: "puzzle"
 };
 var ACH_ICON_PATHS = {
   flame: '<path d="M12 3c1.5 3.9 6 5.4 6 10.5a6 6 0 0 1-12 0c0-2.6 1.4-3.9 2.4-5.1.3 2 1.2 3 2.4 3.4C10.5 8.4 11.1 5.1 12 3z"/>',
@@ -6127,14 +6175,26 @@ var ACH_ICON_PATHS = {
   compass: '<circle cx="12" cy="12" r="8"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
   build: '<rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/><rect x="8.5" y="4" width="7" height="7" rx="1"/>',
   shelf: '<path d="M5 4v16M9 4v16M13 5l4 15M3 20h18"/>',
-  seed: '<path d="M12 20v-8M12 12c0-4 3-7 7-7 0 4-3 7-7 7zM12 14c0-3-2-5-6-5 0 3 2 5 6 5z"/>'
+  seed: '<path d="M12 20v-8M12 12c0-4 3-7 7-7 0 4-3 7-7 7zM12 14c0-3-2-5-6-5 0 3 2 5 6 5z"/>',
+  calfull: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M8 14h2M12 14h2M16 14h0M8 17h2M12 17h2"/>',
+  anchor: '<circle cx="12" cy="5" r="2"/><path d="M12 7v13M8 11h8M5 14a7 7 0 0 0 14 0"/>',
+  stack: '<rect x="4" y="9" width="13" height="11" rx="1.5"/><path d="M7 6h12v11"/><path d="M10 3h11v11"/>',
+  chapter: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8.5 9.5l2 2 4-4"/>',
+  books: '<rect x="4" y="4" width="4" height="16" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><path d="M16.5 5.5l3.5-1 3 15-3.5 1z"/>',
+  bolt: '<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',
+  retry: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+  puzzle: '<path d="M4 8h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4H4z"/>'
 };
 // What a plain count is counting, where the server sends no unit of its own.
 var ACH_UNITS = {
   dayStreak: "days", daysStudied: "days", goalKeeper: "days", aboveAverage: "days", dueZero: "days",
-  lessonMastered: "lessons", longTermCards: "cards", vocabInUse: "words", toughOne: "cards",
-  writer: "typed", hoursStudied: "hours", cardFixer: "fixes", wordCollector: "words",
-  builder: "cards", freshStart: "cards"
+  comeback: "times", steadyRhythm: "weeks", fullMonth: "months",
+  classMastered: "classes", lessonMastered: "lessons", longTermCards: "cards", deepMemory: "cards",
+  longMemory: "reviews", vocabInUse: "words", cardsLearned: "cards", chapterDone: "lessons", bookDone: "books",
+  toughOne: "cards", leechCleared: "cards", recallCleared: "days", writer: "typed", deepSession: "sessions",
+  hoursStudied: "hours", sharpSession: "sessions", secondChance: "cards", passageSolved: "passages",
+  recallFirst: "weeks", mixedPractice: "sessions", secondLook: "cards", cardFixer: "fixes",
+  wordCollector: "words", explorer: "weeks", builder: "cards", fromTheBook: "books", freshStart: "cards"
 };
 
 function achIcon(key) {
@@ -6142,13 +6202,10 @@ function achIcon(key) {
     (ACH_ICON_PATHS[ACH_ICONS[key]] || ACH_ICON_PATHS.star) + '</svg>';
 }
 
-// Medal colour for a tier: bronze first, gold at the top tier of a ladder, silver between.
-// A single-step achievement stays bronze, as the design preview showed. A lost one keeps
-// the colour of what it was, faded by CSS.
-function achMedalTier(tier, steps) {
-  if (!tier) return 0;
-  if (steps === 1 || tier === 1) return 1;
-  return tier >= steps ? 3 : 2;
+// Medal colour for a level: bronze, silver, gold, platinum, diamond, one per level of the
+// five every achievement has. A lost one keeps the colour of what it was, faded by CSS.
+function achMedalTier(tier) {
+  return tier ? Math.min(tier, 5) : 0;
 }
 
 function achThresholdLabel(item, tier) {
@@ -6171,7 +6228,7 @@ function achProgressText(item) {
   var s = item.show || {};
   var text;
   if (s.off) text = t("ach.goalOff");
-  else if (s.unit === "waiting") text = s.cur > 0 ? t("ach.waiting", { n: s.cur }) : item.tier ? (item.earnedAt ? t("ach.earnedOn", { date: achDate(item.earnedAt) }) : "") : t("ach.notYet");
+  else if (s.unit === "waiting" && s.cur > 0) text = t("ach.waiting", { n: s.cur });
   else if (item.next == null) {
     text = item.tiers.length > 1 ? t("ach.count", { n: item.value, unit: ACH_UNITS[item.key] ? t("ach.unit." + ACH_UNITS[item.key]) : "" }).trim()
       : item.earnedAt ? t("ach.earnedOn", { date: achDate(item.earnedAt) }) : "";
@@ -6182,7 +6239,7 @@ function achProgressText(item) {
 
 function achBadgeHtml(item) {
   var shownTier = item.lost && !item.tier ? 1 : item.tier;
-  var medal = achMedalTier(shownTier, item.tiers.length);
+  var medal = achMedalTier(shownTier);
   var label = achThresholdLabel(item, shownTier);
   var cls = "ach-badge " + (medal ? "ach-t" + medal : "ach-locked") + (item.lost ? " ach-lost" : "");
   var name = t("ach." + item.key + ".name");
@@ -6232,7 +6289,7 @@ function achTierName(medal) {
 function achEarnedLineText(item) {
   var name = t("ach." + item.key + ".name");
   if (item.tiers.length === 1) return t("ach.earnedLine", { name: name });
-  return t("ach.earnedTierLine", { name: name, tier: achTierName(achMedalTier(item.tier, item.tiers.length)), threshold: achThresholdLabel(item, item.tier) });
+  return t("ach.earnedTierLine", { name: name, tier: achTierName(achMedalTier(item.tier)), threshold: achThresholdLabel(item, item.tier) });
 }
 
 function achSeenKey() {
@@ -6322,11 +6379,11 @@ function achMiniHtml(data) {
   var next = achNextUp(items);
   var count = achEarnedCount(items);
   var text = next
-    ? t("ach.next", { name: t("ach." + next.key + ".name"), tier: achTierName(achMedalTier(next.tier + 1, next.tiers.length)) })
+    ? t("ach.next", { name: t("ach." + next.key + ".name"), tier: achTierName(achMedalTier(next.tier + 1)) })
     : count === items.length ? t("ach.allEarned") : t("ach.keepGoing");
   return '<div class="dash-ach-mini">' +
     (latest.length ? '<div class="ach-strip-medals">' + latest.map(function(it) {
-      return '<span class="ach-medal ach-t' + achMedalTier(it.tier, it.tiers.length) + '" title="' + escHtml(t("ach." + it.key + ".name")) + '">' + achIcon(it.key) + '</span>';
+      return '<span class="ach-medal ach-t' + achMedalTier(it.tier) + '" title="' + escHtml(t("ach." + it.key + ".name")) + '">' + achIcon(it.key) + '</span>';
     }).join('') + '</div>' : '') +
     '<div class="dash-ach-mini-text"><span><b>' + count + ' / ' + items.length + '</b> · ' + escHtml(text) + '</span>' +
       (next ? '<div class="ach-prog"><i style="width:' + Math.round(next.progress * 100) + '%"></i></div>' : '') + '</div>' +
@@ -8038,7 +8095,7 @@ function achDecimals(n) {
 
 function sessionExtras(earned, lessons, before, after, achBefore, achItems) {
   var medals = earned.slice().sort(function(a, b) {
-    return achMedalTier(b.tier, b.tiers.length) - achMedalTier(a.tier, a.tiers.length);
+    return achMedalTier(b.tier) - achMedalTier(a.tier);
   });
   var out = [];
   if (medals.length) out.push({ kind: "badge", item: medals[0] });
@@ -8080,7 +8137,7 @@ var SESSION_SPARKS = [[-64, -18], [64, -22], [-46, 30], [50, 32], [0, -44], [-76
 
 function sessionExtraHtml(x) {
   if (x.kind === "badge") {
-    var it = x.item, medal = achMedalTier(it.tier, it.tiers.length);
+    var it = x.item, medal = achMedalTier(it.tier);
     var name = t("ach." + it.key + ".name") + (it.tiers.length > 1 ? " · " + achTierName(medal) : "");
     return '<div class="session-badge ach-t' + medal + '">' +
       SESSION_SPARKS.map(function(p) { return '<i class="session-spark" style="--x:' + p[0] + 'px;--y:' + p[1] + 'px"></i>'; }).join("") +
@@ -8091,7 +8148,7 @@ function sessionExtraHtml(x) {
       '<button type="button" class="session-badge-link" data-open-achievements>' + escHtml(t("done.seeBadges")) + '</button></div>';
   }
   if (x.kind === "medal") {
-    return '<div class="session-cheer cheer-ach"><span class="ach-medal ach-t' + achMedalTier(x.item.tier, x.item.tiers.length) + '">' + achIcon(x.item.key) + '</span>' +
+    return '<div class="session-cheer cheer-ach"><span class="ach-medal ach-t' + achMedalTier(x.item.tier) + '">' + achIcon(x.item.key) + '</span>' +
       '<span>' + escHtml(achEarnedLineText(x.item)) + '</span></div>';
   }
   var icon, title, sub;
@@ -9478,6 +9535,8 @@ function checkGapfill() {
   st.checked = true;
   var wrong = st.fill.filter(function(b, k) { return !gapfillSame(st.bank[b], st.answers[k]); }).length;
   st.wrong = wrong;
+  // One a day per passage, so checking the same passage again the same day counts once.
+  if (!wrong) recordStudyEvent("passage_solved", st.cardId + ":" + new Date().toISOString().slice(0, 10));
   haptic(wrong ? "error" : "success");
   playSound(wrong ? "wrong" : "correct");
   renderGapfill();

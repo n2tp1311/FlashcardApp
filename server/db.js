@@ -623,4 +623,43 @@ runMigration("attempt_daily_rollup", function() {
   }
 });
 
+// Achievements went from one to five levels each (lib/achievements.js). user_achievements
+// stores a level number, which means a different threshold on the new ladder: a 30-day
+// streak was tier 2 of [7, 30, 100, 365] and is tier 3 of [3, 7, 30, 100, 365]. Each recorded
+// tier is moved to the new level of the threshold it stood for. Every old threshold is on its
+// new ladder, so nothing is lost. Both ladders are frozen here, so this stays correct whatever
+// the module's later ladders are.
+runMigration("achievement_ladders_v2", function() {
+  var OLD = {
+    dayStreak: [7, 30, 100, 365], daysStudied: [30, 100, 365], goalKeeper: [7, 30], aboveAverage: [7, 14, 30],
+    comeback: [1], steadyRhythm: [4], dueZero: [7, 30], classMastered: [1], lessonMastered: [1, 10, 50],
+    longTermCards: [100, 500, 2000], longMemory: [50], vocabInUse: [10, 50, 200], toughOne: [1, 10, 50],
+    leechCleared: [1], recallCleared: [1], writer: [100, 500, 2000], deepSession: [1], hoursStudied: [1, 10, 50, 100],
+    recallFirst: [1], mixedPractice: [1], secondLook: [1], cardFixer: [1, 10], wordCollector: [10, 50, 200],
+    explorer: [1], builder: [100, 500, 2000], fromTheBook: [1], freshStart: [100]
+  };
+  // longMemory's one step was "50 reviews of month-old cards at 90%": its new first level.
+  var NEW = {
+    dayStreak: [3, 7, 30, 100, 365], daysStudied: [10, 30, 100, 365, 1000], goalKeeper: [3, 7, 14, 30, 60],
+    aboveAverage: [3, 7, 14, 30, 60], comeback: [1, 2, 4, 7, 12], steadyRhythm: [2, 4, 8, 16, 32],
+    dueZero: [3, 7, 14, 30, 60], classMastered: [1, 2, 4, 7, 12], lessonMastered: [1, 10, 50, 150, 400],
+    longTermCards: [100, 500, 2000, 5000, 12000], longMemory: [50, 150, 400, 1000, 2500],
+    vocabInUse: [10, 50, 200, 500, 1200], toughOne: [1, 10, 50, 150, 400], leechCleared: [1, 3, 7, 15, 30],
+    recallCleared: [1, 7, 30, 100, 250], writer: [100, 500, 2000, 5000, 12000], deepSession: [1, 5, 20, 50, 120],
+    hoursStudied: [1, 10, 50, 100, 250], recallFirst: [1, 4, 12, 26, 52], mixedPractice: [1, 5, 20, 50, 120],
+    secondLook: [1, 5, 20, 50, 120], cardFixer: [1, 10, 30, 75, 150], wordCollector: [10, 50, 200, 500, 1200],
+    explorer: [1, 4, 12, 26, 52], builder: [100, 500, 2000, 5000, 12000], fromTheBook: [1, 2, 4, 7, 12],
+    freshStart: [100, 250, 500, 1000, 2000]
+  };
+  var rows = db.prepare("SELECT user_id, key, tier FROM user_achievements").all();
+  var set = db.prepare("UPDATE user_achievements SET tier = ? WHERE user_id = ? AND key = ?");
+  rows.forEach(function(r) {
+    var old = OLD[r.key], next = NEW[r.key];
+    if (!old || !next || r.tier < 1) return;
+    var reached = old[Math.min(r.tier, old.length) - 1];
+    var tier = next.filter(function(x) { return x <= reached; }).length;
+    if (tier !== r.tier) set.run(tier, r.user_id, r.key);
+  });
+});
+
 module.exports = db;

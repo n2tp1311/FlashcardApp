@@ -38,6 +38,7 @@ server.use(express.json());
 server.use("/api", require(path.join(root, "server/routes/cards.js")));
 server.use("/api/stats", require(path.join(root, "server/routes/stats.js")));
 server.use("/api/classes", require(path.join(root, "server/routes/classes.js")));
+server.use("/api/achievements", require(path.join(root, "server/routes/achievements.js")));
 
 const now = Math.floor(Date.now() / 1000);
 db.exec(`
@@ -287,4 +288,37 @@ test("a card shown but never graded, or marked Know It, is still new: Study now 
   assert.equal(est.availableNewCards, 3);
   assert.deepEqual(est.byClass, [{ id: "k5", name: "Seen", available: 3 }]);
   assert.deepEqual((await studyNow({ reviews: null, newCards: 10 }, "u5")).body.cards.map((c) => c.id), ["seen", "known", "untouched"]);
+});
+
+test("achievements over the real schema: learned, deep memory, a solved passage, and Needs Recall days", async () => {
+  db.exec(`
+    INSERT INTO users (id, email, name) VALUES ('u6', 'f@x', 'F');
+    INSERT INTO classes (id, user_id, name) VALUES ('k6', 'u6', 'Deep');
+    INSERT INTO lessons (id, class_id, title, format) VALUES ('l6', 'k6', 'Only', 'term-def');
+    INSERT INTO cards (id, lesson_id, format, data, external_id) VALUES
+      ('deep', 'l6', 'term-def', '{}', 'ka-1'), ('near', 'l6', 'term-def', '{}', 'ka-2');
+    INSERT INTO attempts (id, card_id, user_id, correct, source, created_at) VALUES ('q6', 'near', 'u6', 1, 'quiz', ${now - 60});
+  `);
+  st.run("deep", "u6", now + 100 * 86400, now - 86400);
+  st.run("near", "u6", now + 30 * 86400, now - 86400);
+  const get = async () => {
+    const body = await (await fetch(base + "/api/achievements", { headers: { "x-user": "u6" } })).json();
+    const m = {}; body.items.forEach((i) => { m[i.key] = i; }); return m;
+  };
+  const post = (kind, ref) => fetch(base + "/api/achievements/events", { method: "POST",
+    headers: { "content-type": "application/json", "x-user": "u6" }, body: JSON.stringify({ kind, ref }) });
+  assert.equal((await post("passage_solved", "deep:2026-10-21")).status, 201);
+  assert.equal((await post("recall_zero", "2026-10-21")).status, 400, "the server's own event");
+  const a = await get();
+  assert.equal(Object.keys(a).length, 35);
+  assert.equal(a.cardsLearned.value, 2);
+  assert.equal(a.deepMemory.value, 1, "100 days out is deep; 30 is only mastered");
+  assert.equal(a.longTermCards.value, 2);
+  assert.equal(a.chapterDone.value, 1);
+  assert.equal(a.bookDone.value, 1);
+  assert.equal(a.passageSolved.value, 1);
+  assert.equal(a.recallCleared.value, 1);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM study_events WHERE user_id = 'u6' AND kind = 'recall_zero'").get().n, 1);
+  assert.equal(a.bookDone.tier, 1);
+  assert.equal(db.prepare("SELECT tier FROM user_achievements WHERE user_id = 'u6' AND key = 'bookDone'").get().tier, 1);
 });

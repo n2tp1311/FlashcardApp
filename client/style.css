@@ -5128,18 +5128,22 @@ button.leech-pill:hover { filter: brightness(0.96); }
 
 /* ============================
    Achievements: medals on their own page, a strip on the Dashboard, and a line on the
-   session-complete screen. A medal's ring is its tier: bronze, silver between, gold at the
-   top of a ladder. Locked is a dashed ring; lost (a mastery one that no longer holds) fades.
+   session-complete screen. A medal's ring is its level: bronze, silver, gold, platinum,
+   diamond. Locked is a dashed ring; lost (a mastery one that no longer holds) fades.
    ============================ */
 :root {
   --medal-1: #a8703f; --medal-1-bg: #f3e6da;
   --medal-2: #6f7784; --medal-2-bg: #e7e9ec;
   --medal-3: #a87a00; --medal-3-bg: #f6ecd0;
+  --medal-4: #2f7c86; --medal-4-bg: #dcedef;
+  --medal-5: #5a4fc4; --medal-5-bg: #e6e3f8;
 }
 [data-theme="dark"] {
   --medal-1: #d9a172; --medal-1-bg: #3a2c22;
   --medal-2: #bfc6cf; --medal-2-bg: #30343a;
   --medal-3: #e8c068; --medal-3-bg: #3a3222;
+  --medal-4: #7fcfd8; --medal-4-bg: #1f3436;
+  --medal-5: #a99ff0; --medal-5-bg: #2c2942;
 }
 .ach-page { width: 100%; max-width: 900px; margin: 0 auto; display: grid; gap: 14px; }
 .ach-summary { margin: 2px 0 0; color: var(--text2); font-variant-numeric: tabular-nums; }
@@ -5168,6 +5172,8 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .ach-t1 { color: var(--medal-1); } .ach-t1 .ach-medal, .ach-medal.ach-t1 { background: var(--medal-1-bg); }
 .ach-t2 { color: var(--medal-2); } .ach-t2 .ach-medal, .ach-medal.ach-t2 { background: var(--medal-2-bg); }
 .ach-t3 { color: var(--medal-3); } .ach-t3 .ach-medal, .ach-medal.ach-t3 { background: var(--medal-3-bg); }
+.ach-t4 { color: var(--medal-4); } .ach-t4 .ach-medal, .ach-medal.ach-t4 { background: var(--medal-4-bg); }
+.ach-t5 { color: var(--medal-5); } .ach-t5 .ach-medal, .ach-medal.ach-t5 { background: var(--medal-5-bg); }
 .ach-locked .ach-medal { color: var(--text3); border-style: dashed; background: transparent; opacity: 0.8; }
 .ach-lost .ach-medal { opacity: 0.5; }
 .ach-name { font-size: 0.8125rem; font-weight: 600; color: var(--text); line-height: 1.25; text-wrap: balance; }

@@ -26,7 +26,7 @@ function days(list) {
 test("every achievement comes back once, with its tiers in order", function() {
   const items = lib.computeAchievements(facts(), TODAY);
   assert.equal(items.length, lib.DEFS.length);
-  assert.equal(items.length, 27);
+  assert.equal(items.length, 35);
   assert.ok(!items.some(i => i.key === "bothWays"), "Both ways round has nothing to track");
   items.forEach(i => {
     assert.deepEqual(i.tiers, i.tiers.slice().sort((a, b) => a - b), i.key);
@@ -50,12 +50,13 @@ test("best streak survives a later gap; days studied counts them all", function(
   list.push("2026-09-25");
   const r = byKey(lib.computeAchievements(facts({ attempts: days(list) }), TODAY));
   assert.ok(r.dayStreak.value >= 7);
-  assert.equal(r.dayStreak.tier, 1);
+  assert.equal(r.dayStreak.tier, 2);
   assert.equal(r.daysStudied.value, 9);
 });
 
-test("comeback needs a week away and then three days running", function() {
+test("comeback needs a week away and then three days running, and counts each time", function() {
   assert.equal(lib.comeback(["2026-09-01", "2026-09-10", "2026-09-11", "2026-09-12"]), 1);
+  assert.equal(lib.comeback(["2026-09-01", "2026-09-10", "2026-09-11", "2026-09-12", "2026-09-25", "2026-09-26", "2026-09-27"]), 2);
   assert.equal(lib.comeback(["2026-09-01", "2026-09-10", "2026-09-11"]), 0);
   assert.equal(lib.comeback(["2026-09-01", "2026-09-05", "2026-09-06", "2026-09-07"]), 0);
 });
@@ -115,7 +116,13 @@ test("Recall cleared needs a quiz first, then nothing quiz-only due", function()
   assert.equal(byKey(lib.computeAchievements(facts({ cards: [due] }), TODAY)).recallCleared.tier, 0);
   assert.equal(byKey(lib.computeAchievements(facts({ cards: [due], attempts: quiz }), TODAY)).recallCleared.show.cur, 1);
   const later = Object.assign({}, due, { due: Date.parse("2027-01-01") / 1000 });
-  assert.equal(byKey(lib.computeAchievements(facts({ cards: [later], attempts: quiz }), TODAY)).recallCleared.tier, 1);
+  const clear = byKey(lib.computeAchievements(facts({ cards: [later], attempts: quiz }), TODAY)).recallCleared;
+  assert.equal(clear.tier, 1);
+  assert.equal(clear.show.clearNow, true, "the route records today from this");
+  // Levels count the days it was found empty: recorded ones, plus today when it is.
+  const days7 = ["2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-06"];
+  assert.equal(byKey(lib.computeAchievements(facts({ cards: [later], attempts: quiz, recallZeroDays: days7 }), TODAY)).recallCleared.tier, 2);
+  assert.equal(byKey(lib.computeAchievements(facts({ cards: [due], attempts: quiz, recallZeroDays: days7 }), TODAY)).recallCleared.value, 6);
 });
 
 test("recall over recognition needs 30 answers in a week, 70% flashcards", function() {
@@ -138,7 +145,8 @@ test("the route keeps a reached tier, except for lossable ones, which say they w
   assert.match(route, /lost: it\.lossable && best > it\.tier/);
   assert.match(route, /if \(it\.tier > \(rec \? rec\.tier : 0\)\)/);
   // due_zero is the server's to write: a client cannot claim it.
-  assert.match(route, /const CLIENT_EVENTS = new Set\(\["second_look", "card_fix"\]\);/);
+  assert.match(route, /const CLIENT_EVENTS = new Set\(\["second_look", "card_fix", "passage_solved"\]\);/);
+  assert.match(route, /if \(recall && recall\.show\.clearNow\)\s*db\.prepare\("INSERT OR IGNORE INTO study_events \(user_id, kind, ref\) VALUES \(\?, 'recall_zero', date\('now'\)\)"\)/);
   const attempts = fs.readFileSync(path.join(__dirname, "..", "server", "routes", "attempts.js"), "utf8");
   assert.match(attempts, /typed === true \? 1 : null/);
   assert.match(attempts, /recordDueZero\(/);
@@ -173,15 +181,15 @@ function item(over) {
     next: 100, progress: 0, show: { cur: 0, target: 100 }, earnedAt: null, lost: false }, over);
 }
 
-test("medal colour: bronze first, gold at the top of a ladder, silver between; single steps stay bronze", function() {
-  assert.equal(ctx.achMedalTier(0, 3), 0);
-  assert.equal(ctx.achMedalTier(1, 3), 1);
-  assert.equal(ctx.achMedalTier(2, 3), 2);
-  assert.equal(ctx.achMedalTier(3, 3), 3);
-  assert.equal(ctx.achMedalTier(2, 4), 2);
-  assert.equal(ctx.achMedalTier(3, 4), 2);
-  assert.equal(ctx.achMedalTier(2, 2), 3);
-  assert.equal(ctx.achMedalTier(1, 1), 1);
+test("medal colour: one per level, bronze to diamond", function() {
+  [0, 1, 2, 3, 4, 5].forEach(n => assert.equal(ctx.achMedalTier(n), n));
+  assert.equal(ctx.achMedalTier(6), 5);
+  const css = fs.readFileSync(path.join(__dirname, "..", "client", "style.css"), "utf8");
+  [1, 2, 3, 4, 5].forEach(n => {
+    assert.match(css, new RegExp("\\.ach-t" + n + " \\{ color: var\\(--medal-" + n + "\\); \\}"));
+    assert.equal(css.split("--medal-" + n + "-bg: #").length - 1, 2, "light and dark tokens for level " + n);
+  });
+  [1, 2, 3, 4, 5].forEach(n => assert.equal(app.split('"ach.tier' + n + '":').length - 1, 2, "tier " + n + " named in both languages"));
 });
 
 test("progress line: count toward the next tier, percent, waiting, goal off, not yet, lost", function() {
@@ -263,4 +271,103 @@ test("wiring: sidebar, screen, back paths, strip, events and the typed flag", fu
   assert.equal(app.split("openEditCard(card.id, card, true);").length - 1, 2);
   assert.equal(app.split("renderQuizCard();\n  noteQuizSecondLook();").length - 1, 2);
   assert.match(extract("noteQuizSecondLook"), /if \(res && !res\.correct\) recordStudyEvent\("second_look", card\.id\);/);
+  assert.match(extract("checkGapfill"), /if \(!wrong\) recordStudyEvent\("passage_solved", st\.cardId \+ ":" \+ new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\);/);
+});
+
+/* ---------- five levels ---------- */
+
+test("every achievement has five levels, and each step asks more than the one before", function() {
+  lib.DEFS.forEach(d => {
+    assert.equal(d.tiers.length, 5, d.key);
+    for (let i = 2; i < 5; i++)
+      assert.ok(d.tiers[i] - d.tiers[i - 1] >= d.tiers[i - 1] - d.tiers[i - 2], d.key + " step " + i);
+  });
+});
+
+function migration() {
+  const src = fs.readFileSync(path.join(__dirname, "..", "server", "db.js"), "utf8");
+  const start = src.indexOf('runMigration("achievement_ladders_v2"');
+  assert.ok(start >= 0);
+  const body = src.slice(start, src.indexOf("\n});\n", start) + 4);
+  return function(rows) {
+    const updates = [];
+    const db = { prepare: (sql) => ({ all: () => rows, run: (...a) => updates.push(a) }) };
+    let ladders;
+    vm.runInNewContext(body.replace("var rows =", "ladders = { OLD: OLD, NEW: NEW }; var rows ="),
+      { db, runMigration: (n, fn) => fn(), get ladders() { return ladders; }, set ladders(v) { ladders = v; } });
+    return { updates, ladders };
+  };
+}
+
+test("the migration moves a recorded tier to the level of the threshold it stood for", function() {
+  const run = migration();
+  const { updates, ladders } = run([
+    { user_id: "u", key: "dayStreak", tier: 2 },       // 30 days: level 3 now
+    { user_id: "u", key: "steadyRhythm", tier: 1 },    // 4 weeks: level 2
+    { user_id: "u", key: "writer", tier: 3 },          // 2000: still level 3
+    { user_id: "u", key: "longMemory", tier: 1 },      // the old one step: level 1
+    { user_id: "u", key: "freshStart", tier: 1 },
+    { user_id: "u", key: "gone", tier: 2 }
+  ]);
+  assert.deepEqual(updates, [[3, "u", "dayStreak"], [2, "u", "steadyRhythm"]]);
+  // Frozen ladders match today's, and every old threshold is on its new ladder.
+  lib.DEFS.filter(d => ladders.OLD[d.key]).forEach(d => {
+    assert.deepEqual(Array.from(ladders.NEW[d.key]), d.tiers, d.key);
+    ladders.OLD[d.key].forEach(x => assert.ok(d.tiers.includes(x), d.key + " keeps " + x));
+  });
+});
+
+test("full month: every day of a calendar month, the one in progress only once it is complete", function() {
+  const sept = [];
+  for (let i = 1; i <= 30; i++) sept.push("2026-09-" + String(i).padStart(2, "0"));
+  assert.equal(lib.fullMonths(sept), 1);
+  assert.equal(lib.fullMonths(sept.slice(1)), 0);
+  assert.equal(lib.fullMonths(sept.concat(["2026-10-01", "2026-10-02"])), 1);
+  const feb = [];
+  for (let i = 1; i <= 28; i++) feb.push("2027-02-" + String(i).padStart(2, "0"));
+  assert.equal(lib.fullMonths(feb), 1);
+});
+
+test("learned, chapter and book done count graded cards; deep memory counts live deep ones", function() {
+  const c = (id, lesson, cls, more) => Object.assign({ id, lesson, cls, archived: 0, due: 1, ext: "x" + id, mastered: 0, deep: 0 }, more);
+  const cards = [
+    c("a", "l1", "k1", { deep: 1 }), c("b", "l1", "k1"), c("c", "l2", "k1", { due: null }),
+    c("d", "l3", "k2"), c("e", "l4", "k3", { ext: null }),
+    c("f", "l5", "k4", { archived: 1, deep: 1 })
+  ];
+  const r = byKey(lib.computeAchievements(facts({ cards }), TODAY));
+  assert.equal(r.cardsLearned.value, 5);
+  assert.equal(r.chapterDone.value, 3, "l1, l3 and l4; l2 has a new card; archived l5 is set aside");
+  assert.equal(r.bookDone.value, 1, "k2 only: k1 has a new card, k3 is not from a book");
+  assert.equal(r.deepMemory.value, 1);
+  assert.ok(r.deepMemory.lossable && !r.chapterDone.lossable && !r.bookDone.lossable);
+});
+
+test("sharp session: 20+ quiz answers at 90%; second chance: missed then right in one session", function() {
+  const a = [];
+  for (let i = 0; i < 20; i++) a.push(answer(T0 + i * 30, { source: "quiz", correct: i < 18 ? 1 : 0, card: "q" + i }));
+  a.push(answer(T0 + 20 * 30, { source: "quiz", correct: 1, card: "q18" }));
+  a.push(answer(T0 + 21 * 30, { source: "quiz", correct: 1, card: "q18" }));
+  let r = byKey(lib.computeAchievements(facts({ attempts: a }), TODAY));
+  assert.equal(r.sharpSession.value, 1);
+  assert.equal(r.secondChance.value, 1, "q18 once; q19 never came back right; a repeat right does not count twice");
+  a.push(answer(T0 + 22 * 30, { source: "quiz", correct: 0, card: "q0" }), answer(T0 + 23 * 30, { source: "quiz", correct: 0, card: "q1" }));
+  r = byKey(lib.computeAchievements(facts({ attempts: a }), TODAY));
+  assert.equal(r.sharpSession.value, 0, "19 of 24 is under 90%");
+  // A miss in one session and a right answer in the next is not a second chance.
+  const split = [answer(T0, { correct: 0 }), answer(T0 + 11 * 60, { correct: 1 })];
+  assert.equal(byKey(lib.computeAchievements(facts({ attempts: split }), TODAY)).secondChance.value, 0);
+});
+
+test("one-off achievements became counts: sessions, weeks, books, events", function() {
+  const a = [];
+  for (let s = 0; s < 2; s++)
+    for (let i = 0; i < 30; i++) a.push(answer(T0 + s * 3600 + i * 60, { ms: 60000, cls: "k" + (i % 3), ext: "e", card: "c" + i }));
+  const r = byKey(lib.computeAchievements(facts({ attempts: a, secondLooks: 5, passagesSolved: 10 }), TODAY));
+  assert.equal(r.deepSession.value, 2);
+  assert.equal(r.mixedPractice.value, 2);
+  assert.equal(r.fromTheBook.value, 3);
+  assert.equal(r.secondLook.tier, 2);
+  assert.equal(r.passageSolved.tier, 1);
+  assert.equal(r.deepSession.show.cur, 2, "after the first, the line counts toward the next level");
 });

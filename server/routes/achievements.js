@@ -7,8 +7,10 @@ const { computeAchievements } = require("../lib/achievements");
 const { MASTERED_INTERVAL_SEC, MASTERED_SQL } = require("../lib/mastery");
 const router  = express.Router();
 
-// Events the client reports. due_zero is written by the server only (routes/attempts.js).
-const CLIENT_EVENTS = new Set(["second_look", "card_fix"]);
+// Events the client reports. due_zero (routes/attempts.js) and recall_zero (below) are written
+// by the server only.
+const CLIENT_EVENTS = new Set(["second_look", "card_fix", "passage_solved"]);
+const DEEP_MEMORY_SEC = 90 * 86400;  // Deep memory: next review three months or more out
 const DEFAULT_DAILY_GOAL = 20; // the client's default when the preference was never set
 
 function gatherFacts(uid) {
@@ -28,10 +30,11 @@ function gatherFacts(uid) {
   const cards = db.prepare(
     "SELECT ca.id, ca.lesson_id AS lesson, l.class_id AS cls, c.archived, ca.external_id AS ext, " +
     "cs.fsrs_state AS state, cs.fsrs_lapses AS lapses, cs.srs_due_at AS due, cs.last_correct_source AS lastCorrectSource, " +
-    "CASE WHEN " + MASTERED_SQL + " THEN 1 ELSE 0 END AS mastered " +
+    "CASE WHEN " + MASTERED_SQL + " THEN 1 ELSE 0 END AS mastered, " +
+    "CASE WHEN " + MASTERED_SQL + " THEN 1 ELSE 0 END AS deep " +
     "FROM cards ca JOIN lessons l ON l.id = ca.lesson_id JOIN classes c ON c.id = l.class_id " +
     "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? WHERE c.user_id = ?"
-  ).all(MASTERED_INTERVAL_SEC, uid, uid).map(c => Object.assign(c, { vocab: vocabCards.has(c.id) }));
+  ).all(MASTERED_INTERVAL_SEC, DEEP_MEMORY_SEC, uid, uid).map(c => Object.assign(c, { vocab: vocabCards.has(c.id) }));
 
   const events = {};
   db.prepare("SELECT kind, ref FROM study_events WHERE user_id = ?").all(uid).forEach(e => {
@@ -51,6 +54,8 @@ function gatherFacts(uid) {
     cards,
     dailyGoal,
     dueZeroDays: events.due_zero || [],
+    recallZeroDays: events.recall_zero || [],
+    passagesSolved: (events.passage_solved || []).length,
     secondLooks: (events.second_look || []).length,
     cardFixes: (events.card_fix || []).length,
     vocabRequests: db.prepare("SELECT COUNT(*) AS n FROM vocabulary_requests WHERE user_id = ?").get(uid).n
@@ -64,6 +69,9 @@ router.get("/", requireAuth, (req, res) => {
   const uid = req.session.userId;
   const facts = gatherFacts(uid);
   const items = computeAchievements(facts, new Date().toISOString().slice(0, 10));
+  const recall = items.find(it => it.key === "recallCleared");
+  if (recall && recall.show.clearNow)
+    db.prepare("INSERT OR IGNORE INTO study_events (user_id, kind, ref) VALUES (?, 'recall_zero', date('now'))").run(uid);
   const recorded = new Map(db.prepare("SELECT key, tier, earned_at FROM user_achievements WHERE user_id = ?")
     .all(uid).map(r => [r.key, r]));
   const upsert = db.prepare(
@@ -101,7 +109,7 @@ router.get("/", requireAuth, (req, res) => {
 router.post("/events", requireAuth, (req, res) => {
   const { kind, ref } = req.body || {};
   if (!CLIENT_EVENTS.has(kind) || typeof ref !== "string" || !ref || ref.length > 64)
-    return res.status(400).json({ error: "kind must be second_look or card_fix, ref a string of up to 64 characters" });
+    return res.status(400).json({ error: "kind must be second_look, card_fix or passage_solved, ref a string of up to 64 characters" });
   db.prepare("INSERT OR IGNORE INTO study_events (user_id, kind, ref) VALUES (?, ?, ?)").run(req.session.userId, kind, ref);
   res.status(201).json({ ok: true });
 });
