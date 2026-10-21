@@ -10,6 +10,7 @@ const { previewIntervals } = require("../fsrs");
 const { forEachBatch } = require("../lib/batch");
 const { isLeech, lapsesSinceEdit, resetLeech } = require("../lib/leech");
 const { userScheduler } = require("../lib/memory");
+const { UNSCHEDULED_SQL } = require("../lib/mastery");
 const router  = express.Router();
 
 const UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads");
@@ -199,7 +200,7 @@ router.post("/cards/study-now", requireAuth, (req, res) => {
   ).all(userId, userId, now, ...classArgs, reviews);
   const unseen = fresh === 0 ? [] : db.prepare(STUDY_NOW_COLS +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
-    "WHERE c.user_id = ? AND c.archived = 0 AND cs.card_id IS NULL" + inClasses + " " +
+    "WHERE c.user_id = ? AND c.archived = 0 AND " + UNSCHEDULED_SQL + inClasses + " " +
     "ORDER BY c.sort_order, c.created_at, l.sort_order, l.created_at, cards.sort_order, cards.created_at LIMIT ?"
   ).all(userId, userId, ...classArgs, fresh);
 

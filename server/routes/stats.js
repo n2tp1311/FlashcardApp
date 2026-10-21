@@ -7,7 +7,7 @@ const { requireAuth } = require("../middleware/auth");
 const { computeStreak, weekRow, weekStart, addDays } = require("../lib/streak");
 const { summarizeToday } = require("../lib/today");
 const { aboveAverageRun } = require("../lib/aboveAvg");
-const { MASTERED_INTERVAL_SEC, MASTERED_SQL } = require("../lib/mastery");
+const { MASTERED_INTERVAL_SEC, MASTERED_SQL, UNSCHEDULED_SQL } = require("../lib/mastery");
 const router  = express.Router();
 
 // Whole weeks back from today on attempt_daily's UTC days: today and the six days before are 0.
@@ -835,19 +835,19 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
     accuracyMultiplier = acc >= 0.85 ? 1.15 : acc >= 0.70 ? 1.0 : acc >= 0.50 ? 0.7 : 0.4;
   }
 
-  // Cards never touched at all (no card_states row), non-archived classes only
+  // Cards never scheduled, non-archived classes only
   const availRow = db.prepare(
     "SELECT COUNT(*) AS n FROM cards ca " +
     "JOIN lessons l ON ca.lesson_id = l.id " +
     "JOIN classes c ON l.class_id = c.id " +
     "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
-    "WHERE c.user_id = ? AND c.archived = 0 AND cs.card_id IS NULL"
+    "WHERE c.user_id = ? AND c.archived = 0 AND " + UNSCHEDULED_SQL
   ).get(uid, uid);
   const availableNewCards = availRow.n || 0;
   // Per class, for Study now's class checklist: its names, and how many new cards each
   // could add when only some classes are picked.
   const byClass = db.prepare(
-    "SELECT c.id, c.name, COUNT(ca.id) - COUNT(cs.card_id) AS available FROM classes c " +
+    "SELECT c.id, c.name, COUNT(ca.id) - COUNT(cs.srs_due_at) AS available FROM classes c " +
     "LEFT JOIN lessons l ON l.class_id = c.id " +
     "LEFT JOIN cards ca ON ca.lesson_id = l.id " +
     "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +

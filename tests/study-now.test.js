@@ -270,3 +270,21 @@ test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup
   assert.match(fn("startStudy"), /launchStudy\(filtered, mode, order\);/);
   assert.match(app, /getStudyNowCards: function\(reviews, newCards, classIds\) \{ return req\("POST", "\/cards\/study-now"/);
 });
+
+test("a card shown but never graded, or marked Know It, is still new: Study now offers it and the class is not done", async () => {
+  db.exec(`
+    INSERT INTO users (id, email, name) VALUES ('u5', 'e@x', 'E');
+    INSERT INTO classes (id, user_id, name) VALUES ('k5', 'u5', 'Seen');
+    INSERT INTO lessons (id, class_id, title, format) VALUES ('l5', 'k5', 'Only', 'term-def');
+    INSERT INTO cards (id, lesson_id, format, data, sort_order) VALUES
+      ('seen', 'l5', 'term-def', '{}', 0), ('known', 'l5', 'term-def', '{}', 1), ('untouched', 'l5', 'term-def', '{}', 2);
+    INSERT INTO card_states (card_id, user_id, last_seen_at) VALUES ('seen', 'u5', ${now - 60});
+    INSERT INTO card_states (card_id, user_id, known) VALUES ('known', 'u5', 1);
+  `);
+  // Both rows carry no schedule. Counted by the row alone, they were neither new nor due,
+  // so the class read Completed while the mastery bar still showed them as New.
+  const est = await (await fetch(base + "/api/stats/new-card-estimate", { headers: { "x-user": "u5" } })).json();
+  assert.equal(est.availableNewCards, 3);
+  assert.deepEqual(est.byClass, [{ id: "k5", name: "Seen", available: 3 }]);
+  assert.deepEqual((await studyNow({ reviews: null, newCards: 10 }, "u5")).body.cards.map((c) => c.id), ["seen", "known", "untouched"]);
+});
