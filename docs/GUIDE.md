@@ -517,8 +517,10 @@ if a card's own `distractors` contains a correct statement, the quiz will show t
 answers. Such a card has to be edited.
 
 **The question card says what each answer would do to the schedule**, before it is
-answered: a small line at its bottom edge, "✓ 15d ✗ 10 min" (`#quiz-outcomes`; screen
-readers hear "If right: back in 15d"). The flip card shows each grade's interval on its
+answered: a small line at its bottom edge, "✗ 10 min ✓ 15d" (`#quiz-outcomes`; screen
+readers hear "If right: back in 15d"). Wrong comes first, as the flip card's grade buttons
+run from Again to Easy; the user asked for that order. The check and cross are the app's
+SVG icons: the ✓ ✗ characters fell back to a symbol font that matched nothing around them. The flip card shows each grade's interval on its
 button; a quiz showed nothing, so the learner could not see a right answer's reward or a
 wrong one's cost. It first went on the answer sheet ("Next review in 15d · was 12d"), but a
 right answer moves on after 1.2 s, too fast to read it, so it moved up to where it can be
