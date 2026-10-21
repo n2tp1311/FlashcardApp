@@ -90,3 +90,17 @@ test("the sheet slides from below, respects the safe area, and leaves room for t
   assert.match(css, /#screen-quiz\.sheet-open \.quiz-container \{ padding-bottom/);
   for (const tone of ["correct", "combo", "wrong"]) assert.match(css, new RegExp("\\.study-sheet-" + tone + " +\\{ background"));
 });
+
+test("the sheet moves down to the visible bottom when iOS leaves the viewports apart", function() {
+  const s = app.indexOf("\nfunction vvBottomShift(");
+  const fn = app.slice(s, app.indexOf("\n}\n", s) + 3);
+  const shift = (win) => { const ctx = { window: win, Math }; vm.createContext(ctx); vm.runInContext(fn, ctx); return ctx.vvBottomShift(); };
+  assert.equal(shift({ innerHeight: 844 }), 0, "no visualViewport: nothing moves");
+  assert.equal(shift({ innerHeight: 844, visualViewport: { offsetTop: 0, height: 844 } }), 0);
+  // The Home Screen app after the keyboard: the visible area sits 120px below the layout one.
+  assert.equal(shift({ innerHeight: 844, visualViewport: { offsetTop: 120, height: 844 } }), 120);
+  assert.match(css, /\.study-sheet \{[^}]*translate: 0 var\(--vv-shift, 0px\);/);
+  const show = app.slice(app.indexOf("\nfunction showQuizSheet("), app.indexOf("\n}\n", app.indexOf("\nfunction showQuizSheet(")));
+  assert.match(show, /syncVvShift\(\);/);
+  assert.match(app, /window\.visualViewport\.addEventListener\("resize", syncVvShift\);\s*window\.visualViewport\.addEventListener\("scroll", syncVvShift\);/);
+});

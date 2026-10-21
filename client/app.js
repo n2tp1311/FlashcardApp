@@ -10582,6 +10582,23 @@ function revealRightQuizOption() {
   if (over > 0) window.scrollBy(0, over);
 }
 
+// iOS 26 can leave the visual viewport offset from the layout one (in the Home Screen app,
+// visualViewport.offsetTop stays above 0 after the keyboard closes), and a bar fixed to the
+// bottom then floats with a gap under it. --vv-shift is how far the visible bottom is below
+// the layout bottom; the answer sheet moves down by it. Zero wherever the two agree.
+function vvBottomShift() {
+  var vv = window.visualViewport;
+  if (!vv) return 0;
+  return Math.round(vv.offsetTop + vv.height - window.innerHeight);
+}
+function syncVvShift() {
+  document.documentElement.style.setProperty("--vv-shift", vvBottomShift() + "px");
+}
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", syncVvShift);
+  window.visualViewport.addEventListener("scroll", syncVvShift);
+}
+
 var QUIZ_PRAISE_COUNT = 6, QUIZ_PRAISE_SUB_COUNT = 3, QUIZ_WRONG_COUNT = 3;
 
 function randomPick(count, avoid) {
@@ -10653,6 +10670,7 @@ function setQuizOutcomeTime(isCorrect, seconds) {
 function showQuizSheet(cheer) {
   var sheet = document.getElementById("quiz-sheet");
   sheet.className = "study-sheet study-sheet-" + cheer.tone;
+  syncVvShift();
   document.getElementById("quiz-sheet-title").textContent = cheer.title;
   document.getElementById("quiz-sheet-sub").textContent = cheer.sub;
   void sheet.offsetWidth; // restart the slide-up when the previous answer's sheet was still open
