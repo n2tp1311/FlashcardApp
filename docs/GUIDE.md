@@ -827,24 +827,49 @@ calls one id at a time. POST because the id lists outgrow a URL; nothing is writ
 
 ## 11. Achievements
 
-27 achievements in five groups, **computed from stored data on every request**
+35 achievements in five groups, **computed from stored data on every request**
 (`lib/achievements.js` is pure; `routes/achievements.js` gathers the facts, about 30 ms
 on the test account). Computing rather than counting means the rules can change and the
 whole history counts at once. They reward showing up, struggling and method more than
 volume; nothing rewards cramming (there is no "most cards in a day").
 
+- **Every achievement has five levels**: bronze, silver, gold, platinum, diamond, one medal
+  colour each. The user asked for levels on every achievement with each rank-up harder
+  than the last, so every ladder's steps grow (Day streak 3 / 7 / 30 / 100 / 365; a test
+  holds every ladder to it): the first level comes within days, the last takes a year or
+  more. Achievements that were one-off became counts so they can have levels (Comeback:
+  how many times; Deep session, Mixed practice: sessions; Recall over recognition,
+  Explorer: weeks; From the book: books studied; Leech cleared: cards). Until the first
+  level, a few keep the line that shows how close the first is ("18 / 25 min", "64% of
+  70%"); after it, every line counts toward the next level.
+- **The ladders changed under stored tiers.** `user_achievements` holds a level number, and
+  level 2 of the old Day streak ladder (30 days) is level 3 of the new one. The migration
+  `achievement_ladders_v2` moves each recorded tier to the level of the threshold it stood
+  for, with both ladders frozen inside it. Every old threshold is on its new ladder, so no
+  level anyone had is lost, and nothing reads as newly earned.
+- **Eight were added**: Full month (every day of a UTC calendar month), Deep memory
+  (cards due 90+ days out; lossable like mastery), Cards learned (cards with a due date),
+  Chapter done and Book done (every card in a lesson, or in a class from KnowledgeApp,
+  learned; the moment Study order calls a class Completed, but kept once reached), Sharp
+  session (20+ quiz answers at 90%), Second chance (missed, then right in the same
+  session, once per card per session) and Passage solved. "Learned" means a due date, the
+  rule Study now uses for new cards (§8), so Book done and Completed cannot disagree.
 - **Earned tiers are stored** (`user_achievements`) only so an achievement about the past
   — a 30-day streak — is not taken away when the streak ends, and so the page can say
   when it was earned.
 - **Five describe the present** (Class mastered, Lesson mastered, Cards in long-term
-  memory, Vocabulary in use, Recall cleared). Those show the current tier and fade to
-  "was earned" when lost.
+  memory, Deep memory, Vocabulary in use). Those show the current tier and fade to
+  "was earned" when lost. Recall cleared used to be one of them; it now counts the days
+  Needs Recall was found empty. Nothing stored that history, so `GET /api/achievements`
+  records a `recall_zero` day when it finds the list empty: days count from this release,
+  and only days on which the page or a session end asked.
 - **Four needed data the app did not record**, so they count from the day they shipped:
   `attempts.typed` (Writer), and `study_events` rows `second_look`, `card_fix` and
   `due_zero`. **Due zero is written only by the server**, after an answer leaves nothing
-  due, because a client-reported "nothing was due" could be posted by anyone. Second look
-  and Card fixer are client events, since only the client sees them; the worst a forged
-  one does is award itself a badge.
+  due, because a client-reported "nothing was due" could be posted by anyone. Second look,
+  Card fixer and `passage_solved` are client events, since only the client sees them; the
+  worst a forged one does is award itself a badge. A solved passage is sent as
+  `cardId:date`, so checking the same passage twice in a day counts once.
 - Sessions are inferred from 10-minute gaps, because attempts carry no session id.
 - The session end's "Almost there ... this session +N" subtracts the value before the
   session from the value after, rounded to the decimals the values carry. Hours come with
