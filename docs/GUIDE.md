@@ -516,16 +516,22 @@ distractor pool, or two missed cards would make a two-option question.
 if a card's own `distractors` contains a correct statement, the quiz will show two right
 answers. Such a card has to be edited.
 
-**The answer sheet says what the answer did to the schedule**: "Next review in 15d · was
-12d" after a right answer, "Next review in 10 min · was 12d" after a wrong one. The flip
-card shows each grade's interval on its button; a quiz showed nothing, so the learner
-could not see a right answer's reward or a wrong one's cost. The line is filled at once
-from the card's previews (a right quiz answer is rated Hard, or Good when quiz answers
-count as Know It; a wrong one Again; `quizNextReviewText`), then replaced by the server's
-due date when the answer is saved, since load balancing may move a review by a day. "Was"
-is the interval the card had been given (due date minus last review); a new card has none.
-A card not due yet keeps its schedule, so the line stays empty and the not-due hint
-explains.
+**The question card says what each answer would do to the schedule**, before it is
+answered: a small line at its bottom edge, "✓ 15d ✗ 10 min" (`#quiz-outcomes`; screen
+readers hear "If right: back in 15d"). The flip card shows each grade's interval on its
+button; a quiz showed nothing, so the learner could not see a right answer's reward or a
+wrong one's cost. It first went on the answer sheet ("Next review in 15d · was 12d"), but a
+right answer moves on after 1.2 s, too fast to read it, so it moved up to where it can be
+read while thinking. The user chose this place from three previews (two chips under the
+question, this line, the top bar): it adds no row, so the options stay where they were; the
+cost is small type. They also dropped "was 12d", the interval the card had been given, as
+noise. After answering, the outcome that happened is bold and the other struck through.
+Times come from the card's previews (a right quiz answer is rated Hard, or Good when quiz
+answers count as Know It; a wrong one Again; `quizOutcomeTimes`), and the outcome that
+happened is replaced by the server's due date when the answer is saved, since load
+balancing may move a review by a day. A card not due yet keeps its schedule whatever the
+answer, so it shows no line and the not-due hint explains. A replayed card (Back) shows
+the times from before its answer, with that answer marked.
 
 A correct answer moves on by itself after 1.2 s (`QUIZ_ADVANCE_MS`); a wrong one waits for
 Next, so the right option can be studied for as long as it takes. A correct answer used to
