@@ -863,9 +863,9 @@ volume; nothing rewards cramming (there is no "most cards in a day").
   Needs Recall was found empty. Nothing stored that history, so `GET /api/achievements`
   records a `recall_zero` day when it finds the list empty: days count from this release,
   and only days on which the page or a session end asked.
-- **Four needed data the app did not record**, so they count from the day they shipped:
-  `attempts.typed` (Writer), and `study_events` rows `second_look`, `card_fix` and
-  `due_zero`. **Due zero is written only by the server**, after an answer leaves nothing
+- **Six needed data the app did not record**, so they count from the day they shipped:
+  `attempts.typed` (Writer), and `study_events` rows `second_look`, `card_fix`,
+  `passage_solved`, `recall_zero` and `due_zero`. **Due zero is written only by the server**, after an answer leaves nothing
   due, because a client-reported "nothing was due" could be posted by anyone. Second look,
   Card fixer and `passage_solved` are client events, since only the client sees them; the
   worst a forged one does is award itself a badge. A solved passage is sent as
