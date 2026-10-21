@@ -870,8 +870,8 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.go": "Study now · {n} cards",
   "studyNow.modeLabel": "Review with",
   "studyNow.learnNew": "Learn {n} new cards",
-  "quiz.nextReview": "Next review in {time}",
-  "quiz.nextReviewWas": "was {time}",
+  "quiz.ifRight": "If right: back in {time}",
+  "quiz.ifWrong": "If wrong: back in {time}",
   "studyNow.barReview": "Review {n}",
   "studyNow.barReviewDone": "Reviewed ✓",
   "studyNow.barNew": "New {n}",
@@ -2000,8 +2000,8 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.go": "Học ngay · {n} thẻ",
   "studyNow.modeLabel": "Ôn bằng",
   "studyNow.learnNew": "Học {n} thẻ mới",
-  "quiz.nextReview": "Ôn lại sau {time}",
-  "quiz.nextReviewWas": "trước đó {time}",
+  "quiz.ifRight": "Nếu đúng: gặp lại sau {time}",
+  "quiz.ifWrong": "Nếu sai: gặp lại sau {time}",
   "studyNow.barReview": "Ôn {n}",
   "studyNow.barReviewDone": "Đã ôn ✓",
   "studyNow.barNew": "Học mới {n}",
@@ -10339,6 +10339,8 @@ function renderQuizCard() {
     renderLatex(card.data.term, qEl);
   }
   document.getElementById("btn-quiz-audio").classList.toggle("hidden", !window.speechSynthesis || !quizSpeechText(card));
+  // A replayed card shows what its answer did; its previews are from before that answer.
+  setQuizOutcomes(priorResult && priorResult.notDue ? null : quizOutcomeTimes(card), priorResult ? priorResult.correct : null);
 
   // Options — replay the exact shuffled set from when this card was first answered
   // (buildQuizOptions() re-shuffles on every call, so a reviewed card must reuse its saved opts)
@@ -10437,12 +10439,12 @@ function answerQuiz(selectedIdx) {
   }
   if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
   addSessionTime(quizAttemptFields.durationMs);
-  cheer.next = quizNextReviewText(card, isCorrect);
+  markQuizOutcome(isCorrect);
   store.recordAttempt(quizAttemptFields).then(function(res) {
     if (res && state.quizCards[state.quizIndex] === card) {
       // A retry of a card answered minutes ago is not due on the server: nothing changed.
-      document.getElementById("quiz-sheet-next").textContent = res.notDue || !res.srs_due_at ? "" :
-        quizNextReviewText(card, isCorrect, res.srs_due_at - Math.floor(Date.now() / 1000));
+      if (res.notDue || !res.srs_due_at) setQuizOutcomes(null);
+      else setQuizOutcomeTime(isCorrect, res.srs_due_at - Math.floor(Date.now() / 1000));
     }
     if (res && res.capped) {
       resultEntry.capped = true;
@@ -10546,20 +10548,46 @@ function quizEncouragement(isCorrect, streak, answered, total, lastPraise) {
   return { tone: "correct", title: t("enc.right" + praise), sub: sub, praise: praise };
 }
 
-// What this answer did to the schedule, on the answer sheet: the flip card shows each grade's
-// interval on its button, a quiz showed nothing, so a right answer's reward and a wrong one's
-// cost were invisible. First from the card's own previews (a right quiz answer is rated Hard,
-// or Good under "quiz answers count as Know It"; a wrong one Again), then corrected to the
-// server's due date, which may move a review a day to even out the load. A card not due yet
-// keeps its schedule and says nothing here; its own hint explains.
-function quizNextReviewText(card, isCorrect, seconds) {
-  var nowSec = Math.floor(Date.now() / 1000);
-  if (card.srs_due_at && card.srs_due_at > nowSec) return "";
-  if (seconds == null) seconds = isCorrect ? (state.quizCountsAsKnown ? card.fsrs_preview_good : card.fsrs_preview_hard) : card.fsrs_preview_again;
-  if (seconds == null) return "";
-  var was = card.srs_due_at && card.fsrs_last_review_at ? card.srs_due_at - card.fsrs_last_review_at : null;
-  return t("quiz.nextReview", { time: formatFsrsDuration(Math.max(0, seconds)) }) +
-    (was > 0 ? " · " + t("quiz.nextReviewWas", { time: formatFsrsDuration(was) }) : "");
+// Under the question, before it is answered: how long until the card comes back if the
+// answer is right, and if it is wrong. On the sheet after answering it was gone with a right
+// answer's 1.2-second auto-advance before it could be read. From the card's own previews (a
+// right quiz answer is rated Hard, or Good under "quiz answers count as Know It"; a wrong one
+// Again); after answering, the outcome that happened is marked and takes the server's due
+// date, which may move a review a day to even out the load. A card not due yet keeps its
+// schedule whatever the answer, so it shows nothing.
+function quizOutcomeTimes(card) {
+  if (card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000)) return null;
+  var right = state.quizCountsAsKnown ? card.fsrs_preview_good : card.fsrs_preview_hard;
+  var wrong = card.fsrs_preview_again;
+  return right == null || wrong == null ? null : { right: right, wrong: wrong };
+}
+
+function quizOutcomeHtml(ok, seconds) {
+  var time = formatFsrsDuration(Math.max(0, seconds));
+  var label = t(ok ? "quiz.ifRight" : "quiz.ifWrong", { time: time });
+  return '<span class="quiz-out quiz-out-' + (ok ? "ok" : "bad") + '" role="img" aria-label="' + escHtml(label) + '" title="' + escHtml(label) + '">' +
+    (ok ? "✓ " : "✗ ") + escHtml(time) + '</span>';
+}
+
+function setQuizOutcomes(times, answeredCorrect) {
+  var el = document.getElementById("quiz-outcomes");
+  el.innerHTML = times ? quizOutcomeHtml(true, times.right) + quizOutcomeHtml(false, times.wrong) : "";
+  if (times && answeredCorrect != null) markQuizOutcome(answeredCorrect);
+}
+
+function markQuizOutcome(isCorrect) {
+  document.querySelectorAll("#quiz-outcomes .quiz-out").forEach(function(o) {
+    var on = o.classList.contains("quiz-out-ok") === isCorrect;
+    o.classList.toggle("is-on", on);
+    o.classList.toggle("is-off", !on);
+  });
+}
+
+function setQuizOutcomeTime(isCorrect, seconds) {
+  var o = document.querySelector("#quiz-outcomes .quiz-out-" + (isCorrect ? "ok" : "bad"));
+  if (!o) return;
+  o.outerHTML = quizOutcomeHtml(isCorrect, seconds);
+  markQuizOutcome(isCorrect);
 }
 
 function showQuizSheet(cheer) {
@@ -10567,7 +10595,6 @@ function showQuizSheet(cheer) {
   sheet.className = "study-sheet study-sheet-" + cheer.tone;
   document.getElementById("quiz-sheet-title").textContent = cheer.title;
   document.getElementById("quiz-sheet-sub").textContent = cheer.sub;
-  document.getElementById("quiz-sheet-next").textContent = cheer.next || "";
   void sheet.offsetWidth; // restart the slide-up when the previous answer's sheet was still open
   sheet.classList.add("on");
   document.getElementById("screen-quiz").classList.add("sheet-open");

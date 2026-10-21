@@ -2633,6 +2633,14 @@ code {
 }
 
 .quiz-audio { position: absolute; top: 8px; right: 8px; }
+/* If right / if wrong, in the card's bottom edge: no extra row, so the options stay put. */
+.quiz-outcomes { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; justify-content: center; gap: 16px; font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.quiz-outcomes:empty { display: none; }
+.quiz-question-wrap:has(.quiz-outcomes:not(:empty)) { padding-bottom: 36px; }
+.quiz-out-ok { color: var(--success); }
+.quiz-out-bad { color: var(--danger); }
+.quiz-out.is-on { font-weight: 700; }
+.quiz-out.is-off { opacity: 0.45; text-decoration: line-through; }
 /* Room for the speaker on both sides, so a long question neither runs under it nor sits off-centre. */
 .quiz-question-wrap:has(.quiz-audio:not(.hidden)) { padding-inline: 44px; }
 @media (pointer: coarse) {
@@ -2770,8 +2778,6 @@ code {
 .study-sheet-combo   .study-sheet-title { color: var(--warning); }
 .study-sheet-wrong   .study-sheet-title { color: var(--danger); }
 .study-sheet-sub { color: var(--text2); font-size: 0.875rem; margin-top: 2px; }
-.study-sheet-next { color: var(--text); font-size: 0.8125rem; font-weight: 600; margin-top: 4px; }
-.study-sheet-next:empty { display: none; }
 /* Room below the explanation so the sheet never covers what the user is reading. */
 #screen-quiz.sheet-open .quiz-container { padding-bottom: calc(var(--quiz-sheet-h, 164px) + 16px); }
 

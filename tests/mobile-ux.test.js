@@ -826,7 +826,7 @@ test("in a Study now run the time left counts the new cards still to come, and t
   });
 });
 
-test("the quiz answer sheet says when the card comes back, and what its interval was", async function() {
+test("the quiz card shows when it comes back if right and if wrong, before the answer, and marks what happened", async function() {
   await withApp(async function(page) {
     const r = await page.evaluate(async function(cards) {
       const now = Math.floor(Date.now() / 1000);
@@ -838,30 +838,37 @@ test("the quiz answer sheet says when the card comes back, and what its interval
       store.recordAttempt = () => new Promise((ok) => { reply = ok; });
       state.quizCountsAsKnown = false;
       state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
-      state.quizCards = [seen(cards[0]), seen(cards[1]), Object.assign({}, cards[2], { fsrs_preview_hard: 600 }), Object.assign({}, cards[3], { srs_due_at: now + day })];
+      state.quizCards = [seen(cards[0]), seen(cards[1]), Object.assign({}, cards[2], { srs_due_at: now + day, fsrs_preview_hard: 600, fsrs_preview_again: 60 })];
       startQuiz();
-      const next = () => document.getElementById("quiz-sheet-next").textContent;
-      const out = {};
+      const read = () => [...document.querySelectorAll("#quiz-outcomes .quiz-out")].map((o) => o.textContent + (o.classList.contains("is-on") ? ":on" : o.classList.contains("is-off") ? ":off" : ""));
+      const out = { before: read(), label: document.querySelector("#quiz-outcomes .quiz-out").getAttribute("aria-label") };
       answerQuiz(state.quizOptions.indexOf(state.quizCards[0].data.correct));
-      out.right = next();
+      out.right = read();
       reply({ ok: true, srs_due_at: now + 16 * day, notDue: false });
       await new Promise((r) => setTimeout(r, 0));
-      out.rightServer = next();
+      out.rightServer = read();
+      out.sheet = document.getElementById("quiz-sheet").textContent;
       pauseQuizAdvance(); document.getElementById("quiz-next-btn").click();
       answerQuiz(state.quizOptions.findIndex((o) => o !== state.quizCards[1].data.correct));
-      out.wrong = next();
+      out.wrong = read();
       document.getElementById("quiz-next-btn").click();
-      answerQuiz(state.quizOptions.indexOf(state.quizCards[2].data.correct));
-      out.fresh = next();
-      pauseQuizAdvance(); document.getElementById("quiz-next-btn").click();
-      answerQuiz(state.quizOptions.indexOf(state.quizCards[3].data.correct));
-      out.notDue = next();
+      out.notDue = read();
+      out.notDuePad = getComputedStyle(document.querySelector(".quiz-question-wrap")).paddingBottom;
+      state.quizIndex = 0; renderQuizCard();
+      out.replay = read();
+      state.quizCountsAsKnown = true; state.quizResults = []; state.quizIndex = 0; renderQuizCard();
+      out.asKnown = read();
       return out;
     }, QUIZ4);
-    assert.equal(r.right, "Next review in 15d · was 12d");
-    assert.equal(r.rightServer, "Next review in 16d · was 12d", "the server's date wins once it arrives");
-    assert.equal(r.wrong, "Next review in 10 min · was 12d");
-    assert.equal(r.fresh, "Next review in 10 min", "a new card has no interval to compare");
-    assert.equal(r.notDue, "", "a card not due keeps its schedule");
+    assert.deepEqual(r.before, ["✓ 15d", "✗ 10 min"]);
+    assert.equal(r.label, "If right: back in 15d");
+    assert.deepEqual(r.right, ["✓ 15d:on", "✗ 10 min:off"]);
+    assert.deepEqual(r.rightServer, ["✓ 16d:on", "✗ 10 min:off"], "the server's date wins once it arrives");
+    assert.doesNotMatch(r.sheet, /15d|16d|was/, "the sheet no longer repeats it");
+    assert.deepEqual(r.wrong, ["✓ 15d:off", "✗ 10 min:on"]);
+    assert.deepEqual(r.notDue, [], "a card not due keeps its schedule");
+    assert.equal(r.notDuePad, "28px");
+    assert.deepEqual(r.replay, ["✓ 15d:on", "✗ 10 min:off"], "a replayed card shows what its answer did");
+    assert.deepEqual(r.asKnown, ["✓ 1 mo", "✗ 10 min"], "quiz answers counted as Know It are rated Good");
   });
 });
