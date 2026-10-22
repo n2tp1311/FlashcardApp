@@ -516,14 +516,22 @@ distractor pool, or two missed cards would make a two-option question.
 if a card's own `distractors` contains a correct statement, the quiz will show two right
 answers. Such a card has to be edited.
 
-**The answer sheet sits on the visible bottom edge**, wherever the page is scrolled. In the
-Home Screen app on iOS 26 it floated about 120px up with the question showing under it: iOS
-can leave the visual viewport offset from the layout viewport (visualViewport.offsetTop
-stays above 0, reported after the keyboard closes), and a fixed element is placed against the
-layout one. `syncVvShift()` sets `--vv-shift` to the visible bottom minus the layout bottom,
-on every visualViewport resize and scroll and when the sheet opens, and the sheet's
-`translate` moves it down by that. It is 0 wherever the two agree. It was fixed blind: no
-desktop browser reproduces the offset, so the test checks the arithmetic, not the phone.
+**Bars pinned to the bottom sit on the visible bottom edge**, wherever the page is scrolled:
+the quiz answer sheet, the flashcard Prev/Next/grade row and the session-end buttons. In
+the Home Screen app on iOS 26 they floated about 120px up with the page showing under them.
+iOS can lay the page out in a viewport shorter than the screen: visualViewport.offsetTop
+stays above 0 after the keyboard closes, and the layout viewport can come back short after
+the app resumes; fixed and sticky elements are placed against that short viewport.
+`syncVvShift()` sets `--vv-shift` to the visible bottom minus the layout bottom, and those
+bars' `translate` moves them down by it. In the full-screen Home Screen app
+(black-translucent, `viewport-fit=cover`) the layout viewport should be the whole screen, so
+a portrait `innerHeight` below `screen.height` counts as the gap too; in Safari it does not,
+since a toolbar legitimately takes that height. It is recomputed on viewport resize and
+scroll, on resume (`pageshow`, `visibilitychange`) and when the sheet opens, and is 0
+wherever the sizes agree. It was fixed blind: no desktop browser reproduces the short
+viewport, so the tests check the arithmetic, not the phone. Every screen also has a band of
+the page colour behind the status bar (`.screen.active::before`, as Home already had): with
+the translucent status bar, a study card's text scrolled up under the clock.
 
 **The question card says what each answer would do to the schedule**, before it is
 answered: a small line at its bottom edge, "✗ 10 min ✓ 15d" (`#quiz-outcomes`; screen
