@@ -10582,14 +10582,20 @@ function revealRightQuizOption() {
   if (over > 0) window.scrollBy(0, over);
 }
 
-// iOS 26 can leave the visual viewport offset from the layout one (in the Home Screen app,
-// visualViewport.offsetTop stays above 0 after the keyboard closes), and a bar fixed to the
-// bottom then floats with a gap under it. --vv-shift is how far the visible bottom is below
-// the layout bottom; the answer sheet moves down by it. Zero wherever the two agree.
+// iOS 26 in the Home Screen app can lay the page out in a viewport shorter than the screen
+// (visualViewport.offsetTop stays above 0 after the keyboard closes; the layout viewport can
+// come back short after the app resumes), and every bar pinned to the bottom then floats about
+// 120px up with the page showing under it. --vv-shift is how far the visible bottom is below
+// the layout bottom; the pinned bars move down by it. Full-screen standalone (black-translucent,
+// viewport-fit=cover) fills the screen, so there a layout viewport shorter than the screen is
+// the bug itself. Zero wherever the sizes agree.
 function vvBottomShift() {
   var vv = window.visualViewport;
-  if (!vv) return 0;
-  return Math.round(vv.offsetTop + vv.height - window.innerHeight);
+  var shift = vv ? vv.offsetTop + vv.height - window.innerHeight : 0;
+  var standalone = !!window.navigator && window.navigator.standalone === true;
+  if (standalone && window.screen && Math.abs(window.innerWidth - window.screen.width) < 2 && window.screen.height > window.innerHeight)
+    shift = Math.max(shift, window.screen.height - window.innerHeight);
+  return Math.max(0, Math.round(shift));
 }
 function syncVvShift() {
   document.documentElement.style.setProperty("--vv-shift", vvBottomShift() + "px");
@@ -10598,6 +10604,10 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", syncVvShift);
   window.visualViewport.addEventListener("scroll", syncVvShift);
 }
+window.addEventListener("resize", syncVvShift);
+window.addEventListener("pageshow", syncVvShift);
+document.addEventListener("visibilitychange", function() { if (!document.hidden) syncVvShift(); });
+syncVvShift();
 
 var QUIZ_PRAISE_COUNT = 6, QUIZ_PRAISE_SUB_COUNT = 3, QUIZ_WRONG_COUNT = 3;
 

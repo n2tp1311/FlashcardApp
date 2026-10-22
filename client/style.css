@@ -1022,6 +1022,18 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
   .home-header { transition: none; }
 }
+/* Every other screen too: in the Home Screen app the status bar is translucent, and a study
+   card's text scrolled up under the clock and battery. The safe-area height on a notched
+   phone and nothing elsewhere. Below modals and the sidebar. */
+.screen.active:not(#screen-home)::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--bg);
+  z-index: 9;
+  pointer-events: none;
+}
 
 /* ============================
    HEADER (other screens)
@@ -5065,6 +5077,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
     margin-top: auto;
     background: var(--bg);
     padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+    translate: 0 var(--vv-shift, 0px);  /* iOS 26's short viewport: see syncVvShift() */
     /* Extend the background across the screen's side padding so content doesn't show beside it. */
     box-shadow: 0 0 0 100vmax var(--bg);
     clip-path: inset(0 -100vmax);
@@ -5085,6 +5098,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
     width: 100%;
     background: var(--bg);
     padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+    translate: 0 var(--vv-shift, 0px);
     box-shadow: 0 0 0 100vmax var(--bg);
     clip-path: inset(0 -100vmax);
   }

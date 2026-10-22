@@ -104,3 +104,21 @@ test("the sheet moves down to the visible bottom when iOS leaves the viewports a
   assert.match(show, /syncVvShift\(\);/);
   assert.match(app, /window\.visualViewport\.addEventListener\("resize", syncVvShift\);\s*window\.visualViewport\.addEventListener\("scroll", syncVvShift\);/);
 });
+
+test("short layout viewport in the Home Screen app: pinned bars move down by the missing height", function() {
+  const s = app.indexOf("\nfunction vvBottomShift(");
+  const fn = app.slice(s, app.indexOf("\n}\n", s) + 3);
+  const shift = (win) => { const ctx = { window: Object.assign({ navigator: {} }, win), Math }; vm.createContext(ctx); vm.runInContext(fn, ctx); return ctx.vvBottomShift(); };
+  const phone = { innerWidth: 393, innerHeight: 732, screen: { width: 393, height: 852 }, visualViewport: { offsetTop: 0, height: 732 } };
+  assert.equal(shift(Object.assign({}, phone, { navigator: { standalone: true } })), 120);
+  assert.equal(shift(phone), 0, "in Safari a toolbar legitimately takes that height");
+  assert.equal(shift(Object.assign({}, phone, { navigator: { standalone: true }, innerWidth: 852 })), 0, "landscape: screen.height is the other side");
+  assert.equal(shift({ navigator: { standalone: true }, innerWidth: 393, innerHeight: 852, screen: { width: 393, height: 852 }, visualViewport: { offsetTop: 0, height: 852 } }), 0);
+  ["#screen-flashcard .fc-nav", "#screen-results .results-actions"].forEach((sel) => {
+    const i = css.indexOf(sel + (sel.indexOf("results") > 0 ? ", " : " {"));
+    assert.ok(i > 0, sel);
+    assert.match(css.slice(i, css.indexOf("}", i)), /translate: 0 var\(--vv-shift, 0px\);/, sel);
+  });
+  assert.match(app, /document\.addEventListener\("visibilitychange", function\(\) \{ if \(!document\.hidden\) syncVvShift\(\); \}\);\s*syncVvShift\(\);/);
+  assert.match(css, /\.screen\.active:not\(#screen-home\)::before \{[^}]*height: env\(safe-area-inset-top, 0px\);/);
+});
