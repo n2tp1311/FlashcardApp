@@ -248,6 +248,9 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.filterAll": "All",
   "upstream.filterUpdated": "Updated",
   "upstream.filterDeleted": "Removed",
+  "upstream.byClass": "By class",
+  "upstream.classUpdated": "{n} updated",
+  "upstream.classRemoved": "{n} removed",
   "upstream.current": "Current",
   "upstream.openInLesson": "Open in lesson",
   "upstream.markAllShown": "Mark all shown as reviewed",
@@ -1419,6 +1422,9 @@ Object.assign(TRANSLATIONS.vi, {
   "upstream.filterAll": "Tất cả",
   "upstream.filterUpdated": "Đã cập nhật",
   "upstream.filterDeleted": "Đã xoá ở nguồn",
+  "upstream.byClass": "Theo lớp",
+  "upstream.classUpdated": "{n} đã cập nhật",
+  "upstream.classRemoved": "{n} đã xoá",
   "upstream.current": "Hiện tại",
   "upstream.openInLesson": "Mở trong bài học",
   "upstream.markAllShown": "Đánh dấu tất cả đang hiện là đã xem",
@@ -5686,6 +5692,7 @@ function setUpstreamCount(count) {
 
 function openUpstreamScreen() {
   state.upstreamFilter = "all";
+  state.upstreamClass = null;
   setPillGroup("upstream-filter", "all");
   document.getElementById("upstream-status").classList.add("hidden");
   showScreen("upstream");
@@ -5848,13 +5855,71 @@ function showUpstreamData() {
 
 function upstreamFilteredCards() {
   var f = state.upstreamFilter || "all";
-  return state.upstreamData.cards.filter(function(c) { return f === "all" || c.upstream_change === f; });
+  var cls = state.upstreamClass;
+  return state.upstreamData.cards.filter(function(c) {
+    return (f === "all" || c.upstream_change === f) && (!cls || c.class_id === cls);
+  });
+}
+
+// Largest first: with hundreds of changes the list alone hides which class took the hit.
+function upstreamClassSummary(cards) {
+  var byId = {};
+  var rows = [];
+  cards.forEach(function(c) {
+    var row = byId[c.class_id];
+    if (!row) {
+      row = byId[c.class_id] = { class_id: c.class_id, class_name: c.class_name, updated: 0, deleted: 0, total: 0 };
+      rows.push(row);
+    }
+    if (c.upstream_change === "deleted") row.deleted++; else row.updated++;
+    row.total++;
+  });
+  return rows.sort(function(a, b) {
+    return b.total - a.total || String(a.class_name).localeCompare(String(b.class_name));
+  });
+}
+
+function renderUpstreamClasses() {
+  var rows = upstreamClassSummary(state.upstreamData.cards);
+  if (state.upstreamClass && !rows.some(function(r) { return r.class_id === state.upstreamClass; }))
+    state.upstreamClass = null;
+  var wrap = document.getElementById("upstream-classes");
+  wrap.innerHTML = "";
+  wrap.classList.toggle("hidden", rows.length < 2);
+  if (rows.length < 2) return;
+  var heading = document.createElement("p");
+  heading.className = "upstream-classes-title";
+  heading.textContent = t("upstream.byClass");
+  wrap.appendChild(heading);
+  rows.forEach(function(row) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "upstream-class-row" + (state.upstreamClass === row.class_id ? " active" : "");
+    btn.setAttribute("aria-pressed", state.upstreamClass === row.class_id ? "true" : "false");
+    var name = document.createElement("span");
+    name.className = "upstream-class-name";
+    name.textContent = row.class_name;
+    var counts = document.createElement("span");
+    counts.className = "upstream-class-counts";
+    var parts = [];
+    if (row.updated) parts.push(t("upstream.classUpdated", { n: row.updated }));
+    if (row.deleted) parts.push(t("upstream.classRemoved", { n: row.deleted }));
+    counts.textContent = parts.join(" · ");
+    btn.appendChild(name);
+    btn.appendChild(counts);
+    btn.addEventListener("click", function() {
+      state.upstreamClass = state.upstreamClass === row.class_id ? null : row.class_id;
+      renderUpstreamList();
+    });
+    wrap.appendChild(btn);
+  });
 }
 
 function renderUpstreamList() {
   var count = state.upstreamData.count;
   document.getElementById("upstream-summary").textContent =
     t("upstream.summary", { n: count.total, updated: count.updated, deleted: count.deleted });
+  renderUpstreamClasses();
   var cards = upstreamFilteredCards();
   var list = document.getElementById("upstream-list");
   list.innerHTML = "";

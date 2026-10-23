@@ -4987,6 +4987,13 @@ button.leech-pill:hover { filter: brightness(0.96); }
 /* KnowledgeApp changes review screen */
 .upstream-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px 12px 20px; margin: 0 0 20px; background: color-mix(in srgb, var(--primary-light) 45%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border)); color: var(--text); border-radius: var(--radius); font-size: 0.875rem; }
 .upstream-summary { color: var(--text2); font-size: 0.875rem; margin: 8px 0; }
+.upstream-classes { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 14px; }
+.upstream-classes-title { font-size: 0.75rem; font-weight: 600; color: var(--text3); margin: 0 0 2px; }
+.upstream-class-row { display: flex; align-items: baseline; gap: 12px; width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer; }
+.upstream-class-row:hover { border-color: color-mix(in srgb, var(--primary) 50%, var(--border)); }
+.upstream-class-row.active { border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, var(--surface)); }
+.upstream-class-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upstream-class-counts { flex-shrink: 0; color: var(--text2); font-size: 0.8125rem; }
 .upstream-status { padding: 8px 12px; margin: 8px 0; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: 0.875rem; overflow-wrap: anywhere; }
 .upstream-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
 .upstream-toolbar .pill-group { margin-right: auto; }

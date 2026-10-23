@@ -285,3 +285,31 @@ test("corner radii that match a token use the token", function() {
   const literal = css.match(/border-radius: (?:999px|50px|20px|10px|7px|6px);/g);
   assert.equal(literal, null);
 });
+
+test("Changes screen summarises classes by size and a class row filters the list", function() {
+  const ctx = { state: {}, String };
+  vm.createContext(ctx);
+  vm.runInContext(fn("upstreamClassSummary") + fn("upstreamFilteredCards"), ctx);
+  const cards = [
+    { id: "1", class_id: "b", class_name: "Bernoulli", upstream_change: "updated" },
+    { id: "2", class_id: "a", class_name: "AI-300", upstream_change: "deleted" },
+    { id: "3", class_id: "a", class_name: "AI-300", upstream_change: "updated" },
+    { id: "4", class_id: "a", class_name: "AI-300", upstream_change: "deleted" },
+  ];
+  const rows = ctx.upstreamClassSummary(cards);
+  assert.equal(JSON.stringify(rows.map(function(r) { return [r.class_name, r.updated, r.deleted]; })),
+               JSON.stringify([["AI-300", 1, 2], ["Bernoulli", 1, 0]]));
+
+  ctx.state.upstreamData = { cards };
+  ctx.state.upstreamFilter = "deleted";
+  ctx.state.upstreamClass = "a";
+  assert.equal(ctx.upstreamFilteredCards().map(function(c) { return c.id; }).join(), "2,4");
+  ctx.state.upstreamClass = null;
+  ctx.state.upstreamFilter = "all";
+  assert.equal(ctx.upstreamFilteredCards().length, 4);
+
+  // "Mark all shown" and "Study updated" act on upstreamFilteredCards, so they follow the class choice.
+  assert.match(fn("openUpstreamScreen"), /state\.upstreamClass = null;/);
+  assert.match(fn("renderUpstreamList"), /renderUpstreamClasses\(\);/);
+  assert.match(html, /id="upstream-classes"/);
+});
