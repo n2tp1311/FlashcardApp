@@ -1011,6 +1011,14 @@ sees. Mark reviewed clears the flag (with a 6-second Undo, sent when it expires,
 the server has no un-acknowledge). The Undo bar's text is one line cut with an ellipsis; a
 long card name had run it past the edge of a phone screen, taking the Undo button with it.
 
+Above the list, **By class** counts updated and removed cards per class, largest first,
+whatever the Updated/Removed filter says. A KnowledgeApp merge or refresh can flag
+hundreds of cards across many books at once (492 in one pass), and the lesson-grouped
+list alone never said which class took the hit. Tapping a row narrows the list to that
+class, and tapping it again clears it; "Mark all shown" and "Study updated cards" act on
+what is shown, so they follow the choice. The block is hidden when only one class is
+flagged, since the summary line already says everything.
+
 ### Classes and lessons from KnowledgeApp's side
 
 | Route | What it is for |
