@@ -898,6 +898,7 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.learnNew": "Learn {n} new cards",
   "studyNow.reviewNext": "Review {n} cards",
   "studyNow.orderLabel": "Study order",
+  "studyNow.options": "Study now options",
   "studyNow.reviewFirst": "Review first",
   "studyNow.newFirst": "Learn first",
   "studyNow.barNewDone": "Learned ✓",
@@ -2059,6 +2060,7 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.learnNew": "Học {n} thẻ mới",
   "studyNow.reviewNext": "Ôn {n} thẻ",
   "studyNow.orderLabel": "Thứ tự học",
+  "studyNow.options": "Tuỳ chọn Học ngay",
   "studyNow.reviewFirst": "Ôn trước",
   "studyNow.newFirst": "Học mới trước",
   "studyNow.barNewDone": "Đã học ✓",
@@ -11410,21 +11412,44 @@ var STUDY_NOW_MODES = ["flashcard", "quiz"];
 function studyNowMode() { return state.studyNowMode === "quiz" ? "quiz" : "flashcard"; }
 
 function studyNowModeHtml(mode) {
-  return '<div class="study-now-mode" role="group" aria-label="' + escHtml(t("studyNow.modeLabel")) + '">' +
+  return '<div class="study-now-menu-grp" role="group" aria-label="' + escHtml(t("studyNow.modeLabel")) + '">' +
+    '<div class="study-now-menu-h" aria-hidden="true">' + escHtml(t("studyNow.modeLabel")) + '</div>' +
     STUDY_NOW_MODES.map(function(m) {
-      return '<button type="button" data-study-now-mode="' + m + '" aria-pressed="' + (m === mode) + '">' + escHtml(t("studyNow." + m)) + '</button>';
+      return '<button type="button" role="menuitemradio" data-study-now-mode="' + m + '" aria-checked="' + (m === mode) + '">' + escHtml(t("studyNow." + m)) + '</button>';
     }).join("") + '</div>';
+}
+
+// The two choices live behind the gear, out of the way of the one action; the line under the
+// counts says what they are set to, so a closed menu still shows how the session will run.
+function studyNowOptsText(both) {
+  return t("studyNow." + studyNowMode()) +
+    (both ? " · " + t(studyNowFirst() === "new" ? "studyNow.newFirst" : "studyNow.reviewFirst") : "");
+}
+
+function refreshStudyNowOpts() {
+  document.querySelectorAll(".study-now-opts").forEach(function(el) {
+    el.textContent = studyNowOptsText(el.dataset.both === "1");
+  });
+}
+
+function studyNowMenu(open) {
+  document.querySelectorAll("[data-study-now-gear]").forEach(function(g) {
+    var on = open === g;
+    g.setAttribute("aria-expanded", String(on));
+    g.parentNode.querySelector(".study-now-menu").hidden = !on;
+  });
 }
 
 function setStudyNowMode(mode) {
   if (STUDY_NOW_MODES.indexOf(mode) < 0 || mode === studyNowMode()) return;
   state.studyNowMode = mode;
   document.querySelectorAll("[data-study-now-mode]").forEach(function(b) {
-    b.setAttribute("aria-pressed", String(b.dataset.studyNowMode === mode));
+    b.setAttribute("aria-checked", String(b.dataset.studyNowMode === mode));
   });
-  document.querySelectorAll(".study-now[data-sub-" + mode + "] small").forEach(function(small) {
+  document.querySelectorAll(".study-now[data-sub-" + mode + "] .study-now-sub").forEach(function(small) {
     small.textContent = small.closest(".study-now").getAttribute("data-sub-" + mode);
   });
+  refreshStudyNowOpts();
   saveStudyNowPref("studyNowMode", mode);
 }
 
@@ -11435,9 +11460,10 @@ var STUDY_NOW_FIRSTS = ["review", "new"];
 function studyNowFirst() { return state.studyNowFirst === "new" ? "new" : "review"; }
 
 function studyNowFirstHtml(first) {
-  return '<div class="study-now-mode study-now-first" role="group" aria-label="' + escHtml(t("studyNow.orderLabel")) + '">' +
+  return '<div class="study-now-menu-grp" role="group" aria-label="' + escHtml(t("studyNow.orderLabel")) + '">' +
+    '<div class="study-now-menu-h" aria-hidden="true">' + escHtml(t("studyNow.orderLabel")) + '</div>' +
     STUDY_NOW_FIRSTS.map(function(f) {
-      return '<button type="button" data-study-now-first="' + f + '" aria-pressed="' + (f === first) + '">' +
+      return '<button type="button" role="menuitemradio" data-study-now-first="' + f + '" aria-checked="' + (f === first) + '">' +
         escHtml(t(f === "new" ? "studyNow.newFirst" : "studyNow.reviewFirst")) + '</button>';
     }).join("") + '</div>';
 }
@@ -11446,8 +11472,9 @@ function setStudyNowFirst(first) {
   if (STUDY_NOW_FIRSTS.indexOf(first) < 0 || first === studyNowFirst()) return;
   state.studyNowFirst = first;
   document.querySelectorAll("[data-study-now-first]").forEach(function(b) {
-    b.setAttribute("aria-pressed", String(b.dataset.studyNowFirst === first));
+    b.setAttribute("aria-checked", String(b.dataset.studyNowFirst === first));
   });
+  refreshStudyNowOpts();
   saveStudyNowPref("studyNowFirst", first);
 }
 
@@ -11620,12 +11647,21 @@ function studyNowHtml(plan, today, noCards, classesHtml) {
       subs[mode] = counts.concat(ms < 60000 ? t("studyNow.underMinute") : t("studyNow.minutes", { n: Math.round(ms / 60000) })).join(" · ");
     });
     var mode = studyNowMode();
-    return classesHtml + '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '"' +
+    var both = !!(plan.reviews && plan.newCards);
+    // The gear sits beside the button, not in it: a button inside a button is invalid HTML
+    // and a tap on it would also start the session.
+    return classesHtml + '<div class="study-now-box' + (plan.reviews ? ' has-gear' : '') + '">' +
+      '<button type="button" class="study-now" data-study-now="' + (plan.uncapped ? "all" : plan.reviews) + ',' + plan.newCards + '"' +
         ' data-sub-flashcard="' + escHtml(subs.flashcard) + '" data-sub-quiz="' + escHtml(subs.quiz) + '">' +
       '<span class="study-now-play" aria-hidden="true"></span>' +
-      '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small>' + escHtml(subs[mode]) + '</small></span></button>' +
-      (plan.reviews ? studyNowModeHtml(mode) : '') +
-      (plan.reviews && plan.newCards ? studyNowFirstHtml(studyNowFirst()) : '');
+      '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small class="study-now-sub">' + escHtml(subs[mode]) + '</small>' +
+        (plan.reviews ? '<small class="study-now-opts" data-both="' + (both ? 1 : 0) + '">' + escHtml(studyNowOptsText(both)) + '</small>' : '') +
+      '</span></button>' +
+      (plan.reviews ? '<button type="button" class="study-now-gear" data-study-now-gear aria-haspopup="menu" aria-expanded="false"' +
+          ' aria-label="' + escHtml(t("studyNow.options")) + '" title="' + escHtml(t("studyNow.options")) + '">' + ICON_SETTINGS + '</button>' +
+        '<div class="study-now-menu" role="menu" hidden>' + studyNowModeHtml(mode) +
+          (both ? studyNowFirstHtml(studyNowFirst()) : '') + '</div>' : '') +
+    '</div>';
   }
   var capped = plan.dueLeft > 0;
   return classesHtml + '<div class="study-now-done">' +
@@ -11702,11 +11738,20 @@ function setLearnNewButton(prefix) {
   });
 });
 
+document.addEventListener("keydown", function(e) {
+  if (e.key !== "Escape") return;
+  var open = document.querySelector('[data-study-now-gear][aria-expanded="true"]');
+  if (open) { studyNowMenu(null); open.focus(); }
+});
+
 document.addEventListener("click", function(e) {
+  var gear = e.target.closest("[data-study-now-gear]");
+  if (gear) { studyNowMenu(gear.getAttribute("aria-expanded") === "true" ? null : gear); return; }
   var modeBtn = e.target.closest("[data-study-now-mode]");
-  if (modeBtn) { setStudyNowMode(modeBtn.dataset.studyNowMode); return; }
+  if (modeBtn) { setStudyNowMode(modeBtn.dataset.studyNowMode); studyNowMenu(null); return; }
   var firstBtn = e.target.closest("[data-study-now-first]");
-  if (firstBtn) { setStudyNowFirst(firstBtn.dataset.studyNowFirst); return; }
+  if (firstBtn) { setStudyNowFirst(firstBtn.dataset.studyNowFirst); studyNowMenu(null); return; }
+  if (!e.target.closest(".study-now-menu")) studyNowMenu(null);
   var btn = e.target.closest("[data-study-now]");
   if (btn) { startStudyNow(btn); return; }
   if (e.target.closest("[data-new-class]")) document.getElementById("btn-new-class").click();

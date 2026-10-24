@@ -163,7 +163,8 @@ const strings = {
   "studyNow.doneSub": "Nothing is due", "studyNow.capTitle": "Today's review limit reached",
   "studyNow.capSub": "{n} more due, left for tomorrow", "studyNow.more": "Learn {n} more new cards",
   "studyNow.modeLabel": "How to study", "studyNow.flashcard": "Flashcards", "studyNow.quiz": "Quiz",
-  "studyNow.orderLabel": "Study order", "studyNow.reviewFirst": "Review first", "studyNow.newFirst": "Learn first"
+  "studyNow.orderLabel": "Study order", "studyNow.reviewFirst": "Review first", "studyNow.newFirst": "Learn first",
+  "studyNow.options": "Study now options"
 };
 const harness = `
 var state = { maxReviewsPerDay: null, studyNowMode: "flashcard", studyNowFirst: "review" };
@@ -176,13 +177,17 @@ var ETA_FALLBACK_MS = { flashcard: 10000, quiz: 15000 };
 var STUDY_NOW_EXTRA = 10;
 var STUDY_NOW_MODES = ["flashcard", "quiz"];
 var STUDY_NOW_FIRSTS = ["review", "new"];
-${fn("studyNowFirst")}${fn("studyNowFirstHtml")}${fn("setStudyNowFirst")}${fn("studyNowMode")}${fn("studyNowModeHtml")}${fn("setStudyNowMode")}${fn("saveStudyNowPref")}${fn("studyNowPlan")}${fn("studyNowHtml")}
+var ICON_SETTINGS = "<svg></svg>";
+${fn("studyNowFirst")}${fn("studyNowFirstHtml")}${fn("setStudyNowFirst")}${fn("studyNowOptsText")}${fn("refreshStudyNowOpts")}${fn("studyNowMenu")}${fn("studyNowMode")}${fn("studyNowModeHtml")}${fn("setStudyNowMode")}${fn("saveStudyNowPref")}${fn("studyNowPlan")}${fn("studyNowHtml")}
 // app.js's delegate, as the wiring test pins it.
 document.addEventListener("click", function(e) {
+  var gear = e.target.closest("[data-study-now-gear]");
+  if (gear) { studyNowMenu(gear.getAttribute("aria-expanded") === "true" ? null : gear); return; }
   var modeBtn = e.target.closest("[data-study-now-mode]");
-  if (modeBtn) setStudyNowMode(modeBtn.dataset.studyNowMode);
+  if (modeBtn) { setStudyNowMode(modeBtn.dataset.studyNowMode); studyNowMenu(null); return; }
   var firstBtn = e.target.closest("[data-study-now-first]");
-  if (firstBtn) setStudyNowFirst(firstBtn.dataset.studyNowFirst);
+  if (firstBtn) { setStudyNowFirst(firstBtn.dataset.studyNowFirst); studyNowMenu(null); return; }
+  if (!e.target.closest(".study-now-menu")) studyNowMenu(null);
 });
 function tile(today, est, due, cap) {
   state.maxReviewsPerDay = cap;
@@ -205,11 +210,11 @@ test("the button counts reviews and new cards, and says how long from the median
   const est = { estimatedNewCards: 10, availableNewCards: 40 };
 
   let r = await p.evaluate(([a, b]) => tile(a, b, 28, null), [today(0, 4), est]);
-  assert.deepEqual(r, { text: "Study now · 34 cards 28 to review · 6 new · ~11 min Flashcards Quiz Review first Learn first", data: "all,6", filled: true });
+  assert.deepEqual(r, { text: "Study now · 34 cards 28 to review · 6 new · ~11 min Flashcards · Review first", data: "all,6", filled: true });
 
   // A cap counts what is left of it today; due cards past it wait for tomorrow.
   r = await p.evaluate(([a, b]) => tile(a, b, 28, 30), [today(25, 10), est]);
-  assert.deepEqual(r, { text: "Study now · 5 cards 5 to review · ~2 min Flashcards Quiz", data: "5,0", filled: true });
+  assert.deepEqual(r, { text: "Study now · 5 cards 5 to review · ~2 min Flashcards", data: "5,0", filled: true });
   r = await p.evaluate(([a, b]) => tile(a, b, 28, 30), [today(30, 10), est]);
   assert.deepEqual(r, { text: "✓ Today's review limit reached 28 more due, left for tomorrow", data: null, filled: false });
 
@@ -234,25 +239,32 @@ test("flashcards or quiz is a choice under the button: the time follows it, and 
   const today = { activity: { reviews: 0, newCards: 0 }, medianMs: { flashcard: 20000, quiz: 30000 } };
   const est = { estimatedNewCards: 10, availableNewCards: 40 };
   const read = () => p.evaluate(() => ({
-    sub: document.querySelector(".study-now small").textContent,
-    pressed: [...document.querySelectorAll("[data-study-now-mode]")].map((b) => b.dataset.studyNowMode + "=" + b.getAttribute("aria-pressed")),
+    sub: document.querySelector(".study-now-sub").textContent, opts: document.querySelector(".study-now-opts").textContent,
+    open: !document.querySelector(".study-now-menu").hidden,
+    pressed: [...document.querySelectorAll("[data-study-now-mode]")].map((b) => b.dataset.studyNowMode + "=" + b.getAttribute("aria-checked")),
     mode: state.studyNowMode, puts: puts.slice(), cached: JSON.parse(localStorage.getItem("fc-preferences") || "{}")
   }));
   await p.evaluate(([a, b]) => { localStorage.setItem("fc-preferences", '{"theme":"dark"}'); tile(a, b, 20, null); }, [today, est]);
   let r = await read();
   assert.equal(r.sub, "20 to review · 10 new · ~10 min");
   assert.deepEqual(r.pressed, ["flashcard=true", "quiz=false"], "flashcards for anyone who never picked");
+  assert.equal(r.opts, "Flashcards · Review first");
+  assert.equal(r.open, false, "the choices wait behind the gear");
 
+  await p.click("[data-study-now-gear]");
   await p.click("[data-study-now-mode=quiz]");
   r = await read();
   // 20 reviews at the quiz median and the 10 new cards still at the flashcard one.
   assert.equal(r.sub, "20 to review · 10 new · ~13 min", "the reviews at a quiz answer's own median");
+  assert.equal(r.opts, "Quiz · Review first", "the line under the counts follows the choice");
+  assert.equal(r.open, false, "picking closes the menu");
   assert.deepEqual(r.pressed, ["flashcard=false", "quiz=true"]);
   assert.equal(r.mode, "quiz");
   assert.deepEqual(r.puts, [["/api/auth/preferences", "PUT", '{"studyNowMode":"quiz"}']]);
   assert.deepEqual(r.cached, { theme: "dark", studyNowMode: "quiz" }, "merged into the cached preferences");
 
   // Pressing the chosen one again sends nothing; the next render opens on the choice.
+  await p.click("[data-study-now-gear]");
   await p.click("[data-study-now-mode=quiz]");
   await p.evaluate(([a, b]) => tile(a, b, 20, null), [today, est]);
   r = await read();
@@ -262,7 +274,7 @@ test("flashcards or quiz is a choice under the button: the time follows it, and 
   await p.close();
 });
 
-test("review first or learn first is a choice under the mode, shown only when there are both", async () => {
+test("review first or learn first is in the gear menu, shown only when there are both", async () => {
   const p = await browser.newPage();
   await p.route("http://sn.test/", (r) => r.fulfill({ contentType: "text/html", body: "<!doctype html><body></body>" }));
   await p.goto("http://sn.test/");
@@ -270,24 +282,34 @@ test("review first or learn first is a choice under the mode, shown only when th
   const today = { activity: { reviews: 0, newCards: 0 }, medianMs: { flashcard: 20000, quiz: 30000 } };
   const est = { estimatedNewCards: 10, availableNewCards: 40 };
   const read = () => p.evaluate(() => ({
-    pressed: [...document.querySelectorAll("[data-study-now-first]")].map((b) => b.dataset.studyNowFirst + "=" + b.getAttribute("aria-pressed")),
+    pressed: [...document.querySelectorAll("[data-study-now-first]")].map((b) => b.dataset.studyNowFirst + "=" + b.getAttribute("aria-checked")),
     first: state.studyNowFirst, puts: puts.slice()
   }));
   await p.evaluate(([a, b]) => tile(a, b, 20, null), [today, est]);
   let r = await read();
   assert.deepEqual(r.pressed, ["review=true", "new=false"], "reviews first for anyone who never picked");
 
+  await p.click("[data-study-now-gear]");
   await p.click("[data-study-now-first=new]");
   r = await read();
   assert.deepEqual(r.pressed, ["review=false", "new=true"]);
   assert.equal(r.first, "new");
   assert.deepEqual(r.puts, [["/api/auth/preferences", "PUT", '{"studyNowFirst":"new"}']]);
+  assert.equal(await p.evaluate(() => document.querySelector(".study-now-opts").textContent), "Flashcards · Learn first");
+
+  // A click outside closes the menu; the gear toggles it.
+  await p.click("[data-study-now-gear]");
+  assert.equal(await p.evaluate(() => document.querySelector(".study-now-menu").hidden), false);
+  await p.mouse.click(5, 300);
+  assert.equal(await p.evaluate(() => document.querySelector(".study-now-menu").hidden), true);
 
   // Only reviews, or only new cards: nothing to put first.
   await p.evaluate(([a]) => tile(a, null, 20, null), [today]);
   assert.deepEqual((await read()).pressed, []);
+  assert.equal(await p.evaluate(() => document.querySelector(".study-now-opts").textContent), "Flashcards", "only the mode with no new cards");
   await p.evaluate(([a, b]) => tile(a, b, 0, null), [today, est]);
   assert.deepEqual((await read()).pressed, []);
+  assert.equal(await p.evaluate(() => !!document.querySelector("[data-study-now-gear]")), false, "only new cards: no gear");
   await p.close();
 });
 
@@ -305,7 +327,7 @@ test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup
   assert.match(fn("launchStudyNowCards"), /returnScreen: from/);
   assert.match(fn("launchStudyNowCards"), /launchStudy\(cards, mode, "in-order"\)/);
   assert.match(fn("applyPrefs"), /if \(prefs\.studyNowMode === "quiz" \|\| prefs\.studyNowMode === "flashcard"\) state\.studyNowMode = prefs\.studyNowMode;/);
-  assert.match(app, /var modeBtn = e\.target\.closest\("\[data-study-now-mode\]"\);\n  if \(modeBtn\) \{ setStudyNowMode\(modeBtn\.dataset\.studyNowMode\); return; \}/);
+  assert.match(app, /var modeBtn = e\.target\.closest\("\[data-study-now-mode\]"\);\n  if \(modeBtn\) \{ setStudyNowMode\(modeBtn\.dataset\.studyNowMode\); studyNowMenu\(null\); return; \}/);
   assert.match(fn("startStudy"), /launchStudy\(filtered, mode, order\);/);
   assert.match(app, /getStudyNowCards: function\(reviews, newCards, classIds\) \{ return req\("POST", "\/cards\/study-now"/);
 });
