@@ -162,10 +162,11 @@ const strings = {
   "studyNow.minutes": "~{n} min", "studyNow.underMinute": "<1 min", "studyNow.doneTitle": "All done for today",
   "studyNow.doneSub": "Nothing is due", "studyNow.capTitle": "Today's review limit reached",
   "studyNow.capSub": "{n} more due, left for tomorrow", "studyNow.more": "Learn {n} more new cards",
-  "studyNow.modeLabel": "How to study", "studyNow.flashcard": "Flashcards", "studyNow.quiz": "Quiz"
+  "studyNow.modeLabel": "How to study", "studyNow.flashcard": "Flashcards", "studyNow.quiz": "Quiz",
+  "studyNow.orderLabel": "Study order", "studyNow.reviewFirst": "Review first", "studyNow.newFirst": "Learn first"
 };
 const harness = `
-var state = { maxReviewsPerDay: null, studyNowMode: "flashcard" };
+var state = { maxReviewsPerDay: null, studyNowMode: "flashcard", studyNowFirst: "review" };
 var IS_SERVER = true, puts = [];
 window.fetch = function(url, opts) { puts.push([url, opts.method, opts.body]); return Promise.resolve({ ok: true }); };
 var STRINGS = ${JSON.stringify(strings)};
@@ -174,11 +175,14 @@ function escHtml(s) { return String(s); }
 var ETA_FALLBACK_MS = { flashcard: 10000, quiz: 15000 };
 var STUDY_NOW_EXTRA = 10;
 var STUDY_NOW_MODES = ["flashcard", "quiz"];
-${fn("studyNowMode")}${fn("studyNowModeHtml")}${fn("setStudyNowMode")}${fn("saveStudyNowPref")}${fn("studyNowPlan")}${fn("studyNowHtml")}
+var STUDY_NOW_FIRSTS = ["review", "new"];
+${fn("studyNowFirst")}${fn("studyNowFirstHtml")}${fn("setStudyNowFirst")}${fn("studyNowMode")}${fn("studyNowModeHtml")}${fn("setStudyNowMode")}${fn("saveStudyNowPref")}${fn("studyNowPlan")}${fn("studyNowHtml")}
 // app.js's delegate, as the wiring test pins it.
 document.addEventListener("click", function(e) {
   var modeBtn = e.target.closest("[data-study-now-mode]");
   if (modeBtn) setStudyNowMode(modeBtn.dataset.studyNowMode);
+  var firstBtn = e.target.closest("[data-study-now-first]");
+  if (firstBtn) setStudyNowFirst(firstBtn.dataset.studyNowFirst);
 });
 function tile(today, est, due, cap) {
   state.maxReviewsPerDay = cap;
@@ -201,7 +205,7 @@ test("the button counts reviews and new cards, and says how long from the median
   const est = { estimatedNewCards: 10, availableNewCards: 40 };
 
   let r = await p.evaluate(([a, b]) => tile(a, b, 28, null), [today(0, 4), est]);
-  assert.deepEqual(r, { text: "Study now · 34 cards 28 to review · 6 new · ~11 min Flashcards Quiz", data: "all,6", filled: true });
+  assert.deepEqual(r, { text: "Study now · 34 cards 28 to review · 6 new · ~11 min Flashcards Quiz Review first Learn first", data: "all,6", filled: true });
 
   // A cap counts what is left of it today; due cards past it wait for tomorrow.
   r = await p.evaluate(([a, b]) => tile(a, b, 28, 30), [today(25, 10), est]);
@@ -258,12 +262,46 @@ test("flashcards or quiz is a choice under the button: the time follows it, and 
   await p.close();
 });
 
+test("review first or learn first is a choice under the mode, shown only when there are both", async () => {
+  const p = await browser.newPage();
+  await p.route("http://sn.test/", (r) => r.fulfill({ contentType: "text/html", body: "<!doctype html><body></body>" }));
+  await p.goto("http://sn.test/");
+  await p.addScriptTag({ content: harness });
+  const today = { activity: { reviews: 0, newCards: 0 }, medianMs: { flashcard: 20000, quiz: 30000 } };
+  const est = { estimatedNewCards: 10, availableNewCards: 40 };
+  const read = () => p.evaluate(() => ({
+    pressed: [...document.querySelectorAll("[data-study-now-first]")].map((b) => b.dataset.studyNowFirst + "=" + b.getAttribute("aria-pressed")),
+    first: state.studyNowFirst, puts: puts.slice()
+  }));
+  await p.evaluate(([a, b]) => tile(a, b, 20, null), [today, est]);
+  let r = await read();
+  assert.deepEqual(r.pressed, ["review=true", "new=false"], "reviews first for anyone who never picked");
+
+  await p.click("[data-study-now-first=new]");
+  r = await read();
+  assert.deepEqual(r.pressed, ["review=false", "new=true"]);
+  assert.equal(r.first, "new");
+  assert.deepEqual(r.puts, [["/api/auth/preferences", "PUT", '{"studyNowFirst":"new"}']]);
+
+  // Only reviews, or only new cards: nothing to put first.
+  await p.evaluate(([a]) => tile(a, null, 20, null), [today]);
+  assert.deepEqual((await read()).pressed, []);
+  await p.evaluate(([a, b]) => tile(a, b, 0, null), [today, est]);
+  assert.deepEqual((await read()).pressed, []);
+  await p.close();
+});
+
 test("wiring: Home and the Dashboard feed it the due total, it skips Study Setup and returns where it began", () => {
   assert.match(fn("renderHomeCharts"), /state\.studyNowDue = dueTotal\(dash\.dueForReview\);\n    state\.studyNowDueLessons = dash\.dueForReview \|\| \[\];/);
   assert.match(app, /state\.studyNowDue = dueTotal\(d\.dueForReview\);\n    state\.studyNowDueLessons = d\.dueForReview \|\| \[\];\n    summaryGrid\.innerHTML = streakTimeHeroCard/);
   assert.match(fn("heroTodayTile"), /studyNowHtml\(state\.studyNowDue == null \? null : studyNowPlan\(today, newCardEstimate, state\.studyNowDue\), today, !!summary && summary\.cards === 0, studyNowOrderChipHtml\(newCardEstimate\)\)/);
   const start = fn("startStudyNow");
-  assert.match(start, /launchStudyNowCards\(due\.length \? due : fresh, res\.lessons, statsMap, from, due\.length \? studyNowMode\(\) : "flashcard"\)/);
+  assert.match(start, /var first = !due\.length \? "new" : !fresh\.length \? "review" : studyNowFirst\(\);/);
+  assert.match(start, /cards: first === "new" \? due : fresh/);
+  assert.match(start, /launchStudyNowCards\(first === "new" \? fresh : due, res\.lessons, statsMap, from, first === "new" \? "flashcard" : mode\)/);
+  assert.match(fn("applyPrefs"), /if \(prefs\.studyNowFirst === "new" \|\| prefs\.studyNowFirst === "review"\) state\.studyNowFirst = prefs\.studyNowFirst;/);
+  assert.match(fn("setLearnNewButton"), /next\.run\.first === "new" \? "studyNow\.reviewNext" : "studyNow\.learnNew"/);
+  assert.match(app, /var phase = next\.run\.first === "new" \? "review" : "new";[\s\S]{0,260}phase === "new" \? "flashcard" : next\.run\.mode\);/);
   assert.match(fn("launchStudyNowCards"), /returnScreen: from/);
   assert.match(fn("launchStudyNowCards"), /launchStudy\(cards, mode, "in-order"\)/);
   assert.match(fn("applyPrefs"), /if \(prefs\.studyNowMode === "quiz" \|\| prefs\.studyNowMode === "flashcard"\) state\.studyNowMode = prefs\.studyNowMode;/);

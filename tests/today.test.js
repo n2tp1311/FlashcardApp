@@ -31,7 +31,7 @@ function load(goal) {
     "function resumeSessionHtml() { return ''; }" +
     "var STUDY_NOW_MODES = ['flashcard', 'quiz'];" +
     ["dailyGoalRing", "weekdayLabel", "heroWeekHtml", "streakTimeHeroCard", "heroStreakTile", "heroTodayTile",
-     "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml", "studyNowMode", "studyNowModeHtml", "studyNowPlan", "studyNowHtml", "studyNowOrderChipHtml", "dueTotal"].map(extract).join(""), ctx);
+     "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml", "studyNowMode", "studyNowModeHtml", "studyNowFirst", "studyNowFirstHtml", "studyNowPlan", "studyNowHtml", "studyNowOrderChipHtml", "dueTotal"].map(extract).join(""), ctx);
   return ctx;
 }
 

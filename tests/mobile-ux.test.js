@@ -826,6 +826,39 @@ test("in a Study now run the time left counts the new cards still to come, and t
   });
 });
 
+test("a Study now run that learns first puts the new half first on the bar and counts the reviews still to come", async function() {
+  await withApp(async function(page) {
+    const r = await page.evaluate(function(cards) {
+      const many = (n) => Array.from({ length: n }, (_, i) => Object.assign({}, cards[i % 4], { id: "r" + i }));
+      state.studyScope = { lessonIds: ["l1"], lessons: [], returnScreen: "home", title: "Study now" };
+      state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
+      const labels = () => [...document.querySelectorAll("#quiz-progress-labels span")].map((s) => s.textContent + (s.className ? ":" + s.className : ""));
+      state.pendingStudyNowRun = { reviews: 20, fresh: 30, first: "new", mode: "quiz", phase: "new" };
+      launchStudy(many(30), "quiz", "in-order");
+      const out = { text: document.getElementById("quiz-progress-text").textContent, labels: labels(),
+        done: !!document.querySelector("#quiz-progress-fill ~ .pb-done") };
+      state.pendingStudyNowRun = { reviews: 20, fresh: 1, first: "new", mode: "quiz", phase: "new" };
+      launchStudy(many(1), "quiz", "in-order");
+      out.oneText = document.getElementById("quiz-progress-text").textContent;
+      state.pendingStudyNowRun = { reviews: 20, fresh: 30, first: "new", mode: "quiz", phase: "review" };
+      launchStudy(many(20), "quiz", "in-order");
+      out.after = labels();
+      out.afterText = document.getElementById("quiz-progress-text").textContent;
+      out.afterDone = document.querySelector("#quiz-progress-fill ~ .pb-done").style.width;
+      return out;
+    }, QUIZ4);
+    assert.equal(r.text.split(" · ")[0], "New 1 / 30");
+    assert.deepEqual(r.labels, ["New 1/30:is-now", "Review 20"]);
+    assert.equal(r.done, false);
+    const minutes = (s) => Number(/~(\d+)/.exec(s)[1]);
+    // The 20 reviews still to come are quizzes, at the fallback 15 s: five minutes.
+    assert.equal(minutes(r.oneText), 5, r.oneText);
+    assert.deepEqual(r.after, ["Learned ✓:is-done", "Review 20:is-now"]);
+    assert.equal(r.afterText.split(" · ")[0], "Review 1 / 20");
+    assert.equal(r.afterDone, "60%");
+  });
+});
+
 test("the quiz card shows when it comes back if right and if wrong, before the answer, and marks what happened", async function() {
   await withApp(async function(page) {
     const r = await page.evaluate(async function(cards) {

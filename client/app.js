@@ -896,6 +896,11 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.go": "Study now · {n} cards",
   "studyNow.modeLabel": "Review with",
   "studyNow.learnNew": "Learn {n} new cards",
+  "studyNow.reviewNext": "Review {n} cards",
+  "studyNow.orderLabel": "Study order",
+  "studyNow.reviewFirst": "Review first",
+  "studyNow.newFirst": "Learn first",
+  "studyNow.barNewDone": "Learned ✓",
   "quiz.ifRight": "If right: back in {time}",
   "quiz.ifWrong": "If wrong: back in {time}",
   "studyNow.barReview": "Review {n}",
@@ -2052,6 +2057,11 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.go": "Học ngay · {n} thẻ",
   "studyNow.modeLabel": "Ôn bằng",
   "studyNow.learnNew": "Học {n} thẻ mới",
+  "studyNow.reviewNext": "Ôn {n} thẻ",
+  "studyNow.orderLabel": "Thứ tự học",
+  "studyNow.reviewFirst": "Ôn trước",
+  "studyNow.newFirst": "Học mới trước",
+  "studyNow.barNewDone": "Đã học ✓",
   "quiz.ifRight": "Nếu đúng: gặp lại sau {time}",
   "quiz.ifWrong": "Nếu sai: gặp lại sau {time}",
   "studyNow.barReview": "Ôn {n}",
@@ -3444,6 +3454,7 @@ var state = {
   haptics: true,
   sounds: true,
   studyNowMode: "flashcard",
+  studyNowFirst: "review",
   dailyGoal: 20,
   quizCountsAsKnown: false,
   loadBalance: true,
@@ -8081,15 +8092,19 @@ function setStudyProgress(prefix, position, total, remaining, source) {
   var run = state.studyNowRun;
   // A retry of the missed cards reuses the screen with fewer cards: the run no longer fits it.
   var split = run && run.reviews > 0 && run.fresh > 0 && total === (run.phase === "new" ? run.fresh : run.reviews);
-  var whole = split ? run.reviews + run.fresh : total;
-  var before = split && run.phase === "new" ? run.reviews : 0;
+  var newFirst = split && run.first === "new";
+  var a = newFirst ? run.fresh : split ? run.reviews : 0;  // the half that runs first
+  var b = newFirst ? run.reviews : split ? run.fresh : 0;
+  var second = split && run.phase !== (newFirst ? "new" : "review");
+  var whole = split ? a + b : total;
+  var before = second ? a : 0;
   fill.style.transform = scaleXStyle(whole ? (before + position) / whole : 0);
   // A half of a few cards is a sliver; a middle tick in it sat against the notch like a glitch.
-  var marks = (split ? [[run.reviews / 2, "mid", run.reviews], [run.reviews, "notch", Infinity], [run.reviews + run.fresh / 2, "mid", run.fresh]] : [[total / 2, "mid", total]])
+  var marks = (split ? [[a / 2, "mid", a], [a, "notch", Infinity], [a + b / 2, "mid", b]] : [[total / 2, "mid", total]])
     .filter(function(m) { return m[2] >= PB_MID_MIN_CARDS; });
   var html = marks.map(function(m) {
     return '<i class="pb-mark is-' + m[1] + '" style="left:' + (whole ? m[0] / whole * 100 : 0).toFixed(2) + '%"></i>';
-  }).join("") + (split && run.phase === "new" ? '<i class="pb-done" style="width:' + (run.reviews / whole * 100).toFixed(2) + '%"></i>' : "");
+  }).join("") + (second ? '<i class="pb-done" style="width:' + (a / whole * 100).toFixed(2) + '%"></i>' : "");
   bar.querySelectorAll(".pb-mark, .pb-done").forEach(function(el) { el.remove(); });
   bar.insertAdjacentHTML("beforeend", html);
   bar.classList.toggle("is-split", !!split);
@@ -8103,20 +8118,28 @@ function setStudyProgress(prefix, position, total, remaining, source) {
   labels.hidden = !split;
   if (!split) { labels.innerHTML = ""; return; }
   // The count is the part being studied, named, and the time left is the whole run's: "1 / 20"
-  // alone read as if the new cards were in it. New cards are flashcards, at that median.
+  // alone read as if the other half were in it. New cards are flashcards, reviews in the run's
+  // mode, each at that mode's median.
   var later = 0;
-  if (run.phase === "review") {
+  if (!second) {
     var medians = state.sessionTodayAtStart && state.sessionTodayAtStart.medianMs;
-    later = run.fresh * ((medians && medians.flashcard) || ETA_FALLBACK_MS.flashcard);
+    var laterMode = newFirst ? (run.mode || "flashcard") : "flashcard";
+    later = b * ((medians && medians[laterMode]) || ETA_FALLBACK_MS[laterMode]);
   }
   var eta = formatTimeLeft(estimateTimeLeftMs(remaining, source) + later);
   document.getElementById(prefix + "-progress-text").textContent =
     t(run.phase === "new" ? "studyNow.barTextNew" : "studyNow.barTextReview", { i: position, n: total }) + (eta ? " · " + eta : "");
-  var review = run.phase === "new" ? t("studyNow.barReviewDone") : t("studyNow.barReview", { n: run.reviews });
-  var fresh = run.phase === "new" ? t("studyNow.barNewAt", { i: position, n: run.fresh }) : t("studyNow.barNew", { n: run.fresh });
-  labels.style.gridTemplateColumns = "minmax(max-content, " + run.reviews + "fr) minmax(max-content, " + run.fresh + "fr)";
-  labels.innerHTML = '<span class="' + (run.phase === "new" ? "is-done" : "is-now") + '">' + escHtml(review) + '</span>' +
-    '<span class="' + (run.phase === "new" ? "is-now" : "") + '">' + escHtml(fresh) + '</span>';
+  var now = run.phase;
+  var review = now === "review" ? t("studyNow.barReview", { n: run.reviews })
+    : newFirst ? t("studyNow.barReview", { n: run.reviews }) : t("studyNow.barReviewDone");
+  var fresh = now === "new" ? t("studyNow.barNewAt", { i: position, n: run.fresh })
+    : newFirst ? t("studyNow.barNewDone") : t("studyNow.barNew", { n: run.fresh });
+  var cls = function(phase) { return phase === now ? "is-now" : second ? "is-done" : ""; };
+  var spans = [['<span class="' + cls("review") + '">' + escHtml(review) + '</span>', run.reviews],
+               ['<span class="' + cls("new") + '">' + escHtml(fresh) + '</span>', run.fresh]];
+  if (newFirst) spans.reverse();
+  labels.style.gridTemplateColumns = "minmax(max-content, " + spans[0][1] + "fr) minmax(max-content, " + spans[1][1] + "fr)";
+  labels.innerHTML = spans[0][0] + spans[1][0];
 }
 
 function formatSessionTime(ms) {
@@ -11405,6 +11428,29 @@ function setStudyNowMode(mode) {
   saveStudyNowPref("studyNowMode", mode);
 }
 
+// Which half of Study now runs first. Reviews first is the default: an overdue card is the
+// one closest to being forgotten. Learning first suits a day spent on a new class.
+var STUDY_NOW_FIRSTS = ["review", "new"];
+
+function studyNowFirst() { return state.studyNowFirst === "new" ? "new" : "review"; }
+
+function studyNowFirstHtml(first) {
+  return '<div class="study-now-mode study-now-first" role="group" aria-label="' + escHtml(t("studyNow.orderLabel")) + '">' +
+    STUDY_NOW_FIRSTS.map(function(f) {
+      return '<button type="button" data-study-now-first="' + f + '" aria-pressed="' + (f === first) + '">' +
+        escHtml(t(f === "new" ? "studyNow.newFirst" : "studyNow.reviewFirst")) + '</button>';
+    }).join("") + '</div>';
+}
+
+function setStudyNowFirst(first) {
+  if (STUDY_NOW_FIRSTS.indexOf(first) < 0 || first === studyNowFirst()) return;
+  state.studyNowFirst = first;
+  document.querySelectorAll("[data-study-now-first]").forEach(function(b) {
+    b.setAttribute("aria-pressed", String(b.dataset.studyNowFirst === first));
+  });
+  saveStudyNowPref("studyNowFirst", first);
+}
+
 function saveStudyNowPref(key, value) {
   try {
     var cached = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
@@ -11578,7 +11624,8 @@ function studyNowHtml(plan, today, noCards, classesHtml) {
         ' data-sub-flashcard="' + escHtml(subs.flashcard) + '" data-sub-quiz="' + escHtml(subs.quiz) + '">' +
       '<span class="study-now-play" aria-hidden="true"></span>' +
       '<span class="study-now-lbl"><b>' + escHtml(t("studyNow.go", { n: n })) + '</b><small>' + escHtml(subs[mode]) + '</small></span></button>' +
-      (plan.reviews ? studyNowModeHtml(mode) : '');
+      (plan.reviews ? studyNowModeHtml(mode) : '') +
+      (plan.reviews && plan.newCards ? studyNowFirstHtml(studyNowFirst()) : '');
   }
   var capped = plan.dueLeft > 0;
   return classesHtml + '<div class="study-now-done">' +
@@ -11589,10 +11636,10 @@ function studyNowHtml(plan, today, noCards, classesHtml) {
   '</div>';
 }
 
-// The session skips Study Setup. Reviews come first, most overdue first, in the chosen mode;
-// the user quizzes to review and uses flashcards to learn, so the new cards (in course order)
-// are held back and offered on the reviews' summary as a flashcard session of their own.
-// With nothing due, Study now goes straight to the new cards.
+// The session skips Study Setup. It runs in two halves: reviews, most overdue first, in the
+// chosen mode, and new cards, in course order, always as flashcards (the user quizzes to review
+// and uses flashcards to learn). The half chosen to go first starts; the other is offered on its
+// summary as a session of its own. With only one half there is nothing to choose.
 function startStudyNow(btn) {
   if (btn.classList.contains("is-loading")) return;
   var parts = btn.dataset.studyNow.split(",");
@@ -11604,9 +11651,14 @@ function startStudyNow(btn) {
       if (getActiveScreen() !== from) return;  // left while it loaded
       var due = res.cards.filter(function(c) { return c.srs_due_at != null; });
       var fresh = res.cards.filter(function(c) { return c.srs_due_at == null; });
-      var next = due.length && fresh.length ? { cards: fresh, lessons: res.lessons, statsMap: statsMap, reviews: due.length } : null;
-      state.pendingStudyNowRun = { reviews: due.length, fresh: fresh.length, phase: due.length ? "review" : "new" };
-      launchStudyNowCards(due.length ? due : fresh, res.lessons, statsMap, from, due.length ? studyNowMode() : "flashcard");
+      var mode = studyNowMode();
+      var first = !due.length ? "new" : !fresh.length ? "review" : studyNowFirst();
+      var run = { reviews: due.length, fresh: fresh.length, first: first, mode: mode, phase: first };
+      var next = due.length && fresh.length
+        ? { cards: first === "new" ? due : fresh, lessons: res.lessons, statsMap: statsMap, run: run }
+        : null;
+      state.pendingStudyNowRun = run;
+      launchStudyNowCards(first === "new" ? fresh : due, res.lessons, statsMap, from, first === "new" ? "flashcard" : mode);
       state.studyNowNext = next;
     });
   }).catch(function() {
@@ -11630,26 +11682,31 @@ function launchStudyNowCards(cards, lessons, statsMap, from, mode) {
   launchStudy(cards, mode, "in-order");
 }
 
-// On a Study now review session's summary: go on to the new cards it held back.
+// On the summary of Study now's first half: go on to the half it held back.
 function setLearnNewButton(prefix) {
   var next = state.studyNowNext;
   var btn = document.getElementById("btn-" + prefix + "-learn-new");
   btn.classList.toggle("hidden", !next);
-  btn.textContent = next ? t("studyNow.learnNew", { n: next.cards.length }) : "";
+  btn.textContent = !next ? "" :
+    t(next.run.first === "new" ? "studyNow.reviewNext" : "studyNow.learnNew", { n: next.cards.length });
 }
 
 ["results", "summary"].forEach(function(prefix) {
   document.getElementById("btn-" + prefix + "-learn-new").addEventListener("click", function() {
     var next = state.studyNowNext;
     if (!next) return;
-    state.pendingStudyNowRun = { reviews: next.reviews, fresh: next.cards.length, phase: "new" };
-    launchStudyNowCards(next.cards, next.lessons, next.statsMap, state.studyScope ? state.studyScope.returnScreen : "home", "flashcard");
+    var phase = next.run.first === "new" ? "review" : "new";
+    state.pendingStudyNowRun = Object.assign({}, next.run, { phase: phase });
+    launchStudyNowCards(next.cards, next.lessons, next.statsMap, state.studyScope ? state.studyScope.returnScreen : "home",
+      phase === "new" ? "flashcard" : next.run.mode);
   });
 });
 
 document.addEventListener("click", function(e) {
   var modeBtn = e.target.closest("[data-study-now-mode]");
   if (modeBtn) { setStudyNowMode(modeBtn.dataset.studyNowMode); return; }
+  var firstBtn = e.target.closest("[data-study-now-first]");
+  if (firstBtn) { setStudyNowFirst(firstBtn.dataset.studyNowFirst); return; }
   var btn = e.target.closest("[data-study-now]");
   if (btn) { startStudyNow(btn); return; }
   if (e.target.closest("[data-new-class]")) document.getElementById("btn-new-class").click();
@@ -13845,6 +13902,7 @@ function applyPrefs(prefs) {
     state.haptics = prefs.haptics;
   }
   if (prefs.studyNowMode === "quiz" || prefs.studyNowMode === "flashcard") state.studyNowMode = prefs.studyNowMode;
+  if (prefs.studyNowFirst === "new" || prefs.studyNowFirst === "review") state.studyNowFirst = prefs.studyNowFirst;
   if (typeof prefs.fontScale === "number") {
     applyFontScale(prefs.fontScale);
   }
