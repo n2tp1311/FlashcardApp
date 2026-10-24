@@ -596,25 +596,33 @@ chapters build on each other.
 
 **Reviews and new cards are two sessions.** The user quizzes to review and uses flashcards
 to learn new terms: a quiz on a card never seen tests a guess, and a flip card on a known
-one is slower than picking an answer. So the button starts the due cards in the mode the
-switch under it chooses (Flashcards or Quiz, remembered in the account's preferences as
+one is slower than picking an answer. So the button starts the due cards in the mode its
+menu chooses (Flashcards or Quiz, remembered in the account's preferences as
 `studyNowMode` because it is a habit, not a property of one phone), and holds the new cards
 back. The reviews' summary then offers "Learn N new cards", which starts them as
 flashcards; Back to Home drops them. With nothing due the button goes straight to the new
-cards and the switch is hidden, since it has nothing to decide. The cards are fetched once,
+cards and the gear is hidden, since it has nothing to decide. The cards are fetched once,
 when the button is pressed, and split by whether they have a due date, so the second
 session costs no request. The cost: a learner who wants to quiz new cards has to go
 through Study Setup.
 
-**Which half goes first is the learner's.** A second switch, Review first | Learn first, is
-shown only when the run has both halves, and is saved as `studyNowFirst` beside
+**Which half goes first is the learner's.** A second choice, Review first | Learn first, is
+offered only when the run has both halves, and is saved as `studyNowFirst` beside
 `studyNowMode`. Reviews first stays the default -- an overdue card is the one nearest to
 being forgotten -- but on a day spent starting a new class the user wanted the new terms
 while fresh, and reviews after. Learning first changes only the order: the new cards still
 run as flashcards and the reviews in the chosen mode, and the first summary offers "Review
 N cards" instead of "Learn N new cards". The run carries `first` and `mode`, so the bar and
-the second session do not have to re-read the switch, which may have moved since. The
+the second session do not have to re-read the menu, whose choice may have changed since. The
 cost: Back to Home after the new cards skips the reviews, the ones that cannot wait.
+
+**Both choices sit behind a gear on the button.** As two full-width switches they made the
+Today tile three rows of controls for one action, and the user asked for a menu instead.
+The gear opens a small menu with the two groups (the order group only when there are both
+halves); a third line in the button, "Quiz · Learn first", says how the session will run
+while the menu is closed. The gear is a sibling laid over the button, not inside it: a
+button in a button is invalid, and a tap on it would also start the session. The cost:
+a choice is a tap further away, and the gear is easier to miss than a switch.
 
 **The study bar shows the whole run.** Since a Study now run is two sessions, the bar in
 each spans both: the reviews, then the new cards, with a notch where the new cards start
