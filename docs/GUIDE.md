@@ -606,12 +606,24 @@ when the button is pressed, and split by whether they have a due date, so the se
 session costs no request. The cost: a learner who wants to quiz new cards has to go
 through Study Setup.
 
+**Which half goes first is the learner's.** A second switch, Review first | Learn first, is
+shown only when the run has both halves, and is saved as `studyNowFirst` beside
+`studyNowMode`. Reviews first stays the default -- an overdue card is the one nearest to
+being forgotten -- but on a day spent starting a new class the user wanted the new terms
+while fresh, and reviews after. Learning first changes only the order: the new cards still
+run as flashcards and the reviews in the chosen mode, and the first summary offers "Review
+N cards" instead of "Learn N new cards". The run carries `first` and `mode`, so the bar and
+the second session do not have to re-read the switch, which may have moved since. The
+cost: Back to Home after the new cards skips the reviews, the ones that cannot wait.
+
 **The study bar shows the whole run.** Since a Study now run is two sessions, the bar in
 each spans both: the reviews, then the new cards, with a notch where the new cards start
 and a tick at the middle of each half, and labels under it ("Review 35 · New 50", then
 "Reviewed ✓ · New 10/50" with the review half green). The user wanted to see the
 milestones from the first card -- how far the reviews go and when learning starts --
-rather than a bar that fills, empties and fills again. Study now passes the run to
+rather than a bar that fills, empties and fills again. With Learn first the halves swap places on the
+bar ("New 50 · Review 35", then "Learned ✓ · Review 35"), and the time left during the new
+cards counts the reviews to come at the review mode's median. Study now passes the run to
 `launchStudy` through `state.pendingStudyNowRun`, because the first card renders inside
 that call; any other session starts with none. A retry of the missed cards has fewer cards
 than the run expects, so it shows the plain bar. Other sessions have one bar with a tick
