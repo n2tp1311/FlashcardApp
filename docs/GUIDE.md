@@ -629,6 +629,12 @@ while the menu is closed. The gear is a sibling laid over the button, not inside
 button in a button is invalid, and a tap on it would also start the session. The cost:
 a choice is a tap further away, and the gear is easier to miss than a switch.
 
+When nothing is due, the button gives way to "All done for today" with "Learn N more new
+cards" beside it. Its label shares the `flex: 1` of the button's label, whose zero basis
+gave all the room to the button (which does not wrap its text), so on a phone the title
+stood one word a line. In the done state the label has a 10em basis, and the button wraps
+under the text when both do not fit.
+
 **The study bar shows the whole run.** Since a Study now run is two sessions, the bar in
 each spans both: the reviews, then the new cards, with a notch where the new cards start
 and a tick at the middle of each half, and labels under it ("Review 35 · New 50", then
