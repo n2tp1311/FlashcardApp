@@ -235,9 +235,14 @@ This one route is where learning is recorded. It does, in one transaction:
 3. **Clear an upstream `updated` flag.** Answering a card KnowledgeApp reworded counts
    as having seen the change. A `deleted` flag is not cleared: a removal needs an
    explicit acknowledgement, or studying would hide the notice.
-4. **Insert the attempt**, with the duration clamped to 5 minutes (a backgrounded tab
-   can leave a card "shown" for hours) and a snapshot of the schedule it is about to
-   change (`prev_state`, for undo, §7).
+4. **Insert the attempt**, with the duration clamped to 5 minutes (a card can be left
+   open on screen for hours) and a snapshot of the schedule it is about to change
+   (`prev_state`, for undo, §7). The client already leaves out time the app spent hidden:
+   on `visibilitychange` back to visible it moves the card's shown-at time forward by the
+   time away (`shiftCardClocks`). Before that, switching apps mid-card and answering on
+   return added up to five minutes of time spent elsewhere, and a few of those a day made
+   Studied read high. The clamp stays for a card left on an unattended screen, which
+   the page cannot tell from slow thinking.
 5. **Stop here if the card was not due.** The answer counts for stats, but the
    schedule is left alone. This is what makes cramming, retries and browsing harmless
    to FSRS: a card drilled five times in an hour is scheduled once. The response says
