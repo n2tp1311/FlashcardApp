@@ -230,6 +230,27 @@ test("the button counts reviews and new cards, and says how long from the median
   await p.close();
 });
 
+test("on a phone the done state keeps its title on one line and wraps the Learn more button under it", async () => {
+  const p = await browser.newPage({ viewport: { width: 390, height: 600 } });
+  await p.setContent("<!doctype html><body></body>");
+  await p.addStyleTag({ path: path.join(root, "client", "style.css") });
+  await p.addScriptTag({ content: harness });
+  const today = { activity: { reviews: 12, newCards: 10 }, medianMs: { flashcard: 20000, quiz: null } };
+  const est = { estimatedNewCards: 10, availableNewCards: 40 };
+  const r = await p.evaluate(([a, b]) => {
+    state.maxReviewsPerDay = null;
+    // The phone's Today tile: 330px wide with its own padding, as in the reported screenshot.
+    document.body.innerHTML = '<section class="dash-tile" style="width:330px;box-sizing:border-box">' + studyNowHtml(studyNowPlan(a, b, 0), a) + '</section>';
+    const title = document.querySelector(".study-now-done b").getBoundingClientRect();
+    const more = document.querySelector(".study-now-more").getBoundingClientRect();
+    return { titleH: title.height, line: parseFloat(getComputedStyle(document.querySelector(".study-now-done b")).lineHeight) || 24, below: more.top >= title.bottom };
+  }, [today, est]);
+  // Before the fix the title was 48px wide and four lines tall: "All / done / for / today".
+  assert.ok(r.titleH < r.line * 1.5, "title on one line, was " + r.titleH + "px");
+  assert.ok(r.below, "the button wraps under the text");
+  await p.close();
+});
+
 test("flashcards or quiz is a choice under the button: the time follows it, and it is remembered", async () => {
   const p = await browser.newPage();
   await p.route("http://sn.test/", (r) => r.fulfill({ contentType: "text/html", body: "<!doctype html><body></body>" }));

@@ -3230,6 +3230,9 @@ code {
 .study-now-lbl small { font-size: 0.8125rem; opacity: 0.9; }
 .study-now-done { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius); background: var(--surface2); }
 .study-now-done .study-now-lbl small { color: var(--text2); opacity: 1; }
+/* The label's shared flex: 1 has a zero basis, so it gave all the room to the nowrap button and
+   "All done for today" stood one word per line on a phone. A basis lets the button wrap under it. */
+.study-now-done .study-now-lbl { flex: 1 1 10em; }
 .study-now-tick { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: var(--success); background: color-mix(in srgb, var(--success) 18%, transparent); }
 .study-now-more {
   border: 2px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text);
