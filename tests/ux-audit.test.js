@@ -313,3 +313,23 @@ test("Changes screen summarises classes by size and a class row filters the list
   assert.match(fn("renderUpstreamList"), /renderUpstreamClasses\(\);/);
   assert.match(html, /id="upstream-classes"/);
 });
+
+test("a card's clock stops while the app is hidden, so time in another app is not study time", function() {
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext(fn("shiftCardClocks"), ctx);
+  const st = { studyCardShownAt: 1000, quizCardShownAt: 2000 };
+  ctx.shiftCardClocks(st, 90000);
+  assert.equal(st.studyCardShownAt, 91000);
+  assert.equal(st.quizCardShownAt, 92000);
+  const none = { studyCardShownAt: null, quizCardShownAt: 0 };
+  ctx.shiftCardClocks(none, 5000);
+  assert.equal(none.studyCardShownAt, null, "no card on screen: nothing to move");
+  assert.equal(none.quizCardShownAt, 0);
+  ctx.shiftCardClocks(st, -10);
+  assert.equal(st.studyCardShownAt, 91000, "a clock that went backwards moves nothing");
+  assert.match(app, /if \(document\.visibilityState === "hidden"\) \{ cardClockHiddenAt = Date\.now\(\); return; \}\n    if \(cardClockHiddenAt !== null\) shiftCardClocks\(state, Date\.now\(\) - cardClockHiddenAt\);/);
+  // The answer still measures from the (moved) start.
+  assert.match(app, /attemptFields\.durationMs = Date\.now\(\) - state\.studyCardShownAt;/);
+  assert.match(app, /quizAttemptFields\.durationMs = Date\.now\(\) - state\.quizCardShownAt;/);
+});

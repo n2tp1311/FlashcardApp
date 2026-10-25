@@ -8044,6 +8044,25 @@ function beginStudySession() {
 }
 
 // Returns what was added, so undoing a grade can take the same amount back off.
+// A card's clock stops while the app is hidden: time in another app is not study time, and
+// a phone put down mid-card and picked up later had added up to the five-minute clamp for
+// one answer. Moving the start forward by the time away keeps the measure a plain subtraction.
+var cardClockHiddenAt = null;
+
+function shiftCardClocks(st, awayMs) {
+  if (!(awayMs > 0)) return;
+  if (st.studyCardShownAt) st.studyCardShownAt += awayMs;
+  if (st.quizCardShownAt) st.quizCardShownAt += awayMs;
+}
+
+if (typeof document !== "undefined" && document.addEventListener) {
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "hidden") { cardClockHiddenAt = Date.now(); return; }
+    if (cardClockHiddenAt !== null) shiftCardClocks(state, Date.now() - cardClockHiddenAt);
+    cardClockHiddenAt = null;
+  });
+}
+
 function addSessionTime(ms) {
   if (typeof ms !== "number" || !(ms > 0)) return 0;
   ms = Math.min(ms, SESSION_CARD_MAX_MS);
