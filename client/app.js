@@ -1290,6 +1290,13 @@ Object.assign(TRANSLATIONS.en, {
   "study.whySkip": "Skip",
   "study.whyCheck": "Check",
   "study.whyYou": "You: {text}",
+  "study.sourceAsk": "Did this passage help?",
+  "study.sourceYes": "Yes",
+  "study.sourceNo": "Doesn't match",
+  "study.sourceThanks": "Thanks, noted.",
+  "study.sourceRemoved": "Passage removed. The next sync will look for a better one.",
+  "study.sourceUndo": "Undo",
+  "study.sourceFailed": "Couldn't save that. Try again.",
   "keymap.reviewPrevNext": "Review prev / next answered question"
 });
 Object.assign(TRANSLATIONS.vi, {
@@ -2440,6 +2447,13 @@ Object.assign(TRANSLATIONS.vi, {
   "study.whySkip": "Bỏ qua",
   "study.whyCheck": "Đối chiếu",
   "study.whyYou": "Bạn: {text}",
+  "study.sourceAsk": "Đoạn này có giúp không?",
+  "study.sourceYes": "Có",
+  "study.sourceNo": "Không khớp",
+  "study.sourceThanks": "Cảm ơn, đã ghi nhận.",
+  "study.sourceRemoved": "Đã gỡ đoạn này. Lần đồng bộ sau sẽ thử đoạn khác.",
+  "study.sourceUndo": "Hoàn tác",
+  "study.sourceFailed": "Chưa lưu được. Thử lại.",
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
 
@@ -9288,7 +9302,52 @@ function sourcePanel(card, id) {
   body.textContent = card.source;
   el.appendChild(sum);
   el.appendChild(body);
+  var ask = sourceFeedback(card, body);
+  if (ask) el.appendChild(ask);
   return el;
+}
+
+// "Did this passage help?" under a book passage. "Doesn't match" hides it at once and the
+// server keeps it aside, so undo can restore it and KnowledgeApp never sends it again; the
+// next sync tries the next-best passage or leaves none. Asked until answered: a card judged
+// good is not asked again until its passage changes.
+function sourceFeedback(card, body) {
+  if (!card || !card.id || card.source_verdict === "good" || typeof store.sourceFeedback !== "function") return null;
+  var row = document.createElement("div");
+  row.className = "source-ask";
+  function ask() {
+    row.innerHTML = '<span>' + escHtml(t("study.sourceAsk")) + "</span>" +
+      '<button type="button" class="btn btn-sm btn-ghost" data-v="good">' + escHtml(t("study.sourceYes")) + "</button>" +
+      '<button type="button" class="btn btn-sm btn-ghost" data-v="bad">' + escHtml(t("study.sourceNo")) + "</button>";
+  }
+  function send(verdict, done) {
+    store.sourceFeedback(card.id, verdict).then(function(r) {
+      card.source = r.source;
+      card.source_verdict = r.source_verdict;
+      done();
+    }).catch(function() {
+      row.innerHTML = '<span class="source-ask-msg">' + escHtml(t("study.sourceFailed")) + "</span>";
+      setTimeout(function() { body.classList.remove("hidden"); ask(); }, 2500);
+    });
+  }
+  row.addEventListener("click", function(e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.v === "good") {
+      send("good", function() { row.innerHTML = '<span class="source-ask-msg">' + escHtml(t("study.sourceThanks")) + "</span>"; });
+    } else if (b.dataset.v === "bad") {
+      body.classList.add("hidden");
+      row.innerHTML = '<span class="source-ask-msg">' + escHtml(t("study.sourceRemoved")) + "</span>";
+      send("bad", function() {
+        row.innerHTML = '<span class="source-ask-msg">' + escHtml(t("study.sourceRemoved")) + "</span>" +
+          '<button type="button" class="btn btn-sm btn-ghost" data-v="undo">' + escHtml(t("study.sourceUndo")) + "</button>";
+      });
+    } else if (b.dataset.v === "undo") {
+      send(null, function() { body.classList.remove("hidden"); ask(); });
+    }
+  });
+  ask();
+  return row;
 }
 
 // "Why?" on a flashcard with a book passage: you write your own reason first, then the passage
@@ -9316,6 +9375,8 @@ function whyPanel(card) {
     "</div>";
   // textContent, as in sourcePanel: book prose is full of $ amounts and markup-like text.
   el.querySelector("#fc-why-source").textContent = card.source;
+  var feedback = sourceFeedback(card, el.querySelector("#fc-why-source"));
+  if (feedback) el.querySelector("#fc-why-answer").appendChild(feedback);
   var btn = el.querySelector("#btn-fc-why"), ask = el.querySelector("#fc-why-ask"), input = el.querySelector("#fc-why-input");
   function reveal(reason) {
     var yours = el.querySelector("#fc-why-yours");
@@ -13774,6 +13835,7 @@ var SQLiteAdapter = (function() {
 
     acknowledgeCardUpdate: function(id) { return req("POST", "/cards/" + id + "/acknowledge-update"); },
     requestCardRewrite: function(id) { return req("POST", "/cards/" + id + "/rewrite-request"); },
+    sourceFeedback: function(id, verdict) { return req("POST", "/cards/" + id + "/source-feedback", { verdict: verdict }); },
     // The server caps each request at 1000 ids, so larger selections go in sequential batches.
     acknowledgeCardUpdates: function(ids) {
       var p = Promise.resolve();

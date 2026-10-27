@@ -328,7 +328,9 @@ router.post("/link", (req, res) => {
 // Sets the book passage on every card of this user linked to each unit. A card made before
 // KnowledgeApp has no unit, so KnowledgeApp finds its passage by the card's own words and
 // sends it by card_id -- which only ever touches a card with no external_id: a linked card's
-// passage belongs to its unit and the next sync would put that back. Replaying a batch
+// passage belongs to its unit and the next sync would put that back.
+// A new passage clears the learner's verdict on the old one (a 'good' stays when the same
+// text is resent), and the passage the learner rejected is never written back. Replaying a batch
 // writes the same text again; a unit or card with nothing to update counts as not_found.
 router.post("/sources", (req, res) => {
   const sources = req.body && req.body.sources;
@@ -342,15 +344,18 @@ router.post("/sources", (req, res) => {
   let updated = 0, notFound = 0;
   db.transaction(() => {
     const byUnit = db.prepare(
-      "UPDATE cards SET source = ? WHERE external_id = ? AND lesson_id IN (" +
+      "UPDATE cards SET source = ?, source_verdict = CASE WHEN source IS ? THEN source_verdict ELSE NULL END " +
+      "WHERE external_id = ? AND source_rejected IS NOT ? AND lesson_id IN (" +
       "SELECT lessons.id FROM lessons JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ?)"
     );
     const byCard = db.prepare(
-      "UPDATE cards SET source = ? WHERE id = ? AND external_id IS NULL AND lesson_id IN (" +
+      "UPDATE cards SET source = ?, source_verdict = CASE WHEN source IS ? THEN source_verdict ELSE NULL END " +
+      "WHERE id = ? AND external_id IS NULL AND source_rejected IS NOT ? AND lesson_id IN (" +
       "SELECT lessons.id FROM lessons JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ?)"
     );
     sources.forEach(s => {
-      const n = (s.card_id ? byCard : byUnit).run(s.text.trim(), s.card_id || s.external_id, req.userId).changes;
+      const text = s.text.trim();
+      const n = (s.card_id ? byCard : byUnit).run(text, text, s.card_id || s.external_id, text, req.userId).changes;
       if (n) updated += n; else notFound++;
     });
   })();
@@ -520,7 +525,7 @@ router.get("/classes/:id/cards", (req, res) => {
   ).all(cls.id).map((l, i) => ({ id: l.id, title: l.title, format: l.format, position: i, card_count: l.card_count }));
 
   const rows = db.prepare(
-    "SELECT ca.id, ca.lesson_id, ca.format, ca.data, ca.external_id, ca.upstream_change, cs.known, cs.srs_due_at, cs.fsrs_reps, " +
+    "SELECT ca.id, ca.lesson_id, ca.format, ca.data, ca.external_id, ca.upstream_change, ca.source, ca.source_verdict, ca.source_rejected, cs.known, cs.srs_due_at, cs.fsrs_reps, " +
     "cs.fsrs_state, cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_lapses, cs.fsrs_last_review_at " +
     "FROM cards ca JOIN lessons l ON ca.lesson_id = l.id " +
     "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
@@ -539,6 +544,10 @@ router.get("/classes/:id/cards", (req, res) => {
     const card = {
       id: r.id, lesson_id: r.lesson_id, position, format: r.format,
       external_id: r.external_id, upstream_change: r.upstream_change,
+      // "Did this passage help?" -- the passage judged and the answer. KnowledgeApp keeps a
+      // rejected one out of every later search for this card.
+      source_feedback: r.source_verdict === "bad" && r.source_rejected ? { verdict: "bad", text: r.source_rejected }
+        : r.source_verdict === "good" && r.source ? { verdict: "good", text: r.source } : null,
       studied: r.srs_due_at != null || (r.fsrs_reps || 0) > 0,
       known: r.known == null ? null : r.known === 1,
       // Learning progress, read by KnowledgeApp's Fetch to measure how much of a book the

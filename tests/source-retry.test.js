@@ -20,17 +20,23 @@ function extract(name) {
 }
 
 function fakeEl(tag) {
-  return { tag, children: [], id: "", className: "", innerHTML: "", textContent: "",
+  const classes = new Set();
+  return { tag, children: [], id: "", className: "", innerHTML: "", textContent: "", listeners: {},
+    classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) },
+    addEventListener(type, fn) { this.listeners[type] = fn; },
     appendChild(c) { this.children.push(c); } };
 }
 
 const ctx = {
   t: (k) => k,
   escHtml: (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"),
-  document: { createElement: fakeEl }
+  document: { createElement: fakeEl },
+  setTimeout: (fn) => fn(),
+  calls: [],
+  store: null
 };
 vm.createContext(ctx);
-vm.runInContext("var ICON_BOOK = '<svg/>';" + ["sourcePanel", "missedFlashcards", "missedQuizCards"].map(extract).join(""), ctx);
+vm.runInContext("var ICON_BOOK = '<svg/>';" + ["sourcePanel", "sourceFeedback", "missedFlashcards", "missedQuizCards"].map(extract).join(""), ctx);
 
 test("a card with a passage gets a collapsed panel holding it as plain text", () => {
   const el = ctx.sourcePanel({ source: "Costs rose to $5 and <b>then</b> fell." }, "quiz-source");
@@ -88,11 +94,11 @@ test("the sources endpoint sets the passage only on this user's linked cards", (
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
     CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
-    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT);
     INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
     INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
-    INSERT INTO cards VALUES ('a','L1','s:1',NULL), ('b','L2','s:1',NULL), ('c','L1','s:2',NULL);`);
-  const n = db.prepare(sql[0]).run(["The passage.", "s:1", "u1"]).changes;
+    INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('a','L1','s:1',NULL), ('b','L2','s:1',NULL), ('c','L1','s:2',NULL);`);
+  const n = db.prepare(sql[0]).run(["The passage.", "The passage.", "s:1", "The passage.", "u1"]).changes;
   assert.equal(n, 1);
   assert.deepEqual(db.all("SELECT id, source FROM cards ORDER BY id"),
     [{ id: "a", source: "The passage." }, { id: "b", source: null }, { id: "c", source: null }]);
@@ -111,12 +117,12 @@ test("a passage sent by card_id lands only on this user's card that has no unit"
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
     CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
-    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT);
     INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
     INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
-    INSERT INTO cards VALUES ('old','L1',NULL,NULL), ('linked','L1','s:1','Its unit passage.'),
+    INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('old','L1',NULL,NULL), ('linked','L1','s:1','Its unit passage.'),
       ('theirs','L2',NULL,NULL);`);
-  for (const id of ["old", "linked", "theirs"]) db.prepare(byCard).run(["Found by words.", id, "u1"]);
+  for (const id of ["old", "linked", "theirs"]) db.prepare(byCard).run(["Found by words.", "Found by words.", id, "Found by words.", "u1"]);
   assert.deepEqual(db.all("SELECT id, source FROM cards ORDER BY id"), [
     { id: "linked", source: "Its unit passage." },
     { id: "old", source: "Found by words." },

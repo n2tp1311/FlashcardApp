@@ -338,6 +338,30 @@ router.post("/cards/:id/rewrite-request", requireAuth, (req, res) => {
   res.status(201).json({ id, status: "pending" });
 });
 
+// POST /api/cards/:id/source-feedback { verdict: "good" | "bad" | null }
+// "Did this passage help?" under a book passage. 'bad' takes the passage off the card at once
+// -- a wrong passage misleads, none does not -- and keeps it in source_rejected, which undo
+// (null) puts back and KnowledgeApp reads so it searches past it on the next sync.
+router.post("/cards/:id/source-feedback", requireAuth, (req, res) => {
+  if (!ownCard(req.params.id, req.session.userId)) return res.status(404).json({ error: "Not found" });
+  const verdict = req.body ? req.body.verdict : undefined;
+  if (verdict !== "good" && verdict !== "bad" && verdict !== null)
+    return res.status(400).json({ error: "verdict must be good, bad or null" });
+  const card = db.prepare("SELECT source, source_verdict, source_rejected FROM cards WHERE id = ?").get(req.params.id);
+  if (verdict === null) {
+    if (card.source_verdict === "bad" && card.source == null && card.source_rejected)
+      db.prepare("UPDATE cards SET source = source_rejected, source_rejected = NULL, source_verdict = NULL WHERE id = ?").run(req.params.id);
+    else db.prepare("UPDATE cards SET source_verdict = NULL WHERE id = ?").run(req.params.id);
+  } else {
+    if (!card.source || !card.source.trim()) return res.status(409).json({ error: "This card has no passage" });
+    if (verdict === "bad")
+      db.prepare("UPDATE cards SET source_rejected = source, source = NULL, source_verdict = 'bad' WHERE id = ?").run(req.params.id);
+    else db.prepare("UPDATE cards SET source_verdict = 'good' WHERE id = ?").run(req.params.id);
+  }
+  const after = db.prepare("SELECT source, source_verdict FROM cards WHERE id = ?").get(req.params.id);
+  res.json({ source: after.source, source_verdict: after.source_verdict });
+});
+
 // POST /api/cards/:id/acknowledge-update
 router.post("/cards/:id/acknowledge-update", requireAuth, (req, res) => {
   if (!ownCard(req.params.id, req.session.userId))

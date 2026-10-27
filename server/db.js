@@ -386,6 +386,11 @@ try { db.exec("ALTER TABLE cards ADD COLUMN converted_from TEXT"); } catch (_) {
 // The book passage a KnowledgeApp card was written from, shown under the answer. Plain text;
 // KnowledgeApp picks a ~100-word excerpt, so this never holds a whole chapter.
 try { db.exec("ALTER TABLE cards ADD COLUMN source TEXT"); } catch (_) {}
+// The learner's answer to "Did this passage help?": 'good', or 'bad' -- then the passage
+// moves to source_rejected (kept for undo, and read by KnowledgeApp so it never sends that
+// passage again) and the card shows none until KnowledgeApp sends a better one.
+try { db.exec("ALTER TABLE cards ADD COLUMN source_verdict TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE cards ADD COLUMN source_rejected TEXT"); } catch (_) {}
 // A linked card (external_id set) the learner deleted: KnowledgeApp reads these so the card
 // is never synced back. `kind` says how it went. 'card' is a single-card delete, "this card is
 // wrong", and KnowledgeApp removes the unit behind it. 'lesson' came with its whole lesson,
