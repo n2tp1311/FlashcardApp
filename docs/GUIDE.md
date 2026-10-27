@@ -500,6 +500,12 @@ There is no study direction setting: a card is always studied front to back.
   right, then sees the book passage the card came from. Explaining before checking makes
   a miss stick better than re-reading. The passage is stored on the card (`cards.source`),
   so there is no model call; what the learner writes is not saved.
+  A card made before KnowledgeApp has no unit, so KnowledgeApp searches the book with
+  the card's own words and sends the passage by `card_id`. The server sets it only on a
+  card with no `external_id`: a linked card's passage belongs to its unit, and the next
+  sync would overwrite anything else. KnowledgeApp sends one only when it is close in
+  meaning to the card (cosine 0.75), so about one older card in five gets a passage;
+  a wrong passage would mislead more than none.
 
 ### Quiz
 
@@ -1060,7 +1066,7 @@ flagged, since the summary line already says everything.
 | `PUT /lessons/:id` | rename a lesson in place |
 | `GET /classes/:id/cards` | every card with its position, for reconciling |
 | `POST /convert-cards` | rewrite mcq / true-false cards as term-def in place |
-| `POST /sources` | set the book passage shown under a card |
+| `POST /sources` | set the book passage shown under a card: by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
 | `POST /remove-cards` | delete cards KnowledgeApp made, for a kind of card the learner asked to take back |
 | `GET /deletions?since=` | linked cards the learner deleted |
 
