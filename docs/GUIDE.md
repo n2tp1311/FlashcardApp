@@ -506,6 +506,14 @@ There is no study direction setting: a card is always studied front to back.
   sync would overwrite anything else. KnowledgeApp sends one only when it is close in
   meaning to the card (cosine 0.75), so about one older card in five gets a passage;
   a wrong passage would mislead more than none.
+  Under each passage: **Did this passage help? Yes / Doesn't match.** Doesn't match takes
+  the passage off the card at once (`cards.source_rejected` keeps it for Undo), and the
+  next KnowledgeApp sync sends the next-best passage or none. KnowledgeApp chooses
+  passages by word overlap, which is sometimes wrong in ways only a reader sees -- ESL's
+  Bootstrap card showed a mangled formula -- so the learner is the last check. `/sources`
+  never writes a rejected passage back, and a new passage clears the old verdict. Yes is
+  stored too (`source_verdict = 'good'`): it stops the question for that passage, and
+  gives KnowledgeApp real evidence for its thresholds.
 
 ### Quiz
 
@@ -1064,7 +1072,7 @@ flagged, since the summary line already says everything.
 | `POST /add-cards` | add cards into an existing class, into a lesson, after a card, or into a new lesson |
 | `PUT /classes/:id/layout` | move linked cards into KnowledgeApp's current lessons, in its order |
 | `PUT /lessons/:id` | rename a lesson in place |
-| `GET /classes/:id/cards` | every card with its position, for reconciling |
+| `GET /classes/:id/cards` | every card with its position, for reconciling, and the learner's verdict on its passage (`source_feedback`) |
 | `POST /convert-cards` | rewrite mcq / true-false cards as term-def in place |
 | `POST /sources` | set the book passage shown under a card: by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
 | `POST /remove-cards` | delete cards KnowledgeApp made, for a kind of card the learner asked to take back |
