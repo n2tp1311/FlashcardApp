@@ -324,26 +324,33 @@ router.post("/link", (req, res) => {
   });
 });
 
-// POST /api/integrations/knowledge/sources  { sources: [{external_id, text}] }
-// Sets the book passage on every card of this user linked to each unit. Replaying a batch
-// writes the same text again; a unit with no card here counts as not_found.
+// POST /api/integrations/knowledge/sources  { sources: [{external_id | card_id, text}] }
+// Sets the book passage on every card of this user linked to each unit. A card made before
+// KnowledgeApp has no unit, so KnowledgeApp finds its passage by the card's own words and
+// sends it by card_id -- which only ever touches a card with no external_id: a linked card's
+// passage belongs to its unit and the next sync would put that back. Replaying a batch
+// writes the same text again; a unit or card with nothing to update counts as not_found.
 router.post("/sources", (req, res) => {
   const sources = req.body && req.body.sources;
   if (!Array.isArray(sources) || sources.length < 1 || sources.length > MAX_SOURCES)
     return res.status(400).json({ error: "sources must be an array of 1-" + MAX_SOURCES });
   for (let i = 0; i < sources.length; i++) {
     const s = sources[i];
-    if (!s || !isId(s.external_id) || typeof s.text !== "string" || !s.text.trim() || s.text.length > MAX_SOURCE_LEN)
-      return res.status(400).json({ error: "source " + i + ": external_id and text (1-" + MAX_SOURCE_LEN + " chars) required" });
+    if (!s || isId(s.external_id) === isId(s.card_id) || typeof s.text !== "string" || !s.text.trim() || s.text.length > MAX_SOURCE_LEN)
+      return res.status(400).json({ error: "source " + i + ": one of external_id or card_id, and text (1-" + MAX_SOURCE_LEN + " chars) required" });
   }
   let updated = 0, notFound = 0;
   db.transaction(() => {
-    const stmt = db.prepare(
+    const byUnit = db.prepare(
       "UPDATE cards SET source = ? WHERE external_id = ? AND lesson_id IN (" +
       "SELECT lessons.id FROM lessons JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ?)"
     );
+    const byCard = db.prepare(
+      "UPDATE cards SET source = ? WHERE id = ? AND external_id IS NULL AND lesson_id IN (" +
+      "SELECT lessons.id FROM lessons JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ?)"
+    );
     sources.forEach(s => {
-      const n = stmt.run(s.text.trim(), s.external_id, req.userId).changes;
+      const n = (s.card_id ? byCard : byUnit).run(s.text.trim(), s.card_id || s.external_id, req.userId).changes;
       if (n) updated += n; else notFound++;
     });
   })();

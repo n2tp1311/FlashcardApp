@@ -83,7 +83,7 @@ test("the sources endpoint sets the passage only on this user's linked cards", (
   const handler = route.slice(0, route.indexOf("\n});") + 4);
   const sql = [...handler.matchAll(/db\.prepare\(\s*((?:"[^"]*"\s*\+?\s*)+)\)/g)]
     .map((m) => m[1].split(/"\s*\+\s*"/).join("").replace(/^"|"\s*$/g, ""));
-  assert.equal(sql.length, 1);
+  assert.equal(sql.length, 2);
 
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
@@ -98,4 +98,29 @@ test("the sources endpoint sets the passage only on this user's linked cards", (
     [{ id: "a", source: "The passage." }, { id: "b", source: null }, { id: "c", source: null }]);
   db.close();
   assert.match(fs.readFileSync(path.join(root, "server", "db.js"), "utf8"), /ALTER TABLE cards ADD COLUMN source TEXT/);
+});
+
+test("a passage sent by card_id lands only on this user's card that has no unit", () => {
+  const route = integrations.slice(integrations.indexOf('router.post("/sources"'));
+  const handler = route.slice(0, route.indexOf("\n});") + 4);
+  const sql = [...handler.matchAll(/db\.prepare\(\s*((?:"[^"]*"\s*\+?\s*)+)\)/g)]
+    .map((m) => m[1].split(/"\s*\+\s*"/).join("").replace(/^"|"\s*$/g, ""));
+  const byCard = sql.find((q) => /WHERE id = \?/.test(q));
+  assert.ok(byCard);
+
+  const db = new Database();
+  db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
+    CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT);
+    INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
+    INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
+    INSERT INTO cards VALUES ('old','L1',NULL,NULL), ('linked','L1','s:1','Its unit passage.'),
+      ('theirs','L2',NULL,NULL);`);
+  for (const id of ["old", "linked", "theirs"]) db.prepare(byCard).run(["Found by words.", id, "u1"]);
+  assert.deepEqual(db.all("SELECT id, source FROM cards ORDER BY id"), [
+    { id: "linked", source: "Its unit passage." },
+    { id: "old", source: "Found by words." },
+    { id: "theirs", source: null }]);
+  db.close();
+  assert.match(handler, /isId\(s\.external_id\) === isId\(s\.card_id\)/);
 });
