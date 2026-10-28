@@ -522,6 +522,14 @@ There is no study direction setting: a card is always studied front to back.
   marked with a tint of the palette's accent (`color-mix` of `--primary`), which follows
   every theme. The cost is storage: about 240 more words per card, roughly 45 MB over
   30,000 cards.
+  **After a miss the passage is already open.** A wrong quiz answer opens it (a wrong
+  answer waits for Next anyway); the Flashcard & Write retype drill opens it under the
+  card; a card graded Learning earlier in the run opens straight to it when it comes back
+  in Retry missed, a cram round or a resumed session (`state.sessionMissed`). Those skip
+  the "Why?" prompt: self-explanation helps when you half know the answer, and after a
+  miss you do not. Plain Flashcard mode adds no step after a Learning grade -- a pause on
+  every lapse was previewed and not chosen, because it costs a tap on the cards you are
+  already struggling with.
 
 ### Quiz
 
