@@ -42,7 +42,7 @@ const ctx = {
   store: null
 };
 vm.createContext(ctx);
-vm.runInContext("var ICON_BOOK = '<svg/>'; var SOURCE_STOP = [];" + ["sourcePanel", "sourceFeedback", "fillSource", "sourceTermPattern", "markSourceWords", "missedFlashcards", "missedQuizCards"].map(extract).join(""), ctx);
+vm.runInContext("var ICON_BOOK = '<svg/>'; var SOURCE_STOP = [];" + ["sourcePanel", "sourceFeedback", "sourceTabs", "sourceRelated", "fillSource", "sourceTermPattern", "markSourceWords", "missedFlashcards", "missedQuizCards"].map(extract).join(""), ctx);
 
 test("a card with a passage gets a collapsed panel holding it as plain text", () => {
   const el = ctx.sourcePanel({ source: "Costs rose to $5 and <b>then</b> fell." }, "quiz-source");
@@ -100,11 +100,11 @@ test("the sources endpoint sets the passage only on this user's linked cards", (
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
     CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
-    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
     INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
     INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
     INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('a','L1','s:1',NULL), ('b','L2','s:1',NULL), ('c','L1','s:2',NULL);`);
-  const n = db.prepare(sql[0]).run(["The passage.", "The passage.", null, null, "s:1", "The passage.", "u1"]).changes;
+  const n = db.prepare(sql[0]).run(["The passage.", "The passage.", null, null, null, "s:1", "The passage.", "u1"]).changes;
   assert.equal(n, 1);
   assert.deepEqual(db.all("SELECT id, source FROM cards ORDER BY id"),
     [{ id: "a", source: "The passage." }, { id: "b", source: null }, { id: "c", source: null }]);
@@ -123,12 +123,12 @@ test("a passage sent by card_id lands only on this user's card that has no unit"
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
     CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
-    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
     INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
     INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
     INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('old','L1',NULL,NULL), ('linked','L1','s:1','Its unit passage.'),
       ('theirs','L2',NULL,NULL);`);
-  for (const id of ["old", "linked", "theirs"]) db.prepare(byCard).run(["Found by words.", "Found by words.", null, null, id, "Found by words.", "u1"]);
+  for (const id of ["old", "linked", "theirs"]) db.prepare(byCard).run(["Found by words.", "Found by words.", null, null, null, id, "Found by words.", "u1"]);
   assert.deepEqual(db.all("SELECT id, source FROM cards ORDER BY id"), [
     { id: "linked", source: "Its unit passage." },
     { id: "old", source: "Found by words." },

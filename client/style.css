@@ -5461,6 +5461,11 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .source-more { display: block; margin-top: 6px; padding: 0; border: 0; background: none; color: var(--primary); font: inherit; font-size: 0.82rem; cursor: pointer; }
 .source-more:hover { text-decoration: underline; }
 /* the card's own words in the passage: a tint of the palette's accent, so it follows every theme */
+.source-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 16px 8px; }
+.why-answer .source-tabs { margin: 0 0 8px; }
+.source-tab { border: 1px solid var(--border); background: var(--surface); color: var(--text2); border-radius: var(--radius-pill); padding: 3px 12px; font: inherit; font-size: 0.8rem; cursor: pointer; }
+.source-tab[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 600; }
+.source-body.source-other { border-left-color: var(--primary); }
 .source-mark { background: color-mix(in srgb, var(--primary) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
 
 /* Cloze: the gap reads as a slot in the sentence; once revealed, the answer stays marked so

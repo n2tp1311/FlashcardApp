@@ -1299,6 +1299,7 @@ Object.assign(TRANSLATIONS.en, {
   "study.sourceFailed": "Couldn't save that. Try again.",
   "study.sourceMore": "Read more",
   "study.sourceLess": "Show less",
+  "study.sourceThisBook": "This book",
   "keymap.reviewPrevNext": "Review prev / next answered question"
 });
 Object.assign(TRANSLATIONS.vi, {
@@ -2458,6 +2459,7 @@ Object.assign(TRANSLATIONS.vi, {
   "study.sourceFailed": "Chưa lưu được. Thử lại.",
   "study.sourceMore": "Đọc thêm",
   "study.sourceLess": "Thu gọn",
+  "study.sourceThisBook": "Sách này",
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
 
@@ -9312,6 +9314,8 @@ function sourcePanel(card, id) {
   el.appendChild(body);
   var ask = sourceFeedback(card, body);
   if (ask) el.appendChild(ask);
+  var tabs = sourceTabs(card, body, ask);
+  if (tabs) el.insertBefore(tabs, body);
   return el;
 }
 
@@ -9346,6 +9350,55 @@ function fillSource(body, card) {
     more.setAttribute("aria-expanded", String(open));
   });
   body.appendChild(more);
+}
+
+// The same concept in other books (cards.source_related, JSON [{book, text}]): one button per
+// book above the passage, and the passage shown is the chosen book's. "Did this passage help?"
+// and "Read more" are about this card's own passage, so they go while another book's shows.
+function sourceRelated(card) {
+  var list = card && card.source_related;
+  if (typeof list === "string") { try { list = JSON.parse(list); } catch (_) { return []; } }
+  if (!Array.isArray(list)) return [];
+  return list.filter(function(r) {
+    return r && typeof r.book === "string" && r.book.trim() && typeof r.text === "string" && r.text.trim();
+  });
+}
+
+function sourceTabs(card, body, ask) {
+  var related = sourceRelated(card);
+  if (!related.length) return null;
+  var row = document.createElement("div");
+  row.className = "source-tabs";
+  [t("study.sourceThisBook")].concat(related.map(function(r) { return r.book; })).forEach(function(name, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "source-tab";
+    b.textContent = name;
+    b.dataset.i = String(i);
+    b.setAttribute("aria-pressed", String(i === 0));
+    row.appendChild(b);
+  });
+  row.addEventListener("click", function(e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    var i = Number(b.dataset.i);
+    row.querySelectorAll("button").forEach(function(x) { x.setAttribute("aria-pressed", String(x === b)); });
+    if (i === 0) {
+      // this card's passage may have been turned down meanwhile: then there is none to show
+      if (typeof card.source === "string" && card.source.trim()) fillSource(body, card);
+      body.classList.toggle("hidden", !(typeof card.source === "string" && card.source.trim()));
+    } else {
+      body.textContent = "";
+      var span = document.createElement("span");
+      span.className = "source-core";
+      markSourceWords(span, related[i - 1].text, sourceTermPattern(card));
+      body.appendChild(span);
+      body.classList.remove("hidden");
+    }
+    body.classList.toggle("source-other", i > 0);
+    if (ask) ask.classList.toggle("hidden", i > 0);
+  });
+  return row;
 }
 
 // The term's words (3+ letters, not "the"/"and"…) as a pattern matching the start of a word,
@@ -9445,6 +9498,8 @@ function whyPanel(card, open) {
   fillSource(el.querySelector("#fc-why-source"), card);
   var feedback = sourceFeedback(card, el.querySelector("#fc-why-source"));
   if (feedback) el.querySelector("#fc-why-answer").appendChild(feedback);
+  var whyTabs = sourceTabs(card, el.querySelector("#fc-why-source"), feedback);
+  if (whyTabs) el.querySelector("#fc-why-answer").insertBefore(whyTabs, el.querySelector("#fc-why-source"));
   var btn = el.querySelector("#btn-fc-why"), ask = el.querySelector("#fc-why-ask"), input = el.querySelector("#fc-why-input");
   function reveal(reason) {
     var yours = el.querySelector("#fc-why-yours");

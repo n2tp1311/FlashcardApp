@@ -115,3 +115,52 @@ test("strings exist in English and Vietnamese", function() {
     assert.equal(app.split('"' + k + '":').length - 1, 2, k);
   }
 });
+
+test("another book's passage on the same concept is a button above the passage; Read more and the question are this card's", async function() {
+  const card = { id: "c1", data: { term: "Critical path" }, source: "The critical path is the longest path.",
+    source_after: "Its activities are critical.",
+    source_related: JSON.stringify([{ book: "Operations Research", text: "Delaying the critical path <b>delays</b> the project." }]) };
+  await withPanel(card, async (page) => {
+    const tabs = () => page.evaluate(() => Array.from(document.querySelectorAll("#fc-why .source-tab")).map((b) => [b.textContent, b.getAttribute("aria-pressed")]));
+    assert.deepEqual(await tabs(), [["This book", "true"], ["Operations Research", "false"]]);
+    assert.match(await page.textContent("#fc-why-source"), /longest path/);
+    await page.click("#fc-why .source-tab:nth-child(2)");
+    assert.deepEqual(await tabs(), [["This book", "false"], ["Operations Research", "true"]]);
+    assert.equal(await page.textContent("#fc-why-source"), "Delaying the critical path <b>delays</b> the project.");
+    assert.equal(await page.evaluate(() => document.querySelectorAll("#fc-why-source mark").length), 2, "the card's words marked here too");
+    assert.equal(await page.evaluate(() => document.querySelector("#fc-why-source b")), null, "book text never becomes markup");
+    assert.equal(await shown(page, "#fc-why-source .source-more"), false, "Read more belongs to this card's passage");
+    await page.click("#fc-why .source-tab:nth-child(1)");
+    assert.match(await page.textContent("#fc-why-source"), /longest path/);
+    assert.equal(await shown(page, "#fc-why-source .source-more"), true);
+    const fits = await page.evaluate(() => Array.from(document.querySelectorAll("#fc-why *")).every((el) => el.getBoundingClientRect().right <= innerWidth + 0.5));
+    assert.ok(fits, "fits a 320px phone");
+  }, true);
+});
+
+test("no buttons without another book, or when what arrived is not a list of passages", async function() {
+  for (const related of [undefined, "[]", "not json", JSON.stringify([{ book: "X" }])])
+    await withPanel({ source: "Passage.", source_related: related }, async (page) => {
+      assert.equal(await page.evaluate(() => document.querySelectorAll(".source-tab").length), 0);
+    }, true);
+});
+
+test("the collapsed panel under a quiz answer gets the same buttons", async function() {
+  const { chromium } = require("playwright");
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(base + "/");
+    await page.waitForFunction(() => typeof window.sourcePanel === "function");
+    const got = await page.evaluate(() => {
+      const el = sourcePanel({ source: "Own.", source_related: [{ book: "B", text: "Theirs." }] });
+      document.body.prepend(el);
+      el.open = true;
+      const tabs = el.querySelector(".source-tabs");
+      return [tabs.nextElementSibling.classList.contains("source-body"), tabs.textContent];
+    });
+    assert.deepEqual(got, [true, "This bookB"]);
+  } finally {
+    await browser.close();
+  }
+});

@@ -24,7 +24,7 @@ raw.exec(`
   CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
   CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
   CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT,
-    source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT);
+    source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
   INSERT INTO classes VALUES ('k1', 'u1'), ('k2', 'u2');
   INSERT INTO lessons VALUES ('L1', 'k1'), ('X1', 'k2');
   INSERT INTO cards (id, lesson_id, external_id, source) VALUES
@@ -83,7 +83,7 @@ test("a sync never writes the rejected passage back, and a new one clears the ve
   const byUnit = [...handler.matchAll(/db\.prepare\(\s*((?:"[^"]*"\s*\+?\s*)+)\)/g)]
     .map((m) => m[1].split(/"\s*\+\s*"/).join("").replace(/^"|"\s*$/g, ""))
     .find((q) => /WHERE external_id = \?/.test(q));
-  const send = (text, ext, before = null, after = null) => raw.prepare(byUnit).run([text, text, before, after, ext, text, "u1"]).changes;
+  const send = (text, ext, before = null, after = null) => raw.prepare(byUnit).run([text, text, before, after, null, ext, text, "u1"]).changes;
 
   raw.exec("UPDATE cards SET source = NULL, source_verdict = 'bad', source_rejected = 'A formula.' WHERE id = 'a'");
   assert.equal(send("A formula.", "s:1"), 0);
@@ -155,9 +155,27 @@ test("a passage arrives with the book's text either side, and a resend without i
   const byUnit = [...handler.matchAll(/db\.prepare\(\s*((?:"[^"]*"\s*\+?\s*)+)\)/g)]
     .map((m) => m[1].split(/"\s*\+\s*"/).join("").replace(/^"|"\s*$/g, ""))
     .find((q) => /WHERE external_id = \?/.test(q));
-  raw.prepare(byUnit).run(["Core.", "Core.", "Before it.", "After it.", "s:2", "Core.", "u1"]);
+  raw.prepare(byUnit).run(["Core.", "Core.", "Before it.", "After it.", null, "s:2", "Core.", "u1"]);
   assert.deepEqual(db.prepare("SELECT source_before, source_after FROM cards WHERE id = 'b'").get(),
     { source_before: "Before it.", source_after: "After it." });
   assert.match(handler, /ctx\(s\.before\), ctx\(s\.after\)/);
   assert.match(handler, /\[s\.before, s\.after\]\.some/);
+});
+
+test("another book's passage is stored with the card, and a resend without it clears it", () => {
+  const integrations = fs.readFileSync(path.join(root, "server", "routes", "integrations.js"), "utf8");
+  const route = integrations.slice(integrations.indexOf('router.post("/sources"'));
+  const handler = route.slice(0, route.indexOf("\n});") + 4);
+  const byUnit = [...handler.matchAll(/db\.prepare\(\s*((?:"[^"]*"\s*\+?\s*)+)\)/g)]
+    .map((m) => m[1].split(/"\s*\+\s*"/).join("").replace(/^"|"\s*$/g, ""))
+    .find((q) => /WHERE external_id = \?/.test(q));
+  const related = JSON.stringify([{ book: "Operations Research", text: "Theirs." }]);
+  raw.prepare(byUnit).run(["Core.", "Core.", null, null, related, "s:2", "Core.", "u1"]);
+  assert.equal(db.prepare("SELECT source_related FROM cards WHERE id = 'b'").get().source_related, related);
+  raw.prepare(byUnit).run(["Core.", "Core.", null, null, null, "s:2", "Core.", "u1"]);
+  assert.equal(db.prepare("SELECT source_related FROM cards WHERE id = 'b'").get().source_related, null);
+  // at most three books, each {book, text} within the limits, or the whole batch is refused
+  assert.match(handler, /s\.related\.length > MAX_RELATED/);
+  assert.match(handler, /typeof r\.book === "string" && r\.book\.trim\(\) && r\.book\.length <= MAX_BOOK_NAME/);
+  assert.match(fs.readFileSync(path.join(root, "server", "db.js"), "utf8"), /ALTER TABLE cards ADD COLUMN source_related TEXT/);
 });
