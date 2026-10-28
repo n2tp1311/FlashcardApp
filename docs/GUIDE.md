@@ -522,6 +522,14 @@ There is no study direction setting: a card is always studied front to back.
   marked with a tint of the palette's accent (`color-mix` of `--primary`), which follows
   every theme. The cost is storage: about 240 more words per card, roughly 45 MB over
   30,000 cards.
+  **Another book explains it too.** When KnowledgeApp links the card to the same concept
+  in other books, their passages arrive with it (`source_related`, JSON `[{book, text}]`,
+  at most three) and show as buttons above the passage: "This book", then each book's
+  name. Choosing one swaps the passage in place, with the card's words marked; Read more
+  and "Did this passage help?" are about this card's own passage, so they go while
+  another book's shows. A second book helps because it says the same thing differently.
+  Few cards have one (about 170 of 30,000): KnowledgeApp links books only when it is sure
+  the concept is the same.
   **After a miss the passage is already open.** A wrong quiz answer opens it (a wrong
   answer waits for Next anyway); the Flashcard & Write retype drill opens it under the
   card; a card graded Learning earlier in the run opens straight to it when it comes back
@@ -1090,7 +1098,7 @@ flagged, since the summary line already says everything.
 | `PUT /lessons/:id` | rename a lesson in place |
 | `GET /classes/:id/cards` | every card with its position, for reconciling, and the learner's verdict on its passage (`source_feedback`) |
 | `POST /convert-cards` | rewrite mcq / true-false cards as term-def in place |
-| `POST /sources` | set the book passage shown under a card, with the text before and after it for Read more: by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
+| `POST /sources` | set the book passage shown under a card, with the text before and after it for Read more and the same concept's passages in other books (`related`): by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
 | `POST /remove-cards` | delete cards KnowledgeApp made, for a kind of card the learner asked to take back |
 | `GET /deletions?since=` | linked cards the learner deleted |
 
