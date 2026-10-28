@@ -530,6 +530,18 @@ There is no study direction setting: a card is always studied front to back.
   another book's shows. A second book helps because it says the same thing differently.
   Few cards have one (about 170 of 30,000): KnowledgeApp links books only when it is sure
   the concept is the same.
+  **Learn these first.** A card forgotten again and again often rests on another card the
+  learner is also unsure of: its definition names it. KnowledgeApp sends those links
+  (`cards.needs`, JSON external ids, in the order the definition names them, at most five).
+  From the third time a card is forgotten (two lapses since its last edit, then this miss),
+  `GET /cards/:id/needs` returns those cards from the same class with a `weak` flag: never
+  scheduled, still learning or relearning, or due now. If any weak one has not been seen
+  this session, the flashcard holds before advancing and asks: review them first, then
+  this card again? Yes puts them straight after, then the card, and a prerequisite already
+  later in the session moves up instead of showing twice. Skip moves on. A failed lookup,
+  or one answered after an undo or a move to another card, never holds the session.
+  Flashcards only, and only on the server, where the links and the weak test live. The
+  cost is a pause on those cards, and a session a few cards longer when the learner says yes.
   **After a miss the passage is already open.** A wrong quiz answer opens it (a wrong
   answer waits for Next anyway); the Flashcard & Write retype drill opens it under the
   card; a card graded Learning earlier in the run opens straight to it when it comes back
@@ -1098,6 +1110,7 @@ flagged, since the summary line already says everything.
 | `PUT /lessons/:id` | rename a lesson in place |
 | `GET /classes/:id/cards` | every card with its position, for reconciling, and the learner's verdict on its passage (`source_feedback`) |
 | `POST /convert-cards` | rewrite mcq / true-false cards as term-def in place |
+| `POST /needs` | set which cards each linked card builds on (`cards.needs`, external ids); an empty list clears it |
 | `POST /sources` | set the book passage shown under a card, with the text before and after it for Read more and the same concept's passages in other books (`related`): by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
 | `POST /remove-cards` | delete cards KnowledgeApp made, for a kind of card the learner asked to take back |
 | `GET /deletions?since=` | linked cards the learner deleted |
