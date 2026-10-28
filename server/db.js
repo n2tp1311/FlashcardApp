@@ -398,6 +398,9 @@ try { db.exec("ALTER TABLE cards ADD COLUMN source_after TEXT"); } catch (_) {}
 // The same concept's passage in other books, as JSON [{book, text}] (at most three), shown
 // as one button per book above the passage. KnowledgeApp links cards across books by meaning.
 try { db.exec("ALTER TABLE cards ADD COLUMN source_related TEXT"); } catch (_) {}
+// The cards this card's definition builds on, as JSON [external_id] in the order the
+// definition names them (KnowledgeApp's prereqs.py). Offered when the card keeps being forgotten.
+try { db.exec("ALTER TABLE cards ADD COLUMN needs TEXT"); } catch (_) {}
 // A linked card (external_id set) the learner deleted: KnowledgeApp reads these so the card
 // is never synced back. `kind` says how it went. 'card' is a single-card delete, "this card is
 // wrong", and KnowledgeApp removes the unit behind it. 'lesson' came with its whole lesson,

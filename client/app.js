@@ -1300,6 +1300,12 @@ Object.assign(TRANSLATIONS.en, {
   "study.sourceMore": "Read more",
   "study.sourceLess": "Show less",
   "study.sourceThisBook": "This book",
+  "study.needsTitle": "You keep forgetting this card",
+  "study.needsBody": "It builds on {n} cards you are not sure of yet: {names}. Review those first, then this card again?",
+  "study.needsBody_one": "It builds on a card you are not sure of yet: {names}. Review it first, then this card again?",
+  "study.needsSkip": "Skip",
+  "study.needsStudy": "Review {n} first",
+  "study.needsStudy_one": "Review it first",
   "keymap.reviewPrevNext": "Review prev / next answered question"
 });
 Object.assign(TRANSLATIONS.vi, {
@@ -2460,6 +2466,10 @@ Object.assign(TRANSLATIONS.vi, {
   "study.sourceMore": "Đọc thêm",
   "study.sourceLess": "Thu gọn",
   "study.sourceThisBook": "Sách này",
+  "study.needsTitle": "Thẻ này hay quên",
+  "study.needsBody": "Nó dựa trên {n} thẻ bạn chưa vững: {names}. Ôn những thẻ đó trước rồi quay lại thẻ này?",
+  "study.needsSkip": "Bỏ qua",
+  "study.needsStudy": "Ôn {n} thẻ nền",
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
 
@@ -8360,8 +8370,9 @@ document.addEventListener("click", function(e) {
 function showFlashcardSummary() {
   haptic("complete");
   clearResumeSession();
-  // Each card once, so the skipped count and "retry the ones you missed" do not see repeats.
-  if (state.cram) state.studyCards = uniqueCards(state.studyCards);
+  // Each card once, so the skipped count and "retry the ones you missed" do not see repeats
+  // (cram repeats cards, and so does "learn these first").
+  state.studyCards = uniqueCards(state.studyCards);
   var log = state.studySessionLog || {};
   var gradedIds = Object.keys(log);
   var total = gradedIds.length;
@@ -10290,6 +10301,95 @@ function scheduleFlashcardAdvance(delay) {
   state.fcAdvanceTimer = setTimeout(advanceFlashcard, delay);
 }
 
+// "Learn these first": a card forgotten again and again often rests on another card the
+// learner is also shaky on -- its definition names it. From the third time it is forgotten
+// (two lapses before this one), the cards it builds on (cards.needs, from KnowledgeApp) are
+// looked up, and those still weak are offered straight after, then this card again. Only on
+// the server: the links and the weak test live there. Cards already seen this session are
+// not offered again; one coming later in it is moved up rather than shown twice.
+var NEEDS_AFTER_LAPSES = 2;
+function needIds(card) {
+  var list = card && card.needs;
+  if (typeof list === "string") { try { list = JSON.parse(list); } catch (_) { return []; } }
+  return Array.isArray(list) ? list.filter(function(x) { return typeof x === "string"; }) : [];
+}
+
+function needsLookup(card, attemptId) {
+  if (!IS_SERVER || typeof store.cardNeeds !== "function" || !needIds(card).length) return null;
+  if ((card.leech_lapses || 0) < NEEDS_AFTER_LAPSES) return null;
+  return { card: card, index: state.studyIndex, attemptId: attemptId, promise: store.cardNeeds(card.id) };
+}
+
+function needsToStudy(cards, index) {
+  var seen = {};
+  state.studyCards.slice(0, index + 1).forEach(function(c) { seen[c.id] = true; });
+  return (cards || []).filter(function(c) { return c && c.weak && !seen[c.id]; });
+}
+
+function advanceOrOfferNeeds(delay) {
+  var offer = state.fcNeedsOffer;
+  state.fcNeedsOffer = null;
+  if (!offer) { scheduleFlashcardAdvance(delay); return; }
+  function stillHere() {
+    return state.studyIndex === offer.index && state.studyCards[offer.index] === offer.card &&
+      state.fcUndoneAttempt !== offer.attemptId && getActiveScreen() === "flashcard";
+  }
+  offer.promise.then(function(res) {
+    if (!stillHere()) return;
+    var weak = needsToStudy(res && res.cards, offer.index);
+    if (!weak.length) scheduleFlashcardAdvance(delay);
+    else showNeedsOffer(offer.card, weak);
+  }, function() {
+    if (stillHere()) scheduleFlashcardAdvance(delay);
+  });
+}
+
+function needTerm(card) {
+  var d = card && card.data || {};
+  return d.term || d.statement || d.question || "";
+}
+
+function showNeedsOffer(card, weak) {
+  var box = document.createElement("section");
+  box.className = "needs-offer";
+  box.id = "fc-needs";
+  box.setAttribute("role", "group");
+  var names = weak.map(needTerm).filter(Boolean).join(", ");
+  box.innerHTML = '<p class="needs-title">' + escHtml(t("study.needsTitle")) + "</p>" +
+    '<p class="needs-body">' + escHtml(t("study.needsBody", { n: weak.length, names: names })) + "</p>" +
+    '<div class="needs-btns"><button type="button" class="btn btn-sm btn-ghost" id="btn-fc-needs-skip">' + escHtml(t("study.needsSkip")) + "</button>" +
+    '<button type="button" class="btn btn-sm btn-primary" id="btn-fc-needs-study">' + escHtml(t("study.needsStudy", { n: weak.length })) + "</button></div>";
+  var exp = document.getElementById("fc-explanation");
+  exp.insertBefore(box, exp.firstChild);
+  exp.classList.remove("hidden");
+  box.querySelector("#btn-fc-needs-skip").addEventListener("click", function() {
+    box.remove();
+    advanceFlashcard();
+  });
+  box.querySelector("#btn-fc-needs-study").addEventListener("click", function() {
+    box.remove();
+    insertNeeds(card, weak);
+    advanceFlashcard();
+  });
+  box.querySelector("#btn-fc-needs-study").focus();
+}
+
+function insertNeeds(card, weak) {
+  var at = state.studyIndex;
+  var ids = {};
+  weak.forEach(function(c) { ids[c.id] = true; });
+  // A prerequisite already coming later in the session moves up, keeping the card object the
+  // session holds; one from another lesson joins as fetched.
+  var later = {};
+  for (var i = state.studyCards.length - 1; i > at; i--) {
+    if (ids[state.studyCards[i].id]) later[state.studyCards[i].id] = state.studyCards.splice(i, 1)[0];
+  }
+  var add = weak.map(function(c) { return later[c.id] || c; });
+  state.studyCards.splice.apply(state.studyCards, [at + 1, 0].concat(add, [card]));
+  saveResumeSession();
+  renderFcDots();
+}
+
 function beginForcedRetype(advanceDelay) {
   // A swipe-graded card leaves #fc-scene translated off-screen after its fly-off animation
   // (see initSwipeGestures) — this is the other of the two moments (alongside
@@ -10358,7 +10458,7 @@ function completeForcedRetype() {
   document.getElementById("btn-fc-next").title = "";
   document.getElementById("btn-fc-prev").disabled = state.studyIndex === 0;
   setMarkButtonsEnabled(false);
-  scheduleFlashcardAdvance(state.fcRetypeAdvanceDelay);
+  advanceOrOfferNeeds(state.fcRetypeAdvanceDelay);
 }
 
 function submitForcedRetype() {
@@ -10416,6 +10516,7 @@ function markCard(known, grade, forceRetype) {
     card.upstream_change = null;
     setUpstreamCount((state.upstreamCount || 0) - 1);
   }
+  state.fcNeedsOffer = !known ? needsLookup(card, undo.attemptId) : null;
   var attemptFields = { cardId: card.id, correct: known, source: "flashcard", clientId: undo.attemptId };
   if (grade) attemptFields.grade = grade;
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
@@ -10453,7 +10554,7 @@ function markCard(known, grade, forceRetype) {
   if (forceRetype && state.typeToCompare && card.format !== "gapfill") {
     beginForcedRetype(advanceDelay);
   } else {
-    scheduleFlashcardAdvance(advanceDelay);
+    advanceOrOfferNeeds(advanceDelay);
   }
 }
 
@@ -13980,6 +14081,7 @@ var SQLiteAdapter = (function() {
     acknowledgeCardUpdate: function(id) { return req("POST", "/cards/" + id + "/acknowledge-update"); },
     requestCardRewrite: function(id) { return req("POST", "/cards/" + id + "/rewrite-request"); },
     sourceFeedback: function(id, verdict) { return req("POST", "/cards/" + id + "/source-feedback", { verdict: verdict }); },
+    cardNeeds: function(id) { return req("GET", "/cards/" + id + "/needs"); },
     // The server caps each request at 1000 ids, so larger selections go in sequential batches.
     acknowledgeCardUpdates: function(ids) {
       var p = Promise.resolve();

@@ -338,6 +338,37 @@ router.post("/cards/:id/rewrite-request", requireAuth, (req, res) => {
   res.status(201).json({ id, status: "pending" });
 });
 
+// GET /api/cards/:id/needs — the cards this card's definition builds on (cards.needs), from
+// the same class, in that order, shaped like a lesson's cards so the study screen can put them
+// straight into the session. `weak`: never scheduled, still learning or relearning, or due
+// now -- the ones worth reviewing before this card comes back. A card in review and not yet
+// due is known well enough and is not offered.
+router.get("/cards/:id/needs", requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  if (!ownCard(req.params.id, userId)) return res.status(404).json({ error: "Not found" });
+  const card = db.prepare("SELECT cards.needs, l.class_id FROM cards JOIN lessons l ON l.id = cards.lesson_id WHERE cards.id = ?").get(req.params.id);
+  let ids = [];
+  try { ids = JSON.parse(card.needs || "[]"); } catch (_) {}
+  ids = Array.isArray(ids) ? ids.filter(x => typeof x === "string").slice(0, 10) : [];
+  if (!ids.length) return res.json({ cards: [] });
+  const rows = db.prepare(
+    "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
+    "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
+    "cs.fsrs_learning_steps, cs.fsrs_last_review_at, cs.leech_base, " +
+    "EXISTS (SELECT 1 FROM rewrite_requests rr WHERE rr.card_id = cards.id AND rr.status = 'pending') AS rewrite_pending " +
+    "FROM cards JOIN lessons l ON cards.lesson_id = l.id " +
+    "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
+    `WHERE l.class_id = ? AND cards.id != ? AND cards.external_id IN (${ids.map(() => "?").join(",")})`
+  ).all(userId, card.class_id, req.params.id, ...ids);
+  const now = Math.floor(Date.now() / 1000);
+  const sched = userScheduler(db, userId);
+  const order = new Map(ids.map((x, i) => [x, i]));
+  res.json({ cards: rows
+    .sort((a, b) => order.get(a.external_id) - order.get(b.external_id))
+    .map(r => ({ ...attachFsrsPreview({ ...r, data: JSON.parse(r.data) }, sched),
+      weak: r.srs_due_at == null || r.fsrs_state !== 2 || r.srs_due_at <= now })) });
+});
+
 // POST /api/cards/:id/source-feedback { verdict: "good" | "bad" | null }
 // "Did this passage help?" under a book passage. 'bad' takes the passage off the card at once
 // -- a wrong passage misleads, none does not -- and keeps it in source_rejected, which undo

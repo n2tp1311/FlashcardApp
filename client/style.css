@@ -5461,6 +5461,10 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .source-more { display: block; margin-top: 6px; padding: 0; border: 0; background: none; color: var(--primary); font: inherit; font-size: 0.82rem; cursor: pointer; }
 .source-more:hover { text-decoration: underline; }
 /* the card's own words in the passage: a tint of the palette's accent, so it follows every theme */
+.needs-offer { margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--primary); border-radius: var(--radius); background: var(--primary-light); display: grid; gap: 6px; font-size: 0.875rem; }
+.needs-title { margin: 0; font-weight: 600; color: var(--primary); }
+.needs-body { margin: 0; color: var(--text2); }
+.needs-btns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .source-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 16px 8px; }
 .why-answer .source-tabs { margin: 0 0 8px; }
 .source-tab { border: 1px solid var(--border); background: var(--surface); color: var(--text2); border-radius: var(--radius-pill); padding: 3px 12px; font: inherit; font-size: 0.8rem; cursor: pointer; }

@@ -29,6 +29,7 @@ const MAX_TITLE_LEN = 200;
 const MAX_SOURCES = 500;
 const MAX_SOURCE_LEN = 4000;
 const MAX_RELATED = 3;
+const MAX_NEEDS = 10;
 const MAX_BOOK_NAME = 200;
 const MAX_LAYOUT_LESSONS = 500;
 const MAX_LAYOUT_CARDS = 10000;
@@ -370,6 +371,33 @@ router.post("/sources", (req, res) => {
         ? JSON.stringify(s.related.map(r => ({ book: r.book.trim(), text: r.text.trim() }))) : null;
       const n = (s.card_id ? byCard : byUnit).run(text, text, ctx(s.before), ctx(s.after), related, s.card_id || s.external_id, text, req.userId).changes;
       if (n) updated += n; else notFound++;
+    });
+  })();
+  res.json({ updated, not_found: notFound });
+});
+
+// POST /api/integrations/knowledge/needs  { needs: [{external_id, needs: [external_id]}] }
+// Sets which cards each linked card builds on (cards.needs). An empty list clears it. The
+// listed ids are not checked here: a prerequisite not synced yet simply is not offered until
+// it is, since the study screen looks them up in the card's own class when it needs them.
+router.post("/needs", (req, res) => {
+  const needs = req.body && req.body.needs;
+  if (!Array.isArray(needs) || needs.length < 1 || needs.length > MAX_SOURCES)
+    return res.status(400).json({ error: "needs must be an array of 1-" + MAX_SOURCES });
+  for (let i = 0; i < needs.length; i++) {
+    const n = needs[i];
+    if (!n || !isId(n.external_id) || !Array.isArray(n.needs) || n.needs.length > MAX_NEEDS || !n.needs.every(isId))
+      return res.status(400).json({ error: "needs " + i + ": external_id and needs (at most " + MAX_NEEDS + " external ids) required" });
+  }
+  let updated = 0, notFound = 0;
+  db.transaction(() => {
+    const set = db.prepare(
+      "UPDATE cards SET needs = ? WHERE external_id = ? AND lesson_id IN (" +
+      "SELECT lessons.id FROM lessons JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ?)"
+    );
+    needs.forEach(n => {
+      const c = set.run(n.needs.length ? JSON.stringify(n.needs) : null, n.external_id, req.userId).changes;
+      if (c) updated += c; else notFound++;
     });
   })();
   res.json({ updated, not_found: notFound });

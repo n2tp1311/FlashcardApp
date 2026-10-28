@@ -100,7 +100,7 @@ test("Study Setup offers Cram as a card order, flashcards only, and the summary 
   assert.match(html, /id="setup-order-hint"/);
   assert.match(html, /id="summary-cram-note"/);
   assert.match(app, /state\.cram = order === "cram" && mode !== "quiz" \? newCram\(filtered\) : null;/);
-  assert.match(app, /if \(state\.cram\) state\.studyCards = uniqueCards\(state\.studyCards\);/);
+  assert.match(app, /\n  state\.studyCards = uniqueCards\(state\.studyCards\);/);
   assert.match(app, /if \(state\.cram\) undo\.cram = cramAnswered\(/);
   for (const lang of ["en", "vi"]) {
     const block = app.slice(app.indexOf("Object.assign(TRANSLATIONS." + lang));
