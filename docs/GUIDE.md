@@ -311,8 +311,9 @@ forget about.
 
 ### Flagging a card
 
-Any term-def card synced from KnowledgeApp has a ⚑ beside Edit on the study screen and
-in the lesson card list. It opens a sheet of checkboxes -- the fact is wrong, the front is
+Any term-def card synced from KnowledgeApp has a ⚑ beside Edit on the flashcard and quiz
+screens and in the lesson card list. A quiz question built from such a card can be
+flagged too: the card is what gets fixed, not the generated options. It opens a sheet of checkboxes -- the fact is wrong, the front is
 unclear, the back is too long or muddled, a typo or broken formula, something else -- with
 an optional note (required for "something else"). Several can be ticked, since one bad card
 often has more than one problem; they are stored comma-joined in `issue`, in the sheet's
