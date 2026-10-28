@@ -143,7 +143,7 @@ Other tables, by owner:
 | `api_tokens` | KnowledgeApp tokens, SHA-256 only (§15) |
 | `external_card_deletions` | linked cards the learner deleted, read by KnowledgeApp (§13) |
 | `vocabulary_requests` | words saved for KnowledgeApp to define (§13) |
-| `rewrite_requests` | leeches the learner asked KnowledgeApp to rewrite (§5, §13) |
+| `rewrite_requests` | cards the learner asked KnowledgeApp to fix: leeches and ⚑ flags, with `issue`, `note`, and KnowledgeApp's `outcome_note` (§5, §13) |
 | `crams` | a test date and its lessons; progress is read from attempts (§8) |
 | `study_events`, `user_achievements` | the few facts achievements need that nothing else stores (§11) |
 | `push_subscriptions`, `reminder_log`, `app_secrets` | reminders (§17) |
@@ -308,6 +308,26 @@ client comparing counts, so it shows once, and an offline answer replayed later 
 pops it up out of context. **Nothing is suspended.** Anki suspends leeches by default;
 here the fix is a better card, not fewer reviews, and a suspended card is easy to
 forget about.
+
+### Flagging a card
+
+Any term-def card synced from KnowledgeApp has a ⚑ beside Edit on the study screen and
+in the lesson card list. It opens a sheet: the fact is wrong, the front is unclear, the
+back is too long or muddled, a typo or broken formula, or something else, with an
+optional note (required for "something else"). Sending it is the leech request with a
+reason -- the same `rewrite_requests` row, now with `issue` and `note` -- so it shares
+the leech's queue, its "edit it yourself and the request is dropped" rule, and the way
+the fix comes back, rather than opening a second channel to KnowledgeApp. The leech
+prompt's own request sends no issue and is stored as `leech`; it never overwrites a flag
+already waiting, while a second flag replaces the first's issue and note.
+
+Once sent, the ⚑ is filled in. KnowledgeApp fixes only what was flagged, from the book
+passage, and may leave the card as it was -- a "wrong" fact the book does not contradict,
+say. It then sends a one-sentence reason (`outcome_note`), and the sheet shows it the next
+time the learner opens that card's ⚑, read from `GET /api/cards/:id/rewrite-request`
+after the sheet opens so a slow answer never holds it. There is no push for it: a reason
+the learner did not go looking for would be noise. The ⚑ sits on Edit's side of the
+toolbar gap, away from Delete, and is locked with Edit during the retype drill.
 
 ---
 
@@ -1157,9 +1177,11 @@ keeps the cursor, so a lost response is simply read again.
   lends are two cards worth having, and the context is what tells KnowledgeApp which
   sense to define. A completed request counts only while its card exists, so deleting
   the card is how a word gets saved again.
-- **Leech rewrites.** Ask KnowledgeApp to rewrite (§5) creates a `rewrite_requests` row;
-  KnowledgeApp reads the card's current text, and the new wording comes back as an
-  ordinary `updated` event, which also resets the leech count. The rewrite goes through
+- **Leech rewrites and flags.** Ask KnowledgeApp to rewrite and ⚑ (§5) create a
+  `rewrite_requests` row; `GET /rewrites` gives KnowledgeApp the card's current text,
+  `issue` and `note`, and the new wording comes back as an ordinary `updated` event,
+  which also resets the leech count. `POST /rewrites/:id/complete` may carry `note`, the
+  reason a card was left unchanged (300 characters at most). The rewrite goes through
   KnowledgeApp rather than a model call here because KnowledgeApp owns the card's source
   passage and history; the cost is waiting for its next run.
 
