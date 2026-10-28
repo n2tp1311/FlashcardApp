@@ -18,7 +18,7 @@ test.before(() => new Promise((ok) => {
 }));
 test.after(() => listener.close());
 
-async function withPanel(card, fn) {
+async function withPanel(card, fn, open) {
   const { chromium } = require("playwright");
   const browser = await chromium.launch({ headless: true });
   try {
@@ -27,12 +27,12 @@ async function withPanel(card, fn) {
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(base + "/");
     await page.waitForFunction(() => typeof window.whyPanel === "function");
-    const made = await page.evaluate((c) => {
-      const el = whyPanel(c);
+    const made = await page.evaluate(([c, open]) => {
+      const el = whyPanel(c, open);
       if (!el) return false;
       document.body.prepend(el);
       return true;
-    }, card);
+    }, [card, !!open]);
     await fn(page, made);
     assert.deepEqual(errors, []);
   } finally {
@@ -77,6 +77,37 @@ test("Skip, or Enter with nothing typed, shows the passage without a reason line
     await page.keyboard.press("Enter");
     assert.equal(await shown(page, "#fc-why-source"), true);
   });
+});
+
+test("a card missed earlier opens straight to the passage; the retype drill opens it too", async function() {
+  await withPanel({ source: "Passage." }, async (page) => {
+    assert.equal(await shown(page, "#fc-why-source"), true);
+    assert.equal(await shown(page, "#btn-fc-why"), false);
+    assert.equal(await shown(page, "#fc-why-ask"), false);
+    assert.equal(await shown(page, "#fc-why-yours"), false);
+  }, true);
+  await withPanel({ source: "Passage." }, async (page) => {
+    assert.equal(await shown(page, "#fc-why-source"), false);
+    await page.evaluate(() => document.getElementById("fc-why").openPassage());
+    assert.equal(await shown(page, "#fc-why-source"), true);
+  });
+});
+
+test("after a miss the passage is already open: a wrong quiz answer, a missed card coming back, the drill", function() {
+  const fn = (name) => { const i = app.indexOf("\nfunction " + name + "("); return app.slice(i, app.indexOf("\n}\n", i)); };
+  assert.match(fn("answerQuiz"), /if \(answerSource && !isCorrect\) answerSource\.open = true;/);
+  assert.match(fn("renderQuizCard"), /if \(replaySource && !priorResult\.correct\) replaySource\.open = true;/);
+  assert.match(fn("renderFlashcard"), /whyPanel\(card, !!\(state\.sessionMissed && state\.sessionMissed\[card\.id\]\)\)/);
+  assert.match(fn("markCard"), /if \(!known && state\.sessionMissed && !state\.sessionMissed\[card\.id\]\)/);
+  assert.match(fn("restoreGradedCard"), /if \(undo\.addedMissed && state\.sessionMissed\) delete state\.sessionMissed\[id\];/);
+  assert.match(fn("beginForcedRetype"), /why\.openPassage\(\)/);
+  // the set survives "Retry missed" (which does not go through launchStudy) and starts empty per session
+  assert.match(fn("launchStudy"), /state\.sessionMissed = \{\};/);
+  // every other way into a flashcard session sets it too: a cram round, and a resumed session from its log
+  assert.equal(app.split("state.sessionMissed = {};").length - 1, 3);
+  assert.match(app, /if \(log\[id\] === "learning"\) state\.sessionMissed\[id\] = true;/);
+  const retry = app.slice(app.indexOf('getElementById("btn-summary-missed").addEventListener'));
+  assert.doesNotMatch(retry.slice(0, retry.indexOf("\n});")), /sessionMissed/);
 });
 
 test("strings exist in English and Vietnamese", function() {

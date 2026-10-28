@@ -8739,6 +8739,7 @@ function startCramRound(cram, plan) {
   state.studyFlipped = false;
   state.studySessionLog = {};
   state.studySessionNewSet = {};
+  state.sessionMissed = {};
   cards.forEach(function(c) { if (!c.last_studied_at) state.studySessionNewSet[c.id] = true; });
   store.markCardsSeen(cards.map(function(c) { return c.id; }));
   startFlashcards();
@@ -8963,6 +8964,9 @@ function launchStudy(filtered, mode, order) {
 
   state.studyMode = mode;
   state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
+  // Cards missed in this study run, kept through "Retry missed" rounds: when one comes back,
+  // its book passage is already open. A new session starts empty.
+  state.sessionMissed = {};
 
   // Record last_seen_at for all cards in this session (fire-and-forget)
   store.markCardsSeen(filtered.map(function(c) { return c.id; }));
@@ -9418,7 +9422,7 @@ function sourceFeedback(card, body) {
 // opens under it. Explaining an answer to yourself before checking makes a miss stick better
 // than re-reading, which the passage alone would be. The reason is not stored: it only has to
 // be written to do its work. Skip goes straight to the passage.
-function whyPanel(card) {
+function whyPanel(card, open) {
   if (!card || typeof card.source !== "string" || !card.source.trim()) return null;
   var el = document.createElement("section");
   el.className = "why-panel";
@@ -9456,6 +9460,14 @@ function whyPanel(card) {
     input.focus();
   });
   el.querySelector("#btn-fc-why-skip").addEventListener("click", function() { reveal(""); });
+  // Straight to the passage, no "why?" first: after a miss the learner needs the book, not a
+  // prompt to explain an answer they did not know (a card missed earlier, or the retype drill).
+  el.openPassage = function() {
+    btn.classList.add("hidden");
+    btn.setAttribute("aria-expanded", "true");
+    reveal("");
+  };
+  if (open) el.openPassage();
   el.querySelector("#btn-fc-why-check").addEventListener("click", function() { reveal(input.value.trim()); });
   // Enter checks; Shift+Enter is a new line. Esc leaves the field so study keys work again.
   input.addEventListener("keydown", function(e) {
@@ -9675,7 +9687,7 @@ function renderFlashcard() {
     expEl.appendChild(body);
     expContainer.appendChild(expEl);
   }
-  var fcWhy = whyPanel(card);
+  var fcWhy = whyPanel(card, !!(state.sessionMissed && state.sessionMissed[card.id]));
   if (fcWhy) expContainer.appendChild(fcWhy);
 
   // Difficulty badge — read from the already-fetched studyStatsMap (server-backed accuracy
@@ -10238,6 +10250,8 @@ function beginForcedRetype(advanceDelay) {
     return;
   }
   haptic("warn");
+  var why = document.getElementById("fc-why");
+  if (why && why.openPassage) why.openPassage();
   state.fcForcedRetype = true;
   state.fcRetypeAdvanceDelay = advanceDelay;
   setFlashcardNavLocked(true);
@@ -10337,6 +10351,10 @@ function markCard(known, grade, forceRetype) {
   if (state.cram) undo.cram = cramAnswered(state.cram, state.studyCards, state.studyIndex, card, known);
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known).catch(function() {});
+  if (!known && state.sessionMissed && !state.sessionMissed[card.id]) {
+    state.sessionMissed[card.id] = true;
+    undo.addedMissed = true;
+  }
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
   saveResumeSession();
   if (card.upstream_change === "updated") {
@@ -10409,6 +10427,7 @@ function dismissGradeUndo() {
 function restoreGradedCard(undo) {
   var id = undo.card.id;
   if (undo.prevKnown === undefined) delete state.studyKnownMap[id]; else state.studyKnownMap[id] = undo.prevKnown;
+  if (undo.addedMissed && state.sessionMissed) delete state.sessionMissed[id];
   if (undo.prevLog === undefined) delete state.studySessionLog[id]; else state.studySessionLog[id] = undo.prevLog;
   saveResumeSession();
   if (undo.sessionMs) {
@@ -10674,6 +10693,7 @@ function renderQuizCard() {
     optsEl.after(expEl);
   }
   var replaySource = priorResult && sourcePanel(card, "quiz-source");
+  if (replaySource && !priorResult.correct) replaySource.open = true;
   if (replaySource) (document.getElementById("quiz-explanation") || optsEl).after(replaySource);
 
   if (priorResult && priorResult.capped) showQuizHint("quiz-cap-hint", "quiz.cappedHint");
@@ -10780,6 +10800,9 @@ function answerQuiz(selectedIdx) {
     document.getElementById("quiz-options").after(expEl);
   }
   var answerSource = sourcePanel(card, "quiz-source");
+  // A wrong answer waits for Next anyway, so the passage is open while the learner looks:
+  // reading the book right after a miss is when it helps most. A right answer keeps it shut.
+  if (answerSource && !isCorrect) answerSource.open = true;
   if (answerSource) (document.getElementById("quiz-explanation") || document.getElementById("quiz-options")).after(answerSource);
 
   showQuizSheet(cheer);
@@ -11528,6 +11551,8 @@ function resumeStudySession(btn) {
       state.studyFlipped = false;
       state.typeToCompare = saved.mode === "flashcard-write";
       state.studySessionLog = log;
+      state.sessionMissed = {};
+      Object.keys(log).forEach(function(id) { if (log[id] === "learning") state.sessionMissed[id] = true; });
       state.studySessionNewSet = {};
       (saved.newIds || []).forEach(function(id) { state.studySessionNewSet[id] = true; });
       store.markCardsSeen(list.map(function(c) { return c.id; }));
