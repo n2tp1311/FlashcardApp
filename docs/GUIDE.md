@@ -514,6 +514,14 @@ There is no study direction setting: a card is always studied front to back.
   never writes a rejected passage back, and a new passage clears the old verdict. Yes is
   stored too (`source_verdict = 'good'`): it stops the question for that passage, and
   gives KnowledgeApp real evidence for its thresholds.
+  **Read more** opens the book's text either side of the passage, about 120 words each
+  in whole sentences (`source_before`, `source_after`). A passage is often the definition
+  alone, and the explanation is the next paragraph: ESL's Bootstrap passage stops one
+  sentence before the book says how bootstrap samples are drawn. It opens in place,
+  quieter than the passage, so there is nothing to close. The card's term words are
+  marked with a tint of the palette's accent (`color-mix` of `--primary`), which follows
+  every theme. The cost is storage: about 240 more words per card, roughly 45 MB over
+  30,000 cards.
 
 ### Quiz
 
@@ -1074,7 +1082,7 @@ flagged, since the summary line already says everything.
 | `PUT /lessons/:id` | rename a lesson in place |
 | `GET /classes/:id/cards` | every card with its position, for reconciling, and the learner's verdict on its passage (`source_feedback`) |
 | `POST /convert-cards` | rewrite mcq / true-false cards as term-def in place |
-| `POST /sources` | set the book passage shown under a card: by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
+| `POST /sources` | set the book passage shown under a card, with the text before and after it for Read more: by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
 | `POST /remove-cards` | delete cards KnowledgeApp made, for a kind of card the learner asked to take back |
 | `GET /deletions?since=` | linked cards the learner deleted |
 
