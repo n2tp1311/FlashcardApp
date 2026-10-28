@@ -312,13 +312,15 @@ forget about.
 ### Flagging a card
 
 Any term-def card synced from KnowledgeApp has a ⚑ beside Edit on the study screen and
-in the lesson card list. It opens a sheet: the fact is wrong, the front is unclear, the
-back is too long or muddled, a typo or broken formula, or something else, with an
-optional note (required for "something else"). Sending it is the leech request with a
+in the lesson card list. It opens a sheet of checkboxes -- the fact is wrong, the front is
+unclear, the back is too long or muddled, a typo or broken formula, something else -- with
+an optional note (required for "something else"). Several can be ticked, since one bad card
+often has more than one problem; they are stored comma-joined in `issue`, in the sheet's
+order, and sent to KnowledgeApp as an `issues` list. Sending it is the leech request with a
 reason -- the same `rewrite_requests` row, now with `issue` and `note` -- so it shares
 the leech's queue, its "edit it yourself and the request is dropped" rule, and the way
 the fix comes back, rather than opening a second channel to KnowledgeApp. The leech
-prompt's own request sends no issue and is stored as `leech`; it never overwrites a flag
+prompt's own request sends no issues and is stored as `leech`; it never overwrites a flag
 already waiting, while a second flag replaces the first's issue and note.
 
 Once sent, the ⚑ is filled in. KnowledgeApp fixes only what was flagged, from the book
@@ -328,6 +330,13 @@ time the learner opens that card's ⚑, read from `GET /api/cards/:id/rewrite-re
 after the sheet opens so a slow answer never holds it. There is no push for it: a reason
 the learner did not go looking for would be noise. The ⚑ sits on Edit's side of the
 toolbar gap, away from Delete, and is locked with Edit during the retype drill.
+
+A dialog body is a scrolling flex column, and flex children shrink before a container
+scrolls: on a short phone screen the note box collapsed to a sliver with its placeholder
+cut off, and so did the card editors' front and back boxes (measured at 360×500: the flag
+note 18px of 42, the term-def front 28 of 42). Textareas and fieldsets directly in a
+dialog body no longer shrink; `tests/leech.test.js` measures every dialog textarea at that
+size.
 
 ---
 
@@ -1179,7 +1188,7 @@ keeps the cursor, so a lost response is simply read again.
   the card is how a word gets saved again.
 - **Leech rewrites and flags.** Ask KnowledgeApp to rewrite and ⚑ (§5) create a
   `rewrite_requests` row; `GET /rewrites` gives KnowledgeApp the card's current text,
-  `issue` and `note`, and the new wording comes back as an ordinary `updated` event,
+  `issues` and `note`, and the new wording comes back as an ordinary `updated` event,
   which also resets the leech count. `POST /rewrites/:id/complete` may carry `note`, the
   reason a card was left unchanged (300 characters at most). The rewrite goes through
   KnowledgeApp rather than a model call here because KnowledgeApp owns the card's source
