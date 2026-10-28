@@ -320,9 +320,21 @@ router.put("/cards/:id", requireAuth, (req, res) => {
   res.json({ ...updated, data: JSON.parse(updated.data) });
 });
 
-// The issues a learner can flag a card for. 'leech' is the leech prompt's request.
-const FLAG_ISSUES = ["leech", "wrong", "front", "back", "typo", "other"];
+// The issues a learner can flag a card for, in the order they are stored. A flag may tick
+// several; they are kept comma-joined in rewrite_requests.issue. 'leech' is the leech
+// prompt's request and stands alone.
+const FLAG_ISSUES = ["wrong", "front", "back", "typo", "other"];
 const FLAG_NOTE_MAX = 500;
+const splitIssues = (stored) => (stored || "leech").split(",");
+
+// The issues in the body, canonical order, or null when they are not a valid flag. `issue`
+// (one string) is what the first version of the flag sheet sent.
+function flagIssues(body) {
+  const raw = Array.isArray(body.issues) ? body.issues : body.issue != null ? [body.issue] : null;
+  if (raw == null) return ["leech"];
+  if (!raw.length || !raw.every((i) => FLAG_ISSUES.includes(i))) return null;
+  return FLAG_ISSUES.filter((i) => raw.includes(i));
+}
 
 // POST /api/cards/:id/rewrite-request — ask KnowledgeApp to fix a card: one that keeps being
 // forgotten, or one the learner flagged with an issue and an optional note. Only a card synced
@@ -332,20 +344,22 @@ router.post("/cards/:id/rewrite-request", requireAuth, (req, res) => {
   const userId = req.session.userId;
   if (!ownCard(req.params.id, userId)) return res.status(404).json({ error: "Not found" });
   const body = req.body || {};
-  const issue = body.issue == null ? "leech" : body.issue;
-  if (!FLAG_ISSUES.includes(issue))
-    return res.status(400).json({ error: "issue must be one of " + FLAG_ISSUES.join(", ") });
+  const issues = flagIssues(body);
+  if (!issues)
+    return res.status(400).json({ error: "issues must be one or more of " + FLAG_ISSUES.join(", ") });
+  const issue = issues.join(",");
+  const isFlag = issue !== "leech";
   if (body.note != null && typeof body.note !== "string")
     return res.status(400).json({ error: "note must be text" });
   const note = (body.note || "").trim().slice(0, FLAG_NOTE_MAX) || null;
-  if (issue === "other" && !note)
+  if (issues.includes("other") && !note)
     return res.status(400).json({ error: "Say what is wrong with the card", code: "noteRequired" });
   const card = db.prepare("SELECT id, external_id, format FROM cards WHERE id = ?").get(req.params.id);
   if (!card.external_id || card.format !== "term-def")
     return res.status(409).json({ error: "Only cards from KnowledgeApp can be rewritten there", code: "notLinked" });
   const pending = db.prepare("SELECT id FROM rewrite_requests WHERE card_id = ? AND status = 'pending'").get(card.id);
   if (pending) {
-    if (body.issue != null)
+    if (isFlag)
       db.prepare("UPDATE rewrite_requests SET issue = ?, note = ? WHERE id = ?").run(issue, note, pending.id);
     return res.json({ id: pending.id, status: "pending" });
   }
@@ -368,7 +382,12 @@ router.get("/cards/:id/rewrite-request", requireAuth, (req, res) => {
     "SELECT issue, outcome, outcome_note, completed_at FROM rewrite_requests " +
     "WHERE card_id = ? AND user_id = ? AND status = 'completed' ORDER BY completed_at DESC, rowid DESC LIMIT 1"
   ).get(req.params.id, userId);
-  res.json({ pending: pending || null, last: last || null });
+  const withIssues = (r) => {
+    if (!r) return null;
+    const { issue, ...rest } = r;
+    return { ...rest, issues: splitIssues(issue) };
+  };
+  res.json({ pending: withIssues(pending), last: withIssues(last) });
 });
 
 // GET /api/cards/:id/needs — the cards this card's definition builds on (cards.needs), from

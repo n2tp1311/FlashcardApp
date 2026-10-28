@@ -1064,12 +1064,13 @@
       <div class="leech-card-term" id="flag-card-term"></div>
       <p class="flag-last hidden" id="flag-last"></p>
       <div id="flag-error" class="auth-error hidden"></div>
-      <fieldset class="flag-issues" id="flag-issues" aria-labelledby="flag-title">
-        <label class="flag-issue"><input type="radio" name="flag-issue" value="wrong"> <span data-i18n="flag.wrong">The fact is wrong</span></label>
-        <label class="flag-issue"><input type="radio" name="flag-issue" value="front"> <span data-i18n="flag.front">The front is unclear</span></label>
-        <label class="flag-issue"><input type="radio" name="flag-issue" value="back"> <span data-i18n="flag.back">The back is too long or muddled</span></label>
-        <label class="flag-issue"><input type="radio" name="flag-issue" value="typo"> <span data-i18n="flag.typo">A typo or broken formula</span></label>
-        <label class="flag-issue"><input type="radio" name="flag-issue" value="other"> <span data-i18n="flag.other">Something else</span></label>
+      <p class="form-hint" id="flag-hint" data-i18n="flag.hint">Tick all that apply.</p>
+      <fieldset class="flag-issues" id="flag-issues" aria-labelledby="flag-title" aria-describedby="flag-hint">
+        <label class="flag-issue"><input type="checkbox" name="flag-issue" value="wrong"> <span data-i18n="flag.wrong">The fact is wrong</span></label>
+        <label class="flag-issue"><input type="checkbox" name="flag-issue" value="front"> <span data-i18n="flag.front">The front is unclear</span></label>
+        <label class="flag-issue"><input type="checkbox" name="flag-issue" value="back"> <span data-i18n="flag.back">The back is too long or muddled</span></label>
+        <label class="flag-issue"><input type="checkbox" name="flag-issue" value="typo"> <span data-i18n="flag.typo">A typo or broken formula</span></label>
+        <label class="flag-issue"><input type="checkbox" name="flag-issue" value="other"> <span data-i18n="flag.other">Something else</span></label>
       </fieldset>
       <label class="form-label" for="flag-note" data-i18n="flag.noteLabel">Note (optional)</label>
       <textarea id="flag-note" class="form-textarea" rows="2" maxlength="500" placeholder="What should it say?" data-i18n-placeholder="flag.notePlaceholder"></textarea>

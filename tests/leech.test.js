@@ -159,23 +159,27 @@ test("KnowledgeApp reads the queue with the current text, sends the rewrite as a
   assert.equal((await lessonCard("c1")).rewrite_pending, false);
 });
 
-test("a flag carries its issue and note to KnowledgeApp; a second flag replaces them", async function() {
-  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issue: "nope" })).status, 400);
-  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issue: "other" })).body.code, "noteRequired");
-  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issue: "wrong", note: 5 })).status, 400);
-  assert.equal((await call("POST", "/api/cards/c2/rewrite-request", { issue: "wrong" })).status, 409, "a card typed here has nothing to fix there");
-  const first = await call("POST", "/api/cards/c1/rewrite-request", { issue: "front", note: "  which identity?  " });
+test("a flag carries its issues and note to KnowledgeApp; a second flag replaces them", async function() {
+  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issues: ["nope"] })).status, 400);
+  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issues: [] })).status, 400);
+  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issues: ["leech"] })).status, 400, "leech is not a flag");
+  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issues: ["front", "other"] })).body.code, "noteRequired");
+  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issues: ["wrong"], note: 5 })).status, 400);
+  assert.equal((await call("POST", "/api/cards/c2/rewrite-request", { issues: ["wrong"] })).status, 409, "a card typed here has nothing to fix there");
+  const first = await call("POST", "/api/cards/c1/rewrite-request", { issues: ["back", "front", "back"], note: "  which identity?  " });
   assert.equal(first.status, 201);
   let status = (await call("GET", "/api/cards/c1/rewrite-request")).body;
-  assert.deepEqual(status.pending, { id: first.body.id, issue: "front", note: "which identity?" });
+  assert.deepEqual(status.pending, { id: first.body.id, issues: ["front", "back"], note: "which identity?" },
+    "ticked issues are kept once each, in the sheet's order");
+  assert.deepEqual((await call("GET", "/api/integrations/knowledge/rewrites")).body.requests[0].issues, ["front", "back"]);
   assert.equal((await call("GET", "/api/cards/c1/rewrite-request", null, "u2")).status, 404);
 
-  const second = await call("POST", "/api/cards/c1/rewrite-request", { issue: "wrong", note: "x".repeat(900) });
+  const second = await call("POST", "/api/cards/c1/rewrite-request", { issue: "wrong", note: "x".repeat(900) });  // the first sheet's shape
   assert.equal(second.body.id, first.body.id, "still one request");
   const leech = await call("POST", "/api/cards/c1/rewrite-request");
   assert.equal(leech.body.id, first.body.id);
   const [req] = (await call("GET", "/api/integrations/knowledge/rewrites")).body.requests;
-  assert.equal(req.issue, "wrong", "the leech prompt does not overwrite a flag");
+  assert.deepEqual(req.issues, ["wrong"], "the leech prompt does not overwrite a flag");
   assert.equal(req.note.length, 500);
 
   const done = await call("POST", "/api/integrations/knowledge/rewrites/" + req.id + "/complete",
@@ -185,14 +189,14 @@ test("a flag carries its issue and note to KnowledgeApp; a second flag replaces 
   assert.equal(status.pending, null);
   assert.equal(status.last.outcome, "unchanged");
   assert.equal(status.last.outcome_note, "The book says the same.");
-  assert.equal(status.last.issue, "wrong");
+  assert.deepEqual(status.last.issues, ["wrong"]);
 });
 
 test("a leech request with no body is still a leech", async function() {
   const r = await call("POST", "/api/cards/c1/rewrite-request");
   const [req] = (await call("GET", "/api/integrations/knowledge/rewrites")).body.requests;
   assert.equal(req.id, r.body.id);
-  assert.equal(req.issue, "leech");
+  assert.deepEqual(req.issues, ["leech"]);
   assert.equal(req.note, "");
   await call("POST", "/api/integrations/knowledge/rewrites/" + req.id + "/complete", { outcome: "rewritten" });
 });
@@ -254,10 +258,10 @@ test("the flag button shows only on KnowledgeApp cards, fills in once sent, and 
   assert.match(indexHtml, /id="btn-fc-flag-card"/);
   assert.match(indexHtml, /id="modal-flag"/);
   for (const v of ["wrong", "front", "back", "typo", "other"])
-    assert.match(indexHtml, new RegExp('name="flag-issue" value="' + v + '"'));
+    assert.match(indexHtml, new RegExp('type="checkbox" name="flag-issue" value="' + v + '"'), "several can be ticked");
   for (const k of ["flag.button", "flag.pending", "flag.title", "flag.wrong", "flag.front", "flag.back", "flag.typo", "flag.other",
                    "flag.noteLabel", "flag.notePlaceholder", "flag.noteRequired", "flag.pickIssue", "flag.send", "flag.update",
-                   "flag.waiting", "flag.lastUnchanged", "flag.lastRewritten", "toast.flagSent"]) {
+                   "flag.waiting", "flag.hint", "flag.lastUnchanged", "flag.lastRewritten", "toast.flagSent"]) {
     assert.equal(appJs.split('"' + k + '":').length - 1, 2, k);
   }
 });
@@ -274,16 +278,58 @@ test("the flag sheet fits a phone: every issue and action on screen and none cli
       document.getElementById("modal-overlay").classList.remove("hidden");
       document.getElementById("modal-flag").classList.remove("hidden");
       document.getElementById("flag-card-term").textContent = "Monte Carlo Methods — identity for intractable partition functions";
-      return Array.from(document.querySelectorAll("#modal-flag .flag-issue, #modal-flag .modal-footer .btn")).map(function(b) {
-        const x = b.getBoundingClientRect();
-        return { left: x.left, right: x.right, bottom: x.bottom, sw: b.scrollWidth, cw: b.clientWidth };
-      });
+      const last = document.getElementById("flag-last");
+      last.textContent = "Last time, KnowledgeApp left this card as it was: the passage gives the same formula as the card.";
+      last.classList.remove("hidden");
+      const note = document.getElementById("flag-note");
+      const line = parseFloat(getComputedStyle(note).lineHeight) || 20;
+      return {
+        note: { h: note.clientHeight, two: 2 * line },
+        boxes: Array.from(document.querySelectorAll("#modal-flag .flag-issue, #modal-flag .modal-footer .btn")).map(function(b) {
+          const x = b.getBoundingClientRect();
+          return { left: x.left, right: x.right, bottom: x.bottom, sw: b.scrollWidth, cw: b.clientWidth };
+        }),
+      };
     });
-    assert.equal(r.length, 7);
-    for (const b of r) {
+    // On a phone the body scrolls; the note box had shrunk to a sliver with its placeholder cut off.
+    assert.ok(r.note.h >= r.note.two, "note box squashed: " + JSON.stringify(r.note));
+    assert.equal(r.boxes.length, 7);
+    for (const b of r.boxes) {
       assert.ok(b.left >= 0 && b.right <= 360, JSON.stringify(b));
       assert.ok(b.sw <= b.cw + 1, "clipped: " + JSON.stringify(b));
     }
+  } finally {
+    await browser.close();
+  }
+});
+
+test("no dialog squashes a textarea to fit a short screen: the body scrolls instead", async function() {
+  const { chromium } = require("playwright");
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 360, height: 500 } });
+    await page.route("**/*.js", (r) => r.abort());
+    await page.goto("file://" + path.join(root, "client", "index.html"));
+    await page.addStyleTag({ path: path.join(root, "client", "style.css") });
+    const r = await page.evaluate(function() {
+      document.getElementById("modal-overlay").classList.remove("hidden");
+      const out = [];
+      document.querySelectorAll(".modal").forEach(function(m) {
+        const boxes = m.querySelectorAll(".modal-body textarea");
+        if (!boxes.length) return;
+        document.querySelectorAll(".modal").forEach(function(o) { o.classList.add("hidden"); });
+        m.classList.remove("hidden");
+        m.querySelectorAll(".hidden").forEach(function(h) { h.classList.remove("hidden"); });
+        boxes.forEach(function(t) {
+          const want = (+t.getAttribute("rows") || 2) * parseFloat(getComputedStyle(t).lineHeight);
+          out.push({ id: t.id, h: t.clientHeight, want: want });
+        });
+      });
+      return out;
+    });
+    assert.ok(r.length >= 10, "found the dialogs' textareas: " + r.length);
+    // Measured before the fix: the flag note at 18px of 42, the card editor's front at 28 of 42.
+    for (const t of r) assert.ok(t.h >= t.want, "squashed: " + JSON.stringify(t));
   } finally {
     await browser.close();
   }

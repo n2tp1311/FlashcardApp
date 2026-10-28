@@ -988,7 +988,7 @@ router.get("/rewrites", (req, res) => {
     let data;
     try { data = JSON.parse(r.data); } catch (_) { data = {}; }
     return { id: r.id, external_id: r.external_id, term: data.term || "", def: data.def || "",
-             lapses: r.lapses, issue: r.issue, note: r.note || "", created_at: r.created_at };
+             lapses: r.lapses, issues: (r.issue || "leech").split(","), note: r.note || "", created_at: r.created_at };
   });
   res.json({ requests });
 });

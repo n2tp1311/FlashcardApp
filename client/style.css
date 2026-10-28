@@ -1803,6 +1803,9 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 }
 
 .form-textarea:focus { border-color: var(--primary); }
+/* A dialog body is a scrolling flex column, and its children shrink before it scrolls: on a
+   phone a textarea collapsed to a sliver with its placeholder cut off. Scroll instead. */
+.modal-body > .form-textarea, .modal-body > fieldset { flex-shrink: 0; }
 
 .form-hint { font-size: 0.75rem; color: var(--text2); }
 

@@ -307,7 +307,8 @@ Object.assign(TRANSLATIONS.en, {
   "flag.noteLabel": "Note (optional)",
   "flag.notePlaceholder": "What should it say?",
   "flag.noteRequired": "Say what is wrong with the card.",
-  "flag.pickIssue": "Pick what is wrong with the card.",
+  "flag.pickIssue": "Tick what is wrong with the card.",
+  "flag.hint": "Tick all that apply.",
   "flag.send": "Send to KnowledgeApp",
   "flag.update": "Update report",
   "flag.waiting": "Already sent. KnowledgeApp will look at it on its next run; sending again replaces your report.",
@@ -1519,7 +1520,8 @@ Object.assign(TRANSLATIONS.vi, {
   "flag.noteLabel": "Ghi chú (không bắt buộc)",
   "flag.notePlaceholder": "Thẻ nên ghi gì?",
   "flag.noteRequired": "Hãy nói thẻ sai ở đâu.",
-  "flag.pickIssue": "Hãy chọn thẻ sai ở đâu.",
+  "flag.pickIssue": "Hãy đánh dấu thẻ sai ở đâu.",
+  "flag.hint": "Chọn tất cả các mục đúng.",
   "flag.send": "Gửi cho KnowledgeApp",
   "flag.update": "Cập nhật báo lỗi",
   "flag.waiting": "Đã gửi. KnowledgeApp sẽ xem ở lần chạy tới; gửi lại sẽ thay báo lỗi cũ.",
@@ -7166,7 +7168,7 @@ function openFlagPrompt(card) {
   var termEl = document.getElementById("flag-card-term");
   renderLatex((card.data && card.data.term) || "", termEl);
   flagError("");
-  document.querySelectorAll('input[name="flag-issue"]').forEach(function(r) { r.checked = false; });
+  document.querySelectorAll('input[name="flag-issue"]').forEach(function(box) { box.checked = false; });
   document.getElementById("flag-note").value = "";
   var last = document.getElementById("flag-last");
   last.classList.add("hidden");
@@ -7180,10 +7182,11 @@ function openFlagPrompt(card) {
     if (!state.flagPrompt || state.flagPrompt.card !== card) return;
     if (r.pending) {
       card.rewrite_pending = true;
-      if (FLAG_ISSUES.indexOf(r.pending.issue) !== -1) {
-        var radio = document.querySelector('input[name="flag-issue"][value="' + r.pending.issue + '"]');
-        if (radio) radio.checked = true;
-      }
+      (r.pending.issues || []).forEach(function(issue) {
+        if (FLAG_ISSUES.indexOf(issue) === -1) return;
+        var box = document.querySelector('input[name="flag-issue"][value="' + issue + '"]');
+        if (box) box.checked = true;
+      });
       document.getElementById("flag-note").value = r.pending.note || "";
       last.textContent = t("flag.waiting");
       last.classList.remove("hidden");
@@ -7200,13 +7203,14 @@ function openFlagPrompt(card) {
 document.getElementById("btn-flag-send").addEventListener("click", function() {
   var p = state.flagPrompt;
   if (!p) return;
-  var picked = document.querySelector('input[name="flag-issue"]:checked');
+  var issues = Array.prototype.map.call(document.querySelectorAll('input[name="flag-issue"]:checked'),
+    function(box) { return box.value; });
   var note = document.getElementById("flag-note").value.trim();
-  if (!picked) return flagError(t("flag.pickIssue"));
-  if (picked.value === "other" && !note) return flagError(t("flag.noteRequired"));
+  if (!issues.length) return flagError(t("flag.pickIssue"));
+  if (issues.indexOf("other") !== -1 && !note) return flagError(t("flag.noteRequired"));
   flagError("");
   withBusy(this, function() {
-    return store.requestCardRewrite(p.card.id, { issue: picked.value, note: note }).then(function() {
+    return store.requestCardRewrite(p.card.id, { issues: issues, note: note }).then(function() {
       p.card.rewrite_pending = true;
       closeModal("flag");
       showToast(t("toast.flagSent"));

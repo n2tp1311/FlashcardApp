@@ -473,8 +473,8 @@ try {
 } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_rewrite_requests_user_status ON rewrite_requests(user_id, status, created_at)"); } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_rewrite_requests_card ON rewrite_requests(card_id)"); } catch (_) {}
-// Any linked card can be flagged, not only a leech: `issue` says what the learner found wrong
-// ('leech' for a request from the leech prompt), `note` is their own words, and `outcome_note`
+// Any linked card can be flagged, not only a leech: `issue` says what the learner found wrong,
+// several comma-joined ('leech' for a request from the leech prompt), `note` is their own words, and `outcome_note`
 // is KnowledgeApp's reason when it left the card as it was.
 try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN issue TEXT NOT NULL DEFAULT 'leech'"); } catch (_) {}
 try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN note TEXT"); } catch (_) {}
