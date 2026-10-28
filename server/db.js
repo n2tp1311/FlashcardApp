@@ -391,6 +391,10 @@ try { db.exec("ALTER TABLE cards ADD COLUMN source TEXT"); } catch (_) {}
 // passage again) and the card shows none until KnowledgeApp sends a better one.
 try { db.exec("ALTER TABLE cards ADD COLUMN source_verdict TEXT"); } catch (_) {}
 try { db.exec("ALTER TABLE cards ADD COLUMN source_rejected TEXT"); } catch (_) {}
+// The book's text either side of the passage (~120 words each), behind "Read more": the
+// passage is often the definition alone, and the explanation is the next paragraph.
+try { db.exec("ALTER TABLE cards ADD COLUMN source_before TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE cards ADD COLUMN source_after TEXT"); } catch (_) {}
 // A linked card (external_id set) the learner deleted: KnowledgeApp reads these so the card
 // is never synced back. `kind` says how it went. 'card' is a single-card delete, "this card is
 // wrong", and KnowledgeApp removes the unit behind it. 'lesson' came with its whole lesson,

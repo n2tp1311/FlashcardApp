@@ -324,13 +324,14 @@ router.post("/link", (req, res) => {
   });
 });
 
-// POST /api/integrations/knowledge/sources  { sources: [{external_id | card_id, text}] }
+// POST /api/integrations/knowledge/sources  { sources: [{external_id | card_id, text, before?, after?}] }
 // Sets the book passage on every card of this user linked to each unit. A card made before
 // KnowledgeApp has no unit, so KnowledgeApp finds its passage by the card's own words and
 // sends it by card_id -- which only ever touches a card with no external_id: a linked card's
 // passage belongs to its unit and the next sync would put that back.
 // A new passage clears the learner's verdict on the old one (a 'good' stays when the same
-// text is resent), and the passage the learner rejected is never written back. Replaying a batch
+// text is resent), and the passage the learner rejected is never written back. `before` and
+// `after` are the book's text around the passage, shown behind "Read more". Replaying a batch
 // writes the same text again; a unit or card with nothing to update counts as not_found.
 router.post("/sources", (req, res) => {
   const sources = req.body && req.body.sources;
@@ -340,22 +341,25 @@ router.post("/sources", (req, res) => {
     const s = sources[i];
     if (!s || isId(s.external_id) === isId(s.card_id) || typeof s.text !== "string" || !s.text.trim() || s.text.length > MAX_SOURCE_LEN)
       return res.status(400).json({ error: "source " + i + ": one of external_id or card_id, and text (1-" + MAX_SOURCE_LEN + " chars) required" });
+    if ([s.before, s.after].some(x => x != null && (typeof x !== "string" || x.length > MAX_SOURCE_LEN)))
+      return res.status(400).json({ error: "source " + i + ": before and after are text of at most " + MAX_SOURCE_LEN + " chars" });
   }
   let updated = 0, notFound = 0;
   db.transaction(() => {
     const byUnit = db.prepare(
-      "UPDATE cards SET source = ?, source_verdict = CASE WHEN source IS ? THEN source_verdict ELSE NULL END " +
-      "WHERE external_id = ? AND source_rejected IS NOT ? AND lesson_id IN (" +
+      "UPDATE cards SET source = ?, source_verdict = CASE WHEN source IS ? THEN source_verdict ELSE NULL END, " +
+      "source_before = ?, source_after = ? WHERE external_id = ? AND source_rejected IS NOT ? AND lesson_id IN (" +
       "SELECT lessons.id FROM lessons JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ?)"
     );
     const byCard = db.prepare(
-      "UPDATE cards SET source = ?, source_verdict = CASE WHEN source IS ? THEN source_verdict ELSE NULL END " +
-      "WHERE id = ? AND external_id IS NULL AND source_rejected IS NOT ? AND lesson_id IN (" +
+      "UPDATE cards SET source = ?, source_verdict = CASE WHEN source IS ? THEN source_verdict ELSE NULL END, " +
+      "source_before = ?, source_after = ? WHERE id = ? AND external_id IS NULL AND source_rejected IS NOT ? AND lesson_id IN (" +
       "SELECT lessons.id FROM lessons JOIN classes ON lessons.class_id = classes.id WHERE classes.user_id = ?)"
     );
     sources.forEach(s => {
       const text = s.text.trim();
-      const n = (s.card_id ? byCard : byUnit).run(text, text, s.card_id || s.external_id, text, req.userId).changes;
+      const ctx = (x) => (typeof x === "string" && x.trim() ? x.trim() : null);
+      const n = (s.card_id ? byCard : byUnit).run(text, text, ctx(s.before), ctx(s.after), s.card_id || s.external_id, text, req.userId).changes;
       if (n) updated += n; else notFound++;
     });
   })();

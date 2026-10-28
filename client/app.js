@@ -1297,6 +1297,8 @@ Object.assign(TRANSLATIONS.en, {
   "study.sourceRemoved": "Passage removed. The next sync will look for a better one.",
   "study.sourceUndo": "Undo",
   "study.sourceFailed": "Couldn't save that. Try again.",
+  "study.sourceMore": "Read more",
+  "study.sourceLess": "Show less",
   "keymap.reviewPrevNext": "Review prev / next answered question"
 });
 Object.assign(TRANSLATIONS.vi, {
@@ -2454,6 +2456,8 @@ Object.assign(TRANSLATIONS.vi, {
   "study.sourceRemoved": "Đã gỡ đoạn này. Lần đồng bộ sau sẽ thử đoạn khác.",
   "study.sourceUndo": "Hoàn tác",
   "study.sourceFailed": "Chưa lưu được. Thử lại.",
+  "study.sourceMore": "Đọc thêm",
+  "study.sourceLess": "Thu gọn",
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
 
@@ -9299,12 +9303,72 @@ function sourcePanel(card, id) {
   sum.innerHTML = ICON_BOOK + " " + escHtml(t("study.source"));
   var body = document.createElement("blockquote");
   body.className = "explanation-body source-body";
-  body.textContent = card.source;
+  fillSource(body, card);
   el.appendChild(sum);
   el.appendChild(body);
   var ask = sourceFeedback(card, body);
   if (ask) el.appendChild(ask);
   return el;
+}
+
+// The passage with the card's own words marked, and the book's text either side of it
+// behind "Read more" (cards.source_before / source_after). DOM text nodes only: book prose
+// never goes through innerHTML, and its $ amounts never reach renderLatex.
+var SOURCE_STOP = ["the", "and", "for", "with", "from", "that", "this", "into", "its"];
+function fillSource(body, card) {
+  body.textContent = "";
+  var re = sourceTermPattern(card);
+  function part(text, cls) {
+    var span = document.createElement("span");
+    span.className = cls;
+    markSourceWords(span, text, re);
+    return span;
+  }
+  var before = typeof card.source_before === "string" && card.source_before.trim() ? part(card.source_before.trim() + " ", "source-ctx hidden") : null;
+  var after = typeof card.source_after === "string" && card.source_after.trim() ? part(" " + card.source_after.trim(), "source-ctx hidden") : null;
+  if (before) body.appendChild(before);
+  body.appendChild(part(card.source, "source-core"));
+  if (after) body.appendChild(after);
+  if (!before && !after) return;
+  var more = document.createElement("button");
+  more.type = "button";
+  more.className = "source-more";
+  more.textContent = t("study.sourceMore");
+  more.setAttribute("aria-expanded", "false");
+  more.addEventListener("click", function() {
+    var open = more.getAttribute("aria-expanded") !== "true";
+    [before, after].forEach(function(x) { if (x) x.classList.toggle("hidden", !open); });
+    more.textContent = t(open ? "study.sourceLess" : "study.sourceMore");
+    more.setAttribute("aria-expanded", String(open));
+  });
+  body.appendChild(more);
+}
+
+// The term's words (3+ letters, not "the"/"and"…) as a pattern matching the start of a word,
+// so "bootstrap" also marks "bootstrapping". Null when there is nothing to mark.
+function sourceTermPattern(card) {
+  var term = card && card.data && typeof card.data.term === "string" ? card.data.term : "";
+  var words = [];
+  (term.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) || []).forEach(function(w) {
+    if (SOURCE_STOP.indexOf(w) < 0 && words.indexOf(w) < 0) words.push(w);
+  });
+  if (!words.length) return null;
+  return new RegExp("(?<![\\p{L}\\p{N}])(?:" + words.join("|") + ")[\\p{L}\\p{N}]*", "giu");
+}
+
+function markSourceWords(el, text, re) {
+  if (!re) { el.appendChild(document.createTextNode(text)); return; }
+  var last = 0, m;
+  re.lastIndex = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+    var mark = document.createElement("mark");
+    mark.className = "source-mark";
+    mark.textContent = m[0];
+    el.appendChild(mark);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
 }
 
 // "Did this passage help?" under a book passage. "Doesn't match" hides it at once and the
@@ -9374,7 +9438,7 @@ function whyPanel(card) {
       '<blockquote class="explanation-body source-body why-source" id="fc-why-source"></blockquote>' +
     "</div>";
   // textContent, as in sourcePanel: book prose is full of $ amounts and markup-like text.
-  el.querySelector("#fc-why-source").textContent = card.source;
+  fillSource(el.querySelector("#fc-why-source"), card);
   var feedback = sourceFeedback(card, el.querySelector("#fc-why-source"));
   if (feedback) el.querySelector("#fc-why-answer").appendChild(feedback);
   var btn = el.querySelector("#btn-fc-why"), ask = el.querySelector("#fc-why-ask"), input = el.querySelector("#fc-why-input");

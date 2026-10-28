@@ -21,8 +21,14 @@ function extract(name) {
 
 function fakeEl(tag) {
   const classes = new Set();
-  return { tag, children: [], id: "", className: "", innerHTML: "", textContent: "", listeners: {},
-    classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) },
+  return { tag, children: [], id: "", innerHTML: "", listeners: {}, attrs: {},
+    get className() { return [...classes].join(" "); },
+    set className(v) { classes.clear(); String(v).split(/\s+/).filter(Boolean).forEach((c) => classes.add(c)); },
+    get textContent() { return this.children.map((c) => c.textContent).join("") + (this._text || ""); },
+    set textContent(v) { this.children = []; this._text = v; },
+    classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c),
+      toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)) },
+    setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k]; },
     addEventListener(type, fn) { this.listeners[type] = fn; },
     appendChild(c) { this.children.push(c); } };
 }
@@ -30,13 +36,13 @@ function fakeEl(tag) {
 const ctx = {
   t: (k) => k,
   escHtml: (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"),
-  document: { createElement: fakeEl },
+  document: { createElement: fakeEl, createTextNode: (text) => ({ textContent: text }) },
   setTimeout: (fn) => fn(),
   calls: [],
   store: null
 };
 vm.createContext(ctx);
-vm.runInContext("var ICON_BOOK = '<svg/>';" + ["sourcePanel", "sourceFeedback", "missedFlashcards", "missedQuizCards"].map(extract).join(""), ctx);
+vm.runInContext("var ICON_BOOK = '<svg/>'; var SOURCE_STOP = [];" + ["sourcePanel", "sourceFeedback", "fillSource", "sourceTermPattern", "markSourceWords", "missedFlashcards", "missedQuizCards"].map(extract).join(""), ctx);
 
 test("a card with a passage gets a collapsed panel holding it as plain text", () => {
   const el = ctx.sourcePanel({ source: "Costs rose to $5 and <b>then</b> fell." }, "quiz-source");
@@ -94,11 +100,11 @@ test("the sources endpoint sets the passage only on this user's linked cards", (
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
     CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
-    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT);
     INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
     INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
     INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('a','L1','s:1',NULL), ('b','L2','s:1',NULL), ('c','L1','s:2',NULL);`);
-  const n = db.prepare(sql[0]).run(["The passage.", "The passage.", "s:1", "The passage.", "u1"]).changes;
+  const n = db.prepare(sql[0]).run(["The passage.", "The passage.", null, null, "s:1", "The passage.", "u1"]).changes;
   assert.equal(n, 1);
   assert.deepEqual(db.all("SELECT id, source FROM cards ORDER BY id"),
     [{ id: "a", source: "The passage." }, { id: "b", source: null }, { id: "c", source: null }]);
@@ -117,16 +123,40 @@ test("a passage sent by card_id lands only on this user's card that has no unit"
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
     CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
-    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT);
     INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
     INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
     INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('old','L1',NULL,NULL), ('linked','L1','s:1','Its unit passage.'),
       ('theirs','L2',NULL,NULL);`);
-  for (const id of ["old", "linked", "theirs"]) db.prepare(byCard).run(["Found by words.", "Found by words.", id, "Found by words.", "u1"]);
+  for (const id of ["old", "linked", "theirs"]) db.prepare(byCard).run(["Found by words.", "Found by words.", null, null, id, "Found by words.", "u1"]);
   assert.deepEqual(db.all("SELECT id, source FROM cards ORDER BY id"), [
     { id: "linked", source: "Its unit passage." },
     { id: "old", source: "Found by words." },
     { id: "theirs", source: null }]);
   db.close();
   assert.match(handler, /isId\(s\.external_id\) === isId\(s\.card_id\)/);
+});
+
+test("Read more shows the book either side of the passage, and the card's words are marked", () => {
+  const card = { id: "k", data: { term: "Bootstrap sample" }, source: "The bootstrap is a general tool.",
+    source_before: "Cross-validation behaved.", source_after: "Draw a sample with replacement." };
+  const body = fakeEl("blockquote");
+  ctx.fillSource(body, card);
+  const [pre, core, post, more] = body.children;
+  assert.equal(core.textContent, card.source);
+  assert.ok(pre.classList.contains("hidden") && post.classList.contains("hidden"));
+  assert.equal(more.textContent, "study.sourceMore");
+  more.listeners.click();
+  assert.ok(!pre.classList.contains("hidden") && !post.classList.contains("hidden"));
+  assert.equal(more.textContent, "study.sourceLess");
+  assert.deepEqual(core.children.filter((c) => c.tag === "mark").map((c) => c.textContent), ["bootstrap"]);
+  assert.deepEqual(post.children.filter((c) => c.tag === "mark").map((c) => c.textContent), ["sample"]);
+
+  const plain = fakeEl("blockquote");
+  ctx.fillSource(plain, { source: "No context, no button.", data: {} });
+  assert.equal(plain.children.length, 1);
+  assert.equal(plain.textContent, "No context, no button.");
+  // a word only starts a match: "strap" inside "bootstrap" is not the term "strap"
+  const re = ctx.sourceTermPattern({ data: { term: "Strap" } });
+  assert.equal("bootstrap strapping".match(re).join(","), "strapping");
 });
