@@ -7214,7 +7214,9 @@ document.getElementById("btn-flag-send").addEventListener("click", function() {
       p.card.rewrite_pending = true;
       closeModal("flag");
       showToast(t("toast.flagSent"));
-      if (getActiveScreen() === "flashcard") syncFlagButton(document.getElementById("btn-fc-flag-card"), p.card);
+      var screen = getActiveScreen();
+      if (screen === "flashcard" || screen === "quiz")
+        syncFlagButton(document.getElementById(screen === "quiz" ? "btn-quiz-flag-card" : "btn-fc-flag-card"), p.card);
       if (getActiveScreen() === "lesson") renderCards();
     });
   });
@@ -10897,6 +10899,7 @@ function renderQuizCard() {
   var prevNext = document.getElementById("quiz-next-btn");
   if (prevNext) prevNext.remove();
   hideQuizSheet();
+  syncFlagButton(document.getElementById("btn-quiz-flag-card"), cards[i] || {});
   var prevCap = document.getElementById("quiz-cap-hint");
   if (prevCap) prevCap.remove();
   var prevNotDue = document.getElementById("quiz-notdue-hint");
@@ -11296,6 +11299,11 @@ document.getElementById("btn-quiz-review-next").addEventListener("click", functi
 document.getElementById("btn-quiz-layout").addEventListener("click", function() {
   try { localStorage.setItem("fc-quiz-layout", quizLayout() === "grid" ? "list" : "grid"); } catch (_) {}
   applyQuizLayout();
+});
+
+document.getElementById("btn-quiz-flag-card").addEventListener("click", function() {
+  var card = state.quizCards[state.quizIndex];
+  if (card) openFlagPrompt(card);
 });
 
 document.getElementById("btn-quiz-edit-card").addEventListener("click", function() {

@@ -103,6 +103,6 @@ test("the quiz header matches the flashcard one: Exit, progress, a check-mark sc
   assert.match(html, /<span id="quiz-score-display" class="score-display">✓ 0<\/span>/);
   assert.match(fn("setQuizScoreDisplay"), /"✓ " \+ state\.quizScore/);
   const header = html.slice(html.indexOf('<div id="screen-quiz"'), html.indexOf('<div class="quiz-container">'));
-  assert.match(header, /<div class="fc-toolbar">[\s\S]*id="btn-quiz-layout"[\s\S]*id="btn-quiz-edit-card"[\s\S]*fc-toolbar-gap[\s\S]*id="btn-quiz-delete-card"/);
+  assert.match(header, /<div class="fc-toolbar">[\s\S]*id="btn-quiz-layout"[\s\S]*id="btn-quiz-edit-card"[\s\S]*id="btn-quiz-flag-card"[\s\S]*fc-toolbar-gap[\s\S]*id="btn-quiz-delete-card"/);
 });
 
