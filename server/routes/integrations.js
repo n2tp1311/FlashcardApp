@@ -968,8 +968,9 @@ router.post("/vocabulary/:id/complete", (req, res) => {
   }
 });
 
-// GET /api/integrations/knowledge/rewrites — leeches the user asked KnowledgeApp to rewrite.
-// The card's current text goes along so the rewrite starts from what the user is studying.
+// GET /api/integrations/knowledge/rewrites — cards the user asked KnowledgeApp to fix: leeches,
+// and cards flagged with an issue and the learner's note. The card's current text goes along so
+// the fix starts from what the user is studying.
 router.get("/rewrites", (req, res) => {
   const rawLimit = req.query.limit == null ? "20" : req.query.limit;
   const limit = Number(rawLimit);
@@ -977,7 +978,7 @@ router.get("/rewrites", (req, res) => {
     return res.status(400).json({ error: "limit must be an integer from 1 to 100" });
 
   const rows = db.prepare(
-    "SELECT rr.id, rr.lapses, rr.created_at, cards.external_id, cards.data " +
+    "SELECT rr.id, rr.lapses, rr.issue, rr.note, rr.created_at, cards.external_id, cards.data " +
     "FROM rewrite_requests rr JOIN cards ON cards.id = rr.card_id " +
     "JOIN lessons ON lessons.id = cards.lesson_id JOIN classes ON classes.id = lessons.class_id " +
     "WHERE rr.user_id = ? AND classes.user_id = ? AND rr.status = 'pending' " +
@@ -987,7 +988,7 @@ router.get("/rewrites", (req, res) => {
     let data;
     try { data = JSON.parse(r.data); } catch (_) { data = {}; }
     return { id: r.id, external_id: r.external_id, term: data.term || "", def: data.def || "",
-             lapses: r.lapses, created_at: r.created_at };
+             lapses: r.lapses, issue: r.issue, note: r.note || "", created_at: r.created_at };
   });
   res.json({ requests });
 });
@@ -996,18 +997,23 @@ const REWRITE_OUTCOMES = ["rewritten", "unchanged", "missing"];
 
 // POST /api/integrations/knowledge/rewrites/:id/complete — KnowledgeApp is done with a request.
 // The new text itself arrives as an ordinary "updated" sync event, which also resets the
-// card's leech count; this only closes the request so it stops showing as pending.
+// card's leech count; this only closes the request so it stops showing as pending. `note` is
+// KnowledgeApp's reason for leaving a card unchanged, shown when the learner next opens its flag.
 router.post("/rewrites/:id/complete", (req, res) => {
-  const outcome = (req.body || {}).outcome;
+  const body = req.body || {};
+  const outcome = body.outcome;
   if (!REWRITE_OUTCOMES.includes(outcome))
     return res.status(400).json({ error: "outcome must be one of " + REWRITE_OUTCOMES.join(", ") });
+  if (body.note != null && typeof body.note !== "string")
+    return res.status(400).json({ error: "note must be text" });
+  const note = (body.note || "").trim().slice(0, 300) || null;
   const request = db.prepare("SELECT id, status, outcome FROM rewrite_requests WHERE id = ? AND user_id = ?")
     .get(req.params.id, req.userId);
   if (!request) return res.status(404).json({ error: "Rewrite request not found" });
   if (request.status === "completed") return res.json({ status: "already", outcome: request.outcome });
   db.prepare(
-    "UPDATE rewrite_requests SET status = 'completed', outcome = ?, completed_at = unixepoch() WHERE id = ? AND status = 'pending'"
-  ).run(outcome, request.id);
+    "UPDATE rewrite_requests SET status = 'completed', outcome = ?, outcome_note = ?, completed_at = unixepoch() WHERE id = ? AND status = 'pending'"
+  ).run(outcome, note, request.id);
   res.json({ status: "completed", outcome });
 });
 

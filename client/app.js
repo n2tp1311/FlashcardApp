@@ -296,6 +296,24 @@ Object.assign(TRANSLATIONS.en, {
   "leech.rewriteAlreadyRequested": "Rewrite requested",
   "leech.keepStudying": "Keep studying",
   "toast.rewriteRequested": "KnowledgeApp will rewrite this card on its next run.",
+  "flag.button": "Report a problem with this card",
+  "flag.pending": "Problem reported — KnowledgeApp will look at it on its next run",
+  "flag.title": "What's wrong with this card?",
+  "flag.wrong": "The fact is wrong",
+  "flag.front": "The front is unclear",
+  "flag.back": "The back is too long or muddled",
+  "flag.typo": "A typo or broken formula",
+  "flag.other": "Something else",
+  "flag.noteLabel": "Note (optional)",
+  "flag.notePlaceholder": "What should it say?",
+  "flag.noteRequired": "Say what is wrong with the card.",
+  "flag.pickIssue": "Pick what is wrong with the card.",
+  "flag.send": "Send to KnowledgeApp",
+  "flag.update": "Update report",
+  "flag.waiting": "Already sent. KnowledgeApp will look at it on its next run; sending again replaces your report.",
+  "flag.lastUnchanged": "Last time, KnowledgeApp left this card as it was",
+  "flag.lastRewritten": "Last time, KnowledgeApp rewrote this card.",
+  "toast.flagSent": "Sent. KnowledgeApp will fix this card on its next run.",
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
@@ -1490,6 +1508,24 @@ Object.assign(TRANSLATIONS.vi, {
   "leech.rewriteAlreadyRequested": "Đã yêu cầu viết lại",
   "leech.keepStudying": "Tiếp tục học",
   "toast.rewriteRequested": "KnowledgeApp sẽ viết lại thẻ này ở lần chạy tới.",
+  "flag.button": "Báo lỗi thẻ này",
+  "flag.pending": "Đã báo lỗi — KnowledgeApp sẽ xem ở lần chạy tới",
+  "flag.title": "Thẻ này sai ở đâu?",
+  "flag.wrong": "Thông tin sai",
+  "flag.front": "Mặt trước không rõ",
+  "flag.back": "Mặt sau quá dài hoặc rối",
+  "flag.typo": "Lỗi chính tả hoặc công thức hỏng",
+  "flag.other": "Lý do khác",
+  "flag.noteLabel": "Ghi chú (không bắt buộc)",
+  "flag.notePlaceholder": "Thẻ nên ghi gì?",
+  "flag.noteRequired": "Hãy nói thẻ sai ở đâu.",
+  "flag.pickIssue": "Hãy chọn thẻ sai ở đâu.",
+  "flag.send": "Gửi cho KnowledgeApp",
+  "flag.update": "Cập nhật báo lỗi",
+  "flag.waiting": "Đã gửi. KnowledgeApp sẽ xem ở lần chạy tới; gửi lại sẽ thay báo lỗi cũ.",
+  "flag.lastUnchanged": "Lần trước, KnowledgeApp giữ nguyên thẻ này",
+  "flag.lastRewritten": "Lần trước, KnowledgeApp đã viết lại thẻ này.",
+  "toast.flagSent": "Đã gửi. KnowledgeApp sẽ sửa thẻ này ở lần chạy tới.",
 
   "nav.home": "Trang chủ",
   "nav.dashboard": "Bảng điều khiển",
@@ -6711,6 +6747,7 @@ function renderCards() {
         (state.cardSelectMode ? '' :
           '<div class="card-actions">' +
             '<button class="icon-btn" title="' + t("common.edit") + '" data-card-edit="' + card.id + '">' + ICON_EDIT + '</button>' +
+            flagButtonHtml(card) +
             '<button class="icon-btn danger" title="' + t("common.delete") + '" data-card-del="' + card.id + '">' + ICON_DELETE + '</button>' +
           '</div>');
 
@@ -6761,6 +6798,8 @@ function renderCards() {
         });
         var leechBtn = item.querySelector("[data-card-leech]");
         if (leechBtn) leechBtn.addEventListener("click", function() { openLeechPrompt(card, false); });
+        var flagBtn = item.querySelector("[data-card-flag]");
+        if (flagBtn) flagBtn.addEventListener("click", function() { openFlagPrompt(card); });
         item.querySelector("[data-card-del]").addEventListener("click", function() {
           confirmDelete(t("confirm.deleteCard"), function() {
             store.deleteCard(card.id, state.currentLesson.id).then(renderCards);
@@ -7089,6 +7128,89 @@ document.getElementById("btn-leech-rewrite").addEventListener("click", function(
       p.card.rewrite_pending = true;
       closeModal("leech");
       showToast(t("toast.rewriteRequested"));
+      if (getActiveScreen() === "lesson") renderCards();
+    });
+  });
+});
+
+// Flagging a card (⚑): the learner says what is wrong and KnowledgeApp fixes that on its next
+// run, from the book passage the card came from. It is the leech request with a reason, so it
+// goes in the same queue, and the fixed text comes back as an ordinary update.
+var ICON_FLAG = svgIcon('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>');
+var FLAG_ISSUES = ["wrong", "front", "back", "typo", "other"];
+
+function flagButtonHtml(card) {
+  if (!canRewriteInKnowledge(card)) return "";
+  var label = escHtml(t(card.rewrite_pending ? "flag.pending" : "flag.button"));
+  return '<button class="icon-btn' + (card.rewrite_pending ? " is-flagged" : "") + '" title="' + label +
+    '" aria-label="' + label + '" data-card-flag="' + escHtml(card.id) + '">' + ICON_FLAG + '</button>';
+}
+
+function syncFlagButton(btn, card) {
+  var show = canRewriteInKnowledge(card);
+  btn.classList.toggle("hidden", !show);
+  btn.classList.toggle("is-flagged", show && !!card.rewrite_pending);
+  var label = t(card.rewrite_pending ? "flag.pending" : "flag.button");
+  btn.title = label;
+  btn.setAttribute("aria-label", label);
+}
+
+function flagError(message) {
+  var el = document.getElementById("flag-error");
+  el.textContent = message || "";
+  el.classList.toggle("hidden", !message);
+}
+
+function openFlagPrompt(card) {
+  state.flagPrompt = { card: card };
+  var termEl = document.getElementById("flag-card-term");
+  renderLatex((card.data && card.data.term) || "", termEl);
+  flagError("");
+  document.querySelectorAll('input[name="flag-issue"]').forEach(function(r) { r.checked = false; });
+  document.getElementById("flag-note").value = "";
+  var last = document.getElementById("flag-last");
+  last.classList.add("hidden");
+  var send = document.getElementById("btn-flag-send");
+  send.setAttribute("data-i18n", card.rewrite_pending ? "flag.update" : "flag.send");
+  send.textContent = t(send.getAttribute("data-i18n"));
+  openModal("flag");
+  // What is already waiting, and why the last report changed nothing: fetched after opening so
+  // a slow answer never holds the sheet. A card the learner moved on from is left alone.
+  store.cardRewriteRequest(card.id).then(function(r) {
+    if (!state.flagPrompt || state.flagPrompt.card !== card) return;
+    if (r.pending) {
+      card.rewrite_pending = true;
+      if (FLAG_ISSUES.indexOf(r.pending.issue) !== -1) {
+        var radio = document.querySelector('input[name="flag-issue"][value="' + r.pending.issue + '"]');
+        if (radio) radio.checked = true;
+      }
+      document.getElementById("flag-note").value = r.pending.note || "";
+      last.textContent = t("flag.waiting");
+      last.classList.remove("hidden");
+      send.setAttribute("data-i18n", "flag.update");
+      send.textContent = t("flag.update");
+    } else if (r.last) {
+      last.textContent = r.last.outcome === "rewritten" ? t("flag.lastRewritten")
+        : t("flag.lastUnchanged") + (r.last.outcome_note ? ": " + r.last.outcome_note : ".");
+      last.classList.remove("hidden");
+    }
+  }).catch(function() {});
+}
+
+document.getElementById("btn-flag-send").addEventListener("click", function() {
+  var p = state.flagPrompt;
+  if (!p) return;
+  var picked = document.querySelector('input[name="flag-issue"]:checked');
+  var note = document.getElementById("flag-note").value.trim();
+  if (!picked) return flagError(t("flag.pickIssue"));
+  if (picked.value === "other" && !note) return flagError(t("flag.noteRequired"));
+  flagError("");
+  withBusy(this, function() {
+    return store.requestCardRewrite(p.card.id, { issue: picked.value, note: note }).then(function() {
+      p.card.rewrite_pending = true;
+      closeModal("flag");
+      showToast(t("toast.flagSent"));
+      if (getActiveScreen() === "flashcard") syncFlagButton(document.getElementById("btn-fc-flag-card"), p.card);
       if (getActiveScreen() === "lesson") renderCards();
     });
   });
@@ -9090,7 +9212,7 @@ function hintAvailable(answer) {
 // exception to that (it works from inside any text field everywhere in the app, not just
 // here) and can still navigate away — unchanged, pre-existing behavior, out of scope here.
 function setFlashcardNavLocked(locked) {
-  ["btn-fc-prev", "btn-fc-next", "btn-fc-shuffle", "btn-fc-edit-card", "btn-fc-delete-card",
+  ["btn-fc-prev", "btn-fc-next", "btn-fc-shuffle", "btn-fc-edit-card", "btn-fc-flag-card", "btn-fc-delete-card",
    "btn-fc-learning", "btn-fc-hard", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
     document.getElementById(id).disabled = locked;
   });
@@ -9767,6 +9889,7 @@ function renderFlashcard() {
   var upstreamBadge = document.getElementById("fc-upstream-badge");
   upstreamBadge.className = "fc-upstream-badge upstream-pill " + (card.upstream_change || "") + (card.upstream_change ? "" : " hidden");
   upstreamBadge.textContent = card.upstream_change ? t("upstream." + card.upstream_change) : "";
+  syncFlagButton(document.getElementById("btn-fc-flag-card"), card);
 
   // Dots
   renderFcDots();
@@ -10154,6 +10277,11 @@ document.getElementById("btn-fc-shuffle").addEventListener("click", function() {
   state.studyCards = shuffle(state.studyCards);
   state.studyIndex = 0;
   renderFlashcard();
+});
+
+document.getElementById("btn-fc-flag-card").addEventListener("click", function() {
+  var card = state.studyCards[state.studyIndex];
+  if (card) openFlagPrompt(card);
 });
 
 document.getElementById("btn-fc-edit-card").addEventListener("click", function() {
@@ -14079,7 +14207,8 @@ var SQLiteAdapter = (function() {
     getLessonAccuracy: function(classId) { return req("GET", "/stats/accuracy/lessons?classId=" + classId); },
 
     acknowledgeCardUpdate: function(id) { return req("POST", "/cards/" + id + "/acknowledge-update"); },
-    requestCardRewrite: function(id) { return req("POST", "/cards/" + id + "/rewrite-request"); },
+    requestCardRewrite: function(id, flag) { return req("POST", "/cards/" + id + "/rewrite-request", flag); },
+    cardRewriteRequest: function(id) { return req("GET", "/cards/" + id + "/rewrite-request"); },
     sourceFeedback: function(id, verdict) { return req("POST", "/cards/" + id + "/source-feedback", { verdict: verdict }); },
     cardNeeds: function(id) { return req("GET", "/cards/" + id + "/needs"); },
     // The server caps each request at 1000 ids, so larger selections go in sequential batches.

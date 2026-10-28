@@ -320,22 +320,55 @@ router.put("/cards/:id", requireAuth, (req, res) => {
   res.json({ ...updated, data: JSON.parse(updated.data) });
 });
 
-// POST /api/cards/:id/rewrite-request — ask KnowledgeApp to rewrite a card that keeps being
-// forgotten. Only a card synced from KnowledgeApp can be rewritten there; asking twice keeps
-// the one request.
+// The issues a learner can flag a card for. 'leech' is the leech prompt's request.
+const FLAG_ISSUES = ["leech", "wrong", "front", "back", "typo", "other"];
+const FLAG_NOTE_MAX = 500;
+
+// POST /api/cards/:id/rewrite-request — ask KnowledgeApp to fix a card: one that keeps being
+// forgotten, or one the learner flagged with an issue and an optional note. Only a card synced
+// from KnowledgeApp can be fixed there. Asking again keeps the one request; a new flag replaces
+// its issue and note, since the latest is what the learner means now.
 router.post("/cards/:id/rewrite-request", requireAuth, (req, res) => {
   const userId = req.session.userId;
   if (!ownCard(req.params.id, userId)) return res.status(404).json({ error: "Not found" });
+  const body = req.body || {};
+  const issue = body.issue == null ? "leech" : body.issue;
+  if (!FLAG_ISSUES.includes(issue))
+    return res.status(400).json({ error: "issue must be one of " + FLAG_ISSUES.join(", ") });
+  if (body.note != null && typeof body.note !== "string")
+    return res.status(400).json({ error: "note must be text" });
+  const note = (body.note || "").trim().slice(0, FLAG_NOTE_MAX) || null;
+  if (issue === "other" && !note)
+    return res.status(400).json({ error: "Say what is wrong with the card", code: "noteRequired" });
   const card = db.prepare("SELECT id, external_id, format FROM cards WHERE id = ?").get(req.params.id);
   if (!card.external_id || card.format !== "term-def")
     return res.status(409).json({ error: "Only cards from KnowledgeApp can be rewritten there", code: "notLinked" });
   const pending = db.prepare("SELECT id FROM rewrite_requests WHERE card_id = ? AND status = 'pending'").get(card.id);
-  if (pending) return res.json({ id: pending.id, status: "pending" });
+  if (pending) {
+    if (body.issue != null)
+      db.prepare("UPDATE rewrite_requests SET issue = ?, note = ? WHERE id = ?").run(issue, note, pending.id);
+    return res.json({ id: pending.id, status: "pending" });
+  }
   const state = db.prepare("SELECT fsrs_lapses, leech_base FROM card_states WHERE card_id = ? AND user_id = ?").get(card.id, userId);
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  db.prepare("INSERT INTO rewrite_requests (id, user_id, card_id, lapses) VALUES (?, ?, ?, ?)")
-    .run(id, userId, card.id, lapsesSinceEdit(state));
+  db.prepare("INSERT INTO rewrite_requests (id, user_id, card_id, lapses, issue, note) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(id, userId, card.id, lapsesSinceEdit(state), issue, note);
   res.status(201).json({ id, status: "pending" });
+});
+
+// GET /api/cards/:id/rewrite-request — the flag sheet's state: the request still waiting, if
+// any, and how the last finished one ended, so a card KnowledgeApp left as it was says why.
+router.get("/cards/:id/rewrite-request", requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  if (!ownCard(req.params.id, userId)) return res.status(404).json({ error: "Not found" });
+  const pending = db.prepare(
+    "SELECT id, issue, note FROM rewrite_requests WHERE card_id = ? AND user_id = ? AND status = 'pending'"
+  ).get(req.params.id, userId);
+  const last = db.prepare(
+    "SELECT issue, outcome, outcome_note, completed_at FROM rewrite_requests " +
+    "WHERE card_id = ? AND user_id = ? AND status = 'completed' ORDER BY completed_at DESC, rowid DESC LIMIT 1"
+  ).get(req.params.id, userId);
+  res.json({ pending: pending || null, last: last || null });
 });
 
 // GET /api/cards/:id/needs — the cards this card's definition builds on (cards.needs), from

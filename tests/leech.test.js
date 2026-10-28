@@ -159,6 +159,44 @@ test("KnowledgeApp reads the queue with the current text, sends the rewrite as a
   assert.equal((await lessonCard("c1")).rewrite_pending, false);
 });
 
+test("a flag carries its issue and note to KnowledgeApp; a second flag replaces them", async function() {
+  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issue: "nope" })).status, 400);
+  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issue: "other" })).body.code, "noteRequired");
+  assert.equal((await call("POST", "/api/cards/c1/rewrite-request", { issue: "wrong", note: 5 })).status, 400);
+  assert.equal((await call("POST", "/api/cards/c2/rewrite-request", { issue: "wrong" })).status, 409, "a card typed here has nothing to fix there");
+  const first = await call("POST", "/api/cards/c1/rewrite-request", { issue: "front", note: "  which identity?  " });
+  assert.equal(first.status, 201);
+  let status = (await call("GET", "/api/cards/c1/rewrite-request")).body;
+  assert.deepEqual(status.pending, { id: first.body.id, issue: "front", note: "which identity?" });
+  assert.equal((await call("GET", "/api/cards/c1/rewrite-request", null, "u2")).status, 404);
+
+  const second = await call("POST", "/api/cards/c1/rewrite-request", { issue: "wrong", note: "x".repeat(900) });
+  assert.equal(second.body.id, first.body.id, "still one request");
+  const leech = await call("POST", "/api/cards/c1/rewrite-request");
+  assert.equal(leech.body.id, first.body.id);
+  const [req] = (await call("GET", "/api/integrations/knowledge/rewrites")).body.requests;
+  assert.equal(req.issue, "wrong", "the leech prompt does not overwrite a flag");
+  assert.equal(req.note.length, 500);
+
+  const done = await call("POST", "/api/integrations/knowledge/rewrites/" + req.id + "/complete",
+    { outcome: "unchanged", note: "The book says the same." });
+  assert.equal(done.status, 200);
+  status = (await call("GET", "/api/cards/c1/rewrite-request")).body;
+  assert.equal(status.pending, null);
+  assert.equal(status.last.outcome, "unchanged");
+  assert.equal(status.last.outcome_note, "The book says the same.");
+  assert.equal(status.last.issue, "wrong");
+});
+
+test("a leech request with no body is still a leech", async function() {
+  const r = await call("POST", "/api/cards/c1/rewrite-request");
+  const [req] = (await call("GET", "/api/integrations/knowledge/rewrites")).body.requests;
+  assert.equal(req.id, r.body.id);
+  assert.equal(req.issue, "leech");
+  assert.equal(req.note, "");
+  await call("POST", "/api/integrations/knowledge/rewrites/" + req.id + "/complete", { outcome: "rewritten" });
+});
+
 // --- Client ---
 const vm = require("vm");
 const appJs = fs.readFileSync(path.join(root, "client", "app.js"), "utf8");
@@ -199,6 +237,55 @@ test("both answer paths offer the prompt, the edit clears the flag in the sessio
                    "leech.rewriteRequestedTooltip", "leech.title", "leech.body", "leech.editCard", "leech.askRewrite",
                    "leech.rewriteAlreadyRequested", "leech.keepStudying", "toast.rewriteRequested"]) {
     assert.equal(appJs.split('"' + k + '":').length - 1, 2, k);
+  }
+});
+
+test("the flag button shows only on KnowledgeApp cards, fills in once sent, and escapes the id", function() {
+  const ctx = { t: (k) => k, ICON_FLAG: "<svg/>", IS_SERVER: true, escHtml: (s) => String(s).replace(/</g, "&lt;").replace(/"/g, "&quot;") };
+  vm.createContext(ctx);
+  vm.runInContext(extract("canRewriteInKnowledge") + extract("flagButtonHtml"), ctx);
+  assert.equal(ctx.flagButtonHtml({ id: "a", format: "term-def" }), "", "not linked");
+  assert.equal(ctx.flagButtonHtml({ id: "a", format: "mcq", external_id: "s:1" }), "");
+  assert.match(ctx.flagButtonHtml({ id: "a", format: "term-def", external_id: "s:1" }), /class="icon-btn" title="flag\.button"[^>]*data-card-flag="a"/);
+  assert.match(ctx.flagButtonHtml({ id: "a", format: "term-def", external_id: "s:1", rewrite_pending: true }), /is-flagged" title="flag\.pending"/);
+  assert.ok(!ctx.flagButtonHtml({ id: '"><img>', format: "term-def", external_id: "s:1" }).includes('"><img>'));
+  assert.match(extract("renderFlashcard"), /syncFlagButton\(document\.getElementById\("btn-fc-flag-card"\), card\)/);
+  assert.match(appJs, /"btn-fc-edit-card", "btn-fc-flag-card"/, "locked during the retype drill like Edit");
+  assert.match(indexHtml, /id="btn-fc-flag-card"/);
+  assert.match(indexHtml, /id="modal-flag"/);
+  for (const v of ["wrong", "front", "back", "typo", "other"])
+    assert.match(indexHtml, new RegExp('name="flag-issue" value="' + v + '"'));
+  for (const k of ["flag.button", "flag.pending", "flag.title", "flag.wrong", "flag.front", "flag.back", "flag.typo", "flag.other",
+                   "flag.noteLabel", "flag.notePlaceholder", "flag.noteRequired", "flag.pickIssue", "flag.send", "flag.update",
+                   "flag.waiting", "flag.lastUnchanged", "flag.lastRewritten", "toast.flagSent"]) {
+    assert.equal(appJs.split('"' + k + '":').length - 1, 2, k);
+  }
+});
+
+test("the flag sheet fits a phone: every issue and action on screen and none clipped", async function() {
+  const { chromium } = require("playwright");
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
+    await page.route("**/*.js", (r) => r.abort());
+    await page.goto("file://" + path.join(root, "client", "index.html"));
+    await page.addStyleTag({ path: path.join(root, "client", "style.css") });
+    const r = await page.evaluate(function() {
+      document.getElementById("modal-overlay").classList.remove("hidden");
+      document.getElementById("modal-flag").classList.remove("hidden");
+      document.getElementById("flag-card-term").textContent = "Monte Carlo Methods — identity for intractable partition functions";
+      return Array.from(document.querySelectorAll("#modal-flag .flag-issue, #modal-flag .modal-footer .btn")).map(function(b) {
+        const x = b.getBoundingClientRect();
+        return { left: x.left, right: x.right, bottom: x.bottom, sw: b.scrollWidth, cw: b.clientWidth };
+      });
+    });
+    assert.equal(r.length, 7);
+    for (const b of r) {
+      assert.ok(b.left >= 0 && b.right <= 360, JSON.stringify(b));
+      assert.ok(b.sw <= b.cw + 1, "clipped: " + JSON.stringify(b));
+    }
+  } finally {
+    await browser.close();
   }
 });
 
