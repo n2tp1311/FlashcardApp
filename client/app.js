@@ -1315,12 +1315,6 @@ Object.assign(TRANSLATIONS.en, {
   "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
   "study.source": "From the book",
-  "study.why": "Why is this the answer?",
-  "study.whyPrompt": "In your own words, why?",
-  "study.whyHint": "A few words is enough. Then check it against the book.",
-  "study.whySkip": "Skip",
-  "study.whyCheck": "Check",
-  "study.whyYou": "You: {text}",
   "study.sourceAsk": "Did this passage help?",
   "study.sourceYes": "Yes",
   "study.sourceNo": "Doesn't match",
@@ -2512,12 +2506,6 @@ Object.assign(TRANSLATIONS.vi, {
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
   "study.source": "Trích từ sách",
-  "study.why": "Vì sao là đáp án này?",
-  "study.whyPrompt": "Theo cách của bạn, vì sao?",
-  "study.whyHint": "Vài chữ là đủ. Rồi đối chiếu với sách.",
-  "study.whySkip": "Bỏ qua",
-  "study.whyCheck": "Đối chiếu",
-  "study.whyYou": "Bạn: {text}",
   "study.sourceAsk": "Đoạn này có giúp không?",
   "study.sourceYes": "Có",
   "study.sourceNo": "Không khớp",
@@ -8973,7 +8961,6 @@ function startCramRound(cram, plan) {
   state.studyFlipped = false;
   state.studySessionLog = {};
   state.studySessionNewSet = {};
-  state.sessionMissed = {};
   cards.forEach(function(c) { if (!c.last_studied_at) state.studySessionNewSet[c.id] = true; });
   store.markCardsSeen(cards.map(function(c) { return c.id; }));
   startFlashcards();
@@ -9198,9 +9185,6 @@ function launchStudy(filtered, mode, order) {
 
   state.studyMode = mode;
   state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
-  // Cards missed in this study run, kept through "Retry missed" rounds: when one comes back,
-  // its book passage is already open. A new session starts empty.
-  state.sessionMissed = {};
 
   // Record last_seen_at for all cards in this session (fire-and-forget)
   store.markCardsSeen(filtered.map(function(c) { return c.id; }));
@@ -9703,26 +9687,16 @@ function sourceFeedback(card, body) {
   return row;
 }
 
-// "Why?" on a flashcard with a book passage: you write your own reason first, then the passage
-// opens under it. Explaining an answer to yourself before checking makes a miss stick better
-// than re-reading, which the passage alone would be. The reason is not stored: it only has to
-// be written to do its work. Skip goes straight to the passage.
-function whyPanel(card, open) {
+// The book passage under a flashcard's answer, open as soon as the answer shows. It used to
+// wait behind "Why is this the answer?" and a box for the learner's own reason; the learner
+// asked to see the proof at once instead, so the passage is simply there.
+function whyPanel(card) {
   if (!card || typeof card.source !== "string" || !card.source.trim()) return null;
   var el = document.createElement("section");
   el.className = "why-panel";
   el.id = "fc-why";
   el.innerHTML =
-    '<button type="button" class="why-btn" id="btn-fc-why" aria-expanded="false">' + ICON_BOOK + " " + escHtml(t("study.why")) + "</button>" +
-    '<div class="why-ask hidden" id="fc-why-ask">' +
-      '<label class="why-label" for="fc-why-input">' + escHtml(t("study.whyPrompt")) + "</label>" +
-      '<textarea class="form-textarea why-input" id="fc-why-input" rows="2" maxlength="500"></textarea>' +
-      '<p class="why-hint">' + escHtml(t("study.whyHint")) + "</p>" +
-      '<div class="why-btns"><button type="button" class="btn btn-sm btn-ghost" id="btn-fc-why-skip">' + escHtml(t("study.whySkip")) + "</button>" +
-      '<button type="button" class="btn btn-sm btn-primary" id="btn-fc-why-check">' + escHtml(t("study.whyCheck")) + "</button></div>" +
-    "</div>" +
-    '<div class="why-answer hidden" id="fc-why-answer" aria-live="polite">' +
-      '<p class="why-yours hidden" id="fc-why-yours"></p>' +
+    '<div class="why-answer" id="fc-why-answer">' +
       '<p class="why-from">' + escHtml(t("study.source")) + "</p>" +
       '<blockquote class="explanation-body source-body why-source" id="fc-why-source"></blockquote>' +
     "</div>";
@@ -9732,35 +9706,6 @@ function whyPanel(card, open) {
   if (feedback) el.querySelector("#fc-why-answer").appendChild(feedback);
   var whyTabs = sourceTabs(card, el.querySelector("#fc-why-source"), feedback);
   if (whyTabs) el.querySelector("#fc-why-answer").insertBefore(whyTabs, el.querySelector("#fc-why-source"));
-  var btn = el.querySelector("#btn-fc-why"), ask = el.querySelector("#fc-why-ask"), input = el.querySelector("#fc-why-input");
-  function reveal(reason) {
-    var yours = el.querySelector("#fc-why-yours");
-    yours.textContent = reason ? t("study.whyYou", { text: reason }) : "";
-    yours.classList.toggle("hidden", !reason);
-    ask.classList.add("hidden");
-    el.querySelector("#fc-why-answer").classList.remove("hidden");
-  }
-  btn.addEventListener("click", function() {
-    btn.classList.add("hidden");
-    btn.setAttribute("aria-expanded", "true");
-    ask.classList.remove("hidden");
-    input.focus();
-  });
-  el.querySelector("#btn-fc-why-skip").addEventListener("click", function() { reveal(""); });
-  // Straight to the passage, no "why?" first: after a miss the learner needs the book, not a
-  // prompt to explain an answer they did not know (a card missed earlier, or the retype drill).
-  el.openPassage = function() {
-    btn.classList.add("hidden");
-    btn.setAttribute("aria-expanded", "true");
-    reveal("");
-  };
-  if (open) el.openPassage();
-  el.querySelector("#btn-fc-why-check").addEventListener("click", function() { reveal(input.value.trim()); });
-  // Enter checks; Shift+Enter is a new line. Esc leaves the field so study keys work again.
-  input.addEventListener("keydown", function(e) {
-    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); reveal(input.value.trim()); }
-    else if (e.key === "Escape") { e.stopPropagation(); input.blur(); }
-  });
   return el;
 }
 
@@ -9974,7 +9919,7 @@ function renderFlashcard() {
     expEl.appendChild(body);
     expContainer.appendChild(expEl);
   }
-  var fcWhy = whyPanel(card, !!(state.sessionMissed && state.sessionMissed[card.id]));
+  var fcWhy = whyPanel(card);
   if (fcWhy) expContainer.appendChild(fcWhy);
 
   // Difficulty badge — read from the already-fetched studyStatsMap (server-backed accuracy
@@ -10632,8 +10577,6 @@ function beginForcedRetype(advanceDelay) {
     return;
   }
   haptic("warn");
-  var why = document.getElementById("fc-why");
-  if (why && why.openPassage) why.openPassage();
   state.fcForcedRetype = true;
   state.fcRetypeAdvanceDelay = advanceDelay;
   setFlashcardNavLocked(true);
@@ -10733,10 +10676,6 @@ function markCard(known, grade, forceRetype) {
   if (state.cram) undo.cram = cramAnswered(state.cram, state.studyCards, state.studyIndex, card, known);
   state.studyKnownMap[card.id] = known;
   store.setCardKnown(card.id, known).catch(function() {});
-  if (!known && state.sessionMissed && !state.sessionMissed[card.id]) {
-    state.sessionMissed[card.id] = true;
-    undo.addedMissed = true;
-  }
   state.studySessionLog[card.id] = !known ? "learning" : grade === "hard" ? "hard" : grade === "easy" ? "confident" : "known";
   saveResumeSession();
   if (card.upstream_change === "updated") {
@@ -10810,7 +10749,6 @@ function dismissGradeUndo() {
 function restoreGradedCard(undo) {
   var id = undo.card.id;
   if (undo.prevKnown === undefined) delete state.studyKnownMap[id]; else state.studyKnownMap[id] = undo.prevKnown;
-  if (undo.addedMissed && state.sessionMissed) delete state.sessionMissed[id];
   if (undo.prevLog === undefined) delete state.studySessionLog[id]; else state.studySessionLog[id] = undo.prevLog;
   saveResumeSession();
   if (undo.sessionMs) {
@@ -11940,8 +11878,6 @@ function resumeStudySession(btn) {
       state.studyFlipped = false;
       state.typeToCompare = saved.mode === "flashcard-write";
       state.studySessionLog = log;
-      state.sessionMissed = {};
-      Object.keys(log).forEach(function(id) { if (log[id] === "learning") state.sessionMissed[id] = true; });
       state.studySessionNewSet = {};
       (saved.newIds || []).forEach(function(id) { state.studySessionNewSet[id] = true; });
       store.markCardsSeen(list.map(function(c) { return c.id; }));

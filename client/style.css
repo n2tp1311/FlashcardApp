@@ -5460,19 +5460,10 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .pref-nav-row, .pref-nav-toggle { min-height: 52px; }
 }
 
-/* "Why?" on a flashcard: the reason box, then the passage under what you wrote. */
+/* The book passage under a flashcard's answer, open at once. */
 .why-panel { margin-top: 12px; display: grid; gap: 8px; font-size: 0.875rem; }
-.why-btn {
-  justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 14px;
-  border: 1px solid var(--primary); border-radius: var(--radius-pill); background: var(--primary-light);
-  color: var(--primary); font: inherit; font-weight: 600; cursor: pointer;
-}
-.why-ask, .why-answer { display: grid; gap: 8px; background: var(--primary-light); border: 1px solid var(--primary); border-radius: var(--radius); padding: 12px 14px; }
-.why-label { font-weight: 600; }
-.why-input { width: 100%; resize: vertical; min-height: 60px; }
-.why-hint, .why-from { margin: 0; font-size: 0.78rem; color: var(--text2); }
-.why-btns { display: flex; gap: 8px; justify-content: flex-end; }
-.why-yours { margin: 0; padding: 6px 10px; border-left: 3px solid var(--text3); background: var(--surface); border-radius: var(--radius-sm); color: var(--text2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.why-answer { display: grid; gap: 8px; background: var(--primary-light); border: 1px solid var(--primary); border-radius: var(--radius); padding: 12px 14px; }
+.why-from { margin: 0; font-size: 0.78rem; color: var(--text2); }
 .explanation-body.source-body.why-source { margin: 0; }
 .source-ask { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; margin: 0 16px 12px; font-size: 0.8rem; color: var(--text3); }
 .why-answer .source-ask { margin: 0; }

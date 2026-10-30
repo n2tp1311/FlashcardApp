@@ -1,5 +1,5 @@
 "use strict";
-// "Why?" on a flashcard with a book passage: your own reason first, then the passage under it.
+// The book passage under a flashcard's answer, shown at once: no "Why?" button, no reason box.
 // Runs the real whyPanel() in the offline app at phone width.
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -18,7 +18,7 @@ test.before(() => new Promise((ok) => {
 }));
 test.after(() => listener.close());
 
-async function withPanel(card, fn, open) {
+async function withPanel(card, fn) {
   const { chromium } = require("playwright");
   const browser = await chromium.launch({ headless: true });
   try {
@@ -27,12 +27,12 @@ async function withPanel(card, fn, open) {
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(base + "/");
     await page.waitForFunction(() => typeof window.whyPanel === "function");
-    const made = await page.evaluate(([c, open]) => {
-      const el = whyPanel(c, open);
+    const made = await page.evaluate((c) => {
+      const el = whyPanel(c);
       if (!el) return false;
       document.body.prepend(el);
       return true;
-    }, [card, !!open]);
+    }, card);
     await fn(page, made);
     assert.deepEqual(errors, []);
   } finally {
@@ -47,73 +47,30 @@ test("only cards with a book passage get Why?", async function() {
   await withPanel({}, async (page, made) => assert.equal(made, false));
 });
 
-test("you write a reason first; Check shows it above the passage, as text", async function() {
+test("the passage shows at once, as text, with no Why? button or reason box", async function() {
   const passage = "A set C is affine if for any x, y in C and θ in R, θx + (1 − θ)y is in C. It costs $5 <b>not</b> bold.";
   await withPanel({ source: passage }, async (page, made) => {
     assert.equal(made, true);
-    assert.equal(await shown(page, "#fc-why-source"), false, "the passage waits for your reason");
-    await page.click("#btn-fc-why");
-    assert.equal(await page.evaluate(() => document.activeElement.id), "fc-why-input");
-    await page.fill("#fc-why-input", "the <i>whole</i> line, not just the segment");
-    await page.click("#btn-fc-why-check");
-    assert.equal(await shown(page, "#fc-why-ask"), false);
-    assert.equal(await page.textContent("#fc-why-yours"), "You: the <i>whole</i> line, not just the segment");
+    assert.equal(await shown(page, "#fc-why-source"), true);
     assert.equal(await page.textContent("#fc-why-source"), passage);
-    assert.equal(await page.evaluate(() => document.querySelector("#fc-why b, #fc-why i")), null, "nothing from the card or reason becomes markup");
+    assert.equal(await page.evaluate(() => document.querySelectorAll("#fc-why button.why-btn, #fc-why textarea").length), 0);
+    assert.equal(await page.evaluate(() => document.querySelector("#fc-why b")), null, "book text never becomes markup");
     const fits = await page.evaluate(() => Array.from(document.querySelectorAll("#fc-why *")).every((el) => el.getBoundingClientRect().right <= innerWidth + 0.5));
     assert.ok(fits, "fits a 320px phone");
   });
 });
 
-test("Skip, or Enter with nothing typed, shows the passage without a reason line", async function() {
-  await withPanel({ source: "Passage." }, async (page) => {
-    await page.click("#btn-fc-why");
-    await page.click("#btn-fc-why-skip");
-    assert.equal(await shown(page, "#fc-why-source"), true);
-    assert.equal(await shown(page, "#fc-why-yours"), false);
-  });
-  await withPanel({ source: "Passage." }, async (page) => {
-    await page.click("#btn-fc-why");
-    await page.keyboard.press("Enter");
-    assert.equal(await shown(page, "#fc-why-source"), true);
-  });
-});
-
-test("a card missed earlier opens straight to the passage; the retype drill opens it too", async function() {
-  await withPanel({ source: "Passage." }, async (page) => {
-    assert.equal(await shown(page, "#fc-why-source"), true);
-    assert.equal(await shown(page, "#btn-fc-why"), false);
-    assert.equal(await shown(page, "#fc-why-ask"), false);
-    assert.equal(await shown(page, "#fc-why-yours"), false);
-  }, true);
-  await withPanel({ source: "Passage." }, async (page) => {
-    assert.equal(await shown(page, "#fc-why-source"), false);
-    await page.evaluate(() => document.getElementById("fc-why").openPassage());
-    assert.equal(await shown(page, "#fc-why-source"), true);
-  });
-});
-
-test("after a miss the passage is already open: a wrong quiz answer, a missed card coming back, the drill", function() {
+test("a flashcard's passage is open at once; the quiz still opens it only after a miss, so a right answer moves on", function() {
   const fn = (name) => { const i = app.indexOf("\nfunction " + name + "("); return app.slice(i, app.indexOf("\n}\n", i)); };
   assert.match(fn("answerQuiz"), /if \(answerSource && !isCorrect\) answerSource\.open = true;/);
   assert.match(fn("renderQuizCard"), /if \(replaySource && !priorResult\.correct\) replaySource\.open = true;/);
-  assert.match(fn("renderFlashcard"), /whyPanel\(card, !!\(state\.sessionMissed && state\.sessionMissed\[card\.id\]\)\)/);
-  assert.match(fn("markCard"), /if \(!known && state\.sessionMissed && !state\.sessionMissed\[card\.id\]\)/);
-  assert.match(fn("restoreGradedCard"), /if \(undo\.addedMissed && state\.sessionMissed\) delete state\.sessionMissed\[id\];/);
-  assert.match(fn("beginForcedRetype"), /why\.openPassage\(\)/);
-  // the set survives "Retry missed" (which does not go through launchStudy) and starts empty per session
-  assert.match(fn("launchStudy"), /state\.sessionMissed = \{\};/);
-  // every other way into a flashcard session sets it too: a cram round, and a resumed session from its log
-  assert.equal(app.split("state.sessionMissed = {};").length - 1, 3);
-  assert.match(app, /if \(log\[id\] === "learning"\) state\.sessionMissed\[id\] = true;/);
-  const retry = app.slice(app.indexOf('getElementById("btn-summary-missed").addEventListener'));
-  assert.doesNotMatch(retry.slice(0, retry.indexOf("\n});")), /sessionMissed/);
+  assert.match(fn("renderFlashcard"), /var fcWhy = whyPanel\(card\);/);
+  assert.doesNotMatch(app, /sessionMissed|openPassage/, "nothing is left that waited to open the passage");
 });
 
-test("strings exist in English and Vietnamese", function() {
-  for (const k of ["study.why", "study.whyPrompt", "study.whyHint", "study.whySkip", "study.whyCheck", "study.whyYou"]) {
-    assert.equal(app.split('"' + k + '":').length - 1, 2, k);
-  }
+test("the Why? prompt's strings are gone in both languages", function() {
+  for (const k of ["study.why", "study.whyPrompt", "study.whyHint", "study.whySkip", "study.whyCheck", "study.whyYou"])
+    assert.equal(app.split('"' + k + '":').length - 1, 0, k);
 });
 
 test("another book's passage on the same concept is a button above the passage; Read more and the question are this card's", async function() {
@@ -135,14 +92,14 @@ test("another book's passage on the same concept is a button above the passage; 
     assert.equal(await shown(page, "#fc-why-source .source-more"), true);
     const fits = await page.evaluate(() => Array.from(document.querySelectorAll("#fc-why *")).every((el) => el.getBoundingClientRect().right <= innerWidth + 0.5));
     assert.ok(fits, "fits a 320px phone");
-  }, true);
+  });
 });
 
 test("no buttons without another book, or when what arrived is not a list of passages", async function() {
   for (const related of [undefined, "[]", "not json", JSON.stringify([{ book: "X" }])])
     await withPanel({ source: "Passage.", source_related: related }, async (page) => {
       assert.equal(await page.evaluate(() => document.querySelectorAll(".source-tab").length), 0);
-    }, true);
+    });
 });
 
 test("the collapsed panel under a quiz answer gets the same buttons", async function() {
