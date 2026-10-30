@@ -314,6 +314,18 @@ Object.assign(TRANSLATIONS.en, {
   "flag.waiting": "Already sent. KnowledgeApp will look at it on its next run; sending again replaces your report.",
   "flag.lastUnchanged": "Last time, KnowledgeApp left this card as it was",
   "flag.lastRewritten": "Last time, KnowledgeApp rewrote this card.",
+  "flag.lastMissing": "Last time, KnowledgeApp could not find this card.",
+  "flag.front_side": "Front",
+  "flag.back_side": "Back",
+  "feedback.title": "Your feedback",
+  "feedback.hint": "Every card you flagged or asked to rewrite, and what KnowledgeApp decided.",
+  "feedback.none": "Nothing sent yet",
+  "feedback.leech": "Rewrite requested",
+  "feedback.you": "You: “{note}”",
+  "feedback.waiting": "Waiting for KnowledgeApp's next run.",
+  "feedback.outcomeRewritten": "Rewritten.",
+  "feedback.outcomeUnchanged": "Left as it was.",
+  "feedback.outcomeMissing": "KnowledgeApp could not find this card.",
   "toast.flagSent": "Sent. KnowledgeApp will fix this card on its next run.",
 
   "nav.home": "Home",
@@ -1527,6 +1539,18 @@ Object.assign(TRANSLATIONS.vi, {
   "flag.waiting": "Đã gửi. KnowledgeApp sẽ xem ở lần chạy tới; gửi lại sẽ thay báo lỗi cũ.",
   "flag.lastUnchanged": "Lần trước, KnowledgeApp giữ nguyên thẻ này",
   "flag.lastRewritten": "Lần trước, KnowledgeApp đã viết lại thẻ này.",
+  "flag.lastMissing": "Lần trước, KnowledgeApp không tìm thấy thẻ này.",
+  "flag.front_side": "Mặt trước",
+  "flag.back_side": "Mặt sau",
+  "feedback.title": "Phản hồi của bạn",
+  "feedback.hint": "Mọi thẻ bạn đã báo lỗi hoặc yêu cầu viết lại, và KnowledgeApp đã quyết định gì.",
+  "feedback.none": "Chưa gửi gì",
+  "feedback.leech": "Yêu cầu viết lại",
+  "feedback.you": "Bạn: “{note}”",
+  "feedback.waiting": "Đang chờ KnowledgeApp chạy lần tới.",
+  "feedback.outcomeRewritten": "Đã viết lại.",
+  "feedback.outcomeUnchanged": "Giữ nguyên.",
+  "feedback.outcomeMissing": "KnowledgeApp không tìm thấy thẻ này.",
   "toast.flagSent": "Đã gửi. KnowledgeApp sẽ sửa thẻ này ở lần chạy tới.",
 
   "nav.home": "Trang chủ",
@@ -7193,11 +7217,80 @@ function openFlagPrompt(card) {
       send.setAttribute("data-i18n", "flag.update");
       send.textContent = t("flag.update");
     } else if (r.last) {
-      last.textContent = r.last.outcome === "rewritten" ? t("flag.lastRewritten")
-        : t("flag.lastUnchanged") + (r.last.outcome_note ? ": " + r.last.outcome_note : ".");
+      renderRewriteAnswer(last, r.last, true);
       last.classList.remove("hidden");
     }
   }).catch(function() {});
+}
+
+// KnowledgeApp's answer to one request: the outcome with its verdict, and for a rewrite the
+// front and back that changed, old struck through above new. Built with textContent: every
+// string here came from a model or a book.
+function renderRewriteAnswer(el, r, lastTime) {
+  el.textContent = "";
+  var head = document.createElement("span");
+  var key = r.outcome === "rewritten" ? "flag.lastRewritten" : r.outcome === "missing" ? "flag.lastMissing" : "flag.lastUnchanged";
+  var text = lastTime ? t(key) : t(key.replace("flag.last", "feedback.outcome"));
+  head.textContent = r.outcome_note ? text.replace(/\.$/, "") + ": " + r.outcome_note : (/[.]$/.test(text) ? text : text + ".");
+  el.appendChild(head);
+  if (r.outcome !== "rewritten" || !r.before || !r.after) return;
+  [["term", "flag.front_side"], ["definition", "flag.back_side"]].forEach(function(side) {
+    var was = r.before[side[0]], now = r.after[side[0]];
+    if (was === now) return;
+    var row = document.createElement("span");
+    row.className = "rewrite-diff";
+    var label = document.createElement("span");
+    label.className = "rewrite-diff-label";
+    label.textContent = t(side[1]);
+    var del = document.createElement("del");
+    del.textContent = was;
+    var ins = document.createElement("ins");
+    ins.textContent = now;
+    row.appendChild(label);
+    row.appendChild(del);
+    row.appendChild(ins);
+    el.appendChild(row);
+  });
+}
+
+function renderFeedbackList() {
+  var list = document.getElementById("pref-feedback-list");
+  store.listRewriteRequests().then(function(body) {
+    var requests = body.requests || [];
+    list.textContent = "";
+    if (!requests.length) {
+      var none = document.createElement("li");
+      none.className = "pref-token-empty";
+      none.textContent = t("feedback.none");
+      list.appendChild(none);
+      return;
+    }
+    requests.forEach(function(r) {
+      var li = document.createElement("li");
+      li.className = "pref-feedback-item";
+      var meta = document.createElement("span");
+      meta.className = "pref-feedback-meta";
+      var issues = (r.issues || []).map(function(i) { return i === "leech" ? t("feedback.leech") : t("flag." + i); });
+      meta.textContent = [r.class_name, issues.join(", "), relativeTime(r.completed_at || r.created_at)].join(" · ");
+      var term = document.createElement("span");
+      term.className = "pref-feedback-term";
+      term.textContent = r.term;
+      li.appendChild(meta);
+      li.appendChild(term);
+      if (r.note) {
+        var mine = document.createElement("span");
+        mine.className = "pref-feedback-note";
+        mine.textContent = t("feedback.you", { note: r.note });
+        li.appendChild(mine);
+      }
+      var answer = document.createElement("span");
+      answer.className = "pref-feedback-answer";
+      if (r.status === "pending") answer.textContent = t("feedback.waiting");
+      else renderRewriteAnswer(answer, r, false);
+      li.appendChild(answer);
+      list.appendChild(li);
+    });
+  }).catch(function(err) { list.textContent = err.message; });
 }
 
 document.getElementById("btn-flag-send").addEventListener("click", function() {
@@ -14221,6 +14314,7 @@ var SQLiteAdapter = (function() {
     acknowledgeCardUpdate: function(id) { return req("POST", "/cards/" + id + "/acknowledge-update"); },
     requestCardRewrite: function(id, flag) { return req("POST", "/cards/" + id + "/rewrite-request", flag); },
     cardRewriteRequest: function(id) { return req("GET", "/cards/" + id + "/rewrite-request"); },
+    listRewriteRequests: function() { return req("GET", "/rewrite-requests"); },
     sourceFeedback: function(id, verdict) { return req("POST", "/cards/" + id + "/source-feedback", { verdict: verdict }); },
     cardNeeds: function(id) { return req("GET", "/cards/" + id + "/needs"); },
     // The server caps each request at 1000 ids, so larger selections go in sequential batches.
@@ -14904,6 +14998,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
     document.getElementById("pref-token-reveal").classList.add("hidden");
     document.getElementById("pref-token-value").value = "";
     renderApiTokens();
+    renderFeedbackList();
   }
   clearTimeout(prefsSaveTimer);
   prefsLastSent = JSON.stringify(readPrefsForm());
@@ -15575,7 +15670,7 @@ if (IS_SERVER && !currentUser) {
   // shown-then-erroring, same treatment as the image-def format pill and other server-only
   // affordances.
   if (!IS_SERVER) {
-    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-memory", "pref-reminders", "pref-api-tokens", "pref-backup", "pref-nav-memory", "pref-nav-reminders", "pref-nav-data", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
+    ["btn-export-class", "btn-export-lesson", "btn-export-classes", "btn-import-flashcards", "setup-filter-updated", "setup-filter-leeches", "pref-workload", "pref-memory", "pref-reminders", "pref-api-tokens", "pref-backup", "pref-nav-memory", "pref-nav-reminders", "pref-nav-data", "pref-nav-feedback", "sidebar-upstream-link", "sidebar-vocabulary-link", "sidebar-achievements-link"].forEach(function(id) {
       document.getElementById(id).classList.add("hidden");
     });
   }

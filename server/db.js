@@ -479,6 +479,11 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_rewrite_requests_card ON rewrite_r
 try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN issue TEXT NOT NULL DEFAULT 'leech'"); } catch (_) {}
 try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN note TEXT"); } catch (_) {}
 try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN outcome_note TEXT"); } catch (_) {}
+// The wording before and after a rewrite, sent by KnowledgeApp when it closes the request, so
+// the learner sees what changed without having to remember the old card.
+for (const col of ["before_term", "before_def", "after_term", "after_def"]) {
+  try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN " + col + " TEXT"); } catch (_) {}
+}
 
 // A personal FSRS model (lib/memory.js), as JSON { w, trainedAt, reviews, errorDefault,
 // errorPersonal }. Its own columns, not preferences: the preferences PUT takes whatever the

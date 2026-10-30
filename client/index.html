@@ -790,6 +790,7 @@
         </div>
         <div class="pref-nav-group">
           <button type="button" class="pref-nav-row" data-page="sound" id="pref-nav-sound"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupSound">Sound &amp; speech</span></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button type="button" class="pref-nav-row" data-page="feedback" id="pref-nav-feedback"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22V4"/><path d="M4 4h12l-2 4 2 4H4"/></svg></span><span class="pref-nav-text"><span data-i18n="feedback.title">Your feedback</span></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
           <button type="button" class="pref-nav-row" data-page="data" id="pref-nav-data"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupData">Account &amp; data</span></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
         <div class="pref-row pref-nav-toggle">
           <label class="form-label" data-i18n="tutorial.preferenceLabel">Getting started</label>
@@ -969,6 +970,13 @@
               <button type="button" class="btn btn-sm btn-ghost" id="pref-rate-increase">+</button>
               <button type="button" class="btn btn-sm btn-ghost" id="pref-tts-test" title="Test speed" aria-label="Test speed" data-i18n-title="pref.testSpeed" data-i18n-aria="pref.testSpeed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
             </div>
+          </div>
+        </section>
+        <section class="pref-page" data-page="feedback" aria-labelledby="pref-page-feedback">
+          <h4 class="pref-group" id="pref-page-feedback" data-i18n="feedback.title">Your feedback</h4>
+          <div class="pref-tokens" data-no-dirty>
+            <p class="pref-hint" data-i18n="feedback.hint">Every card you flagged or asked to rewrite, and what KnowledgeApp decided.</p>
+            <ul class="pref-feedback-list" id="pref-feedback-list"></ul>
           </div>
         </section>
         <section class="pref-page" data-page="data" aria-labelledby="pref-page-data">

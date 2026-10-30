@@ -998,7 +998,8 @@ const REWRITE_OUTCOMES = ["rewritten", "unchanged", "missing"];
 // POST /api/integrations/knowledge/rewrites/:id/complete — KnowledgeApp is done with a request.
 // The new text itself arrives as an ordinary "updated" sync event, which also resets the
 // card's leech count; this only closes the request so it stops showing as pending. `note` is
-// KnowledgeApp's reason for leaving a card unchanged, shown when the learner next opens its flag.
+// KnowledgeApp's verdict on the request, for any outcome; a rewrite also carries `before` and
+// `after` ({term, definition}). The learner sees them in the card's flag and in Your feedback.
 router.post("/rewrites/:id/complete", (req, res) => {
   const body = req.body || {};
   const outcome = body.outcome;
@@ -1007,13 +1008,24 @@ router.post("/rewrites/:id/complete", (req, res) => {
   if (body.note != null && typeof body.note !== "string")
     return res.status(400).json({ error: "note must be text" });
   const note = (body.note || "").trim().slice(0, 300) || null;
+  const wording = {};
+  for (const side of ["before", "after"]) {
+    const w = body[side];
+    if (w == null) continue;
+    if (typeof w !== "object" || typeof w.term !== "string" || typeof w.definition !== "string")
+      return res.status(400).json({ error: side + " must be {term, definition}" });
+    wording[side] = [w.term.slice(0, 2000), w.definition.slice(0, 4000)];
+  }
+  const [beforeTerm, beforeDef] = wording.before || [null, null];
+  const [afterTerm, afterDef] = wording.after || [null, null];
   const request = db.prepare("SELECT id, status, outcome FROM rewrite_requests WHERE id = ? AND user_id = ?")
     .get(req.params.id, req.userId);
   if (!request) return res.status(404).json({ error: "Rewrite request not found" });
   if (request.status === "completed") return res.json({ status: "already", outcome: request.outcome });
   db.prepare(
-    "UPDATE rewrite_requests SET status = 'completed', outcome = ?, outcome_note = ?, completed_at = unixepoch() WHERE id = ? AND status = 'pending'"
-  ).run(outcome, note, request.id);
+    "UPDATE rewrite_requests SET status = 'completed', outcome = ?, outcome_note = ?, before_term = ?, before_def = ?, " +
+    "after_term = ?, after_def = ?, completed_at = unixepoch() WHERE id = ? AND status = 'pending'"
+  ).run(outcome, note, beforeTerm, beforeDef, afterTerm, afterDef, request.id);
   res.json({ status: "completed", outcome });
 });
 

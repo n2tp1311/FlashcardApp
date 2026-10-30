@@ -379,15 +379,39 @@ router.get("/cards/:id/rewrite-request", requireAuth, (req, res) => {
     "SELECT id, issue, note FROM rewrite_requests WHERE card_id = ? AND user_id = ? AND status = 'pending'"
   ).get(req.params.id, userId);
   const last = db.prepare(
-    "SELECT issue, outcome, outcome_note, completed_at FROM rewrite_requests " +
+    "SELECT issue, outcome, outcome_note, before_term, before_def, after_term, after_def, completed_at FROM rewrite_requests " +
     "WHERE card_id = ? AND user_id = ? AND status = 'completed' ORDER BY completed_at DESC, rowid DESC LIMIT 1"
   ).get(req.params.id, userId);
-  const withIssues = (r) => {
-    if (!r) return null;
-    const { issue, ...rest } = r;
-    return { ...rest, issues: splitIssues(issue) };
-  };
-  res.json({ pending: withIssues(pending), last: withIssues(last) });
+  res.json({ pending: requestShape(pending), last: requestShape(last) });
+});
+
+// `issue` as a list, and the wording columns as {term, definition} pairs (null when absent).
+function requestShape(r) {
+  if (!r) return null;
+  const { issue, before_term, before_def, after_term, after_def, ...rest } = r;
+  const shaped = { ...rest, issues: splitIssues(issue) };
+  if ("before_term" in r) {
+    shaped.before = before_term == null ? null : { term: before_term, definition: before_def || "" };
+    shaped.after = after_term == null ? null : { term: after_term, definition: after_def || "" };
+  }
+  return shaped;
+}
+
+// GET /api/rewrite-requests — Your feedback: every flag and rewrite request this learner sent,
+// newest first, with the class and the card's current front, and how KnowledgeApp answered.
+router.get("/rewrite-requests", requireAuth, (req, res) => {
+  const rows = db.prepare(
+    "SELECT rr.id, rr.card_id, rr.status, rr.issue, rr.note, rr.outcome, rr.outcome_note, rr.before_term, rr.before_def, " +
+    "rr.after_term, rr.after_def, rr.created_at, rr.completed_at, cards.data, classes.name AS class_name " +
+    "FROM rewrite_requests rr JOIN cards ON cards.id = rr.card_id JOIN lessons ON lessons.id = cards.lesson_id " +
+    "JOIN classes ON classes.id = lessons.class_id WHERE rr.user_id = ? AND classes.user_id = ? " +
+    "ORDER BY COALESCE(rr.completed_at, rr.created_at) DESC, rr.rowid DESC LIMIT 100"
+  ).all(req.session.userId, req.session.userId);
+  res.json({ requests: rows.map(({ data, ...r }) => {
+    let term = "";
+    try { term = (JSON.parse(data) || {}).term || ""; } catch (_) {}
+    return { ...requestShape(r), term };
+  }) });
 });
 
 // GET /api/cards/:id/needs — the cards this card's definition builds on (cards.needs), from

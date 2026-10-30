@@ -189,12 +189,17 @@ test("imports have plain names, show progress, and errors stay until dismissed",
   assert.match(server, /imported: \{ classes: classes\.length, lessons: importedLessons, cards: importedCards, classIds \}/);
 });
 
-test("Preferences is a list of seven topics, and the server-only ones hide in local mode", function() {
+test("Preferences is a list of eight topics, and the server-only ones hide in local mode", function() {
   const pages = html.match(/<section class="pref-page" data-page="\w+"/g) || [];
   const rows = html.match(/<button type="button" class="pref-nav-row" data-page="\w+"/g) || [];
-  assert.equal(pages.length, 7);
-  assert.equal(rows.length, 7, "every page has a row in the list");
-  assert.match(app, /"pref-backup", "pref-nav-memory", "pref-nav-reminders", "pref-nav-data"/);
+  assert.equal(pages.length, 8);
+  assert.equal(rows.length, 8, "every page has a row in the list");
+  pages.forEach(function(p) {
+    const name = p.match(/data-page="(\w+)"/)[1];
+    assert.ok(css.includes('#modal-preferences[data-page="' + name + '"] .pref-page[data-page="' + name + '"]'),
+      "page " + name + " has the rule that shows it");
+  });
+  assert.match(app, /"pref-backup", "pref-nav-memory", "pref-nav-reminders", "pref-nav-data", "pref-nav-feedback"/);
   ["Appearance", "Plan", "Memory", "Reminders", "Sound", "Data"].forEach(function(g) { assert.ok(tr("vi", "pref.group" + g), g); });
 });
 

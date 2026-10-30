@@ -3419,6 +3419,17 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .flag-issue { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-radius: var(--radius); cursor: pointer; }
 .flag-issue:hover { background: var(--surface2); }
 .flag-last { margin: 0 0 10px; color: var(--text2); line-height: 1.5; }
+.rewrite-diff { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; margin-top: 6px; font-size: 0.875rem; }
+.rewrite-diff-label { grid-row: span 2; color: var(--text3); }
+.rewrite-diff del { color: var(--text3); }
+.rewrite-diff ins { text-decoration: none; color: var(--text); }
+.pref-feedback-list { list-style: none; margin: 0; padding: 0; }
+.pref-feedback-item { display: grid; gap: 2px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 0.875rem; }
+.pref-feedback-item:first-child { border-top: 0; }
+.pref-feedback-meta { font-size: 0.75rem; color: var(--text3); }
+.pref-feedback-term { font-weight: 600; }
+.pref-feedback-note { font-style: italic; color: var(--text2); }
+.pref-feedback-answer { color: var(--text2); }
 
 /* Weekly recap: a centred dialog on a wide screen, a sheet from the bottom edge on a phone. */
 .modal-week-recap { max-width: 420px; }
@@ -5432,6 +5443,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
 #modal-preferences[data-page="memory"] .pref-page[data-page="memory"],
 #modal-preferences[data-page="reminders"] .pref-page[data-page="reminders"],
 #modal-preferences[data-page="sound"] .pref-page[data-page="sound"],
+#modal-preferences[data-page="feedback"] .pref-page[data-page="feedback"],
 #modal-preferences[data-page="data"] .pref-page[data-page="data"] { display: block; }
 @media (max-width: 719px) {
   #modal-preferences[data-page] .pref-home,

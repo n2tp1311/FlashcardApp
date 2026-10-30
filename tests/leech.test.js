@@ -192,6 +192,39 @@ test("a flag carries its issues and note to KnowledgeApp; a second flag replaces
   assert.deepEqual(status.last.issues, ["wrong"]);
 });
 
+test("a rewrite comes back with its verdict and the wording before and after, and Your feedback lists it", async function() {
+  const sent = await call("POST", "/api/cards/c1/rewrite-request", { issues: ["front"], note: "which one?" });
+  let mine = (await call("GET", "/api/rewrite-requests")).body.requests;
+  assert.equal(mine[0].id, sent.body.id);
+  assert.equal(mine[0].status, "pending");
+  assert.equal(mine[0].class_name, "Stats");
+  assert.equal(mine[0].note, "which one?");
+  assert.equal((await call("GET", "/api/rewrite-requests", null, "u2")).body.requests.length, 0, "only your own");
+
+  const url = "/api/integrations/knowledge/rewrites/" + sent.body.id + "/complete";
+  assert.equal((await call("POST", url, { outcome: "rewritten", before: { term: "x" } })).status, 400);
+  assert.equal((await call("POST", url, { outcome: "rewritten", after: "y" })).status, 400);
+  const before = { term: "Bayes", definition: "Flips a conditional." };
+  const after = { term: "Bayes' theorem — inverting a conditional", definition: "Flips a conditional." };
+  const done = await call("POST", url, { outcome: "rewritten", note: "The front was vague.", before, after });
+  assert.equal(done.status, 200);
+  const last = (await call("GET", "/api/cards/c1/rewrite-request")).body.last;
+  assert.equal(last.outcome_note, "The front was vague.");
+  assert.deepEqual([last.before, last.after], [before, after]);
+  mine = (await call("GET", "/api/rewrite-requests")).body.requests;
+  assert.equal(mine[0].status, "completed");
+  assert.deepEqual([mine[0].issues, mine[0].before, mine[0].after], [["front"], before, after]);
+});
+
+test("the flag sheet and Your feedback build KnowledgeApp's answer with textContent, never innerHTML", function() {
+  const fn = appJs.slice(appJs.indexOf("\nfunction renderRewriteAnswer("), appJs.indexOf("\nfunction renderFeedbackList("));
+  const list = appJs.slice(appJs.indexOf("\nfunction renderFeedbackList("));
+  assert.ok(fn.includes("textContent") && !fn.includes("innerHTML"));
+  assert.ok(!list.slice(0, list.indexOf("\n}\n")).includes("innerHTML"));
+  assert.match(indexHtml, /id="pref-nav-feedback"/);
+  assert.match(appJs, /"pref-nav-feedback"/, "hidden in the offline app with the other server-only rows");
+});
+
 test("a leech request with no body is still a leech", async function() {
   const r = await call("POST", "/api/cards/c1/rewrite-request");
   const [req] = (await call("GET", "/api/integrations/knowledge/rewrites")).body.requests;
