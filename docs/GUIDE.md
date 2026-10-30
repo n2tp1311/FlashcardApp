@@ -309,6 +309,28 @@ pops it up out of context. **Nothing is suspended.** Anki suspends leeches by de
 here the fix is a better card, not fewer reviews, and a suspended card is easy to
 forget about.
 
+### Moving a card
+
+**Move to…** in a lesson's Select bar moves the selected cards to another lesson, in the
+same class or another (`POST /api/cards/move {card_ids, lesson_id}`). Only `lesson_id` and
+`sort_order` change: `card_states` and `attempts` are keyed by card, so the review history
+and due date move with it. Recreating the card elsewhere, the only way before, started
+its reviews over. The case that prompted it was an older card in the wrong book: a card on
+Voulgaris sat in Thinking in Bets, which never mentions him, so it could never get a passage.
+
+Three refusals, each counted in the reply and named in the toast:
+
+- **A KnowledgeApp card is not moved** (`external_id` set). KnowledgeApp places it, and
+  the next sync would put it back.
+- **Only into a lesson of the same format.** The dialog lists only those lessons; the
+  server checks again.
+- Another user's cards and lessons read as not found.
+
+Moving to another class drops the card's passage and its verdict, because it came from the
+old class's book. KnowledgeApp keeps, per older card, the book it last searched, so a card
+in a new class is searched in the new book on the next sync. Within a class the passage
+stays. The button shows only with the server store; the offline store has no move.
+
 ### Flagging a card
 
 Any term-def card synced from KnowledgeApp has a ⚑ beside Edit on the flashcard and quiz
