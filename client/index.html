@@ -1202,6 +1202,24 @@
     </div>
   </div>
 
+  <div id="modal-move" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-move-title">
+    <div class="modal-header">
+      <h3 id="modal-move-title">Move cards</h3>
+      <button class="modal-close" data-modal="move" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label" for="move-class" data-i18n="move.class">Class</label>
+      <select id="move-class" class="form-input"></select>
+      <label class="form-label" for="move-lesson" data-i18n="move.lesson">Lesson</label>
+      <select id="move-lesson" class="form-input"></select>
+      <p class="form-hint" id="move-hint" data-i18n="move.hint">Review history and due dates move with the cards.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="move" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-move-cards" data-i18n="move.go">Move</button>
+    </div>
+  </div>
+
   <!-- Card Form Modal (Term-Def) -->
   <div id="modal-card-termdef" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="modal-card-termdef-title">
     <div class="modal-header">

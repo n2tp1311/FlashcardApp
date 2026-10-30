@@ -632,6 +632,19 @@ Object.assign(TRANSLATIONS.en, {
   "common.zeroSelected": "0 selected",
   "common.nSelected": "{n} selected",
   "common.deleteSelected": "Delete selected",
+  "move.open": "Move to…",
+  "move.title_one": "Move {n} card",
+  "move.title": "Move {n} cards",
+  "move.class": "Class",
+  "move.lesson": "Lesson",
+  "move.hint": "Review history and due dates move with the cards.",
+  "move.noLesson": "This class has no lesson of this kind.",
+  "move.go": "Move",
+  "move.done_one": "Moved {n} card to {lesson}.",
+  "move.done": "Moved {n} cards to {lesson}.",
+  "move.linkedStay_one": "{n} card from KnowledgeApp stays where it put it.",
+  "move.linkedStay": "{n} cards from KnowledgeApp stay where it put them.",
+  "move.failed": "Couldn't move the cards. Try again.",
   "common.shuffle": "Shuffle",
   "class.editClass": "Edit Class",
   "class.archiveClass": "Archive Class",
@@ -1847,6 +1860,16 @@ Object.assign(TRANSLATIONS.vi, {
   "common.zeroSelected": "Đã chọn 0",
   "common.nSelected": "Đã chọn {n}",
   "common.deleteSelected": "Xóa mục đã chọn",
+  "move.open": "Chuyển đến…",
+  "move.title": "Chuyển {n} thẻ",
+  "move.class": "Lớp",
+  "move.lesson": "Bài học",
+  "move.hint": "Lịch sử ôn và hạn ôn đi theo thẻ.",
+  "move.noLesson": "Lớp này không có bài học cùng loại.",
+  "move.go": "Chuyển",
+  "move.done": "Đã chuyển {n} thẻ đến {lesson}.",
+  "move.linkedStay": "{n} thẻ từ KnowledgeApp giữ nguyên chỗ KnowledgeApp đặt.",
+  "move.failed": "Chưa chuyển được thẻ. Thử lại.",
   "common.shuffle": "Xáo trộn",
   "class.editClass": "Sửa lớp",
   "class.archiveClass": "Lưu trữ lớp",
@@ -5523,6 +5546,8 @@ function setCardSelectMode(on) {
         '</div>' +
         '<div class="select-bar-actions">' +
           '<button class="btn btn-sm btn-danger" id="btn-delete-selected-cards" disabled>' + escHtml(t("common.deleteSelected")) + '</button>' +
+          (typeof store.moveCards === "function"
+            ? '<button class="btn btn-sm btn-primary" id="btn-move-selected-cards" disabled>' + escHtml(t("move.open")) + '</button>' : "") +
         '</div>' +
       '</div>';
     toolbar.style.display = "";
@@ -5544,6 +5569,10 @@ function setCardSelectMode(on) {
       });
       updateCardSelectBar();
     });
+    var moveBtn = document.getElementById("btn-move-selected-cards");
+    if (moveBtn) moveBtn.addEventListener("click", function() {
+      if (state.selectedCardIds.length) openMoveCards(state.selectedCardIds.slice());
+    });
     document.getElementById("btn-delete-selected-cards").addEventListener("click", function() {
       var ids = state.selectedCardIds.slice();
       if (ids.length === 0) return;
@@ -5561,6 +5590,52 @@ function setCardSelectMode(on) {
     toolbar.innerHTML = "";
     toolbar.style.display = "none";
   }
+}
+
+// "Move to…" in the card Select bar: class first, then a lesson of the same format in it. The
+// current class is preselected, so moving within it is one choice. The server moves only cards
+// the learner made (a KnowledgeApp card would be put back by the next sync) and keeps their
+// review history; the toast says how many stayed.
+function openMoveCards(ids) {
+  var classSel = document.getElementById("move-class");
+  var lessonSel = document.getElementById("move-lesson");
+  var go = document.getElementById("btn-move-cards");
+  var hint = document.getElementById("move-hint");
+  var from = state.currentLesson;
+  document.getElementById("modal-move-title").textContent = t("move.title", { n: ids.length });
+  function fillLessons() {
+    lessonSel.innerHTML = "";
+    go.disabled = true;
+    store.getLessons(classSel.value).then(function(lessons) {
+      var fit = lessons.filter(function(l) { return l.format === from.format && l.id !== from.id; });
+      lessonSel.innerHTML = fit.map(function(l) {
+        return '<option value="' + escHtml(l.id) + '">' + escHtml(l.title) + "</option>";
+      }).join("");
+      hint.textContent = t(fit.length ? "move.hint" : "move.noLesson");
+      go.disabled = !fit.length;
+    }).catch(function() { hint.textContent = t("move.failed"); });
+  }
+  store.getClasses().then(function(classes) {
+    classSel.innerHTML = classes.filter(function(c) { return !c.archived || c.id === from.class_id; }).map(function(c) {
+      return '<option value="' + escHtml(c.id) + '"' + (c.id === from.class_id ? " selected" : "") + ">" + escHtml(c.name) + "</option>";
+    }).join("");
+    classSel.onchange = fillLessons;
+    fillLessons();
+    openModal("move");
+  }).catch(function() { showToast(t("move.failed"), "error"); });
+  go.onclick = function() {
+    if (!lessonSel.value) return;
+    var title = lessonSel.options[lessonSel.selectedIndex].text;
+    go.disabled = true;
+    store.moveCards(ids, lessonSel.value).then(function(r) {
+      closeModal("move");
+      setCardSelectMode(false);
+      renderCards();
+      var msg = t("move.done", { n: r.moved, lesson: title });
+      if (r.linked) msg += " " + t("move.linkedStay", { n: r.linked });
+      showToast(msg);
+    }).catch(function() { go.disabled = false; showToast(t("move.failed"), "error"); });
+  };
 }
 
 function toggleCardSelection(cardId) {
@@ -5584,6 +5659,8 @@ function updateCardSelectBar() {
   var allCheck = document.getElementById("select-all-cards");
   if (countEl) countEl.textContent = t("common.nSelected", { n: n });
   if (deleteBtn) deleteBtn.disabled = n === 0;
+  var moveBtn = document.getElementById("btn-move-selected-cards");
+  if (moveBtn) moveBtn.disabled = n === 0;
   var total = (state.currentLessonCards || []).length;
   if (allCheck) allCheck.checked = total > 0 && n === total;
 }
@@ -14199,6 +14276,7 @@ var SQLiteAdapter = (function() {
     },
     updateCard: function(id, _lessonId, f) { return req("PUT",    "/cards/" + id, f); },
     deleteCard: function(id)               { return req("DELETE", "/cards/" + id); },
+    moveCards: function(ids, lessonId)     { return req("POST", "/cards/move", { card_ids: ids, lesson_id: lessonId }); },
 
     recordAttempt: function(f) {
       var body = { cardId: f.cardId, correct: f.correct, source: f.source, clientId: f.clientId || newClientId() };
