@@ -554,6 +554,13 @@ There is no study direction setting: a card is always studied front to back.
   never writes a rejected passage back, and a new passage clears the old verdict. Yes is
   stored too (`source_verdict = 'good'`): it stops the question for that passage, and
   gives KnowledgeApp real evidence for its thresholds.
+  After Doesn't match, one optional line asks **What should it show?** (`cards.source_note`,
+  at most 300 characters, Enter or Send). A rejection only tells KnowledgeApp where not to
+  look, and its next-best sentence is often the same idea restated a page later, which the
+  learner turns down again. KnowledgeApp reads the note with the verdict and weights its
+  words in the next search. The note is typed after the passage is already gone, so a
+  second `bad` on a card already judged bad stores the note instead of being refused for
+  having no passage. Undo, Yes and a newly sent passage clear it.
   **Read more** opens the book's text either side of the passage, about 120 words each
   in whole sentences (`source_before`, `source_after`). A passage is often the definition
   alone, and the explanation is the next paragraph: ESL's Bootstrap passage stops one
