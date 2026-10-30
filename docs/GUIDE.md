@@ -533,10 +533,13 @@ There is no study direction setting: a card is always studied front to back.
     different word. Enter pressed while an IME is still composing (Telex or VNI,
     `isComposing` or keyCode 229) confirms the syllable and does not answer. Before, it
     sent half a Vietnamese word.
-- **Why?** On a KnowledgeApp card, the learner writes a few words on why the answer is
-  right, then sees the book passage the card came from. Explaining before checking makes
-  a miss stick better than re-reading. The passage is stored on the card (`cards.source`),
-  so there is no model call; what the learner writes is not saved.
+- **From the book.** On a KnowledgeApp card the back shows the book passage the card came
+  from, open as soon as the answer shows. The passage is stored on the card
+  (`cards.source`), so there is no model call. It used to wait behind "Why is this the
+  answer?" and a box asking for the learner's own reason first, on the grounds that
+  explaining before checking makes a miss stick. The learner found the extra step got in
+  the way and asked to see the proof at once (2026-10-30), so the button, the reason box
+  and `state.sessionMissed` (which opened the passage early after a miss) are gone.
   A card made before KnowledgeApp has no unit, so KnowledgeApp searches the book with
   the card's own words and sends the passage by `card_id`. The server sets it only on a
   card with no `external_id`: a linked card's passage belongs to its unit, and the next
@@ -579,14 +582,11 @@ There is no study direction setting: a card is always studied front to back.
   or one answered after an undo or a move to another card, never holds the session.
   Flashcards only, and only on the server, where the links and the weak test live. The
   cost is a pause on those cards, and a session a few cards longer when the learner says yes.
-  **After a miss the passage is already open.** A wrong quiz answer opens it (a wrong
-  answer waits for Next anyway); the Flashcard & Write retype drill opens it under the
-  card; a card graded Learning earlier in the run opens straight to it when it comes back
-  in Retry missed, a cram round or a resumed session (`state.sessionMissed`). Those skip
-  the "Why?" prompt: self-explanation helps when you half know the answer, and after a
-  miss you do not. Plain Flashcard mode adds no step after a Learning grade -- a pause on
-  every lapse was previewed and not chosen, because it costs a tap on the cards you are
-  already struggling with.
+  **The quiz still opens it only after a miss.** A wrong quiz answer opens the passage (a
+  wrong answer waits for Next anyway); a right one keeps it folded, because a right answer
+  moves on by itself and an open panel would stop it. Plain Flashcard mode adds no step
+  after a Learning grade -- a pause on every lapse was previewed and not chosen, because it
+  costs a tap on the cards you are already struggling with.
 
 ### Quiz
 
