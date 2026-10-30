@@ -445,25 +445,34 @@ router.get("/cards/:id/needs", requireAuth, (req, res) => {
       weak: r.srs_due_at == null || r.fsrs_state !== 2 || r.srs_due_at <= now })) });
 });
 
-// POST /api/cards/:id/source-feedback { verdict: "good" | "bad" | null }
+// POST /api/cards/:id/source-feedback { verdict: "good" | "bad" | null, note?: string }
 // "Did this passage help?" under a book passage. 'bad' takes the passage off the card at once
 // -- a wrong passage misleads, none does not -- and keeps it in source_rejected, which undo
-// (null) puts back and KnowledgeApp reads so it searches past it on the next sync.
+// (null) puts back and KnowledgeApp reads so it searches past it on the next sync. `note` is
+// the learner's optional "what should it show?"; it is typed after the passage is already
+// gone, so a 'bad' on a card already judged bad only stores the note.
+const MAX_SOURCE_NOTE = 300;
 router.post("/cards/:id/source-feedback", requireAuth, (req, res) => {
   if (!ownCard(req.params.id, req.session.userId)) return res.status(404).json({ error: "Not found" });
   const verdict = req.body ? req.body.verdict : undefined;
   if (verdict !== "good" && verdict !== "bad" && verdict !== null)
     return res.status(400).json({ error: "verdict must be good, bad or null" });
+  const rawNote = req.body ? req.body.note : null;
+  if (rawNote != null && (typeof rawNote !== "string" || rawNote.length > MAX_SOURCE_NOTE))
+    return res.status(400).json({ error: "note is text of at most " + MAX_SOURCE_NOTE + " characters" });
+  const note = verdict === "bad" && rawNote ? rawNote.replace(/\s+/g, " ").trim() || null : null;
   const card = db.prepare("SELECT source, source_verdict, source_rejected FROM cards WHERE id = ?").get(req.params.id);
   if (verdict === null) {
     if (card.source_verdict === "bad" && card.source == null && card.source_rejected)
-      db.prepare("UPDATE cards SET source = source_rejected, source_rejected = NULL, source_verdict = NULL WHERE id = ?").run(req.params.id);
-    else db.prepare("UPDATE cards SET source_verdict = NULL WHERE id = ?").run(req.params.id);
+      db.prepare("UPDATE cards SET source = source_rejected, source_rejected = NULL, source_verdict = NULL, source_note = NULL WHERE id = ?").run(req.params.id);
+    else db.prepare("UPDATE cards SET source_verdict = NULL, source_note = NULL WHERE id = ?").run(req.params.id);
+  } else if (verdict === "bad" && card.source_verdict === "bad" && card.source == null && card.source_rejected) {
+    db.prepare("UPDATE cards SET source_note = ? WHERE id = ?").run(note, req.params.id);
   } else {
     if (!card.source || !card.source.trim()) return res.status(409).json({ error: "This card has no passage" });
     if (verdict === "bad")
-      db.prepare("UPDATE cards SET source_rejected = source, source = NULL, source_verdict = 'bad' WHERE id = ?").run(req.params.id);
-    else db.prepare("UPDATE cards SET source_verdict = 'good' WHERE id = ?").run(req.params.id);
+      db.prepare("UPDATE cards SET source_rejected = source, source = NULL, source_verdict = 'bad', source_note = ? WHERE id = ?").run(note, req.params.id);
+    else db.prepare("UPDATE cards SET source_verdict = 'good', source_note = NULL WHERE id = ?").run(req.params.id);
   }
   const after = db.prepare("SELECT source, source_verdict FROM cards WHERE id = ?").get(req.params.id);
   res.json({ source: after.source, source_verdict: after.source_verdict });

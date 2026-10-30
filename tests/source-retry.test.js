@@ -100,7 +100,7 @@ test("the sources endpoint sets the passage only on this user's linked cards", (
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
     CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
-    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_note TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
     INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
     INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
     INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('a','L1','s:1',NULL), ('b','L2','s:1',NULL), ('c','L1','s:2',NULL);`);
@@ -123,7 +123,7 @@ test("a passage sent by card_id lands only on this user's card that has no unit"
   const db = new Database();
   db.exec(`CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
     CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
-    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
+    CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT, source_verdict TEXT, source_rejected TEXT, source_note TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
     INSERT INTO classes VALUES ('C1','u1'), ('C2','u2');
     INSERT INTO lessons VALUES ('L1','C1'), ('L2','C2');
     INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('old','L1',NULL,NULL), ('linked','L1','s:1','Its unit passage.'),

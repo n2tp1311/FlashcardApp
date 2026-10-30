@@ -391,6 +391,9 @@ try { db.exec("ALTER TABLE cards ADD COLUMN source TEXT"); } catch (_) {}
 // passage again) and the card shows none until KnowledgeApp sends a better one.
 try { db.exec("ALTER TABLE cards ADD COLUMN source_verdict TEXT"); } catch (_) {}
 try { db.exec("ALTER TABLE cards ADD COLUMN source_rejected TEXT"); } catch (_) {}
+// The learner's optional line after "Doesn't match": what the passage should have shown.
+// KnowledgeApp reads it with the verdict and searches for that; cleared with the verdict.
+try { db.exec("ALTER TABLE cards ADD COLUMN source_note TEXT"); } catch (_) {}
 // The book's text either side of the passage (~120 words each), behind "Read more": the
 // passage is often the definition alone, and the explanation is the next paragraph.
 try { db.exec("ALTER TABLE cards ADD COLUMN source_before TEXT"); } catch (_) {}

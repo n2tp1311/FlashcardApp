@@ -24,7 +24,7 @@ raw.exec(`
   CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT);
   CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
   CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, external_id TEXT, source TEXT,
-    source_verdict TEXT, source_rejected TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
+    source_verdict TEXT, source_rejected TEXT, source_note TEXT, source_before TEXT, source_after TEXT, source_related TEXT);
   INSERT INTO classes VALUES ('k1', 'u1'), ('k2', 'u2');
   INSERT INTO lessons VALUES ('L1', 'k1'), ('X1', 'k2');
   INSERT INTO cards (id, lesson_id, external_id, source) VALUES
@@ -51,9 +51,10 @@ let base, server;
 test.before(() => new Promise((ok) => { server = app.listen(0, "127.0.0.1", () => { base = "http://127.0.0.1:" + server.address().port; ok(); }); }));
 test.after(() => server.close());
 
-async function verdict(id, v, user = "u1") {
+async function verdict(id, v, user = "u1", note) {
   const r = await fetch(base + "/api/cards/" + id + "/source-feedback", { method: "POST",
-    headers: { "content-type": "application/json", "x-user": user }, body: JSON.stringify({ verdict: v }) });
+    headers: { "content-type": "application/json", "x-user": user },
+    body: JSON.stringify(note === undefined ? { verdict: v } : { verdict: v, note }) });
   return { status: r.status, body: await r.json() };
 }
 const row = (id) => db.prepare("SELECT source, source_verdict, source_rejected FROM cards WHERE id = ?").get(id);
@@ -66,6 +67,28 @@ test("doesn't match takes the passage off at once, and undo puts it back", async
   const undo = await verdict("a", null);
   assert.deepEqual(undo.body, { source: "A formula.", source_verdict: null });
   assert.deepEqual(row("a"), { source: "A formula.", source_verdict: null, source_rejected: null });
+});
+
+test("the note typed after doesn't match is kept with the verdict, and undo clears it", async () => {
+  raw.exec("INSERT INTO cards (id, lesson_id, external_id, source) VALUES ('m', 'L1', 's:9', 'Unbiased under exogeneity.')");
+  const note = (id) => db.prepare("SELECT source_note FROM cards WHERE id = ?").get(id).source_note;
+  assert.equal((await verdict("m", "bad")).status, 200);
+  assert.equal(note("m"), null);
+  // typed after the passage is gone: stored, not refused for having no passage
+  const later = await verdict("m", "bad", "u1", "  about   standard errors ");
+  assert.equal(later.status, 200);
+  assert.deepEqual(later.body, { source: null, source_verdict: "bad" });
+  assert.equal(note("m"), "about standard errors");
+  assert.equal(row("m").source_rejected, "Unbiased under exogeneity.");
+  assert.equal((await verdict("m", "bad", "u1", "x".repeat(301))).status, 400);
+  assert.equal((await verdict("m", "bad", "u1", 7)).status, 400);
+  assert.equal(note("m"), "about standard errors");
+  await verdict("m", null);
+  assert.equal(note("m"), null);
+  assert.equal(row("m").source, "Unbiased under exogeneity.");
+  // a note on yes is not kept
+  await verdict("m", "good", "u1", "fine");
+  assert.equal(note("m"), null);
 });
 
 test("yes is kept; a card with no passage, a bad verdict and another user's card are refused", async () => {
@@ -102,7 +125,9 @@ test("a sync never writes the rejected passage back, and a new one clears the ve
 test("KnowledgeApp reads the passage judged and the answer with each card", () => {
   const integrations = fs.readFileSync(path.join(root, "server", "routes", "integrations.js"), "utf8");
   assert.match(integrations, /ca\.source, ca\.source_verdict, ca\.source_rejected/);
-  assert.match(integrations, /source_feedback: r\.source_verdict === "bad" && r\.source_rejected \? \{ verdict: "bad", text: r\.source_rejected \}/);
+  assert.match(integrations, /source_feedback: r\.source_verdict === "bad" && r\.source_rejected \? \{ verdict: "bad", text: r\.source_rejected, note: r\.source_note \|\| "" \}/);
+  assert.match(integrations, /ca\.source_rejected, ca\.source_note/);
+  assert.match(fs.readFileSync(path.join(root, "server", "db.js"), "utf8"), /ALTER TABLE cards ADD COLUMN source_note TEXT/);
   assert.match(fs.readFileSync(path.join(root, "server", "db.js"), "utf8"), /ALTER TABLE cards ADD COLUMN source_rejected TEXT/);
 });
 
@@ -115,9 +140,11 @@ function extract(name) {
 }
 function fakeEl() {
   const classes = new Set();
-  return { innerHTML: "", className: "", listeners: {},
+  const el = { innerHTML: "", className: "", listeners: {}, value: "",
     classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) },
-    addEventListener(type, fn) { this.listeners[type] = fn; } };
+    addEventListener(type, fn) { this.listeners[type] = fn; },
+    querySelector() { return el.child || (el.child = fakeEl()); } };
+  return el;
 }
 const ctx = { t: (k) => k, escHtml: (s) => String(s), document: { createElement: fakeEl }, setTimeout: (fn) => fn(), sent: [] };
 vm.createContext(ctx);
@@ -125,7 +152,7 @@ vm.runInContext(extract("sourceFeedback"), ctx);
 const click = (row, v) => row.listeners.click({ target: { closest: () => ({ dataset: { v } }) } });
 
 test("the row hides the passage on doesn't match, offers undo, and is not shown once judged good", async () => {
-  ctx.store = { sourceFeedback: (id, v) => { ctx.sent.push([id, v]); return Promise.resolve({ source: v === "bad" ? null : "P", source_verdict: v }); } };
+  ctx.store = { sourceFeedback: (id, v, n) => { ctx.sent.push([id, v, n]); return Promise.resolve({ source: v === "bad" ? null : "P", source_verdict: v }); } };
   const card = { id: "a", source: "P" }, body = fakeEl();
   const row = ctx.sourceFeedback(card, body);
   assert.match(row.innerHTML, /study\.sourceAsk/);
@@ -133,11 +160,20 @@ test("the row hides the passage on doesn't match, offers undo, and is not shown 
   assert.ok(body.classList.contains("hidden"));
   await new Promise((r) => setImmediate(r));
   assert.match(row.innerHTML, /study\.sourceUndo/);
+  assert.match(row.innerHTML, /study\.sourceNoteAsk/);
   assert.equal(card.source, null);
+  const form = row.querySelector("form");
+  form.listeners.submit({ preventDefault() {} });
+  assert.equal(ctx.sent.length, 1, "an empty note sends nothing");
+  form.querySelector("input").value = "  about standard errors ";
+  form.listeners.submit({ preventDefault() {} });
+  await new Promise((r) => setImmediate(r));
+  assert.match(row.innerHTML, /study\.sourceNoteThanks/);
+  assert.match(row.innerHTML, /study\.sourceUndo/);
   click(row, "undo");
   await new Promise((r) => setImmediate(r));
   assert.ok(!body.classList.contains("hidden"));
-  assert.deepEqual(ctx.sent, [["a", "bad"], ["a", null]]);
+  assert.deepEqual(ctx.sent, [["a", "bad", undefined], ["a", "bad", "about standard errors"], ["a", null, undefined]]);
   assert.equal(ctx.sourceFeedback({ id: "b", source: "P", source_verdict: "good" }, fakeEl()), null);
   ctx.store = {};
   assert.equal(ctx.sourceFeedback({ id: "c", source: "P" }, fakeEl()), null);

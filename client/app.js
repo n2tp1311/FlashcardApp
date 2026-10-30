@@ -1321,6 +1321,9 @@ Object.assign(TRANSLATIONS.en, {
   "study.sourceThanks": "Thanks, noted.",
   "study.sourceRemoved": "Passage removed. The next sync will look for a better one.",
   "study.sourceUndo": "Undo",
+  "study.sourceNoteAsk": "What should it show? (optional)",
+  "study.sourceNoteSend": "Send",
+  "study.sourceNoteThanks": "Passage removed. The next sync will look for what you described.",
   "study.sourceFailed": "Couldn't save that. Try again.",
   "study.sourceMore": "Read more",
   "study.sourceLess": "Show less",
@@ -2512,6 +2515,9 @@ Object.assign(TRANSLATIONS.vi, {
   "study.sourceThanks": "Cảm ơn, đã ghi nhận.",
   "study.sourceRemoved": "Đã gỡ đoạn này. Lần đồng bộ sau sẽ thử đoạn khác.",
   "study.sourceUndo": "Hoàn tác",
+  "study.sourceNoteAsk": "Đoạn đúng nên nói gì? (không bắt buộc)",
+  "study.sourceNoteSend": "Gửi",
+  "study.sourceNoteThanks": "Đã gỡ đoạn này. Lần đồng bộ sau sẽ tìm đoạn như bạn mô tả.",
   "study.sourceFailed": "Chưa lưu được. Thử lại.",
   "study.sourceMore": "Đọc thêm",
   "study.sourceLess": "Thu gọn",
@@ -9647,7 +9653,9 @@ function markSourceWords(el, text, re) {
 // "Did this passage help?" under a book passage. "Doesn't match" hides it at once and the
 // server keeps it aside, so undo can restore it and KnowledgeApp never sends it again; the
 // next sync tries the next-best passage or leaves none. Asked until answered: a card judged
-// good is not asked again until its passage changes.
+// good is not asked again until its passage changes. After "Doesn't match" one optional line
+// asks what it should show: a rejection only says where not to look, and the next-best
+// sentence is often the same idea restated, which the learner turns down again.
 function sourceFeedback(card, body) {
   if (!card || !card.id || card.source_verdict === "good" || typeof store.sourceFeedback !== "function") return null;
   var row = document.createElement("div");
@@ -9657,8 +9665,26 @@ function sourceFeedback(card, body) {
       '<button type="button" class="btn btn-sm btn-ghost" data-v="good">' + escHtml(t("study.sourceYes")) + "</button>" +
       '<button type="button" class="btn btn-sm btn-ghost" data-v="bad">' + escHtml(t("study.sourceNo")) + "</button>";
   }
-  function send(verdict, done) {
-    store.sourceFeedback(card.id, verdict).then(function(r) {
+  function removed(msg) {
+    return '<span class="source-ask-msg">' + escHtml(t(msg)) + "</span>" +
+      '<button type="button" class="btn btn-sm btn-ghost" data-v="undo">' + escHtml(t("study.sourceUndo")) + "</button>";
+  }
+  function askNote() {
+    row.innerHTML = removed("study.sourceRemoved") +
+      '<form class="source-note">' +
+        '<input type="text" class="form-input source-note-input" maxlength="300" placeholder="' + escHtml(t("study.sourceNoteAsk")) + '" aria-label="' + escHtml(t("study.sourceNoteAsk")) + '">' +
+        '<button type="submit" class="btn btn-sm btn-ghost">' + escHtml(t("study.sourceNoteSend")) + "</button>" +
+      "</form>";
+    var form = row.querySelector("form");
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      var note = form.querySelector("input").value.trim();
+      if (!note) return;
+      send("bad", function() { row.innerHTML = removed("study.sourceNoteThanks"); }, note);
+    });
+  }
+  function send(verdict, done, note) {
+    store.sourceFeedback(card.id, verdict, note).then(function(r) {
       card.source = r.source;
       card.source_verdict = r.source_verdict;
       done();
@@ -9675,10 +9701,7 @@ function sourceFeedback(card, body) {
     } else if (b.dataset.v === "bad") {
       body.classList.add("hidden");
       row.innerHTML = '<span class="source-ask-msg">' + escHtml(t("study.sourceRemoved")) + "</span>";
-      send("bad", function() {
-        row.innerHTML = '<span class="source-ask-msg">' + escHtml(t("study.sourceRemoved")) + "</span>" +
-          '<button type="button" class="btn btn-sm btn-ghost" data-v="undo">' + escHtml(t("study.sourceUndo")) + "</button>";
-      });
+      send("bad", askNote);
     } else if (b.dataset.v === "undo") {
       send(null, function() { body.classList.remove("hidden"); ask(); });
     }
@@ -14251,7 +14274,9 @@ var SQLiteAdapter = (function() {
     requestCardRewrite: function(id, flag) { return req("POST", "/cards/" + id + "/rewrite-request", flag); },
     cardRewriteRequest: function(id) { return req("GET", "/cards/" + id + "/rewrite-request"); },
     listRewriteRequests: function() { return req("GET", "/rewrite-requests"); },
-    sourceFeedback: function(id, verdict) { return req("POST", "/cards/" + id + "/source-feedback", { verdict: verdict }); },
+    sourceFeedback: function(id, verdict, note) {
+      return req("POST", "/cards/" + id + "/source-feedback", note ? { verdict: verdict, note: note } : { verdict: verdict });
+    },
     cardNeeds: function(id) { return req("GET", "/cards/" + id + "/needs"); },
     // The server caps each request at 1000 ids, so larger selections go in sequential batches.
     acknowledgeCardUpdates: function(ids) {
