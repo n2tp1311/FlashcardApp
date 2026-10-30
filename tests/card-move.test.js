@@ -47,8 +47,13 @@ stub("server/db.js", db);
 stub("server/middleware/auth.js", {
   requireAuth(req, res, next) { req.session = { userId: req.get("x-user") }; next(); }
 });
+stub("server/middleware/apiToken.js", {
+  requireApiToken(req, res, next) { req.userId = req.get("x-user"); next(); },
+  hashToken: (t) => t
+});
 const app = express();
 app.use(express.json());
+app.use("/api/integrations/knowledge", require(path.join(root, "server/routes/integrations.js")));
 app.use("/api", require(path.join(root, "server/routes/cards.js")));
 
 let base, server;
@@ -81,6 +86,21 @@ test("within a class the passage stays; other formats, other users' cards and le
   assert.equal((await move({ card_ids: [], lesson_id: "b5" })).status, 400);
   assert.equal((await move({ card_ids: [7], lesson_id: "b5" })).status, 400);
   assert.equal((await move({ card_ids: ["kept"] })).status, 400);
+});
+
+test("KnowledgeApp's token moves the same cards under the same rules, and only its user's", async () => {
+  raw.exec("INSERT INTO cards (id, lesson_id, external_id, sort_order, source) VALUES ('tok', 'b4', NULL, 9, 'Old book.'), ('tka', 'b4', 'u:9', 10, NULL)");
+  const send = async (body, user = "u1") => {
+    const r = await fetch(base + "/api/integrations/knowledge/move-cards", { method: "POST",
+      headers: { "content-type": "application/json", "x-user": user }, body: JSON.stringify(body) });
+    return { status: r.status, body: await r.json() };
+  };
+  assert.equal((await send({ card_ids: ["tok"], lesson_id: "s8" }, "u2")).status, 404);
+  assert.deepEqual((await send({ card_ids: ["tok", "tka"], lesson_id: "s8" })).body, { moved: 1, linked: 1, format: 0, not_found: 0 });
+  assert.equal(card("tok").lesson_id, "s8");
+  assert.equal(card("tok").source, null);
+  assert.equal(card("tka").lesson_id, "b4");
+  assert.equal((await send({ card_ids: "tok", lesson_id: "s8" })).status, 400);
 });
 
 test("the Select bar offers Move to… only where the store can move, and the dialog is wired", () => {

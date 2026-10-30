@@ -7,6 +7,7 @@
 
 const express = require("express");
 const db      = require("../db");
+const { moveCards } = require("../lib/moveCards");
 const { forEachBatch } = require("../lib/batch");
 const { cardFromState } = require("../fsrs");
 const { userScheduler } = require("../lib/memory");
@@ -925,6 +926,15 @@ router.post("/remove-cards", (req, res) => {
     });
   })();
   res.json({ removed, not_found: notFound });
+});
+
+// POST /move-cards { card_ids, lesson_id }: move the user's own cards (not KnowledgeApp's) to
+// another lesson, keeping their reviews -- the Select bar's "Move to…", for a card the learner
+// asked KnowledgeApp to put in the right book. Same rules as /api/cards/move (lib/moveCards.js).
+router.post("/move-cards", (req, res) => {
+  const body = req.body || {};
+  const r = moveCards(req.userId, body.card_ids, body.lesson_id);
+  res.status(r.status).json(r.body);
 });
 
 router.post("/vocabulary/:id/complete", (req, res) => {
