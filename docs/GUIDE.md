@@ -331,6 +331,13 @@ old class's book. KnowledgeApp keeps, per older card, the book it last searched,
 in a new class is searched in the new book on the next sync. Within a class the passage
 stays. The button shows only with the server store; the offline store has no move.
 
+KnowledgeApp's token can make the same move (`POST /api/integrations/knowledge/move-cards`),
+so a misplaced card can be fixed from KnowledgeApp's side when the learner asks for it.
+Both routes call `lib/moveCards.js`, so the token can move nothing the Select bar could
+not: only that user's cards, never a KnowledgeApp card, only into a lesson of the same
+format. The token could already add, convert and remove cards, so this widens what it
+can do by one narrow verb, not to the learner's whole session.
+
 ### Flagging a card
 
 Any term-def card synced from KnowledgeApp has a ⚑ beside Edit on the flashcard and quiz
@@ -1179,6 +1186,7 @@ flagged, since the summary line already says everything.
 | `POST /needs` | set which cards each linked card builds on (`cards.needs`, external ids); an empty list clears it |
 | `POST /sources` | set the book passage shown under a card, with the text before and after it for Read more and the same concept's passages in other books (`related`): by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
 | `POST /remove-cards` | delete cards KnowledgeApp made, for a kind of card the learner asked to take back |
+| `POST /move-cards` | move the learner's own cards (never KnowledgeApp's) to another lesson, keeping their reviews; same rules as the Select bar's Move to… |
 | `GET /deletions?since=` | linked cards the learner deleted |
 
 **The study order of a KnowledgeApp class belongs to KnowledgeApp.** Lesson order and
