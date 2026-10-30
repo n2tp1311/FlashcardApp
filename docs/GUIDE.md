@@ -143,7 +143,7 @@ Other tables, by owner:
 | `api_tokens` | KnowledgeApp tokens, SHA-256 only (§15) |
 | `external_card_deletions` | linked cards the learner deleted, read by KnowledgeApp (§13) |
 | `vocabulary_requests` | words saved for KnowledgeApp to define (§13) |
-| `rewrite_requests` | cards the learner asked KnowledgeApp to fix: leeches and ⚑ flags, with `issue`, `note`, and KnowledgeApp's `outcome_note` (§5, §13) |
+| `rewrite_requests` | cards the learner asked KnowledgeApp to fix: leeches and ⚑ flags, with `issue`, `note`, KnowledgeApp's `outcome_note`, and for a rewrite the wording before and after (`before_term`, `before_def`, `after_term`, `after_def`) (§5, §13) |
 | `crams` | a test date and its lessons; progress is read from attempts (§8) |
 | `study_events`, `user_achievements` | the few facts achievements need that nothing else stores (§11) |
 | `push_subscriptions`, `reminder_log`, `app_secrets` | reminders (§17) |
@@ -326,10 +326,17 @@ already waiting, while a second flag replaces the first's issue and note.
 
 Once sent, the ⚑ is filled in. KnowledgeApp fixes only what was flagged, from the book
 passage, and may leave the card as it was -- a "wrong" fact the book does not contradict,
-say. It then sends a one-sentence reason (`outcome_note`), and the sheet shows it the next
-time the learner opens that card's ⚑, read from `GET /api/cards/:id/rewrite-request`
-after the sheet opens so a slow answer never holds it. There is no push for it: a reason
-the learner did not go looking for would be noise. The ⚑ sits on Edit's side of the
+say. Whatever it decides, it sends a one-sentence verdict (`outcome_note`): what was wrong
+and what changed, or why the card stayed. A rewrite also carries the front and back before
+and after. The sheet shows the verdict the next time the learner opens that card's ⚑,
+with each changed side as the old wording struck through above the new, read from
+`GET /api/cards/:id/rewrite-request` after the sheet opens so a slow answer never holds
+it. A rewrite used to come back as a bare "rewrote this card", and seeing what had changed
+meant remembering the old card. There is no push for it: a verdict the learner did not go
+looking for would be noise. **Your feedback** in Preferences lists every request, newest
+first (`GET /api/rewrite-requests`, the last 100): class, what was flagged, the card's
+current front, the learner's note, and the answer or "Waiting". Every string in both comes
+from a model or a book, so both are built with `textContent`. The ⚑ sits on Edit's side of the
 toolbar gap, away from Delete, and is locked with Edit during the retype drill.
 
 A dialog body is a scrolling flex column, and flex children shrink before a container
@@ -1190,8 +1197,9 @@ keeps the cursor, so a lost response is simply read again.
 - **Leech rewrites and flags.** Ask KnowledgeApp to rewrite and ⚑ (§5) create a
   `rewrite_requests` row; `GET /rewrites` gives KnowledgeApp the card's current text,
   `issues` and `note`, and the new wording comes back as an ordinary `updated` event,
-  which also resets the leech count. `POST /rewrites/:id/complete` may carry `note`, the
-  reason a card was left unchanged (300 characters at most). The rewrite goes through
+  which also resets the leech count. `POST /rewrites/:id/complete` may carry `note`,
+  KnowledgeApp's verdict for any outcome (300 characters at most), and for a rewrite
+  `before` and `after`, each `{term, definition}`; anything else in those two is a 400. The rewrite goes through
   KnowledgeApp rather than a model call here because KnowledgeApp owns the card's source
   passage and history; the cost is waiting for its next run.
 
@@ -1444,8 +1452,12 @@ Most study happens on an iPhone, and several decisions are about it:
 
 ### Preferences
 
-A list of topics (Appearance, Daily plan, Memory, Reminders, Sound & speech, Account &
-data) that **saves as you go**: 0.3 s after a tap, 0.8 s after typing, nothing sent when
+Each page is shown by its own CSS rule keyed on `#modal-preferences[data-page]`, so a new
+page needs one; Your feedback first shipped without it and opened blank, and a test now
+checks every page has its rule.
+
+A list of topics (Appearance, Daily plan, Memory, Reminders, Sound & speech, Your
+feedback, Account & data) that **saves as you go**: 0.3 s after a tap, 0.8 s after typing, nothing sent when
 nothing changed. There is no Cancel, so a regretted change is undone by hand.
 
 **One bad field holds back only itself.** A Max reviews that is not a whole number keeps
