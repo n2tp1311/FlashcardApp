@@ -579,6 +579,10 @@ There is no study direction setting: a card is always studied front to back.
   (`toggleQuizSource()`), in a quiz otherwise answered from the keyboard. It does nothing
   before an answer, when there is no passage to show, and nothing while a text box has
   focus, so typing a "b" into the "What should it show?" note is not taken as the shortcut.
+  On both study screens **E**, **F** and **D** press the card's Edit, ⚑ and Delete buttons
+  (`cardToolKey()`), which were otherwise the only mouse-only steps left in a session. A key
+  answers only when its button is visible, so F does nothing on a card KnowledgeApp did not
+  make. D still opens the delete confirmation.
   Under each passage: **Did this passage help? Yes / Doesn't match.** Doesn't match takes
   the passage off the card at once (`cards.source_rejected` keeps it for Undo), and the
   next KnowledgeApp sync sends the next-best passage or none. KnowledgeApp chooses
