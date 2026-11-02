@@ -575,6 +575,10 @@ There is no study direction setting: a card is always studied front to back.
   sync would overwrite anything else. KnowledgeApp sends one only when it is close in
   meaning to the card (cosine 0.75), so about one older card in five gets a passage;
   a wrong passage would mislead more than none.
+  In the quiz the passage sits folded under the answer, so **B** opens and closes it
+  (`toggleQuizSource()`), in a quiz otherwise answered from the keyboard. It does nothing
+  before an answer, when there is no passage to show, and nothing while a text box has
+  focus, so typing a "b" into the "What should it show?" note is not taken as the shortcut.
   Under each passage: **Did this passage help? Yes / Doesn't match.** Doesn't match takes
   the passage off the card at once (`cards.source_rejected` keeps it for Undo), and the
   next KnowledgeApp sync sends the next-best passage or none. KnowledgeApp chooses
