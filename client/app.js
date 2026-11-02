@@ -1185,6 +1185,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.flipCard": "Flip card",
   "keymap.pronounce": "Pronounce",
   "keymap.pronounceTerm": "Pronounce the term",
+  "keymap.fromTheBook": "Open / close From the book (after answering)",
   "keymap.undoGrade": "Undo the last grade",
   "keymap.selectOption": "Select option",
   "keymap.sectionResultsEtc": "Results / Stats / Dashboard / Analytics",
@@ -2395,6 +2396,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.flipCard": "Lật thẻ",
   "keymap.pronounce": "Phát âm",
   "keymap.pronounceTerm": "Đọc thuật ngữ",
+  "keymap.fromTheBook": "Mở / đóng Trích từ sách (sau khi trả lời)",
   "keymap.undoGrade": "Hoàn tác lần đánh dấu vừa rồi",
   "keymap.selectOption": "Chọn đáp án",
   "keymap.sectionResultsEtc": "Kết quả / Thống kê / Bảng điều khiển / Phân tích",
@@ -2843,6 +2845,14 @@ function quizSpeechText(card) {
 
 function speakQuizTerm() {
   speakText(quizSpeechText(state.quizCards[state.quizIndex]));
+}
+
+function toggleQuizSource() {
+  var panel = document.getElementById("quiz-source");
+  if (!panel) return false;
+  panel.open = !panel.open;
+  if (panel.open && panel.scrollIntoView) panel.scrollIntoView({ block: "nearest" });
+  return true;
 }
 
 function speakStudyFront() {
@@ -9606,6 +9616,7 @@ function sourcePanel(card, id) {
   el.className = "explanation-panel source-panel";
   var sum = document.createElement("summary");
   sum.innerHTML = ICON_BOOK + " " + escHtml(t("study.source"));
+  sum.title = "B";
   var body = document.createElement("blockquote");
   body.className = "explanation-body source-body";
   fillSource(body, card);
@@ -16468,6 +16479,7 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "ArrowLeft") document.getElementById("btn-quiz-prev").click();
     else if (e.key === "ArrowRight") document.getElementById("btn-quiz-review-next").click();
     else if ((e.key === "p" || e.key === "P") && !e.ctrlKey && !e.metaKey && !e.altKey) speakQuizTerm();
+    else if ((e.key === "b" || e.key === "B") && !e.ctrlKey && !e.metaKey && !e.altKey && toggleQuizSource()) e.preventDefault();
   }
 
   else if (screen === "results") {
