@@ -2847,6 +2847,19 @@ function speakQuizTerm() {
   speakText(quizSpeechText(state.quizCards[state.quizIndex]));
 }
 
+// E, F and D on a study screen press its Edit, Flag and Delete buttons. The flag is hidden on
+// cards KnowledgeApp did not make, and a hidden button must not answer its key.
+var CARD_TOOL_KEYS = { e: "edit", f: "flag", d: "delete" };
+function cardToolKey(e, screen) {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return false;
+  var tool = CARD_TOOL_KEYS[String(e.key).toLowerCase()];
+  if (!tool) return false;
+  var btn = document.getElementById("btn-" + (screen === "quiz" ? "quiz" : "fc") + "-" + tool + "-card");
+  if (!btn || btn.disabled || btn.classList.contains("hidden")) return false;
+  btn.click();
+  return true;
+}
+
 function toggleQuizSource() {
   var panel = document.getElementById("quiz-source");
   if (!panel) return false;
@@ -16454,6 +16467,7 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "3") { e.preventDefault(); document.getElementById("btn-fc-known").click(); }
     else if (e.key === "4") { e.preventDefault(); document.getElementById("btn-fc-easy").click(); }
     else if (e.key === "s" || e.key === "S") document.getElementById("btn-fc-shuffle").click();
+    else if (cardToolKey(e, "flashcard")) e.preventDefault();
     else if ((e.key === "t" || e.key === "T") && !e.repeat && !e.altKey && !e.ctrlKey && !e.metaKey && !e.isComposing) {
       e.preventDefault();
       translateVisibleFlashcardSide();
@@ -16480,6 +16494,7 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "ArrowRight") document.getElementById("btn-quiz-review-next").click();
     else if ((e.key === "p" || e.key === "P") && !e.ctrlKey && !e.metaKey && !e.altKey) speakQuizTerm();
     else if ((e.key === "b" || e.key === "B") && !e.ctrlKey && !e.metaKey && !e.altKey && toggleQuizSource()) e.preventDefault();
+    else if (cardToolKey(e, "quiz")) e.preventDefault();
   }
 
   else if (screen === "results") {
