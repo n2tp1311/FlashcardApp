@@ -791,7 +791,8 @@ button names the class new cards come from next ("New cards from Deep Learning")
 dialog on a wide screen, the week recap's styling) that only orders: each class has a handle,
 dragged with a finger or a mouse, or moved with the arrow keys on the focused handle. It
 shows only with two classes or more. `GET /api/stats/new-card-estimate` returns `byClass`
-(each class with its untouched cards, in `sort_order`), so the sheet costs no extra request.
+(each class with its untouched cards, in `sort_order`), so the sheet opens with no request
+of its own; only its dates (below) need one.
 
 The first version was a checklist with the order inside it, applied by Done, and saved as
 `studyNowClasses`. The user set an order, closed the panel by tapping its chip again, and
@@ -808,6 +809,44 @@ the list: having set an order, the user found Home still sorted by Level and not
 page showed it. Pinned classes still come first there, as under every sort. Each save also
 rewrites Home's cached class list the way the server does, so the new order shows without a
 reload. Reviews are not reordered: an overdue card is overdue whichever book it is from.
+
+**Each class in the sheet says about when it will be Completed and Mastered.** Under "250 new
+left" come "done ~28 Nov" and "mastered ~18 Dec"; a Completed class has "mastered ~8 Nov", and
+one whose cards are all mastered reads **Mastered** instead of Completed. The words are the
+app's own: Completed is every card with a due date (`UNSCHEDULED_SQL`), Mastered every card a
+Review card 21 days or more out (`MASTERED_SQL`). Two other forms were previewed -- the dates on
+the class page, and a calendar of bars -- and the user picked the sheet: it is where the
+order is set, and a move shows what it does to the dates at once.
+
+The dates come from `GET /api/stats/class-eta`, fetched when the sheet opens and kept for ten
+minutes, since the sheet is often opened a few times while deciding. It is not part of
+`/new-card-estimate`, which loads with every Home view; this one seeks once per card (§10).
+It returns three things, and the page does the rest so a drag recomputes without a request:
+
+- **Pace**: new cards actually learned per calendar day over the last 28 days (fewer for a
+  younger account, never under 7). Not the daily goal: the goal is what Study now offers,
+  this is what the learner did, and days off count. Cards of archived classes count too --
+  it measures how fast the learner takes on cards, not which class they came from. No pace
+  (nothing new in four weeks) shows no dates.
+- **Time to master** (`masterDays`): the median days from a card's first answer to the review
+  that put it 21 days out. When a card became mastered is not stored, so the sample is the 500
+  most recently reviewed cards mastered on an interval of at most 60 days: FSRS grows a passed
+  interval two to three times, so their last review is very likely the one that crossed 21.
+  Only cards that did master are in it, so it leans optimistic, and every date says "~". With
+  fewer than 20 such cards the learner's own scheduler is run answering Good every time
+  (load balancing ignored); on the local development account that came to 13 days.
+- **Per class**: its cards, those not mastered, and `readyAt`, when its learned but unmastered
+  cards should all be mastered. Each card is taken at the latest of its next review (only a
+  review masters), `masterDays` after its first answer, and the share of `masterDays` its
+  interval is still short of 21 days, counted from now. The last is for a lapsed card long
+  past its usual time: without it the class said "mastered ~today" every day until it was.
+
+Study now drains the order from the top, so the page walks the classes in order adding up their
+new cards: a class is done after `ceil(cards so far / pace)` days, today being the first, and
+mastered `masterDays` after that, or at `readyAt` if later. A drag or an arrow step re-sorts
+`byClass` and rewrites each row's text in place, which keeps the handle's focus. If the request
+fails the rows read as before. The dates are a reading of the current pace, not a plan: they
+move with every session, every lapse and every reorder.
 
 **A new card is one with no due date** (`UNSCHEDULED_SQL` in `lib/mastery.js`), not one
 with no `card_states` row. Showing a card without grading it writes `last_seen_at`, and
@@ -958,6 +997,15 @@ Measured on a synthetic account the size of the real one (80k cards, 120k attemp
 `/api/stats/analytics` took 0.98 s and `/api/stats/dashboard` 0.38 s, during which the
 synchronous server answered nobody. The rollup is about 3k rows for 120k attempts, and
 the heatmap query fell from 182 ms to 1 ms.
+
+**`GET /api/stats/class-eta`** (Study order's dates, §8) avoids a scan of the learner's
+answers, which is what would cost here: the pace counts cards first answered in the window
+with a range on `idx_attempts_user_created` and a `NOT EXISTS` seek on
+`idx_attempts_cu_created` for an earlier answer, instead of grouping all history the way
+`/new-card-estimate` does. The time-to-master sample picks its 500 cards first and then looks
+up each one's first answer; per class, the first-answer seek runs only for learned cards not
+yet mastered. It is fetched only when the sheet opens. On the local development copy (600
+answers) it answers in 48 ms; it has not been measured on the production account.
 
 - **Kept by triggers, not by route code.** Attempts are written by grading, deleted by
   undo, re-sent by the account import and removed by an account's cascade delete. A
