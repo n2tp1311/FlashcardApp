@@ -2857,6 +2857,11 @@ function cardToolKey(e, screen) {
   var btn = document.getElementById("btn-" + (screen === "quiz" ? "quiz" : "fc") + "-" + tool + "-card");
   if (!btn || btn.disabled || btn.classList.contains("hidden")) return false;
   btn.click();
+  // The confirmation focuses Cancel so a stray Enter keeps the card. D was the deliberate
+  // step here, so D then Enter deletes; a mouse-opened confirmation is unchanged.
+  var confirm = document.getElementById("btn-confirm-delete");
+  var dialog = document.getElementById("modal-delete");
+  if (tool === "delete" && confirm && dialog && !dialog.classList.contains("hidden")) confirm.focus();
   return true;
 }
 

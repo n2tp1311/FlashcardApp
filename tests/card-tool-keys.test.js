@@ -53,3 +53,19 @@ test("both study screens bind the keys and list them in the keymap", function() 
   for (const [k, label] of [["E", "study.editCard"], ["F", "flag.button"], ["D", "study.deleteCard"]])
     assert.equal(html.split(`<kbd class="kbd">${k}</kbd><span data-i18n="${label}">`).length - 1, 2);
 });
+
+test("D focuses Delete in its confirmation, so Enter deletes", function() {
+  const dialog = { classList: { contains: () => false } };
+  const confirm = { focused: 0, focus() { this.focused++; } };
+  const b = { "btn-fc-delete-card": button(), "btn-fc-edit-card": button(),
+              "btn-confirm-delete": confirm, "modal-delete": dialog };
+  const ctx = load(b);
+  ctx.cardToolKey(key("e"), "flashcard");
+  assert.equal(confirm.focused, 0, "only D moves the focus");
+  ctx.cardToolKey(key("d"), "flashcard");
+  assert.equal(confirm.focused, 1);
+});
+
+test("a confirmation opened by mouse still focuses Cancel", function() {
+  assert.match(app, /\(id === "delete" \? modal\.querySelector\('\[data-modal="delete"\]'\) : modal\)\.focus\(\)/);
+});
