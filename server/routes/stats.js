@@ -888,7 +888,7 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
 // masterDays is the median time from a card's first answer to the review that mastered it. When a
 // card became mastered is not stored, so the sample is cards mastered with an interval of at most
 // 60 days: FSRS grows a passed interval 2-3x, so their last review is very likely the one that
-// crossed 21 days. Only cards that did master are sampled, so it leans optimistic -- the page says "~".
+// crossed 21 days. Only cards that did master are sampled, so it leans optimistic.
 const ETA_PACE_WINDOW_DAYS = 28, ETA_PACE_MIN_DAYS = 7;
 const ETA_MASTER_MIN_SAMPLES = 20, ETA_MASTER_SAMPLE = 500, ETA_JUST_MASTERED_MAX_SEC = 60 * 86400;
 

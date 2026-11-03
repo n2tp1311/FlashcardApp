@@ -793,8 +793,8 @@ test("the order sheet shows when each class should be done and mastered, and a m
     const eta = (id) => page.locator('#study-order-list li[data-class-id="' + id + '"] small').evaluate((s) => [...s.querySelectorAll(".sn-eta")].map((x) => x.textContent).join(" | "));
     await open(true);
     await page.waitForSelector("#study-order-list .sn-eta");
-    assert.match(await eta("k1"), /^done ~.+ \| mastered ~.+$/);
-    assert.match(await eta("k0"), /^mastered ~/);
+    assert.match(await eta("k1"), /^done \S.+ \| mastered \S.+$/);
+    assert.match(await eta("k0"), /^mastered \S/);
     assert.equal(await page.locator('#study-order-list li[data-class-id="k4"] small').textContent(), "Mastered");
     const layout = await page.evaluate(() => ({ page: document.documentElement.scrollWidth,
       name: document.querySelector('#study-order-list li[data-class-id="k1"] .sn-name').getBoundingClientRect().width }));
