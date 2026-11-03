@@ -16,7 +16,7 @@ function load() {
     escHtml: function(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
   };
   vm.createContext(ctx);
-  vm.runInContext(["studyOrderEtas", "studyOrderEtaText"].map(extract).join(""), ctx);
+  vm.runInContext(["studyOrderEtas", "studyOrderCell", "studyOrderEtaText"].map(extract).join(""), ctx);
   return ctx;
 }
 const D = 86400, NOW = 1000 * D;
@@ -54,16 +54,16 @@ test("Completed classes: a date, Mastered, or today when it is overdue; an empty
   assert.equal(e.e, undefined);
   assert.equal(e.f.masteredAt, NOW);
   const fmt = s => "@" + (s - NOW) / D;
-  assert.equal(ctx.studyOrderEtaText(ORDER[3], e.d, fmt), "studyNow.mastered");
-  assert.equal(ctx.studyOrderEtaText(ORDER[4], e.e, fmt), "studyNow.completed");
-  assert.equal(ctx.studyOrderEtaText(ORDER[2], e.c, fmt), 'studyNow.completed<span class="sn-eta">studyNow.etaMastered|date=@3</span>');
-  assert.equal(ctx.studyOrderEtaText(ORDER[0], e.a, fmt), 'studyNow.newLeft|n=25<span class="sn-eta">studyNow.etaDone|date=@2</span><span class="sn-eta">studyNow.etaMastered|date=@22</span>');
+  assert.equal(ctx.studyOrderEtaText(ORDER[3], e.d, fmt), '<span class="sn-n">studyNow.mastered</span>');
+  assert.equal(ctx.studyOrderEtaText(ORDER[4], e.e, fmt), '<span class="sn-n">studyNow.completed</span>');
+  assert.equal(ctx.studyOrderEtaText(ORDER[2], e.c, fmt), '<span class="sn-n">studyNow.completed</span><span class="sn-eta sn-mast"><span class="sn-lbl">studyNow.etaMastered|date=</span>@3</span>');
+  assert.equal(ctx.studyOrderEtaText(ORDER[0], e.a, fmt), '<span class="sn-n"><span class="sn-lbl">studyNow.newLeft|n=</span>25</span><span class="sn-eta sn-done"><span class="sn-lbl">studyNow.etaDone|date=</span>@2</span><span class="sn-eta sn-mast"><span class="sn-lbl">studyNow.etaMastered|date=</span>@22</span>');
 });
 
 test("no pace or no answer from the server: the row reads as before", () => {
   const ctx = load();
   const e = ctx.studyOrderEtas(ORDER, Object.assign({}, ETA, { pacePerDay: 0 }), NOW);
   assert.equal(e.a, undefined);
-  assert.equal(ctx.studyOrderEtaText(ORDER[0], e.a, String), "studyNow.newLeft|n=25");
+  assert.equal(ctx.studyOrderEtaText(ORDER[0], e.a, String), '<span class="sn-n"><span class="sn-lbl">studyNow.newLeft|n=</span>25</span>');
   assert.deepEqual(Object.keys(ctx.studyOrderEtas(ORDER, null, NOW)), []);
 });

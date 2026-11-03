@@ -810,6 +810,20 @@ test("the order sheet shows when each class should be done and mastered, and a m
     });
     assert.ok(wide.sheet > 600, "the sheet is " + wide.sheet + "px wide");
     assert.equal(wide.lines, 1);
+    // A table: a heading per column, the words moved into it, and each column's right edge shared by every row.
+    const table = await page.evaluate(() => {
+      const right = (sel) => [...document.querySelectorAll("#study-order-list " + sel)].map((x) => Math.round(x.getBoundingClientRect().right));
+      const head = document.querySelector("#modal-study-order .study-order-head");
+      return { head: getComputedStyle(head).display, mast: new Set(right(".sn-mast")).size, n: new Set(right(".sn-n")).size,
+        cell: document.querySelector('#study-order-list li[data-class-id="k1"] .sn-done').innerText,
+        heads: [...head.children].slice(2).map((x) => Math.round(x.getBoundingClientRect().right)),
+        cells: [right(".sn-n")[0], right(".sn-done")[0], right(".sn-mast")[0]] };
+    });
+    assert.equal(table.head, "grid");
+    assert.equal(table.mast, 1);
+    assert.equal(table.n, 1);
+    assert.doesNotMatch(table.cell, /done/);
+    assert.deepEqual(table.heads, table.cells);
     await page.setViewportSize({ width: 390, height: 844 });
 
     // Statistics moved above Deep Learning: done 25 days sooner, from 5 days instead of 30.

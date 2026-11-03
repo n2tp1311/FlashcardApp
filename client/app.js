@@ -962,6 +962,9 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.completed": "Completed",
   "studyNow.newLeft": "{n} new left",
   "studyNow.etaDone": "done {date}",
+  "studyNow.colNew": "New left",
+  "studyNow.colDone": "Done",
+  "studyNow.colMastered": "Mastered",
   "studyNow.etaMastered": "mastered {date}",
   "studyNow.mastered": "Mastered",
   "studyNow.orderFailed": "Couldn't save the class order",
@@ -2182,6 +2185,9 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.completed": "Đã học xong",
   "studyNow.newLeft": "Còn {n} thẻ mới",
   "studyNow.etaDone": "xong {date}",
+  "studyNow.colNew": "Thẻ mới",
+  "studyNow.colDone": "Xong",
+  "studyNow.colMastered": "Thành thạo",
   "studyNow.etaMastered": "thành thạo {date}",
   "studyNow.mastered": "Thành thạo",
   "studyNow.orderFailed": "Không lưu được thứ tự lớp",
@@ -12202,16 +12208,25 @@ function studyOrderEtas(byClass, eta, nowSec) {
   return out;
 }
 
-// The row's small text: what it says today, and the dates on a second line when there are any.
+// The row's cells. Each keeps its words ("done", "new left") in a .sn-lbl: a phone shows them
+// stacked under the name, while a wide screen hides them under a column heading and lines the
+// values up as a table.
+function studyOrderCell(cls, text, value) {
+  var i = value == null ? -1 : text.indexOf(value);
+  if (i < 0) return '<span class="' + cls + '">' + escHtml(text) + '</span>';
+  var lbl = function(s) { return s ? '<span class="sn-lbl">' + escHtml(s) + '</span>' : ""; };
+  return '<span class="' + cls + '">' + lbl(text.slice(0, i)) + escHtml(value) + lbl(text.slice(i + value.length)) + '</span>';
+}
+
 function studyOrderEtaText(c, e, fmt) {
+  var mastered = function(at) { var d = fmt(at); return studyOrderCell("sn-eta sn-mast", t("studyNow.etaMastered", { date: d }), d); };
   if (!c.available) {
-    if (e && e.mastered) return escHtml(t("studyNow.mastered"));
-    return escHtml(t("studyNow.completed")) + (e && e.masteredAt
-      ? '<span class="sn-eta">' + escHtml(t("studyNow.etaMastered", { date: fmt(e.masteredAt) })) + '</span>' : "");
+    if (e && e.mastered) return studyOrderCell("sn-n", t("studyNow.mastered"));
+    return studyOrderCell("sn-n", t("studyNow.completed")) + (e && e.masteredAt ? mastered(e.masteredAt) : "");
   }
-  return escHtml(t("studyNow.newLeft", { n: c.available })) + (e && e.doneAt
-    ? '<span class="sn-eta">' + escHtml(t("studyNow.etaDone", { date: fmt(e.doneAt) })) + '</span>' +
-      '<span class="sn-eta">' + escHtml(t("studyNow.etaMastered", { date: fmt(e.masteredAt) })) + '</span>' : "");
+  var n = String(c.available), done = e && e.doneAt ? fmt(e.doneAt) : null;
+  return studyOrderCell("sn-n", t("studyNow.newLeft", { n: c.available }), n) + (done
+    ? studyOrderCell("sn-eta sn-done", t("studyNow.etaDone", { date: done }), done) + mastered(e.masteredAt) : "");
 }
 
 // Rewrites each row's small text in place: rebuilding the list would drop the handle's focus

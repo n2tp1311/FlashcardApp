@@ -3438,11 +3438,19 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .modal-week-recap .modal-footer { border-top: 0; padding-top: 4px; }
 .modal-week-recap .modal-footer .btn { flex: 1; justify-content: center; }
 .modal-week-recap .dash-week { max-width: none; }
-/* On a wide screen the order sheet has room for each class's figures on one line beside its name. */
+/* On a wide screen the order sheet is a table: the figures sit in columns under one heading
+   each, so they line up from row to row. The words go to the heading; a phone keeps them inline. */
+.study-order-head { display: none; }
 @media (min-width: 768px) {
-  .modal-week-recap.modal-study-order { max-width: 680px; }
-  .study-now-pick small { display: flex; gap: 14px; align-items: baseline; }
-  .study-now-pick .sn-eta { display: inline; }
+  .modal-week-recap.modal-study-order { max-width: 760px; }
+  .study-now-pick, .study-order-head { display: grid; grid-template-columns: 36px minmax(0, 1fr) 5rem 6.5rem 7rem; column-gap: 16px; align-items: center; }
+  .modal-study-order .modal-body:has(.sn-eta) .study-order-head { display: grid; }
+  .study-order-head { padding: 0 8px 0 0; font-size: 0.75rem; font-weight: 600; color: var(--text3); text-align: right; }
+  .study-now-pick small { display: contents; }
+  .study-now-pick .sn-lbl { display: none; }
+  .study-now-pick .sn-n, .study-now-pick .sn-eta { grid-column: 3; text-align: right; white-space: nowrap; font-size: 0.75rem; }
+  .study-now-pick .sn-done { grid-column: 4; }
+  .study-now-pick .sn-mast { grid-column: 5; }
 }
 .sheet-grab { display: none; }
 .recap-title { font-size: 1.15rem; font-weight: 700; text-wrap: balance; }
