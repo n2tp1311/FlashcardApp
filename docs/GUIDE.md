@@ -793,10 +793,14 @@ dragged with a finger or a mouse, or moved with the arrow keys on the focused ha
 shows only with two classes or more. `GET /api/stats/new-card-estimate` returns `byClass`
 (each class with its untouched cards, in `sort_order`), so the sheet opens with no request
 of its own; only its dates (below) need one.
-On a wide screen the sheet is 680px rather than the recap's 420px, so each class's
-figures ("1605 new left  done Dec 5  mastered Dec 27") sit on one line beside its name;
-at 420px they stacked three deep and the list was mostly empty space. A phone keeps the
-stacked form.
+On a wide screen the sheet is a 760px table rather than the recap's 420px list: a heading
+row (New left, Done, Mastered) and each class's figures in those columns, so the numbers
+and dates line up from row to row. At 420px the figures stacked three deep; set on one
+line as text they started wherever the previous one ended and read as ragged. Each cell
+keeps its words ("done", "new left") in a `.sn-lbl` that the table hides, so a phone still
+shows the labelled, stacked form with no second markup. The column widths are in `rem`,
+not `em`: the heading's smaller type made `em` columns narrower there, and the headings
+sat off their columns.
 
 The first version was a checklist with the order inside it, applied by Done, and saved as
 `studyNowClasses`. The user set an order, closed the panel by tapping its chip again, and
