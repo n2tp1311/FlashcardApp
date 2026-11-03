@@ -811,7 +811,7 @@ rewrites Home's cached class list the way the server does, so the new order show
 reload. Reviews are not reordered: an overdue card is overdue whichever book it is from.
 
 **Each class in the sheet says about when it will be Completed and Mastered.** Under "250 new
-left" come "done ~28 Nov" and "mastered ~18 Dec"; a Completed class has "mastered ~8 Nov", and
+left" come "done 28 Nov" and "mastered 18 Dec"; a Completed class has "mastered 8 Nov", and
 one whose cards are all mastered reads **Mastered** instead of Completed. The words are the
 app's own: Completed is every card with a due date (`UNSCHEDULED_SQL`), Mastered every card a
 Review card 21 days or more out (`MASTERED_SQL`). Two other forms were previewed -- the dates on
@@ -832,21 +832,23 @@ It returns three things, and the page does the rest so a drag recomputes without
   that put it 21 days out. When a card became mastered is not stored, so the sample is the 500
   most recently reviewed cards mastered on an interval of at most 60 days: FSRS grows a passed
   interval two to three times, so their last review is very likely the one that crossed 21.
-  Only cards that did master are in it, so it leans optimistic, and every date says "~". With
+  Only cards that did master are in it, so it leans optimistic. With
   fewer than 20 such cards the learner's own scheduler is run answering Good every time
   (load balancing ignored); on the local development account that came to 13 days.
 - **Per class**: its cards, those not mastered, and `readyAt`, when its learned but unmastered
   cards should all be mastered. Each card is taken at the latest of its next review (only a
   review masters), `masterDays` after its first answer, and the share of `masterDays` its
   interval is still short of 21 days, counted from now. The last is for a lapsed card long
-  past its usual time: without it the class said "mastered ~today" every day until it was.
+  past its usual time: without it the class showed today's date every day until it was.
 
 Study now drains the order from the top, so the page walks the classes in order adding up their
 new cards: a class is done after `ceil(cards so far / pace)` days, today being the first, and
 mastered `masterDays` after that, or at `readyAt` if later. A drag or an arrow step re-sorts
 `byClass` and rewrites each row's text in place, which keeps the handle's focus. If the request
 fails the rows read as before. The dates are a reading of the current pace, not a plan: they
-move with every session, every lapse and every reorder.
+move with every session, every lapse and every reorder. They first carried a "~" to say so;
+the user found it cluttered the sheet and it was dropped, so nothing on the row marks them as
+estimates.
 
 **A new card is one with no due date** (`UNSCHEDULED_SQL` in `lib/mastery.js`), not one
 with no `card_states` row. Showing a card without grading it writes `last_seen_at`, and
