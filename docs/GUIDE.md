@@ -582,7 +582,9 @@ There is no study direction setting: a card is always studied front to back.
   On both study screens **E**, **F** and **D** press the card's Edit, ⚑ and Delete buttons
   (`cardToolKey()`), which were otherwise the only mouse-only steps left in a session. A key
   answers only when its button is visible, so F does nothing on a card KnowledgeApp did not
-  make. D still opens the delete confirmation.
+  make. D still opens the delete confirmation, but with Delete focused, so D then Enter
+  deletes. The confirmation otherwise focuses Cancel, so that a stray Enter keeps the card.
+  Pressing D is the deliberate step, so here Enter only confirms it, and Esc still cancels.
   Under each passage: **Did this passage help? Yes / Doesn't match.** Doesn't match takes
   the passage off the card at once (`cards.source_rejected` keeps it for Undo), and the
   next KnowledgeApp sync sends the next-best passage or none. KnowledgeApp chooses
