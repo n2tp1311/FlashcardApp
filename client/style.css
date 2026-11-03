@@ -3438,6 +3438,12 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .modal-week-recap .modal-footer { border-top: 0; padding-top: 4px; }
 .modal-week-recap .modal-footer .btn { flex: 1; justify-content: center; }
 .modal-week-recap .dash-week { max-width: none; }
+/* On a wide screen the order sheet has room for each class's figures on one line beside its name. */
+@media (min-width: 768px) {
+  .modal-week-recap.modal-study-order { max-width: 680px; }
+  .study-now-pick small { display: flex; gap: 14px; align-items: baseline; }
+  .study-now-pick .sn-eta { display: inline; }
+}
 .sheet-grab { display: none; }
 .recap-title { font-size: 1.15rem; font-weight: 700; text-wrap: balance; }
 .recap-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }

@@ -801,6 +801,17 @@ test("the order sheet shows when each class should be done and mastered, and a m
     assert.ok(layout.page <= 390, "page is " + layout.page + "px wide");
     assert.ok(layout.name >= 120, "the class name is squeezed to " + layout.name + "px");
 
+    // A desktop window: a wider sheet, and each class's figures on one line.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const wide = await page.evaluate(() => {
+      const li = document.querySelector('#study-order-list li[data-class-id="k1"]'), small = li.querySelector("small");
+      return { sheet: document.getElementById("modal-study-order").getBoundingClientRect().width,
+        lines: new Set([...small.querySelectorAll(".sn-eta")].map((x) => Math.round(x.getBoundingClientRect().top))).size };
+    });
+    assert.ok(wide.sheet > 600, "the sheet is " + wide.sheet + "px wide");
+    assert.equal(wide.lines, 1);
+    await page.setViewportSize({ width: 390, height: 844 });
+
     // Statistics moved above Deep Learning: done 25 days sooner, from 5 days instead of 30.
     const before = await eta("k2");
     await page.focus('#study-order-list li[data-class-id="k2"] [data-sn-handle]');
