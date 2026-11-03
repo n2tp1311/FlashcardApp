@@ -766,6 +766,68 @@ test("the order sheet saves every move as it lands, keeps a Completed class's pl
   }, { isMobile: false, hasTouch: false });
 });
 
+test("the order sheet shows when each class should be done and mastered, and a move changes them", async function() {
+  await withApp(async function(page) {
+    const open = (answer) => page.evaluate(function(answer) {
+      const today = { count: 0, activity: { studyMs: 0, newCards: 0, reviews: 0 }, medianMs: {} };
+      const est = { estimatedNewCards: 10, availableNewCards: 30, byClass: [
+        { id: "k0", name: "Finished Book", available: 0 }, { id: "k1", name: "Deep Learning with a rather long class name", available: 250 },
+        { id: "k2", name: "Statistics", available: 50 }, { id: "k4", name: "All Mastered", available: 0 }] };
+      const now = Math.floor(Date.now() / 1000);
+      IS_SERVER = true;
+      state.studyNowDue = 0;
+      state.studyNowDueLessons = [];
+      state._dashHeroData = { summary: { cards: 40 }, newCardEstimate: est, today: today };
+      store.setClassOrder = () => Promise.resolve({ ok: true });
+      state._studyOrderEta = null;
+      store.getClassEta = () => answer ? Promise.resolve({ pacePerDay: 10, masterDays: 20, masterDaysMeasured: true, classes: [
+        { id: "k0", total: 40, unmastered: 3, readyAt: now + 5 * 86400 }, { id: "k1", total: 300, unmastered: 280, readyAt: null },
+        { id: "k2", total: 50, unmastered: 50, readyAt: null }, { id: "k4", total: 12, unmastered: 0, readyAt: null }] })
+        : Promise.reject(new Error("offline"));
+      showScreen("home");
+      const grid = document.getElementById("home-summary-grid");
+      grid.innerHTML = streakTimeHeroCard(null, null, { cards: 40 }, est, today);
+      for (let el = grid; el; el = el.parentElement) el.classList.remove("hidden");
+      grid.querySelector("[data-study-now-classes]").click();
+    }, answer);
+    const eta = (id) => page.locator('#study-order-list li[data-class-id="' + id + '"] small').evaluate((s) => [...s.querySelectorAll(".sn-eta")].map((x) => x.textContent).join(" | "));
+    await open(true);
+    await page.waitForSelector("#study-order-list .sn-eta");
+    assert.match(await eta("k1"), /^done ~.+ \| mastered ~.+$/);
+    assert.match(await eta("k0"), /^mastered ~/);
+    assert.equal(await page.locator('#study-order-list li[data-class-id="k4"] small').textContent(), "Mastered");
+    const layout = await page.evaluate(() => ({ page: document.documentElement.scrollWidth,
+      name: document.querySelector('#study-order-list li[data-class-id="k1"] .sn-name').getBoundingClientRect().width }));
+    assert.ok(layout.page <= 390, "page is " + layout.page + "px wide");
+    assert.ok(layout.name >= 120, "the class name is squeezed to " + layout.name + "px");
+
+    // Statistics moved above Deep Learning: done 25 days sooner, from 5 days instead of 30.
+    const before = await eta("k2");
+    await page.focus('#study-order-list li[data-class-id="k2"] [data-sn-handle]');
+    await page.keyboard.press("ArrowUp");
+    const after = await eta("k2");
+    assert.notEqual(after, before);
+    const d = await page.evaluate(() => { const e = studyOrderEtas(state._dashHeroData.newCardEstimate.byClass, state._studyOrderEta, Math.floor(Date.now() / 1000));
+      return Math.round((e.k1.doneAt - e.k2.doneAt) / 86400); });
+    assert.equal(d, 25);
+
+    // Reopened within minutes: the same dates, without asking the server again.
+    await page.keyboard.press("Escape");
+    await page.evaluate(() => { window.__etaCalls = 0; const g = store.getClassEta;
+      store.getClassEta = () => { window.__etaCalls++; return g(); };
+      document.querySelector("#home-summary-grid [data-study-now-classes]").click(); });
+    await page.waitForSelector("#study-order-list .sn-eta");
+    assert.equal(await page.evaluate(() => window.__etaCalls), 0);
+
+    // No answer from the server: the rows read as they always have.
+    await page.keyboard.press("Escape");
+    await open(false);
+    await page.waitForTimeout(50);
+    assert.equal(await page.locator("#study-order-list .sn-eta").count(), 0);
+    assert.equal(await page.locator('#study-order-list li[data-class-id="k1"] small').textContent(), "250 new left");
+  });
+});
+
 test("a finger drags a class up the order sheet on a phone, without scrolling the page", async function() {
   await withApp(async function(page) {
     await page.evaluate(function() {

@@ -8,6 +8,8 @@ const { computeStreak, weekRow, weekStart, addDays } = require("../lib/streak");
 const { summarizeToday } = require("../lib/today");
 const { aboveAverageRun } = require("../lib/aboveAvg");
 const { MASTERED_INTERVAL_SEC, MASTERED_SQL, UNSCHEDULED_SQL } = require("../lib/mastery");
+const { userScheduler } = require("../lib/memory");
+const { cardFromState, Rating } = require("../fsrs");
 const router  = express.Router();
 
 // Whole weeks back from today on attempt_daily's UTC days: today and the six days before are 0.
@@ -874,6 +876,81 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
     recentAccuracy: recentTotal > 0 ? Math.round((recentCorrect / recentTotal) * 100) : null,
     recentAttempts: recentTotal,
     accuracyMultiplier
+  });
+});
+
+// GET /api/stats/class-eta — when each class should be Completed and Mastered, for the Study
+// order sheet. Its own request, fetched only when the sheet opens: /new-card-estimate loads with
+// every Home view, and these queries seek once per card.
+//
+// Pace is new cards actually learned per calendar day over the last 4 weeks, not the daily goal:
+// the goal is what Study now offers, intake is what the learner did, and days off count.
+// masterDays is the median time from a card's first answer to the review that mastered it. When a
+// card became mastered is not stored, so the sample is cards mastered with an interval of at most
+// 60 days: FSRS grows a passed interval 2-3x, so their last review is very likely the one that
+// crossed 21 days. Only cards that did master are sampled, so it leans optimistic -- the page says "~".
+const ETA_PACE_WINDOW_DAYS = 28, ETA_PACE_MIN_DAYS = 7;
+const ETA_MASTER_MIN_SAMPLES = 20, ETA_MASTER_SAMPLE = 500, ETA_JUST_MASTERED_MAX_SEC = 60 * 86400;
+
+// Too few mastered cards to measure: answer Good every time with the learner's own scheduler until
+// an interval reaches 21 days, and count the days to that review. Load balancing is ignored.
+function simulatedMasterDays(sched) {
+  const t0 = new Date();
+  let card = cardFromState(null, t0), at = t0;
+  for (let i = 0; i < 30; i++) {
+    const next = sched.next(card, at, Rating.Good).card;
+    if (next.due - at >= MASTERED_INTERVAL_SEC * 1000) return (at - t0) / 86400000;
+    at = next.due; card = next;
+  }
+  return (at - t0) / 86400000;
+}
+
+router.get("/class-eta", requireAuth, (req, res) => {
+  const uid = req.session.userId;
+  const now = Math.floor(Date.now() / 1000), since = now - ETA_PACE_WINDOW_DAYS * 86400;
+  const first = db.prepare("SELECT MIN(created_at) AS t FROM attempts WHERE user_id = ?").get(uid).t;
+  const fresh = db.prepare(
+    "SELECT COUNT(*) AS n FROM (SELECT DISTINCT card_id FROM attempts WHERE user_id = ? AND created_at >= ?) r " +
+    "WHERE NOT EXISTS (SELECT 1 FROM attempts b WHERE b.card_id = r.card_id AND b.user_id = ? AND b.created_at < ?)"
+  ).get(uid, since, uid, since).n;
+  const days = first == null ? 0 : Math.max(ETA_PACE_MIN_DAYS, Math.min(ETA_PACE_WINDOW_DAYS, (now - first) / 86400));
+  const pacePerDay = days ? fresh / days : 0;
+
+  // The 500 most recent are picked first, so the first-answer lookup runs 500 times, not once per card.
+  const samples = db.prepare(
+    "SELECT s.last - (SELECT MIN(a.created_at) FROM attempts a WHERE a.card_id = s.card_id AND a.user_id = ?) AS d FROM (" +
+    "SELECT card_id, fsrs_last_review_at AS last FROM card_states WHERE user_id = ? AND fsrs_state = 2 AND fsrs_stability IS NOT NULL " +
+    "AND fsrs_last_review_at IS NOT NULL AND srs_due_at - fsrs_last_review_at BETWEEN ? AND ? " +
+    "ORDER BY fsrs_last_review_at DESC LIMIT ?) s"
+  ).all(uid, uid, MASTERED_INTERVAL_SEC, ETA_JUST_MASTERED_MAX_SEC, ETA_MASTER_SAMPLE).map(r => r.d).filter(d => d > 0);
+  const measured = samples.length >= ETA_MASTER_MIN_SAMPLES;
+  const masterDays = measured ? median(samples) / 86400 : simulatedMasterDays(userScheduler(db, uid));
+
+  // readyAt: when the class's learned, unmastered cards should all be mastered. Each card is taken
+  // at the latest of: its next review (only a review masters), masterDays after its first answer
+  // (the usual time), and -- for a card behind that, after lapses -- the share of masterDays its
+  // interval is still short of 21 days, counted from now. Without the last, a lapsed card said
+  // "mastered today" every day until it was.
+  const lag = masterDays * 86400;
+  const rows = db.prepare(
+    "SELECT c.id, COUNT(ca.id) AS total, " +
+    "SUM(CASE WHEN ca.id IS NOT NULL AND NOT " + MASTERED_SQL + " THEN 1 ELSE 0 END) AS unmastered, " +
+    "MAX(CASE WHEN cs.srs_due_at IS NOT NULL AND NOT " + MASTERED_SQL + " THEN max(cs.srs_due_at, " +
+    "COALESCE((SELECT MIN(a.created_at) FROM attempts a WHERE a.card_id = ca.id AND a.user_id = ?), cs.updated_at) + ?, " +
+    "? + ? * (1.0 - min(1.0, max(0, cs.srs_due_at - COALESCE(cs.fsrs_last_review_at, cs.updated_at)) * 1.0 / ?))) END) AS readyAt " +
+    "FROM classes c LEFT JOIN lessons l ON l.class_id = c.id LEFT JOIN cards ca ON ca.lesson_id = l.id " +
+    "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 GROUP BY c.id"
+  ).all(MASTERED_INTERVAL_SEC, MASTERED_INTERVAL_SEC, uid, lag, now, lag, MASTERED_INTERVAL_SEC, uid, uid);
+
+  res.json({
+    pacePerDay: Math.round(pacePerDay * 100) / 100,
+    masterDays: Math.round(masterDays * 10) / 10,
+    masterDaysMeasured: measured,
+    classes: rows.map(r => ({
+      id: r.id, total: r.total, unmastered: r.unmastered || 0,
+      readyAt: r.readyAt == null ? null : Math.round(r.readyAt)
+    }))
   });
 });
 

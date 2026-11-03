@@ -961,6 +961,9 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.move": "Move {name}",
   "studyNow.completed": "Completed",
   "studyNow.newLeft": "{n} new left",
+  "studyNow.etaDone": "done ~{date}",
+  "studyNow.etaMastered": "mastered ~{date}",
+  "studyNow.mastered": "Mastered",
   "studyNow.orderFailed": "Couldn't save the class order",
   "studyNow.flashcard": "Flashcards",
   "studyNow.quiz": "Quiz",
@@ -2178,6 +2181,9 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.move": "Di chuyển {name}",
   "studyNow.completed": "Đã học xong",
   "studyNow.newLeft": "Còn {n} thẻ mới",
+  "studyNow.etaDone": "xong ~{date}",
+  "studyNow.etaMastered": "thành thạo ~{date}",
+  "studyNow.mastered": "Thành thạo",
   "studyNow.orderFailed": "Không lưu được thứ tự lớp",
   "studyNow.flashcard": "Thẻ ghi nhớ",
   "studyNow.quiz": "Trắc nghiệm",
@@ -12133,14 +12139,14 @@ function studyNowOrderChipHtml(est) {
 
 // A class with no new cards left is Completed and sinks below the rest, out of the drag:
 // there is nothing left for its place to decide.
-function studyOrderListHtml(classes) {
+function studyOrderListHtml(classes, etas) {
   var row = function(c) {
     var done = !c.available;
     return '<li class="study-now-pick' + (done ? ' is-done' : '') + '" data-class-id="' + escHtml(c.id) + '">' +
       (done ? '<span class="sn-handle" aria-hidden="true"></span>' :
         '<button type="button" class="sn-handle" data-sn-handle aria-label="' + escHtml(t("studyNow.move", { name: c.name })) + '">' + ICON_GRIP + '</button>') +
       '<span class="sn-name">' + escHtml(c.name) + '</span>' +
-      '<small>' + escHtml(done ? t("studyNow.completed") : t("studyNow.newLeft", { n: c.available })) + '</small></li>';
+      '<small>' + studyOrderEtaText(c, etas && etas[c.id], memoryDate) + '</small></li>';
   };
   return classes.filter(function(c) { return c.available; }).map(row).join("") +
     classes.filter(function(c) { return !c.available; }).map(row).join("");
@@ -12151,6 +12157,75 @@ function openStudyOrder() {
   if (!est || !est.byClass) return;
   document.getElementById("study-order-list").innerHTML = studyOrderListHtml(est.byClass);
   openModal("study-order");
+  if (!IS_SERVER || !store.getClassEta) return;
+  // Pace and time to master barely move within a sitting; the sheet is often opened a few times
+  // while deciding, and the request seeks once per card.
+  if (state._studyOrderEta && Date.now() - state._studyOrderEtaAt < 10 * 60000) { refreshStudyOrderEtas(); return; }
+  state._studyOrderEta = null;
+  // A late answer for a sheet since closed or reopened is dropped.
+  var token = state._studyOrderEtaReq = (state._studyOrderEtaReq || 0) + 1;
+  store.getClassEta().catch(function() { return null; }).then(function(eta) {
+    if (!eta || token !== state._studyOrderEtaReq) return;
+    if (document.getElementById("modal-study-order").classList.contains("hidden")) return;
+    state._studyOrderEta = eta;
+    state._studyOrderEtaAt = Date.now();
+    refreshStudyOrderEtas();
+  });
+}
+
+// When each class should be Completed and Mastered (GET /stats/class-eta). Study now drains the
+// order from the top, so a class is done once every class above it and itself are: their new
+// cards, in order, at the learner's pace. It is then mastered masterDays after its last new card,
+// and never before its learned cards can be (readyAt). Computed here so a drag moves the dates.
+function studyOrderEtas(byClass, eta, nowSec) {
+  var out = {};
+  if (!eta || !eta.classes) return out;
+  var info = {};
+  eta.classes.forEach(function(c) { info[c.id] = c; });
+  var pace = eta.pacePerDay || 0, lag = (eta.masterDays || 0) * 86400, cum = 0;
+  byClass.forEach(function(c) {
+    var i = info[c.id];
+    if (!i) return;
+    var ready = i.readyAt == null ? null : Math.max(i.readyAt, nowSec);
+    if (c.available) {
+      if (!pace) return;
+      cum += c.available;
+      // Today's session takes the first day's cards, so a class within today's pace is done today.
+      var doneAt = nowSec + (Math.ceil(cum / pace) - 1) * 86400;
+      out[c.id] = { doneAt: doneAt, masteredAt: Math.max(doneAt + lag, ready || 0), mastered: false };
+    } else if (i.total > 0 && !i.unmastered) {
+      out[c.id] = { mastered: true };
+    } else if (ready != null) {
+      out[c.id] = { masteredAt: ready, mastered: false };
+    }
+  });
+  return out;
+}
+
+// The row's small text: what it says today, and the dates on a second line when there are any.
+function studyOrderEtaText(c, e, fmt) {
+  if (!c.available) {
+    if (e && e.mastered) return escHtml(t("studyNow.mastered"));
+    return escHtml(t("studyNow.completed")) + (e && e.masteredAt
+      ? '<span class="sn-eta">' + escHtml(t("studyNow.etaMastered", { date: fmt(e.masteredAt) })) + '</span>' : "");
+  }
+  return escHtml(t("studyNow.newLeft", { n: c.available })) + (e && e.doneAt
+    ? '<span class="sn-eta">' + escHtml(t("studyNow.etaDone", { date: fmt(e.doneAt) })) + '</span>' +
+      '<span class="sn-eta">' + escHtml(t("studyNow.etaMastered", { date: fmt(e.masteredAt) })) + '</span>' : "");
+}
+
+// Rewrites each row's small text in place: rebuilding the list would drop the handle's focus
+// and any drag in progress.
+function refreshStudyOrderEtas() {
+  var est = state._dashHeroData && state._dashHeroData.newCardEstimate;
+  if (!est || !est.byClass || !state._studyOrderEta) return;
+  var etas = studyOrderEtas(est.byClass, state._studyOrderEta, Math.floor(Date.now() / 1000));
+  var byId = {};
+  est.byClass.forEach(function(c) { byId[c.id] = c; });
+  document.querySelectorAll("#study-order-list li[data-class-id]").forEach(function(li) {
+    var c = byId[li.dataset.classId], small = li.querySelector("small");
+    if (c && small) small.innerHTML = studyOrderEtaText(c, etas[c.id], memoryDate);
+  });
 }
 
 // The whole order to save: the dragged classes fill the places classes with new cards held,
@@ -12176,6 +12251,7 @@ function saveStudyOrder(list) {
   var order = studyOrderMerged(est.byClass, active);
   if (order.join("\n") === est.byClass.map(function(c) { return c.id; }).join("\n")) return;
   est.byClass.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+  refreshStudyOrderEtas();
   var savedNote = document.getElementById("study-order-saved");
   savedNote.textContent = "";
   studyOrderSaving = studyOrderSaving.then(function() { return store.setClassOrder(order); })
@@ -14371,6 +14447,7 @@ var SQLiteAdapter = (function() {
     writesSettled: function() { return writeChain; },
     getReviewsToday: function() { return req("GET", "/stats/reviews-today"); },
     getNewCardEstimate: function() { return req("GET", "/stats/new-card-estimate"); },
+    getClassEta: function() { return req("GET", "/stats/class-eta"); },
     getWeekRecap: function() { return req("GET", "/stats/week-recap"); },
     markWeekRecapSeen: function(week) { return req("POST", "/stats/week-recap/seen", { week: week }); },
     getTrend: function(type, id) { return req("GET", "/stats/trend?scope=" + type + "&id=" + id); },
@@ -15259,8 +15336,11 @@ function memoryPerDay(n) {
 }
 
 function memoryDate(ts) {
-  try { return new Date(ts * 1000).toLocaleDateString(appLocale(), { day: "numeric", month: "short" }); }
-  catch (_) { return ""; }
+  try {
+    var d = new Date(ts * 1000), opts = { day: "numeric", month: "short" };
+    if (d.getFullYear() !== new Date().getFullYear()) opts.year = "numeric";
+    return d.toLocaleDateString(appLocale(), opts);
+  } catch (_) { return ""; }
 }
 
 function memoryChoicesHtml(info, chosen) {

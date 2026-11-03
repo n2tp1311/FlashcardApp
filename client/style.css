@@ -3260,9 +3260,10 @@ code {
 .study-order-saved { font-size: 0.8125rem; font-weight: 600; color: var(--success); }
 .study-now-hint { margin: 0; font-size: 0.8125rem; color: var(--text2); }
 .study-now-order { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.study-now-pick { display: flex; align-items: center; gap: 6px; min-height: 48px; padding-right: 8px; border-radius: 8px; background: var(--surface); }
+.study-now-pick { display: flex; align-items: center; gap: 6px; min-height: 48px; padding: 4px 8px 4px 0; border-radius: 8px; background: var(--surface); }
 .study-now-pick .sn-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.study-now-pick small { flex: none; font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.study-now-pick small { flex: none; text-align: right; font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+.study-now-pick .sn-eta { display: block; white-space: nowrap; font-weight: 400; color: var(--text2); }
 .study-now-pick.is-dragging { background: var(--surface2); box-shadow: 0 2px 8px color-mix(in srgb, var(--text) 18%, transparent); position: relative; z-index: 1; }
 .study-now-pick.is-done .sn-name { color: var(--text2); }
 .study-now-pick.is-done small { color: var(--success); font-weight: 600; }
