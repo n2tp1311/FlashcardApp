@@ -1384,6 +1384,15 @@ rebuild, and an open statement is exactly what once made a migration's `DROP TAB
 with "database table is locked". A test holds the open-statement count at zero through
 the migrations and real dashboard requests.
 
+The wrapper lives in `lib/statements.js` (`shimPrepare`). It replaces `db.prepare` on the
+connection, and the library's own `db.run`, `db.get` and `db.all` call `this.prepare()`
+and then `finalize()` on what comes back, which the wrapper's object does not have: on
+the server's connection they run the statement and then throw "stmt.finalize is not a
+function". Server code uses `db.prepare(...)` or `db.exec()`. The nightly backup called
+`db.run("VACUUM INTO ?")` and failed this way every night for three weeks (below); its
+tests used a connection without the wrapper and passed throughout, so they now wrap
+theirs with the same `shimPrepare`.
+
 ### Watchdog, rate limits, request log
 
 - **Watchdog** (`middleware/watchdog.js`): if the event loop stops responding for too
@@ -1409,7 +1418,17 @@ Nightly at 18:00 UTC (01:00 in Vietnam), the server writes a copy with **`VACUUM
 from inside its own connection — under EXCLUSIVE nothing else may open the file, and
 copying bytes would miss whatever is in the WAL. Measured 0.39 s for a 51 MB database. It
 runs `quick_check` (0.14 s, against 1.2 s for `integrity_check`, all on the event loop),
-keeps seven, and writes under a temporary name renamed only after the check. The owner's
+keeps seven, and writes under a temporary name renamed only after the check. A failed
+attempt deletes its temporary file, and each attempt sweeps any left from earlier days.
+
+**From 2026-10-14 to 2026-11-04 no backup was made.** `VACUUM INTO` went through the
+statement wrapper (above), wrote a full copy, and threw before the check, so the copy
+never got a backup's name: the route had nothing to serve, the seven-copy limit never
+applied, and every ten minutes from 18:00 to midnight UTC the server rewrote the copy,
+blocking the event loop each time. Three weeks of 53-138 MB `.part` files, 1.6 GB, sat
+on a 4.4 GB volume, about 20 days from full. Nothing reported it: the error went to the
+server log only, and the pull below, the one place meant to notice, had never been set
+up. `VACUUM INTO` now runs through `db.exec`. The owner's
 Mac pulls the newest at 03:00 (`scripts/pull-backup.sh`, LaunchAgent
 `com.flashcardapp.backup`), runs the full `integrity_check` where time costs nothing, and
 keeps 30. Two places for two losses: copies on the volume cover a bad migration or a
