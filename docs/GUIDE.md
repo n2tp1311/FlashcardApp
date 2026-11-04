@@ -1209,7 +1209,7 @@ not undo the rest:
 | Event | Effect on every linked card |
 |---|---|
 | `updated` | new text; flagged `updated`; **due now**, stability kept; leech count reset |
-| `deleted` | flagged `deleted` only — card, schedule and history stay |
+| `deleted` | flagged `deleted` only — card, schedule and history stay; with `merged_into`, removed when the survivor's card is in the same class (below) |
 | `restored` | clears a `deleted` flag, then applies the text |
 | `split` | the card's text becomes the first part; the other parts are added after it in its lesson |
 
@@ -1225,6 +1225,16 @@ not undo the rest:
 - **A deletion only flags.** The learner's card, schedule and history belong to them.
   Answering does not clear a `deleted` flag (unlike `updated`), so the notice is not
   lost by studying.
+- **A merge removes the duplicate.** When KnowledgeApp merges two units, the `deleted`
+  event for the merged-away one carries `merged_into`, the survivor's external id. If the
+  survivor's card is in the same class, the merged-away card is the same concept twice and
+  is deleted outright. Each user's schedule moves to the survivor when it is ahead (more
+  reviews, then the later review; the survivor wins a tie). Attempts stay under the old card
+  id, as on any delete, so streaks and stats are unchanged. No tombstone is written: the
+  learner did not delete it. With no survivor card in the class, the card is only flagged.
+  Merges used to flag only, and "Mark all shown as reviewed" cleared 684 such flags while
+  leaving both cards in place, so a class showed "Unsupervised learning" and
+  "Unsupervised Learning" side by side.
 - **Replay-safe from the card's current state, not an event log.** Same text → `noop`,
   split card already in the lesson → skipped, already deleted → `noop`. KnowledgeApp
   retries whole batches whose response it never saw; a processed-event table would be
