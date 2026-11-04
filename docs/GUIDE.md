@@ -700,7 +700,13 @@ a wrong one after 2.5 s; the user wanted the wrong answer to wait. After a wrong
 option is scrolled above the sheet (`revealRightQuizOption`): on a phone the sheet
 covered the lower options, so the one thing worth seeing was under it. Each new question
 starts at the top of the page, since a page left scrolled put a different option under
-the finger that had pressed Next. A bottom sheet answers each choice (praise, combos
+the finger that had pressed Next. On a phone (`scrollQuizToEnd`, under 768px) it then
+scrolls down just far enough for the last option to clear the bottom of the screen, and
+after any answer, right or wrong, far enough for the options and the Explanation to clear
+the sheet. The user asked for this: on a phone the header and toolbar pushed the last
+options off the screen, and every question started with a swipe. It stops at the last
+thing on the card rather than the page's end, because the end is the empty padding left
+for the sheet, and scrolling there pushed the question off the top. A bottom sheet answers each choice (praise, combos
 at 3, 5, 10 and every ten after, a calm line on a miss) and holds Next in the same place
 every time. It appears only in Quiz, where the app decides right from wrong: praising a
 flashcard self-grade would be praising the learner for their own button press.
