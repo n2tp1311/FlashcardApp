@@ -994,3 +994,25 @@ test("the quiz card shows when it comes back if right and if wrong, before the a
     assert.deepEqual(r.asKnown, ["✗ 10 min", "✓ 1 mo"], "quiz answers counted as Know It are rated Good");
   });
 });
+
+test("a quiz on a phone scrolls just far enough to show every option, and after an answer everything above the sheet", async function() {
+  const LONG = "A retrieval system decomposes a complex question into sub-queries, retrieves evidence for each, and then reasons across the retrieved passages to compose an answer that no single document contains. Which capability does this describe?";
+  const cards = [1, 2].map((i) => ({ id: "s" + i, lesson_id: "l1", format: "mcq", data: { question: LONG,
+    correct: "Multi-hop reasoning over several retrieved documents to connect facts",
+    distractors: ["Contextual retrieval that prepends chunk-specific context before embedding", "Corrective RAG that grades retrieved documents and falls back to web search", "Hybrid search combining BM25 keyword scores with dense vector similarity"],
+    explanation: "Chains evidence across documents." } }));
+  await withApp(async function(page) {
+    await page.evaluate((c) => { state.currentLesson = { id: "l1", title: "RAG", format: "mcq" }; state.quizCards = c; startQuiz(); }, cards);
+    await page.waitForTimeout(100);
+    const fresh = await page.evaluate(() => ({ y: scrollY, bottom: document.getElementById("quiz-options").getBoundingClientRect().bottom, h: innerHeight }));
+    assert.ok(fresh.y > 0, "the question did not scroll");
+    assert.ok(fresh.bottom <= fresh.h && fresh.bottom > fresh.h - 30, JSON.stringify(fresh));
+
+    await page.evaluate(() => answerQuiz(0));
+    await page.waitForTimeout(400);
+    const answered = await page.evaluate(() => ({ bottom: document.getElementById("quiz-explanation").getBoundingClientRect().bottom,
+      limit: innerHeight - document.getElementById("quiz-sheet").offsetHeight }));
+    // Clear of the sheet, and no further: the question keeps what room there is.
+    assert.ok(answered.bottom <= answered.limit && answered.bottom > answered.limit - 30, JSON.stringify(answered));
+  }, { viewport: { width: 390, height: 664 } });
+});

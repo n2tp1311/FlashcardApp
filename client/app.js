@@ -11164,6 +11164,28 @@ function renderQuizCard() {
 
   document.getElementById("btn-quiz-prev").classList.toggle("hidden", i === 0);
   document.getElementById("btn-quiz-review-next").classList.toggle("hidden", !priorResult);
+  scrollQuizToEnd();
+}
+
+// On a phone the question and its options run past the bottom of the screen, under the
+// header and toolbar, and after an answer under the sheet too. The user asked to have them
+// scrolled into view: just far enough that the last thing on the card (the options, or the
+// Explanation once answered) clears the bottom, and no further, so as much of the question
+// stays on screen as fits. Not the page's end: that ran past into empty padding and pushed
+// the question off the top. Next frame, because opening the quiz screen resets the scroll
+// after the card is drawn. Only a phone: a desktop window shows it all.
+function scrollQuizToEnd() {
+  if (!window.matchMedia || !window.matchMedia("(max-width: 767px)").matches) return false;
+  requestAnimationFrame(function() {
+    var last = ["quiz-source", "quiz-explanation", "quiz-options"].map(function(id) { return document.getElementById(id); })
+      .filter(function(el) { return el && el.offsetParent; })[0];
+    if (!last) return;
+    var sheet = document.getElementById("quiz-sheet");
+    var cover = sheet && sheet.classList.contains("on") ? sheet.offsetHeight : 0;
+    var over = last.getBoundingClientRect().bottom - (window.innerHeight - cover - 12);
+    if (over > 0) window.scrollBy(0, over);
+  });
+  return true;
 }
 
 function showQuizHint(id, textKey) {
@@ -11292,10 +11314,13 @@ function answerQuiz(selectedIdx) {
 // The answer sheet slides over the bottom of the screen, which on a phone is often where the
 // right option is: after a wrong answer the one thing worth seeing was under the sheet. The
 // column's bottom padding follows the sheet's real height so there is room to scroll it up.
+// A phone scrolls until the options and the Explanation all clear the sheet; elsewhere only
+// far enough for the right option.
 function revealRightQuizOption() {
   var sheet = document.getElementById("quiz-sheet");
   var right = document.querySelector("#quiz-options .quiz-opt.correct");
   document.getElementById("screen-quiz").style.setProperty("--quiz-sheet-h", sheet.offsetHeight + "px");
+  if (scrollQuizToEnd()) return;
   if (!right) return;
   var limit = window.innerHeight - sheet.offsetHeight - 12;
   var over = right.getBoundingClientRect().bottom - limit;
