@@ -1286,6 +1286,18 @@ would pull chapter 18 into chapter 13. A knowledge map was considered at the sam
 not built: Khan Academy and Duolingo both moved to a linear path, and this data's 2-D map
 positions carry little meaning.
 
+Crediting a card's prerequisites when it is answered right -- Math Academy's implicit
+repetition, which would push their next reviews later -- was measured and not built
+(2026-11-04). On the 30,130 answers to 2026-11-03, replayed with the learner's scheduler:
+a prerequisite's cross-day review after a correct answer on a card that needs it was
+recalled 95.8% of the time against 96.2% predicted (625 reviews, ±1.6), and 97.3%
+against 96.8% with no such answer between (691). The answer on the harder card adds
+nothing to what FSRS already knows, so a later review would only spend recall. The
+likely reason is the link itself: `needs` means the definition names the other card,
+and naming a term is not recalling its definition, as a Math Academy problem makes the
+learner use the skill beneath it. Nearly all those reviews came at a predicted recall
+above 90%, so the region where credit would matter most is barely sampled.
+
 The rule behind all of them: **a card is moved or rewritten in place, never recreated**,
 so its id, schedule and answer history survive. `layout` reuses, for each target lesson,
 the existing lesson that already holds most of its cards (renamed if needed), removes
