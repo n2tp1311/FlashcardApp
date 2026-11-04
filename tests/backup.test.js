@@ -12,20 +12,22 @@ const express = require("express");
 const { Database } = require("node-sqlite3-wasm");
 const backup = require("../server/lib/backup");
 const backupRouter = require("../server/routes/backup");
+const { shimPrepare } = require("../server/lib/statements");
 
 const root = path.join(__dirname, "..");
 const DAY = 86400000;
 const at = (iso) => Date.parse(iso);
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), "fc-backup-")); }
-// A database held as server/db.js holds it, with writes still in the WAL.
+// A database held as server/db.js holds it, with writes still in the WAL and db.prepare
+// shimmed. Without the shim these tests passed while every nightly backup failed.
 function live(dir) {
   const db = new Database(path.join(dir, "flashcards.db"));
   db.exec("PRAGMA locking_mode = EXCLUSIVE");
   db.get("PRAGMA journal_mode = WAL");
   db.exec("CREATE TABLE t (id INTEGER PRIMARY KEY, v TEXT)");
   for (let i = 0; i < 50; i++) db.run("INSERT INTO t (v) VALUES (?)", ["row " + i]);
-  return db;
+  return shimPrepare(db);
 }
 function rows(file) {
   const db = new Database(file);
@@ -53,6 +55,22 @@ test("a copy cut short is never served, and only the newest KEEP are kept", func
   assert.equal(backup.list(b).length, backup.KEEP);
   assert.equal(backup.latest(b).day, "2026-10-10");
   assert.equal(backup.list(b)[0], "flashcards-2026-10-04.db");
+  db.close();
+});
+
+test("a failed attempt leaves no .part behind, and earlier days' leftovers are swept", function() {
+  const dir = tmpdir();
+  const db = live(dir);
+  const b = path.join(dir, "b");
+  fs.mkdirSync(b);
+  fs.writeFileSync(path.join(b, "flashcards-2026-10-14.db.part"), "stuck");
+  const exec = db.exec.bind(db);
+  db.exec = function(sql) { exec(sql); if (/^VACUUM/.test(sql)) throw new Error("boom"); };
+  assert.throws(() => backup.snapshot(db, b, at("2026-10-15T18:05:00Z")), /boom/);
+  assert.deepEqual(fs.readdirSync(b), []);
+  db.exec = exec;
+  assert.ok(backup.snapshot(db, b, at("2026-10-15T18:15:00Z")));
+  assert.deepEqual(fs.readdirSync(b), ["flashcards-2026-10-15.db"]);
   db.close();
 });
 

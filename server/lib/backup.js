@@ -37,22 +37,34 @@ function latest(dir) {
 // damaged database is not passed off as a good backup. quick_check here (0.14 s on the
 // 51 MB copy, against 1.2 s for integrity_check, all of it on the event loop); the pull
 // runs the full integrity_check on the owner's machine, where it costs the server nothing.
+//
+// A failed attempt removes its .part before rethrowing: the check reruns every ten
+// minutes, and leftovers from earlier days are swept too. From 2026-10-14 every attempt
+// failed after VACUUM INTO had written a full copy, and three weeks of 130 MB .part files
+// sat on the volume, never pruned because they never got a backup's name.
 function snapshot(db, dir, nowMs) {
   fs.mkdirSync(dir, { recursive: true });
   const target = path.join(dir, "flashcards-" + day(nowMs) + ".db");
   if (fs.existsSync(target)) return null;
   const tmp = target + ".part";
-  fs.rmSync(tmp, { force: true });
-  db.run("VACUUM INTO ?", [tmp]);
-  const { Database } = require("node-sqlite3-wasm");
-  const copy = new Database(tmp);
-  let ok;
-  try { ok = copy.get("PRAGMA quick_check").quick_check; } finally { copy.close(); }
-  if (ok !== "ok") {
-    fs.rmSync(tmp, { force: true });
-    throw new Error("backup copy failed quick_check: " + ok);
+  for (const n of fs.readdirSync(dir)) {
+    if (n.endsWith(".part")) fs.rmSync(path.join(dir, n), { recursive: true, force: true });
   }
-  fs.renameSync(tmp, target);
+  try {
+    // exec, not db.run: server/db.js shims db.prepare, and the library's db.run calls the
+    // shim and then a finalize() the shim's object lacks (lib/statements.js). The path is
+    // the server's own, quoted as an SQL string.
+    db.exec("VACUUM INTO '" + tmp.replace(/'/g, "''") + "'");
+    const { Database } = require("node-sqlite3-wasm");
+    const copy = new Database(tmp);
+    let ok;
+    try { ok = copy.get("PRAGMA quick_check").quick_check; } finally { copy.close(); }
+    if (ok !== "ok") throw new Error("backup copy failed quick_check: " + ok);
+    fs.renameSync(tmp, target);
+  } catch (e) {
+    fs.rmSync(tmp, { force: true });
+    throw e;
+  }
   for (const old of list(dir).slice(0, -KEEP)) fs.rmSync(path.join(dir, old), { force: true });
   return target;
 }
