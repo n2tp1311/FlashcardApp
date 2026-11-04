@@ -81,6 +81,10 @@ function validateEvent(ev) {
   if (ev.type === "updated" || ev.type === "restored") {
     if (!cardText(ev)) return "term and def, cloze with a {{c1::…}} gap, or gapfill with 2-8 gaps, required";
   }
+  if (ev.merged_into !== undefined) {
+    if (ev.type !== "deleted" || !isId(ev.merged_into) || ev.merged_into === ev.external_id)
+      return "merged_into is only for a deleted event, and names another unit";
+  }
   if (ev.type === "split") {
     if (!Array.isArray(ev.cards) || ev.cards.length < 1 || ev.cards.length > MAX_SPLIT_CARDS)
       return "cards must be an array of 1-" + MAX_SPLIT_CARDS;
@@ -135,6 +139,32 @@ function applyUpdate(card, text, now, userId) {
 function applyDeleted(card, now) {
   if (card.upstream_change === "deleted") return false;
   db.prepare("UPDATE cards SET upstream_change = 'deleted', upstream_changed_at = ? WHERE id = ?").run(now, card.id);
+  return true;
+}
+
+// KnowledgeApp merged this card's unit into another. Where the other unit's card is in the
+// same class, this card is the same concept twice, so it is removed -- a flag alone was
+// cleared by "Mark all shown as reviewed" and left both cards in the class. Each user's
+// progress moves over when it is ahead (more reviews, then the later review); the keeper
+// wins a tie. Attempts stay as they are, as on any delete, so history and stats keep them.
+function applyMerged(card, mergedInto) {
+  const keeper = db.prepare(
+    "SELECT cards.id FROM cards JOIN lessons ON cards.lesson_id = lessons.id " +
+    "WHERE cards.external_id = ? AND cards.id != ? " +
+    "AND lessons.class_id = (SELECT class_id FROM lessons WHERE id = ?) ORDER BY cards.rowid LIMIT 1"
+  ).get(mergedInto, card.id, card.lesson_id);
+  if (!keeper) return false;
+  const rank = s => [s.fsrs_reps || 0, s.fsrs_last_review_at || 0];
+  db.prepare("SELECT * FROM card_states WHERE card_id = ?").all(card.id).forEach(s => {
+    const k = db.prepare("SELECT * FROM card_states WHERE card_id = ? AND user_id = ?").get(keeper.id, s.user_id);
+    if (k) {
+      const [a, b] = [rank(s), rank(k)];
+      if (a[0] < b[0] || (a[0] === b[0] && a[1] <= b[1])) return;
+      db.prepare("DELETE FROM card_states WHERE card_id = ? AND user_id = ?").run(keeper.id, s.user_id);
+    }
+    db.prepare("UPDATE card_states SET card_id = ? WHERE card_id = ? AND user_id = ?").run(keeper.id, card.id, s.user_id);
+  });
+  db.prepare("DELETE FROM cards WHERE id = ?").run(card.id);
   return true;
 }
 
@@ -259,7 +289,8 @@ router.post("/events", (req, res) => {
         cards.forEach(card => {
           let changed = false;
           if (ev.type === "updated")  changed = applyUpdate(card, cardText(ev), now, userId);
-          if (ev.type === "deleted")  changed = applyDeleted(card, now);
+          if (ev.type === "deleted")
+            changed = (ev.merged_into && applyMerged(card, ev.merged_into)) || applyDeleted(card, now);
           if (ev.type === "restored") changed = applyRestored(card, cardText(ev), now, userId);
           if (ev.type === "split")    changed = applySplit(card, ev.cards);
           if (changed) touched++;
