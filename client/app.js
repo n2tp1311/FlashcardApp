@@ -10289,6 +10289,14 @@ document.getElementById("fc-gapfill").addEventListener("click", function(e) {
   }
 });
 
+// One row of dots fits about 40. A longer session shows the 40 around the current card,
+// so its dot stays in view instead of the row stopping at card 40.
+var FC_DOTS_MAX = 40;
+function fcDotWindow(n, index, max) {
+  if (n <= max) return 0;
+  return Math.max(0, Math.min(n - max, index - Math.floor(max / 2)));
+}
+
 function renderFcDots() {
   var dots = document.getElementById("fc-dots");
   dots.innerHTML = "";
@@ -10296,8 +10304,9 @@ function renderFcDots() {
   dots.classList.toggle("hidden", !!state.cram);
   if (state.cram) return;
   var cards = state.studyCards;
-  var max = Math.min(cards.length, 40); // limit visible dots
-  for (var i = 0; i < max; i++) {
+  var start = fcDotWindow(cards.length, state.studyIndex, FC_DOTS_MAX);
+  var end = Math.min(cards.length, start + FC_DOTS_MAX);
+  for (var i = start; i < end; i++) {
     var dot = document.createElement("div");
     dot.className = "fc-dot";
     if (i === state.studyIndex) dot.classList.add("active");
