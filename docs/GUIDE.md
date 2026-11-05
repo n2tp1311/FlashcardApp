@@ -544,6 +544,11 @@ There is no study direction setting: a card is always studied front to back.
   advice to recall first, and four faded buttons read as broken.
 - **Four grades**: Learning (Again), Hard, Know It (Good), Confident (Easy), keys 1–4,
   swipe right for Know It and left for Learning.
+- **The row of dots** under the card has one dot per card, green for Know It and red for
+  Learning, and a click on one jumps to that card. One row fits about 40, so a longer
+  session shows the 40 around the current card (`fcDotWindow()`). Until 2026-11-05 it
+  showed cards 1–40 only: from card 41 on, the current card had no dot and the row
+  looked finished with 25 cards still to go.
 - **Flashcard & Write** adds a text box on the front. What is typed is never checked;
   it is echoed on the back for comparison. Two things make it more than a text box:
   - **Hints** uncover the answer one word at a time. Using one caps the grade at
