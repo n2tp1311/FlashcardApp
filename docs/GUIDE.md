@@ -1575,19 +1575,30 @@ in dark mode get a lighter `--danger`, because their card backs are light enough
 take the shared dark red under 4.5:1 (3.98:1 in Nord).
 
 **Style** (Classic, Playful, Neo-brutalism; `prefs.style`, `data-style`, `applyStyle()`)
-sits above both. A palette swaps colours; a style is the whole look: corners, border
-widths, shadows, type, and its own colours in light and dark. Playful has rounded type
+sits beside them. The style is the shape -- corners, border widths, shadows, type -- and
+the colour theme the colours, so every palette works under every style. Playful has rounded type
 (`ui-rounded`, SF Pro Rounded on an iPhone), 18px corners and a raised lip under anything
 pressable that sinks when tapped. Neo-brutalism has ink outlines, hard offset shadows,
 square corners and heavy headings; at night the ink turns to bone so the outlines still
-lead. Classic is everything else in `style.css` and sets no attribute. A style brings its own
-colours, so while one is on, Colour theme and High contrast hide and their attributes are
-removed: their selectors carry more attributes than a style's and would win. They come back
-as the learner left them on Classic. The style's colour blocks sit after every palette, and
-`tests/styles.test.js` checks their text at 4.5:1 as the palette test does. The cost: the
-style rules override about twenty component selectors by name, so a new component keeps
-Classic's shape under a style until it is added there. Neo-brutalism also repaints the bars
-that use `--border` as their track, since solid ink made an empty bar look full.
+lead. Classic is everything else in `style.css` and sets no attribute.
+
+Playful and Neo-brutalism also have colours of their own, offered as **Style colours**, the
+first Colour theme under a style (`palette: "own"`). They apply only while no
+`data-palette` is set, so under a style even Parchment sets `data-palette="parchment"`, and
+Style colours sets none; under Classic "own" means Parchment. Leaving Classic from Parchment
+starts on Style colours; any other theme is kept. The shape rules draw from `--ink` (the
+theme's text colour) and `--lip` (the border mixed toward text), never from a palette's
+soft `--border` or blurred `--shadow`, so Neo-brutalism's outlines are dark on light themes
+and pale on dark ones. High contrast works under any theme but hides on Style colours, which
+has no high-contrast set. At first paint the inline script follows the same rules, and the
+boot code restores the saved contrast before applying the style, which would otherwise clear
+it. `tests/styles.test.js` checks the style colours at 4.5:1; the palette test already
+covers every theme. The first version kept each style to its own colours, on the grounds
+that sixty combinations were untested; the user asked for themes under styles, and since
+a style only changes shape, the palette checks still hold. The cost: the style rules
+override about twenty component selectors by name, so a new component keeps Classic's
+shape under a style until it is added there. Neo-brutalism also repaints the bars that use
+`--border` as their track, since solid ink made an empty bar look full.
 
 ### Screens on a phone
 
