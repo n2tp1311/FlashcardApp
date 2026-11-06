@@ -151,7 +151,7 @@ Object.assign(TRANSLATIONS.en, {
   "pref.styleClassic": "Classic",
   "pref.stylePlayful": "Playful",
   "pref.styleBrutal": "Neo-brutalism",
-  "pref.styleHint": "Playful and Neo-brutalism bring their own colours, so Colour theme and High contrast apply to Classic only.",
+  "pref.palette.own": "Style colours",
   "pref.highContrast": "High contrast",
   "pref.highContrastHint": "Dark mode only: brighter text and vivid colours on the page and both sides of the card.",
   "pref.palette.parchment": "Parchment",
@@ -1411,7 +1411,7 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.styleClassic": "Cổ điển",
   "pref.stylePlayful": "Vui nhộn",
   "pref.styleBrutal": "Neo-brutalism",
-  "pref.styleHint": "Vui nhộn và Neo-brutalism có bảng màu riêng, nên Màu giao diện và Độ tương phản cao chỉ áp dụng cho Cổ điển.",
+  "pref.palette.own": "Màu của phong cách",
   "pref.highContrast": "Độ tương phản cao",
   "pref.highContrastHint": "Chỉ ở chế độ tối: chữ sáng hơn và màu rực hơn trên trang và cả hai mặt thẻ.",
   "pref.palette.parchment": "Giấy ngà",
@@ -14692,20 +14692,27 @@ function syncThemeColor() {
 var PALETTES = ["parchment", "sage", "slate", "sepia", "plum", "harbour", "serika", "nord", "gruvbox", "solarized", "catppuccin", "rosepine", "everforest", "tokyonight", "dracula", "candy", "bubblegum", "meadow", "indigo", "pulse"];
 
 function paletteFromPrefs(prefs) {
-  return PALETTES.indexOf(prefs.palette) >= 0 ? prefs.palette : "parchment";
+  if (prefs.palette === "own") return "own";
+  if (PALETTES.indexOf(prefs.palette) >= 0) return prefs.palette;
+  return prefs.style === "playful" || prefs.style === "brutal" ? "own" : "parchment";
+}
+
+function styleOwnColours() {
+  return state.style !== "classic" && state.palette === "own";
 }
 
 function applyPalette(palette) {
-  state.palette = PALETTES.indexOf(palette) >= 0 ? palette : "parchment";
-  if (state.palette === "parchment" || state.style !== "classic") document.documentElement.removeAttribute("data-palette");
+  state.palette = PALETTES.indexOf(palette) >= 0 || palette === "own" ? palette : "parchment";
+  var bare = state.style === "classic" ? (state.palette === "parchment" || state.palette === "own") : state.palette === "own";
+  if (bare) document.documentElement.removeAttribute("data-palette");
   else document.documentElement.setAttribute("data-palette", state.palette);
   syncThemeColor();
 }
 
-// A style is a whole look -- shapes, borders, shadows, type and its own colours in both
-// modes -- where a palette swaps colours only. Playful and Neo-brutalism bring their own colours, so
-// the palette and high-contrast attributes are dropped while one is on (their selectors
-// would outrank the style's) and come back, as the learner left them, on Classic.
+// A style is the shape -- corners, outlines, shadows, type -- and a palette the colours, so
+// every palette works under every style. Playful and Neo-brutalism also have colours of their
+// own ("own"), shown while no data-palette is set; so under a style even Parchment sets
+// data-palette, and "own" sets none. Under Classic "own" means Parchment.
 var STYLES = ["classic", "playful", "brutal"];
 
 function styleFromPrefs(prefs) {
@@ -14725,7 +14732,7 @@ function applyStyle(style) {
 // alongside data-theme="dark".
 function applyContrast(high) {
   state.highContrast = high === true;
-  if (state.highContrast && state.style === "classic") document.documentElement.setAttribute("data-contrast", "high");
+  if (state.highContrast && !styleOwnColours()) document.documentElement.setAttribute("data-contrast", "high");
   else document.documentElement.removeAttribute("data-contrast");
 }
 
@@ -15641,12 +15648,23 @@ document.getElementById("pref-palette").addEventListener("click", function(e) {
   if (!pill) return;
   setPillGroup("pref-palette", pill.dataset.value);
   applyPalette(pill.dataset.value);
+  applyContrast(state.highContrast);
 });
 
 document.getElementById("pref-style").addEventListener("click", function(e) {
   var pill = e.target.closest(".pill");
   if (!pill) return;
   setPillGroup("pref-style", pill.dataset.value);
+  // Leaving Classic on the default Parchment shows the style's own colours; any other
+  // colour theme the learner chose is kept.
+  var palette = document.querySelector("#pref-palette .pill.active");
+  if (pill.dataset.value !== "classic" && palette && palette.dataset.value === "parchment") {
+    setPillGroup("pref-palette", "own");
+    state.palette = "own";
+  } else if (pill.dataset.value === "classic" && palette && palette.dataset.value === "own") {
+    setPillGroup("pref-palette", "parchment");
+    state.palette = "parchment";
+  }
   applyStyle(pill.dataset.value);
 });
 
@@ -15944,6 +15962,7 @@ applyI18n();
 try {
   var cachedStartPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
   state.style = styleFromPrefs(cachedStartPrefs);
+  state.highContrast = cachedStartPrefs.highContrast === true;
   applyPalette(paletteFromPrefs(cachedStartPrefs));
   applyStyle(state.style);
   applyThemePref(themeFromPrefs(cachedStartPrefs));

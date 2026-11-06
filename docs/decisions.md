@@ -1353,3 +1353,7 @@ KnowledgeApp's `ka lessons --tree` makes lessons that each hold one concept and 
 ## 2026-11-07 — Styles beside palettes: Classic, Playful, Neo-brutalism
 
 Four styles were previewed on five screens in light and dark: neo-brutalism, playful, iOS-like and Memphis. The user picked Playful and Neo-brutalism and asked to keep the current look too, switchable. A style is a separate preference from the palette because it changes shape and type, not only colour, and each style's colours were chosen with its shapes; combining twenty palettes with three styles would give sixty untested looks. So under Playful or Neo-brutalism the palette and High contrast are off and hidden, and come back on Classic. No web fonts: Playful uses the system's rounded face and Neo-brutalism the system's heaviest weight, so the offline shell needs nothing new. The cost: a new component needs its own line in each style to match it.
+
+## 2026-11-07 — Colour themes under every style
+
+The first version kept Playful and Neo-brutalism to their own colours. The user asked whether they could take colour themes too, and chose, over a few colour sets per style, to let every theme work under every style, with the style's own colours kept as one more choice. It is safe because a style changes only shape: its shape rules draw from the theme's text and border colours, and every theme's text is already checked. The cost: Neo-brutalism with a soft theme is less stark than with its own ink-on-yellow.

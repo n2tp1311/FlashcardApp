@@ -5571,14 +5571,15 @@ button.leech-pill:hover { filter: brightness(0.96); }
 
 /* ==============================
    STYLES — Preferences › Style
-   A style is a whole look: shape, borders, shadows and type, with its own colours in both
-   modes. Classic is everything above and sets no attribute. Playful and Neo-brutalism set
-   data-style; app.js drops data-palette and data-contrast while one is on, because those
-   selectors carry more attributes than these and would win. The colour blocks sit after
-   every palette so equal specificity still resolves to the style. Chosen from a preview of
-   four styles (2026-11-07); tests/styles.test.js checks every text colour here.
+   A style is the shape: corners, outlines, shadows and type. Colours come from the colour
+   theme, as in Classic, or from the style's own set, which applies only while no
+   data-palette is set (app.js sets data-palette="parchment" for Parchment under a style, so
+   "the style's colours" and "Parchment" stay different choices). Shape rules therefore draw
+   from --ink and --lip, never from a palette's soft --border or blurred --shadow. Chosen
+   from a preview of four styles (2026-11-07); tests/styles.test.js checks the style's own
+   colours, tests/palettes.test.js every theme's.
    ============================== */
-:root[data-style="playful"]:not([data-theme="dark"]) {
+:root[data-style="playful"]:not([data-palette]):not([data-theme="dark"]) {
   --bg: #f4f0ff; --surface: #ffffff; --surface2: #ece6ff; --border: #d9cff9;
   --text: #2b2250; --text2: #51487a; --text3: #605889;
   --primary: #5b3fd6; --primary-hover: #4a30bd; --primary-light: #ebe5ff;
@@ -5590,7 +5591,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
   --shadow-md: 0 6px 0 var(--lip);
   --shadow-lg: 0 14px 34px -10px rgba(43,34,80,.35);
 }
-:root[data-style="playful"][data-theme="dark"] {
+:root[data-style="playful"]:not([data-palette])[data-theme="dark"] {
   --bg: #17132e; --surface: #221c44; --surface2: #2c2556; --border: #3d3470;
   --text: #ece8ff; --text2: #cac2ec; --text3: #ada4d6;
   --primary: #b3a2ff; --primary-hover: #c7baff; --primary-light: #352c6b;
@@ -5602,7 +5603,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
   --shadow-md: 0 6px 0 var(--lip);
   --shadow-lg: 0 14px 34px -10px rgba(0,0,0,.7);
 }
-:root[data-style="brutal"]:not([data-theme="dark"]) {
+:root[data-style="brutal"]:not([data-palette]):not([data-theme="dark"]) {
   --bg: #fff4d6; --surface: #ffffff; --surface2: #fbe9b7; --border: #0a0a0a;
   --text: #0a0a0a; --text2: #2e2e2e; --text3: #454545;
   --primary: #b8300c; --primary-hover: #962608; --primary-light: #ffd23f;
@@ -5615,7 +5616,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
   --shadow-lg: 8px 8px 0 var(--border);
 }
 /* At night the ink turns to bone, so the outlines and hard shadows still lead. */
-:root[data-style="brutal"][data-theme="dark"] {
+:root[data-style="brutal"]:not([data-palette])[data-theme="dark"] {
   --bg: #16140f; --surface: #24211a; --surface2: #2f2a20; --border: #f6efdc;
   --text: #f6efdc; --text2: #ddd5bf; --text3: #c4bca5;
   --primary: #ff9a7a; --primary-hover: #ffb39a; --primary-light: #4a3a10;
@@ -5628,18 +5629,20 @@ button.leech-pill:hover { filter: brightness(0.96); }
   --shadow-lg: 8px 8px 0 var(--border);
 }
 
-/* Classic's colour settings mean nothing under another style, so they hide. */
-:root[data-style] .pref-classic-only { display: none; }
+/* The style's own colours have no high-contrast set, and Classic has no "style colours". */
+:root[data-style]:not([data-palette]) .pref-contrast-only { display: none; }
 :root:not([data-style]) .pref-style-only { display: none; }
+:root[data-style="playful"] { --lip: color-mix(in srgb, var(--border) 70%, var(--text)); }
+:root[data-style="brutal"] { --ink: var(--text); }
 
 /* ---- Playful: rounded type, soft corners, a raised lip under everything you can press ---- */
 :root[data-style="playful"] { --radius: 18px; --radius-sm: 14px; }
 :root[data-style="playful"] body { font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, sans-serif; }
 :root[data-style="playful"] :is(.screen-title, .dash-tile-num, .stat-value, h1, h2, h3) { font-weight: 800; }
 :root[data-style="playful"] :is(.class-card, .class-list-row, .lesson-item, .dash-tile, .stat-card, .stats-card-item, .quiz-opt, .tf-answer-btn) {
-  border-width: 2px; box-shadow: var(--shadow);
+  border-width: 2px; box-shadow: 0 4px 0 var(--lip);
 }
-:root[data-style="playful"] :is(.fc-front, .fc-back) { border-width: 2px; border-radius: 26px; box-shadow: var(--shadow-md); }
+:root[data-style="playful"] :is(.fc-front, .fc-back) { border-width: 2px; border-radius: 26px; box-shadow: 0 6px 0 var(--lip); }
 :root[data-style="playful"] .modal { border-radius: 24px; }
 :root[data-style="playful"] .btn:not(.btn-ghost) { box-shadow: 0 4px 0 color-mix(in srgb, var(--text) 18%, transparent); transition: transform .06s, box-shadow .06s, background var(--transition); }
 :root[data-style="playful"] .btn:not(.btn-ghost):active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--text) 18%, transparent); }
@@ -5653,19 +5656,23 @@ button.leech-pill:hover { filter: brightness(0.96); }
 :root[data-style="brutal"] :is(.screen-title, .dash-tile-num, .stat-value, h1, h2, h3) { font-weight: 900; letter-spacing: -0.02em; }
 :root[data-style="brutal"] :is(.dash-section-label, .stat-label, .dash-tile-h) { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.02em; }
 :root[data-style="brutal"] :is(.class-card, .class-list-row, .lesson-item, .dash-tile, .stat-card, .stats-card-item, .quiz-opt, .tf-answer-btn) {
-  border-width: 2px; box-shadow: var(--shadow);
+  border-width: 2px; box-shadow: 3px 3px 0 var(--ink);
 }
-:root[data-style="brutal"] :is(.fc-front, .fc-back) { border-width: 3px; box-shadow: var(--shadow-md); }
-:root[data-style="brutal"] .modal { border: 3px solid var(--border); }
-:root[data-style="brutal"] :is(.btn:not(.btn-ghost), .pill, .form-input) { border-width: 2px; border-color: var(--border); }
+/* Ink outlines, except where a state colours the border (a right or wrong answer). */
+:root[data-style="brutal"] :is(.class-card, .class-list-row, .lesson-item, .dash-tile, .stat-card, .stats-card-item, .quiz-opt:not(.correct, .wrong), .tf-answer-btn, .fc-front, .fc-back, .app-header) { border-color: var(--ink); }
+:root[data-style="brutal"] :is(.fc-front, .fc-back) { border-width: 3px; box-shadow: 5px 5px 0 var(--ink); }
+:root[data-style="brutal"] .modal { border: 3px solid var(--ink); box-shadow: 8px 8px 0 var(--ink); }
+:root[data-style="brutal"] :is(.btn:not(.btn-ghost), .pill, .form-input) { border-width: 2px; border-color: var(--ink); }
 :root[data-style="brutal"] .form-input:focus { border-color: var(--primary); }
-:root[data-style="brutal"] .btn:not(.btn-ghost) { box-shadow: 3px 3px 0 var(--border); transition: transform .06s, box-shadow .06s, background var(--transition); }
+:root[data-style="brutal"] .btn:not(.btn-ghost) { box-shadow: 3px 3px 0 var(--ink); transition: transform .06s, box-shadow .06s, background var(--transition); }
 :root[data-style="brutal"] :is(.btn:not(.btn-ghost), .quiz-opt, .tf-answer-btn):active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none; }
-:root[data-style="brutal"] .progress-bar { height: 10px; border: 2px solid var(--border); border-radius: 0; background: var(--surface); }
+:root[data-style="brutal"] .progress-bar { height: 10px; border: 2px solid var(--ink); border-radius: 0; background: var(--surface); }
 :root[data-style="brutal"] .progress-fill { border-radius: 0; }
-/* These tracks are painted in --border, which is solid ink here: an empty bar read as full. */
-:root[data-style="brutal"] :is(.progress-mini, .mastery-bar, .diff-bar-track, .analytics-retention-bar) { background: var(--surface2); box-shadow: inset 0 0 0 1.5px var(--border); }
-:root[data-style] :is(.class-card, .class-list-row, .lesson-item):hover { box-shadow: var(--shadow-md); }
+/* These tracks are painted in --border, which is solid ink in the style's own colours: an
+   empty bar read as full. */
+:root[data-style="brutal"] :is(.progress-mini, .mastery-bar, .diff-bar-track, .analytics-retention-bar) { background: var(--surface2); box-shadow: inset 0 0 0 1.5px var(--ink); }
+:root[data-style="playful"] :is(.class-card, .class-list-row, .lesson-item):hover { box-shadow: 0 6px 0 var(--lip); }
+:root[data-style="brutal"] :is(.class-card, .class-list-row, .lesson-item):hover { box-shadow: 5px 5px 0 var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   :root[data-style] :is(.btn, .quiz-opt, .tf-answer-btn):active:not(:disabled) { transform: none; }
 }

@@ -1,7 +1,7 @@
 "use strict";
-// Preferences › Style: Classic, Playful and Neo-brutalism. A style brings its own colours in
-// both modes, so every text colour is checked here, and the real app is run to check that a
-// style turns the palette and high contrast off and that Classic gives them back.
+// Preferences › Style: Classic, Playful and Neo-brutalism. A style is the shape and works with
+// every colour theme; Playful and Neo-brutalism also have colours of their own, checked here
+// in both modes. The real app is run to check how style, colour theme and contrast combine.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("fs");
@@ -32,8 +32,8 @@ function ratio(a, b) {
 
 const BLOCKS = [];
 for (const style of ["playful", "brutal"]) {
-  BLOCKS.push([style + " light", ':root[data-style="' + style + '"]:not([data-theme="dark"])']);
-  BLOCKS.push([style + " dark", ':root[data-style="' + style + '"][data-theme="dark"]']);
+  BLOCKS.push([style + " light", ":root[data-style=\"" + style + "\"]:not([data-palette]):not([data-theme=\"dark\"])"]);
+  BLOCKS.push([style + " dark", ":root[data-style=\"" + style + "\"]:not([data-palette])[data-theme=\"dark\"]"]);
 }
 
 test("every style's text is readable on its own surfaces, in both modes", function() {
@@ -60,7 +60,7 @@ test("each style comes after every palette, so it wins at equal specificity", fu
 });
 
 test("the style's strings exist in English and Vietnamese", function() {
-  for (const k of ["pref.style", "pref.styleClassic", "pref.stylePlayful", "pref.styleBrutal", "pref.styleHint"]) {
+  for (const k of ["pref.style", "pref.styleClassic", "pref.stylePlayful", "pref.styleBrutal", "pref.palette.own"]) {
     assert.equal(app.split('"' + k + '":').length - 1, 2, k);
   }
 });
@@ -73,7 +73,7 @@ test.before(() => new Promise((ok) => {
 }));
 test.after(() => listener.close());
 
-test("a style replaces the palette and high contrast, Classic gives them back, and it survives a reload", async function() {
+test("every colour theme works under a style, the style's own colours are one more choice, and it survives a reload", async function() {
   const { chromium } = require("playwright");
   const browser = await chromium.launch({ headless: true });
   try {
@@ -85,36 +85,67 @@ test("a style replaces the palette and high contrast, Classic gives them back, a
     await page.evaluate(() => document.getElementById("btn-open-preferences").click());
     await page.click("#pref-nav-appearance");
     await page.click('#pref-theme [data-value="dark"]');
-    await page.click('#pref-palette [data-value="sage"]');
-    await page.evaluate(() => { const c = document.getElementById("pref-contrast"); c.checked = true; c.dispatchEvent(new Event("change", { bubbles: true })); });
     const attrs = () => page.evaluate(() => ["data-style", "data-palette", "data-contrast"].map((a) => document.documentElement.getAttribute(a)));
-    assert.deepEqual(await attrs(), [null, "sage", "high"]);
-    assert.equal(await page.isVisible("#pref-palette"), true);
+    const tok = (n) => page.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), n);
+    assert.equal(await page.isVisible('#pref-palette [data-value="own"]'), false, "Classic has no style colours");
 
-    await page.click('#pref-style [data-value="brutal"]');
-    assert.deepEqual(await attrs(), ["brutal", null, null]);
-    assert.equal(await page.isVisible("#pref-palette"), false);
-    assert.equal(await page.isVisible(".pref-style-only"), true);
-    const look = await page.evaluate(() => {
-      const s = getComputedStyle(document.documentElement);
-      return { bg: s.getPropertyValue("--bg").trim(), radius: s.getPropertyValue("--radius").trim() };
-    });
-    assert.deepEqual(look, { bg: "#16140f", radius: "4px" });
-
+    // From the default Parchment, a style starts on its own colours.
     await page.click('#pref-style [data-value="playful"]');
+    assert.deepEqual(await attrs(), ["playful", null, null]);
+    assert.equal(await page.isVisible('#pref-palette [data-value="own"].active'), true);
+    assert.equal(await tok("--bg"), "#17132e");
     assert.match(await page.evaluate(() => getComputedStyle(document.body).fontFamily), /ui-rounded/);
 
-    await page.click('#pref-style [data-value="classic"]');
-    assert.deepEqual(await attrs(), [null, "sage", "high"], "Classic brings the palette and contrast back");
-    assert.equal(await page.isVisible(".pref-style-only"), false);
+    // A colour theme under a style: its colours, the style's shape, and contrast is offered.
+    await page.click('#pref-palette [data-value="sage"]');
+    await page.evaluate(() => { const c = document.getElementById("pref-contrast"); c.checked = true; c.dispatchEvent(new Event("change", { bubbles: true })); });
+    await page.click('#pref-style [data-value="brutal"]');
+    assert.deepEqual(await attrs(), ["brutal", "sage", "high"], "a chosen colour theme is kept");
+    assert.equal(await tok("--radius"), "4px");
+    assert.notEqual(await tok("--bg"), "#16140f");
+    assert.equal(await page.isVisible("#pref-contrast-row, .pref-contrast-only"), true);
 
+    // Parchment and the style's own colours are different choices under a style.
+    await page.click('#pref-palette [data-value="parchment"]');
+    assert.deepEqual(await attrs(), ["brutal", "parchment", "high"]);
+    assert.equal(await tok("--bg"), "#1c1c1c");
+    await page.click('#pref-palette [data-value="own"]');
+    assert.deepEqual(await attrs(), ["brutal", null, null], "own colours have no high-contrast set");
+    assert.equal(await tok("--bg"), "#16140f");
+    assert.equal(await page.isVisible(".pref-contrast-only"), false);
+
+    await page.click('#pref-style [data-value="classic"]');
+    assert.deepEqual(await attrs(), [null, null, "high"], "Classic on Parchment, contrast as left");
+    assert.equal(await page.isVisible('#pref-palette [data-value="parchment"].active'), true);
+
+    await page.click('#pref-palette [data-value="nord"]');
     await page.click('#pref-style [data-value="playful"]');
-    await page.waitForFunction(() => (JSON.parse(localStorage.getItem("fc-preferences") || "{}").style === "playful"));
+    assert.deepEqual(await attrs(), ["playful", "nord", "high"]);
+    await page.waitForFunction(() => {
+      const p = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
+      return p.style === "playful" && p.palette === "nord";
+    });
     await page.reload();
     await page.waitForFunction(() => typeof window.showPrefsPage === "function");
-    assert.deepEqual(await attrs(), ["playful", null, null]);
+    assert.deepEqual(await attrs(), ["playful", "nord", "high"]);
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
   }
+});
+
+test("before first paint: a style with no saved colour theme shows its own colours", function() {
+  const html = fs.readFileSync(path.join(root, "client", "index.html"), "utf8");
+  const boot = html.match(/<script>try\{var _p=[\s\S]*?<\/script>/)[0].replace(/^<script>|<\/script>$/g, "");
+  function run(prefs) {
+    const set = {};
+    const doc = { documentElement: { setAttribute: (k, v) => { set[k] = v; }, style: { setProperty() {} } }, querySelector: () => ({}) };
+    new Function("localStorage", "document", "matchMedia", boot)(
+      { getItem: () => JSON.stringify(prefs) }, doc, () => ({ matches: false }));
+    return set;
+  }
+  assert.deepEqual(run({ style: "brutal" }), { "data-style": "brutal" });
+  assert.deepEqual(run({ style: "brutal", palette: "own", highContrast: true }), { "data-style": "brutal" });
+  assert.deepEqual(run({ style: "playful", palette: "nord", highContrast: true }), { "data-style": "playful", "data-contrast": "high", "data-palette": "nord" });
+  assert.deepEqual(run({ palette: "sage" }), { "data-palette": "sage" });
 });
