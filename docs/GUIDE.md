@@ -1574,6 +1574,21 @@ covers them on `--card-back`. It used fixed dark-mode greens and reds, `#4ade80`
 in dark mode get a lighter `--danger`, because their card backs are light enough to
 take the shared dark red under 4.5:1 (3.98:1 in Nord).
 
+**Style** (Classic, Playful, Neo-brutalism; `prefs.style`, `data-style`, `applyStyle()`)
+sits above both. A palette swaps colours; a style is the whole look: corners, border
+widths, shadows, type, and its own colours in light and dark. Playful has rounded type
+(`ui-rounded`, SF Pro Rounded on an iPhone), 18px corners and a raised lip under anything
+pressable that sinks when tapped. Neo-brutalism has ink outlines, hard offset shadows,
+square corners and heavy headings; at night the ink turns to bone so the outlines still
+lead. Classic is everything else in `style.css` and sets no attribute. A style brings its own
+colours, so while one is on, Colour theme and High contrast hide and their attributes are
+removed: their selectors carry more attributes than a style's and would win. They come back
+as the learner left them on Classic. The style's colour blocks sit after every palette, and
+`tests/styles.test.js` checks their text at 4.5:1 as the palette test does. The cost: the
+style rules override about twenty component selectors by name, so a new component keeps
+Classic's shape under a style until it is added there. Neo-brutalism also repaints the bars
+that use `--border` as their track, since solid ink made an empty bar look full.
+
 ### Screens on a phone
 
 Most study happens on an iPhone, and several decisions are about it:
