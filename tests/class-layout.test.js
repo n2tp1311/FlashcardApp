@@ -27,6 +27,9 @@ raw.exec(`
   CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT, title TEXT, format TEXT, sort_order INTEGER DEFAULT 0, created_at INTEGER DEFAULT 0);
   CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT, format TEXT, data TEXT DEFAULT '{}', external_id TEXT,
                       sort_order INTEGER DEFAULT 0, created_at INTEGER DEFAULT 0);
+  CREATE TABLE class_layouts (class_id TEXT PRIMARY KEY, chapter TEXT NOT NULL, concept TEXT,
+                              active TEXT NOT NULL DEFAULT 'chapter', updated_at INTEGER NOT NULL DEFAULT (unixepoch()));
+  CREATE TABLE crams (id TEXT PRIMARY KEY, user_id TEXT, name TEXT, lesson_ids TEXT);
   INSERT INTO classes (id, user_id, name) VALUES ('k1', 'u1', 'Stats'), ('k2', 'u2', 'Other');
   INSERT INTO lessons VALUES ('Ldiag', 'k1', 'Diagnostic', 'term-def', 0, 0), ('Lt1', 'k1', 'Graphs', 'term-def', 1, 0),
                              ('Lt2', 'k1', 'Spread', 'term-def', 2, 0), ('Lmine', 'k1', 'My notes', 'term-def', 3, 0),

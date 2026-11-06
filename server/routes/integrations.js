@@ -8,6 +8,7 @@
 const express = require("express");
 const db      = require("../db");
 const { moveCards } = require("../lib/moveCards");
+const classLayout = require("../lib/classLayout");
 const { forEachBatch } = require("../lib/batch");
 const { cardFromState } = require("../fsrs");
 const { userScheduler } = require("../lib/memory");
@@ -478,108 +479,47 @@ router.put("/lessons/:id", (req, res) => {
   res.json({ id: lesson.id, title });
 });
 
-// PUT /api/integrations/knowledge/classes/:id/layout { lessons: [{ title, external_ids }] }
-// Puts the class's linked cards into the lessons KnowledgeApp now has, in its order. Cards
-// are moved, never recreated, so each keeps its id, schedule and history. A target lesson
-// reuses the existing lesson that already holds most of its cards, renamed if the title
-// changed, so a lesson id survives wherever it still means something. A lesson the moves
-// leave empty is removed; one that was already empty is the learner's and stays. Cards not
-// named (the learner's own) stay put, and unnamed lessons follow the named ones in their
-// old order.
-router.put("/classes/:id/layout", (req, res) => {
-  const targets = req.body?.lessons;
+// PUT /api/integrations/knowledge/classes/:id/layout
+//   { lessons: [{ title, external_ids }], concept?: [{ title, external_ids }] }
+// The class's lessons as KnowledgeApp has them now: `lessons` by chapter, and `concept` by
+// concept when the book has that layout too. Both are stored (lib/classLayout.js) and the one
+// the learner picked for the class is applied, so the learner's switch needs no KnowledgeApp
+// run. A sync without `concept` drops the stored one and shows the class by chapter.
+function layoutError(targets, name, item, seen) {
   if (!Array.isArray(targets) || targets.length < 1 || targets.length > MAX_LAYOUT_LESSONS)
-    return res.status(400).json({ error: "lessons must be an array of 1-" + MAX_LAYOUT_LESSONS });
-  const seen = new Set();
+    return name + " must be an array of 1-" + MAX_LAYOUT_LESSONS;
   for (let i = 0; i < targets.length; i++) {
     const t = targets[i];
     const title = typeof t?.title === "string" ? t.title.trim() : "";
     if (!title || Array.from(title).length > MAX_TITLE_LEN)
-      return res.status(400).json({ error: "lesson " + i + ": title must be 1-" + MAX_TITLE_LEN + " chars" });
+      return item + " " + i + ": title must be 1-" + MAX_TITLE_LEN + " chars";
     if (!Array.isArray(t.external_ids) || !t.external_ids.every(isId))
-      return res.status(400).json({ error: "lesson " + i + ": external_ids must be an array of ids" });
+      return item + " " + i + ": external_ids must be an array of ids";
     for (const ext of t.external_ids) {
-      if (seen.has(ext)) return res.status(400).json({ error: "external_id " + ext + " is in more than one place" });
+      if (seen.has(ext)) return "external_id " + ext + " is in more than one place";
       seen.add(ext);
     }
   }
-  if (seen.size > MAX_LAYOUT_CARDS)
-    return res.status(400).json({ error: "at most " + MAX_LAYOUT_CARDS + " cards" });
+  if (seen.size > MAX_LAYOUT_CARDS) return "at most " + MAX_LAYOUT_CARDS + " cards";
+  return null;
+}
+
+router.put("/classes/:id/layout", (req, res) => {
+  const chapter = req.body?.lessons, concept = req.body?.concept;
+  const err = layoutError(chapter, "lessons", "lesson", new Set()) ||
+    (concept === undefined || concept === null ? null : layoutError(concept, "concept", "concept lesson", new Set()));
+  if (err) return res.status(400).json({ error: err });
 
   const cls = ownClass(req.userId, req.params.id);
   if (!cls) return res.status(404).json({ error: "Not found" });
 
-  const out = { moved: 0, unchanged: 0, created: 0, renamed: 0, removed: 0, not_found: 0, invalid: 0 };
+  let out;
   db.transaction(() => {
-    const lessons = db.prepare("SELECT id, title, format FROM lessons WHERE class_id = ? ORDER BY sort_order, created_at").all(cls.id);
-    const byExt = new Map();
-    db.prepare(
-      "SELECT ca.id, ca.lesson_id, ca.format, ca.external_id, ca.sort_order FROM cards ca JOIN lessons l ON ca.lesson_id = l.id " +
-      "WHERE l.class_id = ? AND ca.external_id IS NOT NULL ORDER BY ca.created_at, ca.rowid"
-    ).all(cls.id).forEach(r => { if (!byExt.has(r.external_id)) byExt.set(r.external_id, r); });
-    const before = new Map(db.prepare(
-      "SELECT l.id, COUNT(ca.id) AS n FROM lessons l LEFT JOIN cards ca ON ca.lesson_id = l.id WHERE l.class_id = ? GROUP BY l.id"
-    ).all(cls.id).map(r => [r.id, r.n]));
-
-    const plan = targets.map(t => {
-      const cards = [];
-      t.external_ids.forEach(ext => {
-        const c = byExt.get(ext);
-        if (!c) out.not_found++;
-        // Gap cards are named right after their term card, so they move with it.
-        else if (c.format !== "term-def" && c.format !== "cloze" && c.format !== "gapfill") out.invalid++;
-        else cards.push(c);
-      });
-      return { title: t.title.trim(), cards, lessonId: null };
-    }).filter(p => p.cards.length);
-
-    // Most-shared cards first, each existing lesson claimed once.
-    const pairs = [];
-    plan.forEach((p, i) => {
-      const overlap = new Map();
-      p.cards.forEach(c => overlap.set(c.lesson_id, (overlap.get(c.lesson_id) || 0) + 1));
-      overlap.forEach((n, lessonId) => pairs.push({ i, lessonId, n }));
-    });
-    const termDef = new Set(lessons.filter(l => l.format === "term-def").map(l => l.id));
-    const claimed = new Set();
-    pairs.sort((a, b) => b.n - a.n || a.i - b.i).forEach(({ i, lessonId }) => {
-      if (plan[i].lessonId || claimed.has(lessonId) || !termDef.has(lessonId)) return;
-      plan[i].lessonId = lessonId; claimed.add(lessonId);
-    });
-
-    const titleOf = new Map(lessons.map(l => [l.id, l.title]));
-    const moveCard = db.prepare("UPDATE cards SET lesson_id = ?, sort_order = ? WHERE id = ?");
-    const setOrder = db.prepare("UPDATE lessons SET sort_order = ? WHERE id = ?");
-    plan.forEach((p, i) => {
-      if (!p.lessonId) {
-        p.lessonId = genId();
-        db.prepare("INSERT INTO lessons (id, class_id, title, format, sort_order) VALUES (?, ?, ?, 'term-def', ?)")
-          .run(p.lessonId, cls.id, p.title, i);
-        out.created++;
-      } else {
-        if (titleOf.get(p.lessonId) !== p.title) {
-          db.prepare("UPDATE lessons SET title = ? WHERE id = ?").run(p.title, p.lessonId);
-          out.renamed++;
-        }
-        setOrder.run(i, p.lessonId);
-      }
-      p.cards.forEach((c, j) => {
-        if (c.lesson_id === p.lessonId && c.sort_order === j) { out.unchanged++; return; }
-        moveCard.run(p.lessonId, j, c.id);
-        out.moved++;
-      });
-    });
-
-    const named = new Set(plan.map(p => p.lessonId));
-    const left = db.prepare("SELECT COUNT(*) AS n FROM cards WHERE lesson_id = ?");
-    let next = plan.length;
-    lessons.forEach(l => {
-      if (named.has(l.id)) return;
-      if (before.get(l.id) > 0 && left.get(l.id).n === 0) {
-        db.prepare("DELETE FROM lessons WHERE id = ?").run(l.id);
-        out.removed++;
-      } else setOrder.run(next++, l.id);
-    });
+    const had = classLayout.stored(cls.id);
+    const active = concept && had?.active === "concept" ? "concept" : "chapter";
+    classLayout.save(cls.id, chapter, concept || null, active);
+    out = classLayout.apply(req.userId, cls.id, active === "concept" ? concept : chapter);
+    out.active = active;
   })();
   res.json(out);
 });
@@ -657,7 +597,10 @@ router.get("/classes/:id/cards", (req, res) => {
     cards.push(card);
   });
 
-  res.json({ class: { id: cls.id, name: cls.name, archived: !!cls.archived }, lessons, cards });
+  // Which layout the class shows, so KnowledgeApp names its lessons by that layout's titles.
+  const layout = classLayout.summary(cls.id);
+  res.json({ class: { id: cls.id, name: cls.name, archived: !!cls.archived }, lessons, cards,
+    lesson_layout: layout ? layout.active : "chapter" });
 });
 
 // GET /api/integrations/knowledge/deletions?since=<id>

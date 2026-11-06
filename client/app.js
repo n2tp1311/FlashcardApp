@@ -503,6 +503,15 @@ Object.assign(TRANSLATIONS.en, {
   "sort.lastActivity": "Last activity",
   "sort.studyOrder": "Study order",
   "sort.toggleDirection": "Toggle sort direction",
+  "layout.label": "Lessons",
+  "layout.chapters": "Chapters",
+  "layout.concepts": "Concepts",
+  "layout.confirmTitle": "Change how lessons are cut?",
+  "layout.switch": "Switch",
+  "layout.confirmConcept": "Cards move into lessons that each hold one concept and everything under it. Every card keeps its progress, and you can switch back at any time.",
+  "layout.confirmChapter": "Cards move back into the book's reading order, up to 25 cards a lesson. Every card keeps its progress, and you can switch back at any time.",
+  "layout.nowConcept": "{n} lessons, by concept",
+  "layout.nowChapter": "{n} lessons, by chapter",
   "home.tagFilterToggle": "Filter by tag",
   "archive.showArchived": "Show archived classes",
   "archive.archived": "Archived",
@@ -1743,6 +1752,15 @@ Object.assign(TRANSLATIONS.vi, {
   "sort.lastActivity": "Hoạt động gần nhất",
   "sort.studyOrder": "Thứ tự học",
   "sort.toggleDirection": "Đổi chiều sắp xếp",
+  "layout.label": "Bài học",
+  "layout.chapters": "Chương",
+  "layout.concepts": "Khái niệm",
+  "layout.confirmTitle": "Đổi cách chia bài học?",
+  "layout.switch": "Chuyển",
+  "layout.confirmConcept": "Thẻ sẽ chuyển vào các bài học, mỗi bài là một khái niệm cùng mọi thứ thuộc về nó. Mỗi thẻ giữ nguyên tiến độ, và bạn có thể chuyển lại bất cứ lúc nào.",
+  "layout.confirmChapter": "Thẻ sẽ trở về thứ tự đọc của sách, tối đa 25 thẻ mỗi bài. Mỗi thẻ giữ nguyên tiến độ, và bạn có thể chuyển lại bất cứ lúc nào.",
+  "layout.nowConcept": "{n} bài học, theo khái niệm",
+  "layout.nowChapter": "{n} bài học, theo chương",
   "home.tagFilterToggle": "Lọc theo nhãn",
   "archive.showArchived": "Hiện lớp đã lưu trữ",
   "archive.archived": "Đã lưu trữ",
@@ -4745,11 +4763,42 @@ function openClass(classId) {
     setSelectMode(false);
     document.getElementById("lesson-sort-select").value = state.currentLessonSort;
     document.getElementById("lesson-sort-dir").innerHTML = state.currentLessonSortDir === "desc" ? ICON_CHEVRON_DOWN : ICON_CHEVRON_UP;
+    renderLayoutToggle(cls);
     showScreen("class");
     saveScreenState("class", classId);
     renderLessons();
   });
 }
+
+// Chapters | Concepts: shown only for a KnowledgeApp class that has both layouts
+// (`lesson_layout` from GET /classes/:id). The server moves the cards; ids stay, so progress does.
+function renderLayoutToggle(cls) {
+  var el = document.getElementById("lesson-layout-toggle");
+  el.classList.toggle("hidden", !cls.lesson_layout);
+  el.querySelectorAll("[data-layout]").forEach(function(b) {
+    var on = b.dataset.layout === cls.lesson_layout;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+document.getElementById("lesson-layout-toggle").addEventListener("click", function(e) {
+  var b = e.target.closest("[data-layout]");
+  var cls = state.currentClass;
+  if (!b || !cls || b.dataset.layout === cls.lesson_layout) return;
+  var want = b.dataset.layout;
+  confirmAction(t(want === "concept" ? "layout.confirmConcept" : "layout.confirmChapter"), function() {
+    store.setLessonLayout(cls.id, want).then(function(r) {
+      if (state.currentClass !== cls) return;
+      cls.lesson_layout = r.active;
+      renderLayoutToggle(cls);
+      renderLessons();
+      showToast(t(r.active === "concept" ? "layout.nowConcept" : "layout.nowChapter", { n: r.lessons }));
+    }).catch(function(err) {
+      showToast(t("toast.saveFailed", { message: err.message }), "error");
+    });
+  }, "layout");
+});
 
 document.getElementById("lesson-sort-select").addEventListener("change", function() {
   state.currentLessonSort = this.value;
@@ -7792,7 +7841,8 @@ document.getElementById("btn-save-bulk").addEventListener("click", function() {
 function confirmAction(msg, cb, actionKey) {
   var keys = { archive: ["confirm.archiveTitle", "common.archive"], leave: ["confirm.leaveTitle", "study.exit"],
     discard: ["confirm.discardTitle", "confirm.discard"], review: ["confirm.reviewTitle", "upstream.markReviewed"],
-    disableLink: ["share.disableLinkTitle", "share.disableLink"], endCram: ["cram.confirmEndTitle", "cram.end"] }[actionKey]
+    disableLink: ["share.disableLinkTitle", "share.disableLink"], endCram: ["cram.confirmEndTitle", "cram.end"],
+    layout: ["layout.confirmTitle", "layout.switch"] }[actionKey]
     || ["delete.confirmTitle", "common.delete"];
   var titleKey = keys[0];
   var buttonKey = keys[1];
@@ -7805,6 +7855,8 @@ function confirmAction(msg, cb, actionKey) {
   if (button) {
     button.setAttribute("data-i18n", buttonKey);
     button.textContent = t(buttonKey);
+    // Switching a layout loses nothing, so its button is not the red one.
+    button.className = actionKey === "layout" ? "btn btn-primary" : "btn btn-danger";
   }
   document.getElementById("delete-confirm-text").textContent = msg;
   state.deleteCallback = cb;
@@ -14394,6 +14446,7 @@ var SQLiteAdapter = (function() {
   return {
     getClasses:  function()     { return req("GET",    "/classes"); },
     getClass:    function(id)   { return req("GET",    "/classes/" + id); },
+    setLessonLayout: function(id, layout) { return req("PUT", "/classes/" + id + "/lesson-layout", { layout: layout }); },
     createClass: function(f)    { return req("POST",   "/classes", f); },
     updateClass: function(id,f) { return req("PUT",    "/classes/" + id, f); },
     deleteClass: function(id)   { return req("DELETE", "/classes/" + id); },

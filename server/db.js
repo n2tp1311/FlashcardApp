@@ -440,6 +440,19 @@ try {
 } catch (_) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_crams_user ON crams(user_id, test_at)"); } catch (_) {}
 
+// The two layouts KnowledgeApp sends for a class (lib/classLayout.js): by chapter, and by
+// concept when the book has one, as [{ title, external_ids }] JSON. `active` is the
+// learner's pick on the class screen; every layout KnowledgeApp sends is applied in it.
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS class_layouts (
+    class_id   TEXT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
+    chapter    TEXT NOT NULL,
+    concept    TEXT,
+    active     TEXT NOT NULL DEFAULT 'chapter' CHECK (active IN ('chapter', 'concept')),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+  )`);
+} catch (_) {}
+
 // Selected English terms waiting for KnowledgeApp to add a definition and example.
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS vocabulary_requests (

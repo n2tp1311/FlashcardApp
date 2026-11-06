@@ -3,6 +3,7 @@
 const { clozePlain } = require("../lib/cloze");
 const express = require("express");
 const db      = require("../db");
+const classLayout = require("../lib/classLayout");
 const { requireAuth } = require("../middleware/auth");
 const { rateLimit, byUser } = require("../middleware/rateLimit");
 const classifier = require("../services/classifier");
@@ -114,7 +115,30 @@ router.get("/:id", requireAuth, (req, res) => {
     "SELECT * FROM classes WHERE id = ? AND user_id = ?"
   ).get(req.params.id, req.session.userId);
   if (!row) return res.status(404).json({ error: "Not found" });
-  res.json(parseClassTags(row));
+  // Present only for a KnowledgeApp class that has a by-concept layout: the client shows
+  // the Chapters | Concepts switch from it.
+  const layout = classLayout.summary(row.id);
+  res.json(Object.assign(parseClassTags(row), layout && layout.concept ? { lesson_layout: layout.active } : {}));
+});
+
+// PUT /api/classes/:id/lesson-layout { layout: "chapter" | "concept" }
+// Shows a KnowledgeApp class by chapter or by concept, from the layouts KnowledgeApp last
+// sent: the cards move between lessons at once and keep their progress (lib/classLayout.js).
+router.put("/:id/lesson-layout", requireAuth, (req, res) => {
+  const want = req.body?.layout;
+  if (!classLayout.LAYOUTS.includes(want)) return res.status(400).json({ error: "layout must be chapter or concept" });
+  const cls = db.prepare("SELECT id FROM classes WHERE id = ? AND user_id = ?").get(req.params.id, req.session.userId);
+  if (!cls) return res.status(404).json({ error: "Not found" });
+  const had = classLayout.stored(cls.id);
+  if (!had || !had.concept) return res.status(409).json({ error: "This class has no lessons by concept" });
+  let out;
+  db.transaction(() => {
+    classLayout.save(cls.id, had.chapter, had.concept, want);
+    out = classLayout.apply(req.session.userId, cls.id, had[want]);
+  })();
+  out.active = want;
+  out.lessons = db.prepare("SELECT COUNT(*) AS n FROM lessons WHERE class_id = ?").get(cls.id).n;
+  res.json(out);
 });
 
 // POST /api/classes

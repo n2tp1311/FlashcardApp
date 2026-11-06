@@ -4815,6 +4815,9 @@ button.leech-pill:hover { filter: brightness(0.96); }
   color: var(--primary);
 }
 
+/* Chapters | Concepts on the class screen: words, not icons, at the sort select's height. */
+.lesson-layout-toggle .view-toggle-btn { width: auto; height: auto; padding: 4px 10px; font-size: 0.8125rem; }
+
 /* ============================
    CLASS LIST VIEW
    ============================ */
