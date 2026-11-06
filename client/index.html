@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/vendor/katex/katex.min.css">
   <script defer src="/vendor/katex/katex.min.js"></script>
   <link rel="stylesheet" href="/style.css">
-  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");var _t=_p.theme||(_p.darkMode===true?"dark":"system");if(_t==="dark"||(_t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.setAttribute("data-theme","dark");document.querySelector('meta[name="theme-color"]').content="#1c1c1c";}if(_p.highContrast===true)document.documentElement.setAttribute("data-contrast","high");if(typeof _p.palette==="string")document.documentElement.setAttribute("data-palette",_p.palette);if(_p.fontScale)document.documentElement.style.setProperty("--font-scale",_p.fontScale);}catch(_){}</script>
+  <script>try{var _p=JSON.parse(localStorage.getItem("fc-preferences")||"{}");var _t=_p.theme||(_p.darkMode===true?"dark":"system");if(_t==="dark"||(_t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.setAttribute("data-theme","dark");document.querySelector('meta[name="theme-color"]').content="#1c1c1c";}if(_p.style==="playful"||_p.style==="brutal")document.documentElement.setAttribute("data-style",_p.style);else{if(_p.highContrast===true)document.documentElement.setAttribute("data-contrast","high");if(typeof _p.palette==="string")document.documentElement.setAttribute("data-palette",_p.palette);}if(_p.fontScale)document.documentElement.style.setProperty("--font-scale",_p.fontScale);}catch(_){}</script>
 </head>
 <body>
 
@@ -822,14 +822,23 @@
             </div>
           </div>
           <div class="pref-row">
+            <label class="form-label" data-i18n="pref.style">Style</label>
+            <div class="font-scale-row" id="pref-style">
+              <button type="button" class="pill" data-value="classic" data-i18n="pref.styleClassic">Classic</button>
+              <button type="button" class="pill" data-value="playful" data-i18n="pref.stylePlayful">Playful</button>
+              <button type="button" class="pill" data-value="brutal" data-i18n="pref.styleBrutal">Neo-brutalism</button>
+            </div>
+          </div>
+          <p class="pref-hint pref-style-only" data-i18n="pref.styleHint">Playful and Neo-brutalism bring their own colours, so Colour theme and High contrast apply to Classic only.</p>
+          <div class="pref-row pref-classic-only">
             <label class="form-label" for="pref-contrast" data-i18n="pref.highContrast">High contrast</label>
             <label class="toggle-switch">
               <input type="checkbox" id="pref-contrast">
               <span class="toggle-track"></span>
             </label>
           </div>
-          <p class="pref-hint" data-i18n="pref.highContrastHint">Dark mode only: brighter text and vivid colours on the page and both sides of the card.</p>
-          <div class="pref-row pref-row-wrap">
+          <p class="pref-hint pref-classic-only" data-i18n="pref.highContrastHint">Dark mode only: brighter text and vivid colours on the page and both sides of the card.</p>
+          <div class="pref-row pref-row-wrap pref-classic-only">
             <label class="form-label" data-i18n="pref.palette">Colour theme</label>
             <div class="palette-row" id="pref-palette">
               <button type="button" class="pill palette-pill" data-value="parchment" data-i18n="pref.palette.parchment">Parchment</button>

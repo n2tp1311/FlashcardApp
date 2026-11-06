@@ -494,3 +494,6 @@
 
 ## Lessons by chapter or by concept (2026-11-06)
 - A KnowledgeApp class whose book has a by-concept layout shows a Chapters | Concepts switch beside Sort by on the class screen. Switching asks first, then moves the cards into the other layout's lessons at once: every card keeps its progress, and a cram follows its cards. A sync keeps the pick. `tests/class-lesson-layout.test.js`, `tests/lesson-layout-toggle.test.js`
+
+## Style: Classic, Playful, Neo-brutalism (2026-11-07)
+- Preferences → Appearance → Style switches the whole look, in light and dark: Playful (rounded type, soft corners, buttons that press down) and Neo-brutalism (ink outlines, hard shadows, square corners). Colour theme and High contrast apply to Classic and hide under the other two. Saved with the other preferences and applied before first paint. `tests/styles.test.js`

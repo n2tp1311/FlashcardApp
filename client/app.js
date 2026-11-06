@@ -147,6 +147,11 @@ Object.assign(TRANSLATIONS.en, {
   "pref.themeDark": "Dark",
   "pref.themeSystem": "Match device",
   "pref.palette": "Colour theme",
+  "pref.style": "Style",
+  "pref.styleClassic": "Classic",
+  "pref.stylePlayful": "Playful",
+  "pref.styleBrutal": "Neo-brutalism",
+  "pref.styleHint": "Playful and Neo-brutalism bring their own colours, so Colour theme and High contrast apply to Classic only.",
   "pref.highContrast": "High contrast",
   "pref.highContrastHint": "Dark mode only: brighter text and vivid colours on the page and both sides of the card.",
   "pref.palette.parchment": "Parchment",
@@ -1402,6 +1407,11 @@ Object.assign(TRANSLATIONS.vi, {
   "pref.themeDark": "Tối",
   "pref.themeSystem": "Theo thiết bị",
   "pref.palette": "Màu giao diện",
+  "pref.style": "Phong cách",
+  "pref.styleClassic": "Cổ điển",
+  "pref.stylePlayful": "Vui nhộn",
+  "pref.styleBrutal": "Neo-brutalism",
+  "pref.styleHint": "Vui nhộn và Neo-brutalism có bảng màu riêng, nên Màu giao diện và Độ tương phản cao chỉ áp dụng cho Cổ điển.",
   "pref.highContrast": "Độ tương phản cao",
   "pref.highContrastHint": "Chỉ ở chế độ tối: chữ sáng hơn và màu rực hơn trên trang và cả hai mặt thẻ.",
   "pref.palette.parchment": "Giấy ngà",
@@ -3619,6 +3629,7 @@ var state = {
 
   // User preferences (loaded from server after login)
   darkMode: false,
+  style: "classic",
   highContrast: false,
   haptics: true,
   sounds: true,
@@ -14686,9 +14697,27 @@ function paletteFromPrefs(prefs) {
 
 function applyPalette(palette) {
   state.palette = PALETTES.indexOf(palette) >= 0 ? palette : "parchment";
-  if (state.palette === "parchment") document.documentElement.removeAttribute("data-palette");
+  if (state.palette === "parchment" || state.style !== "classic") document.documentElement.removeAttribute("data-palette");
   else document.documentElement.setAttribute("data-palette", state.palette);
   syncThemeColor();
+}
+
+// A style is a whole look -- shapes, borders, shadows, type and its own colours in both
+// modes -- where a palette swaps colours only. Playful and Neo-brutalism bring their own colours, so
+// the palette and high-contrast attributes are dropped while one is on (their selectors
+// would outrank the style's) and come back, as the learner left them, on Classic.
+var STYLES = ["classic", "playful", "brutal"];
+
+function styleFromPrefs(prefs) {
+  return STYLES.indexOf(prefs.style) >= 0 ? prefs.style : "classic";
+}
+
+function applyStyle(style) {
+  state.style = STYLES.indexOf(style) >= 0 ? style : "classic";
+  if (state.style === "classic") document.documentElement.removeAttribute("data-style");
+  else document.documentElement.setAttribute("data-style", state.style);
+  applyPalette(state.palette);
+  applyContrast(state.highContrast);
 }
 
 // Off by default, following Material/Apple/GitHub: the plain dark theme is muted and the
@@ -14696,7 +14725,7 @@ function applyPalette(palette) {
 // alongside data-theme="dark".
 function applyContrast(high) {
   state.highContrast = high === true;
-  if (state.highContrast) document.documentElement.setAttribute("data-contrast", "high");
+  if (state.highContrast && state.style === "classic") document.documentElement.setAttribute("data-contrast", "high");
   else document.documentElement.removeAttribute("data-contrast");
 }
 
@@ -14746,8 +14775,10 @@ if (systemDark.addEventListener) systemDark.addEventListener("change", onSystemT
 else systemDark.addListener(onSystemThemeChange);
 
 function applyPrefs(prefs) {
+  state.style = styleFromPrefs(prefs);
   applyPalette(paletteFromPrefs(prefs));
   applyContrast(prefs.highContrast);
+  applyStyle(state.style);
   applyThemePref(themeFromPrefs(prefs));
   if (typeof prefs.sounds === "boolean") {
     state.sounds = prefs.sounds;
@@ -15227,6 +15258,7 @@ document.getElementById("btn-open-preferences").addEventListener("click", functi
   setPillGroup("pref-daily-goal", String(state.dailyGoal));
   document.getElementById("pref-contrast").checked = state.highContrast;
   setPillGroup("pref-palette", state.palette);
+  setPillGroup("pref-style", state.style);
   document.getElementById("pref-haptics").checked = state.haptics;
   document.getElementById("pref-sounds").checked = state.sounds;
   document.getElementById("pref-quiz-known").checked = state.quizCountsAsKnown;
@@ -15611,6 +15643,13 @@ document.getElementById("pref-palette").addEventListener("click", function(e) {
   applyPalette(pill.dataset.value);
 });
 
+document.getElementById("pref-style").addEventListener("click", function(e) {
+  var pill = e.target.closest(".pill");
+  if (!pill) return;
+  setPillGroup("pref-style", pill.dataset.value);
+  applyStyle(pill.dataset.value);
+});
+
 document.getElementById("pref-contrast").addEventListener("change", function() {
   applyContrast(this.checked);
 });
@@ -15669,6 +15708,8 @@ function readPrefsForm() {
   var maxReviewsRaw = document.getElementById("pref-max-reviews").value.trim();
   var theme = document.querySelector("#pref-theme .pill.active").dataset.value;
   var palette = document.querySelector("#pref-palette .pill.active").dataset.value;
+  var stylePill = document.querySelector("#pref-style .pill.active");
+  var style = stylePill ? stylePill.dataset.value : state.style;
   var highContrast = document.getElementById("pref-contrast").checked;
   var haptics = document.getElementById("pref-haptics").checked;
   var sounds = document.getElementById("pref-sounds").checked;
@@ -15678,7 +15719,7 @@ function readPrefsForm() {
   var maxReviews = maxReviewsFieldInvalid() ? state.maxReviewsPerDay : maxReviewsRaw === "" ? null : parseInt(maxReviewsRaw, 10);
   var goalPill = document.querySelector("#pref-daily-goal .pill.active");
   var dailyGoal = goalPill ? parseInt(goalPill.dataset.value, 10) : state.dailyGoal;
-  var prefs = { theme: theme, palette: palette, highContrast: highContrast, haptics: haptics, sounds: sounds, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, dailyGoal: dailyGoal, quizCountsAsKnown: quizCountsAsKnown };
+  var prefs = { theme: theme, style: style, palette: palette, highContrast: highContrast, haptics: haptics, sounds: sounds, fontScale: state.fontScale, ttsRate: rate, language: lang, maxReviewsPerDay: maxReviews, dailyGoal: dailyGoal, quizCountsAsKnown: quizCountsAsKnown };
   if (IS_SERVER) {
     prefs.loadBalance = document.getElementById("pref-load-balance").checked;
     prefs.easyDays = easyDaysDraft.slice();
@@ -15710,6 +15751,7 @@ function savePrefsNow() {
   if (sent === prefsLastSent) return;
   prefsLastSent = sent;
   applyThemePref(prefs.theme);
+  applyStyle(prefs.style);
   applyPalette(prefs.palette);
   applyContrast(prefs.highContrast);
   state.haptics = prefs.haptics;
@@ -15901,7 +15943,9 @@ document.documentElement.setAttribute("lang", state.language);
 applyI18n();
 try {
   var cachedStartPrefs = JSON.parse(localStorage.getItem("fc-preferences") || "{}");
+  state.style = styleFromPrefs(cachedStartPrefs);
   applyPalette(paletteFromPrefs(cachedStartPrefs));
+  applyStyle(state.style);
   applyThemePref(themeFromPrefs(cachedStartPrefs));
 } catch (_) { applyPalette("parchment"); applyThemePref("system"); }
 
