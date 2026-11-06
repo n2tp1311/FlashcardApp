@@ -145,6 +145,7 @@ Other tables, by owner:
 | `vocabulary_requests` | words saved for KnowledgeApp to define (§13) |
 | `rewrite_requests` | cards the learner asked KnowledgeApp to fix: leeches and ⚑ flags, with `issue`, `note`, KnowledgeApp's `outcome_note`, and for a rewrite the wording before and after (`before_term`, `before_def`, `after_term`, `after_def`) (§5, §13) |
 | `crams` | a test date and its lessons; progress is read from attempts (§8) |
+| `class_layouts` | a KnowledgeApp class's two lesson layouts, by chapter and by concept, as KnowledgeApp sent them, and which one the class shows (`active`) (§13) |
 | `study_events`, `user_achievements` | the few facts achievements need that nothing else stores (§11) |
 | `push_subscriptions`, `reminder_log`, `app_secrets` | reminders (§17) |
 | `class_share_links`, `class_invites` | sharing (§18) |
@@ -1268,9 +1269,9 @@ flagged, since the summary line already says everything.
 |---|---|
 | `GET /classes`, `POST /classes` | list classes; create one for a book that has none |
 | `POST /add-cards` | add cards into an existing class, into a lesson, after a card, or into a new lesson |
-| `PUT /classes/:id/layout` | move linked cards into KnowledgeApp's current lessons, in its order |
+| `PUT /classes/:id/layout` | move linked cards into KnowledgeApp's current lessons, in its order; `lessons` is the by-chapter layout, an optional `concept` the by-concept one |
 | `PUT /lessons/:id` | rename a lesson in place |
-| `GET /classes/:id/cards` | every card with its position, for reconciling, and the learner's verdict on its passage (`source_feedback`) |
+| `GET /classes/:id/cards` | every card with its position, for reconciling, the learner's verdict on its passage (`source_feedback`), and which layout the class shows (`lesson_layout`) |
 | `POST /convert-cards` | rewrite mcq / true-false cards as term-def in place |
 | `POST /needs` | set which cards each linked card builds on (`cards.needs`, external ids); an empty list clears it |
 | `POST /sources` | set the book passage shown under a card, with the text before and after it for Read more and the same concept's passages in other books (`related`): by `external_id` on linked cards, or by `card_id` on a card with no `external_id` |
@@ -1310,6 +1311,21 @@ lessons the moves leave empty, and leaves the learner's own cards and empty less
 alone. `convert-cards` keeps the schedule as it was (deliberately not due) and stores the
 original in `converted_from` so the conversion can be undone. `sort_order` repeats, so
 a lesson's order is rewritten densely when cards are inserted after an anchor.
+
+**By chapter or by concept** (`server/lib/classLayout.js`, `class_layouts`). For a book
+run with `ka lessons --tree`, KnowledgeApp sends two layouts: by chapter (the book's
+reading order, lessons of up to 25 cards) and by concept (one topic and everything under
+it, whatever its size). Both are stored, and the class is arranged by `active`, which the
+learner sets with the Chapters | Concepts switch beside Sort by on the class screen
+(`PUT /api/classes/:id/lesson-layout`, after a confirm). Storing both makes the switch
+instant and independent of KnowledgeApp; the cost is one JSON copy of each layout per
+class. A switch is the same `layout` move: cards keep their ids, schedules and history,
+and only their lesson changes. A switch removes most lessons, so a cram that named a
+removed lesson is pointed at the lessons its cards went to; left alone it would name
+nothing and hold no cards. A later sync keeps the learner's pick, and a sync without
+`concept` (the book's tree was dropped) puts the class back by chapter and hides the
+switch, which only shows when a concept layout exists. Achievements already earned for a
+lesson stay earned.
 
 **No route edits an existing card's data except through events.** A wrong card fixed on
 KnowledgeApp's side arrives as an `updated` event; a card that exists only here (an MCQ
