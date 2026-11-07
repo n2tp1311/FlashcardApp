@@ -354,6 +354,13 @@ the fix comes back, rather than opening a second channel to KnowledgeApp. The le
 prompt's own request sends no issues and is stored as `leech`; it never overwrites a flag
 already waiting, while a second flag replaces the first's issue and note.
 
+While a request is pending, the card sits out: Study now, Study Setup (every filter) and
+every due count leave it out (`notHeldSql()` in `lib/mastery.js`, and the same check on the
+client's `rewrite_pending`). Reviewing text the learner has just said is wrong only drills
+the mistake. Its schedule is untouched, so once KnowledgeApp answers it comes back exactly
+as due as it was. The cost: a card KnowledgeApp leaves pending for days is not reviewed
+for days. A session already running keeps a card flagged in it.
+
 Once sent, the ⚑ is filled in. KnowledgeApp fixes only what was flagged, from the book
 passage, and may leave the card as it was -- a "wrong" fact the book does not contradict,
 say. Whatever it decides, it sends a one-sentence verdict (`outcome_note`): what was wrong
