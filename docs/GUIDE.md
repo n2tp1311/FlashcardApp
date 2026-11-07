@@ -1613,6 +1613,16 @@ Most study happens on an iPhone, and several decisions are about it:
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The
   heading no longer wraps, the row does, and under 430px "Sort by" is for screen readers
   only.
+- **A class's lessons are grouped by chapter in book order.** KnowledgeApp names a lesson
+  "<chapter> — <topic>", and at 375px the chapter repeated on every row and two
+  always-visible edit and delete buttons left the topic as "1. Introduction — Lear…". In
+  Book order the chapter is now a heading over its lessons, with its cards and mastered
+  share summed from the lessons' bars, and each row shows only the topic, wrapped to two
+  lines; a lesson with no " — " is its whole chapter. Any other sort scatters a chapter,
+  so it shows full names and no headings, and a class with no chapter names never gets
+  them (`lessonsGroupByChapter`). Edit and delete sit behind one ⋯ (opening upward near
+  the bottom of the screen) and the score moved to the meta line, so the title has about
+  80% of the row. Three layouts were previewed; this one cost an extra tap to edit.
 - **The grades are the bottom row** of the flashcard screen, Prev/Next the row above.
   Prev/Next used to be the bottom row, 8px under Confident: a slip skipped a card
   ungraded, and on the last card the same spot is Finish. Landscape keeps one row.
