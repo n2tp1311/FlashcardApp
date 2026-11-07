@@ -16,4 +16,10 @@ const MASTERED_SQL =
 // still showed it as New. srs_due_at, not fsrs_stability, so a card can never be both due and new.
 const UNSCHEDULED_SQL = "(cs.card_id IS NULL OR cs.srs_due_at IS NULL)";
 
-module.exports = { MASTERED_INTERVAL_SEC, MASTERED_SQL, UNSCHEDULED_SQL };
+// A card waiting on a KnowledgeApp rewrite (flagged, or a leech sent for rewriting) is held out
+// of study and of the due counts until the answer comes back: reviewing text the learner has
+// already said is wrong only drills the mistake. `alias` names the cards table in the query.
+const notHeldSql = (alias) =>
+  "NOT EXISTS (SELECT 1 FROM rewrite_requests rr WHERE rr.card_id = " + alias + ".id AND rr.status = 'pending')";
+
+module.exports = { MASTERED_INTERVAL_SEC, MASTERED_SQL, UNSCHEDULED_SQL, notHeldSql };

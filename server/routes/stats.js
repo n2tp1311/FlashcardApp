@@ -7,7 +7,7 @@ const { requireAuth } = require("../middleware/auth");
 const { computeStreak, weekRow, weekStart, addDays } = require("../lib/streak");
 const { summarizeToday } = require("../lib/today");
 const { aboveAverageRun } = require("../lib/aboveAvg");
-const { MASTERED_INTERVAL_SEC, MASTERED_SQL, UNSCHEDULED_SQL } = require("../lib/mastery");
+const { MASTERED_INTERVAL_SEC, MASTERED_SQL, UNSCHEDULED_SQL, notHeldSql } = require("../lib/mastery");
 const { userScheduler } = require("../lib/memory");
 const { cardFromState, Rating } = require("../fsrs");
 const router  = express.Router();
@@ -320,7 +320,7 @@ router.get("/dashboard", requireAuth, (req, res) => {
     "JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
     "JOIN lessons l ON ca.lesson_id = l.id " +
     "JOIN classes c ON l.class_id = c.id " +
-    "WHERE c.user_id = ? AND c.archived = 0 AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
+    "WHERE c.user_id = ? AND c.archived = 0 AND cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? AND " + notHeldSql("ca") + " " +
     "GROUP BY ca.lesson_id"
   ).all(uid, uid, nowSec);
 
@@ -843,7 +843,7 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
     "JOIN lessons l ON ca.lesson_id = l.id " +
     "JOIN classes c ON l.class_id = c.id " +
     "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
-    "WHERE c.user_id = ? AND c.archived = 0 AND " + UNSCHEDULED_SQL
+    "WHERE c.user_id = ? AND c.archived = 0 AND " + UNSCHEDULED_SQL + " AND " + notHeldSql("ca")
   ).get(uid, uid);
   const availableNewCards = availRow.n || 0;
   // Per class, for Study now's class checklist: its names, and how many new cards each
@@ -851,7 +851,7 @@ router.get("/new-card-estimate", requireAuth, (req, res) => {
   const byClass = db.prepare(
     "SELECT c.id, c.name, COUNT(ca.id) - COUNT(cs.srs_due_at) AS available FROM classes c " +
     "LEFT JOIN lessons l ON l.class_id = c.id " +
-    "LEFT JOIN cards ca ON ca.lesson_id = l.id " +
+    "LEFT JOIN cards ca ON ca.lesson_id = l.id AND " + notHeldSql("ca") + " " +
     "LEFT JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
     "WHERE c.user_id = ? AND c.archived = 0 GROUP BY c.id ORDER BY c.sort_order, c.created_at"
   ).all(uid, uid);

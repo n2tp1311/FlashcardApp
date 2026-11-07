@@ -371,6 +371,38 @@ test("a card shown but never graded, or marked Know It, is still new: Study now 
   assert.deepEqual((await studyNow({ reviews: null, newCards: 10 }, "u5")).body.cards.map((c) => c.id), ["seen", "known", "untouched"]);
 });
 
+test("a card waiting on a KnowledgeApp rewrite is left out of Study now, the due counts and study setup", async () => {
+  db.exec(`
+    INSERT INTO users (id, email, name) VALUES ('uH', 'held@x', 'F');
+    INSERT INTO classes (id, user_id, name) VALUES ('kH', 'uH', 'Held');
+    INSERT INTO lessons (id, class_id, title, format) VALUES ('lH', 'kH', 'Only', 'term-def');
+    INSERT INTO cards (id, lesson_id, format, data, sort_order) VALUES
+      ('due-ok', 'lH', 'term-def', '{}', 0), ('due-held', 'lH', 'term-def', '{}', 1), ('due-done', 'lH', 'term-def', '{}', 2),
+      ('new-ok', 'lH', 'term-def', '{}', 3), ('new-held', 'lH', 'term-def', '{}', 4);
+    INSERT INTO rewrite_requests (id, user_id, card_id, lapses, status) VALUES
+      ('r1', 'uH', 'due-held', 0, 'pending'), ('r2', 'uH', 'new-held', 0, 'pending'), ('r3', 'uH', 'due-done', 0, 'completed');
+  `);
+  ["due-ok", "due-held", "due-done"].forEach((id, i) => st.run(id, "uH", now - 3600 + i, now - 86400));
+  // A request KnowledgeApp has answered no longer holds the card back.
+  assert.deepEqual((await studyNow({ reviews: null, newCards: 10 }, "uH")).body.cards.map((c) => c.id), ["due-ok", "due-done", "new-ok"]);
+  const est = await (await fetch(base + "/api/stats/new-card-estimate", { headers: { "x-user": "uH" } })).json();
+  assert.equal(est.availableNewCards, 1);
+  assert.deepEqual(est.byClass, [{ id: "kH", name: "Held", available: 1 }]);
+  const dash = await (await fetch(base + "/api/stats/dashboard", { headers: { "x-user": "uH" } })).json();
+  assert.deepEqual(dash.dueForReview.map((l) => [l.id, l.dueCount]), [["lH", 2]]);
+  const classes = await (await fetch(base + "/api/classes", { headers: { "x-user": "uH" } })).json();
+  assert.equal(classes.find((c) => c.id === "kH").due_count, 2);
+
+  // Study setup filters on the client from the lesson's cards, which carry rewrite_pending.
+  const app = fs.readFileSync(path.join(root, "client", "app.js"), "utf8");
+  const i = app.indexOf("function filterCardsBySetup(");
+  const filter = new Function("applyReviewCap", app.slice(i, app.indexOf("\n}\n", i) + 2) + "return filterCardsBySetup;")((c) => c);
+  const cards = [{ id: "a", srs_due_at: now - 60 }, { id: "b", srs_due_at: now - 60, rewrite_pending: true }, { id: "c" }, { id: "d", rewrite_pending: true }];
+  assert.deepEqual(filter(cards, "due", {}, {}, 0).map((c) => c.id), ["a"]);
+  assert.deepEqual(filter(cards, "all", {}, {}, 0).map((c) => c.id), ["a", "c"]);
+  assert.deepEqual(filter(cards, "learning", {}, {}, 0).map((c) => c.id), ["a", "c"]);
+});
+
 test("achievements over the real schema: learned, deep memory, a solved passage, and Needs Recall days", async () => {
   db.exec(`
     INSERT INTO users (id, email, name) VALUES ('u6', 'f@x', 'F');

@@ -4,6 +4,7 @@ const { clozePlain } = require("../lib/cloze");
 const express = require("express");
 const db      = require("../db");
 const classLayout = require("../lib/classLayout");
+const { notHeldSql } = require("../lib/mastery");
 const { requireAuth } = require("../middleware/auth");
 const { rateLimit, byUser } = require("../middleware/rateLimit");
 const classifier = require("../services/classifier");
@@ -85,7 +86,7 @@ router.get("/", requireAuth, (req, res) => {
       "FROM cards ca " +
       "JOIN card_states cs ON cs.card_id = ca.id AND cs.user_id = ? " +
       "JOIN lessons l ON ca.lesson_id = l.id " +
-      "WHERE cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? " +
+      "WHERE cs.srs_due_at IS NOT NULL AND cs.srs_due_at <= ? AND " + notHeldSql("ca") + " " +
       "GROUP BY l.class_id" +
     ") dc ON dc.class_id = cl.id " +
     "LEFT JOIN (" +

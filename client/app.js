@@ -9352,6 +9352,8 @@ function applyReviewCap(dueCards, reviewsToday) {
 // Shared between the live match-count preview on Study Setup and startStudy() itself,
 // so the two can never drift out of sync on what counts as a "match".
 function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday, ignoreCap) {
+  // A card waiting on a KnowledgeApp rewrite sits out until the fixed text arrives (notHeldSql).
+  cards = cards.filter(function(c) { return !c.rewrite_pending; });
   if (filter === "due") {
     var nowSec2 = Math.floor(Date.now() / 1000);
     var due = cards.filter(function(c) { return c.srs_due_at && c.srs_due_at <= nowSec2; });
