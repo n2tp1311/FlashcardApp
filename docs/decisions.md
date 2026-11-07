@@ -1357,3 +1357,7 @@ Four styles were previewed on five screens in light and dark: neo-brutalism, pla
 ## 2026-11-07 — Colour themes under every style
 
 The first version kept Playful and Neo-brutalism to their own colours. The user asked whether they could take colour themes too, and chose, over a few colour sets per style, to let every theme work under every style, with the style's own colours kept as one more choice. It is safe because a style changes only shape: its shape rules draw from the theme's text and border colours, and every theme's text is already checked. The cost: Neo-brutalism with a soft theme is less stark than with its own ink-on-yellow.
+
+## 2026-11-07 — Chapter headings for long lesson names
+
+The concept lessons' names ("2. Linear Algebra — Foundations And Matrix Operations") were cut to "2. Linear Algebra — Fo…" on a phone. Three layouts were previewed on the real Deep Learning lessons: wrap the name to two lines; group lessons under chapter headings; and headings plus moving edit and delete behind ⋯ with the score on the meta line. The user chose the third. Headings appear only in Book order, the one sort that keeps a chapter together. The cost: editing or deleting a lesson takes one more tap, and selecting is still a long press.

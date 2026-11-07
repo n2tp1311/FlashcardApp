@@ -1418,7 +1418,7 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 .sort-dir-btn:hover { background: var(--surface2); color: var(--text); }
 .lesson-list { display: flex; flex-direction: column; gap: 10px; }
 
-.lesson-badges { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 0 0 auto; min-width: 190px; }
+.lesson-badges { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 0 0 auto; min-width: 96px; }
 @media (max-width: 600px) { .lesson-badges { min-width: 0; } }
 .lesson-item {
   background: var(--surface);
@@ -1439,16 +1439,38 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 
 .lesson-info { flex: 1; min-width: 0; }
 
+/* Two lines, then "…": a concept lesson's topic runs to 60 characters. */
 .lesson-title {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .lesson-meta { font-size: 0.75rem; color: var(--text2); margin-top: 2px; }
+.lesson-meta-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+.lesson-meta-line .lesson-meta { margin-top: 0; }
+
+/* Book order in a KnowledgeApp class: the chapter over its lessons (splitLessonTitle). */
+.lesson-chapter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+  margin-top: 10px;
+}
+.lesson-chapter-head:first-child { margin-top: 0; }
+.lesson-chapter-name { font-size: 0.8125rem; font-weight: 700; color: var(--text); min-width: 0; }
+.lesson-chapter-stats { font-size: 0.75rem; color: var(--text2); flex: none; font-variant-numeric: tabular-nums; }
+
+.lesson-menu { flex: none; }
+.lesson-menu .dropdown-item svg { width: 16px; height: 16px; }
+.dropdown-menu.dropdown-up { top: auto; bottom: calc(100% + 6px); }
 
 .class-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 .class-tag-chip {
@@ -3889,11 +3911,9 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .class-card-actions, .lesson-actions, .card-actions { gap: 10px; }
 
   /* M15: lesson titles were mid-word ellipsizing even for realistic-length titles —
-     measured at 375px, the title box only got ~35% of the row (123px of 351px) because
-     row padding/gaps + the always-visible action icons (M13) + the format badge collectively
-     claimed the rest. Action icons stay (deliberate, M13); reclaim from the least essential
-     piece (format badge, purely categorical, still visible once the lesson is open) and
-     tighten padding/gap instead. */
+     measured at 375px, the title box only got ~35% of the row (123px of 351px). Edit and
+     delete now sit behind one ⋯ and the score on the meta line; the format badge (purely
+     categorical, still visible once the lesson is open) goes, and padding tightens. */
   .lesson-item { padding: 14px 14px; gap: 8px; }
   .format-badge { display: none; }
 }
@@ -5654,7 +5674,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
 /* ---- Neo-brutalism: thick ink outlines, hard offset shadows, square corners, heavy type ---- */
 :root[data-style="brutal"] { --radius: 4px; --radius-sm: 3px; --radius-pill: 6px; }
 :root[data-style="brutal"] :is(.screen-title, .dash-tile-num, .stat-value, h1, h2, h3) { font-weight: 900; letter-spacing: -0.02em; }
-:root[data-style="brutal"] :is(.dash-section-label, .stat-label, .dash-tile-h) { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.02em; }
+:root[data-style="brutal"] :is(.dash-section-label, .stat-label, .dash-tile-h, .lesson-chapter-name) { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.02em; }
 :root[data-style="brutal"] :is(.class-card, .class-list-row, .lesson-item, .dash-tile, .stat-card, .stats-card-item, .quiz-opt, .tf-answer-btn) {
   border-width: 2px; box-shadow: 3px 3px 0 var(--ink);
 }

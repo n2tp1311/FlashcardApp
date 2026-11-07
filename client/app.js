@@ -27,6 +27,7 @@ function scaleXStyle(scale) {
 
 var ICON_EDIT     = svgIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>');
 var ICON_DELETE   = svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>');
+var ICON_MORE     = svgIcon('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>');
 var ICON_ARCHIVE  = svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>');
 var ICON_PIN_INNER = '<line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>';
 var ICON_PIN = svgIcon(ICON_PIN_INNER);
@@ -542,6 +543,7 @@ Object.assign(TRANSLATIONS.en, {
   "count.lessons_one": "{n} lesson",
   "count.knownProgress": "{known} / {total} known ({pct}%)",
   "mastery.text": "{pct}% mastered",
+  "lesson.wholeChapter": "Whole chapter",
   "mastery.tooltip": "Mastered {mastered} · Known {remembered} · Learning {learning} · New {fresh}. Mastered: the next review is 21 or more days away. Marked Know It: {flagged} / {total}.",
   "class.levelMeta": "Lv {level} · {lessons}",
   "class.knownTooltip": "Cards you've manually marked \"Know It\" in Flashcard mode",
@@ -1795,6 +1797,7 @@ Object.assign(TRANSLATIONS.vi, {
   "count.lessons": "{n} bài học",
   "count.knownProgress": "{known} / {total} đã thuộc ({pct}%)",
   "mastery.text": "Thành thạo {pct}%",
+  "lesson.wholeChapter": "Cả chương",
   "mastery.tooltip": "Thành thạo {mastered} · Đã nhớ {remembered} · Đang học {learning} · Mới {fresh}. Thành thạo: lần ôn tới cách 21 ngày trở lên. Đã đánh dấu thuộc: {flagged} / {total}.",
   "class.levelMeta": "Bậc {level} · {lessons}",
   "class.knownTooltip": "Số thẻ bạn đã tự đánh dấu \"Đã thuộc\" trong chế độ Thẻ ghi nhớ",
@@ -5224,6 +5227,56 @@ function setLessonProgress(lessonId, p) {
   text.title = t("class.knownTooltip");
 }
 
+// KnowledgeApp names a lesson "<chapter> — <topic>". In book order the chapter becomes a heading
+// over its lessons, so a phone row shows the whole topic instead of the chapter again and "…".
+var LESSON_CHAPTER_SEP = " — ";
+function splitLessonTitle(title) {
+  var s = String(title || ""), i = s.indexOf(LESSON_CHAPTER_SEP);
+  return i > 0 ? { chapter: s.slice(0, i), topic: s.slice(i + LESSON_CHAPTER_SEP.length) } : { chapter: s, topic: "" };
+}
+// Headings only in book order (any other sort scatters a chapter) and only for a class whose
+// lessons carry chapters; a hand-made class would get one heading per lesson.
+function lessonsGroupByChapter(lessons, sortKey) {
+  return sortKey === "book_order" && lessons.some(function(l) { return String(l.title || "").indexOf(LESSON_CHAPTER_SEP) > 0; });
+}
+function lessonChapterHead(name, idx) {
+  var head = document.createElement("div");
+  head.className = "lesson-chapter-head";
+  head.setAttribute("role", "heading");
+  head.setAttribute("aria-level", "3");
+  head.innerHTML = '<span class="lesson-chapter-name">' + escHtml(name) + '</span>' +
+    '<span class="lesson-chapter-stats" id="les-chap-' + idx + '"></span>';
+  return head;
+}
+// A heading's line: the chapter's cards and how much of it is mastered, from the same numbers
+// as its lessons' bars.
+function setLessonChapterStats(chapters, progress) {
+  chapters.forEach(function(ch, idx) {
+    var el = document.getElementById("les-chap-" + idx);
+    if (!el) return;
+    var total = 0, mastered = 0;
+    ch.ids.forEach(function(id) {
+      var p = progress[id];
+      if (!p || !p.total) return;
+      total += p.total;
+      mastered += p.mastery ? p.mastery.mastered : p.known;
+    });
+    if (!total) return;
+    var pct = mastered >= total ? 100 : Math.min(99, Math.round(mastered / total * 100));
+    el.textContent = t("count.cards", { n: total }) + " · " + t("mastery.text", { pct: pct });
+  });
+}
+function toggleLessonMenu(btn) {
+  var menu = btn.nextElementSibling;
+  var open = !menu.classList.contains("hidden");
+  closeAllDropdowns();
+  if (open) return;
+  menu.classList.remove("hidden");
+  // The last rows sit at the bottom of the screen: open upward there.
+  menu.classList.remove("dropdown-up");
+  if (menu.getBoundingClientRect().bottom > window.innerHeight - 8) menu.classList.add("dropdown-up");
+}
+
 function _renderLessonItems(lessons, accMap) {
   var list = document.getElementById("lesson-list");
   var empty = document.getElementById("empty-class");
@@ -5250,7 +5303,19 @@ function _renderLessonItems(lessons, accMap) {
     // intermediate paint here would shrink the page and make the browser
     // clamp window.scrollY, which never gets restored once items are re-added.
     list.innerHTML = "";
+    var grouped = lessonsGroupByChapter(filtered, sortKey);
+    var chapters = [];
     filtered.forEach(function(lesson) {
+      var parts = splitLessonTitle(lesson.title);
+      if (grouped) {
+        var last = chapters[chapters.length - 1];
+        if (!last || last.name !== parts.chapter) {
+          last = { name: parts.chapter, ids: [] };
+          chapters.push(last);
+          list.appendChild(lessonChapterHead(parts.chapter, chapters.length - 1));
+        }
+        last.ids.push(lesson.id);
+      }
       var item = document.createElement("div");
       var selected = state.selectMode && state.selectedLessonIds.indexOf(lesson.id) !== -1;
       var isDue = dueInfo.due.indexOf(lesson.id) !== -1;
@@ -5280,8 +5345,14 @@ function _renderLessonItems(lessons, accMap) {
           ? '<input type="checkbox" class="lesson-check"' + (selected ? " checked" : "") + '>'
           : '') +
         '<div class="lesson-info">' +
-          '<div class="lesson-title">' + escHtml(lesson.title) + '</div>' +
-          '<div class="lesson-meta" id="les-meta-' + lesson.id + '">' + t("common.loading") + '</div>' +
+          '<div class="lesson-title" title="' + escHtml(lesson.title) + '">' +
+            escHtml(grouped ? (parts.topic || t("lesson.wholeChapter")) : lesson.title) + '</div>' +
+          // The score sits on the meta line, not beside the title, so the title has the row.
+          '<div class="lesson-meta-line">' +
+            (isDue ? '<span class="due-badge">' + t("count.due", { n: dueCount }) + '</span>' : '') +
+            accHtml +
+            '<span class="lesson-meta" id="les-meta-' + lesson.id + '">' + t("common.loading") + '</span>' +
+          '</div>' +
           (reviewLabel ? '<div class="lesson-due-label' + (isDue ? " is-due" : "") + '">' + reviewLabel + '</div>' : '') +
           '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
             '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="transform:scaleX(0)"></div></div>' +
@@ -5290,15 +5361,17 @@ function _renderLessonItems(lessons, accMap) {
         '</div>' +
         // One fixed-width slot for the badges, so every row's progress bar ends at the same x.
         '<div class="lesson-badges">' +
-          (isDue ? '<span class="due-badge">' + t("count.due", { n: dueCount }) + '</span>' : '') +
-          accHtml +
           '<span class="format-badge ' + lesson.format + '">' + formatLabel(lesson.format) + '</span>' +
         '</div>' +
+        // Edit and delete behind one ⋯: two always-visible buttons took a third of a phone row.
         (state.selectMode
           ? ''
-          : '<div class="lesson-actions">' +
-              '<button class="icon-btn" title="' + t("common.edit") + '" data-les-edit="' + lesson.id + '">' + ICON_EDIT + '</button>' +
-              '<button class="icon-btn danger" title="' + t("common.delete") + '" data-les-del="' + lesson.id + '">' + ICON_DELETE + '</button>' +
+          : '<div class="dropdown-wrap lesson-menu">' +
+              '<button class="icon-btn" title="' + t("common.moreOptions") + '" aria-label="' + t("common.moreOptions") + '" aria-haspopup="menu" data-les-menu>' + ICON_MORE + '</button>' +
+              '<div class="dropdown-menu hidden" role="menu">' +
+                '<button class="dropdown-item" role="menuitem" data-les-edit="' + lesson.id + '">' + ICON_EDIT + t("common.edit") + '</button>' +
+                '<button class="dropdown-item danger" role="menuitem" data-les-del="' + lesson.id + '">' + ICON_DELETE + t("common.delete") + '</button>' +
+              '</div>' +
             '</div>');
       onLongPress(item, function() {
         if (!state.selectMode) setSelectMode(true);
@@ -5306,16 +5379,22 @@ function _renderLessonItems(lessons, accMap) {
       });
       item.addEventListener("click", function(e) {
         if (state.selectMode) { toggleLessonSelection(lesson.id); return; }
-        if (e.target.closest("[data-les-edit],[data-les-del]")) return;
+        if (e.target.closest(".lesson-menu")) return;
         openLesson(lesson.id);
       });
       if (!state.selectMode) {
+        item.querySelector("[data-les-menu]").addEventListener("click", function(e) {
+          e.stopPropagation();
+          toggleLessonMenu(e.currentTarget);
+        });
         item.querySelector("[data-les-edit]").addEventListener("click", function(e) {
           e.stopPropagation();
+          closeAllDropdowns();
           openEditLesson(lesson.id);
         });
         item.querySelector("[data-les-del]").addEventListener("click", function(e) {
           e.stopPropagation();
+          closeAllDropdowns();
           confirmDelete(t("confirm.deleteLesson", { title: lesson.title }), function() {
             store.deleteLesson(lesson.id).then(renderLessons);
           });
@@ -5330,6 +5409,7 @@ function _renderLessonItems(lessons, accMap) {
     // to print the count, was a hundred for a fifty-lesson book.
     store.getLessonsProgress(filtered.map(function(l) { return l.id; })).then(function(map) {
       Object.keys(map).forEach(function(id) { setLessonProgress(id, map[id]); });
+      setLessonChapterStats(chapters, map);
     }).catch(function() {});
   });
 }

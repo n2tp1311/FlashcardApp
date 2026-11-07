@@ -493,6 +493,7 @@
 - Corner radii that matched a token now use it: 10px is `--radius`, 6–7px `--radius-sm`, and the pill shapes (20px, 50px, 999px) share a new `--radius-pill: 999px`. The 20px pills (filter chips, preset chips) become fully round, about 2px rounder. 8px, 12px and the small 2–5px radii are left as they are.
 
 ## Lessons by chapter or by concept (2026-11-06)
+- In Book order, a KnowledgeApp class's lessons sit under chapter headings (with the chapter's cards and mastered share) and each row shows only its topic, up to two lines; other sorts show full names. Edit and delete moved behind a ⋯ on each row and the score onto the meta line, so a phone row has room for the name. `tests/lesson-chapters.test.js`
 - A KnowledgeApp class whose book has a by-concept layout shows a Chapters | Concepts switch beside Sort by on the class screen. Switching asks first, then moves the cards into the other layout's lessons at once: every card keeps its progress, and a cram follows its cards. A sync keeps the pick. `tests/class-lesson-layout.test.js`, `tests/lesson-layout-toggle.test.js`
 
 ## Style: Classic, Playful, Neo-brutalism (2026-11-07)
