@@ -260,6 +260,9 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.current": "Current",
   "upstream.openInLesson": "Open in lesson",
   "upstream.markAllShown": "Mark all shown as reviewed",
+  "upstream.deleteRemoved": "Delete removed cards",
+  "upstream.confirmDeleteRemoved": "Delete {n} cards removed from the source? Your study history and stats are kept.",
+  "upstream.confirmDeleteRemoved_one": "Delete {n} card removed from the source? Your study history and stats are kept.",
   "upstream.confirmAckAll": "Mark {n} cards as reviewed?",
   "upstream.confirmAckAll_one": "Mark {n} card as reviewed?",
   "upstream.studyUpdated": "Study updated cards",
@@ -1519,6 +1522,8 @@ Object.assign(TRANSLATIONS.vi, {
   "upstream.current": "Hiện tại",
   "upstream.openInLesson": "Mở trong bài học",
   "upstream.markAllShown": "Đánh dấu tất cả đang hiện là đã xem",
+  "upstream.deleteRemoved": "Xoá các thẻ đã xoá ở nguồn",
+  "upstream.confirmDeleteRemoved": "Xoá {n} thẻ đã bị xoá ở nguồn? Lịch sử và thống kê học tập vẫn được giữ lại.",
   "upstream.confirmAckAll": "Đánh dấu {n} thẻ là đã xem?",
   "upstream.studyUpdated": "Học các thẻ đã cập nhật",
   "upstream.markedOne": "Đã đánh dấu “{name}” là đã xem.",
@@ -6305,6 +6310,8 @@ function renderUpstreamList() {
     list.appendChild(none);
   }
   document.getElementById("btn-upstream-ack-all").disabled = cards.length === 0;
+  document.getElementById("btn-upstream-delete-removed").classList.toggle("hidden",
+    !cards.some(function(c) { return c.upstream_change === "deleted"; }));
   document.getElementById("btn-upstream-study").disabled =
     !cards.some(function(c) { return c.upstream_change === "updated"; });
 }
@@ -6863,6 +6870,24 @@ function ackAllShown(btn, cards, ids) {
     showToast(err.message, "error");
   });
 }
+
+// Only the shown cards flagged "removed from source"; updated cards in the same view stay.
+document.getElementById("btn-upstream-delete-removed").addEventListener("click", function() {
+  var btn = this;
+  var cards = upstreamFilteredCards().filter(function(c) { return c.upstream_change === "deleted"; });
+  if (!cards.length) return;
+  confirmDelete(t("upstream.confirmDeleteRemoved", { n: cards.length }), function() {
+    flushUpstreamPending();
+    btn.disabled = true;
+    store.deleteRemovedCards(cards.map(function(c) { return c.id; })).then(function() {
+      btn.disabled = false;
+      renderUpstream();
+    }, function(err) {
+      btn.disabled = false;
+      showToast(err.message, "error");
+    });
+  });
+});
 
 document.getElementById("btn-upstream-study").addEventListener("click", function() {
   var seen = {};
@@ -14663,6 +14688,15 @@ var SQLiteAdapter = (function() {
       for (var i = 0; i < ids.length; i += 1000) {
         (function(chunk) {
           p = p.then(function() { return req("POST", "/cards/acknowledge-updates", { cardIds: chunk }); });
+        })(ids.slice(i, i + 1000));
+      }
+      return p;
+    },
+    deleteRemovedCards: function(ids) {
+      var p = Promise.resolve();
+      for (var i = 0; i < ids.length; i += 1000) {
+        (function(chunk) {
+          p = p.then(function() { return req("POST", "/cards/delete-removed", { cardIds: chunk }); });
         })(ids.slice(i, i + 1000));
       }
       return p;

@@ -556,6 +556,40 @@ router.post("/cards/acknowledge-updates", requireAuth, (req, res) => {
   res.json({ ok: true, count: ids.length });
 });
 
+// POST /api/cards/delete-removed  { cardIds: [...] }
+// Deletes the cards KnowledgeApp removed, in one go. Only cards still flagged 'deleted' go;
+// anything else in the list is skipped, so a stale list cannot take a live card with it.
+router.post("/cards/delete-removed", requireAuth, (req, res) => {
+  const { cardIds } = req.body || {};
+  if (!Array.isArray(cardIds) || cardIds.length === 0 || cardIds.length > MAX_ACK_IDS ||
+      !cardIds.every(id => typeof id === "string"))
+    return res.status(400).json({ error: "cardIds must be an array of 1-" + MAX_ACK_IDS + " card ids" });
+  const ids = [...new Set(cardIds)];
+  const userId = req.session.userId;
+  const rows = [];
+  forEachBatch(ids, chunk => {
+    rows.push(...db.prepare(
+      "SELECT cards.id, cards.format, cards.data, cards.external_id FROM cards " +
+      "JOIN lessons ON cards.lesson_id = lessons.id " +
+      "JOIN classes ON lessons.class_id = classes.id " +
+      `WHERE cards.id IN (${chunk.map(() => "?").join(",")}) AND classes.user_id = ? ` +
+      "AND cards.upstream_change = 'deleted'"
+    ).all(...chunk, userId));
+  });
+  db.transaction(() => {
+    const log = db.prepare("INSERT INTO external_card_deletions (user_id, external_id, card_id) VALUES (?, ?, ?)");
+    const del = db.prepare("DELETE FROM cards WHERE id = ?");
+    rows.forEach(r => {
+      if (r.external_id) log.run(userId, r.external_id, r.id);
+      del.run(r.id);
+    });
+  })();
+  rows.forEach(r => {
+    if (r.format === "image-def") { try { unlinkUpload(JSON.parse(r.data).imageUrl); } catch (_) {} }
+  });
+  res.json({ ok: true, deleted: rows.length, skipped: ids.length - rows.length });
+});
+
 // DELETE /api/cards/:id
 router.delete("/cards/:id", requireAuth, (req, res) => {
   if (!ownCard(req.params.id, req.session.userId))
