@@ -1270,6 +1270,16 @@ class, and tapping it again clears it; "Mark all shown" and "Study updated cards
 what is shown, so they follow the choice. The block is hidden when only one class is
 flagged, since the summary line already says everything.
 
+**Delete removed cards** deletes every shown card flagged removed, in one request
+(`POST /api/cards/delete-removed`), after one confirmation. Before it, a removed card could
+only be deleted with its own Delete button, and "Mark all shown as reviewed" only clears the
+flag, leaving the card in the deck to come back in review -- after a KnowledgeApp grounding
+clean-up flagged 146 cards at once, that was 146 taps. The server deletes only cards still
+flagged `deleted` and owned by the caller and skips the rest, so a list made before a
+`restored` event cannot take a live card with it. Each delete writes the same tombstone as a
+single delete, and attempts stay, so stats and streaks are unchanged. The button is hidden
+when no removed card is shown.
+
 ### Classes and lessons from KnowledgeApp's side
 
 | Route | What it is for |
