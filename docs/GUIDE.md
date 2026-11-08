@@ -588,6 +588,14 @@ There is no study direction setting: a card is always studied front to back.
   sync would overwrite anything else. KnowledgeApp sends one only when it is close in
   meaning to the card (cosine 0.75), so about one older card in five gets a passage;
   a wrong passage would mislead more than none.
+  The term's words are marked in the passage with a filled highlight, and since 2026-11-08
+  the answer's words with a lighter one (bold, underlined; `sourceDefPattern()`), so the
+  learner sees where the book says what the card says, not only where it names the term.
+  An answer word is cut to a stem (4+ letters, trailing -ing/-ed/-es/-e/-s dropped) and
+  matches the start of a word, so "estimate" also marks "estimator". Everyday words
+  (`SOURCE_DEF_STOP`), the term's own words and LaTeX are skipped; where a term and an
+  answer match overlap, the term's mark wins. The cost is some noise: a common content
+  word in the answer is marked wherever it appears in the passage.
   In the quiz the passage sits folded under the answer, so **B** opens and closes it
   (`toggleQuizSource()`), in a quiz otherwise answered from the keyboard. It does nothing
   before an answer, when there is no passage to show, and nothing while a text box has
