@@ -5525,6 +5525,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .source-tab[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 600; }
 .source-body.source-other { border-left-color: var(--primary); }
 .source-mark { background: color-mix(in srgb, var(--primary) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+.source-key { background: none; color: inherit; font-weight: 600; text-decoration: underline 2px color-mix(in srgb, var(--primary) 55%, transparent); text-underline-offset: 3px; }
 
 /* Cloze: the gap reads as a slot in the sentence; once revealed, the answer stays marked so
    it is seen in its place rather than lost in the sentence. */

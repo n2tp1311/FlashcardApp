@@ -42,7 +42,7 @@ const ctx = {
   store: null
 };
 vm.createContext(ctx);
-vm.runInContext("var ICON_BOOK = '<svg/>'; var SOURCE_STOP = [];" + ["sourcePanel", "sourceFeedback", "sourceTabs", "sourceRelated", "fillSource", "sourceTermPattern", "markSourceWords", "missedFlashcards", "missedQuizCards"].map(extract).join(""), ctx);
+vm.runInContext("var ICON_BOOK = '<svg/>'; var SOURCE_STOP = []; var SOURCE_DEF_STOP = ['which'];" + ["sourcePanel", "sourceFeedback", "sourceTabs", "sourceRelated", "fillSource", "sourceTermPattern", "sourceDefPattern", "markSourceWords", "missedFlashcards", "missedQuizCards"].map(extract).join(""), ctx);
 
 test("a card with a passage gets a collapsed panel holding it as plain text", () => {
   const el = ctx.sourcePanel({ source: "Costs rose to $5 and <b>then</b> fell." }, "quiz-source");
@@ -159,4 +159,15 @@ test("Read more shows the book either side of the passage, and the card's words 
   // a word only starts a match: "strap" inside "bootstrap" is not the term "strap"
   const re = ctx.sourceTermPattern({ data: { term: "Strap" } });
   assert.equal("bootstrap strapping".match(re).join(","), "strapping");
+});
+
+test("the answer's words are marked lighter in the passage; the term's keep the filled mark", () => {
+  const el = fakeEl("span");
+  const card = { data: { term: "SGD", def: "Updates the parameters with a noisy but unbiased estimate of the gradient, which is $\\hat g$." } };
+  ctx.markSourceWords(el, "SGD gives an unbiased estimator of the gradient; updating parameters is cheap.",
+    ctx.sourceTermPattern(card), ctx.sourceDefPattern(card));
+  const marks = el.children.filter((c) => c.tag === "mark").map((c) => c.className + ":" + c.textContent);
+  assert.deepEqual(marks, ["source-mark:SGD", "source-key:unbiased", "source-key:estimator",
+    "source-key:gradient", "source-key:updating", "source-key:parameters"]);
+  assert.equal(ctx.sourceDefPattern({ data: { term: "X", def: "which $a+b$" } }), null);
 });

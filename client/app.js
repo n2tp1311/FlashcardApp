@@ -9835,11 +9835,11 @@ function sourcePanel(card, id) {
 var SOURCE_STOP = ["the", "and", "for", "with", "from", "that", "this", "into", "its"];
 function fillSource(body, card) {
   body.textContent = "";
-  var re = sourceTermPattern(card);
+  var re = sourceTermPattern(card), keys = sourceDefPattern(card);
   function part(text, cls) {
     var span = document.createElement("span");
     span.className = cls;
-    markSourceWords(span, text, re);
+    markSourceWords(span, text, re, keys);
     return span;
   }
   var before = typeof card.source_before === "string" && card.source_before.trim() ? part(card.source_before.trim() + " ", "source-ctx hidden") : null;
@@ -9901,7 +9901,7 @@ function sourceTabs(card, body, ask) {
       body.textContent = "";
       var span = document.createElement("span");
       span.className = "source-core";
-      markSourceWords(span, related[i - 1].text, sourceTermPattern(card));
+      markSourceWords(span, related[i - 1].text, sourceTermPattern(card), sourceDefPattern(card));
       body.appendChild(span);
       body.classList.remove("hidden");
     }
@@ -9923,18 +9923,52 @@ function sourceTermPattern(card) {
   return new RegExp("(?<![\\p{L}\\p{N}])(?:" + words.join("|") + ")[\\p{L}\\p{N}]*", "giu");
 }
 
-function markSourceWords(el, text, re) {
-  if (!re) { el.appendChild(document.createTextNode(text)); return; }
-  var last = 0, m;
-  re.lastIndex = 0;
-  while ((m = re.exec(text))) {
-    if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+// Words of the answer worth finding in the passage: not the term's (those are marked already),
+// not everyday words, so the learner sees where the book says what the card says.
+var SOURCE_DEF_STOP = ("about also another because been being between both called cannot could does each " +
+  "every from given have having here into just like made make makes many more most much must only other " +
+  "over same should some such than that their them then there these they this those through used uses " +
+  "using very what when where which while will with within without would your").split(" ");
+
+// The answer's words (4+ letters) cut to a stem, matching the start of a word, so "estimate"
+// also marks "estimator". Null when nothing is left.
+function sourceDefPattern(card) {
+  var def = card && card.data && typeof card.data.def === "string" ? card.data.def : "";
+  var term = card && card.data && typeof card.data.term === "string" ? card.data.term.toLowerCase() : "";
+  var termWords = term.match(/[\p{L}\p{N}]{3,}/gu) || [];
+  var stems = [];
+  (def.replace(/\$[^$]*\$/g, " ").toLowerCase().match(/\p{L}{4,}/gu) || []).forEach(function(w) {
+    if (SOURCE_DEF_STOP.indexOf(w) >= 0) return;
+    var s = w.replace(/(?:ing|ed|es|e|s)$/, "");
+    if (s.length < 4) s = w;
+    if (termWords.some(function(t) { return t.indexOf(s) === 0 || s.indexOf(t) === 0; })) return;
+    if (stems.indexOf(s) < 0) stems.push(s);
+  });
+  if (!stems.length) return null;
+  return new RegExp("(?<![\\p{L}\\p{N}])(?:" + stems.join("|") + ")[\\p{L}\\p{N}]*", "giu");
+}
+
+// The term's words get the filled mark; the answer's words a lighter one. Where both match,
+// the term wins.
+function markSourceWords(el, text, re, keys) {
+  var hits = [];
+  [[re, "source-mark"], [keys, "source-key"]].forEach(function(p) {
+    if (!p[0]) return;
+    var m;
+    p[0].lastIndex = 0;
+    while ((m = p[0].exec(text))) hits.push({ at: m.index, end: m.index + m[0].length, cls: p[1] });
+  });
+  hits.sort(function(a, b) { return a.at - b.at || (a.cls === "source-mark" ? -1 : 1); });
+  var last = 0;
+  hits.forEach(function(h) {
+    if (h.at < last) return;
+    if (h.at > last) el.appendChild(document.createTextNode(text.slice(last, h.at)));
     var mark = document.createElement("mark");
-    mark.className = "source-mark";
-    mark.textContent = m[0];
+    mark.className = h.cls;
+    mark.textContent = text.slice(h.at, h.end);
     el.appendChild(mark);
-    last = m.index + m[0].length;
-  }
+    last = h.end;
+  });
   if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
 }
 
