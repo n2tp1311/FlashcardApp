@@ -750,6 +750,13 @@ chọn, đáp án…):
 | next, tiếp, tiếp theo | Next, once the card is answered |
 | stop, dừng lại (and a bare dừng, except on a true/false card) | turns listening off |
 
+It acts on the recogniser's interim guess once that has stayed the same for 0.25 s
+(`QUIZ_VOICE_STABLE_MS`), or on the final result if that comes first. The final result
+only arrives after the recogniser has heard 1–2 s of silence, which after a one-word
+answer felt slow; the user said so. Each utterance (session and result index) is acted on
+once, so the final "tiếp theo" after an interim "tiếp" does not press Next again on the
+following card.
+
 Anything else, or a number past the options shown, answers nothing and says what was
 heard: a guess would grade the card. A bare "dừng" on a true/false card is ignored
 because one misheard vowel makes it "đúng". Nothing is answered while a modal is open,
