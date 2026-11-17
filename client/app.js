@@ -1210,6 +1210,7 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.flipCard": "Flip card",
   "keymap.pronounce": "Pronounce",
   "keymap.pronounceTerm": "Pronounce the term",
+  "keymap.quizVoice": "Hands-free answers on / off",
   "keymap.fromTheBook": "Open / close From the book (after answering)",
   "keymap.undoGrade": "Undo the last grade",
   "keymap.selectOption": "Select option",
@@ -1350,6 +1351,18 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.scoreTitle": "{n} correct of {total} answered",
   "quiz.layoutGrid": "Show answers side by side",
   "quiz.layoutList": "Show answers in a list",
+  "quiz.voiceOn": "Turn on hands-free answers (V)",
+  "quiz.voiceOff": "Turn off hands-free answers (V)",
+  "quiz.voiceListening": "Listening · say {nums} or {letters}",
+  "quiz.voiceListeningTf": "Listening · say “{yes}” or “{no}”, or 1–2",
+  "quiz.voiceHeard": "Heard “{text}” → {n}",
+  "quiz.voiceMissed": "Didn't catch “{text}” · say a number or a letter",
+  "quiz.voiceSayNext": "Say “next” to continue",
+  "quiz.voicePaused": "Hands-free paused after 2 minutes of silence · tap the mic to resume",
+  "quiz.voiceResume": "Hands-free paused · tap the mic to resume",
+  "quiz.voiceBlocked": "Microphone blocked.",
+  "quiz.voiceBlockedSub": "Allow it for this site in the browser's settings, or answer by tapping.",
+  "quiz.voiceUnavailable": "Voice answers aren't available right now · answer by tapping",
   "quiz.cappedHint": "Correct — but this card needs a Flashcard-mode recall to move to a longer review interval.",
   "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
@@ -2444,6 +2457,7 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.flipCard": "Lật thẻ",
   "keymap.pronounce": "Phát âm",
   "keymap.pronounceTerm": "Đọc thuật ngữ",
+  "keymap.quizVoice": "Bật / tắt trả lời bằng giọng nói",
   "keymap.fromTheBook": "Mở / đóng Trích từ sách (sau khi trả lời)",
   "keymap.undoGrade": "Hoàn tác lần đánh dấu vừa rồi",
   "keymap.selectOption": "Chọn đáp án",
@@ -2578,6 +2592,18 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.scoreTitle": "Đúng {n} trên {total} câu đã trả lời",
   "quiz.layoutGrid": "Xếp đáp án cạnh nhau",
   "quiz.layoutList": "Xếp đáp án thành danh sách",
+  "quiz.voiceOn": "Bật trả lời bằng giọng nói (V)",
+  "quiz.voiceOff": "Tắt trả lời bằng giọng nói (V)",
+  "quiz.voiceListening": "Đang nghe · nói {nums} hoặc {letters}",
+  "quiz.voiceListeningTf": "Đang nghe · nói “{yes}” hoặc “{no}”, hoặc 1–2",
+  "quiz.voiceHeard": "Đã nghe “{text}” → {n}",
+  "quiz.voiceMissed": "Chưa nghe rõ “{text}” · hãy nói số hoặc chữ cái",
+  "quiz.voiceSayNext": "Nói “tiếp” để sang câu sau",
+  "quiz.voicePaused": "Đã tạm dừng sau 2 phút im lặng · chạm micro để nghe tiếp",
+  "quiz.voiceResume": "Đã tạm dừng · chạm micro để nghe tiếp",
+  "quiz.voiceBlocked": "Micro bị chặn.",
+  "quiz.voiceBlockedSub": "Hãy cho phép trang này dùng micro trong cài đặt trình duyệt, hoặc chạm để trả lời.",
+  "quiz.voiceUnavailable": "Hiện không dùng được giọng nói · hãy chạm để trả lời",
   "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
@@ -2892,7 +2918,10 @@ function quizSpeechText(card) {
 }
 
 function speakQuizTerm() {
-  speakText(quizSpeechText(state.quizCards[state.quizIndex]));
+  var text = quizSpeechText(state.quizCards[state.quizIndex]);
+  // The recogniser hears the term late, after speechSynthesis.speaking is false again.
+  if (quizVoice) quizVoice.ttsUntil = Date.now() + Math.min(6000, 1500 + String(text || "").length * 90);
+  speakText(text);
 }
 
 // E, F and D on a study screen press its Edit, Flag and Delete buttons. The flag is hidden on
@@ -3755,6 +3784,7 @@ function showScreen(id) {
   document.querySelectorAll(".screen").forEach(function(s) { s.classList.remove("active"); });
   var el = document.getElementById("screen-" + id);
   if (el) { el.classList.add("active"); window.scrollTo(0, 0); }
+  syncQuizVoice();
   syncSidebar(id);
   syncBackTrap();
 }
@@ -11260,6 +11290,273 @@ function applyQuizLayout() {
   btn.setAttribute("aria-label", label);
 }
 
+// Hands-free quiz: the browser's own speech recognition (no model call) hears "2", "bê" or
+// "tiếp". Per device, like the answer layout. Chrome sends the audio to Google; Safari
+// recognises on the device.
+var QUIZ_VOICE_IDLE_MS = 120000;
+// A right answer moves on after QUIZ_ADVANCE_MS and Chrome delivers a result up to ~1.5s after
+// speech, so words said for one card could otherwise answer the next.
+var QUIZ_VOICE_SETTLE_MS = 600;
+var quizVoice = { rec: null, active: false, paused: null, fromGesture: false, startedAt: 0,
+  gotStart: false, quickEnds: 0, ttsUntil: 0, idleTimer: null, restartTimer: null, watchdog: null };
+
+// One spoken answer or command, or null. Never guesses: the words left after the filler must
+// be exactly one known answer. Tone marks are kept: "dừng" and "đúng" differ only in them.
+function voiceCommand(transcript, optCount, isTrueFalse) {
+  var s = String(transcript || "").normalize("NFC").toLowerCase()
+    .replace(/[.,!?;:"'“”‘’()]/g, " ").replace(/\s+/g, " ").trim();
+  if (!s) return null;
+  var filler = { answer: 1, option: 1, number: 1, letter: 1, the: 1, is: 1, choose: 1, pick: 1,
+    question: 1, "số": 1, "câu": 1, "chọn": 1, "đáp": 1, "án": 1, "chữ": 1 };
+  var p = s.split(" ").filter(function(w) { return !filler[w]; }).join(" ");
+  var has = function(o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+  var cmds = { next: "next", "tiếp": "next", "tiếp theo": "next", tiep: "next", "tiep theo": "next",
+    stop: "stop", "dừng": "stop", "dừng lại": "stop" };
+  if (has(cmds, p)) {
+    // A misheard "dừng" is "đúng", which would answer True for good.
+    if (isTrueFalse && p === "dừng") return null;
+    return { cmd: cmds[p] };
+  }
+  if (isTrueFalse) {
+    var tf = { "đúng": 0, "true": 0, "sai": 1, "false": 1 };
+    if (has(tf, p)) return { answer: tf[p] };
+  }
+  // Chrome en-US writes a lone "two" as "to" as often as "2".
+  var nums = { "1": 0, "2": 1, "3": 2, "4": 3, "5": 4, one: 0, won: 0, two: 1, to: 1, too: 1,
+    three: 2, four: 3, for: 3, five: 4, "một": 0, "hai": 1, "ba": 2, "bốn": 3, "năm": 4, mot: 0, bon: 3, nam: 4 };
+  // True/false is answered by number or by true/false; the hint offers no letters there.
+  var letters = isTrueFalse ? {} : { a: 0, b: 1, c: 2, d: 3, e: 4, bee: 1, be: 1, "bê": 1, see: 2, sea: 2,
+    "xê": 2, xe: 2, dee: 3, "đê": 3, de: 3 };
+  var i = has(nums, p) ? nums[p] : has(letters, p) ? letters[p] : -1;
+  if (i < 0 || i >= optCount) return null;
+  return { answer: i };
+}
+
+function quizVoiceHint(optCount) {
+  var n = Math.max(1, Math.min(5, optCount));
+  return n === 1 ? { nums: "1", letters: "A" } : { nums: "1–" + n, letters: "A–" + "ABCDE".charAt(n - 1) };
+}
+
+function quizVoiceSupported() {
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition) && window.isSecureContext !== false;
+}
+
+function quizVoiceOn() {
+  try { return localStorage.getItem("fc-quiz-voice") === "1"; } catch (_) { return false; }
+}
+
+function setQuizVoicePref(on) {
+  try { localStorage.setItem("fc-quiz-voice", on ? "1" : "0"); } catch (_) {}
+}
+
+function quizVoiceOnScreen() {
+  var el = document.getElementById("screen-quiz");
+  return !!el && el.classList.contains("active");
+}
+
+// Writes only on a change, so the live region does not announce "Listening" on every card.
+function setQuizVoiceStatus(kind, p) {
+  var el = document.getElementById("quiz-voice-status");
+  if (!el) return;
+  p = p || {};
+  var text, sub = "";
+  if (kind === "listening") {
+    var card = state.quizCards && state.quizCards[state.quizIndex];
+    text = card && card.format === "true-false"
+      ? t("quiz.voiceListeningTf", { yes: t("common.true"), no: t("common.false") })
+      : t("quiz.voiceListening", quizVoiceHint((state.quizOptions || []).length));
+  }
+  else if (kind === "heard") text = t("quiz.voiceHeard", p);
+  else if (kind === "missed") text = t("quiz.voiceMissed", p);
+  else if (kind === "next") text = t("quiz.voiceSayNext");
+  else if (kind === "idle") text = t("quiz.voicePaused");
+  else if (kind === "resume") text = t("quiz.voiceResume");
+  else if (kind === "blocked") { text = t("quiz.voiceBlocked"); sub = t("quiz.voiceBlockedSub"); }
+  else text = t("quiz.voiceUnavailable");
+  var key = kind + "|" + text;
+  if (el.dataset.key === key) return;
+  el.dataset.key = key;
+  el.dataset.kind = kind;
+  el.querySelector(".quiz-voice-text").textContent = text;
+  el.querySelector(".quiz-voice-sub").textContent = sub;
+}
+
+function applyQuizVoice() {
+  var btn = document.getElementById("btn-quiz-voice");
+  if (!btn || !quizVoice) return;
+  var ok = quizVoiceSupported();
+  var on = ok && quizVoiceOn();
+  var label = t(on ? "quiz.voiceOff" : "quiz.voiceOn");
+  btn.classList.toggle("hidden", !ok);
+  btn.classList.toggle("active", on && quizVoice.active);
+  btn.title = label;
+  btn.setAttribute("aria-label", label);
+  document.getElementById("quiz-voice-status").classList.toggle("hidden", !on);
+  var nextBtn = document.getElementById("quiz-next-btn");
+  var say = document.querySelector("#quiz-sheet .quiz-voice-next");
+  if (say && !(on && quizVoice.active)) say.remove();
+  if (!say && nextBtn && on && quizVoice.active) {
+    say = document.createElement("div");
+    say.className = "quiz-voice-next";
+    say.textContent = t("quiz.voiceSayNext");
+    nextBtn.before(say);
+  }
+  if (!on) return;
+  // Tapping answers is activity too; only silence across cards should pause.
+  if (quizVoice.active) armQuizVoiceIdle();
+  if (quizVoice.paused) setQuizVoiceStatus(quizVoice.paused);
+  else if (!state.quizAnswered) setQuizVoiceStatus("listening");
+  else if (nextBtn && document.getElementById("quiz-voice-status").dataset.kind !== "heard") setQuizVoiceStatus("next");
+}
+
+function armQuizVoiceIdle() {
+  clearTimeout(quizVoice.idleTimer);
+  quizVoice.idleTimer = setTimeout(function() { if (quizVoice.active) pauseQuizVoice("idle"); }, QUIZ_VOICE_IDLE_MS);
+}
+
+function beginQuizVoice() {
+  quizVoice.startedAt = Date.now();
+  quizVoice.gotStart = false;
+  quizVoice.gotResult = false;
+  clearTimeout(quizVoice.watchdog);
+  // Some iOS home-screen builds never start recognition and never say so.
+  quizVoice.watchdog = setTimeout(function() {
+    if (quizVoice.active && !quizVoice.gotStart) pauseQuizVoice("unavailable");
+  }, 3000);
+  try { quizVoice.rec.start(); } catch (_) {}
+}
+
+function stopQuizVoice() {
+  if (!quizVoice) return;
+  quizVoice.active = false;
+  clearTimeout(quizVoice.idleTimer);
+  clearTimeout(quizVoice.restartTimer);
+  clearTimeout(quizVoice.watchdog);
+  if (quizVoice.rec) { try { quizVoice.rec.abort(); } catch (_) {} }
+}
+
+function pauseQuizVoice(kind) {
+  stopQuizVoice();
+  quizVoice.paused = kind;
+  applyQuizVoice();
+}
+
+function startQuizVoice(fromGesture) {
+  var R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!R || quizVoice.active) return;
+  var rec = quizVoice.rec;
+  if (!rec) {
+    rec = quizVoice.rec = new R();
+    rec.onstart = function() { quizVoice.gotStart = true; };
+    rec.onresult = onQuizVoiceResult;
+    rec.onerror = function(e) {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      // A start without a tap can be refused on iOS; only a refused tap means blocked.
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") pauseQuizVoice(quizVoice.fromGesture ? "blocked" : "resume");
+      else pauseQuizVoice("unavailable");
+    };
+    rec.onend = function() {
+      if (!quizVoice.active) return;
+      // Safari ends a session after each utterance: a quick end that heard something is fine.
+      var quick = Date.now() - quizVoice.startedAt < 1000 && !quizVoice.gotResult;
+      quizVoice.quickEnds = quick ? quizVoice.quickEnds + 1 : 0;
+      if (quizVoice.quickEnds >= 3) { quizVoice.quickEnds = 0; pauseQuizVoice("resume"); return; }
+      quizVoice.fromGesture = false;
+      quizVoice.restartTimer = setTimeout(function() { if (quizVoice.active) beginQuizVoice(); }, 250);
+    };
+  }
+  rec.lang = state.language === "vi" ? "vi-VN" : "en-US";
+  // WebKit's continuous mode piles up results and drops isFinal; it restarts on end instead.
+  rec.continuous = !/Apple/.test(navigator.vendor || "");
+  rec.interimResults = false;
+  // Only the recogniser's best guess: a second-best "đúng" under a said "dừng" would answer True.
+  rec.maxAlternatives = 1;
+  quizVoice.active = true;
+  quizVoice.paused = null;
+  quizVoice.fromGesture = !!fromGesture;
+  quizVoice.quickEnds = 0;
+  armQuizVoiceIdle();
+  beginQuizVoice();
+}
+
+function onQuizVoiceResult(e) {
+  if (!quizVoice.active) return;
+  quizVoice.gotResult = true;
+  armQuizVoiceIdle();
+  if (!quizVoiceOnScreen() || document.hidden || fcAnyOverlayOpen()) return;
+  // The speaker button reads the term aloud, and a term like "one" would answer the card.
+  if (window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) return;
+  if (Date.now() < quizVoice.ttsUntil) return;
+  var card = state.quizCards[state.quizIndex];
+  var tf = !!card && card.format === "true-false";
+  var heard = "";
+  for (var i = e.resultIndex; i < e.results.length; i++) {
+    var res = e.results[i];
+    if (!res.isFinal || !res.length) continue;
+    var text = String(res[0].transcript || "").trim();
+    if (!heard) heard = text;
+    var c = voiceCommand(text, state.quizOptions.length, tf);
+    if (c) {
+      if (c.cmd === "stop") {
+        setQuizVoicePref(false);
+        stopQuizVoice();
+        quizVoice.paused = null;
+        applyQuizVoice();
+        return;
+      }
+      if (c.cmd === "next") {
+        var nextBtn = document.getElementById("quiz-next-btn");
+        if (nextBtn) nextBtn.click();
+        return;
+      }
+      if (state.quizAnswered || Date.now() - (state.quizCardShownAt || 0) < QUIZ_VOICE_SETTLE_MS) return;
+      setQuizVoiceStatus("heard", { text: text, n: c.answer + 1 });
+      answerQuiz(c.answer);
+      return;
+    }
+  }
+  // After an answer, the feedback sound and the room would make this flicker.
+  if (heard && !state.quizAnswered) setQuizVoiceStatus("missed", { text: heard });
+}
+
+// Listens only on the quiz screen while the page is visible. Leaving the screen forgets a pause,
+// so the next quiz tries again.
+function syncQuizVoice() {
+  if (!quizVoice) return;
+  var on = quizVoiceSupported() && quizVoiceOn();
+  if (!on || !quizVoiceOnScreen() || document.hidden) {
+    stopQuizVoice();
+    if (!on || !quizVoiceOnScreen()) quizVoice.paused = null;
+    applyQuizVoice();
+    return;
+  }
+  var lang = state.language === "vi" ? "vi-VN" : "en-US";
+  if (quizVoice.active && quizVoice.rec && quizVoice.rec.lang !== lang) {
+    // Starting in the same tick as abort() lets the old session's end restart the new one.
+    stopQuizVoice();
+    quizVoice.restartTimer = setTimeout(syncQuizVoice, 300);
+    applyQuizVoice();
+    return;
+  }
+  if (!quizVoice.active && !quizVoice.paused) startQuizVoice(false);
+  applyQuizVoice();
+}
+
+// On and listening: off. Off, or on but paused or blocked: on, started from this tap.
+function toggleQuizVoice() {
+  if (!quizVoiceSupported()) return;
+  if (quizVoiceOn() && quizVoice.active) {
+    setQuizVoicePref(false);
+    stopQuizVoice();
+    quizVoice.paused = null;
+  } else {
+    setQuizVoicePref(true);
+    stopQuizVoice();
+    startQuizVoice(true);
+  }
+  applyQuizVoice();
+}
+
 function findQuizResult(card) {
   return state.quizResults.find(function(r) { return r.card.id === card.id; });
 }
@@ -11283,6 +11580,7 @@ function renderQuizCard() {
   if (prevSource) prevSource.remove();
   var prevNext = document.getElementById("quiz-next-btn");
   if (prevNext) prevNext.remove();
+  document.querySelectorAll("#quiz-sheet .quiz-voice-next").forEach(function(el) { el.remove(); });
   hideQuizSheet();
   syncFlagButton(document.getElementById("btn-quiz-flag-card"), cards[i] || {});
   var prevCap = document.getElementById("quiz-cap-hint");
@@ -11335,6 +11633,7 @@ function renderQuizCard() {
   var opts = priorResult ? priorResult.opts : buildQuizOptions(card);
   state.quizOptions = opts;
   state.quizAnswered = !!priorResult;
+  applyQuizVoice();
 
   var optsEl = document.getElementById("quiz-options");
   optsEl.innerHTML = "";
@@ -11681,6 +11980,8 @@ function showQuizNextButton() {
   // Duolingo's placement: Continue lives on the feedback sheet, under the thumb, the same
   // spot after every answer.
   document.getElementById("quiz-sheet").appendChild(nextBtn);
+  // Adds "Say next" above it: on a phone the status line has scrolled away by now.
+  applyQuizVoice();
 }
 
 
@@ -11710,6 +12011,10 @@ document.getElementById("btn-quiz-layout").addEventListener("click", function() 
   try { localStorage.setItem("fc-quiz-layout", quizLayout() === "grid" ? "list" : "grid"); } catch (_) {}
   applyQuizLayout();
 });
+
+document.getElementById("btn-quiz-voice").addEventListener("click", toggleQuizVoice);
+document.addEventListener("visibilitychange", syncQuizVoice);
+window.addEventListener("pagehide", stopQuizVoice);
 
 document.getElementById("btn-quiz-flag-card").addEventListener("click", function() {
   var card = state.quizCards[state.quizIndex];
@@ -14892,6 +15197,7 @@ function applyLanguage(lang) {
   if (previousLanguage && previousLanguage !== state.language) clearFlashcardTranslation();
   document.documentElement.setAttribute("lang", state.language);
   applyI18n();
+  syncQuizVoice();
   if (typeof renderTutorialStep === "function" && !document.getElementById("modal-tutorial").classList.contains("hidden")) renderTutorialStep();
   // Static chrome updates everywhere via applyI18n(); refresh the most
   // commonly-visible dynamic list (home) so it doesn't show stale text
@@ -16894,6 +17200,7 @@ document.addEventListener("keydown", function(e) {
     else if (e.key === "ArrowRight") document.getElementById("btn-quiz-review-next").click();
     else if ((e.key === "p" || e.key === "P") && !e.ctrlKey && !e.metaKey && !e.altKey) speakQuizTerm();
     else if ((e.key === "b" || e.key === "B") && !e.ctrlKey && !e.metaKey && !e.altKey && toggleQuizSource()) e.preventDefault();
+    else if ((e.key === "v" || e.key === "V") && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) { e.preventDefault(); toggleQuizVoice(); }
     else if (cardToolKey(e, "quiz")) e.preventDefault();
   }
 
