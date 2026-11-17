@@ -732,6 +732,44 @@ at 3, 5, 10 and every ten after, a calm line on a miss) and holds Next in the sa
 every time. It appears only in Quiz, where the app decides right from wrong: praising a
 flashcard self-grade would be praising the learner for their own button press.
 
+**Answers can be spoken, hands-free.** The mic button in the quiz toolbar (or `V`) turns
+listening on, and it stays on for every quiz on this device until turned off
+(`localStorage` `fc-quiz-voice`; it is per device because a laptop and a phone differ in
+whether talking to them makes sense). A status line under the question says what it is
+doing: "Listening · say 1–4 or A–D", "Heard "bê" → 2", "Didn't catch "banana"". It uses
+the browser's Web Speech API in the app's language (`vi-VN` or `en-US`), and only its best
+guess: with alternatives on, a said "dừng" came back with "đúng" second and answered True.
+`voiceCommand()` reads that guess after dropping filler words (answer, option, số, câu,
+chọn, đáp án…):
+
+| Said | Does |
+|---|---|
+| `1`–`5`, one…five, một…năm (also "to", "for", "won", as Chrome writes a lone number) | that option |
+| A–E, bee/bê, see/xê, dee/đê | that option (not on a true/false card) |
+| đúng / sai, true / false | True / False on a true/false card |
+| next, tiếp, tiếp theo | Next, once the card is answered |
+| stop, dừng lại (and a bare dừng, except on a true/false card) | turns listening off |
+
+Anything else, or a number past the options shown, answers nothing and says what was
+heard: a guess would grade the card. A bare "dừng" on a true/false card is ignored
+because one misheard vowel makes it "đúng". Nothing is answered while a modal is open,
+while the app is reading a term aloud (a spoken term would answer itself), or in the
+first 0.6 s of a card, when a word said for the last card can still arrive. A wrong
+answer waits for "next" like it waits for a tap; the user chose that, so the right option
+can be read. The app does not read the question aloud (the user turned that off in the
+preview). After 2 minutes with nothing heard, listening pauses ("tap the mic to resume"),
+so a quiz left open does not keep the microphone on. WebKit ends a recognition session
+every few seconds, so `startQuizVoice` restarts it on `end`; a session that ends at once
+three times without hearing anything pauses instead of looping. A refused microphone
+shows "Microphone blocked". Listening stops when the quiz is left, the page is hidden or
+the language changes (then restarts in the new one). The button is hidden where the
+browser has no speech recognition or the page is not a secure context.
+
+Caveats the code cannot fix: Chrome sends the audio to Google to recognise it, while
+Safari on iOS and macOS recognises on the device; on iPhone the page's other sounds get
+quieter while the mic is open, and a restart that is not from a tap can be refused, which
+shows as the pause; Android Chrome plays a chime on each restart. `tests/quiz-voice.test.js`
+
 ### Cram
 
 Cramming is the opposite of what FSRS is for — the same card several times in an hour —
