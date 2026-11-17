@@ -11297,8 +11297,12 @@ var QUIZ_VOICE_IDLE_MS = 120000;
 // A right answer moves on after QUIZ_ADVANCE_MS and Chrome delivers a result up to ~1.5s after
 // speech, so words said for one card could otherwise answer the next.
 var QUIZ_VOICE_SETTLE_MS = 600;
+// An interim guess that stays the same this long is acted on; waiting for the final result
+// meant waiting for the recogniser to hear 1-2 s of silence after a one-word answer.
+var QUIZ_VOICE_STABLE_MS = 250;
 var quizVoice = { rec: null, active: false, paused: null, fromGesture: false, startedAt: 0,
-  gotStart: false, quickEnds: 0, ttsUntil: 0, idleTimer: null, restartTimer: null, watchdog: null };
+  gotStart: false, quickEnds: 0, ttsUntil: 0, idleTimer: null, restartTimer: null, watchdog: null,
+  session: 0, done: {}, pending: null };
 
 // One spoken answer or command, or null. Never guesses: the words left after the filler must
 // be exactly one known answer. Tone marks are kept: "dừng" and "đúng" differ only in them.
@@ -11418,6 +11422,9 @@ function beginQuizVoice() {
   quizVoice.startedAt = Date.now();
   quizVoice.gotStart = false;
   quizVoice.gotResult = false;
+  // Result indexes restart at 0 in each session, so they are keyed by session.
+  quizVoice.session++;
+  quizVoice.done = {};
   clearTimeout(quizVoice.watchdog);
   // Some iOS home-screen builds never start recognition and never say so.
   quizVoice.watchdog = setTimeout(function() {
@@ -11432,7 +11439,13 @@ function stopQuizVoice() {
   clearTimeout(quizVoice.idleTimer);
   clearTimeout(quizVoice.restartTimer);
   clearTimeout(quizVoice.watchdog);
+  clearQuizVoicePending();
   if (quizVoice.rec) { try { quizVoice.rec.abort(); } catch (_) {} }
+}
+
+function clearQuizVoicePending() {
+  if (quizVoice.pending) clearTimeout(quizVoice.pending.timer);
+  quizVoice.pending = null;
 }
 
 function pauseQuizVoice(kind) {
@@ -11468,7 +11481,7 @@ function startQuizVoice(fromGesture) {
   rec.lang = state.language === "vi" ? "vi-VN" : "en-US";
   // WebKit's continuous mode piles up results and drops isFinal; it restarts on end instead.
   rec.continuous = !/Apple/.test(navigator.vendor || "");
-  rec.interimResults = false;
+  rec.interimResults = true;
   // Only the recogniser's best guess: a second-best "đúng" under a said "dừng" would answer True.
   rec.maxAlternatives = 1;
   quizVoice.active = true;
@@ -11479,41 +11492,74 @@ function startQuizVoice(fromGesture) {
   beginQuizVoice();
 }
 
+function quizVoiceDeaf() {
+  if (!quizVoice.active || !quizVoiceOnScreen() || document.hidden || fcAnyOverlayOpen()) return true;
+  // The speaker button reads the term aloud, and a term like "one" would answer the card.
+  if (window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) return true;
+  return Date.now() < quizVoice.ttsUntil;
+}
+
+function quizVoiceCommand(text) {
+  var card = state.quizCards[state.quizIndex];
+  return voiceCommand(text, state.quizOptions.length, !!card && card.format === "true-false");
+}
+
+// Acts on what was said; false when it was no command.
+function runQuizVoice(text) {
+  var c = quizVoiceCommand(text);
+  if (!c) return false;
+  if (c.cmd === "stop") {
+    setQuizVoicePref(false);
+    stopQuizVoice();
+    quizVoice.paused = null;
+    applyQuizVoice();
+    return true;
+  }
+  if (c.cmd === "next") {
+    var nextBtn = document.getElementById("quiz-next-btn");
+    if (nextBtn) nextBtn.click();
+    return true;
+  }
+  if (state.quizAnswered || Date.now() - (state.quizCardShownAt || 0) < QUIZ_VOICE_SETTLE_MS) return true;
+  setQuizVoiceStatus("heard", { text: text, n: c.answer + 1 });
+  answerQuiz(c.answer);
+  return true;
+}
+
+// Each utterance is acted on once: from its interim guess once that has held still for
+// QUIZ_VOICE_STABLE_MS, or else from its final result. Without the once, the final "tiếp"
+// after an interim "tiếp" would press Next on the following card too.
 function onQuizVoiceResult(e) {
   if (!quizVoice.active) return;
   quizVoice.gotResult = true;
   armQuizVoiceIdle();
-  if (!quizVoiceOnScreen() || document.hidden || fcAnyOverlayOpen()) return;
-  // The speaker button reads the term aloud, and a term like "one" would answer the card.
-  if (window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) return;
-  if (Date.now() < quizVoice.ttsUntil) return;
-  var card = state.quizCards[state.quizIndex];
-  var tf = !!card && card.format === "true-false";
+  if (quizVoiceDeaf()) return;
   var heard = "";
   for (var i = e.resultIndex; i < e.results.length; i++) {
     var res = e.results[i];
-    if (!res.isFinal || !res.length) continue;
+    if (!res.length) continue;
+    var key = quizVoice.session + ":" + i;
+    if (quizVoice.done[key]) continue;
     var text = String(res[0].transcript || "").trim();
-    if (!heard) heard = text;
-    var c = voiceCommand(text, state.quizOptions.length, tf);
-    if (c) {
-      if (c.cmd === "stop") {
-        setQuizVoicePref(false);
-        stopQuizVoice();
-        quizVoice.paused = null;
-        applyQuizVoice();
-        return;
-      }
-      if (c.cmd === "next") {
-        var nextBtn = document.getElementById("quiz-next-btn");
-        if (nextBtn) nextBtn.click();
-        return;
-      }
-      if (state.quizAnswered || Date.now() - (state.quizCardShownAt || 0) < QUIZ_VOICE_SETTLE_MS) return;
-      setQuizVoiceStatus("heard", { text: text, n: c.answer + 1 });
-      answerQuiz(c.answer);
-      return;
+    if (res.isFinal) {
+      if (quizVoice.pending && quizVoice.pending.key === key) clearQuizVoicePending();
+      quizVoice.done[key] = true;
+      if (!heard) heard = text;
+      if (runQuizVoice(text)) return;
+      continue;
     }
+    var c = quizVoiceCommand(text);
+    var sig = c ? JSON.stringify(c) : "";
+    if (quizVoice.pending && quizVoice.pending.key === key && quizVoice.pending.sig === sig) continue;
+    clearQuizVoicePending();
+    if (!c) continue;
+    quizVoice.pending = { key: key, sig: sig, text: text, timer: setTimeout(function() {
+      var p = quizVoice.pending;
+      quizVoice.pending = null;
+      if (!p || quizVoiceDeaf()) return;
+      quizVoice.done[p.key] = true;
+      runQuizVoice(p.text);
+    }, QUIZ_VOICE_STABLE_MS) };
   }
   // After an answer, the feedback sound and the room would make this flicker.
   if (heard && !state.quizAnswered) setQuizVoiceStatus("missed", { text: heard });

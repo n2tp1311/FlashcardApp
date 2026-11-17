@@ -90,9 +90,16 @@ function resultHarness(over) {
   const answered = [];
   const statuses = [];
   let clicked = 0;
+  const timers = [];
   const ctx = Object.assign({
-    quizVoice: { active: true, ttsUntil: 0 },
+    quizVoice: { active: true, ttsUntil: 0, session: 1, done: {}, pending: null },
     QUIZ_VOICE_SETTLE_MS: 600,
+    QUIZ_VOICE_STABLE_MS: 250,
+    setTimeout: function(f) { timers.push(f); return timers.length; },
+    clearTimeout: function(id) { if (id) timers[id - 1] = null; },
+    setQuizVoicePref: function() {},
+    stopQuizVoice: function() {},
+    applyQuizVoice: function() {},
     state: { quizCards: [{ format: "mcq" }], quizIndex: 0, quizOptions: ["w", "x", "y", "z"], quizAnswered: false, quizCardShownAt: 0 },
     document: { hidden: false, getElementById: function(id) { return id === "quiz-next-btn" ? { click: function() { clicked++; } } : null; } },
     window: {},
@@ -106,14 +113,59 @@ function resultHarness(over) {
     voiceCommand: pure.voiceCommand,
   }, over || {});
   vm.createContext(ctx);
-  vm.runInContext(fn("onQuizVoiceResult"), ctx);
-  const say = (...alts) => {
-    const r = alts.map(t => ({ transcript: t }));
-    r.isFinal = true;
-    ctx.onQuizVoiceResult({ resultIndex: 0, results: [r] });
+  vm.runInContext(["quizVoiceDeaf", "quizVoiceCommand", "runQuizVoice", "clearQuizVoicePending", "onQuizVoiceResult"].map(fn).join(""), ctx);
+  const event = (idx, text, final, alts) => {
+    const r = [text].concat(alts || []).map(t => ({ transcript: t }));
+    r.isFinal = final;
+    const results = [];
+    results[idx] = r;
+    ctx.onQuizVoiceResult({ resultIndex: idx, results });
   };
-  return { ctx, say, answered, statuses, clicks: () => clicked };
+  const say = (...alts) => event(0, alts[0], true, alts.slice(1));
+  const interim = (idx, text) => event(idx, text, false);
+  const final = (idx, text) => event(idx, text, true);
+  const tick = () => { const fs = timers.splice(0); fs.forEach(f => f && f()); };
+  return { ctx, say, interim, final, tick, answered, statuses, clicks: () => clicked };
 }
+
+test("an interim guess that holds still answers without waiting for the final result, once", function() {
+  let h = resultHarness();
+  h.interim(0, "c");
+  assert.deepEqual(h.answered, []);
+  h.tick();
+  assert.deepEqual(h.answered, [2]);
+  // The final of the same utterance does nothing more.
+  h.final(0, "xê");
+  assert.deepEqual(h.answered, [2]);
+
+  // A guess that changes restarts the wait, and one that becomes no command cancels it.
+  h = resultHarness();
+  h.interim(0, "đúng");
+  h.interim(0, "dừng lại");
+  h.interim(0, "dừng lại đi");
+  h.tick();
+  assert.deepEqual(h.answered, []);
+
+  // "tiếp" pressed Next from the interim; its final must not press Next on the next card.
+  h = resultHarness();
+  h.ctx.state.quizAnswered = true;
+  h.interim(0, "tiếp");
+  h.tick();
+  h.final(0, "tiếp theo");
+  assert.equal(h.clicks(), 1);
+  // The next utterance is a new one.
+  h.interim(1, "tiếp");
+  h.tick();
+  assert.equal(h.clicks(), 2);
+
+  // A final that arrives first acts, and the waiting interim is dropped.
+  h = resultHarness();
+  h.interim(0, "2");
+  h.final(0, "2");
+  h.tick();
+  assert.deepEqual(h.answered, [1]);
+  assert.match(fn("startQuizVoice"), /rec\.interimResults = true;/);
+});
 
 test("a heard answer answers the card, from the best guess only", function() {
   let h = resultHarness();
