@@ -733,9 +733,10 @@ every time. It appears only in Quiz, where the app decides right from wrong: pra
 flashcard self-grade would be praising the learner for their own button press.
 
 **Answers can be spoken, hands-free.** The mic button in the quiz toolbar (or `V`) turns
-listening on, and it stays on for every quiz on this device until turned off
-(`localStorage` `fc-quiz-voice`; it is per device because a laptop and a phone differ in
-whether talking to them makes sense). A status line under the question says what it is
+listening on for this quiz only. Every quiz starts with the mic off and leaving the quiz
+turns it off (`quizVoice.on`, not stored). It was first a per-device setting that started
+listening on its own at every quiz; the user wanted it off until asked for each time. A
+start from a tap is also the one iOS reliably allows. A status line under the question says what it is
 doing: "Listening · say 1–4 or A–D", "Heard "bê" → 2", "Didn't catch "banana"". It uses
 the browser's Web Speech API in the app's language (`vi-VN` or `en-US`), and only its best
 guess: with alternatives on, a said "dừng" came back with "đúng" second and answered True.
