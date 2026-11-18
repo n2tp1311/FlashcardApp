@@ -11302,7 +11302,9 @@ var QUIZ_VOICE_SETTLE_MS = 600;
 var QUIZ_VOICE_STABLE_MS = 250;
 var quizVoice = { rec: null, active: false, paused: null, fromGesture: false, startedAt: 0,
   gotStart: false, quickEnds: 0, ttsUntil: 0, idleTimer: null, restartTimer: null, watchdog: null,
-  session: 0, done: {}, pending: null };
+  session: 0, done: {}, pending: null, on: false };
+// Earlier builds remembered the mic per device; that setting no longer exists.
+try { localStorage.removeItem("fc-quiz-voice"); } catch (_) {}
 
 // One spoken answer or command, or null. Never guesses: the words left after the filler must
 // be exactly one known answer. Tone marks are kept: "dừng" and "đúng" differ only in them.
@@ -11345,12 +11347,14 @@ function quizVoiceSupported() {
   return !!(window.SpeechRecognition || window.webkitSpeechRecognition) && window.isSecureContext !== false;
 }
 
+// On for this quiz only: every quiz starts with the mic off until the learner turns it on,
+// and leaving the quiz turns it off. The user asked for that over a remembered setting.
 function quizVoiceOn() {
-  try { return localStorage.getItem("fc-quiz-voice") === "1"; } catch (_) { return false; }
+  return !!(quizVoice && quizVoice.on);
 }
 
 function setQuizVoicePref(on) {
-  try { localStorage.setItem("fc-quiz-voice", on ? "1" : "0"); } catch (_) {}
+  quizVoice.on = !!on;
 }
 
 function quizVoiceOnScreen() {
@@ -11570,6 +11574,7 @@ function onQuizVoiceResult(e) {
 function syncQuizVoice() {
   if (!quizVoice) return;
   var on = quizVoiceSupported() && quizVoiceOn();
+  if (!quizVoiceOnScreen()) quizVoice.on = false;
   if (!on || !quizVoiceOnScreen() || document.hidden) {
     stopQuizVoice();
     if (!on || !quizVoiceOnScreen()) quizVoice.paused = null;

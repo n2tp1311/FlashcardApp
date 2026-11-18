@@ -73,17 +73,32 @@ test("the hint follows the number of options", function() {
   assert.deepEqual(JSON.parse(JSON.stringify(pure.quizVoiceHint(1))), { nums: "1", letters: "A" });
 });
 
-test("the setting is per device and off unless chosen", function() {
-  const run = (store, throws) => {
-    const ctx = { localStorage: { getItem: function(k) { if (throws) throw new Error("blocked"); return store[k] || null; } } };
-    vm.createContext(ctx);
-    vm.runInContext(fn("quizVoiceOn"), ctx);
-    return ctx.quizVoiceOn();
+test("every quiz starts with the mic off, and leaving the quiz turns it off", function() {
+  let onScreen = true;
+  const ctx = {
+    quizVoice: { on: false, active: false, paused: null },
+    state: { language: "en" },
+    document: { hidden: false },
+    quizVoiceSupported: function() { return true; },
+    quizVoiceOnScreen: function() { return onScreen; },
+    stopQuizVoice: function() { ctx.quizVoice.active = false; },
+    startQuizVoice: function() { ctx.quizVoice.active = true; },
+    applyQuizVoice: function() {},
   };
-  assert.equal(run({ "fc-quiz-voice": "1" }), true);
-  assert.equal(run({ "fc-quiz-voice": "0" }), false);
-  assert.equal(run({}), false);
-  assert.equal(run({}, true), false);
+  vm.createContext(ctx);
+  vm.runInContext(["quizVoiceOn", "setQuizVoicePref", "syncQuizVoice"].map(fn).join(""), ctx);
+  ctx.syncQuizVoice();
+  assert.equal(ctx.quizVoice.active, false);
+  ctx.setQuizVoicePref(true);
+  ctx.syncQuizVoice();
+  assert.equal(ctx.quizVoice.active, true);
+  onScreen = false;
+  ctx.syncQuizVoice();
+  assert.equal(ctx.quizVoiceOn(), false);
+  onScreen = true;
+  ctx.syncQuizVoice();
+  assert.equal(ctx.quizVoice.active, false);
+  assert.doesNotMatch(fn("quizVoiceOn") + fn("setQuizVoicePref"), /localStorage/);
 });
 
 function resultHarness(over) {
