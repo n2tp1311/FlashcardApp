@@ -1748,6 +1748,11 @@ Most study happens on an iPhone, and several decisions are about it:
   them (`lessonsGroupByChapter`). Edit and delete sit behind one ⋯ (opening upward near
   the bottom of the screen) and the score moved to the meta line, so the title has about
   80% of the row. Three layouts were previewed; this one cost an extra tap to edit.
+- **The study header is centred on the card.** Its progress bar sat between Exit and the
+  right-hand control as a flex item, so its centre followed their widths: 20px right of the
+  card in a quiz (Exit against a 25px score) and 17px left in flashcards (against a 100px
+  Shuffle). Under 600px the header is three columns, the sides equal (1fr 2fr 1fr), and
+  Shuffle shows only its icon there, keeping its name as the aria-label.
 - **The grades are the bottom row** of the flashcard screen, Prev/Next the row above.
   Prev/Next used to be the bottom row, 8px under Confident: a slip skipped a card
   ungraded, and on the last card the same spot is Finish. Landscape keeps one row.
