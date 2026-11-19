@@ -809,6 +809,9 @@ buttons' intervals only hint at one card at a time.
   and the count share the primary colour, which is what names the line. Columns shrink
   their dots as they fill (6, 4, then 3px), so a long session fits; past about 27 cards in
   one column the rest are clipped.
+- **On a wide screen** (768px and up) the strip keeps to the card's 600px column, 20px under
+  the header and 16px above the toolbar; across the full window its dots sat far from the
+  card and it touched the toolbar.
 - Each half of a Study now run is its own session, so the strip starts empty for the new
   cards. A resumed session also starts empty: the strip is not saved.
 
