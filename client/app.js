@@ -8998,6 +8998,19 @@ function missedQuizCards(results) {
 function setMissedButton(prefix, n) {
   document.getElementById("btn-" + prefix + "-missed").classList.toggle("hidden", n === 0);
   document.getElementById(prefix + "-missed-label").textContent = n ? t("results.retryMissed", { n: n }) : "";
+  setResultsPrimary(prefix);
+}
+
+// One filled button per end screen: the first shown of Learn new, Retry missed and Back.
+// With two filled the row had no clear next step.
+function setResultsPrimary(prefix) {
+  var first = true;
+  document.querySelectorAll("#screen-" + (prefix === "summary" ? "flashcard-summary" : "results") + " [data-primary]").forEach(function(btn) {
+    var primary = first && !btn.classList.contains("hidden");
+    if (primary) first = false;
+    btn.classList.toggle("btn-primary", primary);
+    btn.classList.toggle("btn-outline", !primary);
+  });
 }
 
 document.getElementById("btn-summary-missed").addEventListener("click", function() {
@@ -13342,6 +13355,7 @@ function setLearnNewButton(prefix) {
   btn.classList.toggle("hidden", !next);
   btn.textContent = !next ? "" :
     t(next.run.first === "new" ? "studyNow.reviewNext" : "studyNow.learnNew", { n: next.cards.length });
+  setResultsPrimary(prefix);
 }
 
 ["results", "summary"].forEach(function(prefix) {

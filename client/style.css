@@ -5872,3 +5872,42 @@ button.leech-pill:hover { filter: brightness(0.96); }
 @media (prefers-reduced-motion: reduce) {
   :root[data-style] :is(.btn, .quiz-opt, .tf-answer-btn):active:not(:disabled) { transform: none; }
 }
+
+/* End screens on a wide screen: one screen, no scrolling. On top the score (quiz ring) beside
+   the headline, tiles, streak and medal; then the memory strip at full width with, on the
+   flashcard summary, the new/review split and grade bars beside it; one row of buttons last.
+   As one 400px column the buttons sat below the fold at 720px tall. */
+@media (min-width: 1024px) {
+  #screen-results .results-container, #screen-flashcard-summary .results-container {
+    display: grid; max-width: 1040px; width: calc(100% - 64px); margin: 0 auto;
+    column-gap: 32px; row-gap: 12px; align-items: start; padding-top: 16px;
+  }
+  .results-container > * { min-width: 0; }
+  #screen-results .results-container {
+    grid-template-columns: 170px minmax(0, 1fr);
+    grid-template-areas: "ring done" "grade done" "detail done" "mem mem" "hint hint" "cap cap" "act act";
+  }
+  #screen-flashcard-summary .results-container {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-areas: "done done" "mem nr" "mem bd" "skip skip" "cram cram" "act act";
+  }
+  #results-done, #summary-done { grid-area: done; }
+  #results-memend, #summary-memend { grid-area: mem; }
+  #screen-results .results-ring-wrap { grid-area: ring; justify-self: center; width: 120px; height: 120px; }
+  #results-grade { grid-area: grade; justify-self: center; }
+  #results-detail { grid-area: detail; text-align: center; }
+  #results-review-hint { grid-area: hint; justify-self: center; }
+  #results-cap-note { grid-area: cap; }
+  .summary-newreview-row { grid-area: nr; width: 100%; }
+  #summary-status-breakdown { grid-area: bd; width: 100%; }
+  #summary-skipped-note { grid-area: skip; }
+  #summary-cram-note { grid-area: cram; }
+  .results-actions { grid-area: act; flex-wrap: nowrap; justify-content: center; }
+  .results-actions .btn { flex: 0 0 auto; white-space: nowrap; min-height: 44px; }
+  .session-done { gap: 10px; }
+  .session-cheers { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; width: 100%; }
+  .session-cheers:empty { display: none; }
+  .session-cheers > * { margin: 0; }
+  .memend { padding-top: 12px; padding-bottom: 10px; }
+  .memend .memend-plot { height: 32px; }
+}
