@@ -966,6 +966,12 @@ Object.assign(TRANSLATIONS.en, {
   "studyNow.newFirst": "Learn first",
   "studyNow.barNewDone": "Learned ✓",
   "quiz.ifRight": "If right: back in {time}",
+  "memstrip.empty": "Each card you answer lands here as a dot",
+  "memstrip.first": "Back in {now}",
+  "memstrip.moved": "Back in {now}, was {prev}",
+  "memstrip.notDue": "Not due yet, so its schedule stays as it was.",
+  "memstrip.pastMonth": "{n} past a month",
+  "memstrip.label": "When the cards you answered come back",
   "quiz.ifWrong": "If wrong: back in {time}",
   "studyNow.barReview": "Review {n}",
   "studyNow.barReviewDone": "Reviewed ✓",
@@ -2219,6 +2225,12 @@ Object.assign(TRANSLATIONS.vi, {
   "studyNow.newFirst": "Học mới trước",
   "studyNow.barNewDone": "Đã học ✓",
   "quiz.ifRight": "Nếu đúng: gặp lại sau {time}",
+  "memstrip.empty": "Mỗi thẻ bạn trả lời sẽ thành một chấm ở đây",
+  "memstrip.first": "Gặp lại sau {now}",
+  "memstrip.moved": "Gặp lại sau {now}, trước là {prev}",
+  "memstrip.notDue": "Thẻ chưa đến hạn, lịch ôn giữ nguyên.",
+  "memstrip.pastMonth": "{n} thẻ quá 1 tháng",
+  "memstrip.label": "Khi nào gặp lại các thẻ vừa trả lời",
   "quiz.ifWrong": "Nếu sai: gặp lại sau {time}",
   "studyNow.barReview": "Ôn {n}",
   "studyNow.barReviewDone": "Đã ôn ✓",
@@ -8580,6 +8592,7 @@ var STREAK_MILESTONES = [7, 14, 30, 50, 100, 200, 365, 500, 1000];
 // session is what extended the streak or reached the daily goal.
 function beginStudySession() {
   dismissGradeUndo();
+  state.memStrip = { entries: {}, dueAt: {}, last: null, lastNotDue: false };
   state.sessionMs = 0;
   state.sessionDurations = [];
   state.sessionTodayAtStart = null;
@@ -10178,6 +10191,7 @@ function renderFlashcard() {
       cards.length - Object.keys(state.studySessionLog || {}).length, "flashcard");
     setStudyProgress("fc", i + 1, cards.length, cards.length - Object.keys(state.studySessionLog || {}).length, "flashcard");
   }
+  renderMemStrip("fc");
 
   // Lesson label (multi-lesson sessions)
   setStudyLessonLabel("fc-lesson-label", card);
@@ -11047,6 +11061,190 @@ function confirmLatexRetype() {
   completeForcedRetype();
 }
 
+/* ---- Memory strip: where each card answered this session will next come back ----
+   One dot per card on a log scale from 1 day to 1 year, so a session reads as cards moving
+   right. A card answered twice keeps one dot, at its latest place. Cram and not-due answers
+   leave the schedule alone, so they move nothing. */
+var MEM_STRIP_BINS = 20;
+var MEM_STRIP_YEAR_DAYS = 365;
+
+function memStripPos(seconds) {
+  var days = seconds / 86400;
+  if (!(days > 1)) return 0;
+  if (days >= MEM_STRIP_YEAR_DAYS) return 100;
+  return Math.log(days) / Math.log(MEM_STRIP_YEAR_DAYS) * 100;
+}
+
+function memStripBin(seconds, bins) {
+  return Math.min(bins - 1, Math.floor(memStripPos(seconds) / 100 * bins));
+}
+
+function memStripBins(entries, bins) {
+  var cols = [];
+  for (var i = 0; i < bins; i++) cols.push({ ok: 0, again: 0 });
+  Object.keys(entries).forEach(function(id) {
+    var e = entries[id];
+    cols[memStripBin(e.now, bins)][e.again ? "again" : "ok"]++;
+  });
+  return cols;
+}
+
+// The previous interval is the one the card was on before this answer: its last place in
+// this session if it already has one, else the server's schedule. A card never scheduled has none.
+function memStripPrev(entry, card) {
+  if (entry) return entry.now;
+  if (card.srs_due_at && card.fsrs_last_review_at) return Math.max(0, card.srs_due_at - card.fsrs_last_review_at);
+  return null;
+}
+
+// Records an answer; returns the strip as it was before it, for undo.
+function memStripRecord(strip, card, seconds, again, attemptId) {
+  var before = { entry: strip.entries[card.id], last: strip.last, lastNotDue: strip.lastNotDue };
+  strip.entries[card.id] = { now: Math.max(0, seconds), prev: memStripPrev(before.entry, card), again: again, attemptId: attemptId };
+  strip.last = card.id;
+  strip.lastNotDue = false;
+  strip.landing = true;
+  return before;
+}
+
+// A not-due answer moves no dot; it only changes what the caption says.
+function memStripNotDue(strip) {
+  var before = { last: strip.last, lastNotDue: strip.lastNotDue };
+  strip.lastNotDue = true;
+  return before;
+}
+
+function memStripRestore(strip, card, before) {
+  if ("entry" in before) {
+    if (before.entry === undefined) delete strip.entries[card.id]; else strip.entries[card.id] = before.entry;
+  }
+  strip.last = before.last;
+  strip.lastNotDue = before.lastNotDue;
+}
+
+// The server's due date wins over the preview: it includes load balancing, and the preview
+// was worked out when the card was shown. A server that finds the card not due after all
+// takes the dot back; the caption follows only if no later answer has replaced it.
+function memStripSettle(strip, card, attemptId, before, res) {
+  var e = strip.entries[card.id];
+  if (!e || e.attemptId !== attemptId || !res) return false;
+  if (res.notDue) {
+    if (strip.last === card.id) {
+      memStripRestore(strip, card, before);
+      strip.lastNotDue = true;
+    } else if (before.entry === undefined) {
+      delete strip.entries[card.id];
+    } else {
+      strip.entries[card.id] = before.entry;
+    }
+    return true;
+  }
+  if (res.srs_due_at == null) return false;
+  e.now = Math.max(0, res.srs_due_at - Math.floor(Date.now() / 1000));
+  return true;
+}
+
+// Puts an answer on the strip: nowhere if the client already knows the card is not due,
+// at the preview's place otherwise. Returns the undo record and the reply handler, or null
+// when there is no strip or no preview to place the card by.
+function memStripAnswer(prefix, card, notDue, preview, again, attemptId) {
+  var strip = state.memStrip;
+  if (!strip || !IS_SERVER) return null;
+  if (notDue) {
+    var nd = memStripNotDue(strip);
+    renderMemStrip(prefix);
+    return { before: nd, settle: function() {} };
+  }
+  if (preview == null) return null;
+  var before = memStripRecord(strip, card, preview, again, attemptId);
+  renderMemStrip(prefix);
+  return {
+    before: before,
+    settle: function(res) {
+      if (state.memStrip === strip && memStripSettle(strip, card, attemptId, before, res)) renderMemStrip(prefix);
+    }
+  };
+}
+
+function memStripPastMonth(entries) {
+  return Object.keys(entries).filter(function(id) { return entries[id].now >= 30 * 86400; }).length;
+}
+
+function memStripCaption(strip) {
+  if (strip.lastNotDue) return t("memstrip.notDue");
+  var e = strip.last != null ? strip.entries[strip.last] : null;
+  if (!e) return t("memstrip.empty");
+  if (e.prev == null) return t("memstrip.first", { now: formatFsrsDuration(e.now) });
+  return t("memstrip.moved", { now: formatFsrsDuration(e.now), prev: formatFsrsDuration(e.prev) });
+}
+
+function renderMemStrip(prefix) {
+  var wrap = document.getElementById(prefix + "-memstrip");
+  if (!wrap) return;
+  var strip = state.memStrip;
+  // Without a server there is no schedule preview to place a card by.
+  var show = !!strip && IS_SERVER && !(prefix === "fc" && state.cram);
+  wrap.classList.toggle("hidden", !show);
+  if (!show) return;
+  if (wrap.getAttribute("data-lang") !== state.language) {
+    wrap.setAttribute("data-lang", state.language || "");
+    wrap.querySelectorAll("[data-memstrip-sec]").forEach(function(tick) {
+      var sec = Number(tick.getAttribute("data-memstrip-sec"));
+      tick.textContent = formatFsrsDuration(sec);
+      tick.style.left = memStripPos(sec) + "%";
+    });
+    wrap.querySelector(".memstrip-month").style.left = memStripPos(30 * 86400) + "%";
+  }
+  var cols = memStripBins(strip.entries, MEM_STRIP_BINS);
+  var last = strip.last != null ? strip.entries[strip.last] : null;
+  var lastBin = last ? memStripBin(last.now, MEM_STRIP_BINS) : -1;
+  // The server's reply usually lands the dot where the preview put it; redrawing the same dots
+  // would cut the landing animation short.
+  var sig = JSON.stringify([cols, lastBin, last && last.again]);
+  var colsEl = document.getElementById(prefix + "-memstrip-cols");
+  if (colsEl.getAttribute("data-sig") !== sig) {
+    colsEl.setAttribute("data-sig", sig);
+    var most = cols.reduce(function(m, c) { return Math.max(m, c.ok + c.again); }, 0);
+    // Smaller dots as a column fills, so a long session still fits the strip's height.
+    wrap.style.setProperty("--memdot", (most <= 10 ? 6 : most <= 24 ? 4 : 3) + "px");
+    colsEl.style.gridTemplateColumns = "repeat(" + MEM_STRIP_BINS + ", minmax(0, 1fr))";
+    colsEl.textContent = "";
+    cols.forEach(function(c, i) {
+      var col = document.createElement("div");
+      col.className = "memstrip-col";
+      var n = c.again + c.ok;
+      for (var k = 0; k < n; k++) {
+        var dot = document.createElement("span");
+        dot.className = "memstrip-dot" + (k < c.again ? " is-again" : "");
+        // The latest answer's dot is the last one placed in its group.
+        if (i === lastBin && k === (last.again ? c.again - 1 : n - 1)) {
+          dot.className += " is-latest" + (strip.landing ? " is-landing" : "");
+        }
+        col.appendChild(dot);
+      }
+      colsEl.appendChild(col);
+    });
+  }
+  strip.landing = false;
+  var ghost = document.getElementById(prefix + "-memstrip-ghost");
+  var trail = document.getElementById(prefix + "-memstrip-trail");
+  var moved = !!last && last.prev != null && !strip.lastNotDue;
+  ghost.classList.toggle("hidden", !moved);
+  trail.classList.toggle("hidden", !moved);
+  if (moved) {
+    var from = (memStripBin(last.prev, MEM_STRIP_BINS) + 0.5) / MEM_STRIP_BINS * 100;
+    var to = (lastBin + 0.5) / MEM_STRIP_BINS * 100;
+    ghost.style.left = from + "%";
+    trail.style.left = Math.min(from, to) + "%";
+    trail.style.width = Math.abs(to - from) + "%";
+    trail.classList.toggle("is-again", !!last.again);
+    ghost.classList.toggle("is-again", !!last.again);
+  }
+  document.getElementById(prefix + "-memstrip-caption").textContent = memStripCaption(strip);
+  var past = memStripPastMonth(strip.entries);
+  document.getElementById(prefix + "-memstrip-count").textContent = past ? t("memstrip.pastMonth", { n: past }) : "";
+}
+
 function markCard(known, grade, forceRetype) {
   var card = state.studyCards[state.studyIndex];
   if (!card || state.studyCardGraded) return;
@@ -11072,9 +11270,16 @@ function markCard(known, grade, forceRetype) {
   if (state.studyCardShownAt) attemptFields.durationMs = Date.now() - state.studyCardShownAt;
   if (state.typeToCompare && document.getElementById("fc-type-input").value.trim()) attemptFields.typed = true;
   undo.sessionMs = addSessionTime(attemptFields.durationMs);
+  var mem = state.cram ? null : memStripAnswer("fc", card,
+    card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000),
+    !known ? card.fsrs_preview_again : grade === "hard" ? card.fsrs_preview_hard :
+      grade === "easy" ? card.fsrs_preview_easy : card.fsrs_preview_good,
+    !known, undo.attemptId);
+  if (mem) undo.memStrip = mem.before;
   store.recordAttempt(attemptFields).then(function(res) {
     if (res && res.srs_due_at != null && state.fcUndoneAttempt !== undo.attemptId) {
       card.srs_due_at = res.srs_due_at;
+      if (mem) mem.settle(res);
     }
     if (res && res.became_leech && state.fcUndoneAttempt !== undo.attemptId) offerLeech(card, res);
   }).catch(function(err) {
@@ -11159,6 +11364,10 @@ function undoLastGrade() {
     state.fcUndoneAttempt = undo.attemptId;
     store.setCardKnown(undo.card.id, undo.prevKnown === undefined ? null : undo.prevKnown).catch(function() {});
     var index = restoreGradedCard(undo);
+    if (undo.memStrip && state.memStrip) {
+      memStripRestore(state.memStrip, undo.card, undo.memStrip);
+      renderMemStrip("fc");
+    }
     if (index < 0) return;
     state.studyIndex = index;
     showScreen("flashcard");
@@ -11651,6 +11860,7 @@ function renderQuizCard() {
     total - state.quizResults.length, "quiz");
   setStudyProgress("quiz", i + 1, total, total - state.quizResults.length, "quiz");
   setQuizScoreDisplay();
+  renderMemStrip("quiz");
 
   // Lesson label (multi-lesson sessions)
   setStudyLessonLabel("quiz-lesson-label", card);
@@ -11801,7 +12011,16 @@ function answerQuiz(selectedIdx) {
   if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
   addSessionTime(quizAttemptFields.durationMs);
   markQuizOutcome(isCorrect);
+  var quizTimes = quizOutcomeTimes(card);
+  // A retry later in this quiz is not due: the earlier answer's due date is kept on the strip,
+  // not on the card, whose old schedule is what a replay of that answer shows.
+  var quizDue = state.memStrip && state.memStrip.dueAt[card.id] || card.srs_due_at;
+  var quizNotDue = !!(quizDue && quizDue > Math.floor(Date.now() / 1000));
+  var quizMem = memStripAnswer("quiz", card, quizNotDue,
+    quizTimes ? (isCorrect ? quizTimes.right : quizTimes.wrong) : null, !isCorrect, genId("mem"));
   store.recordAttempt(quizAttemptFields).then(function(res) {
+    if (res && !res.notDue && res.srs_due_at != null && state.memStrip) state.memStrip.dueAt[card.id] = res.srs_due_at;
+    if (res && quizMem) quizMem.settle(res);
     if (res && state.quizCards[state.quizIndex] === card) {
       // A retry of a card answered minutes ago is not due on the server: nothing changed.
       if (res.notDue || !res.srs_due_at) setQuizOutcomes(null);

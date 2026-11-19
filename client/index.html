@@ -587,6 +587,18 @@
     </div>
     <button class="btn btn-ghost" id="btn-fc-shuffle" data-i18n="common.shuffle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Shuffle</button>
   </header>
+  <div id="fc-memstrip" class="memstrip hidden">
+    <div class="memstrip-plot" role="img" data-i18n-aria="memstrip.label" aria-label="When the cards you answered come back">
+      <div class="memstrip-month" aria-hidden="true"></div>
+      <div class="memstrip-cols" id="fc-memstrip-cols" aria-hidden="true"></div>
+      <div class="memstrip-trail hidden" id="fc-memstrip-trail" aria-hidden="true"></div>
+      <div class="memstrip-ghost hidden" id="fc-memstrip-ghost" aria-hidden="true"></div>
+    </div>
+    <div class="memstrip-axis" aria-hidden="true">
+      <span data-memstrip-sec="86400"></span><span data-memstrip-sec="604800"></span><span data-memstrip-sec="2592000" class="is-month"></span><span data-memstrip-sec="31536000"></span>
+    </div>
+    <div class="memstrip-foot"><span class="memstrip-caption" id="fc-memstrip-caption"></span><span class="memstrip-count" id="fc-memstrip-count"></span></div>
+  </div>
   <div class="fc-toolbar">
     <button class="btn btn-sm btn-ghost btn-icon" id="btn-fc-edit-card" title="Edit card" aria-label="Edit card" data-i18n-title="study.editCard" data-i18n-aria="study.editCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
     <button class="btn btn-sm btn-ghost btn-icon hidden" id="btn-fc-flag-card" title="Report a problem with this card" aria-label="Report a problem with this card" data-i18n-title="flag.button" data-i18n-aria="flag.button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
@@ -662,6 +674,18 @@
     </div>
     <span id="quiz-score-display" class="score-display">✓ 0</span>
   </header>
+  <div id="quiz-memstrip" class="memstrip hidden">
+    <div class="memstrip-plot" role="img" data-i18n-aria="memstrip.label" aria-label="When the cards you answered come back">
+      <div class="memstrip-month" aria-hidden="true"></div>
+      <div class="memstrip-cols" id="quiz-memstrip-cols" aria-hidden="true"></div>
+      <div class="memstrip-trail hidden" id="quiz-memstrip-trail" aria-hidden="true"></div>
+      <div class="memstrip-ghost hidden" id="quiz-memstrip-ghost" aria-hidden="true"></div>
+    </div>
+    <div class="memstrip-axis" aria-hidden="true">
+      <span data-memstrip-sec="86400"></span><span data-memstrip-sec="604800"></span><span data-memstrip-sec="2592000" class="is-month"></span><span data-memstrip-sec="31536000"></span>
+    </div>
+    <div class="memstrip-foot"><span class="memstrip-caption" id="quiz-memstrip-caption"></span><span class="memstrip-count" id="quiz-memstrip-count"></span></div>
+  </div>
   <div class="fc-toolbar">
     <button class="btn btn-sm btn-ghost btn-icon" id="btn-quiz-layout" title="Show answers side by side" aria-label="Show answers side by side"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
     <button class="btn btn-sm btn-ghost btn-icon hidden" id="btn-quiz-voice" title="Turn on hands-free answers (V)" aria-label="Turn on hands-free answers (V)" data-i18n-title="quiz.voiceOn" data-i18n-aria="quiz.voiceOn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg></button>

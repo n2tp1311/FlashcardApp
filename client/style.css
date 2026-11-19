@@ -2167,6 +2167,119 @@ code {
 .pb-labels .is-now { color: var(--text); font-weight: 600; }
 .pb-labels .is-done { color: var(--success); }
 
+/* Memory strip: one dot per answered card, placed on a log scale of when it comes back. */
+.memstrip {
+  --memdot: 6px;
+  margin: 4px 0 0;
+  padding: 8px 12px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.memstrip-plot {
+  position: relative;
+  height: 36px;
+  border-bottom: 1px solid var(--border);
+}
+.memstrip-cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+.memstrip-col {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 1px;
+  padding: 1px 1px 0;
+  overflow: hidden;
+}
+.memstrip-dot {
+  width: var(--memdot);
+  height: var(--memdot);
+  border-radius: 50%;
+  background: var(--success);
+}
+.memstrip-dot.is-again { background: var(--danger); }
+.memstrip-dot.is-latest {
+  box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px currentColor;
+  color: var(--success);
+}
+.memstrip-dot.is-landing { animation: memstrip-land 0.35s ease-out; }
+.memstrip-dot.is-again.is-latest { color: var(--danger); }
+@keyframes memstrip-land {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.memstrip-month {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--primary);
+  opacity: 0.5;
+}
+.memstrip-ghost {
+  position: absolute;
+  bottom: 2px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1.5px dashed var(--success);
+}
+.memstrip-trail {
+  position: absolute;
+  bottom: 5px;
+  height: 2px;
+  background: var(--success);
+  opacity: 0.4;
+}
+.memstrip-ghost.is-again { border-color: var(--danger); }
+.memstrip-trail.is-again { background: var(--danger); }
+.memstrip-axis {
+  position: relative;
+  height: 14px;
+  font-size: 0.6875rem;
+  color: var(--text2);
+}
+.memstrip-axis span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.memstrip-axis span:first-child { transform: none; }
+.memstrip-axis span:last-child { transform: translateX(-100%); }
+.memstrip-axis .is-month { color: var(--primary); font-weight: 600; }
+.memstrip-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--text2);
+  font-variant-numeric: tabular-nums;
+}
+.memstrip-caption { min-width: 0; }
+.memstrip-count { color: var(--primary); font-weight: 600; white-space: nowrap; }
+/* A phone has no height to spare above the question: no axis row, a shorter plot. The month
+   line and the "past a month" count share the primary colour, which is what names the line. */
+@media (max-width: 767px) {
+  .memstrip { margin-top: 0; padding: 4px 10px; gap: 2px; }
+  .memstrip-plot { height: 26px; }
+  .memstrip-axis { display: none; }
+  .memstrip-foot { font-size: 0.75rem; line-height: 15px; }
+  .memstrip-caption { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .memstrip-axis { display: none; }
+  .memstrip-plot { height: 24px; }
+}
+
 .fc-toolbar {
   display: flex;
   gap: 8px;
