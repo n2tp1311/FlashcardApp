@@ -1050,6 +1050,19 @@ to the bottom of the screen from the start. Below the content, the late lines pu
 Lesson from 560px to 1034px down a 667px screen, moving it out from under a finger on its
 way to tap. The cost is a strip of screen the buttons always hold: two rows on Results.
 
+**One filled button.** Of Learn new, Retry missed and Back to Lesson, only the first one shown
+is filled; the rest are outlined like Retry and Change Setup (`setResultsPrimary`, run when
+Retry missed or Learn new is shown or hidden). With Retry missed and Back both filled, the
+row had two "next steps" and read as a jumble.
+
+**On a wide screen (1024px and up)** both end screens are a grid that fits 1288×720 without
+scrolling, where the single 400px column put the buttons below the fold. Results: the ring,
+grade and "7 correct out of 8" on the left of the headline, tiles, streak and medal; then the
+memory strip at full width; then one row of buttons. The flashcard summary: headline, tiles
+and the streak and medal lines side by side; the memory strip beside the new/review split and
+grade bars; one row of buttons. Two layouts were previewed; two columns with the buttons
+stacked on the right was the other.
+
 ---
 
 ## 9. The daily numbers

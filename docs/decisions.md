@@ -1368,3 +1368,6 @@ The brief was to make studying more engaging. The app already had streaks, medal
 
 The session end followed the same day: Before and Now rows of the same strip on the flashcard summary and quiz results, under one headline. Two rows of dots were chosen over one row per card because they still read at 100 cards. The headline names the count past a month only when it grew; otherwise it falls back to cards pushed further out, so a session of mostly new cards does not claim progress it did not make. New cards are left off the Before row rather than drawn at zero, which would read as forgetting.
 
+## 2026-11-20 — End screens fit one desktop screen, with one filled button
+
+On a 1288×720 desktop window the results screen ran past the fold: headline, tiles, medal, the new memory strip, the ring and the grade stacked in a 400px column, and the buttons wrapped into two uneven rows with two of them filled. Two layouts were previewed as screenshots: two columns with the buttons stacked on the right, and the score beside the tiles with the strip at full width and one row of buttons. The user picked the second, after checking that the streak and medal lines still showed (the first preview had no server, so they were missing; the final one shows them side by side). Only one button is filled now, on every width: the first shown of Learn new, Retry missed and Back.
