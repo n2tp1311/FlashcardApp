@@ -20,7 +20,7 @@ const ctx = {
   formatFsrsDuration: (s) => Math.round(s / DAY) + "d",
 };
 vm.createContext(ctx);
-vm.runInContext("var MEM_STRIP_BINS = 20; var MEM_STRIP_YEAR_DAYS = 365;", ctx);
+vm.runInContext("var MEM_STRIP_BINS = 20; var MEM_STRIP_YEAR_DAYS = 365; var MONTH_SECONDS = 30 * 86400;", ctx);
 ctx.state = {};
 ctx.IS_SERVER = true;
 ctx.renders = [];
@@ -164,4 +164,56 @@ test("a quiz answer keeps the card's due date, so a retry in the same quiz is kn
   assert.match(extract("answerQuiz"), /state\.memStrip\.dueAt\[card\.id\] = res\.srs_due_at/);
   assert.doesNotMatch(extract("answerQuiz"), /card\.srs_due_at = /);
   assert.match(extract("answerQuiz"), /quizOutcomeTimes\(card\)/);
+});
+
+for (const fn of ["memStripSummary", "memStripEndText", "memStripStartEntries"]) vm.runInContext(extract(fn), ctx);
+
+test("the session end remembers where a card stood when the session began", () => {
+  const strip = newStrip();
+  const card = { id: "a", srs_due_at: 1000 + 4 * DAY, fsrs_last_review_at: 1000 };
+  ctx.memStripRecord(strip, card, 600, true, "1");
+  ctx.memStripRecord(strip, card, 3 * DAY, false, "2");
+  assert.equal(strip.entries.a.start, 4 * DAY);
+  assert.equal(strip.entries.a.prev, 600);
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.memStripStartEntries(strip.entries))), { a: { now: 4 * DAY, again: false } });
+});
+
+test("the session end headline says the most that is true", () => {
+  const strip = newStrip();
+  const due = (days) => ({ srs_due_at: 1000 + days * DAY, fsrs_last_review_at: 1000 });
+  ctx.memStripRecord(strip, Object.assign({ id: "a" }, due(40)), 90 * DAY, false, "1");
+  ctx.memStripRecord(strip, Object.assign({ id: "b" }, due(10)), 35 * DAY, false, "2");
+  ctx.memStripRecord(strip, { id: "c" }, 600, false, "3");
+  const sum = ctx.memStripSummary(strip.entries);
+  assert.deepEqual(JSON.parse(JSON.stringify(sum)), { total: 3, pastNow: 2, pastBefore: 1, further: 2, fresh: 1 });
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.memStripEndText(sum))),
+    { title: 'memend.pastMonth{"n":2}', sub: 'memend.before{"n":1}' });
+  assert.equal(ctx.memStripEndText({ pastNow: 0, pastBefore: 0, further: 2 }).title, 'memend.further{"n":2}');
+  assert.equal(ctx.memStripEndText({ pastNow: 1, pastBefore: 1, further: 0 }).title, "memend.none");
+});
+
+test("both end screens carry the before-and-now view", () => {
+  for (const id of ["summary-memend", "results-memend"]) assert.ok(indexHtml.includes('id="' + id + '"'), id);
+  assert.match(extract("showFlashcardSummary"), /renderMemEnd\("summary-memend"\)/);
+  assert.match(extract("showQuizResults"), /renderMemEnd\("results-memend"\)/);
+});
+
+test("a new card is not counted as pushed further, and a studied card without a review time is not new", () => {
+  const strip = newStrip();
+  ctx.memStripRecord(strip, { id: "n" }, 3 * DAY, false, "1");
+  ctx.memStripRecord(strip, { id: "old", srs_due_at: 1000 + 9 * DAY, fsrs_last_review_at: null }, 20 * DAY, false, "2");
+  const sum = ctx.memStripSummary(strip.entries);
+  assert.equal(sum.further, 0);
+  assert.equal(sum.fresh, 1);
+  assert.equal(ctx.memStripEndText(sum).title, "memend.none");
+});
+
+test("a graded card's last review time moves with its due date, and undo puts both back", () => {
+  assert.match(extract("markCard"), /if \(!res\.notDue\) card\.fsrs_last_review_at = /);
+  assert.match(extract("markCard"), /prevLastReview: card\.fsrs_last_review_at/);
+  assert.match(extract("restoreGradedCard"), /undo\.card\.fsrs_last_review_at = undo\.prevLastReview/);
+});
+
+test("the month mark is one constant", () => {
+  assert.equal(appJs.split("30 * 86400").length - 1, 1);
 });

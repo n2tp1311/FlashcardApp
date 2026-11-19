@@ -972,6 +972,16 @@ Object.assign(TRANSLATIONS.en, {
   "memstrip.notDue": "Not due yet, so its schedule stays as it was.",
   "memstrip.pastMonth": "{n} past a month",
   "memstrip.label": "When the cards you answered come back",
+  "memend.pastMonth": "{n} cards will now stay with you past a month",
+  "memend.pastMonth_one": "1 card will now stay with you past a month",
+  "memend.before": "Before this session: {n}.",
+  "memend.further": "{n} cards pushed further out",
+  "memend.further_one": "1 card pushed further out",
+  "memend.none": "These cards need a few more goes",
+  "memend.fresh": "{n} new cards had no place before this session.",
+  "memend.fresh_one": "1 new card had no place before this session.",
+  "memend.rowBefore": "Before",
+  "memend.rowNow": "Now",
   "quiz.ifWrong": "If wrong: back in {time}",
   "studyNow.barReview": "Review {n}",
   "studyNow.barReviewDone": "Reviewed ✓",
@@ -2231,6 +2241,13 @@ Object.assign(TRANSLATIONS.vi, {
   "memstrip.notDue": "Thẻ chưa đến hạn, lịch ôn giữ nguyên.",
   "memstrip.pastMonth": "{n} thẻ quá 1 tháng",
   "memstrip.label": "Khi nào gặp lại các thẻ vừa trả lời",
+  "memend.pastMonth": "{n} thẻ giờ sẽ nhớ được hơn một tháng",
+  "memend.before": "Trước phiên này là {n}.",
+  "memend.further": "{n} thẻ được đẩy xa hơn",
+  "memend.none": "Các thẻ này cần thêm vài lần ôn",
+  "memend.fresh": "{n} thẻ mới chưa có chỗ trước phiên này.",
+  "memend.rowBefore": "Trước phiên",
+  "memend.rowNow": "Bây giờ",
   "quiz.ifWrong": "Nếu sai: gặp lại sau {time}",
   "studyNow.barReview": "Ôn {n}",
   "studyNow.barReviewDone": "Đã ôn ✓",
@@ -8932,6 +8949,7 @@ function showFlashcardSummary() {
     { label: t("done.known"), value: (total ? Math.round(knownCount / total * 100) : 0) + "%", tone: "green" },
     { label: t("done.time"), value: formatSessionTime(state.sessionMs), tone: "blue" }
   ], gradedIds.filter(function(id) { return state.studySessionNewSet[id]; }));
+  renderMemEnd("summary-memend");
   document.getElementById("summary-new-count").textContent = newCount;
   document.getElementById("summary-review-count").textContent = total - newCount;
 
@@ -11066,6 +11084,7 @@ function confirmLatexRetype() {
    right. A card answered twice keeps one dot, at its latest place. Cram and not-due answers
    leave the schedule alone, so they move nothing. */
 var MEM_STRIP_BINS = 20;
+var MONTH_SECONDS = 30 * 86400;
 var MEM_STRIP_YEAR_DAYS = 365;
 
 function memStripPos(seconds) {
@@ -11100,7 +11119,13 @@ function memStripPrev(entry, card) {
 // Records an answer; returns the strip as it was before it, for undo.
 function memStripRecord(strip, card, seconds, again, attemptId) {
   var before = { entry: strip.entries[card.id], last: strip.last, lastNotDue: strip.lastNotDue };
-  strip.entries[card.id] = { now: Math.max(0, seconds), prev: memStripPrev(before.entry, card), again: again, attemptId: attemptId };
+  var prev = memStripPrev(before.entry, card);
+  // Where the card stood when the session began, for the session end's "before" row.
+  var start = before.entry ? before.entry.start : prev;
+  // A card with a schedule but no last-review time was studied before, so it is not new;
+  // its starting place is just unknown.
+  var seen = before.entry ? before.entry.seen : !!card.srs_due_at;
+  strip.entries[card.id] = { now: Math.max(0, seconds), prev: prev, start: start, seen: seen, again: again, attemptId: attemptId };
   strip.last = card.id;
   strip.lastNotDue = false;
   strip.landing = true;
@@ -11167,7 +11192,7 @@ function memStripAnswer(prefix, card, notDue, preview, again, attemptId) {
 }
 
 function memStripPastMonth(entries) {
-  return Object.keys(entries).filter(function(id) { return entries[id].now >= 30 * 86400; }).length;
+  return Object.keys(entries).filter(function(id) { return entries[id].now >= MONTH_SECONDS; }).length;
 }
 
 function memStripCaption(strip) {
@@ -11178,6 +11203,45 @@ function memStripCaption(strip) {
   return t("memstrip.moved", { now: formatFsrsDuration(e.now), prev: formatFsrsDuration(e.prev) });
 }
 
+function memStripLayoutAxis(wrap) {
+  if (wrap.getAttribute("data-lang") === state.language) return;
+  wrap.setAttribute("data-lang", state.language || "");
+  wrap.querySelectorAll("[data-memstrip-sec]").forEach(function(tick) {
+    var sec = Number(tick.getAttribute("data-memstrip-sec"));
+    tick.textContent = formatFsrsDuration(sec);
+    tick.style.left = memStripPos(sec) + "%";
+  });
+  wrap.querySelectorAll(".memstrip-month").forEach(function(line) { line.style.left = memStripPos(MONTH_SECONDS) + "%"; });
+}
+
+// Draws one row of dots; `latest` (a bin and whether it was a miss) rings the newest one.
+// Skips the redraw when nothing changed: the server's reply usually lands the dot where the
+// preview put it, and redrawing the same dots would cut the landing animation short.
+function memStripDrawCols(colsEl, cols, latest, landing) {
+  var sig = JSON.stringify([cols, latest]);
+  if (colsEl.getAttribute("data-sig") === sig) return;
+  colsEl.setAttribute("data-sig", sig);
+  var most = cols.reduce(function(m, c) { return Math.max(m, c.ok + c.again); }, 0);
+  // Smaller dots as a column fills, so a long session still fits the strip's height.
+  colsEl.style.setProperty("--memdot", (most <= 10 ? 6 : most <= 24 ? 4 : 3) + "px");
+  colsEl.style.gridTemplateColumns = "repeat(" + cols.length + ", minmax(0, 1fr))";
+  colsEl.textContent = "";
+  cols.forEach(function(c, i) {
+    var col = document.createElement("div");
+    col.className = "memstrip-col";
+    var n = c.again + c.ok;
+    for (var k = 0; k < n; k++) {
+      var dot = document.createElement("span");
+      dot.className = "memstrip-dot" + (k < c.again ? " is-again" : "");
+      if (latest && i === latest.bin && k === (latest.again ? c.again - 1 : n - 1)) {
+        dot.className += " is-latest" + (landing ? " is-landing" : "");
+      }
+      col.appendChild(dot);
+    }
+    colsEl.appendChild(col);
+  });
+}
+
 function renderMemStrip(prefix) {
   var wrap = document.getElementById(prefix + "-memstrip");
   if (!wrap) return;
@@ -11186,45 +11250,11 @@ function renderMemStrip(prefix) {
   var show = !!strip && IS_SERVER && !(prefix === "fc" && state.cram);
   wrap.classList.toggle("hidden", !show);
   if (!show) return;
-  if (wrap.getAttribute("data-lang") !== state.language) {
-    wrap.setAttribute("data-lang", state.language || "");
-    wrap.querySelectorAll("[data-memstrip-sec]").forEach(function(tick) {
-      var sec = Number(tick.getAttribute("data-memstrip-sec"));
-      tick.textContent = formatFsrsDuration(sec);
-      tick.style.left = memStripPos(sec) + "%";
-    });
-    wrap.querySelector(".memstrip-month").style.left = memStripPos(30 * 86400) + "%";
-  }
-  var cols = memStripBins(strip.entries, MEM_STRIP_BINS);
+  memStripLayoutAxis(wrap);
   var last = strip.last != null ? strip.entries[strip.last] : null;
   var lastBin = last ? memStripBin(last.now, MEM_STRIP_BINS) : -1;
-  // The server's reply usually lands the dot where the preview put it; redrawing the same dots
-  // would cut the landing animation short.
-  var sig = JSON.stringify([cols, lastBin, last && last.again]);
-  var colsEl = document.getElementById(prefix + "-memstrip-cols");
-  if (colsEl.getAttribute("data-sig") !== sig) {
-    colsEl.setAttribute("data-sig", sig);
-    var most = cols.reduce(function(m, c) { return Math.max(m, c.ok + c.again); }, 0);
-    // Smaller dots as a column fills, so a long session still fits the strip's height.
-    wrap.style.setProperty("--memdot", (most <= 10 ? 6 : most <= 24 ? 4 : 3) + "px");
-    colsEl.style.gridTemplateColumns = "repeat(" + MEM_STRIP_BINS + ", minmax(0, 1fr))";
-    colsEl.textContent = "";
-    cols.forEach(function(c, i) {
-      var col = document.createElement("div");
-      col.className = "memstrip-col";
-      var n = c.again + c.ok;
-      for (var k = 0; k < n; k++) {
-        var dot = document.createElement("span");
-        dot.className = "memstrip-dot" + (k < c.again ? " is-again" : "");
-        // The latest answer's dot is the last one placed in its group.
-        if (i === lastBin && k === (last.again ? c.again - 1 : n - 1)) {
-          dot.className += " is-latest" + (strip.landing ? " is-landing" : "");
-        }
-        col.appendChild(dot);
-      }
-      colsEl.appendChild(col);
-    });
-  }
+  memStripDrawCols(document.getElementById(prefix + "-memstrip-cols"), memStripBins(strip.entries, MEM_STRIP_BINS),
+    last ? { bin: lastBin, again: !!last.again } : null, strip.landing);
   strip.landing = false;
   var ghost = document.getElementById(prefix + "-memstrip-ghost");
   var trail = document.getElementById(prefix + "-memstrip-trail");
@@ -11245,6 +11275,61 @@ function renderMemStrip(prefix) {
   document.getElementById(prefix + "-memstrip-count").textContent = past ? t("memstrip.pastMonth", { n: past }) : "";
 }
 
+/* ---- Session end: the same strip, before the session and now ---- */
+
+function memStripSummary(entries) {
+  var sum = { total: 0, pastNow: 0, pastBefore: 0, further: 0, fresh: 0 };
+  Object.keys(entries).forEach(function(id) {
+    var e = entries[id];
+    sum.total++;
+    if (e.start != null && e.start >= MONTH_SECONDS) sum.pastBefore++;
+    if (!e.seen && e.start == null) sum.fresh++;
+    // A new card has nowhere it was pushed from.
+    if (!e.again && e.start != null && e.now > e.start) sum.further++;
+  });
+  sum.pastNow = memStripPastMonth(entries);
+  return sum;
+}
+
+// The headline says the most that is true: cards now past a month if there are more than
+// before, else cards pushed further out, else that these cards need more goes.
+function memStripEndText(sum) {
+  if (sum.pastNow > sum.pastBefore) {
+    return { title: t("memend.pastMonth", { n: sum.pastNow }), sub: t("memend.before", { n: sum.pastBefore }) };
+  }
+  if (sum.further > 0) return { title: t("memend.further", { n: sum.further }), sub: "" };
+  return { title: t("memend.none"), sub: "" };
+}
+
+function memStripStartEntries(entries) {
+  var out = {};
+  Object.keys(entries).forEach(function(id) {
+    if (entries[id].start != null) out[id] = { now: entries[id].start, again: false };
+  });
+  return out;
+}
+
+function renderMemEnd(id) {
+  var box = document.getElementById(id);
+  if (!box) return;
+  var strip = state.memStrip;
+  var show = !!strip && IS_SERVER && Object.keys(strip.entries).length > 0;
+  box.classList.toggle("hidden", !show);
+  if (!show) return;
+  var sum = memStripSummary(strip.entries);
+  var text = memStripEndText(sum);
+  box.querySelector(".memend-title").textContent = text.title;
+  var sub = box.querySelector(".memend-sub");
+  sub.textContent = text.sub;
+  sub.classList.toggle("hidden", !text.sub);
+  memStripLayoutAxis(box);
+  memStripDrawCols(box.querySelector(".memend-before"), memStripBins(memStripStartEntries(strip.entries), MEM_STRIP_BINS), null, false);
+  memStripDrawCols(box.querySelector(".memend-now"), memStripBins(strip.entries, MEM_STRIP_BINS), null, false);
+  var note = box.querySelector(".memend-note");
+  note.textContent = sum.fresh ? t("memend.fresh", { n: sum.fresh }) : "";
+  note.classList.toggle("hidden", !sum.fresh);
+}
+
 function markCard(known, grade, forceRetype) {
   var card = state.studyCards[state.studyIndex];
   if (!card || state.studyCardGraded) return;
@@ -11253,7 +11338,7 @@ function markCard(known, grade, forceRetype) {
   setMarkButtonsEnabled(false);
   haptic("select");
   var undo = { card: card, prevKnown: state.studyKnownMap[card.id], prevLog: state.studySessionLog[card.id],
-               prevDue: card.srs_due_at, attemptId: store.newClientId ? store.newClientId() : genId("att"),
+               prevDue: card.srs_due_at, prevLastReview: card.fsrs_last_review_at, attemptId: store.newClientId ? store.newClientId() : genId("att"),
                index: state.studyIndex };
   if (state.cram) undo.cram = cramAnswered(state.cram, state.studyCards, state.studyIndex, card, known);
   state.studyKnownMap[card.id] = known;
@@ -11279,6 +11364,9 @@ function markCard(known, grade, forceRetype) {
   store.recordAttempt(attemptFields).then(function(res) {
     if (res && res.srs_due_at != null && state.fcUndoneAttempt !== undo.attemptId) {
       card.srs_due_at = res.srs_due_at;
+      // Keeps the card's last interval honest when it comes back in a later session (Retry
+      // missed reuses these objects), so the session end's "before" row is not inflated.
+      if (!res.notDue) card.fsrs_last_review_at = Math.floor(Date.now() / 1000);
       if (mem) mem.settle(res);
     }
     if (res && res.became_leech && state.fcUndoneAttempt !== undo.attemptId) offerLeech(card, res);
@@ -11346,6 +11434,7 @@ function restoreGradedCard(undo) {
     if (at >= 0) state.sessionDurations.splice(at, 1);
   }
   undo.card.srs_due_at = undo.prevDue;
+  undo.card.fsrs_last_review_at = undo.prevLastReview;
   if (undo.cram && state.cram) {
     cramUndo(state.cram, state.studyCards, undo.card, undo.cram);
     if (state.studyCards[undo.index] === undo.card) return undo.index;
@@ -12341,6 +12430,7 @@ function showQuizResults() {
     { label: t("done.bestRun"), value: state.quizBestStreak || 0, tone: "green" },
     { label: t("done.time"), value: formatSessionTime(state.sessionMs), tone: "blue" }
   ], state.quizResults.filter(function(r) { return !r.card.last_studied_at; }).map(function(r) { return r.card.id; }));
+  renderMemEnd("results-memend");
   document.getElementById("results-detail").textContent = t("results.correctOutOf", { score: score, total: total });
 
   var grade;

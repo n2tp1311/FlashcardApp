@@ -2275,6 +2275,26 @@ code {
   .memstrip-foot { font-size: 0.75rem; line-height: 15px; }
   .memstrip-caption { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+/* Session end: the strip's dots before the session and now, one row above the other. */
+.memend {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.memend-title { margin: 0; font-size: 1.25rem; line-height: 1.2; font-weight: 700; color: var(--text); }
+.memend-sub { margin: 0 0 4px; font-size: 0.875rem; color: var(--text2); }
+.memend-row { display: flex; flex-direction: column; gap: 2px; }
+.memend-label { font-size: 0.75rem; font-weight: 600; color: var(--text2); }
+.memend .memend-plot { height: 40px; }
+.memend-before .memstrip-dot { background: var(--text3); }
+.memend .memend-axis { display: block; }
+.memend-note { margin: 2px 0 0; font-size: 0.8125rem; color: var(--text2); }
 @media (orientation: landscape) and (max-height: 500px) {
   .memstrip-axis { display: none; }
   .memstrip-plot { height: 24px; }

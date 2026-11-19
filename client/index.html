@@ -723,6 +723,22 @@
   </header>
   <div class="results-container">
     <div class="session-done" id="results-done"></div>
+    <div class="memend hidden" id="results-memend">
+      <p class="memend-title"></p>
+      <p class="memend-sub"></p>
+      <div class="memend-row">
+        <span class="memend-label" data-i18n="memend.rowBefore">Before</span>
+        <div class="memstrip-plot memend-plot" aria-hidden="true"><div class="memstrip-month"></div><div class="memstrip-cols memend-before"></div></div>
+      </div>
+      <div class="memend-row">
+        <span class="memend-label" data-i18n="memend.rowNow">Now</span>
+        <div class="memstrip-plot memend-plot" aria-hidden="true"><div class="memstrip-month"></div><div class="memstrip-cols memend-now"></div></div>
+      </div>
+      <div class="memstrip-axis memend-axis" aria-hidden="true">
+        <span data-memstrip-sec="86400"></span><span data-memstrip-sec="604800"></span><span data-memstrip-sec="2592000" class="is-month"></span><span data-memstrip-sec="31536000"></span>
+      </div>
+      <p class="memend-note hidden"></p>
+    </div>
     <div class="results-ring-wrap">
       <svg class="results-ring" viewBox="0 0 120 120">
         <circle class="ring-track" cx="60" cy="60" r="50"/>
@@ -751,6 +767,22 @@
   </header>
   <div class="results-container">
     <div class="session-done" id="summary-done"></div>
+    <div class="memend hidden" id="summary-memend">
+      <p class="memend-title"></p>
+      <p class="memend-sub"></p>
+      <div class="memend-row">
+        <span class="memend-label" data-i18n="memend.rowBefore">Before</span>
+        <div class="memstrip-plot memend-plot" aria-hidden="true"><div class="memstrip-month"></div><div class="memstrip-cols memend-before"></div></div>
+      </div>
+      <div class="memend-row">
+        <span class="memend-label" data-i18n="memend.rowNow">Now</span>
+        <div class="memstrip-plot memend-plot" aria-hidden="true"><div class="memstrip-month"></div><div class="memstrip-cols memend-now"></div></div>
+      </div>
+      <div class="memstrip-axis memend-axis" aria-hidden="true">
+        <span data-memstrip-sec="86400"></span><span data-memstrip-sec="604800"></span><span data-memstrip-sec="2592000" class="is-month"></span><span data-memstrip-sec="31536000"></span>
+      </div>
+      <p class="memend-note hidden"></p>
+    </div>
     <div class="summary-newreview-row">
       <div class="summary-newreview-chip">
         <span class="summary-newreview-value" id="summary-new-count">0</span>
