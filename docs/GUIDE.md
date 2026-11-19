@@ -778,6 +778,40 @@ Safari on iOS and macOS recognises on the device; on iPhone the page's other sou
 quieter while the mic is open, and a restart that is not from a tap can be refused, which
 shows as the pause; Android Chrome plays a chime on each restart. `tests/quiz-voice.test.js`
 
+### Memory strip
+
+Above the card in flashcard and quiz sessions, a strip shows where each card answered in
+this session will next come back: one dot per card, on a log scale from 1 day at the left
+to 1 year at the right, with a line at one month. The newest dot is ringed, a dashed ring
+and a trail show where the card was before, and the caption says "Back in 21d, was 3d".
+The count on the right is how many cards are now past a month. The point is to make the
+effect of a session visible: a good session moves the dots right, which the grade
+buttons' intervals only hint at one card at a time.
+
+- **One dot per card.** A card answered twice (a Learning card that comes back) keeps one
+  dot, at its latest place; its "was" is where this session last put it.
+- **Placed at once, then corrected.** The dot goes where the grade's `fsrs_preview_*` puts
+  it, so it lands under the finger, and moves to the reply's `srs_due_at` when it comes,
+  because the server moves reviews to a quieter day (§6) and the preview does not. A
+  queued answer offline keeps the preview's place.
+- **What moves nothing:** cram (a queue in front of the scheduler, not the scheduler),
+  a card that is not due (the server leaves its schedule alone), and local mode (no
+  previews to place a card by), where the strip is hidden. A not-due answer only changes
+  the caption. If the client thought a card was due and the server says it was not, the
+  dot is taken back; the caption says so only if no later answer has replaced it.
+- **Quiz retries.** A quiz never changes the card's `srs_due_at` on the client, because a
+  replayed answer (Prev) shows the intervals from before it. So the strip keeps the
+  quiz's new due dates itself (`memStrip.dueAt`), and a retry later in the same quiz is
+  known not to be due.
+- **Undo** of a flashcard grade puts the strip back as it was, the caption too.
+- **On a phone** the strip has no axis labels and a 26px plot, about 53px in all, so a
+  four-option quiz question still fits a 375×667 screen without scrolling; the month line
+  and the count share the primary colour, which is what names the line. Columns shrink
+  their dots as they fill (6, 4, then 3px), so a long session fits; past about 27 cards in
+  one column the rest are clipped.
+- Each half of a Study now run is its own session, so the strip starts empty for the new
+  cards. A resumed session also starts empty: the strip is not saved.
+
 ### Cram
 
 Cramming is the opposite of what FSRS is for — the same card several times in an hour —

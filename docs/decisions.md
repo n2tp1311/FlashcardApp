@@ -1361,3 +1361,8 @@ The first version kept Playful and Neo-brutalism to their own colours. The user 
 ## 2026-11-07 — Chapter headings for long lesson names
 
 The concept lessons' names ("2. Linear Algebra — Foundations And Matrix Operations") were cut to "2. Linear Algebra — Fo…" on a phone. Three layouts were previewed on the real Deep Learning lessons: wrap the name to two lines; group lessons under chapter headings; and headings plus moving edit and delete behind ⋯ with the score on the meta line. The user chose the third. Headings appear only in Book order, the one sort that keeps a chapter together. The cost: editing or deleting a lesson takes one more tap, and selecting is still a long press.
+
+## 2026-11-20 — A memory strip during flashcard and quiz sessions
+
+The brief was to make studying more engaging. The app already had streaks, medals, sounds and a weekly recap, so more rewards were not the gap; what it did not show was what a session does to memory. Three directions were previewed on real cards: Home as a bookshelf filling up, a session end showing cards moving towards long-term memory, and cards filed into trays as they are graded. The user asked how the session end would cope with 100 cards (one row per card does not fit), then asked to combine the dot version with the trays. The result is one strip of dots that fills during the session, for both flashcard and quiz, with no cram. The trays and a large stamp on each card were dropped: three trays say less than a dot per card, and a stamp stops the 400ms auto-advance. This ships the in-session strip first; the session end that reuses it is the next step. The cost: about 53px of height on a phone above every card.
+
