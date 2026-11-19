@@ -812,6 +812,23 @@ buttons' intervals only hint at one card at a time.
 - Each half of a Study now run is its own session, so the strip starts empty for the new
   cards. A resumed session also starts empty: the strip is not saved.
 
+**At the session end** the flashcard summary and the quiz results show the same strip
+twice: *Before* (grey dots, where each answered card stood when the session began) above
+*Now*. The headline says the most that is true: "N cards will now stay with you past a
+month" with "Before this session: M." when more cards are past a month than before; else
+"N cards pushed further out"; else "These cards need a few more goes".
+- **Where a card stood** is its interval at its first answer this session,
+  `srs_due_at - fsrs_last_review_at`, kept as `start` on its entry. A new card has none:
+  it is left off the Before row, counted in the note "N new cards had no place before
+  this session", and never counted as pushed further out. A card with a due date but no
+  last-review time was studied before, so it is not called new; its start is unknown.
+- **A graded card's `fsrs_last_review_at`** now moves with its `srs_due_at` on the client
+  (undo puts both back), because Retry missed reuses the same card objects: without it, a
+  card just answered Again would start the retry at its old, long interval.
+- The headline compares totals. A card that falls back from past a month shows as a red
+  dot on the Now row; the headline does not subtract it.
+- The month mark is one constant, `MONTH_SECONDS`, shared with the in-session count.
+
 ### Cram
 
 Cramming is the opposite of what FSRS is for — the same card several times in an hour —
