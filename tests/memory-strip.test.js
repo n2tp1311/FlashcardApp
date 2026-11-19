@@ -222,3 +222,9 @@ test("on a wide screen the strip keeps to the card's 600px column", () => {
   const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
   assert.match(css, /@media \(min-width: 768px\) \{\n  \.memstrip \{[^}]*max-width: 600px;[^}]*margin: 20px auto 16px;/);
 });
+
+test("on a phone the study header's sides are equal, so the progress bar is centred", () => {
+  const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
+  assert.match(css, /#screen-quiz \.app-header, #screen-flashcard \.app-header \{ display: grid; grid-template-columns: 1fr 2fr 1fr; \}/);
+  assert.match(indexHtml, /id="btn-fc-shuffle"[^>]*data-i18n-aria="common.shuffle"/);
+});

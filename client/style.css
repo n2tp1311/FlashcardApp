@@ -5376,6 +5376,16 @@ button.leech-pill:hover { filter: brightness(0.96); }
   }
   #quiz-score-display, #btn-fc-shuffle { margin-left: auto; }
 }
+/* Phones: the bar fills the space between the side controls, but as a plain flex item its
+   centre followed their widths: Exit (65-78px) against a 25px score put it 20px right of the
+   card's centre, and against the 100px Shuffle 17px left. Equal side columns keep it centred,
+   and Shuffle shows only its icon so that column is not as wide as the bar needs. */
+@media (max-width: 600px) {
+  #screen-quiz .app-header, #screen-flashcard .app-header { display: grid; grid-template-columns: 1fr 2fr 1fr; }
+  #btn-quiz-back, #btn-fc-back { justify-self: start; }
+  #quiz-score-display, #btn-fc-shuffle { justify-self: end; }
+  #btn-fc-shuffle { font-size: 0; gap: 0; min-width: 44px; justify-content: center; }
+}
 
 /* Phone in landscape: a shorter card and one row of Prev, grades and Next, so grading needs no
    scrolling. The header's progress bar already shows position, so the dot row goes. */
