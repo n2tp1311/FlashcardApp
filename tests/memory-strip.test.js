@@ -217,3 +217,8 @@ test("a graded card's last review time moves with its due date, and undo puts bo
 test("the month mark is one constant", () => {
   assert.equal(appJs.split("30 * 86400").length - 1, 1);
 });
+
+test("on a wide screen the strip keeps to the card's 600px column", () => {
+  const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
+  assert.match(css, /@media \(min-width: 768px\) \{\n  \.memstrip \{[^}]*max-width: 600px;[^}]*margin: 20px auto 16px;/);
+});

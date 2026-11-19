@@ -2266,6 +2266,12 @@ code {
 }
 .memstrip-caption { min-width: 0; }
 .memstrip-count { color: var(--primary); font-weight: 600; white-space: nowrap; }
+/* On a wide screen the strip takes the card's 600px column, not the window's width: stretched
+   across it, the dots sat far from the card they describe and the strip touched the toolbar. */
+@media (min-width: 768px) {
+  .memstrip { box-sizing: border-box; width: calc(100% - 32px); max-width: 600px; margin: 20px auto 16px; padding: 12px 16px 10px; gap: 6px; }
+  .memstrip-foot { margin-top: 2px; }
+}
 /* A phone has no height to spare above the question: no axis row, a shorter plot. The month
    line and the "past a month" count share the primary colour, which is what names the line. */
 @media (max-width: 767px) {
