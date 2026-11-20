@@ -1795,6 +1795,10 @@ Most study happens on an iPhone, and several decisions are about it:
   take a whole row. One column at full width was the other option previewed: at 1920px it
   put each definition on one long line, far from its edit icon. Home was previewed too and
   kept as it was.
+- **Stats on a wide screen is two columns** (1100px and up): the four numbers, which now
+  share their row instead of sitting in the left corner, and the difficulty bars on the
+  left; the weekly accuracy chart on the right. Bars 1,400px long were hard to compare.
+  The Dashboard already spanned the window like Home and was left as it was.
 - **Vocabulary and Achievements on a wide screen span the window** (1100px and up), where
   they were 900px columns. Saved words sit two to a row; each achievement group is a row
   like Study Setup, its name and count on the left and its badges beside it. A wider badge

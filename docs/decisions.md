@@ -1392,3 +1392,7 @@ Next in the full-width pass. The cram screen was a 480px column. Two layouts wer
 
 Next in the full-width pass. Both were 900px columns. Saved words now sit two to a row, as a lesson's cards do. For Achievements two layouts were previewed: a wider badge grid with group names above, or each group as a row with its name and count on the left, as in Study Setup. The learner picked the rows.
 
+## 2026-11-20 — Stats on a desktop: two columns
+
+Last screen of the full-width pass. Stats already spanned the window, but its four numbers sat in the left corner and its difficulty bars ran 1,400px. Two layouts were previewed: the numbers sharing their row with the rest stacked, or two columns with the weekly accuracy chart on the right. The learner picked two columns. The Dashboard already spanned the window like Home, which the learner kept, so it was not changed.
+
