@@ -218,9 +218,19 @@ test("the month mark is one constant", () => {
   assert.equal(appJs.split("30 * 86400").length - 1, 1);
 });
 
-test("on a wide screen the strip keeps to the card's 600px column", () => {
+test("on a wide screen the strip spans the study column, with no 600px cap", () => {
   const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
-  assert.match(css, /@media \(min-width: 768px\) \{\n  \.memstrip \{[^}]*max-width: 600px;[^}]*margin: 20px auto 16px;/);
+  const rule = css.match(/@media \(min-width: 768px\) \{\n  \.memstrip \{([^}]*)\}/);
+  assert.ok(rule, "wide-screen .memstrip rule");
+  assert.doesNotMatch(rule[1], /max-width/);
+  assert.match(rule[1], /margin: 16px 0;/);
+});
+
+test("on a wide screen the study screens and end screens drop their width caps", () => {
+  const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
+  assert.match(css, /\.fc-scene, \.fc-translation, #fc-explanation, \.fc-dots, \.fc-nav, \.quiz-container, \.fc-hint-cap \{ max-width: none; \}/);
+  assert.match(css, /\.quiz-options:not\(\.tf-mode\) \{ display: grid; grid-template-columns: 1fr 1fr;/);
+  assert.doesNotMatch(css, /max-width: 1040px/);
 });
 
 test("on a phone the study header's sides are equal, so the progress bar is centred", () => {
