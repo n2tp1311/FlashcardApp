@@ -5652,6 +5652,10 @@ button.leech-pill:hover { filter: brightness(0.96); }
   #lesson-list > :not(.lesson-item) { grid-column: 1 / -1; }
   #card-list.card-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 10px; }
   #card-list > :not(.card-item) { grid-column: 1 / -1; }
+  /* A shared class's lessons are a title and a count, nothing to click: smaller tiles than the
+     class screen's (4 columns at 1440px), so the whole book shows without scrolling. */
+  #screen-share { padding-left: 28px; padding-right: 28px; }
+  #share-lesson-list.lesson-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px 16px; }
 }
 
 

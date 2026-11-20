@@ -81,3 +81,8 @@ test("on a wide screen Stats puts the numbers and bars left, the weekly chart ri
   assert.match(appJs, /t\("stats\.accuracyTrend"\) \+ '<\/div><div id="stats-trend-wrap"><\/div>'/);
 });
 
+test("on a wide screen a shared class's lessons are a grid of small tiles", () => {
+  assert.match(css, /#screen-share \{ padding-left: 28px; padding-right: 28px; \}/);
+  assert.match(css, /#share-lesson-list\.lesson-list \{ display: grid; grid-template-columns: repeat\(auto-fill, minmax\(300px, 1fr\)\); gap: 8px 16px; \}/);
+});
+
