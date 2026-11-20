@@ -5594,15 +5594,18 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .dash-lflag:empty { display: none; }
 }
 
-/* List screens stop at a readable width on a wide desktop: at 1600px a card's text sat at
-   the left and its edit icon 1,400px away. Padding, not max-width on children, so fixed
-   select bars and sheets keep spanning the viewport. */
-:root { --content-max: 1040px; }
+/* List screens on a wide desktop span the window, in columns: the learner prefers full-width
+   desktop screens to a centred column. One full-width column would put a card's text at the
+   left and its edit icon 1,400px away at 1600px, so the class's lessons become a grid like
+   Home's classes and a lesson's cards sit two to a row, read across (1, 2 / 3, 4) so book
+   order holds. Chapter headings and anything else in the lists take a whole row. Until
+   2026-11-20 these screens were a 1040px column centred by padding. */
 @media (min-width: 1100px) {
-  #screen-class, #screen-lesson, #screen-upstream {
-    padding-left: max(16px, calc((100% - var(--nav-w, 0px) - var(--content-max)) / 2));
-    padding-right: max(16px, calc((100% - var(--nav-w, 0px) - var(--content-max)) / 2));
-  }
+  #screen-class, #screen-lesson, #screen-upstream { padding-left: 28px; padding-right: 28px; }
+  #lesson-list.lesson-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 12px; align-items: start; }
+  #lesson-list > :not(.lesson-item) { grid-column: 1 / -1; }
+  #card-list.card-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 10px; }
+  #card-list > :not(.card-item) { grid-column: 1 / -1; }
 }
 
 

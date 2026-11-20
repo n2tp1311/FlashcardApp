@@ -150,12 +150,17 @@ test("a second mark, or leaving the screen, sends the pending one at once", func
   assert.match(fn("showScreen"), /if \(id !== "upstream"\) flushUpstreamPending\(\);/);
 });
 
-test("Updates actions are real buttons with Delete set apart; wide list screens stop at --content-max", function() {
+test("Updates actions are real buttons with Delete set apart; wide list screens span the window in columns", function() {
   const item = fn("renderUpstreamItem");
   assert.match(item, /b\.className = "btn btn-sm " \+ cls/);
   assert.match(item, /"btn-ghost btn-toolbar-danger upstream-delete"/);
   assert.doesNotMatch(item, /link-btn/);
-  assert.match(css, /#screen-class, #screen-lesson, #screen-upstream \{\s*padding-left: max\(16px, calc\(\(100% - var\(--nav-w, 0px\) - var\(--content-max\)\) \/ 2\)\);/);
+  assert.match(css, /#screen-class, #screen-lesson, #screen-upstream \{ padding-left: 28px; padding-right: 28px; \}/);
+  assert.match(css, /#lesson-list\.lesson-list \{ display: grid; grid-template-columns: repeat\(auto-fill, minmax\(440px, 1fr\)\);/);
+  assert.match(css, /#lesson-list > :not\(\.lesson-item\) \{ grid-column: 1 \/ -1; \}/);
+  assert.match(css, /#card-list\.card-list \{ display: grid; grid-template-columns: repeat\(auto-fill, minmax\(560px, 1fr\)\);/);
+  assert.match(css, /#card-list > :not\(\.card-item\) \{ grid-column: 1 \/ -1; \}/);
+  assert.doesNotMatch(css, /--content-max/);
   assert.match(app, /'<div class="lesson-badges">'/);
 });
 
@@ -283,7 +288,6 @@ test("list screens make room for the docked sidebar from 1024px; study screens n
   assert.match(css, /body:not\(\[data-nav\]\) :is\(\.sidebar, \.sidebar-overlay\) \{ display: none; \}/);
   assert.match(css, /@media \(min-width: 1024px\) \{ body\[data-nav\] \{ --nav-w: 240px; \} \}/);
   assert.match(css, /\.screen \{ margin-left: var\(--nav-w, 0px\); \}/);
-  assert.match(css, /100% - var\(--nav-w, 0px\) - var\(--content-max\)/);
 });
 
 test("corner radii that match a token use the token", function() {
