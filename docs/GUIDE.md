@@ -1795,6 +1795,10 @@ Most study happens on an iPhone, and several decisions are about it:
   take a whole row. One column at full width was the other option previewed: at 1920px it
   put each definition on one long line, far from its edit icon. Home was previewed too and
   kept as it was.
+- **A shared class on a wide screen** (the page a share link opens, 1100px and up) shows its
+  lessons as a grid of smaller tiles than the class screen's, 4 columns at 1440px, so a whole
+  book fits without scrolling; those tiles are only a title and a card count. The class
+  screen's 3-column grid was the other option previewed.
 - **Stats on a wide screen is two columns** (1100px and up): the four numbers, which now
   share their row instead of sitting in the left corner, and the difficulty bars on the
   left; the weekly accuracy chart on the right. Bars 1,400px long were hard to compare.

@@ -1396,3 +1396,7 @@ Next in the full-width pass. Both were 900px columns. Saved words now sit two to
 
 Last screen of the full-width pass. Stats already spanned the window, but its four numbers sat in the left corner and its difficulty bars ran 1,400px. Two layouts were previewed: the numbers sharing their row with the rest stacked, or two columns with the weekly accuracy chart on the right. The learner picked two columns. The Dashboard already spanned the window like Home, which the learner kept, so it was not changed.
 
+## 2026-11-20 — A shared class on a desktop: small tiles
+
+The page a share link opens was one full-width column, 18 lessons over two screens. Two grids were previewed: the class screen's (3 columns at 1440px) and smaller tiles (4 columns). The learner picked the smaller tiles: a shared lesson is only a title and a count, so it needs less room than a lesson the owner works in. The sign-in page stays a centred form.
+

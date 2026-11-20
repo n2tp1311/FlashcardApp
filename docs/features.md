@@ -102,6 +102,7 @@
 - Undo bar (grades, Updates → Mark reviewed): a long message is cut with an ellipsis, so Undo stays on screen. `tests/mobile-ux.test.js`
 - Home and the class screen load each class's or lesson's count and progress bar in one request for the whole list, instead of two per class or lesson. `tests/list-requests.test.js`, `tests/mobile-ux.test.js`
 - Charts (Dashboard, Charts tab, Stats): tap a column, a point, a grade segment or a heatmap day to read its exact value in a line under the chart. `tests/mobile-ux.test.js`
+- A shared class on a desktop (1100px and up) lists its lessons as a grid of small tiles, 4 columns at 1440px. `tests/end-layout.test.js`
 - Stats on a desktop (1100px and up) is two columns: numbers and difficulty bars left, weekly accuracy chart right. `tests/end-layout.test.js`
 - Vocabulary and Achievements on a desktop (1100px and up) span the window: saved words two to a row, each achievement group a row with its name and count on the left. `tests/end-layout.test.js`
 - Cram on a desktop (1024px and up) is one framed band across the window: countdown, readiness bar and Start on one row. `tests/end-layout.test.js`
