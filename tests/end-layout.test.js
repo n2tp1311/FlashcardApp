@@ -67,3 +67,9 @@ test("on a wide screen Cram is one framed band: countdown, readiness and Start o
   assert.match(css, /\.cram-body > \.cram-actions \{ grid-column: 3; grid-row: 2;/);
 });
 
+test("on a wide screen Vocabulary is two words to a row and each achievement group is a row", () => {
+  assert.match(css, /\.vocabulary-page-intro, \.vocabulary-list, \.ach-page \{ max-width: none; \}/);
+  assert.match(css, /\.vocabulary-list \{ display: grid; grid-template-columns: repeat\(auto-fill, minmax\(560px, 1fr\)\);/);
+  assert.match(css, /\.ach-group \{ grid-template-columns: 180px minmax\(0, 1fr\);/);
+});
+

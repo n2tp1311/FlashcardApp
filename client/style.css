@@ -5442,6 +5442,20 @@ button.leech-pill:hover { filter: brightness(0.96); }
 }
 .ach-group-h span { font-weight: 500; letter-spacing: 0; margin-left: 6px; font-variant-numeric: tabular-nums; }
 .ach-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+/* Vocabulary and Achievements on a wide desktop span the window (they were 900px columns).
+   Saved words sit two to a row like a lesson's cards. Each achievement group is a row like
+   Study Setup: its name and count in a 180px column, its badges beside it. A wider badge grid
+   with the names above each group was the other layout previewed. */
+@media (min-width: 1100px) {
+  #screen-vocabulary, #screen-achievements { padding-left: 28px; padding-right: 28px; }
+  .vocabulary-page-intro, .vocabulary-list, .ach-page { max-width: none; }
+  .vocabulary-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 10px; }
+  .vocabulary-list > .vocabulary-request { margin-bottom: 0; }
+  .ach-list { gap: 0; }
+  .ach-group { grid-template-columns: 180px minmax(0, 1fr); column-gap: 24px; align-items: start; padding: 18px 0; border-top: 1px solid var(--border); }
+  .ach-group-h { padding-top: 6px; }
+  .ach-group-h span { display: block; margin: 4px 0 0; font-size: 1rem; color: var(--text); }
+}
 .ach-badge {
   display: grid; justify-items: center; align-content: start; text-align: center; gap: 4px;
   padding: 14px 10px 12px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); min-width: 0;
