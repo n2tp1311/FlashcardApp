@@ -1384,3 +1384,7 @@ Next in the full-width pass. Home already spanned the window; a version with Tod
 
 Next in the full-width pass. Study Setup was a 480px column with a 480px Start bar. Two layouts were previewed at 1440×900: sections in two columns, or one row per section with its name on the left like a settings page. The learner picked the rows: they keep the phone's top-to-bottom order, where two columns made the eye jump between them. Start Studying moved to the right of the footer with the match count beside it.
 
+## 2026-11-20 — Cram on a desktop: one framed band
+
+Next in the full-width pass. The cram screen was a 480px column. Two layouts were previewed at 1440×900: the same stack at full width, or one framed band with the countdown, readiness bar and Start on one row. The learner picked the band, which keeps everything about the cram in one place.
+

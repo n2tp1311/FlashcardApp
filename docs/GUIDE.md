@@ -852,6 +852,11 @@ suggests sleep after 22:00 with the test under a day away (`docs/research.md` §
 Per-card progress is read from `attempts` since the cram began rather than stored, so
 undo and offline replays correct it with nothing to keep in step.
 
+On a wide screen (1024px and up) the cram screen is one framed band across the window: the
+countdown, the readiness bar and Start on one row, the round's status and Change date / End
+cram under them. It was a 480px column; stacking it at full width was the other layout
+previewed.
+
 ### Study now
 
 Home's Today tile starts one session across every class: due cards, most overdue first,
