@@ -1774,6 +1774,13 @@ Most study happens on an iPhone, and several decisions are about it:
   its own row). The learner prefers full-width desktop screens to a centred column; two
   layouts were previewed, and stacking everything at full width won over the card on the left
   with the memory strip as a 360px column on the right.
+- **List screens on a wide screen span the window in columns** (1100px and up): the class,
+  lesson and Updates screens were a 1040px column centred by padding and now keep a 28px
+  margin like Home. A class's lessons are a grid like Home's classes (3 columns at 1920px),
+  a lesson's cards sit two to a row, read across so book order holds, and chapter headings
+  take a whole row. One column at full width was the other option previewed: at 1920px it
+  put each definition on one long line, far from its edit icon. Home was previewed too and
+  kept as it was.
 - **The grades are the bottom row** of the flashcard screen, Prev/Next the row above.
   Prev/Next used to be the bottom row, 8px under Confident: a slip skipped a card
   ungraded, and on the last card the same spot is Finish. Landscape keeps one row.

@@ -1375,3 +1375,8 @@ On a 1288×720 desktop window the results screen ran past the fold: headline, ti
 ## 2026-11-20 — Desktop study screens span the window
 
 The learner said they prefer desktop elements that span the width to content stuck in a centred column, for every screen. The study screens went first: the card, quiz and memory strip were capped at 600px and the end screens at 1040px. Two layouts were previewed at 1440×900: everything stacked at full width, or the card on the left with the memory strip as a 360px column on the right. The learner picked the stacked one. At 1024px and up the caps are gone, the card is 340px tall and quiz choices sit two to a row; phones are unchanged. The earlier same-day rule that boxed the strip to the card's 600px column is reverted. The other desktop screens follow one at a time, each previewed.
+
+## 2026-11-20 — Desktop list screens span the window in columns
+
+Next in the full-width pass. Home already spanned the window; a version with Today, Streak and All time in one row (classes 160px higher) was previewed and the learner kept Home as it was. The class, lesson and Updates screens were a 1040px column centred by padding. Two layouts were previewed at 1440 and 1920: the same single column at full width, or columns. The learner picked columns: a class's lessons form a grid like Home's classes and a lesson's cards sit two to a row, read across so book order holds. A single full-width column put each definition on one long line at 1920px, far from its edit icon, which is why the 1040px cap existed.
+
