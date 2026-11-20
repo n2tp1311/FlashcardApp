@@ -809,9 +809,10 @@ buttons' intervals only hint at one card at a time.
   and the count share the primary colour, which is what names the line. Columns shrink
   their dots as they fill (6, 4, then 3px), so a long session fits; past about 27 cards in
   one column the rest are clipped.
-- **On a wide screen** (768px and up) the strip keeps to the card's 600px column, 20px under
-  the header and 16px above the toolbar; across the full window its dots sat far from the
-  card and it touched the toolbar.
+- **On a wide screen** (768px and up) the strip spans the study column like the card, framed,
+  16px under the header and above the toolbar. It was briefly capped to the card's 600px
+  column; the learner prefers desktop screens that use the width (see "Study screens on a
+  wide screen" in section 16).
 - Each half of a Study now run is its own session, so the strip starts empty for the new
   cards. A resumed session also starts empty: the strip is not saved.
 
@@ -1061,7 +1062,8 @@ grade and "7 correct out of 8" on the left of the headline, tiles, streak and me
 memory strip at full width; then one row of buttons. The flashcard summary: headline, tiles
 and the streak and medal lines side by side; the memory strip beside the new/review split and
 grade bars; one row of buttons. Two layouts were previewed; two columns with the buttons
-stacked on the right was the other.
+stacked on the right was the other. Neither screen has a width cap: the grid spans the window, as
+every desktop study screen does.
 
 ---
 
@@ -1766,6 +1768,12 @@ Most study happens on an iPhone, and several decisions are about it:
   card in a quiz (Exit against a 25px score) and 17px left in flashcards (against a 100px
   Shuffle). Under 600px the header is three columns, the sides equal (1fr 2fr 1fr), and
   Shuffle shows only its icon there, keeping its name as the aria-label.
+- **Study screens on a wide screen span the window** (1024px and up): the card, its
+  translation and explanation, the dots, Prev/Next, the quiz and the hint caption drop their
+  600px cap, the card grows to 340px tall, and quiz choices sit two to a row (true/false keeps
+  its own row). The learner prefers full-width desktop screens to a centred column; two
+  layouts were previewed, and stacking everything at full width won over the card on the left
+  with the memory strip as a 360px column on the right.
 - **The grades are the bottom row** of the flashcard screen, Prev/Next the row above.
   Prev/Next used to be the bottom row, 8px under Confident: a slip skipped a card
   ungraded, and on the last card the same spot is Finish. Landscape keeps one row.
