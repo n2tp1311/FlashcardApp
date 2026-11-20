@@ -1388,3 +1388,7 @@ Next in the full-width pass. Study Setup was a 480px column with a 480px Start b
 
 Next in the full-width pass. The cram screen was a 480px column. Two layouts were previewed at 1440×900: the same stack at full width, or one framed band with the countdown, readiness bar and Start on one row. The learner picked the band, which keeps everything about the cram in one place.
 
+## 2026-11-20 — Vocabulary and Achievements on a desktop
+
+Next in the full-width pass. Both were 900px columns. Saved words now sit two to a row, as a lesson's cards do. For Achievements two layouts were previewed: a wider badge grid with group names above, or each group as a row with its name and count on the left, as in Study Setup. The learner picked the rows.
+

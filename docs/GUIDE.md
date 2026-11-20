@@ -1792,6 +1792,10 @@ Most study happens on an iPhone, and several decisions are about it:
   take a whole row. One column at full width was the other option previewed: at 1920px it
   put each definition on one long line, far from its edit icon. Home was previewed too and
   kept as it was.
+- **Vocabulary and Achievements on a wide screen span the window** (1100px and up), where
+  they were 900px columns. Saved words sit two to a row; each achievement group is a row
+  like Study Setup, its name and count on the left and its badges beside it. A wider badge
+  grid with the names above each group was the other option previewed.
 - **The grades are the bottom row** of the flashcard screen, Prev/Next the row above.
   Prev/Next used to be the bottom row, 8px under Confident: a slip skipped a card
   ungraded, and on the last card the same spot is Finish. Landscape keeps one row.
