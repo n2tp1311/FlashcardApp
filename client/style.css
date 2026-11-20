@@ -1318,11 +1318,18 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 :is(.class-card, .class-list-row):is(:hover, :focus-visible, .selected) :is(.class-card-accent, .class-list-colorbar, .progress-mini-fill, .class-icon svg),
 .sidebar-class-item:is(:hover, :focus-visible) .sidebar-class-icon svg { filter: var(--class-filter-hot); }
 
+/* The stripe sits inside the card's 2px border, so it follows the border's inner curve
+   (radius - 2px). It is a full corner tall and masked to 4px: a 4px-tall box given a 12px
+   radius has its radii scaled down to fit, came out nearly square, and its ends ran out past
+   the rounded border. */
 .class-card-accent {
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 4px;
-  border-radius: var(--radius) var(--radius) 0 0;
+  height: var(--radius);
+  border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0;
+  -webkit-mask: linear-gradient(#000 0 4px, transparent 4px);
+  mask: linear-gradient(#000 0 4px, transparent 4px);
+  pointer-events: none;
 }
 
 .class-icon { margin-bottom: 10px; display: block; }

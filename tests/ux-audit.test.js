@@ -343,3 +343,19 @@ test("a card's clock stops while the app is hidden, so time in another app is no
   assert.match(app, /attemptFields\.durationMs = Date\.now\(\) - state\.studyCardShownAt;/);
   assert.match(app, /quizAttemptFields\.durationMs = Date\.now\(\) - state\.quizCardShownAt;/);
 });
+
+test("a thin stripe never carries a card's corner radius (it runs past the rounded border)", () => {
+  // A box only a few px tall cannot hold a 12px radius: CSS scales the radii down to fit,
+  // the corners come out nearly square, and the stripe's ends overshoot the card's curve.
+  const offenders = [];
+  for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const body = m[2];
+    const h = body.match(/(?:^|;|\s)height:\s*(\d+(?:\.\d+)?)px/);
+    if (h && +h[1] <= 6 && /border-radius:\s*var\(--radius\)\s+var\(--radius\)/.test(body)) offenders.push(m[1].trim());
+  }
+  assert.deepEqual(offenders, []);
+  const rule = css.match(/\.class-card-accent \{[^}]*\}/)[0];
+  assert.match(rule, /height: var\(--radius\);/);
+  assert.match(rule, /border-radius: calc\(var\(--radius\) - 2px\) calc\(var\(--radius\) - 2px\) 0 0;/);
+  assert.match(rule, /\bmask: linear-gradient\(#000 0 4px, transparent 4px\);/);
+});
