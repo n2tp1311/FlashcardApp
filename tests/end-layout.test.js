@@ -73,3 +73,11 @@ test("on a wide screen Vocabulary is two words to a row and each achievement gro
   assert.match(css, /\.ach-group \{ grid-template-columns: 180px minmax\(0, 1fr\);/);
 });
 
+test("on a wide screen Stats puts the numbers and bars left, the weekly chart right", () => {
+  assert.match(css, /#stats-overview\.active \{ display: grid; grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/);
+  assert.match(css, /#stats-overview > \.diff-bar-label:has\(\+ #stats-trend-wrap\) \{ grid-column: 2; grid-row: 1; \}/);
+  assert.match(css, /#stats-overview > #stats-trend-wrap \{ grid-column: 2; grid-row: 2 \/ span 6; \}/);
+  // The chart's label and box must stay adjacent in the markup, or the :has() rule misses.
+  assert.match(appJs, /t\("stats\.accuracyTrend"\) \+ '<\/div><div id="stats-trend-wrap"><\/div>'/);
+});
+
