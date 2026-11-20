@@ -1990,6 +1990,21 @@ code {
 
 .setup-section { display: flex; flex-direction: column; gap: 8px; }
 .setup-label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+/* Study Setup on a wide screen spans the window like a settings page: each section is a row,
+   its name in a 180px column and its choices beside it, so it still reads top to bottom in the
+   phone's order. Start Studying sits at the right with the card count beside it, not as a
+   480px bar in the middle. Two columns of sections was the other layout previewed; the eye
+   had to jump between them. */
+@media (min-width: 1024px) {
+  .setup-container { max-width: none; margin: 0 12px; gap: 0; }
+  .setup-container > .setup-scope { align-self: flex-start; margin-bottom: 12px; }
+  .setup-section { display: grid; grid-template-columns: 180px minmax(0, 1fr); column-gap: 24px; row-gap: 6px; align-items: center; padding: 18px 0; border-top: 1px solid var(--border); }
+  .setup-section > * { grid-column: 2; }
+  .setup-section > :is(.setup-label, .setup-label-row) { grid-column: 1; grid-row: 1 / span 3; align-self: start; padding-top: 10px; }
+  .setup-sticky-footer { flex-direction: row; justify-content: flex-end; align-items: center; gap: 20px; padding-left: 28px; padding-right: 28px; }
+  .setup-sticky-footer .btn, .setup-sticky-footer .btn-full { width: 360px; max-width: none; }
+  .setup-sticky-footer .setup-match-count { margin: 0; }
+}
 
 .setup-presets-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .setup-preset-chip {

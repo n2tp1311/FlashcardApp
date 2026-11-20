@@ -52,3 +52,11 @@ test("on a wide screen the end screens are a grid with the buttons in one row", 
   assert.match(block, /"done done" "mem nr" "mem bd" "skip skip" "cram cram" "act act"/);
   assert.match(block, /\.results-actions \{ grid-area: act; flex-wrap: nowrap;/);
 });
+
+test("on a wide screen Study Setup is one row per section with Start at the right", () => {
+  const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
+  assert.match(css, /\.setup-container \{ max-width: none; margin: 0 12px; gap: 0; \}/);
+  assert.match(css, /\.setup-section \{ display: grid; grid-template-columns: 180px minmax\(0, 1fr\);/);
+  assert.match(css, /\.setup-section > :is\(\.setup-label, \.setup-label-row\) \{ grid-column: 1;/);
+  assert.match(css, /\.setup-sticky-footer \{ flex-direction: row; justify-content: flex-end;/);
+});
