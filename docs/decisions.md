@@ -1380,3 +1380,7 @@ The learner said they prefer desktop elements that span the width to content stu
 
 Next in the full-width pass. Home already spanned the window; a version with Today, Streak and All time in one row (classes 160px higher) was previewed and the learner kept Home as it was. The class, lesson and Updates screens were a 1040px column centred by padding. Two layouts were previewed at 1440 and 1920: the same single column at full width, or columns. The learner picked columns: a class's lessons form a grid like Home's classes and a lesson's cards sit two to a row, read across so book order holds. A single full-width column put each definition on one long line at 1920px, far from its edit icon, which is why the 1040px cap existed.
 
+## 2026-11-20 — Study Setup on a desktop: one row per section
+
+Next in the full-width pass. Study Setup was a 480px column with a 480px Start bar. Two layouts were previewed at 1440×900: sections in two columns, or one row per section with its name on the left like a settings page. The learner picked the rows: they keep the phone's top-to-bottom order, where two columns made the eye jump between them. Start Studying moved to the right of the footer with the match count beside it.
+

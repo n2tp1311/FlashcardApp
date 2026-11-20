@@ -545,6 +545,12 @@ which is the point of interleaved practice.
 
 There is no study direction setting: a card is always studied front to back.
 
+**On a wide screen (1024px and up)** Setup spans the window like a settings page: each
+section is a row with its name in a 180px column and its choices beside it, so it reads top
+to bottom in the phone's order, and Start Studying sits at the right of the footer with the
+match count beside it. It was a 480px column with a 480px button. Two columns of sections
+was the other layout previewed; the eye had to jump between them.
+
 ### Flashcards
 
 - **Show answer first.** Until the card is flipped, the grade row is one Show answer
