@@ -1203,6 +1203,9 @@ most 99%, so 239 of 240 never reads "100%".
 
 **Accuracy is observed, not predicted**: the weekly Accuracy chart is correct answers
 over all answers, not FSRS's predicted recall.
+An empty weekly chart (Accuracy, Retention) says "No answers in the last 8 weeks": it
+used to say "No attempted cards yet", which beside "Attempted: 5" on a class last studied
+months ago read as a bug.
 
 **A list screen's bars come in one request.** Home asked twice per class (its lesson list,
 only to count it, and `GET /progress/class/:id`), 22 requests for six classes, and the class

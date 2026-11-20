@@ -115,3 +115,15 @@ test("the section is a headline row, four weekly charts, then the rest", functio
     assert.equal(app.split('"' + k + '":').length - 1, 2, k);
   }
 });
+
+test("an empty weekly trend names its window, not 'no attempted cards'", function() {
+  const ctx = load();
+  vm.runInContext(["renderAccuracyTrend", "renderRetentionTrend"].map(extract).join(""), ctx);
+  const a = { innerHTML: "" }, r = { innerHTML: "" };
+  ctx.renderAccuracyTrend([], a);
+  ctx.renderRetentionTrend([], r, 7);
+  assert.match(a.innerHTML, /stats\.noRecentAnswers\|n=8/);
+  assert.match(r.innerHTML, /stats\.noRecentAnswers\|n=8/);
+  assert.doesNotMatch(a.innerHTML + r.innerHTML, /noAttemptedCards/);
+});
+

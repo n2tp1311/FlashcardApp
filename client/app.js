@@ -1064,6 +1064,7 @@ Object.assign(TRANSLATIONS.en, {
   "stats.difficultyBreakdown": "Difficulty Breakdown",
   "stats.accuracyTrend": "Accuracy Trend",
   "stats.noAttemptedCards": "No attempted cards yet.",
+  "stats.noRecentAnswers": "No answers in the last {n} weeks.",
   "stats.reviewHistory": "Review history",
   "stats.historyOlderOmitted": "Showing the latest {n} attempts; older history is omitted.",
   "stats.notApplicable": "Not applicable",
@@ -2326,6 +2327,7 @@ Object.assign(TRANSLATIONS.vi, {
   "stats.difficultyBreakdown": "Phân bố độ khó",
   "stats.accuracyTrend": "Xu hướng độ chính xác",
   "stats.noAttemptedCards": "Chưa có thẻ nào được làm.",
+  "stats.noRecentAnswers": "Không có câu trả lời nào trong {n} tuần qua.",
   "stats.reviewHistory": "Lịch sử ôn tập",
   "stats.historyOlderOmitted": "Đang hiển thị {n} lượt gần nhất; lịch sử cũ hơn đã được ẩn.",
   "stats.notApplicable": "Không áp dụng",
@@ -14183,8 +14185,10 @@ function renderRetentionTrend(rows, wrap, maxWeeksAgo) {
   var weeks = chartWeeks(maxWeeksAgo);
   var pcts = weeks.map(function(w) { var r = map[w]; return r && r.total > 0 ? Math.round((r.correct || 0) / r.total * 100) : null; });
   var known = pcts.filter(function(p) { return p != null; });
+  // The window is the last few weeks: older answers exist for a class studied months ago,
+  // and "No attempted cards yet" beside "Attempted: 5" read as a bug.
   if (!known.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("stats.noAttemptedCards") + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("stats.noRecentAnswers", { n: weeks.length }) + '</div>';
     return;
   }
   var lo = Math.max(0, Math.min(90, Math.floor((Math.min.apply(null, known) - 5) / 10) * 10));
@@ -14660,7 +14664,7 @@ function renderAccuracyTrend(rows, wrap, maxWeeksAgo) {
   }
 
   if (!weeks.some(function(wk) { return wk.total > 0; })) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("stats.noAttemptedCards") + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("stats.noRecentAnswers", { n: weeks.length }) + '</div>';
     return;
   }
 
