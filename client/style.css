@@ -5632,6 +5632,20 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .cram-status { margin: 0; }
 .cram-note { margin: 0; padding: 10px 14px; background: var(--primary-light); color: var(--text); border-radius: var(--radius); font-size: 0.875rem; }
 .cram-actions { display: flex; gap: 8px; justify-content: center; }
+/* Cram on a wide screen: one framed band across the window, the countdown, the readiness bar
+   and Start on one row, the round's status and the two small actions under them. It was a
+   480px column; stacking it at full width was the other layout previewed. */
+@media (min-width: 1024px) {
+  .cram-body { max-width: none; margin: 16px 12px 0; display: grid; grid-template-columns: auto minmax(0, 1fr) 320px; column-gap: 40px; row-gap: 10px; align-items: center;
+    padding: 24px 28px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  .cram-countdown { grid-column: 1; grid-row: 1; font-size: 2rem; }
+  .cram-ready { grid-column: 2; grid-row: 1; }
+  .cram-ready .progress-bar { height: 12px; }
+  #btn-cram-start { grid-column: 3; grid-row: 1; }
+  .cram-status { grid-column: 1 / 3; grid-row: 2; }
+  .cram-body > .cram-actions { grid-column: 3; grid-row: 2; margin: 0; }
+  .cram-note { grid-column: 1 / -1; }
+}
 .home-crams { display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; }
 .cram-home-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .cram-home-row:hover, .cram-home-row:focus-visible { border-color: var(--primary); }

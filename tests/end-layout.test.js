@@ -60,3 +60,10 @@ test("on a wide screen Study Setup is one row per section with Start at the righ
   assert.match(css, /\.setup-section > :is\(\.setup-label, \.setup-label-row\) \{ grid-column: 1;/);
   assert.match(css, /\.setup-sticky-footer \{ flex-direction: row; justify-content: flex-end;/);
 });
+
+test("on a wide screen Cram is one framed band: countdown, readiness and Start on one row", () => {
+  assert.match(css, /\.cram-body \{ max-width: none; margin: 16px 12px 0; display: grid; grid-template-columns: auto minmax\(0, 1fr\) 320px;/);
+  assert.match(css, /#btn-cram-start \{ grid-column: 3; grid-row: 1; \}/);
+  assert.match(css, /\.cram-body > \.cram-actions \{ grid-column: 3; grid-row: 2;/);
+});
+
