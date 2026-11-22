@@ -1403,3 +1403,7 @@ The page a share link opens was one full-width column, 18 lessons over two scree
 ## 2026-11-22 — Quiz music: synthesized, reacting to the streak, remembered
 
 The user asked for game-show music in the quiz, with an on/off switch. Three directions were previewed: a fixed loop, music that reacts to the streak, and only stings on each answer. The user picked the reacting music, then replaced the preview's bell with another sound (a plucked string) and wanted one master volume, not per-part controls. It is written for the app and synthesized with Web Audio rather than shipped as a file: no licence question, nothing to download, and parts can join one at a time. Unlike voice answers, which start off at every quiz, the music remembers its setting (default off); the user picked that. It runs on its own AudioContext because the answer sounds' context is closed and rebuilt on return from the background.
+
+## 2026-11-22 — Quiz: the toolbar row goes into two menus
+
+The user asked to tidy the quiz's seven toolbar icons, which took a row on a phone. Four layouts were previewed at phone size: settings in a menu with Edit and ⚑ still out (4 targets), the three toggles out and the card actions in a menu (4), no row at all with a settings menu in the header and a ⋯ on the card (2), and only dropping the volume caret (6). The user picked no row. It costs a second tap for Edit and ⚑, which the other layouts avoided; the keyboard shortcuts are unchanged. The flashcard screen's three-button toolbar was left as it was, to be asked about separately.

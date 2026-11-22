@@ -373,8 +373,9 @@ meant remembering the old card. There is no push for it: a verdict the learner d
 looking for would be noise. **Your feedback** in Preferences lists every request, newest
 first (`GET /api/rewrite-requests`, the last 100): class, what was flagged, the card's
 current front, the learner's note, and the answer or "Waiting". Every string in both comes
-from a model or a book, so both are built with `textContent`. The ⚑ sits on Edit's side of the
-toolbar gap, away from Delete, and is locked with Edit during the retype drill.
+from a model or a book, so both are built with `textContent`. In the flashcard toolbar the ⚑
+sits on Edit's side of the gap, away from Delete, and is locked with Edit during the retype
+drill; in the quiz it is in the card menu, after Edit and above the divider before Delete.
 
 A dialog body is a scrolling flex column, and flex children shrink before a container
 scrolls: on a short phone screen the note box collapsed to a sliver with its placeholder
@@ -738,7 +739,19 @@ at 3, 5, 10 and every ten after, a calm line on a miss) and holds Next in the sa
 every time. It appears only in Quiz, where the app decides right from wrong: praising a
 flashcard self-grade would be praising the learner for their own button press.
 
-**Answers can be spoken, hands-free.** The mic button in the quiz toolbar (or `V`) turns
+**The quiz has no toolbar row.** Its seven icons (answer layout, mic, music, the volume
+caret, Edit, ⚑, Delete) took a row on a phone between the memory strip and the question, for
+buttons used a few times a session. The user picked, from four previewed layouts, the one
+that removes the row: the session settings (answer layout, hands-free, music and its volume)
+are in a menu behind the sliders button in the header, beside the score, and the card actions
+(Edit, ⚑, then Delete below a divider) in a ⋯ menu on the question card's top-left corner,
+opposite the speaker. The settings menu stays open while it is changed, so the volume can
+follow the music switch; a card action closes its menu as it runs. Each row's text is the
+action it takes ("Show answers in a list", "Turn on music (M)"), as the icons' labels were.
+The cost is a second tap for Edit and ⚑; the keys `E`, `F`, `D`, `V` and `M` still act at
+once. The flashcard screen keeps its toolbar for now. `tests/quiz-menus.test.js`
+
+**Answers can be spoken, hands-free.** The mic row in the quiz's settings menu (or `V`) turns
 listening on for this quiz only. Every quiz starts with the mic off and leaving the quiz
 turns it off (`quizVoice.on`, not stored). It was first a per-device setting that started
 listening on its own at every quiz; the user wanted it off until asked for each time. A
@@ -784,15 +797,15 @@ Safari on iOS and macOS recognises on the device; on iPhone the page's other sou
 quieter while the mic is open, and a restart that is not from a tap can be refused, which
 shows as the pause; Android Chrome plays a chime on each restart. `tests/quiz-voice.test.js`
 
-**Music, if wanted, that builds with the streak.** The note button in the quiz toolbar (or
+**Music, if wanted, that builds with the streak.** The music row in the quiz's settings menu (or
 `M`) plays a loop written for the app and synthesized on the spot (128 BPM, C–G–Am–F); no
 audio file ships. The user asked for quiz music like a game show's and picked, from a
 preview, music that reacts over a fixed track. Parts join as the streak grows
 (`QUIZ_MUSIC_UNLOCK`): kick, hat and bass from the start, an arpeggio at 3 in a row, a clap
 and a plucked string at 6. A wrong answer muffles the mix (a lowpass that opens from 700 Hz
 over 2.2 s) and, as the streak is 0, drops it back to the beat. The plucked string replaced
-a bell the user disliked in the preview. One master volume, in a popover on the button's
-caret (0–100, default 50, Reset); the user asked for nothing more.
+a bell the user disliked in the preview. One master volume, under the music row in the same
+menu (0–100, default 50, Reset); the user asked for nothing more.
 
 Unlike the mic, the choice is remembered (`localStorage["fc-quiz-music"]`, default off, and
 `fc-quiz-music-volume`): the user picked that. It plays only on the quiz screen with the
@@ -803,7 +816,7 @@ hear it, and drops to 30% while a term is read aloud, back when the reading ends
 background, which would cut the loop. Notes are scheduled 0.12 s ahead on a 25 ms timer, so
 a busy main thread delays the timer, not the beat. The browser only starts audio after a
 tap, so the music starts from the button or `M`, and a remembered "on" starts with the next
-quiz, which a tap has opened. Escape closes the volume popover before it leaves the quiz.
+quiz, which a tap has opened. Escape closes an open menu before it leaves the quiz.
 `tests/quiz-music.test.js`
 
 ### Memory strip
