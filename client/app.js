@@ -723,7 +723,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.newCardEstimateNoneLeft": "No new cards left — you've introduced everything!",
   "setup.presets": "Presets",
   "setup.presetNamePlaceholder": "Preset name",
-  "setup.savePreset": "+ Save current as preset",
+  "setup.savePreset": "+ Save these settings as a preset",
   "setup.deletePresetConfirm": "Delete preset \"{name}\"?",
   "setup.managePresets": "Manage presets",
   "setup.managePresetsTitle": "Manage Presets",
@@ -2010,7 +2010,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.newCardEstimateNoneLeft": "Không còn thẻ mới nào — bạn đã học hết rồi!",
   "setup.presets": "Bộ lọc đã lưu",
   "setup.presetNamePlaceholder": "Tên bộ lọc",
-  "setup.savePreset": "+ Lưu lựa chọn hiện tại",
+  "setup.savePreset": "+ Lưu các lựa chọn này thành preset",
   "setup.deletePresetConfirm": "Xóa bộ lọc \"{name}\"?",
   "setup.managePresets": "Quản lý bộ lọc",
   "setup.managePresetsTitle": "Quản lý bộ lọc đã lưu",
@@ -8242,6 +8242,9 @@ function renderSetupPresets() {
       '<span class="setup-preset-chip-name">' + escHtml(preset.name) + '</span>' +
       '</button>';
   }).join("");
+  // No presets: no section. An empty row, a gear with nothing to manage and the save button
+  // took 106px above Card Count on a phone; saving now sits after the choices.
+  document.getElementById("setup-presets-section").classList.toggle("hidden", !state.studyPresets.length);
   syncPresetChips();
 }
 
