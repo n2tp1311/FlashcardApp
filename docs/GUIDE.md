@@ -1819,6 +1819,14 @@ Most study happens on an iPhone, and several decisions are about it:
   edge-swipe-back onto a blank snapshot of the page. On iOS no entry is ever pushed and
   the app's own edge swipe (`SCREEN_BACK_BTN`) is the only Back; elsewhere an entry exists
   only while there is somewhere in-app to go back to (`syncBackTrap`).
+- **A thumb gets 44×44 without the toolbar growing.** On a touchscreen (`pointer: coarse`)
+  icon buttons are 44px boxes, which does not show since they have no border. Bordered
+  chips would show it, so the Study now class picker and gear, Archived and the class
+  screen's filter pills keep their size and an invisible `::after` takes the tap out to
+  44×44. A select takes no pseudo-element, so the sort selects grow to 44px, and so does
+  the grid/list pair: its two 36px buttons touch and their tap areas would overlap.
+  Chromium's emulated touch does not match `pointer: coarse`, so
+  `tests/touch-targets.test.js` sets the pointer type at launch.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

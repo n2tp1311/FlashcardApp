@@ -1415,3 +1415,8 @@ Following the quiz, the flashcard screen's Edit, ⚑ and Delete row went into a 
 ## 2026-11-22 — Flashcards: Show answer between two arrows, no dot row
 
 First item of a UI audit made with the ui-ux-pro-max checklist: on the flashcard screen the one action, Show answer, was the palest button (3.6:1), under outlined Prev and Next; the dots wrapped to two rows on a phone, and the empty memory strip took a box above the first card. Four layouts were previewed at phone size: as it was; Show answer filled with text-only Prev/Next and one row of dots; one row of ← Show answer → with no dots; and a "1 known · 1 learning · 98 to go" line in place of the dots. The user picked the single row without dots. It costs jumping to a card by its dot. On a phone the buttons became a grid of fixed height, since sizing them by what was showing made the card shrink 108px mid-flip; the price is empty space above Show answer on the front.
+
+## 2026-11-22 — Touch targets: an invisible 44×44, not bigger chips
+
+Third item of the UI audit: on a phone the Study now gear and class picker were 36px, Archived and the filter pills 34px, the sort selects 31px and the grid/list toggles 36×34. Two fixes were previewed at phone size: grow every one to 44px, or keep how they look and take the tap area out to 44×44 with an invisible `::after`. The user picked the second. It keeps the toolbars as compact as they were; the cost is that a finger still aims at a small chip, and the tap area cannot be hidden everywhere: a select has no pseudo-element and the grid/list buttons touch, so those grew. The ⋮ and ⋯ menus and sort direction were already 44px on a touchscreen; the audit had measured them with a mouse pointer.
+
