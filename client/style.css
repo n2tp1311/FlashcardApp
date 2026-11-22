@@ -2329,14 +2329,6 @@ code {
   .memstrip-plot { height: 24px; }
 }
 
-.fc-toolbar {
-  display: flex;
-  gap: 8px;
-  padding: 0 0 12px;
-  justify-content: center;
-}
-/* Delete sits apart from Edit: 8px apart they were easy to hit for each other. */
-.fc-toolbar-gap { width: 24px; }
 
 .fc-scene {
   perspective: 1200px;
@@ -2861,9 +2853,9 @@ code {
    card actions in a menu on the card's corner, so the question sits right under the memory
    strip. A toolbar of seven icons took a row on a phone for buttons used a few times a session. */
 .study-header-end { display: flex; align-items: center; gap: 4px; }
-#btn-quiz-settings, #btn-quiz-card-menu { min-width: 40px; min-height: 40px; justify-content: center; color: var(--text2); }
-@media (pointer: coarse) { #btn-quiz-settings, #btn-quiz-card-menu { min-width: 44px; min-height: 44px; } }
-#btn-quiz-settings[aria-expanded="true"], #btn-quiz-card-menu[aria-expanded="true"] { background: var(--surface2); color: var(--text); }
+#btn-quiz-settings, #btn-quiz-card-menu, #btn-fc-menu { min-width: 40px; min-height: 40px; justify-content: center; color: var(--text2); }
+@media (pointer: coarse) { #btn-quiz-settings, #btn-quiz-card-menu, #btn-fc-menu { min-width: 44px; min-height: 44px; } }
+#btn-quiz-settings[aria-expanded="true"], #btn-quiz-card-menu[aria-expanded="true"], #btn-fc-menu[aria-expanded="true"] { background: var(--surface2); color: var(--text); }
 /* Two classes: .dropdown-wrap, declared later, would make it relative again. */
 .dropdown-wrap.quiz-card-menu { position: absolute; top: 4px; left: 4px; z-index: 2; }
 .quiz-card-menu .dropdown-menu { left: 0; right: auto; }
@@ -5422,17 +5414,15 @@ button.leech-pill:hover { filter: brightness(0.96); }
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     width: min(300px, 38%); flex: none;
   }
-  #screen-quiz .study-header-end, #btn-fc-shuffle { margin-left: auto; }
+  #screen-quiz .study-header-end, #screen-flashcard .fc-head-end { margin-left: auto; }
 }
 /* Phones: the bar fills the space between the side controls, but as a plain flex item its
    centre followed their widths: Exit (65-78px) against a 25px score put it 20px right of the
-   card's centre, and against the 100px Shuffle 17px left. Equal side columns keep it centred,
-   and Shuffle shows only its icon so that column is not as wide as the bar needs. */
+   card's centre, and against the 100px Shuffle 17px left. Equal side columns keep it centred. */
 @media (max-width: 600px) {
   #screen-quiz .app-header, #screen-flashcard .app-header { display: grid; grid-template-columns: 1fr 2fr 1fr; }
   #btn-quiz-back, #btn-fc-back { justify-self: start; }
-  #screen-quiz .study-header-end, #btn-fc-shuffle { justify-self: end; }
-  #btn-fc-shuffle { font-size: 0; gap: 0; min-width: 44px; justify-content: center; }
+  #screen-quiz .study-header-end, #screen-flashcard .fc-head-end { justify-self: end; }
 }
 
 /* Phone in landscape: a shorter card and one row of Prev, grades and Next, so grading needs no

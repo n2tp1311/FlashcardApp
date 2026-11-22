@@ -236,5 +236,5 @@ test("on a wide screen the study screens and end screens drop their width caps",
 test("on a phone the study header's sides are equal, so the progress bar is centred", () => {
   const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
   assert.match(css, /#screen-quiz \.app-header, #screen-flashcard \.app-header \{ display: grid; grid-template-columns: 1fr 2fr 1fr; \}/);
-  assert.match(indexHtml, /id="btn-fc-shuffle"[^>]*data-i18n-aria="common.shuffle"/);
+  assert.match(indexHtml, /id="btn-fc-shuffle"[^>]*data-i18n="common.shuffle"/);
 });

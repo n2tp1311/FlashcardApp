@@ -86,3 +86,40 @@ test("the corner menu does not cover the question", async function() {
   assert.ok(more.right <= q.left || more.bottom <= q.top, JSON.stringify({ more, q }));
   await page.close();
 });
+
+// The flashcard screen: Shuffle and the card actions share one ⋯ in the header.
+const fcStart = html.indexOf('<div id="screen-flashcard" class="screen">');
+const fcScreen = html.slice(fcStart, html.indexOf("<!-- ===== SCREEN: Quiz", fcStart));
+
+test("the flashcard screen has no toolbar row; its ⋯ holds Shuffle, Edit, Report, then Delete", function() {
+  assert.doesNotMatch(fcScreen, /fc-toolbar/);
+  const header = fcScreen.slice(0, fcScreen.indexOf("</header>"));
+  assert.match(header, /id="btn-fc-menu"[^>]*aria-controls="fc-card-menu"[\s\S]*id="btn-fc-shuffle"[\s\S]*id="btn-fc-edit-card"[\s\S]*id="btn-fc-flag-card"[\s\S]*dropdown-divider[\s\S]*id="btn-fc-delete-card"/);
+  assert.match(app, /registerDropdown\("btn-fc-menu", "fc-card-menu"\);/);
+  assert.match(app, /"btn-fc-menu", "btn-fc-shuffle", "btn-fc-edit-card"/, "locked with them during the retype drill");
+  const start = app.indexOf("\nfunction renderFlashcard(");
+  assert.match(app.slice(start, start + 200), /closeAllDropdowns\(\);/);
+  assert.match(app, /e\.key === "Escape" && document\.querySelector\("#screen-flashcard \.dropdown-menu:not\(\.hidden\)"\)\) closeAllDropdowns\(\);/);
+});
+
+test("the report label is short", function() {
+  assert.match(app, /"flag\.button": "Report this card",/);
+  assert.match(app, /"flag\.button": "Báo lỗi thẻ",/);
+});
+
+test("on a phone the flashcard header fits and its menu opens inside the screen", async function() {
+  const page = await browser.newPage({ viewport: { width: 390, height: 700 } });
+  await page.setContent('<div style="padding:0 16px">' + fcScreen.replace('class="screen"', 'class="screen active"') + "</div>");
+  await page.addStyleTag({ path: path.join(root, "client", "style.css") });
+  await page.addScriptTag({ content: extract("registerDropdown") + extract("closeAllDropdowns") +
+    'document.addEventListener("click", closeAllDropdowns); registerDropdown("btn-fc-menu", "fc-card-menu");' });
+  const exit = await box(page, "#btn-fc-back");
+  const more = await box(page, "#btn-fc-menu");
+  assert.ok(more.right <= more.vw && Math.abs(more.top - exit.top) < 12, JSON.stringify({ exit, more }));
+  await page.click("#btn-fc-menu");
+  const menu = await box(page, "#fc-card-menu");
+  assert.ok(menu.shown && menu.left >= 0 && menu.right <= menu.vw, JSON.stringify(menu));
+  await page.click("#btn-fc-edit-card");
+  assert.equal((await box(page, "#fc-card-menu")).shown, false, "an action closes the menu");
+  await page.close();
+});

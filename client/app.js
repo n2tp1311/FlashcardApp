@@ -305,7 +305,7 @@ Object.assign(TRANSLATIONS.en, {
   "leech.rewriteAlreadyRequested": "Rewrite requested",
   "leech.keepStudying": "Keep studying",
   "toast.rewriteRequested": "KnowledgeApp will rewrite this card on its next run.",
-  "flag.button": "Report a problem with this card",
+  "flag.button": "Report this card",
   "flag.pending": "Problem reported — KnowledgeApp will look at it on its next run",
   "flag.title": "What's wrong with this card?",
   "flag.wrong": "The fact is wrong",
@@ -1601,7 +1601,7 @@ Object.assign(TRANSLATIONS.vi, {
   "leech.rewriteAlreadyRequested": "Đã yêu cầu viết lại",
   "leech.keepStudying": "Tiếp tục học",
   "toast.rewriteRequested": "KnowledgeApp sẽ viết lại thẻ này ở lần chạy tới.",
-  "flag.button": "Báo lỗi thẻ này",
+  "flag.button": "Báo lỗi thẻ",
   "flag.pending": "Đã báo lỗi — KnowledgeApp sẽ xem ở lần chạy tới",
   "flag.title": "Thẻ này sai ở đâu?",
   "flag.wrong": "Thông tin sai",
@@ -9679,7 +9679,7 @@ function hintAvailable(answer) {
 // exception to that (it works from inside any text field everywhere in the app, not just
 // here) and can still navigate away — unchanged, pre-existing behavior, out of scope here.
 function setFlashcardNavLocked(locked) {
-  ["btn-fc-prev", "btn-fc-next", "btn-fc-shuffle", "btn-fc-edit-card", "btn-fc-flag-card", "btn-fc-delete-card",
+  ["btn-fc-prev", "btn-fc-next", "btn-fc-menu", "btn-fc-shuffle", "btn-fc-edit-card", "btn-fc-flag-card", "btn-fc-delete-card",
    "btn-fc-learning", "btn-fc-hard", "btn-fc-known", "btn-fc-easy"].forEach(function(id) {
     document.getElementById(id).disabled = locked;
   });
@@ -10158,6 +10158,8 @@ function setFlashcardFaces(flipped) {
 }
 
 function renderFlashcard() {
+  // A menu left open by a key grade (1-4) would cover the next card.
+  closeAllDropdowns();
   hideVocabularySelectionAction(true);
   clearFlashcardTranslation();
   var cards = state.studyCards;
@@ -12426,7 +12428,7 @@ document.getElementById("btn-quiz-music-reset").addEventListener("click", functi
 document.getElementById("quiz-settings-menu").addEventListener("click", function(e) { e.stopPropagation(); });
 // The slider can hold the focus, and the screen's key handler ignores keys typed into a
 // control, so the menus close themselves on Escape and hand focus back to their button.
-["quiz-settings-menu", "quiz-card-menu"].forEach(function(id) {
+["quiz-settings-menu", "quiz-card-menu", "fc-card-menu"].forEach(function(id) {
   document.getElementById(id).addEventListener("keydown", function(e) {
     if (e.key !== "Escape") return;
     e.preventDefault();
@@ -15732,6 +15734,7 @@ registerDropdown("btn-lesson-menu", "lesson-dropdown-menu");
 registerDropdown("btn-user-menu",   "user-dropdown-menu");
 registerDropdown("btn-quiz-settings", "quiz-settings-menu");
 registerDropdown("btn-quiz-card-menu", "quiz-card-menu");
+registerDropdown("btn-fc-menu", "fc-card-menu");
 
 /* ============================
    AUTH UI
@@ -17817,6 +17820,7 @@ document.addEventListener("keydown", function(e) {
       if (state.studyFlipped) speakText(state.studyBackText);
       else speakStudyFront();
     }
+    else if (e.key === "Escape" && document.querySelector("#screen-flashcard .dropdown-menu:not(.hidden)")) closeAllDropdowns();
     else if (e.key === "Escape") confirmLeaveStudy(function() { document.getElementById("btn-fc-back").click(); });
   }
 

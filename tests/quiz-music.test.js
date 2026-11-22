@@ -78,7 +78,7 @@ test("the controls, the M key and the hooks are wired", function() {
   assert.equal((fn("syncQuizVoice").match(/syncQuizMusic\(\)/g) || []).length, 2, "both exits of syncQuizVoice");
   assert.match(fn("toggleQuizVoice"), /syncQuizMusic\(\)/);
   // The slider holds the focus, and the screen's key handler skips keys typed into a control.
-  assert.match(app, /\["quiz-settings-menu", "quiz-card-menu"\]\.forEach[\s\S]{0,200}"keydown"[\s\S]{0,200}"Escape"[\s\S]{0,200}closeAllDropdowns\(\)/);
+  assert.match(app, /\["quiz-settings-menu", "quiz-card-menu", "fc-card-menu"\]\.forEach[\s\S]{0,200}"keydown"[\s\S]{0,200}"Escape"[\s\S]{0,200}closeAllDropdowns\(\)/);
   for (const k of ["quiz.musicOn", "quiz.musicOff", "quiz.musicVolume", "quiz.musicVolumeLabel", "quiz.musicReset"])
     assert.equal(app.split('"' + k + '":').length - 1, 2, k + " in both languages");
 });

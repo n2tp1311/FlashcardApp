@@ -585,7 +585,16 @@
       <span id="fc-progress-text">1 / 10</span>
       <div class="progress-bar"><div id="fc-progress-fill" class="progress-fill"></div></div>
     </div>
-    <button class="btn btn-ghost" id="btn-fc-shuffle" data-i18n="common.shuffle" data-i18n-aria="common.shuffle" aria-label="Shuffle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Shuffle</button>
+    <div class="dropdown-wrap fc-head-end">
+      <button class="btn btn-ghost btn-icon" id="btn-fc-menu" aria-haspopup="true" aria-expanded="false" aria-controls="fc-card-menu" title="Card actions" aria-label="Card actions" data-i18n-title="quiz.cardMenu" data-i18n-aria="quiz.cardMenu"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+      <div class="dropdown-menu hidden" id="fc-card-menu">
+        <button class="dropdown-item" id="btn-fc-shuffle" data-i18n="common.shuffle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Shuffle</button>
+        <button class="dropdown-item" id="btn-fc-edit-card" data-i18n="study.editCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit card</button>
+        <button class="dropdown-item hidden" id="btn-fc-flag-card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span class="menu-text">Report this card</span></button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item danger" id="btn-fc-delete-card" data-i18n="study.deleteCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Delete card</button>
+      </div>
+    </div>
   </header>
   <div id="fc-memstrip" class="memstrip hidden">
     <div class="memstrip-plot" role="img" data-i18n-aria="memstrip.label" aria-label="When the cards you answered come back">
@@ -598,12 +607,6 @@
       <span data-memstrip-sec="86400"></span><span data-memstrip-sec="604800"></span><span data-memstrip-sec="2592000" class="is-month"></span><span data-memstrip-sec="31536000"></span>
     </div>
     <div class="memstrip-foot"><span class="memstrip-caption" id="fc-memstrip-caption"></span><span class="memstrip-count" id="fc-memstrip-count"></span></div>
-  </div>
-  <div class="fc-toolbar">
-    <button class="btn btn-sm btn-ghost btn-icon" id="btn-fc-edit-card" title="Edit card" aria-label="Edit card" data-i18n-title="study.editCard" data-i18n-aria="study.editCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
-    <button class="btn btn-sm btn-ghost btn-icon hidden" id="btn-fc-flag-card" title="Report a problem with this card" aria-label="Report a problem with this card" data-i18n-title="flag.button" data-i18n-aria="flag.button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
-    <span class="fc-toolbar-gap" aria-hidden="true"></span>
-    <button class="btn btn-sm btn-ghost btn-icon btn-toolbar-danger" id="btn-fc-delete-card" title="Delete card" aria-label="Delete card" data-i18n-title="study.deleteCard" data-i18n-aria="study.deleteCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
   </div>
   <div id="fc-lesson-label" class="study-lesson-label hidden"></div>
   <div class="fc-scene" id="fc-scene">
@@ -709,7 +712,7 @@
         <button class="btn btn-ghost btn-icon" id="btn-quiz-card-menu" aria-haspopup="true" aria-expanded="false" aria-controls="quiz-card-menu" title="Card actions" aria-label="Card actions" data-i18n-title="quiz.cardMenu" data-i18n-aria="quiz.cardMenu"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
         <div class="dropdown-menu hidden" id="quiz-card-menu">
           <button class="dropdown-item" id="btn-quiz-edit-card" data-i18n="study.editCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit card</button>
-          <button class="dropdown-item hidden" id="btn-quiz-flag-card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span class="menu-text">Report a problem with this card</span></button>
+          <button class="dropdown-item hidden" id="btn-quiz-flag-card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span class="menu-text">Report this card</span></button>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item danger" id="btn-quiz-delete-card" data-i18n="study.deleteCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Delete card</button>
         </div>
@@ -1649,7 +1652,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">4</kbd><span data-i18n="study.confident">Confident</span></div>
         <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="common.shuffle">Shuffle</span></div>
         <div class="keymap-row"><kbd class="kbd">E</kbd><span data-i18n="study.editCard">Edit card</span></div>
-        <div class="keymap-row"><kbd class="kbd">F</kbd><span data-i18n="flag.button">Report a problem with this card</span></div>
+        <div class="keymap-row"><kbd class="kbd">F</kbd><span data-i18n="flag.button">Report this card</span></div>
         <div class="keymap-row"><kbd class="kbd">D</kbd><span data-i18n="study.deleteCard">Delete card</span></div>
         <div class="keymap-row"><kbd class="kbd">P</kbd><span data-i18n="keymap.pronounce">Pronounce</span></div>
         <div class="keymap-row"><kbd class="kbd">Ctrl/⌘</kbd>+<kbd class="kbd">Z</kbd><span data-i18n="keymap.undoGrade">Undo the last grade</span></div>
@@ -1663,7 +1666,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">B</kbd><span data-i18n="keymap.fromTheBook">Open / close From the book (after answering)</span></div>
         <div class="keymap-row"><kbd class="kbd">V</kbd><span data-i18n="keymap.quizVoice">Hands-free answers on / off</span></div>
         <div class="keymap-row"><kbd class="kbd">E</kbd><span data-i18n="study.editCard">Edit card</span></div>
-        <div class="keymap-row"><kbd class="kbd">F</kbd><span data-i18n="flag.button">Report a problem with this card</span></div>
+        <div class="keymap-row"><kbd class="kbd">F</kbd><span data-i18n="flag.button">Report this card</span></div>
         <div class="keymap-row"><kbd class="kbd">D</kbd><span data-i18n="study.deleteCard">Delete card</span></div>
         <div class="keymap-row"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd><span data-i18n="keymap.reviewPrevNext">Review prev / next answered question</span></div>
         <div class="keymap-row"><kbd class="kbd">Enter</kbd> <kbd class="kbd">Space</kbd><span data-i18n="keymap.quizNext">Next question (after answering)</span></div>

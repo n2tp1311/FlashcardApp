@@ -94,8 +94,8 @@ test("a phone flashcard sizes from the viewport and says when there is more to s
 test("touch screens get 44px icon targets", function() {
   const coarse = css.slice(css.indexOf("Apple's 44pt minimum"));
   assert.match(coarse, /\.btn-icon, \.icon-btn, \.sort-dir-btn, \.btn-audio, \.modal-close \{ min-width: 44px; min-height: 44px; \}/);
-  // The gap keeps Delete away from the safe actions; Report a problem sits with Edit.
-  assert.match(html, /id="btn-fc-edit-card"[^\n]*\n\s*<button[^\n]*id="btn-fc-flag-card"[^\n]*\n\s*<span class="fc-toolbar-gap"/);
+  // A divider keeps Delete away from the safe actions; Report sits with Edit.
+  assert.match(html, /id="btn-fc-edit-card"[^\n]*\n\s*<button[^\n]*id="btn-fc-flag-card"[^\n]*\n\s*<div class="dropdown-divider">/);
 });
 
 function upstreamCtx() {
