@@ -66,7 +66,7 @@
 
 ## Spaced Repetition
 - Per-card SRS intervals: 10min → 1h → 4h → 1d → 3d → 7d → 21d (step advances on correct, resets on wrong)
-- Due badges on lesson cards showing count of cards due for review
+- Due badges on lesson cards showing count of cards due for review. A lesson not yet due says when it comes back ("Next review in 3d"); a due one has only the badge, since the line "N cards due for review" under it repeated it in amber at 3:1 (removed 2026-11-23). `tests/lesson-due-label.test.js`
 - "Quick quiz · N due" button on the lesson screen (and the Dashboard's "Due for review" rows) launches a quiz on the due cards only, capped by Max reviews per day; the label and tooltip say it's a quiz so it isn't mistaken for a flashcard review
 - Due counts on class cards (home screen) and dashboard grouped by class
 - Dashboard due lessons grouped by class with clickable rows to launch review

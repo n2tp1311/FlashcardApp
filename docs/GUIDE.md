@@ -1827,6 +1827,9 @@ Most study happens on an iPhone, and several decisions are about it:
   the grid/list pair: its two 36px buttons touch and their tap areas would overlap.
   Chromium's emulated touch does not match `pointer: coarse`, so
   `tests/touch-targets.test.js` sets the pointer type at launch.
+- **A due lesson row says it once.** Its "N due" badge stands alone; the line under it
+  that said "N cards due for review" again, in amber at 3:1, is gone, so a due row is a line
+  shorter. A lesson not yet due keeps its grey "Next review in 3d".
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

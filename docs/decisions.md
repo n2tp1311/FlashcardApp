@@ -1420,3 +1420,7 @@ First item of a UI audit made with the ui-ux-pro-max checklist: on the flashcard
 
 Third item of the UI audit: on a phone the Study now gear and class picker were 36px, Archived and the filter pills 34px, the sort selects 31px and the grid/list toggles 36×34. Two fixes were previewed at phone size: grow every one to 44px, or keep how they look and take the tap area out to 44×44 with an invisible `::after`. The user picked the second. It keeps the toolbars as compact as they were; the cost is that a finger still aims at a small chip, and the tap area cannot be hidden everywhere: a select has no pseudo-element and the grid/list buttons touch, so those grew. The ⋮ and ⋯ menus and sort direction were already 44px on a touchscreen; the audit had measured them with a mouse pointer.
 
+## 2026-11-23 — Lesson rows: the due badge alone, no amber line
+
+Fourth item of the UI audit, light-mode contrast. Measured again with colours resolved through a canvas, the accuracy pills and the "Quiz · N" chip are about 7:1; the audit had read their `color-mix()` backgrounds as numbers and reported 2.6. The one real failure was the "N cards due for review" line under a due lesson, `#d97706` on white at 11px, 3.08:1. Two fixes were previewed: darken it to the warning text colour, about 7:1, or drop it, since the "N due" badge above says the same. The user picked dropping it. A due row loses a line; nothing it said is lost. The `.acc-good/.acc-mid/.acc-bad` colours, also below 4.5:1, went too: nothing renders them any more.
+
