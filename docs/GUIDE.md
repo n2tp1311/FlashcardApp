@@ -149,7 +149,7 @@ Other tables, by owner:
 | `study_events`, `user_achievements` | the few facts achievements need that nothing else stores (§11) |
 | `push_subscriptions`, `reminder_log`, `app_secrets` | reminders (§17) |
 | `class_share_links`, `class_invites` | sharing (§18) |
-| `quiz_sessions` | finished quiz sessions; only the Sessions count reads it |
+| `quiz_sessions` | finished quiz sessions; read only for the dashboard summary's `quizSessions`, which nothing shows since the hero card's Sessions count went (2026-11-23) |
 
 **Preferences** are one JSON column on `users`. `PUT /api/auth/preferences` merges
 what the client sends into what is stored, so a client that does not know a newer key
@@ -1252,8 +1252,8 @@ heatmap day partway (331 of its 1,024 attempts in the measurement).
 
 **Mastered** means a Review card scheduled 21 days or more out — Anki's "mature" line,
 and an edge of the Memory Interval chart, so the two agree (`lib/mastery.js`). The
-lesson mastery bar, the class medallion and the achievements all use this one
-definition. A class shows **Learned** once no card is New or Learning and **Mastered**
+lesson mastery bar, the class medallion, the library bar at the foot of the hero card and
+the achievements all use this one definition. A class shows **Learned** once no card is New or Learning and **Mastered**
 once every card is mastered; neither is stored, so a card falling back takes it away —
 a badge that outlived its claim would say something untrue. An incomplete class shows at
 most 99%, so 239 of 240 never reads "100%".
@@ -1849,6 +1849,13 @@ Most study happens on an iPhone, and several decisions are about it:
   · studied 2d ago", and none when it is new, since its New pill says so. "Last seen" is
   gone: it changed when a card was only shown, which read as studied beside "Last studied:
   never".
+- **The hero card ends with progress, not inventory.** Under the Streak, Today and Study
+  time tiles, Home and the Dashboard show one mastery bar over every card in unarchived
+  classes, with "N of T cards mastered" and "M in progress" (Known and Learning). It
+  replaced "9 Classes · 31 Lessons · 3003 Cards · 40 Attempts · 0 Sessions", which took two
+  lines on a phone, barely moved, and counted the app's own bookkeeping: Sessions only
+  finished quizzes. The counts come from `masteryCounts()` as `summary.mastery`; local mode
+  has no memory states, so it shows no row.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

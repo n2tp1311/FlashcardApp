@@ -1436,3 +1436,7 @@ Sixth item of the UI audit: the class screen's loudest button was "+ Lesson", it
 ## 2026-11-23 — Meta text: 12px, and only what says something
 
 Seventh item of the UI audit. On a phone the class screen had "0% mastered" in 11px under an empty bar on every lesson, and every card in a lesson three 11px items, which for a new card read "Last seen: 20w ago · Last studied: never · Next review: not scheduled". Options previewed: A, only 12px; B, 12px with "% mastered" on the bar's line and one card line of facts; C, B and no bar on a lesson with nothing learned. Chose C: the bars that remain are the lessons that are moving, and the class bar above still gives the whole. "Last seen" was dropped because it moved when a card was merely shown, so it contradicted "Last studied: never". A lesson with only Learning cards keeps its bar, since that is progress too.
+
+## 2026-11-23 — The hero card's last row: library progress
+
+Eighth item of the UI audit. Under the hero card's tiles, Home and the Dashboard listed "9 Classes · 31 Lessons · 3003 Cards · 40 Attempts · 0 Sessions": two lines on a phone, numbers that barely move, and two of them bookkeeping (Sessions counted only finished quizzes). Options previewed: A, trim to classes, lessons and cards; B, one mastery bar over the whole library with "N of T cards mastered · M in progress"; C, drop the row. Chose B: it is the one number that says whether studying is getting anywhere. Archived classes are left out, as from every dashboard count. The gear's five count toggles became one, Cards mastered.
