@@ -228,7 +228,7 @@ test("on a wide screen the strip spans the study column, with no 600px cap", () 
 
 test("on a wide screen the study screens and end screens drop their width caps", () => {
   const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
-  assert.match(css, /\.fc-scene, \.fc-translation, #fc-explanation, \.fc-dots, \.fc-nav, \.quiz-container, \.fc-hint-cap \{ max-width: none; \}/);
+  assert.match(css, /\.fc-scene, \.fc-translation, #fc-explanation, \.fc-nav, \.quiz-container, \.fc-hint-cap \{ max-width: none; \}/);
   assert.match(css, /\.quiz-options:not\(\.tf-mode\) \{ display: grid; grid-template-columns: 1fr 1fr;/);
   assert.doesNotMatch(css, /max-width: 1040px/);
 });

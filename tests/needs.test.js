@@ -92,7 +92,7 @@ function extract(name) {
   assert.ok(start >= 0, "missing " + name);
   return appJs.slice(start, appJs.indexOf("\n}\n", start) + 3);
 }
-const ctx = { IS_SERVER: true, state: {}, store: {}, saveResumeSession() {}, renderFcDots() {}, advanced: 0,
+const ctx = { IS_SERVER: true, state: {}, store: {}, saveResumeSession() {}, advanced: 0,
   scheduleFlashcardAdvance() { ctx.advanced++; }, getActiveScreen: () => "flashcard", offered: null,
   showNeedsOffer(card, weak) { ctx.offered = weak.map((c) => c.id); } };
 vm.createContext(ctx);

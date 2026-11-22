@@ -651,11 +651,10 @@
   </div>
   <div id="fc-translation" class="fc-translation hidden" aria-live="polite" aria-atomic="true"></div>
   <div id="fc-explanation" class="hidden"></div>
-  <div class="fc-dots" id="fc-dots"></div>
   <div id="fc-notdue-hint" class="quiz-cap-hint hidden"></div>
   <div id="fc-hint-cap" class="quiz-cap-hint fc-hint-cap hidden"></div>
   <div class="fc-nav">
-    <button class="btn btn-outline btn-lg" id="btn-fc-prev" data-i18n="study.prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Prev</button>
+    <button class="btn btn-outline btn-lg fc-arrow" id="btn-fc-prev" title="Previous card (←)" aria-label="Previous card (←)" data-i18n-title="study.prevCard" data-i18n-aria="study.prevCard"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="fc-mark-btns" id="fc-mark-btns">
       <button type="button" class="btn btn-primary btn-mark fc-reveal-btn" id="btn-fc-reveal"><span id="fc-reveal-label" data-i18n="study.showAnswer">Show answer</span></button>
       <button class="btn btn-danger btn-mark" id="btn-fc-learning" title="Learning (1)" data-i18n-title="study.stillLearningHint" data-i18n="study.learning"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Learning<span class="mark-int" id="fc-int-learning"></span></button>
@@ -663,7 +662,7 @@
       <button class="btn btn-success btn-mark" id="btn-fc-known" title="Know It (3)" data-i18n-title="study.knowItHint" data-i18n="study.knowIt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Know It<span class="mark-int" id="fc-int-known"></span></button>
       <button class="btn btn-primary btn-mark" id="btn-fc-easy" title="Confident (4)" data-i18n-title="study.confidentHint" data-i18n="study.confident"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Confident<span class="mark-int" id="fc-int-easy"></span></button>
     </div>
-    <button class="btn btn-outline btn-lg" id="btn-fc-next" data-i18n="study.next">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+    <button class="btn btn-outline btn-lg fc-arrow" id="btn-fc-next" title="Next card (→)" aria-label="Next card (→)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
   </div>
 </div>
 

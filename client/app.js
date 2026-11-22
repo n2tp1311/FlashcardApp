@@ -47,6 +47,8 @@ var ICON_CHEVRON_UP   = svgIcon('<polyline points="18 15 12 9 6 15"/>');
 var ICON_CHEVRON_DOWN = svgIcon('<polyline points="6 9 12 15 18 9"/>');
 var ICON_ARROW_LEFT   = svgIcon('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>');
 var ICON_ARROW_RIGHT  = svgIcon('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>');
+var ICON_ARROW_RIGHT_LG = svgIcon('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>', 18);
+var ICON_CHECK_LG = svgIcon('<polyline points="20 6 9 17 4 12"/>', 18);
 var ICON_GRIP = svgIcon('<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>', 18);
 var ICON_LIGHTBULB    = svgIcon('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/>');
 
@@ -879,6 +881,8 @@ Object.assign(TRANSLATIONS.en, {
   "study.wordAlreadyQueued": "Already saved with this context",
   "study.wordAlreadyFetched": "Already in your vocabulary deck",
   "study.prev": "Prev",
+  "study.prevCard": "Previous card (←)",
+  "study.nextCard": "Next card (→)",
   "study.stillLearningHint": "Learning (1)",
   "study.learning": "Learning",
   "study.hardHint": "Hard (2) — recalled it, but it took some effort",
@@ -2160,6 +2164,8 @@ Object.assign(TRANSLATIONS.vi, {
   "study.wordAlreadyQueued": "Đã lưu với ngữ cảnh này",
   "study.wordAlreadyFetched": "Đã có trong bộ từ vựng",
   "study.prev": "Trước",
+  "study.prevCard": "Thẻ trước (←)",
+  "study.nextCard": "Thẻ tiếp (→)",
   "study.stillLearningHint": "Đang học (1)",
   "study.learning": "Đang học",
   "study.hardHint": "Khó (2) — nhớ được, nhưng phải cố gắng",
@@ -10374,8 +10380,6 @@ function renderFlashcard() {
   upstreamBadge.textContent = card.upstream_change ? t("upstream." + card.upstream_change) : "";
   syncFlagButton(document.getElementById("btn-fc-flag-card"), card);
 
-  // Dots
-  renderFcDots();
   requestAnimationFrame(markFcOverflow);
 
   // Mark buttons reflect known state
@@ -10396,7 +10400,13 @@ function renderFlashcard() {
 
   // Prev/Next
   document.getElementById("btn-fc-prev").disabled = i === 0;
-  document.getElementById("btn-fc-next").innerHTML = i === cards.length - 1 ? t("study.finish") : t("study.next") + " " + ICON_ARROW_RIGHT;
+  // Icon-only, so the name goes in aria-label and the tooltip; the retype drill borrows the
+  // tooltip for its hint and completeForcedRetype() puts the name back.
+  var nextBtn = document.getElementById("btn-fc-next");
+  var last = i === cards.length - 1;
+  nextBtn.innerHTML = last ? ICON_CHECK_LG : ICON_ARROW_RIGHT_LG;
+  nextBtn.setAttribute("aria-label", t(last ? "study.finish" : "study.nextCard"));
+  nextBtn.title = nextBtn.getAttribute("aria-label");
 }
 
 /* ---- Gap fill: a passage whose gaps are filled from a word bank ---- */
@@ -10586,55 +10596,6 @@ document.getElementById("fc-gapfill").addEventListener("click", function(e) {
     else if (state.gf) { state.gf.target = k; renderGapfill(); }
   }
 });
-
-// One row of dots fits about 40. A longer session shows the 40 around the current card,
-// so its dot stays in view instead of the row stopping at card 40.
-var FC_DOTS_MAX = 40;
-function fcDotWindow(n, index, max) {
-  if (n <= max) return 0;
-  return Math.max(0, Math.min(n - max, index - Math.floor(max / 2)));
-}
-
-function renderFcDots() {
-  var dots = document.getElementById("fc-dots");
-  dots.innerHTML = "";
-  // A dot per queue position would show a card once for every time it came back.
-  dots.classList.toggle("hidden", !!state.cram);
-  if (state.cram) return;
-  var cards = state.studyCards;
-  var start = fcDotWindow(cards.length, state.studyIndex, FC_DOTS_MAX);
-  var end = Math.min(cards.length, start + FC_DOTS_MAX);
-  for (var i = start; i < end; i++) {
-    var dot = document.createElement("div");
-    dot.className = "fc-dot";
-    if (i === state.studyIndex) dot.classList.add("active");
-    var card = cards[i];
-    var known = state.studyKnownMap[card.id];
-    if (known === true) {
-      dot.classList.add("known");
-    } else if (known === false) {
-      dot.classList.add("learning");
-    } else {
-      // Not yet marked this session — preview the card's historical difficulty
-      // (same level used for the on-card Easy/Medium/Hard/New badge) instead of
-      // leaving every unmarked dot looking identical.
-      var stats = state.studyStatsMap && state.studyStatsMap[card.id];
-      var level = stats ? stats.level : "new";
-      if (level === "easy") dot.classList.add("known");
-      else if (level === "medium") dot.classList.add("medium");
-      else if (level === "hard") dot.classList.add("learning");
-    }
-    (function(idx) {
-      dot.addEventListener("click", function() {
-        if (state.fcForcedRetype) return; // don't let the drill be skipped by jumping cards
-        haptic("tick");
-        state.studyIndex = idx;
-        renderFlashcard();
-      });
-    })(i);
-    dots.appendChild(dot);
-  }
-}
 
 document.getElementById("fc-scene").addEventListener("click", function() {
   // Forced-retype drill pending — don't let the user flip away from the reinforcement step.
@@ -11007,7 +10968,6 @@ function insertNeeds(card, weak) {
   var add = weak.map(function(c) { return later[c.id] || c; });
   state.studyCards.splice.apply(state.studyCards, [at + 1, 0].concat(add, [card]));
   saveResumeSession();
-  renderFcDots();
 }
 
 function beginForcedRetype(advanceDelay) {
@@ -11073,7 +11033,8 @@ function beginForcedRetype(advanceDelay) {
 function completeForcedRetype() {
   state.fcForcedRetype = false;
   setFlashcardNavLocked(false);
-  document.getElementById("btn-fc-next").title = "";
+  var nextBtn = document.getElementById("btn-fc-next");
+  nextBtn.title = nextBtn.getAttribute("aria-label") || "";
   document.getElementById("btn-fc-prev").disabled = state.studyIndex === 0;
   setMarkButtonsEnabled(false);
   advanceOrOfferNeeds(state.fcRetypeAdvanceDelay);
@@ -11279,7 +11240,10 @@ function renderMemStrip(prefix) {
   if (!wrap) return;
   var strip = state.memStrip;
   // Without a server there is no schedule preview to place a card by.
-  var show = !!strip && IS_SERVER && !(prefix === "fc" && state.cram);
+  // Empty, it was a box saying cards will land here, above the card on every first card.
+  // It appears with the first answer, whose dot is then the thing to look at.
+  var empty = !!strip && !Object.keys(strip.entries).length && !strip.lastNotDue;
+  var show = !!strip && !empty && IS_SERVER && !(prefix === "fc" && state.cram);
   wrap.classList.toggle("hidden", !show);
   if (!show) return;
   memStripLayoutAxis(wrap);
@@ -11405,7 +11369,6 @@ function markCard(known, grade, forceRetype) {
   }).catch(function(err) {
     showToast(t("toast.saveFailed", { message: err.message }), "error");
   });
-  renderFcDots();
   offerGradeUndo(undo, state.studySessionLog[card.id]);
 
   // Known client-side already (same check renderFlashcard() uses to blank the interval
@@ -11493,7 +11456,6 @@ function undoLastGrade() {
     state.studyIndex = index;
     showScreen("flashcard");
     renderFlashcard();
-    renderFcDots();
   }).catch(function() {
     showToast(t("undo.failed"), "error");
   });
