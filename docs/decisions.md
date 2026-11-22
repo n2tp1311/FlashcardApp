@@ -1440,3 +1440,7 @@ Seventh item of the UI audit. On a phone the class screen had "0% mastered" in 1
 ## 2026-11-23 — The hero card's last row: library progress
 
 Eighth item of the UI audit. Under the hero card's tiles, Home and the Dashboard listed "9 Classes · 31 Lessons · 3003 Cards · 40 Attempts · 0 Sessions": two lines on a phone, numbers that barely move, and two of them bookkeeping (Sessions counted only finished quizzes). Options previewed: A, trim to classes, lessons and cards; B, one mastery bar over the whole library with "N of T cards mastered · M in progress"; C, drop the row. Chose B: it is the one number that says whether studying is getting anywhere. Archived classes are left out, as from every dashboard count. The gear's five count toggles became one, Cards mastered.
+
+## 2026-11-23 — Home header: one +, and Select beside Archived
+
+Ninth item of the UI audit. On a phone Home's header held an icon-only import arrow, which read as share or export, and "Select Classes" was a sidebar item among screens though it is a mode; the header's own Select was hidden at that width. Options previewed: A, label Import and move Select to the Your Classes toolbar; B, fold New class and Import file into one + menu and move Select the same way. Chose B, with the menu item reading "Import file" (no ellipsis) to match the app's other labels. The + creates a class directly when there is no import (local mode), rather than open a one-item menu.

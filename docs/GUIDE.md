@@ -1849,6 +1849,11 @@ Most study happens on an iPhone, and several decisions are about it:
   · studied 2d ago", and none when it is new, since its New pill says so. "Last seen" is
   gone: it changed when a card was only shown, which read as studied beside "Last studied:
   never".
+- **The sidebar lists screens; actions sit where they act.** Home's + opens New Class and
+  Import file: on a phone import had been an upward arrow that read as share or export,
+  and both are rare once classes arrive from KnowledgeApp. Select, a mode rather than a
+  place, left the sidebar for the Your Classes toolbar beside Archived, where it also
+  shows on a phone (the header had hidden it there).
 - **The hero card ends with progress, not inventory.** Under the Streak, Today and Study
   time tiles, Home and the Dashboard show one mastery bar over every card in unarchived
   classes, with "N of T cards mastered" and "M in progress" (Known and Learning). It
