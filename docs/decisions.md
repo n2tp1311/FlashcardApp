@@ -1444,3 +1444,7 @@ Eighth item of the UI audit. Under the hero card's tiles, Home and the Dashboard
 ## 2026-11-23 — Home header: one +, and Select beside Archived
 
 Ninth item of the UI audit. On a phone Home's header held an icon-only import arrow, which read as share or export, and "Select Classes" was a sidebar item among screens though it is a mode; the header's own Select was hidden at that width. Options previewed: A, label Import and move Select to the Your Classes toolbar; B, fold New class and Import file into one + menu and move Select the same way. Chose B, with the menu item reading "Import file" (no ellipsis) to match the app's other labels. The + creates a class directly when there is no import (local mode), rather than open a one-item menu.
+
+## 2026-11-23 — Study Setup: Presets only once there is one
+
+Tenth item of the UI audit. With no presets, Setup opened on a Presets section holding an empty row, a gear with nothing to manage and "+ Save current as preset", 106px before the first real choice. Options previewed: A, hide the section until a preset exists and move saving after Card Order; C, fold the empty section into one line with the save button beside the label. Chose A: saving follows the choices it saves, and Setup starts at Card Count. Presets, once saved, stay at the top. Also fixed features.md, which still described a × on each chip that had been removed.

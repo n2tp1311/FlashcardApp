@@ -538,6 +538,11 @@ until a pill changes what it set. Only its 78x20 name used to apply it, with a 2
 delete 4px away, so a slightly wide tap asked to delete it; deleting now lives only in
 Manage presets.
 
+Until a preset exists there is no Presets section: an empty row, a gear with nothing to
+manage and the save button had taken 106px above Card Count on a phone. "+ Save these
+settings as a preset" comes after Card Order, since it saves the choices above it; the
+chips stay on top, where applying one is a tap or a digit.
+
 **Shuffle** is weighted: a card's difficulty level, from its answer history, puts it in
 the pool three times (hard), twice (medium) or once, before de-duplication, which front-
 loads the hard ones. **Interleaved** groups cards by lesson, weighted-shuffles each
