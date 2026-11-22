@@ -5345,6 +5345,16 @@ button.leech-pill:hover { filter: brightness(0.96); }
      does not show; small text buttons stop at 40px so a row of them does not balloon. */
   .btn-icon, .icon-btn, .sort-dir-btn, .btn-audio, .modal-close { min-width: 44px; min-height: 44px; }
   .btn-sm { min-height: 40px; }
+  /* Bordered chips keep their compact look, since growing them would show: an invisible
+     ::after takes the tap out to 44x44 instead. A select draws its own box and takes no
+     pseudo-element, so it grows; so does the grid/list pair, whose 36px buttons touch, and
+     two 44px tap areas on them would overlap. */
+  .study-now-classes-btn, #btn-toggle-archived, .slicer-bar .pill { position: relative; }
+  .study-now-classes-btn::after, .study-now-gear::after, #btn-toggle-archived::after, .slicer-bar .pill::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
+  }
+  .sort-select { min-height: 44px; }
+  .view-toggle-btn { min-width: 44px; min-height: 44px; }
 }
 
 /* Grade row in thumb reach on phones: sticky to the viewport bottom, and margin-top:auto keeps
