@@ -1193,7 +1193,9 @@ skipped days is what makes it a rolling mean of the habit: after a week off the 
 drops and a normal day counts again, while a study-day average would hold the bar at
 the learner's best weeks. Today joins the run only after it passes its mean; until then
 the run shown ends yesterday, with the minutes still needed — the same convention as
-the day streak, so a run does not read as broken every morning.
+the day streak, so a run does not read as broken every morning. With no run the pill is
+left out, and "best" with it when there has never been one: a green "▲ 0 days above
+average" read as an achievement. Only the line with the minutes that start a run remains.
 
 ### Weekly recap
 
