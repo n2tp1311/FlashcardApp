@@ -5639,8 +5639,11 @@ button.leech-pill:hover { filter: brightness(0.96); }
 
 /* A phone has no room for six columns: the name takes a line, the numbers share the next. */
 @media (max-width: 760px) {
-  .dash-lhead { display: none; }
   .dash-lrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 10px 14px; }
+  /* No column headings: each number carries its own label. The head row is also a .dash-lrow,
+     so this must come after the rule above or the flex wins and the headings show. Sorting is
+     the default order on a phone. */
+  .dash-lrow.dash-lhead { display: none; }
   .dash-lrow:nth-child(2) { border-top: 0; }
   .dash-lname { flex: 1 1 100%; }
   .dash-lnum { text-align: left; font-size: 0.75rem; }
