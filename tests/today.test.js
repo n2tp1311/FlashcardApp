@@ -192,6 +192,13 @@ test("the streak tile carries the above-average run, and says what today still n
   const counted = ctx.heroAboveAvgHtml(Object.assign({}, run, { todayAbove: true, current: 4 }));
   assert.doesNotMatch(counted, /dash-run-sub/, "once today counts, the pill says it all");
   assert.match(ctx.heroAboveAvgHtml(Object.assign({}, run, { current: 0 })), /hero\.aboveAvgStart/);
+  // No run: no pill claiming "0 days above average", and no "best 0".
+  const none = ctx.heroAboveAvgHtml(Object.assign({}, run, { current: 0, best: 0 }));
+  assert.doesNotMatch(none, /dash-run-pill|dash-run-best|dash-run-row/);
+  assert.match(none, /hero\.aboveAvgStart/);
+  const brokenRun = ctx.heroAboveAvgHtml(Object.assign({}, run, { current: 0, best: 3 }));
+  assert.doesNotMatch(brokenRun, /dash-run-pill/);
+  assert.match(brokenRun, /dash-run-best/);
   assert.match(ctx.heroAboveAvgHtml(Object.assign({}, run, { current: 1 })), /hero\.aboveAvgRun1/);
   ctx.state.dashMetricConfig = { aboveAvg: "hidden" };
   assert.doesNotMatch(hero(ctx, { count: 3, week: week, activity: activity }, { studyTime: { aboveAvg: run } }), /dash-run/);

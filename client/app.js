@@ -12809,9 +12809,12 @@ function heroAboveAvgHtml(run) {
   // Once today counts, the run already includes it; a line saying so only repeats the pill.
   var sub = run.todayAbove ? ''
     : t(run.current > 0 ? "hero.aboveAvgKeep" : "hero.aboveAvgStart", { time: formatStudyDuration(need) });
+  // No run yet: a green "▲ 0 days above average" pill read as an achievement, and "best 0"
+  // says nothing. The line saying how to start one is enough.
+  var row = (run.current > 0 ? '<span class="dash-run-pill">▲ ' + escHtml(label) + '</span>' : '') +
+    (run.best > 0 ? '<span class="dash-run-best">' + escHtml(t("hero.aboveAvgBest", { n: run.best })) + '</span>' : '');
   return '<div class="dash-run" title="' + escHtml(t("hero.aboveAvgHint")) + '">' +
-    '<div class="dash-run-row"><span class="dash-run-pill">▲ ' + escHtml(label) + '</span>' +
-    '<span class="dash-run-best">' + escHtml(t("hero.aboveAvgBest", { n: run.best })) + '</span></div>' +
+    (row ? '<div class="dash-run-row">' + row + '</div>' : '') +
     (sub ? '<div class="dash-run-sub">' + escHtml(sub) + '</div>' : '') +
   '</div>';
 }
