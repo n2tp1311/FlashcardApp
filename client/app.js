@@ -478,9 +478,9 @@ Object.assign(TRANSLATIONS.en, {
   "ach.secondChance.desc": "Cards missed, then answered right later in the same session.",
   "ach.passageSolved.name": "Passage solved",
   "ach.passageSolved.desc": "Fill-the-gaps passages with every gap right.",
-  "nav.selectClasses": "Select Classes",
   "sidebar.yourClasses": "Your Classes",
   "sidebar.newClass": "New Class",
+  "home.add": "New",
   "sidebar.toggle": "Toggle sidebar",
   "common.pullToRefresh": "Pull to refresh",
   "common.select": "Select",
@@ -1775,9 +1775,9 @@ Object.assign(TRANSLATIONS.vi, {
   "ach.secondChance.desc": "Thẻ trả lời sai, rồi trả lời đúng ngay trong cùng phiên.",
   "ach.passageSolved.name": "Giải đoạn văn",
   "ach.passageSolved.desc": "Số đoạn văn điền từ đúng hết mọi chỗ trống.",
-  "nav.selectClasses": "Chọn lớp",
   "sidebar.yourClasses": "Lớp của bạn",
   "sidebar.newClass": "Lớp mới",
+  "home.add": "Mới",
   "sidebar.toggle": "Đóng/mở thanh bên",
   "common.pullToRefresh": "Kéo để làm mới",
   "common.select": "Chọn",
@@ -5084,7 +5084,13 @@ document.getElementById("btn-save-class").addEventListener("click", function() {
   });
 });
 
-document.getElementById("btn-new-class").addEventListener("click", openNewClass);
+document.getElementById("btn-new-class").addEventListener("click", function() { closeAllDropdowns(); openNewClass(); });
+// With Import file hidden (local mode) the menu would hold one item, so + creates a class.
+document.getElementById("btn-home-add").addEventListener("click", function(e) {
+  e.stopPropagation();
+  if (document.getElementById("btn-import-flashcards").classList.contains("hidden")) { openNewClass(); return; }
+  toggleLessonMenu(e.currentTarget);
+});
 document.getElementById("btn-class-back").addEventListener("click", function() { renderHome(); showScreen("home"); saveScreenState("home"); restoreScrollOnBack("home"); });
 document.getElementById("btn-edit-class").addEventListener("click", function() {
   if (state.currentClass) openEditClass(state.currentClass.id);
@@ -5165,6 +5171,7 @@ document.getElementById("btn-export-class").addEventListener("click", function()
 // (double-picking a file, or picking while a prior import is still in flight).
 var importInFlight = false;
 document.getElementById("btn-import-flashcards").addEventListener("click", function() {
+  closeAllDropdowns();
   if (importInFlight) return;
   document.getElementById("import-flashcards-input").click();
 });
@@ -16073,7 +16080,6 @@ function initUserNav() {
   document.getElementById("sidebar-achievements-link").classList.remove("hidden");
   document.getElementById("sidebar-upstream-link").classList.remove("hidden");
   document.getElementById("sidebar-vocabulary-link").classList.remove("hidden");
-  document.getElementById("sidebar-select-link").classList.remove("hidden");
   document.getElementById("sidebar-classes-label").classList.remove("hidden");
   document.getElementById("sidebar-btn-new-class").classList.remove("hidden");
   var linkBtn = document.getElementById("btn-link-google");
@@ -16156,10 +16162,6 @@ function closeSidebar() {
   document.getElementById("sidebar-vocabulary-link").addEventListener("click", function() {
     closeSidebar();
     openVocabularyScreen();
-  });
-  document.getElementById("sidebar-select-link").addEventListener("click", function() {
-    closeSidebar();
-    document.getElementById("btn-select-classes").click();
   });
   document.getElementById("sidebar-btn-new-class").addEventListener("click", function() {
     closeSidebar();
@@ -17928,7 +17930,7 @@ function injectKeyHints() {
     ["btn-fc-audio-front", "[P]"],
     ["btn-fc-audio-back",  "[P]"]
   ];
-  var iconOnlyBtns = { "btn-new-class": true, "btn-select-classes": true };
+  var iconOnlyBtns = { "btn-new-class": true };
   hints.forEach(function(pair) {
     var btn = document.getElementById(pair[0]);
     if (!btn) return;

@@ -115,10 +115,7 @@
       <span data-i18n="vocabulary.nav">Vocabulary</span>
       <span id="sidebar-vocabulary-badge" class="due-badge is-count hidden"></span>
     </li>
-    <li class="sidebar-nav-item hidden" tabindex="0" role="link" id="sidebar-select-link">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      <span data-i18n="nav.selectClasses">Chọn lớp</span>
-    </li>
+    
   </ul>
   <div class="sidebar-section-label hidden" id="sidebar-classes-label" data-i18n="sidebar.yourClasses">Lớp của bạn</div>
   <ul id="sidebar-class-list" class="sidebar-class-list"></ul>
@@ -146,16 +143,19 @@
       <span class="nav-search-placeholder" data-i18n="search.placeholder">Tìm thẻ ghi nhớ</span>
     </div>
     <div id="user-nav" class="user-nav hidden">
-      <button class="btn btn-ghost home-select-btn" id="btn-select-classes" data-i18n="common.select">Select</button>
-      <button class="btn btn-ghost home-import-btn" id="btn-import-flashcards" title="Import file" data-i18n-title="import.importFile">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span class="home-import-label" data-i18n="import.importFile">Import file</span>
-      </button>
+      <!-- New class and Import file behind one +: both are rare once classes come from
+           KnowledgeApp, and the icon-only import arrow read as share or export. -->
+      <div class="dropdown-wrap">
+        <button class="btn btn-primary home-new-class-btn" id="btn-home-add" aria-haspopup="menu" title="New" aria-label="New" data-i18n-title="home.add" data-i18n-aria="home.add">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span class="home-new-class-label" data-i18n="home.add">New</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right hidden" id="home-add-menu" role="menu">
+          <button class="dropdown-item" role="menuitem" id="btn-new-class"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span data-i18n="sidebar.newClass">New Class</span></button>
+          <button class="dropdown-item" role="menuitem" id="btn-import-flashcards"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span class="home-import-label" data-i18n="import.importFile">Import file</span></button>
+        </div>
+      </div>
       <input type="file" id="import-flashcards-input" accept="application/json,.json" style="display:none">
-      <button class="btn btn-primary home-new-class-btn" id="btn-new-class">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span class="home-new-class-label" data-i18n="sidebar.newClass">Lớp mới</span>
-      </button>
       <div class="dropdown-wrap">
         <button class="user-avatar-btn" id="btn-user-menu" title="Account" data-i18n-title="user.account">
           <img id="user-avatar-img" class="user-avatar hidden" src="" alt="">
@@ -202,6 +202,7 @@
   <div id="home-filter-bar" class="home-filter-bar">
     <div id="home-slicer-bar" class="slicer-bar"></div>
     <div class="home-right-controls">
+      <button id="btn-select-classes" class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> <span data-i18n="common.select">Select</span></button>
       <button id="btn-toggle-archived" class="pill" title="Show archived classes" data-i18n-title="archive.showArchived" data-i18n="archive.archived"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Archived</button>
       <div id="home-view-toggle" class="view-toggle">
         <button class="view-toggle-btn" data-view="grid" title="Grid view" data-i18n-title="view.grid" data-i18n-aria="view.grid">

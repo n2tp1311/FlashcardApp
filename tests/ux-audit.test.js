@@ -221,7 +221,7 @@ test("the sidebar sits outside every screen and its items take keyboard focus", 
   const home = html.indexOf('<div id="screen-home"');
   assert.ok(nav > 0 && nav < home, "sidebar must precede #screen-home, not live inside it");
   const items = html.match(/<li class="sidebar-nav-item[^>]*>/g);
-  assert.equal(items.length, 6);
+  assert.equal(items.length, 5, "screens only: Select is a mode, on the Your Classes toolbar");
   items.forEach(function(li) { assert.match(li, /tabindex="0" role="link"/); });
   const render = fn("renderSidebarClasses");
   assert.match(render, /li\.tabIndex = 0/);

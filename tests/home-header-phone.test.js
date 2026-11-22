@@ -81,7 +81,7 @@ test("on a phone the bar spans the screen, hides scrolling down and returns scro
 test("the bar stays while it holds focus or its menu is open", async function() {
   const page = await home(390, 844, { hasTouch: true, isMobile: true });
   await scrollTo(page, 400);
-  await page.evaluate(() => document.getElementById("btn-new-class").focus());
+  await page.evaluate(() => document.getElementById("btn-home-add").focus());
   await scrollTo(page, 1200);
   assert.equal((await bar(page)).away, false);
 

@@ -921,19 +921,6 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 .home-header .nav-search-bar { flex: 1; }
 .home-header #user-nav { display: flex; align-items: center; gap: 8px; }
 
-.home-select-btn {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-.home-import-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  flex-shrink: 0;
-}
 .home-new-class-btn {
   display: flex;
   align-items: center;
@@ -949,7 +936,7 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 /* Collapse to icon-only, same breakpoint as New Class, so a 3rd header button doesn't
    crowd the search bar out on narrow viewports. */
 @media (max-width: 500px) {
-  .home-new-class-label, .home-import-label { display: none; }
+  .home-new-class-label { display: none; }
 }
 
 /* "Lớp của bạn" section heading above the class grid */
@@ -1189,7 +1176,7 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 /* A press sinks the card onto its ledge, like the buttons: the ledge is what makes it read as
    something to push. */
 :root .class-card:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ledge); transition-duration: 0.06s; }
-:root :is(.nav-search-bar, .sort-select, .sort-dir-btn, .view-toggle, #btn-toggle-archived, #btn-tag-filter-toggle) { border-width: 2px; box-shadow: 0 3px 0 var(--ledge); }
+:root :is(.nav-search-bar, .sort-select, .sort-dir-btn, .view-toggle, #btn-toggle-archived, #btn-select-classes, #btn-tag-filter-toggle) { border-width: 2px; box-shadow: 0 3px 0 var(--ledge); }
 :root .dash-studytime-card .dash-tile { box-shadow: none; }
 :root[data-theme="dark"] :is(.btn-primary, .btn-outline) { border-width: 2px; box-shadow: 0 3px 0 var(--ledge); }
 :root[data-theme="dark"] :is(.btn-primary, .btn-outline):active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--ledge); }
@@ -4092,8 +4079,6 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .class-grid { grid-template-columns: 1fr 1fr; }
   /* Compact user-nav so it doesn't fight for flex space with the title */
   .user-nav { flex: 0 0 auto; }
-  /* Hide ☑ Select from header — available in ⋮ menu instead */
-  #btn-select-classes { display: none; }
 
   /* M12: keep the screen title readable — reserve space so the header-actions wrap to
      a second row instead of squeezing the class/lesson name down to "…". */
@@ -4994,7 +4979,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
   white-space: nowrap;
 }
 
-#btn-toggle-archived {
+#btn-toggle-archived, #btn-select-classes {
   min-height: 34px;
   padding: 5px 12px;
   font-size: 0.8125rem;
@@ -5345,8 +5330,8 @@ button.leech-pill:hover { filter: brightness(0.96); }
      ::after takes the tap out to 44x44 instead. A select draws its own box and takes no
      pseudo-element, so it grows; so does the grid/list pair, whose 36px buttons touch, and
      two 44px tap areas on them would overlap. */
-  .study-now-classes-btn, #btn-toggle-archived, .slicer-bar .pill { position: relative; }
-  .study-now-classes-btn::after, .study-now-gear::after, #btn-toggle-archived::after, .slicer-bar .pill::after {
+  .study-now-classes-btn, #btn-toggle-archived, #btn-select-classes, .slicer-bar .pill { position: relative; }
+  .study-now-classes-btn::after, .study-now-gear::after, #btn-toggle-archived::after, #btn-select-classes::after, .slicer-bar .pill::after {
     content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
   }
   .sort-select { min-height: 44px; }
