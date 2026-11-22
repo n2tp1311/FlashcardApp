@@ -1880,6 +1880,10 @@ Most study happens on an iPhone, and several decisions are about it:
   default order: most due, then struggling, then weakest. The rule hiding them once lost to
   the row's own `display: flex` on the next line; `tests/dash-lesson-head.test.js` now checks
   every media block for a class hidden and then re-displayed on the same element.
+- **The Dashboard has no CSV export.** Its header was Back, the title and Export CSV (90
+  days of answers as `study-export.csv`), the first control on the screen for a file nothing
+  read. It was removed with its route, `GET /api/stats/analytics/export`; flashcards still
+  export as JSON per class or lesson.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

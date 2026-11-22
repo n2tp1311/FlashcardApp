@@ -1460,3 +1460,7 @@ Eleventh item of the UI audit. On the Dashboard's Overview the Due now tile list
 ## 2026-11-23 — Lesson table headings: hidden on a phone, no sort there
 
 Twelfth item of the UI audit. The headings LESSON ACCURACY ANSWERS MASTERED DUE showed over the Dashboard's stacked lesson rows on a phone, though the CSS meant to hide them: the next rule in the same media block gave the head row display:flex. Fixing that removes the Lessons tab's sort buttons on a phone, so the options were about sorting: A, none (the default order); B, a Sort select like Home's; C, a row of sort chips. The user picked A: on a phone the default order, most due then struggling then weakest, is what the list is for.
+
+## 2026-11-23 — Removed: the Dashboard's CSV export
+
+Thirteenth item of the UI audit. Export CSV was the first control on the Dashboard, above the tabs, for a download of 90 days of answers that the user does not use. Asked how to demote it, the user chose to remove it: the button, its strings and `GET /api/stats/analytics/export`. Older entries here about its columns and its `window.location.href` download describe a feature that no longer exists. Flashcard export (JSON, through `downloadFromApi()`) is unaffected.

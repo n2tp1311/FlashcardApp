@@ -349,7 +349,7 @@ Not a separate screen — it renders inside `#screen-dashboard` (`renderDashboar
 | Future Due forecast | Cards becoming due per day, next 14 days — fixed window, independent of the period pills |
 | Study time | Total minutes in the selected period, from `attempts.duration_ms` |
 | Per-lesson/class retention | 8-week Accuracy Trend on the Stats screen's Overview tab |
-| Export | Download last 90 days of attempt data as CSV (date, hour, class, lesson, card_front, mode, result, duration_sec) |
+| Export | ~~Download last 90 days of attempt data as CSV~~ (removed 2026-11-23) |
 
 Data from the existing `attempts` table plus one new column, `duration_ms` (nullable INTEGER, client-timed, server-clamped to 5 minutes) — no other schema changes.
 
