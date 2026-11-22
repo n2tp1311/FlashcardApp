@@ -220,7 +220,7 @@
 - Unified keydown handler covers all screens — no mouse required
 - Home: `↑`/`↓` navigate class cards; `Enter` open class / toggle selection; `X` toggle select mode; `Space` toggle selection; `A` select all; `S` study selected; `Esc` exit select mode; `N` new class
 - Superseded: the header's old inline-button/⋮-dropdown responsive nav (Dashboard/Analytics/Select Classes) was replaced by the sidebar nav (see Home Screen section) — its markup is kept in the DOM but permanently hidden ("Keep for compatibility"), not an active mechanism. The orphaned duplicate "Analytics" label/buttons this left behind (rendered the identical Dashboard screen) were removed; Dashboard is reachable via the sidebar link or the `A` key
-- Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` study selected (select mode); `D` delete selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
+- Class: `↑`/`↓` navigate lesson items; `Enter` open focused lesson; `X` toggle select mode; `Space` toggle selection (select mode); `A` select all (select mode); `S` Study class, or study selected (select mode); `D` delete selected (select mode); `Esc` exit select mode; `N` new lesson, `E` edit, `⌫` back
 - Lesson: `N` new card, `B` bulk paste, `S` start study, `⌫` back; card select mode: `D` delete selected
 - Study Setup: `1`–`9` select a preset in its displayed order (a small numbered badge on each preset chip mirrors the key), `Enter` start studying, `Esc`/`⌫` back — completes the keyboard-only path (press `S` on a lesson to open setup, pick a preset by number, then `Enter` to begin, no mouse needed)
 - Flashcard: `←`/`→` prev/next, `Space` flip, `1`/`2`/`3`/`4` mark learning/hard/known/confident, `S` shuffle, `P` pronounce, `Ctrl/⌘+Z` undo the last grade while its pill is up (not from a field with text in it, where it is the field's own undo), `Esc` exit to lesson screen
@@ -513,4 +513,7 @@
 
 ## Row actions behind ⋯ (2026-11-23)
 - Class cards, class list rows and a lesson's cards show Edit and a ⋯ menu with Pin to top, Archive, ⚑ Flag (KnowledgeApp term-def cards) and Delete, in red at the end; the icons were always visible on a phone, Delete included. On a desktop the actions still appear on hover and stay while the menu is open. `tests/row-menu.test.js`
+
+## One action per header; Study class (2026-11-23)
+- The class screen leads with a filled **Study class** (`S`): Study Setup on every lesson of the class, with Interleaved offered as when several lessons are selected, returning to the class. Hidden in an empty class. "+ Lesson" is in the class's ⋮ menu. The lesson screen's Study is filled and comes first, before Quiz · N. On a phone a long class name wraps to two lines, as a lesson's does. `tests/class-header.test.js`
 

@@ -1428,3 +1428,7 @@ Fourth item of the UI audit, light-mode contrast. Measured again with colours re
 
 Fifth item of the UI audit: on a phone every class card showed archive, edit and delete, and every card in a lesson edit and delete, always visible, so a trash can sat wherever a scrolling thumb lands. Previewed: everything behind one ⋯ (as lesson rows have been since 2026-11-06), or Edit kept visible and the rest behind ⋯. The user picked keeping Edit, the action used most, for fixing a card's wording. It costs a second icon on each row; archive, pin, flag and delete are a tap further away. The guide's flagging section still said ⚑ sits beside Edit on the study screens, where it moved into the ⋯ menu earlier; fixed with this.
 
+## 2026-11-23 — Class and lesson headers: Study class, and Study filled
+
+Sixth item of the UI audit: the class screen's loudest button was "+ Lesson", it had nothing to study, and its name was cut to "Elements of Statistical Learni…"; on the lesson screen Study was tonal, level with Quiz · N, after a leading ⋮. Previewed: fix the emphasis only (Study filled, "+ Lesson" outlined, ⋮ last, the name on two lines), or that plus a filled Study class with "+ Lesson" in ⋮. The user picked adding Study class. It is new behaviour, built on the multi-lesson Study Setup that selecting lessons already used; the cost is a tap more to add a lesson by hand.
+

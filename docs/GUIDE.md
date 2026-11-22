@@ -1835,6 +1835,12 @@ Most study happens on an iPhone, and several decisions are about it:
   `classActionsHtml`). On a phone those icons are always visible, so Delete had sat on every
   card where a scrolling thumb lands. An open menu lifts its row above the next one, since a
   hovered card's transform makes it a stacking context that the next card painted over.
+- **Each list screen has one filled action.** The class screen's is Study class, every
+  lesson in Study Setup (`openSetup` with the class's lessons, as for a selection); the
+  lesson screen's is Study, placed before Quiz · N. "+ Lesson" moved into the class's ⋮:
+  it was the most prominent button on a screen whose lessons mostly arrive from
+  KnowledgeApp, and there was no way to study the class short of selecting every lesson.
+  Under 480px a class name wraps to two lines like a lesson title; it had ended "Learni…".
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The
