@@ -129,7 +129,8 @@ test("local mode turns pinned into pinned_at the same way the server does", asyn
 });
 
 test("the pin control is on both Home layouts and in the class menu", function() {
-  assert.equal(app.split("classPinButtonHtml(cls) +").length - 1, 2);
+  assert.equal(app.split("classActionsHtml(cls) + '</div>'").length - 1, 2);
+  assert.match(app, /rowMenuItemHtml\('data-cls-pin="' \+ cls\.id/);
   assert.equal(app.split("classPinHtml(cls) + escHtml(cls.name)").length - 1, 2);
   assert.match(fs.readFileSync(path.join(root, "client", "index.html"), "utf8"), /id="btn-pin-class"/);
   for (const k of ["common.pin", "common.unpin", "class.pinned", "class.pinClass", "class.unpinClass", "toast.pinned", "toast.unpinned"]) {

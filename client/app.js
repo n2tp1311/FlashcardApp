@@ -4536,8 +4536,39 @@ function classPinHtml(cls) {
   return '<span class="class-pin" title="' + tip + '" aria-label="' + tip + '" role="img">' + svgIcon(ICON_PIN_INNER, 13) + '</span>';
 }
 
-function classPinButtonHtml(cls) {
-  return '<button class="icon-btn class-pin-btn" title="' + (cls.pinned_at ? t("common.unpin") : t("common.pin")) + '" data-cls-pin="' + cls.id + '">' + (cls.pinned_at ? ICON_UNPIN : ICON_PIN) + '</button>';
+// A row's rarer actions behind one ⋯, with Edit left beside it. Always visible on a phone,
+// a row of archive, edit and delete put the trash can under the thumb on every card.
+function rowMenuHtml(items) {
+  var more = escHtml(t("common.moreOptions"));
+  return '<div class="dropdown-wrap row-menu">' +
+    '<button class="icon-btn" title="' + more + '" aria-label="' + more + '" aria-haspopup="menu" data-row-menu>' + ICON_MORE + '</button>' +
+    '<div class="dropdown-menu hidden" role="menu">' + items + '</div></div>';
+}
+
+function rowMenuItemHtml(attrs, icon, label, danger) {
+  return '<button class="dropdown-item' + (danger ? ' danger' : '') + '" role="menuitem" ' + attrs + '>' + icon +
+    '<span class="menu-text">' + escHtml(label) + '</span></button>';
+}
+
+function wireRowMenu(el) {
+  var btn = el.querySelector("[data-row-menu]");
+  if (!btn) return;
+  btn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    toggleLessonMenu(btn);
+  });
+  el.querySelectorAll(".row-menu .dropdown-item").forEach(function(item) {
+    item.addEventListener("click", closeAllDropdowns);
+  });
+}
+
+function classActionsHtml(cls) {
+  var edit = escHtml(t("common.edit"));
+  return '<button class="icon-btn" title="' + edit + '" aria-label="' + edit + '" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
+    rowMenuHtml(
+      rowMenuItemHtml('data-cls-pin="' + cls.id + '"', cls.pinned_at ? ICON_UNPIN : ICON_PIN, t(cls.pinned_at ? "common.unpin" : "common.pin")) +
+      rowMenuItemHtml('data-cls-archive="' + cls.id + '"', cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE, t(cls.archived ? "common.unarchive" : "common.archive")) +
+      rowMenuItemHtml('data-cls-del="' + cls.id + '"', ICON_DELETE, t("common.delete"), true));
 }
 
 // "Level" is the default class-sort criterion but was never shown anywhere on the card
@@ -4567,15 +4598,11 @@ function _renderClassGridCard(cls, container) {
       '<div class="progress-mini"><div class="progress-mini-fill" id="cls-prog-fill-' + cls.id + '" style="transform:scaleX(0);background:' + cls.color + '"></div></div>' +
       '<span class="progress-mini-text" id="cls-prog-text-' + cls.id + '"></span>' +
     '</div>' +
-    '<div class="class-card-actions">' +
-      classPinButtonHtml(cls) +
-      '<button class="icon-btn" title="' + (cls.archived ? t("common.unarchive") : t("common.archive")) + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
-      '<button class="icon-btn" title="' + t("common.edit") + '" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
-      '<button class="icon-btn danger" title="' + t("common.delete") + '" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
-    '</div>';
+    '<div class="class-card-actions">' + classActionsHtml(cls) + '</div>';
+  wireRowMenu(card);
   onLongPress(card, function() { longPressSelectClass(cls.id); });
   card.addEventListener("click", function(e) {
-    if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive],[data-cls-pin]")) return;
+    if (e.target.closest("[data-cls-edit],.row-menu")) return;
     if (!state.homeSelectMode && classMedalTip(e)) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
     openClass(cls.id);
@@ -4631,16 +4658,12 @@ function _renderClassListRow(cls, container) {
       '<span class="class-acc-pill hidden" id="cls-acc-' + cls.id + '"></span>' +
       '<span class="class-done-medal hidden" id="cls-done-' + cls.id + '" role="img"></span>' +
       (state.homeSelectMode ? '' :
-        '<div class="class-list-actions">' +
-          classPinButtonHtml(cls) +
-          '<button class="icon-btn" title="' + (cls.archived ? t("common.unarchive") : t("common.archive")) + '" data-cls-archive="' + cls.id + '">' + (cls.archived ? ICON_UNARCHIVE : ICON_ARCHIVE) + '</button>' +
-          '<button class="icon-btn" title="' + t("common.edit") + '" data-cls-edit="' + cls.id + '">' + ICON_EDIT + '</button>' +
-          '<button class="icon-btn danger" title="' + t("common.delete") + '" data-cls-del="' + cls.id + '">' + ICON_DELETE + '</button>' +
-        '</div>') +
+        '<div class="class-list-actions">' + classActionsHtml(cls) + '</div>') +
     '</div>';
+  wireRowMenu(row);
   onLongPress(row, function() { longPressSelectClass(cls.id); });
   row.addEventListener("click", function(e) {
-    if (e.target.closest("[data-cls-edit],[data-cls-del],[data-cls-archive],[data-cls-pin]")) return;
+    if (e.target.closest("[data-cls-edit],.row-menu")) return;
     if (!state.homeSelectMode && classMedalTip(e)) return;
     if (state.homeSelectMode) { toggleClassSelection(cls.id); return; }
     openClass(cls.id);
@@ -7129,9 +7152,10 @@ function renderCards() {
         diffPill +
         (state.cardSelectMode ? '' :
           '<div class="card-actions">' +
-            '<button class="icon-btn" title="' + t("common.edit") + '" data-card-edit="' + card.id + '">' + ICON_EDIT + '</button>' +
-            flagButtonHtml(card) +
-            '<button class="icon-btn danger" title="' + t("common.delete") + '" data-card-del="' + card.id + '">' + ICON_DELETE + '</button>' +
+            '<button class="icon-btn" title="' + escHtml(t("common.edit")) + '" aria-label="' + escHtml(t("common.edit")) + '" data-card-edit="' + card.id + '">' + ICON_EDIT + '</button>' +
+            rowMenuHtml(
+              flagButtonHtml(card) +
+              rowMenuItemHtml('data-card-del="' + card.id + '"', ICON_DELETE, t("common.delete"), true)) +
           '</div>');
 
       var contentEl = item.querySelector(".card-content");
@@ -7176,6 +7200,7 @@ function renderCards() {
         var cb = item.querySelector(".lesson-check");
         if (cb) cb.addEventListener("change", function() { toggleCardSelection(card.id); });
       } else {
+        wireRowMenu(item);
         item.querySelector("[data-card-edit]").addEventListener("click", function() {
           openEditCard(card.id);
         });
@@ -7525,8 +7550,8 @@ var FLAG_ISSUES = ["wrong", "front", "back", "typo", "other"];
 function flagButtonHtml(card) {
   if (!canRewriteInKnowledge(card)) return "";
   var label = escHtml(t(card.rewrite_pending ? "flag.pending" : "flag.button"));
-  return '<button class="icon-btn' + (card.rewrite_pending ? " is-flagged" : "") + '" title="' + label +
-    '" aria-label="' + label + '" data-card-flag="' + escHtml(card.id) + '">' + ICON_FLAG + '</button>';
+  return '<button class="dropdown-item' + (card.rewrite_pending ? " is-flagged" : "") + '" role="menuitem" data-card-flag="' +
+    escHtml(card.id) + '">' + ICON_FLAG + '<span class="menu-text">' + label + '</span></button>';
 }
 
 function syncFlagButton(btn, card) {

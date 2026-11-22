@@ -283,8 +283,8 @@ test("the flag button shows only on KnowledgeApp cards, fills in once sent, and 
   vm.runInContext(extract("canRewriteInKnowledge") + extract("flagButtonHtml"), ctx);
   assert.equal(ctx.flagButtonHtml({ id: "a", format: "term-def" }), "", "not linked");
   assert.equal(ctx.flagButtonHtml({ id: "a", format: "mcq", external_id: "s:1" }), "");
-  assert.match(ctx.flagButtonHtml({ id: "a", format: "term-def", external_id: "s:1" }), /class="icon-btn" title="flag\.button"[^>]*data-card-flag="a"/);
-  assert.match(ctx.flagButtonHtml({ id: "a", format: "term-def", external_id: "s:1", rewrite_pending: true }), /is-flagged" title="flag\.pending"/);
+  assert.match(ctx.flagButtonHtml({ id: "a", format: "term-def", external_id: "s:1" }), /class="dropdown-item" role="menuitem" data-card-flag="a">[\s\S]*flag\.button/);
+  assert.match(ctx.flagButtonHtml({ id: "a", format: "term-def", external_id: "s:1", rewrite_pending: true }), /is-flagged" role="menuitem"[\s\S]*flag\.pending/);
   assert.ok(!ctx.flagButtonHtml({ id: '"><img>', format: "term-def", external_id: "s:1" }).includes('"><img>'));
   assert.match(extract("renderFlashcard"), /syncFlagButton\(document\.getElementById\("btn-fc-flag-card"\), card\)/);
   assert.match(appJs, /"btn-fc-edit-card", "btn-fc-flag-card"/, "locked during the retype drill like Edit");

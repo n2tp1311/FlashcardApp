@@ -1470,7 +1470,13 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 .lesson-chapter-stats { font-size: 0.75rem; color: var(--text2); flex: none; font-variant-numeric: tabular-nums; }
 
 .lesson-menu { flex: none; }
-.lesson-menu .dropdown-item svg { width: 16px; height: 16px; }
+.lesson-menu .dropdown-item svg, .row-menu .dropdown-item svg { width: 16px; height: 16px; }
+/* Edit and a ⋯ on class cards, list rows and a lesson's cards. While the menu is open its row
+   stays on top of the next one (a hovered card's transform makes it a stacking context), keeps
+   its hover-only actions showing, and stops clipping. */
+.class-card-actions, .class-list-actions, .card-actions { align-items: center; }
+:is(.class-card, .class-list-row, .card-item, .lesson-item):has(.dropdown-menu:not(.hidden)) { position: relative; z-index: 5; overflow: visible; }
+:is(.class-card-actions, .class-list-actions):has(.dropdown-menu:not(.hidden)) { opacity: 1; }
 .dropdown-menu.dropdown-up { top: auto; bottom: calc(100% + 6px); }
 
 .class-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
@@ -4098,9 +4104,6 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .class-card .class-done-medal svg { width: 11px; height: 11px; }
   .class-card .class-done-medal.is-goal { background: var(--surface); }
   .class-card.has-medal .class-card-actions { right: 10px; }
-  /* A fourth always-visible button would push the row into the icon; pinning is in the
-     class's menu on a phone. */
-  .class-pin-btn { display: none; }
   .class-card-actions, .lesson-actions, .card-actions { gap: 10px; }
 
   /* M15: lesson titles were mid-word ellipsizing even for realistic-length titles —
