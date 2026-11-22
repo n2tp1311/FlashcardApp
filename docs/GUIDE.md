@@ -1870,6 +1870,10 @@ Most study happens on an iPhone, and several decisions are about it:
   lines on a phone, barely moved, and counted the app's own bookkeeping: Sessions only
   finished quizzes. The counts come from `masteryCounts()` as `summary.mastery`; local mode
   has no memory states, so it shows no row.
+- **The Dashboard's Due now tile lists no lessons.** It is the count and one "Review all N
+  due" button, which runs Study now with every due card and no new ones. It used to list the
+  four lessons with most due, and Needs attention just below listed the same lessons again;
+  a lesson's own due review is still its badge in that list.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

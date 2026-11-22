@@ -1452,3 +1452,7 @@ Tenth item of the UI audit. With no presets, Setup opened on a Presets section h
 ## 2026-11-23 — Achievements: singular units and the best class
 
 Found while auditing the Achievements page: locked badges read "0 / 1 months", "0 / 1 times", "0 / 1 lessons", and Class mastered "0% of 100%". Fixed without a preview, as a defect: English gained a singular for each unit, and Class mastered names the best class's share, since its target is always 100%. The test now checks that every unit but "typed" and "min", which read the same for one, has a singular.
+
+## 2026-11-23 — Due now: the count and one button
+
+Eleventh item of the UI audit. On the Dashboard's Overview the Due now tile listed the four lessons with most due, and Needs attention just below listed the same lessons again, with a table header that means nothing on a phone. Options previewed: A, keep the tile's list and narrow Needs attention to struggling lessons; B, the tile keeps only the count and a "Review all N due" button; C, drop Needs attention from Overview. The user picked B: one list of lessons, and one tap to review everything due. The button is Study now with no new cards, so the session is the one Home already runs; reviewing a single lesson is its due badge in Needs attention.
