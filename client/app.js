@@ -587,9 +587,10 @@ Object.assign(TRANSLATIONS.en, {
   "stat.classes": "Classes",
   "stat.lessons": "Lessons",
   "stat.cards": "Cards",
-  "stat.sessions": "Sessions",
-  "stat.sessionsHint": "Completed Quiz sessions only — Flashcard study is tracked under Attempts.",
-  "stat.attempts": "Attempts",
+  "stat.libraryProgress": "Cards mastered",
+  "stat.libraryMastered": "of {total} cards mastered",
+  "stat.libraryInProgress": "in progress",
+  "stat.libraryTooltip": "Mastered {mastered} · Known {known} · Learning {learning} · New {fresh}. Mastered: the next review is 21 or more days away.",
   "stat.avgDailyLabel": "Avg/day",
   "stat.minDailyLabel": "Min",
   "stat.maxDailyLabel": "Max",
@@ -1879,9 +1880,10 @@ Object.assign(TRANSLATIONS.vi, {
   "stat.classes": "Lớp học",
   "stat.lessons": "Bài học",
   "stat.cards": "Thẻ ghi nhớ",
-  "stat.sessions": "Phiên học",
-  "stat.sessionsHint": "Chỉ tính các phiên Trắc nghiệm đã hoàn thành — học Thẻ ghi nhớ được tính trong Lượt làm.",
-  "stat.attempts": "Lượt làm",
+  "stat.libraryProgress": "Thẻ thành thạo",
+  "stat.libraryMastered": "/ {total} thẻ thành thạo",
+  "stat.libraryInProgress": "đang học",
+  "stat.libraryTooltip": "Thành thạo {mastered} · Đã nhớ {known} · Đang học {learning} · Mới {fresh}. Thành thạo: lần ôn tới cách 21 ngày trở lên.",
   "stat.avgDailyLabel": "TB/ngày",
   "stat.minDailyLabel": "Thấp nhất",
   "stat.maxDailyLabel": "Cao nhất",
@@ -3623,17 +3625,13 @@ var DASH_METRICS = [
   { key: "avgDaily",        labelKey: "stat.avgDailyLabel" },
   { key: "minDaily",        labelKey: "stat.minDailyLabel" },
   { key: "maxDaily",        labelKey: "stat.maxDailyLabel" },
-  { key: "classes",         labelKey: "stat.classes" },
-  { key: "lessons",         labelKey: "stat.lessons" },
-  { key: "cards",           labelKey: "stat.cards" },
-  { key: "sessions",        labelKey: "stat.sessions" },
-  { key: "attempts",        labelKey: "stat.attempts" }
+  { key: "library",         labelKey: "stat.libraryProgress" }
 ];
 
 var DEFAULT_DASH_METRIC_CONFIG = {
   streak: "show", aboveAvg: "show", studyTime: "show",
   avgDaily: "show", minDaily: "show", maxDaily: "show",
-  classes: "show", lessons: "show", cards: "show", sessions: "show", attempts: "show"
+  library: "show"
 };
 
 /* ============================
@@ -12735,7 +12733,6 @@ function _streakResetCountdownText() {
 
 
 function _dashMetricHint(key, studyTime, newCardEstimate) {
-  if (key === "sessions") return t("stat.sessionsHint");
   if (key === "studyTime" || key === "avgDaily" || key === "minDaily" || key === "maxDaily") {
     var st = studyTime || { trackedDays: 0, windowDays: null };
     var base = t("stat.studyTimeTrackedHint", { n: st.trackedDays });
@@ -12775,12 +12772,7 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today, 
     if (timeTile) tiles.push(timeTile);
   }
 
-  var library = ["classes", "lessons", "cards", "attempts", "sessions"].filter(on).map(function(key) {
-    var m = DASH_METRICS.filter(function(x) { return x.key === key; })[0];
-    var n = key === "sessions" ? summary.quizSessions : summary[key];
-    return '<span' + (key === "sessions" ? ' title="' + escHtml(t("stat.sessionsHint")) + '"' : '') + '><b>' + escHtml(String(n)) + '</b> ' + escHtml(t(m.labelKey)) + '</span>';
-  });
-  var libraryHtml = library.length ? '<div class="dash-hero-library">' + library.join('') + '</div>' : '';
+  var libraryHtml = on("library") ? libraryProgressHtml(summary) : '';
 
   if (!tiles.length && !libraryHtml) {
     return '<div class="dash-hero-card dash-hero-empty">' + gearBtn +
@@ -12792,6 +12784,28 @@ function streakTimeHeroCard(streak, studyTime, summary, newCardEstimate, today, 
   return '<div class="dash-hero-card">' + (tiles.length ? '' : gearBtn) +
     (tiles.length ? '<div class="dash-hero-tiles">' + tiles.join('') + '</div>' : '') +
     libraryHtml +
+  '</div>';
+}
+
+// The whole library's progress, in place of "9 Classes · 31 Lessons · 3003 Cards · 40 Attempts
+// · 0 Sessions": those counts barely move and two were the app's own bookkeeping, while this
+// is the one number that says whether studying is getting anywhere. Server mode only; local
+// mode has no memory states to count.
+function libraryProgressHtml(summary) {
+  var m = summary && summary.mastery;
+  var total = m ? m.new + m.learning + m.known + m.mastered : 0;
+  if (!total) return '';
+  var tip = t("stat.libraryTooltip", { mastered: m.mastered, known: m.known, learning: m.learning, fresh: m.new });
+  return '<div class="dash-hero-library" title="' + escHtml(tip) + '">' +
+    '<div class="mastery-bar" role="img" aria-label="' + escHtml(tip) + '">' +
+      MASTERY_ORDER.map(function(k) {
+        return m[k] ? '<i class="mastery-' + k + '" style="width:' + (m[k] / total * 100).toFixed(2) + '%"></i>' : '';
+      }).join('') +
+    '</div>' +
+    '<div class="dash-hero-library-text">' +
+      '<span><b>' + m.mastered + '</b> ' + escHtml(t("stat.libraryMastered", { total: total })) + '</span>' +
+      '<span><b>' + (m.known + m.learning) + '</b> ' + escHtml(t("stat.libraryInProgress")) + '</span>' +
+    '</div>' +
   '</div>';
 }
 

@@ -150,6 +150,23 @@ test("a new account's dashboard counts zero answers, not null", async () => {
   assert.equal((await r.json()).summary.attempts, 0);
 });
 
+test("the dashboard summary counts the library's memory states, leaving archived classes out", async () => {
+  const now = Math.floor(Date.now() / 1000);
+  db.exec(`
+    INSERT INTO users (id, email, name) VALUES ('u8', 'm@x', 'M');
+    INSERT INTO classes (id, user_id, name) VALUES ('k8', 'u8', 'Live');
+    INSERT INTO classes (id, user_id, name, archived) VALUES ('k8a', 'u8', 'Shelved', 1);
+    INSERT INTO lessons (id, class_id, title, format) VALUES ('l8', 'k8', 'A', 'term-def'), ('l8a', 'k8a', 'B', 'term-def');
+    INSERT INTO cards (id, lesson_id, format, data) VALUES
+      ('m1', 'l8', 'term-def', '{}'), ('m2', 'l8', 'term-def', '{}'), ('m3', 'l8', 'term-def', '{}'), ('m4', 'l8a', 'term-def', '{}');
+    INSERT INTO card_states (card_id, user_id, srs_due_at, fsrs_stability, fsrs_state, fsrs_last_review_at) VALUES
+      ('m1', 'u8', ${now + 30 * 86400}, 40, 2, ${now}), ('m2', 'u8', ${now + 600}, 1, 1, ${now}),
+      ('m4', 'u8', ${now + 30 * 86400}, 40, 2, ${now});
+  `);
+  const r = await fetch(base + "/api/stats/dashboard", { headers: { "x-user": "u8" } });
+  assert.deepEqual((await r.json()).summary.mastery, { new: 1, learning: 1, known: 0, mastered: 1 });
+});
+
 // The Today tile's button, built by app.js's own functions under the real stylesheet.
 const app = fs.readFileSync(path.join(root, "client", "app.js"), "utf8");
 function fn(name) {

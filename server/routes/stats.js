@@ -423,7 +423,11 @@ router.get("/dashboard", requireAuth, (req, res) => {
       cards:        totalCards,
       quizSessions: totalSessions,
       // SUM over no rows is NULL, which Home printed as "null Attempts" on a new account.
-      attempts:     attRow.total || 0
+      attempts:     attRow.total || 0,
+      // The whole library's memory states, for the hero card's progress bar.
+      mastery:      masteryCounts(
+        "c.lesson_id IN (SELECT l.id FROM lessons l JOIN classes k ON l.class_id = k.id WHERE k.user_id = ? AND k.archived = 0)",
+        uid, uid)
     },
     accuracy:          { correct: attRow.correct_count || 0, total: attRow.total || 0 },
     dueForReview,

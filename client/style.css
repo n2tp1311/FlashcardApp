@@ -3430,11 +3430,12 @@ code {
 .dash-trio div { display: grid; gap: 1px; }
 .dash-trio b { font-size: 1rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
 .dash-trio span { font-size: 0.6875rem; color: var(--text2); }
-.dash-hero-library {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 12px;
-  font-size: 0.75rem; color: var(--text2);
+.dash-hero-library { margin-top: 12px; }
+.dash-hero-library-text {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 18px; margin-top: 6px;
+  font-size: 0.8125rem; color: var(--text2);
 }
-.dash-hero-library b { color: var(--text2); font-variant-numeric: tabular-nums; }
+.dash-hero-library b { color: var(--text); font-variant-numeric: tabular-nums; }
 .dash-goal { display: flex; align-items: center; gap: 12px; }
 /* Study now (studyNowHtml): the Today tile's one action, filled like Start Studying, standing
    on a ledge that it sinks onto when pressed. */

@@ -23,14 +23,14 @@ function load(goal) {
   };
   vm.createContext(ctx);
   vm.runInContext("var GOAL_RING_R = 22; var ICON_TODAY_TIME = '', ICON_TODAY_NEW = '', ICON_TODAY_REVIEW = '', ICON_FLAME = '', ICON_SETTINGS = '';" +
-    "var DASH_METRICS = [{ key: 'classes', labelKey: 'stat.classes' }, { key: 'lessons', labelKey: 'stat.lessons' }, { key: 'cards', labelKey: 'stat.cards' }, { key: 'attempts', labelKey: 'stat.attempts' }, { key: 'sessions', labelKey: 'stat.sessions' }];" +
+    "var DASH_METRICS = [{ key: 'library', labelKey: 'stat.libraryProgress' }]; var MASTERY_ORDER = ['mastered', 'known', 'learning'];" +
     "var DEFAULT_DASH_METRIC_CONFIG = { streak: 'show' };" +
     "function formatStudyDuration(ms) { return Math.round(ms / 60000) + ' min'; }" +
     "function _streakResetCountdownText() { return 'resets'; }" +
     "function _dashMetricHint() { return 'hint'; }" +
     "function resumeSessionHtml() { return ''; }" +
     "var STUDY_NOW_MODES = ['flashcard', 'quiz'];" +
-    ["dailyGoalRing", "weekdayLabel", "heroWeekHtml", "streakTimeHeroCard", "heroStreakTile", "heroTodayTile",
+    ["dailyGoalRing", "libraryProgressHtml", "weekdayLabel", "heroWeekHtml", "streakTimeHeroCard", "heroStreakTile", "heroTodayTile",
      "heroMeter", "heroStudyTimeTile", "studySparkline", "heroAboveAvgHtml", "studyNowMode", "studyNowModeHtml", "studyNowFirst", "studyNowFirstHtml", "studyNowOptsText", "studyNowPlan", "studyNowHtml", "studyNowOrderChipHtml", "dueTotal"].map(extract).join(""), ctx);
   return ctx;
 }
@@ -81,7 +81,7 @@ test("a card is new on the day of its first answer; later days' answers are revi
   assert.deepEqual(s, { studyMs: 14000, newCards: 2, reviews: 2 });
 });
 
-const summary = { classes: 10, lessons: 3, cards: 12, attempts: 177, quizSessions: 0 };
+const summary = { classes: 10, lessons: 3, cards: 12, attempts: 177, quizSessions: 0, mastery: { new: 6, learning: 1, known: 2, mastered: 3 } };
 const activity = { studyMs: 105 * 60000, newCards: 44, reviews: 212 };
 const studyTime = { totalMs: 33 * 3600000, avgDailyMs: 64 * 60000, minDailyMs: 27 * 60000, maxDailyMs: 127 * 60000, windowDays: 30,
   daily: [{ day: "2026-09-30", ms: 3600000 }, { day: "2026-10-01", ms: 0 }, { day: "2026-10-02", ms: 6300000 }] };
@@ -102,7 +102,7 @@ test("the hero card is three tiles: streak, today, study-time window", function(
   assert.match(out, /scaleX\(0\.707\)/, "212 of 300 fills 70.7%");
   assert.match(out, /<span class="dash-tile-num">64 min<\/span>/);
   assert.match(out, /<svg class="dash-spark"/);
-  assert.match(out, /<b>10<\/b> stat\.classes/);
+  assert.match(out, /stat\.libraryMastered/);
 });
 
 test("the ring shows progress until the goal, then a gold check; goal Off keeps the count", function() {
@@ -156,14 +156,15 @@ test("a count with nothing to measure against has no bar; a cap of 0 is still a 
 
 test("the gear hides single numbers or a whole tile; an old 'highlight' still shows", function() {
   const ctx = load(20);
-  ctx.state.dashMetricConfig = { streak: "highlight", avgDaily: "hidden", studyTime: "hidden", minDaily: "hidden", maxDaily: "hidden", classes: "hidden" };
+  ctx.state.dashMetricConfig = { streak: "highlight", avgDaily: "hidden", studyTime: "hidden", minDaily: "hidden", maxDaily: "hidden" };
   const out = hero(ctx, { count: 3, week: week, activity: activity });
   assert.match(out, /hero\.streak/);
   assert.doesNotMatch(out, /hero\.lastDays/, "every study-time number hidden drops the tile");
-  assert.doesNotMatch(out, /stat\.classes/);
-  assert.match(out, /stat\.lessons/);
+  assert.match(out, /stat\.libraryMastered/);
+  ctx.state.dashMetricConfig = { library: "hidden" };
+  assert.doesNotMatch(hero(ctx, { count: 3, week: week, activity: activity }), /dash-hero-library/);
   ctx.state.dashMetricConfig = { streak: "hidden", avgDaily: "hidden", studyTime: "hidden", minDaily: "hidden", maxDaily: "hidden",
-    classes: "hidden", lessons: "hidden", cards: "hidden", attempts: "hidden", sessions: "hidden" };
+    library: "hidden" };
   assert.match(hero(ctx, undefined), /dashboard\.allMetricsHidden/);
 });
 
@@ -214,4 +215,21 @@ test("the sparkline's dashed line follows each day's rolling average when the se
   const svg = ctx.studySparkline(daily, 9e9, false);
   assert.match(svg, /<path class="dash-spark-avg" d="M0\.0 [\d.]+ L150\.0 [\d.]+ L300\.0 [\d.]+"/);
   assert.match(svg, /<path class="dash-spark-line" d="M0\.0 [\d.]+ L150\.0 52\.0 L300\.0 4\.0"/, "the flat window average is ignored for scale");
+});
+
+test("the hero card's last row is the library's progress, not counts of classes, attempts and sessions", function() {
+  const ctx = load(20);
+  const html = ctx.streakTimeHeroCard(1, { avgDailyMs: 0 }, summary, null, { count: 3, week: week, activity: { studyMs: 0, newCards: 2, reviews: 1 } });
+  const row = html.slice(html.indexOf('class="dash-hero-library"'));
+  assert.match(row, /<i class="mastery-mastered" style="width:25\.00%"><\/i><i class="mastery-known" style="width:16\.67%"><\/i><i class="mastery-learning" style="width:8\.33%"><\/i>/);
+  assert.match(row, /<b>3<\/b> stat\.libraryMastered\|total=12/);
+  assert.match(row, /<b>3<\/b> stat\.libraryInProgress/);
+  assert.doesNotMatch(html, /stat\.(attempts|sessions)/);
+  // Local mode has no memory states: no row rather than "0 of 0".
+  const local = ctx.streakTimeHeroCard(1, { avgDailyMs: 0 }, { classes: 1 }, null, { count: 3, week: week, activity: { studyMs: 0, newCards: 2, reviews: 1 } });
+  assert.doesNotMatch(local, /dash-hero-library/);
+  for (const k of ["stat.libraryProgress", "stat.libraryMastered", "stat.libraryInProgress", "stat.libraryTooltip"]) {
+    assert.equal(app.split('"' + k + '":').length - 1, 2, k);
+  }
+  assert.match(stats, /mastery:\s+masteryCounts\(/);
 });
