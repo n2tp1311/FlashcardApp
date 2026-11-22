@@ -396,6 +396,7 @@
     <button class="btn btn-ghost back-btn" id="btn-class-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
     <h2 id="class-detail-name" class="screen-title"></h2>
     <div class="header-actions">
+      <button class="btn btn-primary hidden" id="btn-study-class" data-i18n="class.studyClass"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg> Study class</button>
       <button class="btn btn-ghost" id="btn-select-lessons" data-i18n="common.select"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select</button>
       <div class="dropdown-wrap">
         <button class="btn btn-ghost btn-icon" id="btn-class-menu" title="More options" aria-label="More options" data-i18n-title="common.moreOptions" data-i18n-aria="common.moreOptions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
@@ -407,11 +408,11 @@
           <button class="dropdown-item" id="btn-share-class" data-i18n="common.share"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
           <button class="dropdown-item" id="btn-prompt-guide" data-i18n="class.aiPromptGuide"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg> AI Prompt Guide</button>
           <div class="dropdown-divider"></div>
+          <button class="dropdown-item" id="btn-new-lesson" data-i18n="class.newLesson">+ Lesson</button>
           <button class="dropdown-item" id="btn-bulk-import" data-i18n="class.bulkImport"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Paste lessons</button>
           <button class="dropdown-item" id="btn-export-class" data-i18n="common.export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
         </div>
       </div>
-      <button class="btn btn-primary" id="btn-new-lesson" data-i18n="class.newLesson">+ Lesson</button>
     </div>
   </header>
   <div id="class-mastery" class="class-mastery hidden"></div>
@@ -460,6 +461,8 @@
     <h2 id="lesson-detail-title" class="screen-title"></h2>
     <span id="lesson-card-count" class="lesson-count-badge hidden"></span>
     <div class="header-actions">
+      <button class="btn btn-primary" id="btn-study-lesson" data-i18n="common.study">Study</button>
+      <button class="btn btn-warning btn-sm hidden" id="btn-review-due" data-i18n="lesson.reviewDueZero" data-i18n-title="study.reviewDueTitle" title="Multiple-choice quiz on the cards due now (respects Max reviews per day)">Quick quiz · 0 due</button>
       <button class="btn btn-ghost" id="btn-select-cards" data-i18n="common.select"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Select</button>
       <div class="dropdown-wrap">
         <button class="btn btn-ghost btn-icon" id="btn-lesson-menu" title="More options" aria-label="More options" data-i18n-title="common.moreOptions" data-i18n-aria="common.moreOptions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
@@ -473,8 +476,6 @@
           <button class="dropdown-item" id="btn-bulk-add" data-i18n="lesson.bulkAdd">+ Paste cards</button>
         </div>
       </div>
-      <button class="btn btn-warning btn-sm hidden" id="btn-review-due" data-i18n="lesson.reviewDueZero" data-i18n-title="study.reviewDueTitle" title="Multiple-choice quiz on the cards due now (respects Max reviews per day)">Quick quiz · 0 due</button>
-      <button class="btn btn-primary" id="btn-study-lesson" data-i18n="common.study">Study</button>
     </div>
   </header>
   <div class="lesson-toolbar" id="lesson-toolbar" style="display:none">
@@ -1621,6 +1622,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">X</kbd><span data-i18n="keymap.toggleSelectMode">Toggle select mode</span></div>
         <div class="keymap-row"><kbd class="kbd">Space</kbd><span data-i18n="keymap.toggleSelectionSelectMode">Toggle selection (select mode)</span></div>
         <div class="keymap-row"><kbd class="kbd">A</kbd><span data-i18n="keymap.selectAllSelectMode">Select all (select mode)</span></div>
+        <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="class.studyClass">Study class</span></div>
         <div class="keymap-row"><kbd class="kbd">S</kbd><span data-i18n="keymap.studySelectedSelectMode">Study selected (select mode)</span></div>
         <div class="keymap-row"><kbd class="kbd">D</kbd><span data-i18n="keymap.deleteSelectedSelectMode">Delete selected (select mode)</span></div>
         <div class="keymap-row"><kbd class="kbd">N</kbd><span data-i18n="keymap.newLesson">New lesson</span></div>

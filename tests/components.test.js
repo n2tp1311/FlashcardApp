@@ -25,7 +25,7 @@ test("selected options are tonal and the screen's main action is filled", functi
   assert.ok(!rule(".pill.active").includes("--primary-fill"), "a selected pill must not outrank the main action");
   assert.ok(!rule(".view-toggle-btn.active").includes("--primary-fill"));
   assert.ok(!css.includes(".pill.active, .pill:hover"), "hover must not look selected");
-  assert.ok(rule(".btn-primary.btn-full, .modal-footer .btn-primary").includes("background: var(--primary-fill)"));
+  assert.ok(rule(".btn-primary.btn-full, .modal-footer .btn-primary, #btn-study-lesson, #btn-study-class").includes("background: var(--primary-fill)"));
   assert.match(html, /class="btn btn-primary btn-full" id="btn-start-study"/);
 });
 

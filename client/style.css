@@ -1106,7 +1106,7 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
   .dropdown-item.lesson-select-mobile { display: flex; }
   #btn-review-due .due-full { display: none; }
   #btn-review-due .due-short { display: inline; }
-  #lesson-detail-title {
+  #lesson-detail-title, #class-detail-name {
     white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     line-height: 1.3;
   }
@@ -1149,12 +1149,13 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 /* The one action a screen exists for (Start Studying, a dialog's Save, Sign In) is filled,
    per Material's emphasis ladder: filled for the primary action, tonal for the rest. Soft
    everywhere left it paler than the selected pills above it. */
-.btn-primary.btn-full, .modal-footer .btn-primary {
+.btn-primary.btn-full, .modal-footer .btn-primary, #btn-study-lesson, #btn-study-class {
   background: var(--primary-fill);
   color: #fff;
   border-color: var(--primary-fill);
 }
-.btn-primary.btn-full:hover:not(:disabled), .modal-footer .btn-primary:hover:not(:disabled) {
+.btn-primary.btn-full:hover:not(:disabled), .modal-footer .btn-primary:hover:not(:disabled),
+:is(#btn-study-lesson, #btn-study-class):hover:not(:disabled) {
   background: var(--primary-fill-hover);
   border-color: var(--primary-fill-hover);
 }

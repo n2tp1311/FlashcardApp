@@ -672,6 +672,7 @@ Object.assign(TRANSLATIONS.en, {
   "class.aiPromptGuide": "AI Prompt Guide",
   "class.bulkImport": "Paste lessons",
   "class.newLesson": "+ Lesson",
+  "class.studyClass": "Study class",
   "class.emptyLessons": "No lessons yet. Add a lesson to this class.",
   "lesson.studySelected": "Study selected",
   "lesson.editLesson": "Edit Lesson",
@@ -1958,6 +1959,7 @@ Object.assign(TRANSLATIONS.vi, {
   "class.aiPromptGuide": "Hướng dẫn Prompt AI",
   "class.bulkImport": "Dán bài học",
   "class.newLesson": "+ Bài học",
+  "class.studyClass": "Học cả lớp",
   "class.emptyLessons": "Chưa có bài học nào. Thêm bài học vào lớp này.",
   "lesson.studySelected": "Học mục đã chọn",
   "lesson.editLesson": "Sửa bài học",
@@ -5241,6 +5243,7 @@ function renderLessons() {
   if (!state.currentClass) return;
   store.getLessons(state.currentClass.id).then(function(lessons) {
     state.currentClassLessons = lessons;
+    document.getElementById("btn-study-class").classList.toggle("hidden", !lessons.length);
     _renderLessonSlicer(lessons);
     _renderLessonItems(lessons, state._lessonAccuracyMap);
     _renderClassMastery(state.currentClass.id);
@@ -5982,6 +5985,19 @@ document.getElementById("select-all-lessons").addEventListener("change", functio
     if (check) check.checked = sel;
   });
   updateSelectBar();
+});
+
+// The class screen's one action: every lesson in Study Setup, as if all were selected, so
+// Interleaved is offered. "+ Lesson" moved into ⋮; lessons mostly arrive from KnowledgeApp.
+document.getElementById("btn-study-class").addEventListener("click", function() {
+  var lessons = state.currentClassLessons || [];
+  if (!state.currentClass || !lessons.length) return;
+  openSetup({
+    lessonIds: lessons.map(function(l) { return l.id; }),
+    lessons: lessons,
+    returnScreen: "class",
+    title: state.currentClass.name
+  });
 });
 
 document.getElementById("btn-study-selected").addEventListener("click", function() {
@@ -17750,6 +17766,7 @@ document.addEventListener("keydown", function(e) {
       allCheck.dispatchEvent(new Event("change"));
     }
     else if ((e.key === "s" || e.key === "S") && state.selectMode) document.getElementById("btn-study-selected").click();
+    else if (e.key === "s" || e.key === "S") document.getElementById("btn-study-class").click();
     else if ((e.key === "d" || e.key === "D") && state.selectMode) document.getElementById("btn-delete-selected-lessons").click();
     else if (e.key === "Escape" && state.selectMode) setSelectMode(false);
     else if (e.key === "n" || e.key === "N") { e.preventDefault(); openNewLesson(); }
@@ -17869,6 +17886,7 @@ function injectKeyHints() {
     ["btn-study-classes",  "[S]"],
     ["btn-new-class",      "[N]"],
     ["btn-new-lesson",     "[N]"],
+    ["btn-study-class",    "[S]"],
     ["btn-edit-class",     "[E]"],
     ["btn-class-back",     "[⌫]"],
     ["btn-lesson-back",    "[⌫]"],
