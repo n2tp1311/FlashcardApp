@@ -1874,6 +1874,12 @@ Most study happens on an iPhone, and several decisions are about it:
   due" button, which runs Study now with every due card and no new ones. It used to list the
   four lessons with most due, and Needs attention just below listed the same lessons again;
   a lesson's own due review is still its badge in that list.
+- **The Dashboard's lesson tables have no column headings on a phone.** The rows stack into
+  cards whose numbers carry their own labels ("Accuracy 80%"), so the headings, which are
+  also the sort buttons on the Lessons tab, are hidden below 760px and a phone shows the
+  default order: most due, then struggling, then weakest. The rule hiding them once lost to
+  the row's own `display: flex` on the next line; `tests/dash-lesson-head.test.js` now checks
+  every media block for a class hidden and then re-displayed on the same element.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

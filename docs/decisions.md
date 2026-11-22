@@ -1456,3 +1456,7 @@ Found while auditing the Achievements page: locked badges read "0 / 1 months", "
 ## 2026-11-23 — Due now: the count and one button
 
 Eleventh item of the UI audit. On the Dashboard's Overview the Due now tile listed the four lessons with most due, and Needs attention just below listed the same lessons again, with a table header that means nothing on a phone. Options previewed: A, keep the tile's list and narrow Needs attention to struggling lessons; B, the tile keeps only the count and a "Review all N due" button; C, drop Needs attention from Overview. The user picked B: one list of lessons, and one tap to review everything due. The button is Study now with no new cards, so the session is the one Home already runs; reviewing a single lesson is its due badge in Needs attention.
+
+## 2026-11-23 — Lesson table headings: hidden on a phone, no sort there
+
+Twelfth item of the UI audit. The headings LESSON ACCURACY ANSWERS MASTERED DUE showed over the Dashboard's stacked lesson rows on a phone, though the CSS meant to hide them: the next rule in the same media block gave the head row display:flex. Fixing that removes the Lessons tab's sort buttons on a phone, so the options were about sorting: A, none (the default order); B, a Sort select like Home's; C, a row of sort chips. The user picked A: on a phone the default order, most due then struggling then weakest, is what the list is for.
