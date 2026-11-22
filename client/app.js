@@ -792,9 +792,9 @@ Object.assign(TRANSLATIONS.en, {
   "unit.y": "{n} yr",
   "time.inHours": "in {n}h",
   "time.inDays": "in {n}d",
-  "card.lastSeen": "Last seen",
-  "card.lastStudied": "Last studied",
-  "card.nextReview": "Next review",
+  "card.metaBoth": "Next review {next} · studied {ago}",
+  "card.metaNext": "Next review {next}",
+  "card.metaStudied": "Studied {ago}",
 
   "study.exitSession": "Exit study session",
   "study.exit": "Exit",
@@ -2076,9 +2076,9 @@ Object.assign(TRANSLATIONS.vi, {
   "unit.y": "{n} năm",
   "time.inHours": "còn {n} giờ",
   "time.inDays": "còn {n} ngày",
-  "card.lastSeen": "Lần xem gần nhất",
-  "card.lastStudied": "Học gần nhất",
-  "card.nextReview": "Lần ôn tiếp theo",
+  "card.metaBoth": "Ôn lại {next} · đã học {ago}",
+  "card.metaNext": "Ôn lại {next}",
+  "card.metaStudied": "Đã học {ago}",
 
   "study.exitSession": "Thoát phiên học",
   "study.exit": "Thoát",
@@ -5329,6 +5329,9 @@ function setLessonProgress(lessonId, p) {
   var text = document.getElementById("les-prog-text-" + lessonId);
   if (!wrap) return;
   var pct = Math.round(p.known / p.total * 100);
+  // A lesson with nothing mastered shows no bar: "0% mastered" under an empty bar on every row
+  // said nothing, and hid the lessons that are moving. The class's own bar above still shows.
+  if (p.mastery && !p.mastery.mastered && !p.mastery.known && !p.mastery.learning) { wrap.style.display = "none"; return; }
   wrap.style.display = "";
   if (p.mastery) {
     renderMasteryBar(wrap, p);
@@ -7179,20 +7182,18 @@ function renderCards() {
       contentEl.appendChild(defEl);
 
       if (IS_SERVER) {
-        var tsDiv = document.createElement("div");
-        tsDiv.className = "card-timestamps";
-        var tsItems = [
-          { label: t("card.lastSeen"), value: relativeTime(card.last_seen_at) },
-          { label: t("card.lastStudied"), value: relativeTime(card.last_studied_at) },
-          { label: t("card.nextReview"), value: futureRelativeTime(card.srs_due_at) }
-        ];
-        tsItems.forEach(function(ts) {
-          var span = document.createElement("span");
-          span.className = "card-ts-item";
-          span.textContent = ts.label + ": " + ts.value;
-          tsDiv.appendChild(span);
-        });
-        contentEl.appendChild(tsDiv);
+        // One line, and only what has happened: a new card said "never" and "not scheduled" in
+        // three 11px items on every row, which its New pill already says. "Last seen" went too:
+        // it moved when the card was only shown, beside "Last studied: never".
+        var tsKey = card.srs_due_at && card.last_studied_at ? "card.metaBoth"
+          : card.srs_due_at ? "card.metaNext" : card.last_studied_at ? "card.metaStudied" : "";
+        if (tsKey) {
+          var tsDiv = document.createElement("div");
+          tsDiv.className = "card-timestamps";
+          tsDiv.innerHTML = '<span class="card-ts-item"></span>';
+          tsDiv.firstChild.textContent = t(tsKey, { next: futureRelativeTime(card.srs_due_at), ago: relativeTime(card.last_studied_at) });
+          contentEl.appendChild(tsDiv);
+        }
         if (card.upstream_change) contentEl.appendChild(renderUpstreamNotice(card));
       }
 
