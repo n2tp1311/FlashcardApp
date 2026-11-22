@@ -341,8 +341,8 @@ can do by one narrow verb, not to the learner's whole session.
 
 ### Flagging a card
 
-Any term-def card synced from KnowledgeApp has a ⚑ beside Edit on the flashcard and quiz
-screens and in the lesson card list. A quiz question built from such a card can be
+Any term-def card synced from KnowledgeApp has a ⚑ in the ⋯ menu on the flashcard and quiz
+screens and on each card in the lesson's list. A quiz question built from such a card can be
 flagged too: the card is what gets fixed, not the generated options. It opens a sheet of checkboxes -- the fact is wrong, the front is
 unclear, the back is too long or muddled, a typo or broken formula, something else -- with
 an optional note (required for "something else"). Several can be ticked, since one bad card
@@ -1830,6 +1830,11 @@ Most study happens on an iPhone, and several decisions are about it:
 - **A due lesson row says it once.** Its "N due" badge stands alone; the line under it
   that said "N cards due for review" again, in amber at 3:1, is gone, so a due row is a line
   shorter. A lesson not yet due keeps its grey "Next review in 3d".
+- **No trash can under the thumb.** Class cards, class list rows and a lesson's cards show
+  Edit and a ⋯; pin, archive, ⚑ and Delete (last, in red) are in the menu (`rowMenuHtml`,
+  `classActionsHtml`). On a phone those icons are always visible, so Delete had sat on every
+  card where a scrolling thumb lands. An open menu lifts its row above the next one, since a
+  hovered card's transform makes it a stacking context that the next card painted over.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

@@ -1424,3 +1424,7 @@ Third item of the UI audit: on a phone the Study now gear and class picker were 
 
 Fourth item of the UI audit, light-mode contrast. Measured again with colours resolved through a canvas, the accuracy pills and the "Quiz · N" chip are about 7:1; the audit had read their `color-mix()` backgrounds as numbers and reported 2.6. The one real failure was the "N cards due for review" line under a due lesson, `#d97706` on white at 11px, 3.08:1. Two fixes were previewed: darken it to the warning text colour, about 7:1, or drop it, since the "N due" badge above says the same. The user picked dropping it. A due row loses a line; nothing it said is lost. The `.acc-good/.acc-mid/.acc-bad` colours, also below 4.5:1, went too: nothing renders them any more.
 
+## 2026-11-23 — Class and card rows: Edit and ⋯, not three icons
+
+Fifth item of the UI audit: on a phone every class card showed archive, edit and delete, and every card in a lesson edit and delete, always visible, so a trash can sat wherever a scrolling thumb lands. Previewed: everything behind one ⋯ (as lesson rows have been since 2026-11-06), or Edit kept visible and the rest behind ⋯. The user picked keeping Edit, the action used most, for fixing a card's wording. It costs a second icon on each row; archive, pin, flag and delete are a tap further away. The guide's flagging section still said ⚑ sits beside Edit on the study screens, where it moved into the ⋯ menu earlier; fixed with this.
+

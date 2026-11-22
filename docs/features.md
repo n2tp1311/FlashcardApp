@@ -510,3 +510,7 @@
 - Preferences → Appearance → Style switches the whole look, in light and dark: Playful (rounded type, soft corners, buttons that press down) and Neo-brutalism (ink outlines, hard shadows, square corners). Colour theme and High contrast apply to Classic and hide under the other two. Saved with the other preferences and applied before first paint. `tests/styles.test.js`
 
 - Every Colour theme now works under Playful and Neo-brutalism: the style sets the shape, the theme the colours. "Style colours" is the style's own set, first in the list under a style; High contrast works with any theme except it. (2026-11-07)
+
+## Row actions behind ⋯ (2026-11-23)
+- Class cards, class list rows and a lesson's cards show Edit and a ⋯ menu with Pin to top, Archive, ⚑ Flag (KnowledgeApp term-def cards) and Delete, in red at the end; the icons were always visible on a phone, Delete included. On a desktop the actions still appear on hover and stay while the menu is open. `tests/row-menu.test.js`
+
