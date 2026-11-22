@@ -84,6 +84,9 @@ test("every quiz starts with the mic off, and leaving the quiz turns it off", fu
     stopQuizVoice: function() { ctx.quizVoice.active = false; },
     startQuizVoice: function() { ctx.quizVoice.active = true; },
     applyQuizVoice: function() {},
+    // The quiz music follows the mic: it pauses while the mic listens (quiz-music.test.js).
+    syncQuizMusic: function() { ctx.musicSyncs++; },
+    musicSyncs: 0,
   };
   vm.createContext(ctx);
   vm.runInContext(["quizVoiceOn", "setQuizVoicePref", "syncQuizVoice"].map(fn).join(""), ctx);

@@ -1370,6 +1370,11 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.layoutList": "Show answers in a list",
   "quiz.voiceOn": "Turn on hands-free answers (V)",
   "quiz.voiceOff": "Turn off hands-free answers (V)",
+  "quiz.musicOn": "Turn on music (M)",
+  "quiz.musicOff": "Turn off music (M)",
+  "quiz.musicVolume": "Music volume",
+  "quiz.musicVolumeLabel": "Volume",
+  "quiz.musicReset": "Reset",
   "quiz.voiceListening": "Listening · say {nums} or {letters}",
   "quiz.voiceListeningTf": "Listening · say “{yes}” or “{no}”, or 1–2",
   "quiz.voiceHeard": "Heard “{text}” → {n}",
@@ -2625,6 +2630,11 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.layoutList": "Xếp đáp án thành danh sách",
   "quiz.voiceOn": "Bật trả lời bằng giọng nói (V)",
   "quiz.voiceOff": "Tắt trả lời bằng giọng nói (V)",
+  "quiz.musicOn": "Bật nhạc nền (M)",
+  "quiz.musicOff": "Tắt nhạc nền (M)",
+  "quiz.musicVolume": "Âm lượng nhạc",
+  "quiz.musicVolumeLabel": "Âm lượng",
+  "quiz.musicReset": "Về mặc định",
   "quiz.voiceListening": "Đang nghe · nói {nums} hoặc {letters}",
   "quiz.voiceListeningTf": "Đang nghe · nói “{yes}” hoặc “{no}”, hoặc 1–2",
   "quiz.voiceHeard": "Đã nghe “{text}” → {n}",
@@ -2867,6 +2877,9 @@ function speakWith(text, rate, langHint) {
       u.lang = lang === "vi" ? "vi-VN" : "en-US";
     }
     u.rate = rate || 0.9;
+    // The quiz music steps back while a term is read, and comes back when it ends.
+    quizMusicDuck(true);
+    u.onend = u.onerror = function() { quizMusicDuck(false); };
     window.speechSynthesis.speak(u);
   }, 50);
 }
@@ -11892,6 +11905,7 @@ function syncQuizVoice() {
     stopQuizVoice();
     if (!on || !quizVoiceOnScreen()) quizVoice.paused = null;
     applyQuizVoice();
+    syncQuizMusic();
     return;
   }
   var lang = state.language === "vi" ? "vi-VN" : "en-US";
@@ -11904,6 +11918,7 @@ function syncQuizVoice() {
   }
   if (!quizVoice.active && !quizVoice.paused) startQuizVoice(false);
   applyQuizVoice();
+  syncQuizMusic();
 }
 
 // On and listening: off. Off, or on but paused or blocked: on, started from this tap.
@@ -11919,6 +11934,7 @@ function toggleQuizVoice() {
     startQuizVoice(true);
   }
   applyQuizVoice();
+  syncQuizMusic();
 }
 
 function findQuizResult(card) {
@@ -12096,6 +12112,7 @@ function answerQuiz(selectedIdx) {
   if (cheer.praise) state.quizLastPraise = cheer.praise;
   haptic(isCorrect ? "success" : "error");
   playSound(cheer.tone === "combo" ? "combo" : isCorrect ? "correct" : "wrong", state.quizStreak - 1);
+  quizMusicAnswer(isCorrect);
   if (isCorrect) state.quizScore++;
 
   // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
@@ -12387,6 +12404,32 @@ document.getElementById("btn-quiz-layout").addEventListener("click", function() 
 });
 
 document.getElementById("btn-quiz-voice").addEventListener("click", toggleQuizVoice);
+document.getElementById("btn-quiz-music").addEventListener("click", toggleQuizMusic);
+document.getElementById("btn-quiz-music-volume").addEventListener("click", function(e) {
+  e.stopPropagation();
+  showQuizMusicVolume(document.getElementById("quiz-music-pop").classList.contains("hidden"));
+});
+document.getElementById("quiz-music-volume").addEventListener("input", function() {
+  setQuizMusicVolume(+this.value);
+});
+document.getElementById("btn-quiz-music-reset").addEventListener("click", function() {
+  setQuizMusicVolume(QUIZ_MUSIC_DEFAULT_VOLUME);
+});
+// The slider has the focus while the popover is open, and the screen's key handler ignores
+// keys typed into a control, so the popover closes itself on Escape and hands focus back.
+document.getElementById("quiz-music-pop").addEventListener("keydown", function(e) {
+  if (e.key !== "Escape") return;
+  e.preventDefault();
+  e.stopPropagation();
+  showQuizMusicVolume(false);
+  document.getElementById("btn-quiz-music-volume").focus();
+});
+document.addEventListener("click", function(e) {
+  var pop = document.getElementById("quiz-music-pop");
+  if (pop && !pop.classList.contains("hidden") && !e.target.closest(".quiz-music-wrap")) showQuizMusicVolume(false);
+});
+window.addEventListener("pagehide", stopQuizMusic);
+applyQuizMusic();
 document.addEventListener("visibilitychange", syncQuizVoice);
 window.addEventListener("pagehide", stopQuizVoice);
 
@@ -15114,6 +15157,216 @@ function playSound(name, step) {
   } catch (_) {}
 }
 
+// Quiz music: an original loop synthesized like the sounds above, so there is no file to
+// download, cache or license. Off until the learner turns it on (the note button or M), then
+// remembered on this device, with its volume. It follows the quiz the way a game show's does:
+// the arpeggio joins at a streak of 3 correct answers, the clap and the plucked string at 6,
+// and a wrong answer drops back to the beat and muffles everything for two seconds.
+// It plays only on the quiz screen in a visible tab, pauses while hands-free answers listen
+// (the microphone would hear it), and steps back while a term is read aloud.
+var QUIZ_MUSIC_BPM = 128;
+var QUIZ_MUSIC_LEVEL = 0.22;         // the output gain at the default volume
+var QUIZ_MUSIC_DEFAULT_VOLUME = 50;  // the slider's middle, so it goes up as well as down
+var QUIZ_MUSIC_DUCK = 0.3;
+var QUIZ_MUSIC_UNLOCK = { kick: 0, hat: 0, bass: 0, arp: 3, clap: 6, pluck: 6 };
+// C - G - Am - F, one bar each: the bass root, then the arpeggio's tones.
+var QUIZ_MUSIC_BARS = [
+  { bass: 36, arp: [72, 76, 79, 84] }, { bass: 31, arp: [71, 74, 79, 83] },
+  { bass: 33, arp: [72, 76, 81, 84] }, { bass: 29, arp: [72, 77, 81, 84] }];
+var quizMusic = { ctx: null, timer: null, step: 0, next: 0, out: null, filter: null, noise: null,
+  duck: 1, duckTimer: null };
+
+function quizMusicPref() {
+  try { return localStorage.getItem("fc-quiz-music") === "on"; } catch (_) { return false; }
+}
+
+function quizMusicVolume() {
+  var v = NaN;
+  try { v = parseInt(localStorage.getItem("fc-quiz-music-volume"), 10); } catch (_) {}
+  return isNaN(v) ? QUIZ_MUSIC_DEFAULT_VOLUME : Math.max(0, Math.min(100, v));
+}
+
+function quizMusicGain(volume, duck) {
+  return QUIZ_MUSIC_LEVEL * volume / QUIZ_MUSIC_DEFAULT_VOLUME * duck;
+}
+
+// Which parts play at a streak.
+function quizMusicParts(streak) {
+  return Object.keys(QUIZ_MUSIC_UNLOCK).filter(function(p) { return streak >= QUIZ_MUSIC_UNLOCK[p]; });
+}
+
+function quizMusicWanted(pref, onScreen, hidden, listening) {
+  return !!pref && !!onScreen && !hidden && !listening;
+}
+
+function quizMusicHz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+function quizMusicTone(t, freq, dur, type, vol) {
+  var c = quizMusic.ctx, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(quizMusic.filter); o.start(t); o.stop(t + dur + 0.02);
+}
+
+// A plucked string: a bright sawtooth whose filter closes fast, so it rings and dulls.
+function quizMusicPluck(t, freq, vol) {
+  var c = quizMusic.ctx, o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+  o.type = "sawtooth"; o.frequency.value = freq;
+  f.type = "lowpass"; f.Q.value = 4;
+  f.frequency.setValueAtTime(4200, t); f.frequency.exponentialRampToValueAtTime(380, t + 0.28);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+  o.connect(f); f.connect(g); g.connect(quizMusic.filter); o.start(t); o.stop(t + 0.47);
+}
+
+function quizMusicKick(t) {
+  var c = quizMusic.ctx, o = c.createOscillator(), g = c.createGain();
+  o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+  g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+  o.connect(g); g.connect(quizMusic.filter); o.start(t); o.stop(t + 0.22);
+}
+
+function quizMusicNoise(t, dur, vol, type, freq) {
+  var c = quizMusic.ctx, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  src.buffer = quizMusic.noise; f.type = type; f.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(quizMusic.filter);
+  src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
+}
+
+// One sixteenth note of the four-bar loop.
+function quizMusicStep(step, t) {
+  var s = step % 16, bar = QUIZ_MUSIC_BARS[Math.floor(step / 16) % 4];
+  var on = quizMusicParts(state.quizStreak || 0);
+  function has(p) { return on.indexOf(p) >= 0; }
+  if (has("kick") && s % 4 === 0) quizMusicKick(t);
+  if (has("hat") && s % 4 === 2) quizMusicNoise(t, 0.04, 0.25, "highpass", 7000);
+  if (has("bass") && [0, 3, 6, 8, 11, 14].indexOf(s) >= 0)
+    quizMusicTone(t, quizMusicHz(bar.bass + (s === 14 ? 12 : 0)), 0.18, "triangle", 0.5);
+  if (has("arp") && s % 2 === 0)
+    quizMusicTone(t, quizMusicHz(bar.arp[[0, 1, 2, 1, 3, 2, 1, 2][s / 2]]), 0.12, "square", 0.07);
+  if (has("clap") && (s === 4 || s === 12)) quizMusicNoise(t, 0.12, 0.35, "bandpass", 1500);
+  if (has("pluck") && (s === 0 || s === 6 || s === 10)) quizMusicPluck(t, quizMusicHz(bar.arp[s === 6 ? 2 : 3]), 0.16);
+}
+
+// Notes are scheduled a little ahead on the audio clock; a timer only tops the queue up, so
+// a late tick does not put the beat out of time.
+function quizMusicTick() {
+  var c = quizMusic.ctx, dt = 60 / QUIZ_MUSIC_BPM / 4;
+  if (!c || c.state === "closed") { stopQuizMusic(); return; }
+  try {
+    while (quizMusic.next < c.currentTime + 0.12) {
+      quizMusicStep(quizMusic.step, quizMusic.next);
+      quizMusic.next += dt; quizMusic.step = (quizMusic.step + 1) % 64;
+    }
+  } catch (_) { stopQuizMusic(); }
+}
+
+// Its own context, not soundContext(): that one is closed and rebuilt when the app comes back
+// from the background, which would cut the loop off mid-bar.
+function quizMusicContext() {
+  if (quizMusic.ctx && quizMusic.ctx.state === "closed") quizMusic.ctx = null;
+  if (!quizMusic.ctx) {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    try { if (navigator.audioSession) navigator.audioSession.type = "ambient"; } catch (_) {}
+    var c = quizMusic.ctx = new Ctx();
+    quizMusic.out = c.createGain();
+    quizMusic.out.gain.value = 0.0001;
+    quizMusic.filter = c.createBiquadFilter();
+    quizMusic.filter.type = "lowpass"; quizMusic.filter.frequency.value = 18000;
+    quizMusic.filter.connect(quizMusic.out); quizMusic.out.connect(c.destination);
+    var b = quizMusic.noise = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  if (quizMusic.ctx.state !== "running") quizMusic.ctx.resume().catch(function() {});
+  return quizMusic.ctx;
+}
+
+function quizMusicLevelNow(seconds) {
+  if (!quizMusic.ctx || !quizMusic.out) return;
+  var g = quizMusic.out.gain, now = quizMusic.ctx.currentTime;
+  var to = quizMusic.timer ? quizMusicGain(quizMusicVolume(), quizMusic.duck) : 0.0001;
+  g.cancelScheduledValues(now); g.setValueAtTime(Math.max(g.value, 0.0001), now);
+  g.linearRampToValueAtTime(Math.max(to, 0.0001), now + seconds);
+}
+
+function startQuizMusic() {
+  if (quizMusic.timer) return;
+  try {
+    var c = quizMusicContext();
+    if (!c) return;
+    quizMusic.step = 0; quizMusic.next = c.currentTime + 0.05;
+    quizMusic.timer = setInterval(quizMusicTick, 25);
+    quizMusicLevelNow(0.4);
+  } catch (_) { stopQuizMusic(); }
+}
+
+function stopQuizMusic() {
+  if (quizMusic.timer) clearInterval(quizMusic.timer);
+  quizMusic.timer = null;
+  try { quizMusicLevelNow(0.25); } catch (_) {}
+}
+
+function syncQuizMusic() {
+  var listening = !!(quizVoice && quizVoiceOn() && quizVoice.active);
+  if (quizMusicWanted(quizMusicPref(), quizVoiceOnScreen(), document.hidden, listening)) startQuizMusic();
+  else stopQuizMusic();
+  applyQuizMusic();
+}
+
+function applyQuizMusic() {
+  var btn = document.getElementById("btn-quiz-music");
+  if (!btn) return;
+  var on = quizMusicPref();
+  var label = t(on ? "quiz.musicOff" : "quiz.musicOn");
+  btn.setAttribute("aria-pressed", on ? "true" : "false");
+  btn.title = label;
+  btn.setAttribute("aria-label", label);
+  var v = quizMusicVolume();
+  document.getElementById("quiz-music-volume").value = v;
+  document.getElementById("quiz-music-volume-out").textContent = v + "%";
+}
+
+function toggleQuizMusic() {
+  try { localStorage.setItem("fc-quiz-music", quizMusicPref() ? "off" : "on"); } catch (_) {}
+  syncQuizMusic();
+}
+
+function setQuizMusicVolume(v) {
+  try { localStorage.setItem("fc-quiz-music-volume", String(Math.max(0, Math.min(100, v)))); } catch (_) {}
+  quizMusicLevelNow(0.1);
+  applyQuizMusic();
+}
+
+function showQuizMusicVolume(open) {
+  document.getElementById("quiz-music-pop").classList.toggle("hidden", !open);
+  document.getElementById("btn-quiz-music-volume").setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) document.getElementById("quiz-music-volume").focus();
+}
+
+// A wrong answer muffles the music for about two seconds; the streak, and so the parts,
+// come from answerQuiz().
+function quizMusicAnswer(correct) {
+  if (correct || !quizMusic.timer || !quizMusic.filter) return;
+  try {
+    var f = quizMusic.filter.frequency, now = quizMusic.ctx.currentTime;
+    f.cancelScheduledValues(now); f.setValueAtTime(700, now);
+    f.exponentialRampToValueAtTime(18000, now + 2.2);
+  } catch (_) {}
+}
+
+// A speech engine that never fires onend (iOS after an interruption) must not leave the
+// music quiet for the rest of the quiz.
+function quizMusicDuck(on) {
+  quizMusic.duck = on ? QUIZ_MUSIC_DUCK : 1;
+  clearTimeout(quizMusic.duckTimer);
+  if (on) quizMusic.duckTimer = setTimeout(function() { quizMusicDuck(false); }, 8000);
+  try { if (quizMusic.timer) quizMusicLevelNow(0.15); } catch (_) {}
+}
+
 function relativeTime(unixSec) {
   if (!unixSec) return t("time.never");
   var diff = Math.floor(Date.now() / 1000) - unixSec;
@@ -17573,12 +17826,15 @@ document.addEventListener("keydown", function(e) {
       e.preventDefault();
       quizNextBtn.click();
     }
+    // Escape closes the music volume first, as it would any open popover.
+    else if (e.key === "Escape" && !document.getElementById("quiz-music-pop").classList.contains("hidden")) showQuizMusicVolume(false);
     else if (e.key === "Escape") confirmLeaveStudy(returnFromStudy);
     else if (e.key === "ArrowLeft") document.getElementById("btn-quiz-prev").click();
     else if (e.key === "ArrowRight") document.getElementById("btn-quiz-review-next").click();
     else if ((e.key === "p" || e.key === "P") && !e.ctrlKey && !e.metaKey && !e.altKey) speakQuizTerm();
     else if ((e.key === "b" || e.key === "B") && !e.ctrlKey && !e.metaKey && !e.altKey && toggleQuizSource()) e.preventDefault();
     else if ((e.key === "v" || e.key === "V") && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) { e.preventDefault(); toggleQuizVoice(); }
+    else if ((e.key === "m" || e.key === "M") && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) { e.preventDefault(); toggleQuizMusic(); }
     else if (cardToolKey(e, "quiz")) e.preventDefault();
   }
 

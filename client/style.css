@@ -2859,6 +2859,18 @@ code {
 @media (prefers-reduced-motion: reduce) { .quiz-voice-dot { animation: none !important; } }
 #btn-quiz-voice { position: relative; }
 #btn-quiz-voice.active { background: var(--primary-light); color: var(--primary); }
+/* Quiz music: the note button and a narrow caret that opens the volume slider beside it. */
+.quiz-music-wrap { position: relative; display: inline-flex; align-items: center; }
+#btn-quiz-music[aria-pressed="true"] { background: var(--primary-light); color: var(--primary); }
+.quiz-music-caret { width: 22px; min-width: 22px; padding-left: 0; padding-right: 0; margin-left: -6px; }
+.quiz-music-pop { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 30;
+  display: grid; grid-template-columns: auto 9rem 2.75rem; align-items: center; gap: 8px 10px;
+  padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-md); font-size: 0.875rem; white-space: nowrap; }
+.quiz-music-pop.hidden { display: none; }
+.quiz-music-pop input[type=range] { width: 100%; accent-color: var(--primary); }
+.quiz-music-pop output { text-align: right; color: var(--text2); font-variant-numeric: tabular-nums; }
+.quiz-music-pop #btn-quiz-music-reset { grid-column: 1 / -1; justify-self: start; }
 #btn-quiz-voice.active::after { content: ""; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger-fill); }
 .quiz-voice-next { font-size: 0.8125rem; color: var(--text2); text-align: center; }
 .quiz-question-wrap:has(.quiz-outcomes:not(:empty)) { padding-bottom: 36px; }
