@@ -1407,3 +1407,7 @@ The user asked for game-show music in the quiz, with an on/off switch. Three dir
 ## 2026-11-22 — Quiz: the toolbar row goes into two menus
 
 The user asked to tidy the quiz's seven toolbar icons, which took a row on a phone. Four layouts were previewed at phone size: settings in a menu with Edit and ⚑ still out (4 targets), the three toggles out and the card actions in a menu (4), no row at all with a settings menu in the header and a ⋯ on the card (2), and only dropping the volume caret (6). The user picked no row. It costs a second tap for Edit and ⚑, which the other layouts avoided; the keyboard shortcuts are unchanged. The flashcard screen's three-button toolbar was left as it was, to be asked about separately.
+
+## 2026-11-22 — Flashcards: Shuffle and the card actions in one header menu
+
+Following the quiz, the flashcard screen's Edit, ⚑ and Delete row went into a menu. The card's corners were taken by the speaker and the difficulty badge, so three placements were previewed: a ⋯ replacing Shuffle in the header, Shuffle and ⋯ side by side, and a ⋯ beside the speaker on the card. The user picked replacing Shuffle, which leaves one button in the header; shuffling is rare and `S` still does it. The user also asked for a shorter report label: "Report this card" ("Báo lỗi thẻ").

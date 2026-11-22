@@ -373,9 +373,10 @@ meant remembering the old card. There is no push for it: a verdict the learner d
 looking for would be noise. **Your feedback** in Preferences lists every request, newest
 first (`GET /api/rewrite-requests`, the last 100): class, what was flagged, the card's
 current front, the learner's note, and the answer or "Waiting". Every string in both comes
-from a model or a book, so both are built with `textContent`. In the flashcard toolbar the ⚑
-sits on Edit's side of the gap, away from Delete, and is locked with Edit during the retype
-drill; in the quiz it is in the card menu, after Edit and above the divider before Delete.
+from a model or a book, so both are built with `textContent`. On both study screens the ⚑
+(**Report this card**, shortened at the user's request from "Report a problem with this
+card") is in the card menu, after Edit and above the divider before Delete; on the flashcard
+screen it is locked with Edit during the retype drill.
 
 A dialog body is a scrolling flex column, and flex children shrink before a container
 scrolls: on a short phone screen the note box collapsed to a sliver with its placeholder
@@ -749,7 +750,12 @@ opposite the speaker. The settings menu stays open while it is changed, so the v
 follow the music switch; a card action closes its menu as it runs. Each row's text is the
 action it takes ("Show answers in a list", "Turn on music (M)"), as the icons' labels were.
 The cost is a second tap for Edit and ⚑; the keys `E`, `F`, `D`, `V` and `M` still act at
-once. The flashcard screen keeps its toolbar for now. `tests/quiz-menus.test.js`
+once. The flashcard screen lost its row of Edit, ⚑ and Delete the same way: they and Shuffle
+are in one ⋯ menu that replaced the Shuffle button in its header. The card's two top corners
+were taken (speaker and translate on the left, the difficulty badge on the right), so the
+user picked, from three previewed placements, the header over a ⋯ beside the speaker. `S`
+still shuffles at once. A new card or question closes a menu left open by a key answer.
+`tests/quiz-menus.test.js`
 
 **Answers can be spoken, hands-free.** The mic row in the quiz's settings menu (or `V`) turns
 listening on for this quiz only. Every quiz starts with the mic off and leaving the quiz
