@@ -1432,3 +1432,7 @@ Fifth item of the UI audit: on a phone every class card showed archive, edit and
 
 Sixth item of the UI audit: the class screen's loudest button was "+ Lesson", it had nothing to study, and its name was cut to "Elements of Statistical Learni…"; on the lesson screen Study was tonal, level with Quiz · N, after a leading ⋮. Previewed: fix the emphasis only (Study filled, "+ Lesson" outlined, ⋮ last, the name on two lines), or that plus a filled Study class with "+ Lesson" in ⋮. The user picked adding Study class. It is new behaviour, built on the multi-lesson Study Setup that selecting lessons already used; the cost is a tap more to add a lesson by hand.
 
+
+## 2026-11-23 — Meta text: 12px, and only what says something
+
+Seventh item of the UI audit. On a phone the class screen had "0% mastered" in 11px under an empty bar on every lesson, and every card in a lesson three 11px items, which for a new card read "Last seen: 20w ago · Last studied: never · Next review: not scheduled". Options previewed: A, only 12px; B, 12px with "% mastered" on the bar's line and one card line of facts; C, B and no bar on a lesson with nothing learned. Chose C: the bars that remain are the lessons that are moving, and the class bar above still gives the whole. "Last seen" was dropped because it moved when a card was merely shown, so it contradicted "Last studied: never". A lesson with only Learning cards keeps its bar, since that is progress too.

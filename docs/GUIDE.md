@@ -1841,6 +1841,14 @@ Most study happens on an iPhone, and several decisions are about it:
   it was the most prominent button on a screen whose lessons mostly arrive from
   KnowledgeApp, and there was no way to study the class short of selecting every lesson.
   Under 480px a class name wraps to two lines like a lesson title; it had ended "Learni…".
+- **Small text says something or is not there.** Meta text under lessons and cards is 12px,
+  not 11. A lesson with no card learned yet shows no mastery bar: "0% mastered" under an
+  empty bar sat on every row and hid the lessons that were moving; the class's own bar at
+  the top still shows. A moving lesson puts "% mastered" at the end of its bar, not on a
+  line of its own. A card in a lesson has one line of what has happened, "Next review in 3d
+  · studied 2d ago", and none when it is new, since its New pill says so. "Last seen" is
+  gone: it changed when a card was only shown, which read as studied beside "Last studied:
+  never".
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The
