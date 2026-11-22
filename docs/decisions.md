@@ -1400,3 +1400,6 @@ Last screen of the full-width pass. Stats already spanned the window, but its fo
 
 The page a share link opens was one full-width column, 18 lessons over two screens. Two grids were previewed: the class screen's (3 columns at 1440px) and smaller tiles (4 columns). The learner picked the smaller tiles: a shared lesson is only a title and a count, so it needs less room than a lesson the owner works in. The sign-in page stays a centred form.
 
+## 2026-11-22 — Quiz music: synthesized, reacting to the streak, remembered
+
+The user asked for game-show music in the quiz, with an on/off switch. Three directions were previewed: a fixed loop, music that reacts to the streak, and only stings on each answer. The user picked the reacting music, then replaced the preview's bell with another sound (a plucked string) and wanted one master volume, not per-part controls. It is written for the app and synthesized with Web Audio rather than shipped as a file: no licence question, nothing to download, and parts can join one at a time. Unlike voice answers, which start off at every quiz, the music remembers its setting (default off); the user picked that. It runs on its own AudioContext because the answer sounds' context is closed and rebuilt on return from the background.

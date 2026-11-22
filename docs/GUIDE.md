@@ -784,6 +784,28 @@ Safari on iOS and macOS recognises on the device; on iPhone the page's other sou
 quieter while the mic is open, and a restart that is not from a tap can be refused, which
 shows as the pause; Android Chrome plays a chime on each restart. `tests/quiz-voice.test.js`
 
+**Music, if wanted, that builds with the streak.** The note button in the quiz toolbar (or
+`M`) plays a loop written for the app and synthesized on the spot (128 BPM, C–G–Am–F); no
+audio file ships. The user asked for quiz music like a game show's and picked, from a
+preview, music that reacts over a fixed track. Parts join as the streak grows
+(`QUIZ_MUSIC_UNLOCK`): kick, hat and bass from the start, an arpeggio at 3 in a row, a clap
+and a plucked string at 6. A wrong answer muffles the mix (a lowpass that opens from 700 Hz
+over 2.2 s) and, as the streak is 0, drops it back to the beat. The plucked string replaced
+a bell the user disliked in the preview. One master volume, in a popover on the button's
+caret (0–100, default 50, Reset); the user asked for nothing more.
+
+Unlike the mic, the choice is remembered (`localStorage["fc-quiz-music"]`, default off, and
+`fc-quiz-music-volume`): the user picked that. It plays only on the quiz screen with the
+page visible (`quizMusicWanted()`), stops while the mic listens, since the recogniser would
+hear it, and drops to 30% while a term is read aloud, back when the reading ends or after
+8 s if the browser never says so. It has its own `AudioContext`, not the answer sounds'
+`soundContext()`, because that one is closed and rebuilt when the app returns from the
+background, which would cut the loop. Notes are scheduled 0.12 s ahead on a 25 ms timer, so
+a busy main thread delays the timer, not the beat. The browser only starts audio after a
+tap, so the music starts from the button or `M`, and a remembered "on" starts with the next
+quiz, which a tap has opened. Escape closes the volume popover before it leaves the quiz.
+`tests/quiz-music.test.js`
+
 ### Memory strip
 
 Above the card in flashcard and quiz sessions, a strip shows where each card answered in
