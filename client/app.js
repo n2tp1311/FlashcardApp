@@ -1096,7 +1096,6 @@ Object.assign(TRANSLATIONS.en, {
   "card.imagePlaceholder": "[image]",
   "stats.correctOutOfPct": "{correct} / {total} correct ({pct}%)",
 
-  "dashboard.exportCsv": "Export CSV",
   "common.loadingEllipsis": "Loading…",
   "dashboard.loadFailed": "Failed to load dashboard.",
   "dashboard.studyCharts": "Study Charts",
@@ -2370,7 +2369,6 @@ Object.assign(TRANSLATIONS.vi, {
   "card.imagePlaceholder": "[hình ảnh]",
   "stats.correctOutOfPct": "{correct} / {total} đúng ({pct}%)",
 
-  "dashboard.exportCsv": "Xuất CSV",
   "common.loadingEllipsis": "Đang tải…",
   "dashboard.loadFailed": "Tải bảng điều khiển thất bại.",
   "dashboard.studyCharts": "Biểu đồ học tập",
@@ -5128,8 +5126,7 @@ document.getElementById("btn-class-stats").addEventListener("click", function() 
 });
 
 // Triggers a browser download for a GET endpoint that can fail (auth/rate-limit/validation/
-// ownership) — a plain `window.location.href = url` navigation (the pattern the pre-existing
-// CSV export uses) would navigate the whole SPA away to a bare JSON error body on any non-2xx
+// ownership) — a plain `window.location.href = url` navigation would navigate the whole SPA away to a bare JSON error body on any non-2xx
 // response, with no way back except a reload. Fetching first and only building a download
 // link on success keeps the app intact and surfaces a normal error alert instead.
 //
@@ -13977,8 +13974,6 @@ function renderDashboard() {
   var errEl   = document.getElementById("dash-error");
   loadEl.classList.remove("hidden");
   errEl.classList.add("hidden");
-  var exportBtn = document.getElementById("btn-dashboard-export");
-  if (exportBtn) exportBtn.disabled = true;
   ["dash-summary-grid",
    "dash-chart-kpis","dash-heatmap-wrap","dash-trend-wrap","dash-newcards-trend-wrap","dash-srs-wrap","dash-future-due-wrap","dash-retention-wrap","dash-grade-wrap","dash-reviewtime-wrap",
    "dash-studytime-card","dash-attn-list","dash-lesson-table"].forEach(function(id) {
@@ -14011,10 +14006,6 @@ function renderDashboard() {
     var futureDueTitle = document.getElementById("dash-future-due-title");
     if (futureDueTitle) futureDueTitle.textContent = t("dashboard.futureDue", { n: futureDue.windowDays });
     renderFutureDue(futureDue, document.getElementById("dash-future-due-wrap"));
-
-    // Enable export if there's data
-    var totalAttempts = (analytics.lessonBreakdown || []).reduce(function(sum, l) { return sum + (l.total_attempts || 0); }, 0);
-    if (exportBtn) exportBtn.disabled = totalAttempts === 0;
 
     state.dashLessonData = { lessons: d.lessons || [], due: d.dueForReview || [], breakdown: analytics.lessonBreakdown || [],
       struggling: analytics.strugglingLessons || [], days: days };
@@ -14776,10 +14767,6 @@ function renderAccuracyTrend(rows, wrap, maxWeeksAgo) {
     wrap.appendChild(rowEl);
   });
 }
-
-document.getElementById("btn-dashboard-export").addEventListener("click", function() {
-  window.location.href = "/api/stats/analytics/export";
-});
 
 /* ============================
    BULK LESSON + CARD IMPORT

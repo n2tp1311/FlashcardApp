@@ -626,42 +626,6 @@ router.get("/accuracy/lessons", requireAuth, function(req, res) {
   res.json(map);
 });
 
-router.get("/analytics/export", requireAuth, function(req, res) {
-  var uid = req.session.userId;
-
-  var rows = db.prepare(
-    "SELECT date(a.created_at,'unixepoch') AS date, strftime('%H',a.created_at,'unixepoch') AS hour, " +
-    "cl.name AS class_name, l.title AS lesson, " +
-    "c.data AS card_data, c.format AS card_format, a.source AS mode, a.correct AS result, a.duration_ms AS duration_ms " +
-    "FROM attempts a " +
-    "JOIN cards c ON a.card_id=c.id " +
-    "JOIN lessons l ON c.lesson_id=l.id " +
-    "JOIN classes cl ON l.class_id=cl.id " +
-    "WHERE a.user_id=? AND cl.user_id=? " +
-    "AND a.created_at >= strftime('%s','now','-90 days') " +
-    "ORDER BY a.created_at"
-  ).all(uid, uid);
-
-  function csvField(v) {
-    v = String(v).replace(/"/g, '""');
-    return /[,"\n]/.test(v) ? '"' + v + '"' : v;
-  }
-
-  var lines = ["date,hour,class,lesson,card_front,mode,result,duration_sec"];
-  rows.forEach(function(row) {
-    var data;
-    try { data = JSON.parse(row.card_data); } catch(_) { data = {}; }
-    var front = row.card_format === "image-def" ? "[image]" : (data.term || data.question || data.statement || data.text || "");
-    var durationSec = row.duration_ms != null ? Math.round(row.duration_ms / 1000) : "";
-    lines.push([csvField(row.date), csvField(row.hour), csvField(row.class_name), csvField(row.lesson), csvField(front),
-      csvField(row.mode), row.result === 1 ? "correct" : "incorrect", durationSec].join(","));
-  });
-
-  res.setHeader("Content-Type", "text/csv");
-  res.setHeader("Content-Disposition", 'attachment; filename="study-export.csv"');
-  res.send(lines.join("\n"));
-});
-
 // GET /api/stats/srs-distribution — buckets by the FSRS interval a card is currently
 // scheduled at (srs_due_at minus its last review), using the same perceptual boundaries the
 // old fixed-step ladder used (10m/1h/4h/1d/3d/7d/21d/...), so the chart's shape stays

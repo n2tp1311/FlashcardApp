@@ -127,3 +127,10 @@ test("new strings exist in both languages", function() {
     assert.equal(app.split('"dashboard.' + k + '":').length - 1, 2, k);
   }
 });
+
+test("the Dashboard has no CSV export: no button, string or route", function() {
+  const stats = fs.readFileSync(path.join(__dirname, "..", "server", "routes", "stats.js"), "utf8");
+  assert.doesNotMatch(html, /btn-dashboard-export/);
+  assert.doesNotMatch(app, /dashboard\.exportCsv|analytics\/export/);
+  assert.doesNotMatch(stats, /analytics\/export|text\/csv/);
+});

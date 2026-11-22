@@ -29,8 +29,8 @@ function truncate(str) {
   return str.length > MAX_CHARS_PER_FIELD ? str.slice(0, MAX_CHARS_PER_FIELD) + "…" : str;
 }
 
-// A third independent copy of the per-format field list, alongside cards.js's validation
-// and stats.js's CSV export — each needs different fields (this one keeps both sides of the
+// A second independent copy of the per-format field list, alongside cards.js's validation
+// — each needs different fields (this one keeps both sides of the
 // card, not just the front, since tag suggestion benefits from the answer/definition too),
 // so there's no single shared helper to reuse here, just the same four format strings.
 function extractCardText(format, data) {
