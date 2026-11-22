@@ -557,14 +557,25 @@ was the other layout previewed; the eye had to jump between them.
 
 - **Show answer first.** Until the card is flipped, the grade row is one Show answer
   button (`Space`), as in Anki. Grading a card sight-unseen contradicted the app's own
-  advice to recall first, and four faded buttons read as broken.
+  advice to recall first, and four faded buttons read as broken. It is filled, between two
+  arrow buttons for the previous and next card on one row (`←`/`→` still work). Pale, under
+  outlined Prev and Next buttons, it read as the weakest button on the screen (3.6:1) though
+  it is the only thing to do there. After the flip the arrows lose their edge and sit above
+  the grades. The arrows carry their names ("Previous card (←)", "Next card (→)", "Finish"
+  on the last card) as tooltip and aria-label. Four layouts were previewed at phone size;
+  the user picked this one over keeping the dots on one row or replacing them with a count.
+- **On a phone the card takes the free height**, and the buttons are one grid that is the
+  same height on both faces: arrows on the top row and the grades 2×2 under them, all 52px
+  tall. Before the flip the grades are kept but invisible, holding that height, and the
+  arrows and Show answer take the bottom row. With the rows sized by what was showing, the
+  card shrank 108px in the middle of its flip. The cost is about 110px of empty space
+  between the card and Show answer on the front.
 - **Four grades**: Learning (Again), Hard, Know It (Good), Confident (Easy), keys 1–4,
   swipe right for Know It and left for Learning.
-- **The row of dots** under the card has one dot per card, green for Know It and red for
-  Learning, and a click on one jumps to that card. One row fits about 40, so a longer
-  session shows the 40 around the current card (`fcDotWindow()`). Until 2026-11-05 it
-  showed cards 1–40 only: from card 41 on, the current card had no dot and the row
-  looked finished with 25 cards still to go.
+- **There is no row of dots.** Until 2026-11-22 a row under the card had a dot per card
+  (green for Know It, red for Learning, a click jumped to that card), 40 of them around the
+  current card. On a phone it wrapped to two rows, and the header's progress bar already
+  shows where you are. Jumping to a card by its dot went with it; Prev and Next remain.
 - **Flashcard & Write** adds a text box on the front. What is typed is never checked;
   it is echoed on the back for comparison. Two things make it more than a text box:
   - **Hints** uncover the answer one word at a time. Using one caps the grade at
@@ -834,6 +845,9 @@ and a trail show where the card was before, and the caption says "Back in 21d, w
 The count on the right is how many cards are now past a month. The point is to make the
 effect of a session visible: a good session moves the dots right, which the grade
 buttons' intervals only hint at one card at a time.
+
+The strip appears with the first answer. Empty, it was a box above the first card saying
+cards will land there, which took about 60px from the card for no information.
 
 - **One dot per card.** A card answered twice (a Learning card that comes back) keeps one
   dot, at its latest place; its "was" is where this session last put it.
@@ -1821,10 +1835,10 @@ Most study happens on an iPhone, and several decisions are about it:
 - **The study header is centred on the card.** Its progress bar sat between Exit and the
   right-hand control as a flex item, so its centre followed their widths: 20px right of the
   card in a quiz (Exit against a 25px score) and 17px left in flashcards (against a 100px
-  Shuffle). Under 600px the header is three columns, the sides equal (1fr 2fr 1fr), and
-  Shuffle shows only its icon there, keeping its name as the aria-label.
+  Shuffle). Under 600px the header is three columns, the sides equal (1fr 2fr 1fr). Shuffle
+  has since moved into the ⋯ menu that took its place.
 - **Study screens on a wide screen span the window** (1024px and up): the card, its
-  translation and explanation, the dots, Prev/Next, the quiz and the hint caption drop their
+  translation and explanation, Prev/Next, the quiz and the hint caption drop their
   600px cap, the card grows to 340px tall, and quiz choices sit two to a row (true/false keeps
   its own row). The learner prefers full-width desktop screens to a centred column; two
   layouts were previewed, and stacking everything at full width won over the card on the left
@@ -1848,7 +1862,7 @@ Most study happens on an iPhone, and several decisions are about it:
   they were 900px columns. Saved words sit two to a row; each achievement group is a row
   like Study Setup, its name and count on the left and its badges beside it. A wider badge
   grid with the names above each group was the other option previewed.
-- **The grades are the bottom row** of the flashcard screen, Prev/Next the row above.
+- **The grades are the bottom row** of the flashcard screen, the Prev/Next arrows the row above.
   Prev/Next used to be the bottom row, 8px under Confident: a slip skipped a card
   ungraded, and on the last card the same spot is Finish. Landscape keeps one row.
 - **Home reloads when the app comes back** after the UTC day changed or after 10 minutes

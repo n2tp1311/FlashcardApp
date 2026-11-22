@@ -1411,3 +1411,7 @@ The user asked to tidy the quiz's seven toolbar icons, which took a row on a pho
 ## 2026-11-22 — Flashcards: Shuffle and the card actions in one header menu
 
 Following the quiz, the flashcard screen's Edit, ⚑ and Delete row went into a menu. The card's corners were taken by the speaker and the difficulty badge, so three placements were previewed: a ⋯ replacing Shuffle in the header, Shuffle and ⋯ side by side, and a ⋯ beside the speaker on the card. The user picked replacing Shuffle, which leaves one button in the header; shuffling is rare and `S` still does it. The user also asked for a shorter report label: "Report this card" ("Báo lỗi thẻ").
+
+## 2026-11-22 — Flashcards: Show answer between two arrows, no dot row
+
+First item of a UI audit made with the ui-ux-pro-max checklist: on the flashcard screen the one action, Show answer, was the palest button (3.6:1), under outlined Prev and Next; the dots wrapped to two rows on a phone, and the empty memory strip took a box above the first card. Four layouts were previewed at phone size: as it was; Show answer filled with text-only Prev/Next and one row of dots; one row of ← Show answer → with no dots; and a "1 known · 1 learning · 98 to go" line in place of the dots. The user picked the single row without dots. It costs jumping to a card by its dot. On a phone the buttons became a grid of fixed height, since sizing them by what was showing made the card shrink 108px mid-flip; the price is empty space above Show answer on the front.
