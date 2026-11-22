@@ -193,14 +193,24 @@ test("medal colour: one per level, bronze to diamond", function() {
 });
 
 test("progress line: count toward the next tier, percent, waiting, goal off, not yet, lost", function() {
-  assert.equal(ctx.achProgressText(item({ value: 64, progress: 0.64, show: { cur: 64, target: 100 } })), "ach.progress|cur=64,target=100,unit=ach.unit.typed");
+  assert.equal(ctx.achProgressText(item({ value: 64, progress: 0.64, show: { cur: 64, target: 100 } })), "ach.progress|cur=64,target=100,unit=ach.unit.typed|n=100");
   assert.equal(ctx.achProgressText(item({ key: "longMemory", tiers: [1], next: 1, show: { cur: 91, target: 90, unit: "%" } })), "ach.progressPct|cur=91,target=90");
   assert.equal(ctx.achProgressText(item({ key: "recallCleared", tiers: [1], next: 1, show: { cur: 6, unit: "waiting" } })), "ach.waiting|n=6");
   assert.equal(ctx.achProgressText(item({ key: "goalKeeper", show: { off: true } })), "ach.goalOff");
   assert.equal(ctx.achProgressText(item({ key: "secondLook", tiers: [1], next: 1, show: { cur: 0, target: 1 } })), "ach.notYet");
   assert.match(ctx.achProgressText(item({ key: "lessonMastered", tiers: [1, 10, 50], lost: true, value: 0, show: { cur: 0, target: 1 } })), /^ach\.wasEarned · /);
   // Top of the ladder: the count itself, nothing left to reach.
-  assert.equal(ctx.achProgressText(item({ value: 2400, tier: 3, next: null, progress: 1 })), "ach.count|n=2400,unit=ach.unit.typed");
+  assert.equal(ctx.achProgressText(item({ value: 2400, tier: 3, next: null, progress: 1 })), "ach.count|n=2400,unit=ach.unit.typed|n=2400");
+  // The best class short of mastered reads as that, not "0% of 100%".
+  assert.equal(ctx.achProgressText(item({ key: "classMastered", tiers: [1], next: 1, show: { cur: 42, target: 100, unit: "%" } })), "ach.bestClass|pct=42");
+});
+
+test("units agree with the number in English: one month, not 1 months", function() {
+  const en = app.slice(app.indexOf("Object.assign(TRANSLATIONS.en, {"), app.indexOf("Object.assign(TRANSLATIONS.vi, {"));
+  const units = [...new Set([...app.matchAll(/"ach\.unit\.([a-z]+)":/g)].map(m => m[1]))].filter(u => !/_one$/.test(u) && u !== "typed" && u !== "min");
+  assert.ok(units.length >= 10);
+  units.forEach(u => assert.match(en, new RegExp('"ach\\.unit\\.' + u + '_one":'), "singular for " + u));
+  assert.equal(app.split('"ach.bestClass":').length - 1, 2, "best class in both languages");
 });
 
 test("badge: locked is dashed with progress, earned shows the threshold, a model string is escaped", function() {

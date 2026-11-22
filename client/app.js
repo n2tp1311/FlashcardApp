@@ -386,23 +386,38 @@ Object.assign(TRANSLATIONS.en, {
   "ach.loadFailed": "Couldn't load achievements.",
   "ach.progress": "{cur} / {target} {unit}",
   "ach.progressPct": "{cur}% of {target}%",
+  "ach.bestClass": "Best class: {pct}% mastered",
   "ach.count": "{n} {unit}",
   "ach.unit.days": "days",
+  "ach.unit.days_one": "day",
   "ach.unit.lessons": "lessons",
+  "ach.unit.lessons_one": "lesson",
   "ach.unit.cards": "cards",
+  "ach.unit.cards_one": "card",
   "ach.unit.words": "words",
+  "ach.unit.words_one": "word",
   "ach.unit.typed": "typed",
   "ach.unit.hours": "hours",
+  "ach.unit.hours_one": "hour",
   "ach.unit.fixes": "fixes",
+  "ach.unit.fixes_one": "fix",
   "ach.unit.weeks": "weeks",
+  "ach.unit.weeks_one": "week",
   "ach.unit.reviews": "reviews",
+  "ach.unit.reviews_one": "review",
   "ach.unit.min": "min",
   "ach.unit.classes": "classes",
+  "ach.unit.classes_one": "class",
   "ach.unit.times": "times",
+  "ach.unit.times_one": "time",
   "ach.unit.months": "months",
+  "ach.unit.months_one": "month",
   "ach.unit.books": "books",
+  "ach.unit.books_one": "book",
   "ach.unit.sessions": "sessions",
+  "ach.unit.sessions_one": "session",
   "ach.unit.passages": "passages",
+  "ach.unit.passages_one": "passage",
   "ach.group.showingUp": "Showing up",
   "ach.group.mastery": "Mastery",
   "ach.group.effort": "Effort",
@@ -1683,6 +1698,7 @@ Object.assign(TRANSLATIONS.vi, {
   "ach.loadFailed": "Không tải được thành tích.",
   "ach.progress": "{cur} / {target} {unit}",
   "ach.progressPct": "{cur}% / {target}%",
+  "ach.bestClass": "Lớp tốt nhất: {pct}% thành thạo",
   "ach.count": "{n} {unit}",
   "ach.unit.days": "ngày",
   "ach.unit.lessons": "bài",
@@ -6774,9 +6790,10 @@ function achDate(sec) {
   return new Date(sec * 1000).toLocaleDateString(appLocale(), { day: "numeric", month: "short" });
 }
 
+// The unit agrees with the target ("0 / 1 month"); it said "0 / 1 months" and "0 / 1 times".
 function achCountText(cur, target, unit) {
   if (unit === "%") return t("ach.progressPct", { cur: cur, target: target });
-  return t("ach.progress", { cur: cur, target: target, unit: unit ? t("ach.unit." + unit) : "" }).trim();
+  return t("ach.progress", { cur: cur, target: target, unit: unit ? t("ach.unit." + unit, { n: target }) : "" }).trim();
 }
 
 // The line under a medal's name: how far along, when it was earned, or why it is not moving.
@@ -6785,8 +6802,10 @@ function achProgressText(item) {
   var text;
   if (s.off) text = t("ach.goalOff");
   else if (s.unit === "waiting" && s.cur > 0) text = t("ach.waiting", { n: s.cur });
+  // Its best class's share against a target of 100, which read "0% of 100%".
+  else if (item.key === "classMastered" && s.unit === "%" && item.next != null) text = t("ach.bestClass", { pct: s.cur });
   else if (item.next == null) {
-    text = item.tiers.length > 1 ? t("ach.count", { n: item.value, unit: ACH_UNITS[item.key] ? t("ach.unit." + ACH_UNITS[item.key]) : "" }).trim()
+    text = item.tiers.length > 1 ? t("ach.count", { n: item.value, unit: ACH_UNITS[item.key] ? t("ach.unit." + ACH_UNITS[item.key], { n: item.value }) : "" }).trim()
       : item.earnedAt ? t("ach.earnedOn", { date: achDate(item.earnedAt) }) : "";
   } else if (s.target && (s.unit || item.tiers.length > 1)) text = achCountText(s.cur, s.target, s.unit || ACH_UNITS[item.key]);
   else text = item.value > 0 ? achCountText(item.value, item.next, ACH_UNITS[item.key]) : t("ach.notYet");
