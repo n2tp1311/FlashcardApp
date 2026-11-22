@@ -1448,3 +1448,7 @@ Ninth item of the UI audit. On a phone Home's header held an icon-only import ar
 ## 2026-11-23 — Study Setup: Presets only once there is one
 
 Tenth item of the UI audit. With no presets, Setup opened on a Presets section holding an empty row, a gear with nothing to manage and "+ Save current as preset", 106px before the first real choice. Options previewed: A, hide the section until a preset exists and move saving after Card Order; C, fold the empty section into one line with the save button beside the label. Chose A: saving follows the choices it saves, and Setup starts at Card Count. Presets, once saved, stay at the top. Also fixed features.md, which still described a × on each chip that had been removed.
+
+## 2026-11-23 — Achievements: singular units and the best class
+
+Found while auditing the Achievements page: locked badges read "0 / 1 months", "0 / 1 times", "0 / 1 lessons", and Class mastered "0% of 100%". Fixed without a preview, as a defect: English gained a singular for each unit, and Class mastered names the best class's share, since its target is always 100%. The test now checks that every unit but "typed" and "min", which read the same for one, has a singular.

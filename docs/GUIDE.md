@@ -1328,6 +1328,10 @@ volume; nothing rewards cramming (there is no "most cards in a day").
   worst a forged one does is award itself a badge. A solved passage is sent as
   `cardId:date`, so checking the same passage twice in a day counts once.
 - Sessions are inferred from 10-minute gaps, because attempts carry no session id.
+- **The progress line agrees with its number.** English has a singular for each unit ("0 / 1
+  month", not "1 months"); Vietnamese has no plural to agree. Class mastered says "Best
+  class: 42% mastered" while no class is: its target is always 100%, so "0% of 100%" said
+  nothing.
 - The session end's "Almost there ... this session +N" subtracts the value before the
   session from the value after, rounded to the decimals the values carry. Hours come with
   one decimal, and 99.9 − 99.7 in floating point printed "+0.20000000000000284".

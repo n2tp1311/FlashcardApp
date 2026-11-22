@@ -408,6 +408,7 @@
   - Almost there: only when no medal came, the unfinished one with the most progress, from 80%, with "this session +12" (rounded to the value's own decimals, so hours read "+0.2") where the progress line counts the value itself (not for a current run or a percentage). It plays no sound on its own.
 - Sidebar badge: "N new" for tiers recorded after the page was last opened (per user, in localStorage). The first fetch on a device marks everything seen, so a long-time user is not greeted with every medal as new
 - "Both ways round" (studying a class back to front as well) was asked for and dropped: there is no study direction setting, so there is nothing to count
+- A locked achievement's progress line uses the singular for one ("0 / 1 month"), and Class mastered shows the best class's share ("Best class: 42% mastered") instead of "0% of 100%"
 - `tests/achievements.test.js`
 
 ## MCQ Explanation Field
