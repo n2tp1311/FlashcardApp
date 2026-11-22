@@ -260,5 +260,6 @@ test("listening follows the screen, the language and the page being visible", fu
   // Restarts after the first are not taps: a refusal then means tap to resume, not blocked.
   assert.match(fn("startQuizVoice"), /quizVoice\.fromGesture = false;/);
   assert.match(fn("speakQuizTerm"), /Math\.min\(6000,/);
-  assert.match(html, /id="btn-quiz-voice"[^>]*data-i18n-title="quiz\.voiceOn"/);
+  assert.match(html, /id="btn-quiz-voice"[^\n]*<span class="menu-text">/);
+  assert.match(fn("applyQuizVoice"), /setMenuLabel\(btn, label\)/);
 });

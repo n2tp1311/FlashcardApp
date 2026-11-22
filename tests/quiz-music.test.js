@@ -69,15 +69,16 @@ test("it plays only when on, on the quiz screen, visible, and not while the mic 
 });
 
 test("the controls, the M key and the hooks are wired", function() {
-  for (const id of ["btn-quiz-music", "btn-quiz-music-volume", "quiz-music-pop", "quiz-music-volume", "btn-quiz-music-reset"])
+  for (const id of ["btn-quiz-music", "quiz-music-volume", "btn-quiz-music-reset"])
     assert.ok(html.includes('id="' + id + '"'), id);
+  assert.ok(!html.includes('id="quiz-music-pop"'), "the volume lives in the settings menu, not its own popover");
   assert.match(app, /e\.key === "m" \|\| e\.key === "M"\) && !e\.ctrlKey[^\n]+toggleQuizMusic\(\)/);
   assert.match(fn("answerQuiz"), /quizMusicAnswer\(isCorrect\)/);
   assert.match(fn("speakWith"), /quizMusicDuck\(true\)[\s\S]+quizMusicDuck\(false\)/);
   assert.equal((fn("syncQuizVoice").match(/syncQuizMusic\(\)/g) || []).length, 2, "both exits of syncQuizVoice");
   assert.match(fn("toggleQuizVoice"), /syncQuizMusic\(\)/);
   // The slider holds the focus, and the screen's key handler skips keys typed into a control.
-  assert.match(app, /getElementById\("quiz-music-pop"\)\.addEventListener\("keydown"[\s\S]{0,200}"Escape"[\s\S]{0,200}showQuizMusicVolume\(false\)/);
+  assert.match(app, /\["quiz-settings-menu", "quiz-card-menu"\]\.forEach[\s\S]{0,200}"keydown"[\s\S]{0,200}"Escape"[\s\S]{0,200}closeAllDropdowns\(\)/);
   for (const k of ["quiz.musicOn", "quiz.musicOff", "quiz.musicVolume", "quiz.musicVolumeLabel", "quiz.musicReset"])
     assert.equal(app.split('"' + k + '":').length - 1, 2, k + " in both languages");
 });

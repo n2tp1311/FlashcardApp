@@ -289,8 +289,10 @@ test("the flag button shows only on KnowledgeApp cards, fills in once sent, and 
   assert.match(extract("renderFlashcard"), /syncFlagButton\(document\.getElementById\("btn-fc-flag-card"\), card\)/);
   assert.match(appJs, /"btn-fc-edit-card", "btn-fc-flag-card"/, "locked during the retype drill like Edit");
   assert.match(indexHtml, /id="btn-fc-flag-card"/);
-  // The quiz has the same ⚑, on Edit's side of the gap, kept in step with each question.
-  assert.match(indexHtml, /id="btn-quiz-edit-card"[^\n]*\n\s*<button[^\n]*id="btn-quiz-flag-card"[^\n]*\n\s*<span class="fc-toolbar-gap"/);
+  // The quiz has the same ⚑ in its card menu, after Edit and above the divider before Delete,
+  // kept in step with each question; its label is the menu row's text.
+  assert.match(indexHtml, /id="btn-quiz-edit-card"[^\n]*\n\s*<button[^\n]*id="btn-quiz-flag-card"[^\n]*<span class="menu-text">[^\n]*\n\s*<div class="dropdown-divider">/);
+  assert.match(extract("syncFlagButton"), /setMenuLabel\(btn, /);
   assert.match(extract("renderQuizCard"), /syncFlagButton\(document\.getElementById\("btn-quiz-flag-card"\), cards\[i\] \|\| \{\}\)/);
   assert.match(appJs, /getElementById\("btn-quiz-flag-card"\)\.addEventListener\("click"/);
   assert.match(indexHtml, /id="modal-flag"/);

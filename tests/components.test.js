@@ -38,5 +38,5 @@ test("from tablet width up, the study progress bar is centred over the content, 
   const block = css.slice(css.indexOf("@media (min-width: 601px) {\n  #screen-quiz .app-header"));
   assert.ok(block.length > 0, "centring block missing");
   assert.match(block, /#screen-quiz \.fc-progress-wrap, #screen-flashcard \.fc-progress-wrap \{\s*position: absolute; left: 50%; top: 50%; transform: translate\(-50%, -50%\);/);
-  assert.match(block, /#quiz-score-display, #btn-fc-shuffle \{ margin-left: auto; \}/);
+  assert.match(block, /#screen-quiz \.study-header-end, #btn-fc-shuffle \{ margin-left: auto; \}/);
 });

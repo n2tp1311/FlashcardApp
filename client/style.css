@@ -2857,21 +2857,23 @@ code {
 .quiz-voice-status[data-kind="unavailable"] .quiz-voice-dot { background: var(--danger); }
 @keyframes voice-pulse { 50% { opacity: 0.35; transform: scale(0.8); } }
 @media (prefers-reduced-motion: reduce) { .quiz-voice-dot { animation: none !important; } }
-#btn-quiz-voice { position: relative; }
-#btn-quiz-voice.active { background: var(--primary-light); color: var(--primary); }
-/* Quiz music: the note button and a narrow caret that opens the volume slider beside it. */
-.quiz-music-wrap { position: relative; display: inline-flex; align-items: center; }
-#btn-quiz-music[aria-pressed="true"] { background: var(--primary-light); color: var(--primary); }
-.quiz-music-caret { width: 22px; min-width: 22px; padding-left: 0; padding-right: 0; margin-left: -6px; }
-.quiz-music-pop { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 30;
-  display: grid; grid-template-columns: auto 9rem 2.75rem; align-items: center; gap: 8px 10px;
-  padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  box-shadow: var(--shadow-md); font-size: 0.875rem; white-space: nowrap; }
-.quiz-music-pop.hidden { display: none; }
-.quiz-music-pop input[type=range] { width: 100%; accent-color: var(--primary); }
-.quiz-music-pop output { text-align: right; color: var(--text2); font-variant-numeric: tabular-nums; }
-.quiz-music-pop #btn-quiz-music-reset { grid-column: 1 / -1; justify-self: start; }
-#btn-quiz-voice.active::after { content: ""; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger-fill); }
+/* The quiz has no toolbar row: the session toggles are in the header's settings menu and the
+   card actions in a menu on the card's corner, so the question sits right under the memory
+   strip. A toolbar of seven icons took a row on a phone for buttons used a few times a session. */
+.study-header-end { display: flex; align-items: center; gap: 4px; }
+#btn-quiz-settings, #btn-quiz-card-menu { min-width: 40px; min-height: 40px; justify-content: center; color: var(--text2); }
+@media (pointer: coarse) { #btn-quiz-settings, #btn-quiz-card-menu { min-width: 44px; min-height: 44px; } }
+#btn-quiz-settings[aria-expanded="true"], #btn-quiz-card-menu[aria-expanded="true"] { background: var(--surface2); color: var(--text); }
+/* Two classes: .dropdown-wrap, declared later, would make it relative again. */
+.dropdown-wrap.quiz-card-menu { position: absolute; top: 4px; left: 4px; z-index: 2; }
+.quiz-card-menu .dropdown-menu { left: 0; right: auto; }
+.study-menu { min-width: 250px; }
+#btn-quiz-music[aria-pressed="true"], #btn-quiz-voice.active { color: var(--primary); }
+.study-menu-volume { display: grid; grid-template-columns: auto 1fr 2.75rem; align-items: center; gap: 6px 10px;
+  padding: 4px 16px 10px 38px; font-size: 0.8125rem; color: var(--text2); }
+.study-menu-volume input[type=range] { width: 100%; accent-color: var(--primary); }
+.study-menu-volume output { text-align: right; font-variant-numeric: tabular-nums; }
+.study-menu-volume #btn-quiz-music-reset { grid-column: 1 / -1; justify-self: start; }
 .quiz-voice-next { font-size: 0.8125rem; color: var(--text2); text-align: center; }
 .quiz-question-wrap:has(.quiz-outcomes:not(:empty)) { padding-bottom: 36px; }
 /* The app's icons, not the ✓ ✗ characters: those fell back to a symbol font that matched nothing else. */
@@ -2882,9 +2884,10 @@ code {
 .quiz-out.is-on { font-weight: 700; }
 .quiz-out.is-off { opacity: 0.45; text-decoration: line-through; }
 /* Room for the speaker on both sides, so a long question neither runs under it nor sits off-centre. */
-.quiz-question-wrap:has(.quiz-audio:not(.hidden)) { padding-inline: 44px; }
+/* Both sides, so the question stays centred between the corner menu and the speaker. */
+.quiz-question-wrap { padding-inline: 48px; }
 @media (pointer: coarse) {
-  .quiz-question-wrap:has(.quiz-audio:not(.hidden)) { padding-inline: 56px; }
+  .quiz-question-wrap { padding-inline: 56px; }
 }
 .quiz-question {
   font-size: 1.125rem;
@@ -5419,7 +5422,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     width: min(300px, 38%); flex: none;
   }
-  #quiz-score-display, #btn-fc-shuffle { margin-left: auto; }
+  #screen-quiz .study-header-end, #btn-fc-shuffle { margin-left: auto; }
 }
 /* Phones: the bar fills the space between the side controls, but as a plain flex item its
    centre followed their widths: Exit (65-78px) against a 25px score put it 20px right of the
@@ -5428,7 +5431,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
 @media (max-width: 600px) {
   #screen-quiz .app-header, #screen-flashcard .app-header { display: grid; grid-template-columns: 1fr 2fr 1fr; }
   #btn-quiz-back, #btn-fc-back { justify-self: start; }
-  #quiz-score-display, #btn-fc-shuffle { justify-self: end; }
+  #screen-quiz .study-header-end, #btn-fc-shuffle { justify-self: end; }
   #btn-fc-shuffle { font-size: 0; gap: 0; min-width: 44px; justify-content: center; }
 }
 

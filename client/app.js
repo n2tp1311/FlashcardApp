@@ -1375,6 +1375,8 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.musicVolume": "Music volume",
   "quiz.musicVolumeLabel": "Volume",
   "quiz.musicReset": "Reset",
+  "quiz.settings": "Study settings",
+  "quiz.cardMenu": "Card actions",
   "quiz.voiceListening": "Listening · say {nums} or {letters}",
   "quiz.voiceListeningTf": "Listening · say “{yes}” or “{no}”, or 1–2",
   "quiz.voiceHeard": "Heard “{text}” → {n}",
@@ -2635,6 +2637,8 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.musicVolume": "Âm lượng nhạc",
   "quiz.musicVolumeLabel": "Âm lượng",
   "quiz.musicReset": "Về mặc định",
+  "quiz.settings": "Tùy chỉnh buổi học",
+  "quiz.cardMenu": "Thao tác với thẻ",
   "quiz.voiceListening": "Đang nghe · nói {nums} hoặc {letters}",
   "quiz.voiceListeningTf": "Đang nghe · nói “{yes}” hoặc “{no}”, hoặc 1–2",
   "quiz.voiceHeard": "Đã nghe “{text}” → {n}",
@@ -7526,9 +7530,7 @@ function syncFlagButton(btn, card) {
   var show = canRewriteInKnowledge(card);
   btn.classList.toggle("hidden", !show);
   btn.classList.toggle("is-flagged", show && !!card.rewrite_pending);
-  var label = t(card.rewrite_pending ? "flag.pending" : "flag.button");
-  btn.title = label;
-  btn.setAttribute("aria-label", label);
+  setMenuLabel(btn, t(card.rewrite_pending ? "flag.pending" : "flag.button"));
 }
 
 function flagError(message) {
@@ -11611,9 +11613,16 @@ function applyQuizLayout() {
   document.getElementById("quiz-options").classList.toggle("grid-mode", grid);
   var btn = document.getElementById("btn-quiz-layout");
   var label = t(grid ? "quiz.layoutList" : "quiz.layoutGrid");
-  btn.innerHTML = grid ? ICON_LAYOUT_LIST : ICON_LAYOUT_GRID;
+  btn.innerHTML = (grid ? ICON_LAYOUT_LIST : ICON_LAYOUT_GRID) + '<span class="menu-text"></span>';
+  setMenuLabel(btn, label);
+}
+
+// The quiz's session toggles and card actions sit in menus, where the label is the visible text.
+function setMenuLabel(btn, label) {
   btn.title = label;
   btn.setAttribute("aria-label", label);
+  var text = btn.querySelector(".menu-text");
+  if (text) text.textContent = label;
 }
 
 // Hands-free quiz: the browser's own speech recognition (no model call) hears "2", "bê" or
@@ -11723,8 +11732,7 @@ function applyQuizVoice() {
   var label = t(on ? "quiz.voiceOff" : "quiz.voiceOn");
   btn.classList.toggle("hidden", !ok);
   btn.classList.toggle("active", on && quizVoice.active);
-  btn.title = label;
-  btn.setAttribute("aria-label", label);
+  setMenuLabel(btn, label);
   document.getElementById("quiz-voice-status").classList.toggle("hidden", !on);
   var nextBtn = document.getElementById("quiz-next-btn");
   var say = document.querySelector("#quiz-sheet .quiz-voice-next");
@@ -11942,6 +11950,8 @@ function findQuizResult(card) {
 }
 
 function renderQuizCard() {
+  // A menu left open by a key answer (1-5) would cover the next question.
+  closeAllDropdowns();
   var cards = state.quizCards;
   var i     = state.quizIndex;
   var total = cards.length;
@@ -12405,28 +12415,25 @@ document.getElementById("btn-quiz-layout").addEventListener("click", function() 
 
 document.getElementById("btn-quiz-voice").addEventListener("click", toggleQuizVoice);
 document.getElementById("btn-quiz-music").addEventListener("click", toggleQuizMusic);
-document.getElementById("btn-quiz-music-volume").addEventListener("click", function(e) {
-  e.stopPropagation();
-  showQuizMusicVolume(document.getElementById("quiz-music-pop").classList.contains("hidden"));
-});
 document.getElementById("quiz-music-volume").addEventListener("input", function() {
   setQuizMusicVolume(+this.value);
 });
 document.getElementById("btn-quiz-music-reset").addEventListener("click", function() {
   setQuizMusicVolume(QUIZ_MUSIC_DEFAULT_VOLUME);
 });
-// The slider has the focus while the popover is open, and the screen's key handler ignores
-// keys typed into a control, so the popover closes itself on Escape and hands focus back.
-document.getElementById("quiz-music-pop").addEventListener("keydown", function(e) {
-  if (e.key !== "Escape") return;
-  e.preventDefault();
-  e.stopPropagation();
-  showQuizMusicVolume(false);
-  document.getElementById("btn-quiz-music-volume").focus();
-});
-document.addEventListener("click", function(e) {
-  var pop = document.getElementById("quiz-music-pop");
-  if (pop && !pop.classList.contains("hidden") && !e.target.closest(".quiz-music-wrap")) showQuizMusicVolume(false);
+// The settings stay open while they are changed: a click inside would otherwise reach the
+// document and close the menu between the music toggle and the volume it reveals.
+document.getElementById("quiz-settings-menu").addEventListener("click", function(e) { e.stopPropagation(); });
+// The slider can hold the focus, and the screen's key handler ignores keys typed into a
+// control, so the menus close themselves on Escape and hand focus back to their button.
+["quiz-settings-menu", "quiz-card-menu"].forEach(function(id) {
+  document.getElementById(id).addEventListener("keydown", function(e) {
+    if (e.key !== "Escape") return;
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllDropdowns();
+    document.querySelector('[aria-controls="' + id + '"]').focus();
+  });
 });
 window.addEventListener("pagehide", stopQuizMusic);
 applyQuizMusic();
@@ -15323,8 +15330,7 @@ function applyQuizMusic() {
   var on = quizMusicPref();
   var label = t(on ? "quiz.musicOff" : "quiz.musicOn");
   btn.setAttribute("aria-pressed", on ? "true" : "false");
-  btn.title = label;
-  btn.setAttribute("aria-label", label);
+  setMenuLabel(btn, label);
   var v = quizMusicVolume();
   document.getElementById("quiz-music-volume").value = v;
   document.getElementById("quiz-music-volume-out").textContent = v + "%";
@@ -15339,12 +15345,6 @@ function setQuizMusicVolume(v) {
   try { localStorage.setItem("fc-quiz-music-volume", String(Math.max(0, Math.min(100, v)))); } catch (_) {}
   quizMusicLevelNow(0.1);
   applyQuizMusic();
-}
-
-function showQuizMusicVolume(open) {
-  document.getElementById("quiz-music-pop").classList.toggle("hidden", !open);
-  document.getElementById("btn-quiz-music-volume").setAttribute("aria-expanded", open ? "true" : "false");
-  if (open) document.getElementById("quiz-music-volume").focus();
 }
 
 // A wrong answer muffles the music for about two seconds; the streak, and so the parts,
@@ -15709,6 +15709,7 @@ function registerDropdown(btnId, menuId) {
     closeAllDropdowns();
     if (open) return;
     menu.classList.remove("hidden");
+    if (btn.hasAttribute("aria-expanded")) btn.setAttribute("aria-expanded", "true");
     // Menus hang right-aligned from their button; on a phone the header wraps its actions to
     // the left edge, which pushes the menu off-screen, so flip it to left-aligned there.
     menu.style.left = menu.style.right = "";
@@ -15721,6 +15722,7 @@ function registerDropdown(btnId, menuId) {
 
 function closeAllDropdowns() {
   document.querySelectorAll(".dropdown-menu").forEach(function(m) { m.classList.add("hidden"); });
+  document.querySelectorAll(".dropdown-wrap > [aria-expanded]").forEach(function(b) { b.setAttribute("aria-expanded", "false"); });
 }
 
 document.addEventListener("click", closeAllDropdowns);
@@ -15728,6 +15730,8 @@ document.addEventListener("click", closeAllDropdowns);
 registerDropdown("btn-class-menu",  "class-dropdown-menu");
 registerDropdown("btn-lesson-menu", "lesson-dropdown-menu");
 registerDropdown("btn-user-menu",   "user-dropdown-menu");
+registerDropdown("btn-quiz-settings", "quiz-settings-menu");
+registerDropdown("btn-quiz-card-menu", "quiz-card-menu");
 
 /* ============================
    AUTH UI
@@ -17826,8 +17830,8 @@ document.addEventListener("keydown", function(e) {
       e.preventDefault();
       quizNextBtn.click();
     }
-    // Escape closes the music volume first, as it would any open popover.
-    else if (e.key === "Escape" && !document.getElementById("quiz-music-pop").classList.contains("hidden")) showQuizMusicVolume(false);
+    // Escape closes an open menu first, as it would any popover.
+    else if (e.key === "Escape" && document.querySelector("#screen-quiz .dropdown-menu:not(.hidden)")) closeAllDropdowns();
     else if (e.key === "Escape") confirmLeaveStudy(returnFromStudy);
     else if (e.key === "ArrowLeft") document.getElementById("btn-quiz-prev").click();
     else if (e.key === "ArrowRight") document.getElementById("btn-quiz-review-next").click();

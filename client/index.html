@@ -672,7 +672,23 @@
       <span id="quiz-progress-text">1 / 10</span>
       <div class="progress-bar"><div id="quiz-progress-fill" class="progress-fill"></div></div>
     </div>
-    <span id="quiz-score-display" class="score-display">✓ 0</span>
+    <div class="study-header-end">
+      <span id="quiz-score-display" class="score-display">✓ 0</span>
+      <div class="dropdown-wrap">
+        <button class="btn btn-ghost btn-icon" id="btn-quiz-settings" aria-haspopup="true" aria-expanded="false" aria-controls="quiz-settings-menu" title="Study settings" aria-label="Study settings" data-i18n-title="quiz.settings" data-i18n-aria="quiz.settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></button>
+        <div class="dropdown-menu study-menu hidden" id="quiz-settings-menu" role="group" aria-label="Study settings" data-i18n-aria="quiz.settings">
+          <button class="dropdown-item" id="btn-quiz-layout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span class="menu-text">Show answers side by side</span></button>
+          <button class="dropdown-item hidden" id="btn-quiz-voice"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg><span class="menu-text">Turn on hands-free answers (V)</span></button>
+          <button class="dropdown-item" id="btn-quiz-music" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span class="menu-text">Turn on music (M)</span></button>
+          <div class="study-menu-volume" role="group" aria-label="Music volume" data-i18n-aria="quiz.musicVolume">
+            <label for="quiz-music-volume" data-i18n="quiz.musicVolumeLabel">Volume</label>
+            <input type="range" id="quiz-music-volume" min="0" max="100" step="5">
+            <output id="quiz-music-volume-out"></output>
+            <button class="btn btn-sm btn-ghost" id="btn-quiz-music-reset" data-i18n="quiz.musicReset">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
   <div id="quiz-memstrip" class="memstrip hidden">
     <div class="memstrip-plot" role="img" data-i18n-aria="memstrip.label" aria-label="When the cards you answered come back">
@@ -686,27 +702,18 @@
     </div>
     <div class="memstrip-foot"><span class="memstrip-caption" id="quiz-memstrip-caption"></span><span class="memstrip-count" id="quiz-memstrip-count"></span></div>
   </div>
-  <div class="fc-toolbar">
-    <button class="btn btn-sm btn-ghost btn-icon" id="btn-quiz-layout" title="Show answers side by side" aria-label="Show answers side by side"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
-    <button class="btn btn-sm btn-ghost btn-icon hidden" id="btn-quiz-voice" title="Turn on hands-free answers (V)" aria-label="Turn on hands-free answers (V)" data-i18n-title="quiz.voiceOn" data-i18n-aria="quiz.voiceOn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg></button>
-    <span class="quiz-music-wrap">
-      <button class="btn btn-sm btn-ghost btn-icon" id="btn-quiz-music" aria-pressed="false" title="Turn on music (M)" aria-label="Turn on music (M)" data-i18n-title="quiz.musicOn" data-i18n-aria="quiz.musicOn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></button>
-      <button class="btn btn-sm btn-ghost btn-icon quiz-music-caret" id="btn-quiz-music-volume" aria-expanded="false" aria-controls="quiz-music-pop" title="Music volume" aria-label="Music volume" data-i18n-title="quiz.musicVolume" data-i18n-aria="quiz.musicVolume"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-      <div class="quiz-music-pop hidden" id="quiz-music-pop" role="group" aria-label="Music volume" data-i18n-aria="quiz.musicVolume">
-        <label for="quiz-music-volume" data-i18n="quiz.musicVolumeLabel">Volume</label>
-        <input type="range" id="quiz-music-volume" min="0" max="100" step="5">
-        <output id="quiz-music-volume-out"></output>
-        <button class="btn btn-sm btn-ghost" id="btn-quiz-music-reset" data-i18n="quiz.musicReset">Reset</button>
-      </div>
-    </span>
-    <button class="btn btn-sm btn-ghost btn-icon" id="btn-quiz-edit-card" title="Edit card" aria-label="Edit card" data-i18n-title="study.editCard" data-i18n-aria="study.editCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
-    <button class="btn btn-sm btn-ghost btn-icon hidden" id="btn-quiz-flag-card" title="Report a problem with this card" aria-label="Report a problem with this card" data-i18n-title="flag.button" data-i18n-aria="flag.button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
-    <span class="fc-toolbar-gap" aria-hidden="true"></span>
-    <button class="btn btn-sm btn-ghost btn-icon btn-toolbar-danger" id="btn-quiz-delete-card" title="Delete card" aria-label="Delete card" data-i18n-title="study.deleteCard" data-i18n-aria="study.deleteCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-  </div>
   <div class="quiz-container">
     <div id="quiz-lesson-label" class="study-lesson-label hidden"></div>
     <div class="quiz-question-wrap">
+      <div class="dropdown-wrap quiz-card-menu">
+        <button class="btn btn-ghost btn-icon" id="btn-quiz-card-menu" aria-haspopup="true" aria-expanded="false" aria-controls="quiz-card-menu" title="Card actions" aria-label="Card actions" data-i18n-title="quiz.cardMenu" data-i18n-aria="quiz.cardMenu"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+        <div class="dropdown-menu hidden" id="quiz-card-menu">
+          <button class="dropdown-item" id="btn-quiz-edit-card" data-i18n="study.editCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit card</button>
+          <button class="dropdown-item hidden" id="btn-quiz-flag-card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span class="menu-text">Report a problem with this card</span></button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item danger" id="btn-quiz-delete-card" data-i18n="study.deleteCard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Delete card</button>
+        </div>
+      </div>
       <div id="quiz-question" class="quiz-question"></div>
       <div id="quiz-outcomes" class="quiz-outcomes"></div>
       <button type="button" class="btn-audio quiz-audio hidden" id="btn-quiz-audio" title="Speak (P)" aria-label="Speak term" data-i18n-title="study.speakP" data-i18n-aria="study.speakTerm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>

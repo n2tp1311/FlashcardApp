@@ -19,7 +19,9 @@ function load(stored, throws) {
   const store = stored == null ? {} : { "fc-quiz-layout": stored };
   const classes = new Set();
   const attrs = {};
-  const btn = { innerHTML: "", title: "", setAttribute: function(k, v) { attrs[k] = v; } };
+  const text = { textContent: "" };
+  const btn = { innerHTML: "", title: "", text, setAttribute: function(k, v) { attrs[k] = v; },
+                querySelector: function(sel) { return sel === ".menu-text" ? text : null; } };
   const opts = { classList: { toggle: function(c, on) { on ? classes.add(c) : classes.delete(c); } } };
   const ctx = {
     localStorage: { getItem: function(k) { if (throws) throw new Error("blocked"); return store[k] || null; } },
@@ -28,7 +30,7 @@ function load(stored, throws) {
     ICON_LAYOUT_LIST: "LIST", ICON_LAYOUT_GRID: "GRID",
   };
   vm.createContext(ctx);
-  vm.runInContext(fn("quizLayout") + fn("applyQuizLayout"), ctx);
+  vm.runInContext(fn("quizLayout") + fn("applyQuizLayout") + fn("setMenuLabel"), ctx);
   return { ctx, classes, attrs, btn };
 }
 
@@ -43,15 +45,16 @@ test("the grid layout tags the options and the button offers the list back", fun
   const g = load("grid");
   g.ctx.applyQuizLayout();
   assert.ok(g.classes.has("grid-mode"));
-  assert.equal(g.btn.innerHTML, "LIST");
+  assert.equal(g.btn.innerHTML, 'LIST<span class="menu-text"></span>');
   assert.equal(g.btn.title, "quiz.layoutList");
+  assert.equal(g.btn.text.textContent, "quiz.layoutList", "the menu row reads what it switches to");
   // The label already flips; aria-pressed on top read as "list, pressed".
   assert.equal(g.attrs["aria-pressed"], undefined);
 
   const l = load(null);
   l.ctx.applyQuizLayout();
   assert.ok(!l.classes.has("grid-mode"));
-  assert.equal(l.btn.innerHTML, "GRID");
+  assert.equal(l.btn.innerHTML, 'GRID<span class="menu-text"></span>');
 });
 
 test("the quiz header has the button, both languages label it, and true/false keeps its row", function() {
@@ -103,6 +106,21 @@ test("the quiz header matches the flashcard one: Exit, progress, a check-mark sc
   assert.match(html, /<span id="quiz-score-display" class="score-display">✓ 0<\/span>/);
   assert.match(fn("setQuizScoreDisplay"), /"✓ " \+ state\.quizScore/);
   const header = html.slice(html.indexOf('<div id="screen-quiz"'), html.indexOf('<div class="quiz-container">'));
-  assert.match(header, /<div class="fc-toolbar">[\s\S]*id="btn-quiz-layout"[\s\S]*id="btn-quiz-edit-card"[\s\S]*id="btn-quiz-flag-card"[\s\S]*fc-toolbar-gap[\s\S]*id="btn-quiz-delete-card"/);
+  // No toolbar row: the session toggles are in the header's settings menu, the card actions
+  // in a menu on the question card's corner.
+  assert.doesNotMatch(header, /fc-toolbar/);
+  const headerOnly = header.slice(0, header.indexOf("</header>"));
+  assert.match(headerOnly, /<div class="study-header-end">\s*<span id="quiz-score-display"[\s\S]*id="btn-quiz-settings"[^>]*aria-controls="quiz-settings-menu"/);
+  const settings = html.slice(html.indexOf('id="quiz-settings-menu"'), html.indexOf("</header>", html.indexOf('id="quiz-settings-menu"')));
+  assert.match(settings, /id="btn-quiz-layout"[\s\S]*id="btn-quiz-voice"[\s\S]*id="btn-quiz-music"[\s\S]*id="quiz-music-volume"[\s\S]*id="btn-quiz-music-reset"/);
+  const card = html.slice(html.indexOf('<div class="quiz-question-wrap">'), html.indexOf('id="quiz-question"'));
+  assert.match(card, /id="btn-quiz-card-menu"[^>]*aria-controls="quiz-card-menu"[\s\S]*id="btn-quiz-edit-card"[\s\S]*id="btn-quiz-flag-card"[\s\S]*dropdown-divider[\s\S]*id="btn-quiz-delete-card"/);
+  assert.match(app, /registerDropdown\("btn-quiz-settings", "quiz-settings-menu"\);/);
+  assert.match(app, /registerDropdown\("btn-quiz-card-menu", "quiz-card-menu"\);/);
+  // The settings stay open while changed; a card action closes its menu as it runs.
+  assert.match(app, /getElementById\("quiz-settings-menu"\)\.addEventListener\("click", function\(e\) \{ e\.stopPropagation\(\); \}\);/);
+  assert.match(app, /e\.key === "Escape" && document\.querySelector\("#screen-quiz \.dropdown-menu:not\(\.hidden\)"\)\) closeAllDropdowns\(\);/);
+  for (const k of ["quiz.settings", "quiz.cardMenu"])
+    assert.equal(app.split('"' + k + '":').length - 1, 2, k + " in both languages");
 });
 
