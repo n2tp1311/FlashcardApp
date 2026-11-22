@@ -359,8 +359,8 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.noLessons": "No lessons yet.",
   "dashboard.dueNow": "Due now",
   "dashboard.cardsDue": "cards due",
-  "dashboard.moreLessonsDue": "+{n} more lessons",
-  "dashboard.moreLessonsDue_one": "+1 more lesson",
+  "dashboard.reviewAllDue": "Review all {n} due",
+  "dashboard.reviewAllDue_one": "Review the 1 due card",
   "dashboard.dueLater": "{n} more due in the next {days} days",
   "dashboard.achAll": "All →",
   "ach.nav": "Achievements",
@@ -1672,7 +1672,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.noLessons": "Chưa có bài học nào.",
   "dashboard.dueNow": "Đến hạn",
   "dashboard.cardsDue": "thẻ đến hạn",
-  "dashboard.moreLessonsDue": "+{n} bài khác",
+  "dashboard.reviewAllDue": "Ôn {n} thẻ đến hạn",
   "dashboard.dueLater": "{n} thẻ nữa đến hạn trong {days} ngày tới",
   "dashboard.achAll": "Tất cả →",
   "ach.nav": "Thành tích",
@@ -12860,24 +12860,18 @@ function heroStreakTile(streak, today, run, withAchievements) {
   '</section>';
 }
 
-var DASH_DUE_SHOWN = 4;
-
-// What can be reviewed right now, most due first; each row starts that lesson's due review.
+// What can be reviewed right now, and one button that reviews it all through Study now. The
+// lessons it comes from are the Needs attention list just below; listing them here as well
+// showed the same lessons twice.
 function heroDueTile(due, futureDue) {
-  var lessons = (due || []).slice().sort(function(a, b) { return (b.dueCount || 0) - (a.dueCount || 0); });
-  var total = lessons.reduce(function(sum, l) { return sum + (l.dueCount || 0); }, 0);
-  var shown = lessons.slice(0, DASH_DUE_SHOWN);
+  var total = (due || []).reduce(function(sum, l) { return sum + (l.dueCount || 0); }, 0);
   var later = futureDue && futureDue.days
     ? futureDueBuckets(futureDue).reduce(function(sum, b) { return b.n > 0 ? sum + b.cnt : sum; }, 0) : null;
   return '<section class="dash-tile">' +
     '<h3 class="dash-tile-h">' + escHtml(t("dashboard.dueNow")) + '</h3>' +
     '<div class="dash-tile-big"><span class="dash-tile-num">' + total + '</span><span class="dash-tile-unit">' + escHtml(t("dashboard.cardsDue")) + '</span></div>' +
-    (shown.length ? '<div class="dash-due-rows">' + shown.map(function(l) {
-      return '<button type="button" class="dash-due-row" data-due-lesson="' + escHtml(l.id) + '" data-due-class="' + escHtml(l.class_id) + '" title="' + escHtml(t("study.reviewDueTitle")) + '">' +
-        '<span class="dash-due-name"><b>' + escHtml(l.title) + '</b><small>' + escHtml(l.class_name) + '</small></span>' +
-        '<span class="due-badge">' + escHtml(String(l.dueCount)) + '</span></button>';
-    }).join('') + '</div>' : '<div class="dash-due-empty">' + escHtml(t("dashboard.allCaughtUp")) + '</div>') +
-    (lessons.length > shown.length ? '<button type="button" class="dash-due-more" data-dash-tab="lessons">' + escHtml(t("dashboard.moreLessonsDue", { n: lessons.length - shown.length })) + '</button>' : '') +
+    (total ? '<button type="button" class="btn btn-primary dash-due-review" data-study-now="all,0">' + escHtml(t("dashboard.reviewAllDue", { n: total })) + '</button>'
+      : '<div class="dash-due-empty">' + escHtml(t("dashboard.allCaughtUp")) + '</div>') +
     (later != null ? '<div class="dash-hero-countdown">' + escHtml(t("dashboard.dueLater", { n: later, days: futureDue.windowDays })) + '</div>' : '') +
   '</section>';
 }

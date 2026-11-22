@@ -22,7 +22,7 @@ const ctx = {
   futureDueBuckets: function(d) { return d.days; }
 };
 vm.createContext(ctx);
-vm.runInContext("var DASH_DUE_SHOWN = 4;" +
+vm.runInContext(
   ["dashLessonTableRows", "dashNeedsAttention", "sortDashLessons", "dashLessonTableHtml", "heroDueTile"].map(extract).join(""), ctx);
 
 const LESSONS = [
@@ -78,14 +78,17 @@ test("table: sort headers only when sortable, due opens a review, names are esca
   assert.match(out, /data-label="dashboard\.colMastered">—</);  // no cards
 });
 
-test("due tile: total, most due first, the rest counted, and what falls due later", function() {
+test("due tile: the total and one button reviewing it all; the lessons are not listed again", function() {
   const due = [1, 2, 3, 4, 5].map(i => ({ id: "l" + i, class_id: "k", title: "L" + i, class_name: "K", dueCount: i }));
   const out = ctx.heroDueTile(due, { windowDays: 14, days: [{ n: 0, cnt: 9 }, { n: 1, cnt: 2 }, { n: 5, cnt: 3 }] });
   assert.match(out, /dash-tile-num">15</);
-  assert.deepEqual(out.match(/data-due-lesson="(l\d)"/g), ['data-due-lesson="l5"', 'data-due-lesson="l4"', 'data-due-lesson="l3"', 'data-due-lesson="l2"']);
-  assert.match(out, /dashboard\.moreLessonsDue\|n=1/);
+  // Study now with every due card and no new ones: the same session Home's button runs.
+  assert.match(out, /class="btn btn-primary dash-due-review" data-study-now="all,0">dashboard\.reviewAllDue\|n=15</);
+  assert.doesNotMatch(out, /data-due-lesson|L5/);
   assert.match(out, /dashboard\.dueLater\|n=5,days=14/);
-  assert.match(ctx.heroDueTile([], null), /dashboard\.allCaughtUp/);
+  const none = ctx.heroDueTile([], null);
+  assert.match(none, /dashboard\.allCaughtUp/);
+  assert.doesNotMatch(none, /data-study-now/);
 });
 
 test("three tabs with panels; the old lesson lists and period note are gone", function() {
@@ -120,7 +123,7 @@ test("server: every live lesson with its card and mastered counts", function() {
 test("new strings exist in both languages", function() {
   for (const k of ["tabOverview", "tabCharts", "tabLessons", "needsAttention", "allLessons", "colLesson", "colAccuracy", "colAnswers",
     "colMastered", "colDue", "struggling", "strugglingHint", "lessonsNote", "nothingNeedsAttention", "noLessons", "dueNow", "cardsDue",
-    "moreLessonsDue", "dueLater", "achAll", "filterAll"]) {
+    "reviewAllDue", "dueLater", "achAll", "filterAll"]) {
     assert.equal(app.split('"dashboard.' + k + '":').length - 1, 2, k);
   }
 });
