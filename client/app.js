@@ -733,9 +733,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.presetUpdated": "Updated!",
   "setup.interleaved": "Interleaved",
 
-  "count.cardsDueForReview": "{n} cards due for review",
 
-  "count.cardsDueForReview_one": "{n} card due for review",
   "lesson.nextReviewIn": "Next review in {time}",
   "format.termDef": "Term↔Def",
   "format.mcq": "MCQ",
@@ -2020,7 +2018,6 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.presetUpdated": "Đã cập nhật!",
   "setup.interleaved": "Xen kẽ",
 
-  "count.cardsDueForReview": "{n} thẻ đến hạn ôn tập",
   "lesson.nextReviewIn": "Ôn tập tiếp theo sau {time}",
   "format.termDef": "Thuật ngữ↔Định nghĩa",
   "format.mcq": "Trắc nghiệm",
@@ -5410,10 +5407,10 @@ function _renderLessonItems(lessons, accMap) {
       var isDue = dueInfo.due.indexOf(lesson.id) !== -1;
       var dueCount = (dueInfo.dueCounts && dueInfo.dueCounts[lesson.id]) || 0;
       var nextReviewAt = dueInfo.schedule && dueInfo.schedule[lesson.id];
+      // A due lesson says nothing here: its "N due" badge already does, and the same words in
+      // amber took a line on every due row at 3:1 contrast.
       var reviewLabel = "";
-      if (isDue) {
-        reviewLabel = t("count.cardsDueForReview", { n: dueCount });
-      } else if (nextReviewAt) {
+      if (!isDue && nextReviewAt) {
         var secsLeft = nextReviewAt - now;
         var reviewLabel2 = secsLeft < 3600 ? t("unit.min", { n: Math.ceil(secsLeft / 60) })
           : secsLeft < 86400 ? t("unit.h", { n: Math.ceil(secsLeft / 3600) })
@@ -5442,7 +5439,7 @@ function _renderLessonItems(lessons, accMap) {
             accHtml +
             '<span class="lesson-meta" id="les-meta-' + lesson.id + '">' + t("common.loading") + '</span>' +
           '</div>' +
-          (reviewLabel ? '<div class="lesson-due-label' + (isDue ? " is-due" : "") + '">' + reviewLabel + '</div>' : '') +
+          (reviewLabel ? '<div class="lesson-due-label">' + reviewLabel + '</div>' : '') +
           '<div class="progress-mini-wrap" id="les-prog-wrap-' + lesson.id + '" style="display:none">' +
             '<div class="progress-mini"><div class="progress-mini-fill" id="les-prog-fill-' + lesson.id + '" style="transform:scaleX(0)"></div></div>' +
             '<span class="progress-mini-text" id="les-prog-text-' + lesson.id + '"></span>' +

@@ -654,17 +654,11 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
 [data-theme="dark"] .format-badge.image-def   { background: #2b1507; color: #fb923c; }
 
 /* Due/lesson labels */
-[data-theme="dark"] .lesson-due-label.is-due  { color: #fbbf24; }
 [data-theme="dark"] .lesson-item.lesson-due   { border-color: #e3b341; }
 
 /* TF selected states — swap dark text for light */
 [data-theme="dark"] .tf-answer-btn.selected[data-value="true"]  { color: #4ade80; }
 [data-theme="dark"] .tf-answer-btn.selected[data-value="false"] { color: #f87171; }
-
-/* Analytics accuracy colours */
-[data-theme="dark"] .acc-good { color: #4ade80; }
-[data-theme="dark"] .acc-mid  { color: #fbbf24; }
-[data-theme="dark"] .acc-bad  { color: #f87171; }
 
 /* Auth success banner */
 [data-theme="dark"] .auth-success { background: #122619; color: #4ade80; }
@@ -3228,10 +3222,6 @@ code {
   margin-top: 2px;
   white-space: nowrap;
 }
-.lesson-due-label.is-due {
-  color: #d97706;
-  font-weight: 600;
-}
 
 .lesson-item.lesson-due {
   border-color: #fbbf24;
@@ -4773,9 +4763,6 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .analytics-lesson-class { font-size: 0.75rem; color: var(--text2); }
 .analytics-lesson-stats { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .analytics-lesson-accuracy { font-size: 0.875rem; font-weight: 700; min-width: 36px; text-align: right; }
-.acc-good { color: #16a34a; }
-.acc-mid  { color: #d97706; }
-.acc-bad  { color: #dc2626; }
 .analytics-retention-bar { width: 80px; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
 .analytics-retention-fill { width: 100%; height: 100%; border-radius: 4px; transform-origin: left; transition: transform var(--bar-fill-transition); }
 .analytics-lesson-attempts { font-size: 0.75rem; color: var(--text2); min-width: 44px; text-align: right; }
