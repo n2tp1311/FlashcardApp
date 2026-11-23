@@ -1122,7 +1122,6 @@ Object.assign(TRANSLATIONS.en, {
   "common.due": "Due",
   "dashboard.thisWeek": "This week",
   "dashboard.lastWeek": "Last week",
-  "dashboard.noCardsInSrs": "No cards in SRS yet.",
   "dashboard.cardsInSrs": "{n} cards in SRS",
   "dashboard.cardsInSrs_one": "{n} card in SRS",
   "srsBucket.learning": "Learning",
@@ -1147,9 +1146,12 @@ Object.assign(TRANSLATIONS.en, {
   "chart.point": "1 pt",
   "chart.busiest": "{n} on the busiest day ({when})",
   "dashboard.noCardsDueSoon": "No cards due in the next {n} days.",
-  "dashboard.noStudyData": "No study data yet.",
-  "dashboard.noReviewGrades": "No graded review data yet.",
-  "dashboard.noReviewTime": "No tracked review times yet.",
+  "dashboard.noAnswersIn": "No answers in the last {n} days.",
+  "dashboard.noNewCardsIn": "No new cards in the last {n} days.",
+  "dashboard.noTimedIn": "No timed answers in the last {n} days.",
+  "dashboard.noStudyIn": "No study in the last {n} days.",
+  "dashboard.noReviewedIn": "No cards reviewed in the last {n} days.",
+  "dashboard.noGradedIn": "No graded answers in the last {n} days.",
   "dashboard.gradeAgain": "Learning / incorrect",
   "dashboard.gradeHard": "Hard",
   "dashboard.gradeMedium": "Know It",
@@ -2396,7 +2398,6 @@ Object.assign(TRANSLATIONS.vi, {
   "common.due": "Đến hạn",
   "dashboard.thisWeek": "Tuần này",
   "dashboard.lastWeek": "Tuần trước",
-  "dashboard.noCardsInSrs": "Chưa có thẻ nào trong SRS.",
   "dashboard.cardsInSrs": "{n} thẻ trong SRS",
   "srsBucket.learning": "Đang học",
   "dashboard.futureDue": "Sắp đến hạn ôn ({n} ngày tới)",
@@ -2420,9 +2421,12 @@ Object.assign(TRANSLATIONS.vi, {
   "chart.point": "1 điểm",
   "chart.busiest": "{n} vào ngày bận nhất ({when})",
   "dashboard.noCardsDueSoon": "Không có thẻ nào đến hạn trong {n} ngày tới.",
-  "dashboard.noStudyData": "Chưa có dữ liệu học tập.",
-  "dashboard.noReviewGrades": "Chưa có dữ liệu đánh giá ôn tập.",
-  "dashboard.noReviewTime": "Chưa có dữ liệu thời gian ôn tập.",
+  "dashboard.noAnswersIn": "Không có câu trả lời nào trong {n} ngày qua.",
+  "dashboard.noNewCardsIn": "Không có thẻ mới nào trong {n} ngày qua.",
+  "dashboard.noTimedIn": "Không có câu trả lời nào được tính giờ trong {n} ngày qua.",
+  "dashboard.noStudyIn": "Không học ngày nào trong {n} ngày qua.",
+  "dashboard.noReviewedIn": "Không có thẻ nào được ôn trong {n} ngày qua.",
+  "dashboard.noGradedIn": "Không có câu trả lời nào được chấm trong {n} ngày qua.",
   "dashboard.gradeAgain": "Đang học / sai",
   "dashboard.gradeHard": "Khó",
   "dashboard.gradeMedium": "Đã thuộc",
@@ -14264,7 +14268,7 @@ document.getElementById("btn-dashboard-back").addEventListener("click", function
 
 // Dashboard accuracy per week, as a line: accuracy is a rate, so a bar's length would claim
 // a quantity. The Stats screen's lesson/class trend keeps renderAccuracyTrend's rows.
-function renderRetentionTrend(rows, wrap, maxWeeksAgo) {
+function renderRetentionTrend(rows, wrap, maxWeeksAgo, days) {
   if (!wrap) return;
   var map = {};
   (rows || []).forEach(function(r) { map[r.weeks_ago] = r; });
@@ -14274,7 +14278,7 @@ function renderRetentionTrend(rows, wrap, maxWeeksAgo) {
   // The window is the last few weeks: older answers exist for a class studied months ago,
   // and "No attempted cards yet" beside "Attempted: 5" read as a bug.
   if (!known.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("stats.noRecentAnswers", { n: weeks.length }) + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noAnswersIn", { n: days }) + '</div>';
     return;
   }
   var lo = Math.max(0, Math.min(90, Math.floor((Math.min.apply(null, known) - 5) / 10) * 10));
@@ -14496,6 +14500,12 @@ function chartKpisHtml(analytics, futureDue) {
   return out.join('');
 }
 
+// Every Study chart is drawn over the period pill's window, so an empty one says "nothing in
+// the last 60 days": "No study data yet" and "No cards in SRS yet" read as false beside a
+// history and cards due.
+var DASH_EMPTY_KEYS = { "dash-trend-wrap": "dashboard.noAnswersIn", "dash-newcards-trend-wrap": "dashboard.noNewCardsIn",
+  "dash-heatmap-wrap": "dashboard.noStudyIn" };
+
 // Everything in Study charts that comes from /analytics, drawn together so the first load
 // and a period change cannot drift apart. The forecast and intervals have their own fetches.
 function renderStudyCharts(analytics) {
@@ -14505,24 +14515,24 @@ function renderStudyCharts(analytics) {
   var heatmapTitle = document.getElementById("dash-heatmap-title");
   if (heatmapTitle) heatmapTitle.textContent = t("dashboard.heatmapTitle", { n: days });
   renderHeatmap(analytics.heatmap, document.getElementById("dash-heatmap-wrap"), days);
-  renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), weeksBack);
-  renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), weeksBack);
+  renderWeeklyTrend(analytics.weeklyTrend, document.getElementById("dash-trend-wrap"), weeksBack, days);
+  renderNewCardsTrend(analytics.newCardsWeeklyTrend, document.getElementById("dash-newcards-trend-wrap"), weeksBack, days);
   renderRetentionTrend(analytics.weeklyTrend.map(function(r) { return { weeks_ago: r.weeks_ago, total: r.cnt, correct: r.correct }; }),
-    document.getElementById("dash-retention-wrap"), weeksBack);
-  renderGradeDistribution(analytics.gradeDistribution, document.getElementById("dash-grade-wrap"));
-  renderReviewTimeTrend(analytics.reviewTimeTrend, document.getElementById("dash-reviewtime-wrap"), weeksBack);
+    document.getElementById("dash-retention-wrap"), weeksBack, days);
+  renderGradeDistribution(analytics.gradeDistribution, document.getElementById("dash-grade-wrap"), days);
+  renderReviewTimeTrend(analytics.reviewTimeTrend, document.getElementById("dash-reviewtime-wrap"), weeksBack, days);
   var kpis = document.getElementById("dash-chart-kpis");
   if (kpis) kpis.innerHTML = chartKpisHtml(analytics, state.dashFutureDue);
   var trend = document.getElementById("dash-trend-wrap");
   state.dashChartWidth = trend ? trend.clientWidth : 0;
 }
 
-function renderGradeDistribution(rows, wrap) {
+function renderGradeDistribution(rows, wrap, days) {
   if (!wrap) return;
   var segs = gradeSegments(rows);
   var total = segs.reduce(function(sum, s) { return sum + s.cnt; }, 0);
   if (!total) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noReviewGrades") + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noGradedIn", { n: days }) + '</div>';
     return;
   }
   wrap.innerHTML = '<div class="chart-stack" role="img" aria-label="' + escHtml(t("chart.howYouAnswered")) + '">' +
@@ -14536,7 +14546,7 @@ function renderGradeDistribution(rows, wrap) {
     }).join('') + '</div>';
 }
 
-function renderReviewTimeTrend(rows, wrap, maxWeeksAgo) {
+function renderReviewTimeTrend(rows, wrap, maxWeeksAgo, days) {
   if (!wrap) return;
   var map = {};
   (rows || []).forEach(function(r) { map[r.weeks_ago] = r; });
@@ -14544,7 +14554,7 @@ function renderReviewTimeTrend(rows, wrap, maxWeeksAgo) {
   var secs = weeks.map(function(w) { var r = map[w]; return r && r.samples > 0 ? Math.round(r.avg_ms / 1000) : null; });
   var known = secs.filter(function(s) { return s != null; });
   if (!known.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noReviewTime") + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noTimedIn", { n: days }) + '</div>';
     return;
   }
   var lo = Math.max(0, Math.floor(Math.min.apply(null, known) / 10) * 10);
@@ -14562,7 +14572,7 @@ function renderReviewTimeTrend(rows, wrap, maxWeeksAgo) {
 function renderHeatmap(rows, wrap, days) {
   if (!days) days = 60;
   if (!rows.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStudyData") + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t(DASH_EMPTY_KEYS[wrap.id] || "dashboard.noAnswersIn", { n: days }) + '</div>';
     return;
   }
   var map = {};
@@ -14644,10 +14654,10 @@ document.addEventListener("click", function(e) {
   if (tip) chartReadout(tip);
 });
 
-function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
+function renderWeeklyTrend(rows, wrap, maxWeeksAgo, days) {
   if (maxWeeksAgo === undefined) maxWeeksAgo = 11;
   if (!rows.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStudyData") + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t(DASH_EMPTY_KEYS[wrap.id] || "dashboard.noAnswersIn", { n: days }) + '</div>';
     return;
   }
   var map = {};
@@ -14663,10 +14673,10 @@ function renderWeeklyTrend(rows, wrap, maxWeeksAgo) {
   });
 }
 
-function renderNewCardsTrend(rows, wrap, maxWeeksAgo) {
+function renderNewCardsTrend(rows, wrap, maxWeeksAgo, days) {
   if (maxWeeksAgo === undefined) maxWeeksAgo = 11;
   if (!rows.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noStudyData") + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t(DASH_EMPTY_KEYS[wrap.id] || "dashboard.noAnswersIn", { n: days }) + '</div>';
     return;
   }
   var map = {};
@@ -14704,7 +14714,7 @@ var FSRS_BUCKET_LABELS = {
 
 function renderSrsDistribution(rows, wrap) {
   if (!rows || !rows.length) {
-    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noCardsInSrs") + '</div>';
+    wrap.innerHTML = '<div class="dash-empty-note">' + t("dashboard.noReviewedIn", { n: state.dashPeriod || 60 }) + '</div>';
     return;
   }
   var sorted = rows.slice().sort(function(a, b) {

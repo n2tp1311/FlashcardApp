@@ -121,9 +121,10 @@ test("an empty weekly trend names its window, not 'no attempted cards'", functio
   vm.runInContext(["renderAccuracyTrend", "renderRetentionTrend"].map(extract).join(""), ctx);
   const a = { innerHTML: "" }, r = { innerHTML: "" };
   ctx.renderAccuracyTrend([], a);
-  ctx.renderRetentionTrend([], r, 7);
+  ctx.renderRetentionTrend([], r, 7, 60);
   assert.match(a.innerHTML, /stats\.noRecentAnswers\|n=8/);
-  assert.match(r.innerHTML, /stats\.noRecentAnswers\|n=8/);
+  // The Dashboard's chart sits under the period pill, so it names the pill's days.
+  assert.match(r.innerHTML, /dashboard\.noAnswersIn\|n=60/);
   assert.doesNotMatch(a.innerHTML + r.innerHTML, /noAttemptedCards/);
 });
 

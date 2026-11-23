@@ -3412,7 +3412,7 @@ code {
 .dash-run-best { font-variant-numeric: tabular-nums; }
 .dash-run-sub { font-size: 0.75rem; color: var(--text2); }
 .dash-spark-dot { fill: var(--primary); }
-.dash-spark-note { font-size: 0.6875rem; color: var(--text2); margin-top: -6px; }
+.dash-spark-note { font-size: 0.75rem; color: var(--text2); margin-top: -6px; }
 .dash-trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; }
 .dash-trio div { display: grid; gap: 1px; }
 .dash-trio b { font-size: 1rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
@@ -4660,7 +4660,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
    masonry once every chart turned upright and took about the same height. */
 .chart-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 12px; }
 .chart-kpi { display: grid; gap: 2px; text-align: left; padding: 12px 14px; }
-.chart-kpi-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text2); }
+.chart-kpi-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text2); }
 .chart-kpi-value { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
 .chart-kpi-sub { font-size: 0.75rem; color: var(--text2); font-variant-numeric: tabular-nums; }
 .chart-delta.up { color: var(--success); }
@@ -4671,7 +4671,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .analytics-chart-card { text-align: left; min-width: 0; }
 .analytics-chart-card.is-wide { grid-column: 1 / -1; }
 .analytics-chart-title {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -4683,6 +4683,12 @@ button.leech-pill:hover { filter: brightness(0.96); }
   flex-wrap: wrap;
 }
 .analytics-chart-sub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text3); }
+/* A chart with nothing in the period is one line, its name and why, not a 70px box each:
+   seven of nine could be empty at once. */
+.analytics-chart-card:has(> div > .dash-empty-note:only-child) { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-block: 12px; }
+.analytics-chart-card:has(> div > .dash-empty-note:only-child) .analytics-chart-title { margin: 0; flex: none; }
+.analytics-chart-card:has(> div > .dash-empty-note:only-child) .analytics-chart-sub { display: none; }
+.analytics-chart-card > div > .dash-empty-note:only-child { padding: 0; text-align: right; color: var(--text3); }
 @media (max-width: 1200px) {
   .analytics-charts-grid.is-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
