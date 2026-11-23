@@ -1928,6 +1928,13 @@ Most study happens on an iPhone, and several decisions are about it:
   words yet", "You are up to date") and how things get there; the vocabulary intro is
   hidden then, since it would say the same. A failed Updates load has its own element
   (`#upstream-error`) rather than writing the error into the empty state's text.
+- **A flashcard flips by fading, not turning.** The faces cross-fade in place over 0.2 s.
+  The 3D turn it replaced swung a card as wide as a desktop window through space, its edges
+  sweeping the screen and the near one swelling toward the eye; the user found it
+  headache-inducing and, from a preview of a lighter turn, a vertical turn, a fade and no
+  motion, picked the fade, on every screen size. A new card still shows its front at once:
+  `fc-no-anim` turns the fade off around the un-flip, or the old back would fade out over
+  the new card's answer. `tests/fc-flip-fade.test.js`
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The
@@ -2004,7 +2011,7 @@ Most study happens on an iPhone, and several decisions are about it:
   silent: a "wrong" knock on the learner's own Learning would read as the app disagreeing.
 - **Dialogs** set `inert` on everything behind the top one rather than trapping Tab, which
   covers keyboard, pointer and screen reader in one attribute sweep.
-- **The card face turned away is `inert` and `aria-hidden`.** A flip only rotates the back
+- **The card face turned away is `inert` and `aria-hidden`.** A flip only fades the back
   out of sight, so VoiceOver read the answer before the flip. `setFlashcardFaces` sets both
   on whichever face is hidden: `inert` keeps Tab and taps out, `aria-hidden` covers readers
   that do not honour `inert`. Speak (P) still works, because a script's `click()` is not a tap.
