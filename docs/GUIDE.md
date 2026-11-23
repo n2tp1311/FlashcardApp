@@ -1890,6 +1890,12 @@ Most study happens on an iPhone, and several decisions are about it:
   its look. The Dashboard's small text (the countdown, the Needs attention count, the
   badges) is 12px, and the countdown says "Nothing more due in the next 14 days" rather
   than "0 more due".
+- **An empty Study chart is one row, and names the period.** Every chart on the Charts tab
+  is drawn over the period pill's window, so "No study data yet" beside a study history, and
+  "No cards in SRS yet" beside cards due, were false: there was nothing *in the last 60
+  days*. Each now says what is missing from that window ("No new cards in the last 60
+  days") on its title's row, so seven empty charts no longer stack as 70px boxes. Chart
+  titles and KPI labels are 12px; the SVG axis numbers are left at the chart's own scale.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

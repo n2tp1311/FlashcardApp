@@ -1468,3 +1468,7 @@ Thirteenth item of the UI audit. Export CSV was the first control on the Dashboa
 ## 2026-11-23 — Dashboard: the due badge's tap, 12px, "Nothing more due"
 
 Fourteenth item of the UI audit. The Dashboard's countdown read "0 more due in the next 14 days", its countdown, Needs attention count and due badges were 11px, and a lesson's "3 due" badge, which starts that lesson's review, was a 51x21 target inside a row that opens the lesson's stats. Both options fixed the wording and the size; for the badge, A kept its look with an invisible 44px tap area, B made it a "Review 3" button, which did not fit on the numbers' line. Chose A.
+
+## 2026-11-23 — Empty Study charts: one row, naming the period
+
+Fifteenth item of the UI audit. With no answers in the last 60 days, seven of the Charts tab's nine charts were empty boxes, and their notes were false for a windowed chart: "No cards in SRS yet" beside 8 cards due, "No study data yet" beside a history. Both options named the window in every empty note and raised the 11px labels to 12px; A hid the empty charts behind one note, B kept each as a single row. The user picked B, which keeps the list of charts in view. The Accuracy chart's note, which counted weeks ("9 weeks" under a 60-day pill), now counts the pill's days.
