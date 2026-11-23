@@ -827,7 +827,8 @@ evenly each time so the next change cannot be counted on), one of four elements 
 drums, bass, melody or chord progression (`quizMusicOnAnswer()`). The first four changes bring
 each off its plain kind in that order; after that a random element other than the one changed
 last moves to another of its kinds, for as long as the run lasts. Each element is a list in
-`QUIZ_MUSIC_KINDS` (six kinds each, index 0 the plain one; a melody's plain kind is silence),
+`QUIZ_MUSIC_KINDS` (index 0 the plain one, then five kinds of drums, bass and chords and ten
+melodies; the melody's plain kind is silence),
 and the rules pick from however many entries there are, so adding a kind is adding an entry.
 The key (C major) and the kick on every beat never change. A change lands on the next bar, a
 new progression on the next four-bar phrase, and a soft cymbal marks it.
