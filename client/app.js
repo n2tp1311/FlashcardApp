@@ -362,6 +362,7 @@ Object.assign(TRANSLATIONS.en, {
   "dashboard.reviewAllDue": "Review all {n} due",
   "dashboard.reviewAllDue_one": "Review the 1 due card",
   "dashboard.dueLater": "{n} more due in the next {days} days",
+  "dashboard.dueLaterNone": "Nothing more due in the next {days} days",
   "dashboard.achAll": "All →",
   "ach.nav": "Achievements",
   "ach.filterAll": "All",
@@ -1673,6 +1674,7 @@ Object.assign(TRANSLATIONS.vi, {
   "dashboard.cardsDue": "thẻ đến hạn",
   "dashboard.reviewAllDue": "Ôn {n} thẻ đến hạn",
   "dashboard.dueLater": "{n} thẻ nữa đến hạn trong {days} ngày tới",
+  "dashboard.dueLaterNone": "Không còn thẻ nào đến hạn trong {days} ngày tới",
   "dashboard.achAll": "Tất cả →",
   "ach.nav": "Thành tích",
   "ach.filterAll": "Tất cả",
@@ -12869,7 +12871,7 @@ function heroDueTile(due, futureDue) {
     '<div class="dash-tile-big"><span class="dash-tile-num">' + total + '</span><span class="dash-tile-unit">' + escHtml(t("dashboard.cardsDue")) + '</span></div>' +
     (total ? '<button type="button" class="btn btn-primary dash-due-review" data-study-now="all,0">' + escHtml(t("dashboard.reviewAllDue", { n: total })) + '</button>'
       : '<div class="dash-due-empty">' + escHtml(t("dashboard.allCaughtUp")) + '</div>') +
-    (later != null ? '<div class="dash-hero-countdown">' + escHtml(t("dashboard.dueLater", { n: later, days: futureDue.windowDays })) + '</div>' : '') +
+    (later != null ? '<div class="dash-hero-countdown">' + escHtml(t(later ? "dashboard.dueLater" : "dashboard.dueLaterNone", { n: later, days: futureDue.windowDays })) + '</div>' : '') +
   '</section>';
 }
 

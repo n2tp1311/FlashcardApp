@@ -3310,7 +3310,7 @@ code {
 .sk-short { width: 50%; }
 @keyframes sk-pulse { 50% { opacity: 0.5; } }
 @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
-.dash-hero-countdown { font-size: 0.6875rem; color: var(--text2); opacity: 0.85; }
+.dash-hero-countdown { font-size: 0.75rem; color: var(--text2); opacity: 0.85; }
 
 /* Hero card: three tiles (streak, today, study-time window), then a line of library counts. */
 .dash-hero-tiles {
@@ -4373,7 +4373,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
   border-radius: var(--radius);
   background: var(--primary-fill);
   color: #fff;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -5330,8 +5330,8 @@ button.leech-pill:hover { filter: brightness(0.96); }
      ::after takes the tap out to 44x44 instead. A select draws its own box and takes no
      pseudo-element, so it grows; so does the grid/list pair, whose 36px buttons touch, and
      two 44px tap areas on them would overlap. */
-  .study-now-classes-btn, #btn-toggle-archived, #btn-select-classes, .slicer-bar .pill { position: relative; }
-  .study-now-classes-btn::after, .study-now-gear::after, #btn-toggle-archived::after, #btn-select-classes::after, .slicer-bar .pill::after {
+  .study-now-classes-btn, #btn-toggle-archived, #btn-select-classes, .slicer-bar .pill, .dash-ldue { position: relative; }
+  .study-now-classes-btn::after, .study-now-gear::after, #btn-toggle-archived::after, #btn-select-classes::after, .slicer-bar .pill::after, .dash-ldue::after {
     content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
   }
   .sort-select { min-height: 44px; }
@@ -5633,7 +5633,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .dash-lacc.is-mid { color: var(--warning); }
 .dash-lacc.is-bad { color: var(--danger); }
 .dash-lnone { color: var(--text3); }
-.dash-ldue { border: 0; cursor: pointer; font: inherit; font-size: 0.6875rem; font-weight: 700; }
+.dash-ldue { border: 0; cursor: pointer; font: inherit; font-size: 0.75rem; font-weight: 700; }
 .dash-ldue.is-loading { opacity: 0.6; pointer-events: none; }
 .dash-lflag { text-align: right; }
 

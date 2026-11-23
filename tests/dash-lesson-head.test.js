@@ -70,3 +70,27 @@ test("no media block hides a class and then re-displays an element that also car
   }
   assert.deepEqual(found, []);
 });
+
+// A lesson's "3 due" badge starts its review, inside a row that opens the lesson's stats: on a
+// touch screen it keeps its 51x21 look but takes taps out to 44x44, and nothing on the
+// Dashboard's lists is set below 12px.
+test("due badge: 12px, and a 44px tap area on a touch screen", async function() {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const page = await ctx.newPage();
+  try {
+    await page.goto(base + "/");
+    await page.waitForFunction(() => typeof window.dashLessonTableHtml === "function");
+    const out = await page.evaluate(() => {
+      const rows = [{ id: "a", class_id: "k", title: "A", class_name: "K", cards: 10, mastered: 2, attempts: 5, accuracy: 80, due: 3, hardRatio: null }];
+      const box = document.createElement("div");
+      box.innerHTML = dashLessonTableHtml(rows, { days: 30 }) + '<span class="dash-badge">5</span><div class="dash-hero-countdown">x</div>';
+      document.body.appendChild(box);
+      const b = box.querySelector(".dash-ldue"), after = getComputedStyle(b, "::after");
+      return { size: [".dash-ldue", ".dash-badge", ".dash-hero-countdown"].map((s) => getComputedStyle(box.querySelector(s)).fontSize),
+        tap: [parseFloat(after.width) >= 44, parseFloat(after.height) >= 44], look: b.getBoundingClientRect().height < 30 };
+    });
+    assert.deepEqual(out, { size: ["12px", "12px", "12px"], tap: [true, true], look: true });
+  } finally {
+    await ctx.close();
+  }
+});

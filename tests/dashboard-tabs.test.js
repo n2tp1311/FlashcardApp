@@ -86,6 +86,8 @@ test("due tile: the total and one button reviewing it all; the lessons are not l
   assert.match(out, /class="btn btn-primary dash-due-review" data-study-now="all,0">dashboard\.reviewAllDue\|n=15</);
   assert.doesNotMatch(out, /data-due-lesson|L5/);
   assert.match(out, /dashboard\.dueLater\|n=5,days=14/);
+  // None coming: says so, rather than "0 more due".
+  assert.match(ctx.heroDueTile(due, { windowDays: 14, days: [{ n: 0, cnt: 9 }] }), /dashboard\.dueLaterNone\|n=0,days=14/);
   const none = ctx.heroDueTile([], null);
   assert.match(none, /dashboard\.allCaughtUp/);
   assert.doesNotMatch(none, /data-study-now/);
@@ -123,7 +125,7 @@ test("server: every live lesson with its card and mastered counts", function() {
 test("new strings exist in both languages", function() {
   for (const k of ["tabOverview", "tabCharts", "tabLessons", "needsAttention", "allLessons", "colLesson", "colAccuracy", "colAnswers",
     "colMastered", "colDue", "struggling", "strugglingHint", "lessonsNote", "nothingNeedsAttention", "noLessons", "dueNow", "cardsDue",
-    "reviewAllDue", "dueLater", "achAll", "filterAll"]) {
+    "reviewAllDue", "dueLater", "dueLaterNone", "achAll", "filterAll"]) {
     assert.equal(app.split('"dashboard.' + k + '":').length - 1, 2, k);
   }
 });
