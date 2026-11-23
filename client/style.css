@@ -1652,6 +1652,8 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
 
 .empty-icon { color: var(--text3); }
 .empty-state p { font-size: 0.9375rem; max-width: 300px; }
+.empty-state .empty-title { margin: 0; font-weight: 600; color: var(--text); }
+.empty-state .empty-body { margin: -6px 0 0; font-size: 0.875rem; }
 
 .hidden { display: none !important; }
 

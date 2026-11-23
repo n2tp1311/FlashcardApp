@@ -245,13 +245,14 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.previous": "Previous",
   "upstream.markReviewed": "Mark reviewed",
   "upstream.navTitle": "Updates",
-  "upstream.screenTitle": "Changes from KnowledgeApp",
+  "upstream.screenTitle": "Updates",
   "upstream.bannerText": "{n} cards changed by KnowledgeApp",
   "upstream.bannerText_one": "{n} card changed by KnowledgeApp",
   "upstream.review": "Review",
   "upstream.summary": "{n} cards need review · {updated} updated · {deleted} removed",
   "upstream.summary_one": "{n} card needs review · {updated} updated · {deleted} removed",
-  "upstream.empty": "No cards changed by KnowledgeApp.",
+  "upstream.empty": "You are up to date",
+  "upstream.emptyHow": "When KnowledgeApp rewords, adds or removes cards in your classes, they appear here for you to review.",
   "upstream.noneInFilter": "No cards in this filter.",
   "upstream.filterAll": "All",
   "upstream.filterUpdated": "Updated",
@@ -271,10 +272,11 @@ Object.assign(TRANSLATIONS.en, {
   "upstream.markedOne": "“{name}” marked as reviewed.",
   "upstream.markedMany": "{n} cards marked as reviewed: {names}",
   "vocabulary.nav": "Vocabulary",
-  "vocabulary.screenTitle": "Vocabulary inbox",
+  "vocabulary.screenTitle": "Vocabulary",
   "vocabulary.subtitle": "Review saved words before fetching them in KnowledgeApp.",
   "vocabulary.loading": "Loading vocabulary queue…",
-  "vocabulary.noPending": "No words waiting for KnowledgeApp.",
+  "vocabulary.noPending": "No saved words yet",
+  "vocabulary.emptyHow": "While studying, select a word on a card and choose \"Save as English word\", or use Add word above. KnowledgeApp makes cards from the words saved here.",
   "vocabulary.pendingCount": "{n} words waiting for KnowledgeApp",
   "vocabulary.pendingCount_one": "{n} word waiting for KnowledgeApp",
   "vocabulary.add": "Add word",
@@ -1565,11 +1567,12 @@ Object.assign(TRANSLATIONS.vi, {
   "upstream.previous": "Bản trước",
   "upstream.markReviewed": "Đánh dấu đã xem",
   "upstream.navTitle": "Cập nhật",
-  "upstream.screenTitle": "Thay đổi từ KnowledgeApp",
+  "upstream.screenTitle": "Cập nhật",
   "upstream.bannerText": "{n} thẻ đã bị KnowledgeApp thay đổi",
   "upstream.review": "Xem lại",
   "upstream.summary": "{n} thẻ cần xem lại · {updated} đã cập nhật · {deleted} đã xoá ở nguồn",
-  "upstream.empty": "Không có thẻ nào bị KnowledgeApp thay đổi.",
+  "upstream.empty": "Bạn đã cập nhật đủ",
+  "upstream.emptyHow": "Khi KnowledgeApp sửa câu chữ, thêm hoặc xoá thẻ trong các lớp của bạn, các thẻ đó sẽ hiện ở đây để bạn xem lại.",
   "upstream.noneInFilter": "Không có thẻ nào trong bộ lọc này.",
   "upstream.filterAll": "Tất cả",
   "upstream.filterUpdated": "Đã cập nhật",
@@ -1587,10 +1590,11 @@ Object.assign(TRANSLATIONS.vi, {
   "upstream.markedOne": "Đã đánh dấu “{name}” là đã xem.",
   "upstream.markedMany": "Đã đánh dấu {n} thẻ là đã xem: {names}",
   "vocabulary.nav": "Từ vựng",
-  "vocabulary.screenTitle": "Hàng chờ từ vựng",
+  "vocabulary.screenTitle": "Từ vựng",
   "vocabulary.subtitle": "Xem lại các từ đã lưu trước khi KnowledgeApp tải chúng.",
   "vocabulary.loading": "Đang tải hàng chờ từ vựng…",
-  "vocabulary.noPending": "Không có từ nào đang chờ KnowledgeApp.",
+  "vocabulary.noPending": "Chưa lưu từ nào",
+  "vocabulary.emptyHow": "Khi học, chọn một từ trên thẻ rồi bấm \"Lưu làm từ vựng tiếng Anh\", hoặc dùng nút Thêm từ ở trên. KnowledgeApp sẽ tạo thẻ từ các từ được lưu ở đây.",
   "vocabulary.pendingCount": "{n} từ đang chờ KnowledgeApp",
   "vocabulary.add": "Thêm từ",
   "vocabulary.addTitle": "Thêm từ vào hàng chờ",
@@ -6247,6 +6251,8 @@ function renderVocabularyQueue() {
   list.innerHTML = "";
   var requests = state.vocabularyRequests || [];
   document.getElementById("vocabulary-empty").classList.toggle("hidden", requests.length !== 0);
+  // Empty, the empty state says what the page is for and how words get here; the intro would repeat it.
+  document.getElementById("vocabulary-intro").classList.toggle("hidden", requests.length === 0);
   requests.forEach(function(request) {
     var item = document.createElement("article");
     item.className = "vocabulary-request";
@@ -6346,17 +6352,17 @@ function renderUpstream() {
   }).catch(function(err) {
     loading.classList.add("hidden");
     document.getElementById("upstream-body").classList.add("hidden");
-    var emptyEl = document.getElementById("upstream-empty");
-    emptyEl.classList.remove("hidden");
-    emptyEl.querySelector("p").textContent = err.message;
+    document.getElementById("upstream-empty").classList.add("hidden");
+    var errEl = document.getElementById("upstream-error");
+    errEl.querySelector("p").textContent = err.message;
+    errEl.classList.remove("hidden");
   });
 }
 
 function showUpstreamData() {
   var empty = state.upstreamData.count.total === 0;
-  var emptyEl = document.getElementById("upstream-empty");
-  emptyEl.querySelector("p").textContent = t("upstream.empty");
-  emptyEl.classList.toggle("hidden", !empty);
+  document.getElementById("upstream-error").classList.add("hidden");
+  document.getElementById("upstream-empty").classList.toggle("hidden", !empty);
   document.getElementById("upstream-body").classList.toggle("hidden", empty);
   if (!empty) renderUpstreamList();
 }
