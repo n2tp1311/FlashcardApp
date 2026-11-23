@@ -10328,20 +10328,16 @@ function renderFlashcard() {
   setStudyLessonLabel("fc-lesson-label", card);
 
   // Flip state — reset must be instant, not animated. If the previous card was left
-  // flipped (the common case: flip, grade, auto-advance), .fc-card's CSS transition would
-  // otherwise animate the un-flip over 500ms with the NEW card's content already swapped
-  // in below, briefly revealing its answer mid-rotation. Temporarily disabling the
-  // transition snaps it to front-facing immediately; the deliberate flip animation (user
-  // clicking/tapping the card) is untouched since that's a separate code path. Order matters:
-  // the class removal (the actual un-flip) must happen while the transition is still
-  // disabled, restoring the transition only afterward — doing it the other way around (reflow
-  // first, restore, then remove the class) would un-flip under the now-active 0.5s transition.
+  // flipped (the common case: flip, grade, auto-advance), the faces' fade would otherwise
+  // show the back fading out with the NEW card's answer already swapped in. fc-no-anim turns
+  // the fade off; the deliberate flip (user clicking/tapping the card) keeps it. Order
+  // matters: un-flip while the fade is off, reflow, and only then turn it back on.
   state.studyFlipped = false;
   var fcCardEl = document.getElementById("fc-card");
-  fcCardEl.style.transition = "none";
+  fcCardEl.classList.add("fc-no-anim");
   setFlashcardFaces(false);
-  void fcCardEl.offsetHeight; // force reflow so transition:none takes effect before it's cleared
-  fcCardEl.style.transition = "";
+  void fcCardEl.offsetHeight; // force reflow so the snap lands before the fade returns
+  fcCardEl.classList.remove("fc-no-anim");
   // Swipe-to-grade leaves #fc-scene translated off-screen after its fly-off animation (see
   // initSwipeGestures) — reset that here too, so the just-graded card never snaps back to
   // center and flashes stale content before this render's new content is in place.

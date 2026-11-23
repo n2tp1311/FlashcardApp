@@ -48,7 +48,7 @@ html { font-size: calc(100% * var(--font-scale, 1)); }
   --transition: 0.15s ease;
   /* Shared by every "bar fills in to show a percentage" widget (study progress, class/lesson
      mini progress, dashboard/stats/analytics fill bars) so they read as one consistent motion
-     instead of each having picked its own duration — same curve as .fc-card's flip. One
+     instead of each having picked its own duration. One
      combined value, matching --transition's own single-token shape above (not split into
      separate duration/easing custom properties), since every consumer here plugs it into a
      `transition:` shorthand exactly like --transition already is throughout this file. */
@@ -2321,7 +2321,6 @@ code {
 
 
 .fc-scene {
-  perspective: 1200px;
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
@@ -2364,18 +2363,15 @@ code {
   width: 100%;
   height: 100%;
   position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
 }
 
-.fc-card.flipped { transform: rotateY(180deg); }
-
+/* The faces cross-fade in place. A 3D turn of a card that spans a desktop window swept its
+   edges across the screen and swelled the near one toward the eye; the user found it
+   headache-inducing and picked a fade over a lighter or a vertical turn. */
 .fc-front, .fc-back {
   position: absolute;
   inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  transition: opacity 0.2s ease;
   border-radius: var(--radius);
   /* The speaker and difficulty badge get their own band instead of covering the first line. */
   padding: 44px 24px 24px;
@@ -2399,9 +2395,13 @@ code {
 .fc-back {
   background: var(--card-back);
   color: var(--card-back-text);
-  transform: rotateY(180deg);
   border: 2px solid var(--card-back-border);
+  opacity: 0;
 }
+.fc-card.flipped .fc-front { opacity: 0; pointer-events: none; }
+.fc-card.flipped .fc-back { opacity: 1; }
+/* A new card shows its front at once: fading the old back out would show the new answer. */
+.fc-card.fc-no-anim .fc-front, .fc-card.fc-no-anim .fc-back { transition: none; }
 
 .fc-content {
   font-size: 1.125rem;
@@ -2650,7 +2650,7 @@ code {
   display: flex;
   gap: 2px;
 }
-/* WebKit draws a face's positioned buttons through the other side of the flipped card, mirrored. */
+/* The hidden face's buttons must not take a tap meant for the face in view. */
 .fc-card.flipped .fc-front .fc-face-actions,
 .fc-card:not(.flipped) .fc-back .fc-face-actions { visibility: hidden; }
 .btn-audio {
