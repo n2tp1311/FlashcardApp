@@ -1901,6 +1901,12 @@ Most study happens on an iPhone, and several decisions are about it:
   both previewed; the user kept the full shelf and only raised the description and progress
   from 11px to 12px and the group filters to 44px on a touch screen. A touch size written
   before a plain rule with the same selector loses to it; a test now checks for that.
+- **Vocabulary and Updates are titled as the sidebar names them**, "Vocabulary"/"Từ vựng"
+  and "Updates"/"Cập nhật", instead of "Vocabulary inbox" and "Changes from KnowledgeApp"
+  under a differently named link. Empty, each shows the sidebar's icon, a title ("No saved
+  words yet", "You are up to date") and how things get there; the vocabulary intro is
+  hidden then, since it would say the same. A failed Updates load has its own element
+  (`#upstream-error`) rather than writing the error into the empty state's text.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

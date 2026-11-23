@@ -1476,3 +1476,7 @@ Fifteenth item of the UI audit. With no answers in the last 60 days, seven of th
 ## 2026-11-23 — Achievements: full shelf kept, 12px text
 
 Sixteenth item of the UI audit. The Achievements page is 3848px on a phone for 35 badges, with 11px descriptions and 36px group filters. Options previewed: A, only 12px text and 44px filters; B, show only badges earned or under way and fold the not-started ones (27 of 35) behind "+ N not started yet"; C, three columns without descriptions. The user picked A: every badge stays in view with what it asks, at the cost of a page about 140px longer.
+
+## 2026-11-23 — Vocabulary and Updates: sidebar names, empty states that explain
+
+Seventeenth and last item of the UI audit. The screens were titled "Vocabulary inbox" and "Changes from KnowledgeApp" under sidebar links named Vocabulary and Updates, and empty they showed one grey line. Options previewed: A, sidebar names plus a one-line intro; B, sidebar names plus an empty state with the sidebar's icon, a title and how things get there; C, unchanged. The user picked B. The how-to line says to select a word and then choose "Save as English word", since that is how the study screen offers it.
