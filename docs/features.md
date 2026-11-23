@@ -410,6 +410,7 @@
 - Sidebar badge: "N new" for tiers recorded after the page was last opened (per user, in localStorage). The first fetch on a device marks everything seen, so a long-time user is not greeted with every medal as new
 - "Both ways round" (studying a class back to front as well) was asked for and dropped: there is no study direction setting, so there is nothing to count
 - A locked achievement's progress line uses the singular for one ("0 / 1 month"), and Class mastered shows the best class's share ("Best class: 42% mastered") instead of "0% of 100%"
+- On a phone each badge's description and progress line are 12px, and the group filters 44px tall on a touch screen (2026-11-23)
 - `tests/achievements.test.js`
 
 ## MCQ Explanation Field

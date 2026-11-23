@@ -1472,3 +1472,7 @@ Fourteenth item of the UI audit. The Dashboard's countdown read "0 more due in t
 ## 2026-11-23 — Empty Study charts: one row, naming the period
 
 Fifteenth item of the UI audit. With no answers in the last 60 days, seven of the Charts tab's nine charts were empty boxes, and their notes were false for a windowed chart: "No cards in SRS yet" beside 8 cards due, "No study data yet" beside a history. Both options named the window in every empty note and raised the 11px labels to 12px; A hid the empty charts behind one note, B kept each as a single row. The user picked B, which keeps the list of charts in view. The Accuracy chart's note, which counted weeks ("9 weeks" under a 60-day pill), now counts the pill's days.
+
+## 2026-11-23 — Achievements: full shelf kept, 12px text
+
+Sixteenth item of the UI audit. The Achievements page is 3848px on a phone for 35 badges, with 11px descriptions and 36px group filters. Options previewed: A, only 12px text and 44px filters; B, show only badges earned or under way and fold the not-started ones (27 of 35) behind "+ N not started yet"; C, three columns without descriptions. The user picked A: every badge stays in view with what it asks, at the cost of a page about 140px longer.

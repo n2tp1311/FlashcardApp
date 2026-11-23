@@ -1896,6 +1896,11 @@ Most study happens on an iPhone, and several decisions are about it:
   days*. Each now says what is missing from that window ("No new cards in the last 60
   days") on its title's row, so seven empty charts no longer stack as 70px boxes. Chart
   titles and KPI labels are 12px; the SVG axis numbers are left at the chart's own scale.
+- **Achievements keeps every badge on a phone, at 12px.** The page is long (35 badges, two
+  to a row), and hiding the ones not started or dropping descriptions to three columns were
+  both previewed; the user kept the full shelf and only raised the description and progress
+  from 11px to 12px and the group filters to 44px on a touch screen. A touch size written
+  before a plain rule with the same selector loses to it; a test now checks for that.
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The
