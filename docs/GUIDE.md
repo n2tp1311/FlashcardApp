@@ -819,15 +819,35 @@ Safari on iOS and macOS recognises on the device; on iPhone the page's other sou
 quieter while the mic is open, and a restart that is not from a tap can be refused, which
 shows as the pause; Android Chrome plays a chime on each restart. `tests/quiz-voice.test.js`
 
-**Music, if wanted, that builds with the streak.** The music row in the quiz's settings menu (or
-`M`) plays a loop written for the app and synthesized on the spot (128 BPM, C–G–Am–F); no
-audio file ships. The user asked for quiz music like a game show's and picked, from a
-preview, music that reacts over a fixed track. Parts join as the streak grows
-(`QUIZ_MUSIC_UNLOCK`): kick, hat and bass from the start, an arpeggio at 3 in a row, a clap
-and a plucked string at 6. A wrong answer muffles the mix (a lowpass that opens from 700 Hz
-over 2.2 s) and, as the streak is 0, drops it back to the beat. The plucked string replaced
-a bell the user disliked in the preview. One master volume, under the music row in the same
-menu (0–100, default 50, Reset); the user asked for nothing more.
+**Music, if wanted, that keeps changing while the answers are right.** The music row in the
+quiz's settings menu (or `M`) plays music written for the app and synthesized on the spot; no
+audio file ships. The earlier version added parts at 3 and 6 in a row and then never changed
+again, which grew dull. Now, after 3, 4 or 5 right answers in a row (`quizMusicDraw()`, drawn
+evenly each time so the next change cannot be counted on), one of four elements changes:
+drums, bass, melody or chord progression (`quizMusicOnAnswer()`). The first four changes bring
+each off its plain kind in that order; after that a random element other than the one changed
+last moves to another of its kinds, for as long as the run lasts. Each element is a list in
+`QUIZ_MUSIC_KINDS` (six kinds each, index 0 the plain one; a melody's plain kind is silence),
+and the rules pick from however many entries there are, so adding a kind is adding an entry.
+The key (C major) and the kick on every beat never change. A change lands on the next bar, a
+new progression on the next four-bar phrase, and a soft cymbal marks it.
+
+Melodies are written as chord tones (0–3 of the bar's chord) and scale steps ("u"/"d" from the
+note before), not fixed notes, so every progression fits every melody; a test plays each
+melody over each progression and checks every note is in C major and between MIDI 55 and 76.
+The user asked for lyrical lines, so five of the ten move stepwise like a sung one, and all
+use a soft voice (sine and triangle, slow attack, late vibrato, an echo). After hearing the
+first preview the user found it high: the melody and arpeggio sit an octave lower, around
+250–600 Hz, the hi-hats are softer, and the whole mix is cut above 8 kHz (`QUIZ_MUSIC_TOP`).
+
+Tempo is 128 BPM and never higher: the user tried a tempo that rose with the run and found
+it pressing. A wrong answer glides it down to 120 over two bars, each right answer brings
+2 BPM back, and it stops at 128. A wrong answer also muffles the mix (a lowpass that opens
+from 700 Hz over 2.2 s) and returns the element changed last to its plain kind; each further
+wrong answer undoes one more change. Every answer moves the song on whether the music is
+playing or not, so music turned on mid-run joins it where the run is; `startQuiz()` starts
+each quiz from the plain song. One master volume, under the music row in the same menu
+(0–100, default 50, Reset); the user asked for nothing more.
 
 Unlike the mic, the choice is remembered (`localStorage["fc-quiz-music"]`, default off, and
 `fc-quiz-music-volume`): the user picked that. It plays only on the quiz screen with the
