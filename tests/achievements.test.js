@@ -381,3 +381,29 @@ test("one-off achievements became counts: sessions, weeks, books, events", funct
   assert.equal(r.passageSolved.tier, 1);
   assert.equal(r.deepSession.show.cur, 2, "after the first, the line counts toward the next level");
 });
+
+test("on a phone the description and progress are 12px and the group filters 44px tall", async function() {
+  const { chromium } = require("playwright");
+  const express = require("express");
+  const server = express();
+  server.use(express.static(path.join(__dirname, "..", "client")));
+  const listener = await new Promise((ok) => { const l = server.listen(0, "127.0.0.1", () => ok(l)); });
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
+    await page.goto("http://127.0.0.1:" + listener.address().port + "/");
+    await page.waitForFunction(() => typeof window.achBadgeHtml === "function");
+    const out = await page.evaluate(() => {
+      const box = document.createElement("div");
+      box.innerHTML = '<div class="ach-filters"><button class="pill">All</button></div>' +
+        achBadgeHtml({ key: "writer", group: "effort", tiers: [100], value: 5, tier: 0, next: 100, progress: 0.05, show: { cur: 5, target: 100 }, earnedAt: null, lost: false });
+      document.body.appendChild(box);
+      const fs = (s) => getComputedStyle(box.querySelector(s)).fontSize;
+      return [fs(".ach-desc"), fs(".ach-sub"), Math.round(box.querySelector(".pill").getBoundingClientRect().height)];
+    });
+    assert.deepEqual(out, ["12px", "12px", 44]);
+  } finally {
+    await browser.close();
+    listener.close();
+  }
+});

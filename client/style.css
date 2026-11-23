@@ -5477,6 +5477,7 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .ach-page { width: 100%; max-width: 900px; margin: 0 auto; display: grid; gap: 14px; }
 .ach-summary { margin: 2px 0 0; color: var(--text2); font-variant-numeric: tabular-nums; }
 .ach-filters .pill { min-height: 36px; }
+@media (pointer: coarse) { .ach-filters .pill { min-height: 44px; } }
 .ach-list { display: grid; gap: 20px; }
 .ach-group { display: grid; gap: 10px; }
 .ach-group-h {
@@ -5520,8 +5521,8 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .ach-locked .ach-medal { color: var(--text3); border-style: dashed; background: transparent; opacity: 0.8; }
 .ach-lost .ach-medal { opacity: 0.5; }
 .ach-name { font-size: 0.8125rem; font-weight: 600; color: var(--text); line-height: 1.25; text-wrap: balance; }
-.ach-desc { font-size: 0.6875rem; color: var(--text2); line-height: 1.35; }
-.ach-sub { font-size: 0.6875rem; color: var(--text3); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.ach-desc { font-size: 0.75rem; color: var(--text2); line-height: 1.35; }
+.ach-sub { font-size: 0.75rem; color: var(--text3); font-variant-numeric: tabular-nums; margin-top: 2px; }
 .ach-prog { width: 80%; height: 4px; border-radius: 2px; background: var(--surface2); overflow: hidden; margin-top: 2px; }
 .ach-prog i { display: block; height: 100%; border-radius: 2px; background: var(--primary); }
 .ach-new-badge { margin-left: auto; color: var(--success); background: var(--success-light); }

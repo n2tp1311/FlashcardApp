@@ -94,3 +94,29 @@ test("due badge: 12px, and a 44px tap area on a touch screen", async function() 
     await ctx.close();
   }
 });
+
+// The touch-size slip: a rule inside @media (pointer: coarse) sets min-height or min-width, and
+// a later rule outside any media block, with the same selector, sets it again and wins.
+test("no touch-size rule is undone by a later plain rule with the same selector", function() {
+  const fs = require("fs");
+  const css = fs.readFileSync(path.join(root, "client", "style.css"), "utf8");
+  const blocks = [];
+  for (const m of css.matchAll(/@media[^{]*\{/g)) {
+    let j = m.index + m[0].length, depth = 1;
+    while (depth) { const c = css[j++]; if (c === "{") depth++; else if (c === "}") depth--; }
+    blocks.push([m.index, j, /pointer:\s*coarse/.test(m[0])]);
+  }
+  const inBlock = (i) => blocks.find(([a, b]) => i >= a && i < b);
+  const rules = [...css.matchAll(/([^{}@]+)\{([^{}]*)\}/g)].map((r) => ({ at: r.index, sels: r[1].split(",").map((s) => s.trim()), decl: r[2], block: inBlock(r.index) }));
+  const found = [];
+  rules.filter((r) => r.block && r.block[2]).forEach((r) => {
+    ["min-height", "min-width"].forEach((prop) => {
+      if (!new RegExp("(^|;|\\s)" + prop + ":").test(r.decl)) return;
+      r.sels.forEach((sel) => {
+        rules.filter((o) => o.at > r.at && !o.block && o.sels.includes(sel) && new RegExp("(^|;|\\s)" + prop + ":").test(o.decl))
+          .forEach(() => found.push(sel + " " + prop));
+      });
+    });
+  });
+  assert.deepEqual(found, []);
+});
