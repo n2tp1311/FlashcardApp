@@ -1884,6 +1884,12 @@ Most study happens on an iPhone, and several decisions are about it:
   days of answers as `study-export.csv`), the first control on the screen for a file nothing
   read. It was removed with its route, `GET /api/stats/analytics/export`; flashcards still
   export as JSON per class or lesson.
+- **A lesson's "N due" badge on the Dashboard takes a 44px tap.** It starts that lesson's
+  review from inside a row that opens the lesson's stats, so a near miss used to open the
+  wrong thing. On a touch screen an invisible `::after` takes it to 44x44 without changing
+  its look. The Dashboard's small text (the countdown, the Needs attention count, the
+  badges) is 12px, and the countdown says "Nothing more due in the next 14 days" rather
+  than "0 more due".
 - **Vietnamese runs longer than English**, so a row of controls must wrap rather than
   squeeze. On Home "Lớp của bạn" shared a row with "Sắp xếp theo" and a select sized to
   "Hoạt động gần nhất", and became one word a line (81px tall at 375px, measured). The

@@ -1464,3 +1464,7 @@ Twelfth item of the UI audit. The headings LESSON ACCURACY ANSWERS MASTERED DUE 
 ## 2026-11-23 — Removed: the Dashboard's CSV export
 
 Thirteenth item of the UI audit. Export CSV was the first control on the Dashboard, above the tabs, for a download of 90 days of answers that the user does not use. Asked how to demote it, the user chose to remove it: the button, its strings and `GET /api/stats/analytics/export`. Older entries here about its columns and its `window.location.href` download describe a feature that no longer exists. Flashcard export (JSON, through `downloadFromApi()`) is unaffected.
+
+## 2026-11-23 — Dashboard: the due badge's tap, 12px, "Nothing more due"
+
+Fourteenth item of the UI audit. The Dashboard's countdown read "0 more due in the next 14 days", its countdown, Needs attention count and due badges were 11px, and a lesson's "3 due" badge, which starts that lesson's review, was a 51x21 target inside a row that opens the lesson's stats. Both options fixed the wording and the size; for the badge, A kept its look with an invisible 44px tap area, B made it a "Review 3" button, which did not fit on the numbers' line. Chose A.
