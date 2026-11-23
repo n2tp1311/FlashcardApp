@@ -11563,6 +11563,7 @@ function startQuiz() {
   state.quizCompleteBuzzed = false;
   state.quizStreak = 0;
   state.quizBestStreak = 0;
+  quizMusic.song = null;   // each quiz starts from the plain song
   beginStudySession();
   renderQuizCard();
   showScreen("quiz");
@@ -15214,22 +15215,78 @@ function playSound(name, step) {
 
 // Quiz music: an original loop synthesized like the sounds above, so there is no file to
 // download, cache or license. Off until the learner turns it on (the note button or M), then
-// remembered on this device, with its volume. It follows the quiz the way a game show's does:
-// the arpeggio joins at a streak of 3 correct answers, the clap and the plucked string at 6,
-// and a wrong answer drops back to the beat and muffles everything for two seconds.
+// remembered on this device, with its volume. It rewards a run of right answers without ever
+// settling: after 3, 4 or 5 correct answers in a row (drawn at random each time, so the next
+// change cannot be counted on) one of four elements changes -- drums, bass, melody, chords.
+// The first four changes bring each in turn off its plain kind; from then on a random element
+// other than the last one moves to another kind, for as long as the run lasts. A wrong answer
+// muffles the mix for two seconds, returns the element changed last to its plain kind, and
+// slows the tempo to 120; each correct answer brings it 2 BPM back, never above 128.
+// The key and the kick on every beat never change. Changes land on the next bar (a new chord
+// progression on the next four-bar phrase), the tempo glides over two bars, and a soft
+// cymbal marks each change. The tune sits around 250-600 Hz and the mix is cut above 8 kHz,
+// which the user asked for after hearing it brighter.
 // It plays only on the quiz screen in a visible tab, pauses while hands-free answers listen
 // (the microphone would hear it), and steps back while a term is read aloud.
 var QUIZ_MUSIC_BPM = 128;
+var QUIZ_MUSIC_SLOW_BPM = 120;
+var QUIZ_MUSIC_BPM_STEP = 2;
+var QUIZ_MUSIC_RAMP_STEPS = 32;      // two bars of sixteenths
+var QUIZ_MUSIC_TOP = 8000;           // the mix's lowpass when not muffled
 var QUIZ_MUSIC_LEVEL = 0.22;         // the output gain at the default volume
 var QUIZ_MUSIC_DEFAULT_VOLUME = 50;  // the slider's middle, so it goes up as well as down
 var QUIZ_MUSIC_DUCK = 0.3;
-var QUIZ_MUSIC_UNLOCK = { kick: 0, hat: 0, bass: 0, arp: 3, clap: 6, pluck: 6 };
-// C - G - Am - F, one bar each: the bass root, then the arpeggio's tones.
-var QUIZ_MUSIC_BARS = [
-  { bass: 36, arp: [72, 76, 79, 84] }, { bass: 31, arp: [71, 74, 79, 83] },
-  { bass: 33, arp: [72, 76, 81, 84] }, { bass: 29, arp: [72, 77, 81, 84] }];
-var quizMusic = { ctx: null, timer: null, step: 0, next: 0, out: null, filter: null, noise: null,
-  duck: 1, duckTimer: null };
+var QUIZ_MUSIC_ELEMENTS = ["drums", "bass", "lead", "harm"];
+// Each element is a list of kinds and index 0 is the plain one. Adding a kind is adding an
+// entry: the changes pick from however many there are.
+var QUIZ_MUSIC_CHORDS = {
+  C: { bass: 36, arp: [60, 64, 67, 72] }, G: { bass: 31, arp: [59, 62, 67, 71] },
+  Am: { bass: 33, arp: [60, 64, 69, 72] }, F: { bass: 29, arp: [60, 65, 69, 72] },
+  Em: { bass: 28, arp: [59, 64, 67, 71] }, Dm: { bass: 26, arp: [62, 65, 69, 74] } };
+var QUIZ_MUSIC_KINDS = {
+  harm: [["C", "G", "Am", "F"], ["Am", "F", "C", "G"], ["F", "G", "Em", "Am"], ["C", "Am", "Dm", "G"],
+    ["Am", "Em", "F", "G"], ["Dm", "G", "C", "Am"]],
+  // 16 steps a bar: x loud, o soft, . silent.
+  drums: [
+    { hat: "..x...x...x...x." },
+    { hat: "xoxoxoxoxoxoxoxo", clap: "....x.......x..." },
+    { open: "..x...x...x...x.", shaker: "oo.ooo.ooo.ooo.o", clap: "....x.......x..." },
+    { hat: "xox.xox.xox.xox.", clap: "....x.......x...", fill: true },
+    { hat: "x..x..x..x..x.x.", rim: "......x.......x.", clap: "....x.......x..." },
+    { hat: "xoxoxoxoxoxoxoxo", clap: "........x.......", open: "..............x." }],
+  // [step, semitones above the chord's root]
+  bass: [
+    [[0, 0], [4, 0], [8, 0], [12, 0], [14, 12]],
+    [[0, 0], [2, 12], [4, 0], [6, 12], [8, 0], [10, 12], [12, 0], [14, 12]],
+    [[0, 0], [3, 0], [6, 7], [8, 0], [11, 12], [14, 7]],
+    [[0, 0], [2, 0], [4, 7], [6, 12], [8, 0], [10, 7], [12, 12], [14, 7]],
+    [[0, 0], [1, 0], [3, 12], [6, 0], [8, 0], [9, 0], [11, 12], [14, 7]],
+    [[0, 0], [6, 0], [8, 7], [10, 12], [12, 7], [14, 0]]],
+  // Four bars of [step, note, length in steps]. A note is a tone of the bar's chord (0-3, low to
+  // high), so any progression fits it, or "u"/"d", a scale step from the note before, so a line
+  // can move as a sung one does.
+  lead: [null,
+    [[[0, 1, 4], [4, 2, 2], [6, 1, 2], [8, 0, 6]], [[0, 1, 4], [4, 0, 2], [6, 1, 2], [8, 2, 6]],
+     [[0, 1, 4], [4, 2, 2], [6, 3, 2], [8, 1, 6]], [[0, 1, 4], [4, 0, 2], [6, 1, 2], [8, 0, 8]]],
+    quizMusicSame([[0, 2, 2], [2, 3, 2], [4, 2, 2], [6, 1, 6]], [[0, 2, 2], [2, 3, 2], [4, 2, 2], [6, 1, 4], [10, 2, 2], [12, 3, 4]]),
+    quizMusicSame([[0, 3, 2], [3, 2, 2], [6, 1, 2], [10, 2, 2], [12, 3, 2]]),
+    quizMusicSame([[0, 0, 2], [2, 1, 2], [4, 2, 2], [6, 3, 2], [8, 2, 4], [12, 1, 4]], [[0, 0, 2], [2, 1, 2], [4, 2, 2], [6, 3, 10]]),
+    [[[0, 3, 8], [8, 2, 8]], [[0, 1, 8], [8, 0, 8]], [[0, 3, 8], [8, 2, 8]], [[0, 3, 16]]],
+    [[[0, 2, 6], [6, "d", 2], [8, 1, 8]], [[0, 1, 6], [6, "u", 2], [8, 2, 8]],
+     [[0, 2, 4], [4, "u", 4], [8, 1, 8]], [[0, 1, 4], [4, "d", 4], [8, 0, 8]]],
+    [[[0, 0, 4], [4, "u", 2], [6, "u", 2], [8, 2, 8]], [[0, 2, 4], [4, "u", 2], [6, "d", 2], [8, 1, 8]],
+     [[0, 1, 4], [4, "u", 2], [6, "u", 2], [8, 3, 8]], [[0, 2, 6], [6, "d", 2], [8, "d", 8]]],
+    [[[0, 3, 8], [8, "d", 4], [12, "d", 4]], [[0, 2, 12], [12, "u", 4]],
+     [[0, 3, 8], [8, "d", 4], [12, "d", 4]], [[0, 1, 16]]],
+    [[[2, 1, 4], [6, 2, 4], [10, "u", 6]], [[2, 2, 4], [6, 1, 4], [10, "d", 6]],
+     [[2, 1, 4], [6, 2, 4], [10, 3, 6]], [[2, 2, 6], [8, 1, 8]]],
+    quizMusicSame([[0, 1, 3], [3, "u", 3], [6, "d", 2], [8, "d", 4], [12, 0, 4]], [[0, 1, 3], [3, "u", 3], [6, "d", 2], [8, 0, 8]])]
+};
+var quizMusic = { ctx: null, timer: null, step: 0, next: 0, out: null, filter: null, leadBus: null,
+  noise: null, duck: 1, duckTimer: null, song: null };
+
+// Three bars of one line and a fourth, the cadence, that may differ.
+function quizMusicSame(bar, last) { return [bar, bar, bar, last || bar]; }
 
 function quizMusicPref() {
   try { return localStorage.getItem("fc-quiz-music") === "on"; } catch (_) { return false; }
@@ -15245,9 +15302,73 @@ function quizMusicGain(volume, duck) {
   return QUIZ_MUSIC_LEVEL * volume / QUIZ_MUSIC_DEFAULT_VOLUME * duck;
 }
 
-// Which parts play at a streak.
-function quizMusicParts(streak) {
-  return Object.keys(QUIZ_MUSIC_UNLOCK).filter(function(p) { return streak >= QUIZ_MUSIC_UNLOCK[p]; });
+function quizMusicDraw(rand) { return 3 + Math.floor(rand() * 3); }
+
+function quizMusicNewSong(rand) {
+  return { kind: { drums: 0, bass: 0, lead: 0, harm: 0 }, pending: {}, toNext: quizMusicDraw(rand),
+    last: null, changed: [], bpm: QUIZ_MUSIC_BPM, bpmTarget: QUIZ_MUSIC_BPM, bpmRate: 0, leadPrev: null };
+}
+
+function quizMusicSetTempo(song, target) {
+  song.bpmTarget = target;
+  song.bpmRate = Math.abs(target - song.bpm) / QUIZ_MUSIC_RAMP_STEPS;
+}
+
+// The kind an element has, or is about to have at the next bar.
+function quizMusicKindNow(song, e) { return e in song.pending ? song.pending[e] : song.kind[e]; }
+
+// Returns the element that changes, or null. rand is Math.random, or a fixed one in tests.
+function quizMusicOnAnswer(song, correct, rand) {
+  if (!correct) {
+    song.toNext = quizMusicDraw(rand);
+    quizMusicSetTempo(song, QUIZ_MUSIC_SLOW_BPM);
+    var back = song.changed.pop();
+    if (back) { song.pending[back] = 0; song.last = null; }
+    return null;
+  }
+  if (song.bpmTarget < QUIZ_MUSIC_BPM)
+    quizMusicSetTempo(song, Math.min(QUIZ_MUSIC_BPM, song.bpmTarget + QUIZ_MUSIC_BPM_STEP));
+  if (--song.toNext > 0) return null;
+  song.toNext = quizMusicDraw(rand);
+  var plain = QUIZ_MUSIC_ELEMENTS.filter(function(e) { return quizMusicKindNow(song, e) === 0; });
+  var others = QUIZ_MUSIC_ELEMENTS.filter(function(e) { return e !== song.last; });
+  var e = plain.length ? plain[0] : others[Math.floor(rand() * others.length)];
+  var kinds = [];
+  for (var k = 1; k < QUIZ_MUSIC_KINDS[e].length; k++) if (k !== quizMusicKindNow(song, e)) kinds.push(k);
+  song.pending[e] = kinds[Math.floor(rand() * kinds.length)];
+  song.changed = song.changed.filter(function(x) { return x !== e; }).concat([e]);
+  song.last = e;
+  return e;
+}
+
+// At a bar's first step: pending kinds take over, chords only at a phrase's start. Returns
+// whether something moved off its plain kind, which the cymbal marks.
+function quizMusicApplyPending(song, step) {
+  var marked = false;
+  Object.keys(song.pending).forEach(function(e) {
+    if (e === "harm" && step % 64 !== 0) return;
+    if (song.pending[e] > 0) marked = true;
+    song.kind[e] = song.pending[e]; delete song.pending[e];
+  });
+  return marked;
+}
+
+function quizMusicGlide(song) {
+  var d = song.bpmTarget - song.bpm;
+  if (d) song.bpm = Math.abs(d) <= song.bpmRate ? song.bpmTarget : song.bpm + Math.sign(d) * song.bpmRate;
+}
+
+function quizMusicScaleStep(m, dir) {
+  var x = m;
+  do { x += dir; } while ([0, 2, 4, 5, 7, 9, 11].indexOf(((x % 12) + 12) % 12) < 0);
+  return x;
+}
+
+function quizMusicLeadNote(song, spec, chord) {
+  var prev = song.leadPrev == null ? chord.arp[1] : song.leadPrev;
+  var m = typeof spec === "number" ? chord.arp[spec] : quizMusicScaleStep(prev, spec === "u" ? 1 : -1);
+  song.leadPrev = m;
+  return m;
 }
 
 function quizMusicWanted(pref, onScreen, hidden, listening) {
@@ -15265,15 +15386,23 @@ function quizMusicTone(t, freq, dur, type, vol) {
   o.connect(g); g.connect(quizMusic.filter); o.start(t); o.stop(t + dur + 0.02);
 }
 
-// A plucked string: a bright sawtooth whose filter closes fast, so it rings and dulls.
-function quizMusicPluck(t, freq, vol) {
-  var c = quizMusic.ctx, o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
-  o.type = "sawtooth"; o.frequency.value = freq;
-  f.type = "lowpass"; f.Q.value = 4;
-  f.frequency.setValueAtTime(4200, t); f.frequency.exponentialRampToValueAtTime(380, t + 0.28);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
-  o.connect(f); f.connect(g); g.connect(quizMusic.filter); o.start(t); o.stop(t + 0.47);
+// A soft sung voice: sine and triangle, a slow attack, a vibrato that comes in late, and an
+// echo on its bus. The saw lead it replaced sounded harsh to the user.
+function quizMusicLead(t, freq, dur) {
+  var c = quizMusic.ctx, f = c.createBiquadFilter(), g = c.createGain();
+  var lfo = c.createOscillator(), depth = c.createGain();
+  f.type = "lowpass"; f.frequency.value = 1900;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1, t + 0.05);
+  g.gain.setValueAtTime(0.1, t + dur * 0.8); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.3);
+  lfo.frequency.value = 5.5; depth.gain.setValueAtTime(0, t);
+  depth.gain.linearRampToValueAtTime(7, t + Math.min(0.4, dur)); lfo.connect(depth);
+  [["sine", 1], ["triangle", 0.5]].forEach(function(w) {
+    var o = c.createOscillator(), og = c.createGain();
+    o.type = w[0]; o.frequency.value = freq; og.gain.value = w[1];
+    depth.connect(o.detune); o.connect(og); og.connect(f); o.start(t); o.stop(t + dur + 0.35);
+  });
+  lfo.start(t); lfo.stop(t + dur + 0.35);
+  f.connect(g); g.connect(quizMusic.leadBus);
 }
 
 function quizMusicKick(t) {
@@ -15291,30 +15420,45 @@ function quizMusicNoise(t, dur, vol, type, freq) {
   src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
 }
 
-// One sixteenth note of the four-bar loop.
+// One sixteenth note of the four-bar phrase.
 function quizMusicStep(step, t) {
-  var s = step % 16, bar = QUIZ_MUSIC_BARS[Math.floor(step / 16) % 4];
-  var on = quizMusicParts(state.quizStreak || 0);
-  function has(p) { return on.indexOf(p) >= 0; }
-  if (has("kick") && s % 4 === 0) quizMusicKick(t);
-  if (has("hat") && s % 4 === 2) quizMusicNoise(t, 0.04, 0.25, "highpass", 7000);
-  if (has("bass") && [0, 3, 6, 8, 11, 14].indexOf(s) >= 0)
-    quizMusicTone(t, quizMusicHz(bar.bass + (s === 14 ? 12 : 0)), 0.18, "triangle", 0.5);
-  if (has("arp") && s % 2 === 0)
-    quizMusicTone(t, quizMusicHz(bar.arp[[0, 1, 2, 1, 3, 2, 1, 2][s / 2]]), 0.12, "square", 0.07);
-  if (has("clap") && (s === 4 || s === 12)) quizMusicNoise(t, 0.12, 0.35, "bandpass", 1500);
-  if (has("pluck") && (s === 0 || s === 6 || s === 10)) quizMusicPluck(t, quizMusicHz(bar.arp[s === 6 ? 2 : 3]), 0.16);
+  var song = quizMusicSong(), s = step % 16, bar = Math.floor(step / 16) % 4;
+  if (s === 0 && quizMusicApplyPending(song, step)) quizMusicNoise(t, 1.1, 0.07, "highpass", 3500);
+  var chord = QUIZ_MUSIC_CHORDS[QUIZ_MUSIC_KINDS.harm[song.kind.harm][bar]];
+  var drums = QUIZ_MUSIC_KINDS.drums[song.kind.drums];
+  function hit(p) { var ch = drums[p] && drums[p][s]; return ch === "x" ? 1 : ch === "o" ? 0.45 : 0; }
+  if (s % 4 === 0) quizMusicKick(t);
+  if (hit("hat")) quizMusicNoise(t, 0.035, 0.18 * hit("hat"), "highpass", 5000);
+  if (hit("open")) quizMusicNoise(t, 0.18, 0.15 * hit("open"), "highpass", 4500);
+  if (hit("shaker")) quizMusicNoise(t, 0.02, 0.12 * hit("shaker"), "highpass", 6000);
+  if (hit("clap")) quizMusicNoise(t, 0.12, 0.35 * hit("clap"), "bandpass", 1500);
+  if (hit("rim")) quizMusicNoise(t, 0.03, 0.3 * hit("rim"), "bandpass", 3200);
+  if (drums.fill && bar === 3 && s >= 12) quizMusicNoise(t, 0.08, 0.18 + (s - 12) * 0.05, "bandpass", 900 + (s - 12) * 200);
+  QUIZ_MUSIC_KINDS.bass[song.kind.bass].forEach(function(n) {
+    if (n[0] === s) quizMusicTone(t, quizMusicHz(chord.bass + n[1]), song.kind.bass === 1 ? 0.1 : 0.18, "triangle", 0.5);
+  });
+  if (s % 2 === 0) quizMusicTone(t, quizMusicHz(chord.arp[[0, 1, 2, 1, 3, 2, 1, 2][s / 2]]), 0.12, "triangle", 0.06);
+  var lead = QUIZ_MUSIC_KINDS.lead[song.kind.lead];
+  if (lead) lead[bar].forEach(function(n) {
+    if (n[0] === s) quizMusicLead(t, quizMusicHz(quizMusicLeadNote(song, n[1], chord)), n[2] * 15 / song.bpm);
+  });
+}
+
+function quizMusicSong() {
+  if (!quizMusic.song) quizMusic.song = quizMusicNewSong(Math.random);
+  return quizMusic.song;
 }
 
 // Notes are scheduled a little ahead on the audio clock; a timer only tops the queue up, so
 // a late tick does not put the beat out of time.
 function quizMusicTick() {
-  var c = quizMusic.ctx, dt = 60 / QUIZ_MUSIC_BPM / 4;
+  var c = quizMusic.ctx, song = quizMusicSong();
   if (!c || c.state === "closed") { stopQuizMusic(); return; }
   try {
     while (quizMusic.next < c.currentTime + 0.12) {
       quizMusicStep(quizMusic.step, quizMusic.next);
-      quizMusic.next += dt; quizMusic.step = (quizMusic.step + 1) % 64;
+      quizMusic.next += 15 / song.bpm; quizMusicGlide(song);
+      quizMusic.step = (quizMusic.step + 1) % 64;
     }
   } catch (_) { stopQuizMusic(); }
 }
@@ -15331,8 +15475,12 @@ function quizMusicContext() {
     quizMusic.out = c.createGain();
     quizMusic.out.gain.value = 0.0001;
     quizMusic.filter = c.createBiquadFilter();
-    quizMusic.filter.type = "lowpass"; quizMusic.filter.frequency.value = 18000;
+    quizMusic.filter.type = "lowpass"; quizMusic.filter.frequency.value = QUIZ_MUSIC_TOP;
     quizMusic.filter.connect(quizMusic.out); quizMusic.out.connect(c.destination);
+    var bus = quizMusic.leadBus = c.createGain(), echo = c.createDelay(), fb = c.createGain(), wet = c.createGain();
+    echo.delayTime.value = 0.35; fb.gain.value = 0.3; wet.gain.value = 0.3;
+    bus.connect(quizMusic.filter); bus.connect(echo); echo.connect(fb); fb.connect(echo);
+    echo.connect(wet); wet.connect(quizMusic.filter);
     var b = quizMusic.noise = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0);
     for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   }
@@ -15395,14 +15543,15 @@ function setQuizMusicVolume(v) {
   applyQuizMusic();
 }
 
-// A wrong answer muffles the music for about two seconds; the streak, and so the parts,
-// come from answerQuiz().
+// Every answer moves the song on, heard or not, so turning the music on mid-run joins it
+// where the run is. A wrong one also muffles the mix for about two seconds.
 function quizMusicAnswer(correct) {
+  quizMusicOnAnswer(quizMusicSong(), correct, Math.random);
   if (correct || !quizMusic.timer || !quizMusic.filter) return;
   try {
     var f = quizMusic.filter.frequency, now = quizMusic.ctx.currentTime;
     f.cancelScheduledValues(now); f.setValueAtTime(700, now);
-    f.exponentialRampToValueAtTime(18000, now + 2.2);
+    f.exponentialRampToValueAtTime(QUIZ_MUSIC_TOP, now + 2.2);
   } catch (_) {}
 }
 
