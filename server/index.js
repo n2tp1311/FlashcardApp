@@ -84,6 +84,8 @@ app.use(session({
     sameSite: "lax"
   }
 }));
+// After the session, before every route: a suspended or deleted account's session ends here.
+app.use(require("./middleware/auth").sessionGuard);
 
 // ── API Routes ────────────────────────────────────────────
 app.use("/api/auth",    require("./routes/auth"));

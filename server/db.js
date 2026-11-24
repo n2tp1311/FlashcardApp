@@ -730,4 +730,24 @@ try { db.exec("CREATE INDEX IF NOT EXISTS idx_page_ledger_user ON page_ledger(us
 // The admin page counts active users by attempts in a time window, across all users.
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_attempts_created ON attempts(created_at)"); } catch (_) {}
 
+// Suspended accounts (lib/accounts.js). A suspended user keeps every row; suspended_at set
+// is the whole switch. account_actions logs suspend, restore and delete, and has no foreign
+// key to users on purpose: a deleted account's line, email included, must outlive it.
+try { db.exec("ALTER TABLE users ADD COLUMN suspended_at INTEGER"); } catch (_) {}
+try { db.exec("ALTER TABLE users ADD COLUMN suspended_by TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE users ADD COLUMN suspended_note TEXT"); } catch (_) {}
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS account_actions (
+    id         INTEGER PRIMARY KEY,
+    user_id    TEXT NOT NULL,
+    email      TEXT NOT NULL,
+    action     TEXT NOT NULL CHECK (action IN ('suspend','restore','delete')),
+    by_user_id TEXT,
+    note       TEXT,
+    pages      INTEGER,
+    created_at INTEGER NOT NULL
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_account_actions_created ON account_actions(created_at)"); } catch (_) {}
+
 module.exports = db;

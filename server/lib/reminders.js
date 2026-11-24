@@ -173,7 +173,8 @@ async function remindUser(db, user, now, push) {
 // One pass over the users with reminders on and a device to send to.
 async function runReminders(db, now, push) {
   const users = db.prepare(
-    "SELECT u.id, u.preferences FROM users u WHERE EXISTS (SELECT 1 FROM push_subscriptions p WHERE p.user_id = u.id)"
+    "SELECT u.id, u.preferences FROM users u WHERE u.suspended_at IS NULL " +
+    "AND EXISTS (SELECT 1 FROM push_subscriptions p WHERE p.user_id = u.id)"
   ).all();
   const sent = {};
   for (const u of users) {

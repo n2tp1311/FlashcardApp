@@ -104,6 +104,14 @@ function cloneClass(classId, toUserId) {
   return idMap[classId];
 }
 
+// A suspended owner's links answer as gone, and come back on restore: the link row stays.
+function liveLink(token) {
+  const link = db.prepare("SELECT l.*, u.suspended_at FROM class_share_links l JOIN classes c ON c.id = l.class_id " +
+    "JOIN users u ON u.id = c.user_id WHERE l.token = ?").get(token);
+  if (link) link.suspended = !!link.suspended_at;
+  return link;
+}
+
 // ── Share Link ──────────────────────────────────────────────
 
 // GET /api/share/link/:classId  — the class's current share link, if any
@@ -141,8 +149,9 @@ router.delete("/link/:classId", requireAuth, (req, res) => {
 
 // GET /api/share/view/:token  — public: get class info by token (no auth required)
 router.get("/view/:token", viewLimiter, (req, res) => {
-  const link = db.prepare("SELECT * FROM class_share_links WHERE token = ?").get(req.params.token);
+  const link = liveLink(req.params.token);
   if (!link) return res.status(404).json({ error: "Invalid or expired link", code: "linkInvalid" });
+  if (link.suspended) return res.status(404).json({ error: "This link is no longer available", code: "linkUnavailable" });
 
   const { cls, lessons, cards } = getClassData(link.class_id);
   const owner = db.prepare("SELECT name FROM users WHERE id = ?").get(cls.user_id);
@@ -154,8 +163,9 @@ router.get("/view/:token", viewLimiter, (req, res) => {
 
 // POST /api/share/clone/:token  — clone shared class into current user's account
 router.post("/clone/:token", requireAuth, cloneLimiter, (req, res) => {
-  const link = db.prepare("SELECT * FROM class_share_links WHERE token = ?").get(req.params.token);
+  const link = liveLink(req.params.token);
   if (!link) return res.status(404).json({ error: "Invalid or expired link", code: "linkInvalid" });
+  if (link.suspended) return res.status(404).json({ error: "This link is no longer available", code: "linkUnavailable" });
 
   // Prevent owner from cloning their own class
   const cls = db.prepare("SELECT user_id FROM classes WHERE id = ?").get(link.class_id);

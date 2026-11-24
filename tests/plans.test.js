@@ -13,7 +13,8 @@ const db = new Database();
 require(path.join(root, "server/lib/statements")).shimPrepare(db);
 db.transaction = (fn) => (...a) => { db.exec("BEGIN"); try { const r = fn(...a); db.exec("COMMIT"); return r; } catch (e) { db.exec("ROLLBACK"); throw e; } };
 db.exec(`
-  CREATE TABLE users (id TEXT PRIMARY KEY, email TEXT, name TEXT, created_at INTEGER NOT NULL DEFAULT (unixepoch()));
+  CREATE TABLE users (id TEXT PRIMARY KEY, email TEXT, name TEXT, created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    suspended_at INTEGER, suspended_by TEXT, suspended_note TEXT);
   CREATE TABLE classes (id TEXT PRIMARY KEY, user_id TEXT, archived INTEGER NOT NULL DEFAULT 0);
   CREATE TABLE lessons (id TEXT PRIMARY KEY, class_id TEXT);
   CREATE TABLE cards (id TEXT PRIMARY KEY, lesson_id TEXT);

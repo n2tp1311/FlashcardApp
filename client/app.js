@@ -2785,7 +2785,58 @@ Object.assign(TRANSLATIONS.en, {
   "admin.overLimit": "This takes {n} pages more than are left. The user will see 0 pages left.",
   "admin.deltaInvalid": "Enter a whole number other than 0.",
   "admin.pagesSaved": "{name} has {n} pages left.",
-  "admin.showing": "Showing the newest {n} of {total}. Search by email to find others."
+  "admin.showing": "Showing the newest {n} of {total}. Search by email to find others.",
+  "admin.suspendedLine": "{n} suspended, not counted above.",
+  "admin.filterAria": "Show",
+  "admin.filterAll": "All",
+  "admin.filterActive": "Not suspended",
+  "admin.filterSuspended": "Suspended",
+  "admin.suspendedPill": "Suspended",
+  "admin.suspendedBy": "Suspended {date} by {by}",
+  "admin.adminRow": "Admin: cannot be suspended",
+  "admin.you": "you",
+  "admin.suspend": "Suspend",
+  "admin.restore": "Restore",
+  "admin.deleteMenu": "Delete…",
+  "admin.suspendTitle": "Suspend {name}?",
+  "admin.suspendWhat1": "Signed out on every device; API tokens stop working.",
+  "admin.suspendWhat2": "Nothing is deleted. You can restore with one click.",
+  "admin.whyLabel": "Why",
+  "admin.whyAdminsOnly": "only admins see this",
+  "admin.optional": "optional",
+  "admin.suspendPlaceholder": "e.g. Signup spam",
+  "admin.suspended": "{name} is suspended.",
+  "admin.restoreTitle": "Restore {name}?",
+  "admin.restoreWhat": "They can sign in again and their share links work again. Their plan and pages are as they were.",
+  "admin.restored": "{name} can sign in again.",
+  "admin.deleteTitle": "Delete {name} for good?",
+  "admin.deleteWarn": "This cannot be undone.",
+  "admin.deleteWhat": "Removed: {classes} classes, {cards} cards, their answers, sessions, tokens, reminders and plan.",
+  "admin.deleteCopies": "Copies other people made from their share links stay with those people.",
+  "admin.deleteKept": "Kept: one log line (email, by whom, why, when) and the number of pages they used.",
+  "admin.deleteEmailFree": "The email can be registered again.",
+  "admin.deleteType": "Type {email} to confirm",
+  "admin.deleteBtn": "Delete account",
+  "admin.deleted": "{email} was deleted.",
+  "admin.logTitle": "Account log",
+  "admin.logNote": "Every suspend, restore and delete, with who and why. Kept after a delete.",
+  "admin.logEmpty": "No account has been suspended yet.",
+  "admin.logWhen": "When",
+  "admin.logAccount": "Account",
+  "admin.logAction": "Action",
+  "admin.logBy": "By",
+  "admin.logWhy": "Why",
+  "admin.logDeletedTag": "(deleted)",
+  "admin.actSuspend": "Suspended",
+  "admin.actRestore": "Restored",
+  "admin.actDelete": "Deleted",
+  "admin.logPages": "{n} pages used",
+  "error.accountSuspended": "This account is suspended. Contact the admin if you think this is a mistake.",
+  "error.linkUnavailable": "This link is no longer available. Ask the person who sent it for a new one.",
+  "error.email_mismatch": "The email you typed is not this account's.",
+  "error.is_admin": "An admin's account cannot be suspended or deleted.",
+  "error.not_suspended": "Suspend the account first.",
+  "error.already_suspended": "This account is already suspended."
 });
 Object.assign(TRANSLATIONS.vi, {
   "plan.nav": "Gói của tôi",
@@ -2867,7 +2918,58 @@ Object.assign(TRANSLATIONS.vi, {
   "admin.overLimit": "Trừ vượt hạn mức {n} trang. Người dùng sẽ thấy còn 0 trang.",
   "admin.deltaInvalid": "Nhập một số nguyên khác 0.",
   "admin.pagesSaved": "{name} còn {n} trang.",
-  "admin.showing": "Đang hiện {n} người mới nhất trong {total}. Tìm theo email để thấy người khác."
+  "admin.showing": "Đang hiện {n} người mới nhất trong {total}. Tìm theo email để thấy người khác.",
+  "admin.suspendedLine": "{n} tài khoản bị khóa, không tính ở trên.",
+  "admin.filterAria": "Hiện",
+  "admin.filterAll": "Tất cả",
+  "admin.filterActive": "Không bị khóa",
+  "admin.filterSuspended": "Bị khóa",
+  "admin.suspendedPill": "Bị khóa",
+  "admin.suspendedBy": "Bị khóa {date} bởi {by}",
+  "admin.adminRow": "Admin: không thể khóa",
+  "admin.you": "bạn",
+  "admin.suspend": "Khóa",
+  "admin.restore": "Mở khóa",
+  "admin.deleteMenu": "Xóa…",
+  "admin.suspendTitle": "Khóa {name}?",
+  "admin.suspendWhat1": "Đăng xuất trên mọi thiết bị; API token ngừng hoạt động.",
+  "admin.suspendWhat2": "Không xóa gì cả. Bạn có thể mở khóa bằng một cú bấm.",
+  "admin.whyLabel": "Lý do",
+  "admin.whyAdminsOnly": "chỉ admin thấy",
+  "admin.optional": "không bắt buộc",
+  "admin.suspendPlaceholder": "vd. Đăng ký spam",
+  "admin.suspended": "Đã khóa {name}.",
+  "admin.restoreTitle": "Mở khóa {name}?",
+  "admin.restoreWhat": "Họ đăng nhập lại được và link chia sẻ hoạt động lại. Gói và số trang giữ nguyên như cũ.",
+  "admin.restored": "{name} đăng nhập lại được.",
+  "admin.deleteTitle": "Xóa vĩnh viễn {name}?",
+  "admin.deleteWarn": "Không thể hoàn tác.",
+  "admin.deleteWhat": "Bị xóa: {classes} lớp, {cards} thẻ, câu trả lời, phiên đăng nhập, token, nhắc nhở và gói.",
+  "admin.deleteCopies": "Bản sao người khác đã tạo từ link chia sẻ vẫn thuộc về họ.",
+  "admin.deleteKept": "Giữ lại: một dòng nhật ký (email, ai xóa, lý do, lúc nào) và số trang họ đã dùng.",
+  "admin.deleteEmailFree": "Email này có thể đăng ký lại.",
+  "admin.deleteType": "Gõ {email} để xác nhận",
+  "admin.deleteBtn": "Xóa tài khoản",
+  "admin.deleted": "Đã xóa {email}.",
+  "admin.logTitle": "Nhật ký tài khoản",
+  "admin.logNote": "Mọi lần khóa, mở khóa và xóa, kèm ai làm và lý do. Vẫn giữ sau khi xóa.",
+  "admin.logEmpty": "Chưa khóa tài khoản nào.",
+  "admin.logWhen": "Lúc",
+  "admin.logAccount": "Tài khoản",
+  "admin.logAction": "Thao tác",
+  "admin.logBy": "Bởi",
+  "admin.logWhy": "Lý do",
+  "admin.logDeletedTag": "(đã xóa)",
+  "admin.actSuspend": "Khóa",
+  "admin.actRestore": "Mở khóa",
+  "admin.actDelete": "Xóa",
+  "admin.logPages": "đã dùng {n} trang",
+  "error.accountSuspended": "Tài khoản này đã bị khóa. Hãy liên hệ admin nếu bạn nghĩ đây là nhầm lẫn.",
+  "error.linkUnavailable": "Link này không còn dùng được. Hãy xin người gửi một link mới.",
+  "error.email_mismatch": "Email bạn gõ không phải của tài khoản này.",
+  "error.is_admin": "Không thể khóa hoặc xóa tài khoản admin.",
+  "error.not_suspended": "Hãy khóa tài khoản trước.",
+  "error.already_suspended": "Tài khoản này đã bị khóa."
 });
 
 function t(key, vars) {
@@ -15903,7 +16005,11 @@ var SQLiteAdapter = (function() {
     getVocabularyRequests: function() { return req("GET", "/vocabulary"); },
     getPlan: function() { return req("GET", "/plan"); },
     adminOverview: function() { return req("GET", "/admin/overview"); },
-    adminUsers: function(q) { return req("GET", "/admin/users?q=" + encodeURIComponent(q || "")); },
+    adminUsers: function(q, status) { return req("GET", "/admin/users?q=" + encodeURIComponent(q || "") + "&status=" + encodeURIComponent(status || "all")); },
+    adminSuspend: function(id, note) { return req("POST", "/admin/users/" + encodeURIComponent(id) + "/suspend", { note: note }); },
+    adminRestore: function(id, note) { return req("POST", "/admin/users/" + encodeURIComponent(id) + "/restore", { note: note }); },
+    adminDelete: function(id, email, note) { return req("POST", "/admin/users/" + encodeURIComponent(id) + "/delete", { email: email, note: note }); },
+    adminAccountLog: function() { return req("GET", "/admin/accounts/log"); },
     adminSetPlan: function(id, plan, expiresOn, note) { return req("POST", "/admin/users/" + encodeURIComponent(id) + "/plan", { plan: plan, expiresOn: expiresOn, note: note }); },
     adminAdjustPages: function(id, delta, note) { return req("POST", "/admin/users/" + encodeURIComponent(id) + "/pages", { delta: delta, note: note }); },
     deleteVocabularyRequest: function(id) { return req("DELETE", "/vocabulary/" + encodeURIComponent(id)); },
@@ -16637,7 +16743,8 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
     var msgs = {
       google_cancelled: t("auth.googleCancelled"),
       google_failed: t("auth.googleFailed"),
-      google_already_linked: t("auth.googleAlreadyLinked")
+      google_already_linked: t("auth.googleAlreadyLinked"),
+      account_suspended: t("error.accountSuspended")
     };
     var msg = msgs[params.get("auth_error")] || t("auth.genericError");
     var reason = params.get("reason");
@@ -17534,13 +17641,14 @@ function renderPlan(p) {
     }).join("") + '</tbody></table></div>';
 }
 
-var adminState = { users: [], tiers: [], search: "", searchTimer: null, editing: null };
+var adminState = { users: [], tiers: [], search: "", status: "all", searchTimer: null, editing: null };
 
 function openAdminScreen() {
   showScreen("admin");
   document.getElementById("admin-error").classList.add("hidden");
   loadAdminOverview();
   loadAdminUsers();
+  loadAdminLog();
 }
 
 function adminFail(err) {
@@ -17554,12 +17662,23 @@ function loadAdminOverview() {
 }
 
 function loadAdminUsers() {
-  var q = adminState.search;
-  return store.adminUsers(q).then(function(r) {
-    if (q !== adminState.search) return;
+  var q = adminState.search, st = adminState.status;
+  return store.adminUsers(q, st).then(function(r) {
+    if (q !== adminState.search || st !== adminState.status) return;
     adminState.users = r.users;
-    renderAdminUsers(r.total);
+    renderAdminUsers(r.total, r.counts);
   }).catch(adminFail);
+}
+
+function loadAdminLog() {
+  return store.adminAccountLog().then(function(r) { renderAdminLog(r.actions); }).catch(adminFail);
+}
+
+// After a suspend, restore or delete every part of the page can change.
+function reloadAdmin() {
+  loadAdminOverview();
+  loadAdminUsers();
+  loadAdminLog();
 }
 
 function renderAdminOverview(o) {
@@ -17580,6 +17699,9 @@ function renderAdminOverview(o) {
     return '<div class="admin-planrow">' + planPill(x.id, x.name) + '<b>' + planNum(o.byPlan[x.id] || 0) + '</b></div>';
   }).join("");
   document.getElementById("admin-chart").innerHTML = adminChartSvg(o.weeks);
+  var sus = document.getElementById("admin-suspended-line");
+  sus.classList.toggle("hidden", !o.suspended);
+  if (o.suspended) sus.innerHTML = '<b>' + escHtml(t("admin.suspendedLine", { n: planNum(o.suspended) })) + '</b>';
 }
 
 // Two lines on one scale: registered (cumulative) and active that week. The top of the
@@ -17623,7 +17745,27 @@ function adminLastStudied(sec) {
   return t("admin.daysAgo", { n: n });
 }
 
-function renderAdminUsers(total) {
+function adminByName(name, id) {
+  return currentUser && id === currentUser.id ? t("admin.you") : (name || "?");
+}
+
+function adminActs(u, i) {
+  var b = function(attr, cls, key) {
+    return '<button type="button" class="btn btn-sm ' + cls + '" ' + attr + '="' + i + '">' + escHtml(t(key)) + '</button>';
+  };
+  if (u.isAdmin) return '<span class="admin-sub">' + escHtml(t("admin.adminRow")) + '</span>';
+  if (u.suspended_at) return b("data-admin-restore", "btn-ghost", "admin.restore") + b("data-admin-delete", "btn-ghost admin-btn-danger", "admin.deleteMenu");
+  return b("data-admin-plan", "btn-ghost", "admin.changePlan") + b("data-admin-pages", "btn-ghost", "admin.pagesBtn") +
+    b("data-admin-suspend", "btn-ghost admin-btn-danger", "admin.suspend");
+}
+
+function renderAdminUsers(total, counts) {
+  if (counts) {
+    document.querySelectorAll("#admin-filter [data-count]").forEach(function(el) { el.textContent = planNum(counts[el.dataset.count] || 0); });
+  }
+  document.querySelectorAll("#admin-filter button").forEach(function(btn) {
+    btn.setAttribute("aria-pressed", String(btn.dataset.status === adminState.status));
+  });
   var names = {};
   adminState.tiers.forEach(function(x) { names[x.id] = x.name; });
   document.getElementById("admin-rows").innerHTML = adminState.users.map(function(u, i) {
@@ -17631,19 +17773,96 @@ function renderAdminUsers(total) {
     var pct = p.limit ? Math.min(100, Math.round(p.used / p.limit * 100)) : 100;
     var sub = p.pendingPlan ? t("admin.pendingShort", { name: names[p.pendingPlan] || p.pendingPlan, date: planDate(p.pendingAt) })
       : p.expiresAt ? t("admin.untilShort", { date: planDate(p.expiresAt) }) : "";
-    return '<tr><td class="admin-who"><b>' + escHtml(u.name) + '</b><span>' + escHtml(u.email) + '</span></td>' +
+    var sus = u.suspended_at ? '<div class="admin-susnote">' + escHtml(t("admin.suspendedBy",
+      { date: planDate(u.suspended_at), by: adminByName(u.suspended_by_name, u.suspended_by) }) +
+      (u.suspended_note ? ": " + u.suspended_note : "")) + '</div>' : '';
+    return '<tr' + (u.suspended_at ? ' class="is-suspended"' : '') + '><td class="admin-who"><b>' + escHtml(u.name) +
+      (u.suspended_at ? ' <span class="admin-pill-sus">' + escHtml(t("admin.suspendedPill")) + '</span>' : '') +
+      '</b><span>' + escHtml(u.email) + '</span>' + sus + '</td>' +
       '<td class="num">' + planDate(u.created_at) + '</td><td>' + escHtml(adminLastStudied(u.last_at)) + '</td>' +
       '<td class="num">' + planNum(u.answers30) + '</td><td class="num">' + planNum(u.classes) + '</td><td class="num">' + planNum(u.cards) + '</td>' +
       '<td>' + planPill(p.plan, p.name) + (sub ? '<div class="admin-sub">' + escHtml(sub) + '</div>' : '') + '</td>' +
       '<td><div class="admin-pages"><span class="num">' + planNum(p.used) + ' / ' + planNum(p.limit) + '</span>' +
       '<div class="plan-bar' + (p.remaining === 0 ? ' is-empty' : '') + '" aria-hidden="true"><i style="width:' + pct + '%"></i></div></div></td>' +
-      '<td><div class="admin-acts"><button type="button" class="btn btn-ghost btn-sm" data-admin-plan="' + i + '">' + escHtml(t("admin.changePlan")) +
-      '</button><button type="button" class="btn btn-ghost btn-sm" data-admin-pages="' + i + '">' + escHtml(t("admin.pagesBtn")) + '</button></div></td></tr>';
+      '<td class="admin-acts-td"><div class="admin-acts">' + adminActs(u, i) + '</div></td></tr>';
   }).join("");
   var more = document.getElementById("admin-users-more");
   var hidden = !adminState.search && total > adminState.users.length;
   more.classList.toggle("hidden", !hidden);
   if (hidden) more.textContent = t("admin.showing", { n: adminState.users.length, total: total });
+}
+
+function renderAdminLog(actions) {
+  var box = document.getElementById("admin-log");
+  if (!actions.length) { box.innerHTML = '<p class="plan-note">' + escHtml(t("admin.logEmpty")) + '</p>'; return; }
+  var label = { suspend: "admin.actSuspend", restore: "admin.actRestore", "delete": "admin.actDelete" };
+  box.innerHTML = '<div class="admin-table-wrap"><table class="admin-table admin-log-table"><thead><tr><th>' +
+    [t("admin.logWhen"), t("admin.logAccount"), t("admin.logAction"), t("admin.logBy"), t("admin.logWhy")].map(escHtml).join('</th><th>') +
+    '</th></tr></thead><tbody>' + actions.map(function(a) {
+      return '<tr><td class="admin-when">' + planDate(a.created_at) + '</td><td>' + escHtml(a.email) +
+        (a.deleted ? ' <span class="admin-sub">' + escHtml(t("admin.logDeletedTag")) + '</span>' : '') + '</td>' +
+        '<td><span class="admin-act admin-act-' + escHtml(a.action) + '">' + escHtml(t(label[a.action])) + '</span>' +
+        (a.action === "delete" && a.pages ? '<div class="admin-sub">' + escHtml(t("admin.logPages", { n: planNum(a.pages) })) + '</div>' : '') + '</td>' +
+        '<td>' + escHtml(a.by_user_id ? adminByName(a.by_name || a.by_email, a.by_user_id) : "") + '</td><td>' + escHtml(a.note || "") + '</td></tr>';
+    }).join("") + '</tbody></table></div>';
+}
+
+function adminActionError(id, e) {
+  var err = document.getElementById(id);
+  err.textContent = e.message;
+  err.classList.remove("hidden");
+}
+
+function openAdminSuspendModal(u) {
+  adminState.editing = u;
+  document.getElementById("admin-suspend-title").textContent = t("admin.suspendTitle", { name: u.name || u.email });
+  document.getElementById("admin-suspend-note").value = "";
+  document.getElementById("admin-suspend-error").classList.add("hidden");
+  openModal("admin-suspend");
+  document.getElementById("admin-suspend-note").focus();
+}
+
+function openAdminRestoreModal(u) {
+  adminState.editing = u;
+  document.getElementById("admin-restore-title").textContent = t("admin.restoreTitle", { name: u.name || u.email });
+  document.getElementById("admin-restore-note").value = "";
+  document.getElementById("admin-restore-error").classList.add("hidden");
+  openModal("admin-restore");
+  document.getElementById("admin-restore-note").focus();
+}
+
+function openAdminDeleteModal(u) {
+  adminState.editing = u;
+  document.getElementById("admin-delete-title").textContent = t("admin.deleteTitle", { name: u.name || u.email });
+  document.getElementById("admin-delete-what").textContent = t("admin.deleteWhat", { classes: planNum(u.classes), cards: planNum(u.cards) });
+  document.getElementById("admin-delete-type-label").textContent = t("admin.deleteType", { email: u.email });
+  document.getElementById("admin-delete-note").value = "";
+  document.getElementById("admin-delete-email").value = "";
+  document.getElementById("btn-admin-delete-save").disabled = true;
+  document.getElementById("admin-delete-error").classList.add("hidden");
+  openModal("admin-delete");
+  document.getElementById("admin-delete-note").focus();
+}
+
+// The server checks the typed email too; this only keeps the button off until it matches.
+function adminDeleteTyped() {
+  var u = adminState.editing;
+  var typed = document.getElementById("admin-delete-email").value.trim().toLowerCase();
+  document.getElementById("btn-admin-delete-save").disabled = !u || typed !== String(u.email).toLowerCase();
+}
+
+function runAdminAction(btnId, errId, modal, call, done) {
+  var btn = document.getElementById(btnId);
+  btn.disabled = true;
+  document.getElementById(errId).classList.add("hidden");
+  call().then(function() {
+    closeModal(modal);
+    showToast(done, "success");
+    reloadAdmin();
+  }).catch(function(e) { adminActionError(errId, e); }).then(function() {
+    btn.disabled = false;
+    if (modal === "admin-delete") adminDeleteTyped();
+  });
 }
 
 function openAdminPlanModal(u) {
@@ -17742,7 +17961,36 @@ if (IS_SERVER) {
     if (!b) return;
     if (b.dataset.adminPlan !== undefined) openAdminPlanModal(adminState.users[b.dataset.adminPlan]);
     else if (b.dataset.adminPages !== undefined) openAdminPagesModal(adminState.users[b.dataset.adminPages]);
+    else if (b.dataset.adminSuspend !== undefined) openAdminSuspendModal(adminState.users[b.dataset.adminSuspend]);
+    else if (b.dataset.adminRestore !== undefined) openAdminRestoreModal(adminState.users[b.dataset.adminRestore]);
+    else if (b.dataset.adminDelete !== undefined) openAdminDeleteModal(adminState.users[b.dataset.adminDelete]);
   });
+  document.getElementById("admin-filter").addEventListener("click", function(e) {
+    var b = e.target.closest("button[data-status]");
+    if (!b || b.dataset.status === adminState.status) return;
+    adminState.status = b.dataset.status;
+    renderAdminUsers(0);
+    loadAdminUsers();
+  });
+  document.getElementById("btn-admin-suspend-save").addEventListener("click", function() {
+    var u = adminState.editing;
+    runAdminAction("btn-admin-suspend-save", "admin-suspend-error", "admin-suspend",
+      function() { return store.adminSuspend(u.id, document.getElementById("admin-suspend-note").value); },
+      t("admin.suspended", { name: u.name || u.email }));
+  });
+  document.getElementById("btn-admin-restore-save").addEventListener("click", function() {
+    var u = adminState.editing;
+    runAdminAction("btn-admin-restore-save", "admin-restore-error", "admin-restore",
+      function() { return store.adminRestore(u.id, document.getElementById("admin-restore-note").value); },
+      t("admin.restored", { name: u.name || u.email }));
+  });
+  document.getElementById("btn-admin-delete-save").addEventListener("click", function() {
+    var u = adminState.editing;
+    runAdminAction("btn-admin-delete-save", "admin-delete-error", "admin-delete",
+      function() { return store.adminDelete(u.id, document.getElementById("admin-delete-email").value, document.getElementById("admin-delete-note").value); },
+      t("admin.deleted", { email: u.email }));
+  });
+  document.getElementById("admin-delete-email").addEventListener("input", adminDeleteTyped);
   document.getElementById("btn-admin-plan-save").addEventListener("click", saveAdminPlan);
   document.getElementById("btn-admin-pages-save").addEventListener("click", saveAdminPages);
   document.getElementById("admin-pages-delta").addEventListener("input", adminPagesWarn);
@@ -17818,7 +18066,11 @@ if (shareToken) {
   fetch("/api/share/view/" + shareToken)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.error) { showScreen("home"); return; }
+      if (data.error) {
+        showScreen("home");
+        if (data.code === "linkUnavailable") showToast(t("error.linkUnavailable"), "error");
+        return;
+      }
       renderShareScreen(data, shareToken);
     });
 }

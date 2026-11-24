@@ -25,7 +25,10 @@ router.post("/reserve", requireWorker, (req, res) => {
   const { userId, pages, title } = req.body || {};
   if (!jobId(req.body && req.body.jobId) || typeof userId !== "string" || !Number.isInteger(pages) || pages < 1 || pages > 100000)
     return res.status(400).json({ error: "jobId, userId and a whole number of pages are required" });
-  if (!db.prepare("SELECT 1 FROM users WHERE id = ?").get(userId)) return res.status(404).json({ error: "Unknown user" });
+  const u = db.prepare("SELECT suspended_at FROM users WHERE id = ?").get(userId);
+  if (!u) return res.status(404).json({ error: "Unknown user" });
+  // Only new books are refused: commit and refund still settle a book already running.
+  if (u.suspended_at) return res.status(403).json({ error: "Account suspended", code: "account_suspended" });
   const r = plans.reserve(db, userId, req.body.jobId, pages, { title: typeof title === "string" ? title.slice(0, 200) : null });
   if (r.ok) return res.json(r);
   if (r.code === "not_enough_pages") return res.status(402).json({ error: "Not enough pages", ...r });

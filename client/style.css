@@ -6083,3 +6083,25 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .plan-page, .admin-page { max-width: none; }
   .admin-grid { grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); }
 }
+
+/* Suspended accounts on the admin page */
+.admin-susline { margin: -4px 0 0; font-size: 0.875rem; color: var(--text2); }
+.admin-susline b { color: var(--danger); font-weight: 600; }
+.admin-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.admin-seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.admin-seg button { font: inherit; font-size: 0.85rem; border: 0; background: var(--surface); color: var(--text2); padding: 6px 12px; cursor: pointer; min-height: 34px; }
+.admin-seg button + button { border-left: 1px solid var(--border); }
+.admin-seg button[aria-pressed="true"] { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+.admin-seg button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.admin-pill-sus { display: inline-block; border-radius: var(--radius-pill); padding: 1px 8px; font-size: 0.72rem; font-weight: 600; background: var(--danger-light); color: var(--danger); vertical-align: 1px; white-space: nowrap; }
+.admin-susnote { font-size: 0.78rem; color: var(--danger); margin-top: 2px; }
+.admin-table tr.is-suspended td:not(.admin-acts-td) { color: var(--text3); }
+.admin-table tr.is-suspended .admin-who b { color: var(--text2); }
+.admin-btn-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.admin-hint { font-weight: 400; font-size: 0.8rem; color: var(--text3); }
+.admin-list { margin: 0 0 4px; padding-left: 18px; color: var(--text2); display: grid; gap: 4px; font-size: 0.9rem; }
+.admin-log-table { min-width: 640px; }
+.admin-act { display: inline-block; border-radius: var(--radius-pill); padding: 1px 8px; font-size: 0.75rem; font-weight: 600; background: var(--surface2); color: var(--text2); }
+.admin-act-suspend { background: var(--danger-light); color: var(--danger); }
+.admin-act-restore { background: var(--success-light); color: var(--success); }
+.admin-when { white-space: nowrap; font-variant-numeric: tabular-nums; }

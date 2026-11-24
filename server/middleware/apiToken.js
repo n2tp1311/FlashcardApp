@@ -14,8 +14,10 @@ function hashToken(token) {
 function requireApiToken(req, res, next) {
   const m = /^Bearer (\S+)$/.exec(req.get("authorization") || "");
   if (!m) return res.status(401).json({ error: "API token required" });
-  const row = db.prepare("SELECT id, user_id, last_used_at FROM api_tokens WHERE token_hash = ?").get(hashToken(m[1]));
+  const row = db.prepare("SELECT t.id, t.user_id, t.last_used_at, u.suspended_at FROM api_tokens t " +
+    "JOIN users u ON u.id = t.user_id WHERE t.token_hash = ?").get(hashToken(m[1]));
   if (!row) return res.status(401).json({ error: "Invalid API token" });
+  if (row.suspended_at) return res.status(403).json({ error: "Account suspended", code: "account_suspended" });
   const now = Math.floor(Date.now() / 1000);
   if (!row.last_used_at || row.last_used_at < now - 60)
     db.prepare("UPDATE api_tokens SET last_used_at = ? WHERE id = ?").run(now, row.id);

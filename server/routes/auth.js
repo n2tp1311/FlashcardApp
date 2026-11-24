@@ -39,6 +39,8 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+const SUSPENDED = "This account is suspended. Contact the admin if you think this is a mistake.";
+
 function setSession(req, user) {
   req.session.userId    = user.id;
   req.session.userName  = user.name;
@@ -77,6 +79,8 @@ router.post("/login", loginLimiter, (req, res) => {
   if (!user.password_hash) return res.status(401).json({ error: "This account uses Google sign-in. Use 'Sign in with Google' instead.", code: "googleAccount" });
   if (!bcrypt.compareSync(password, user.password_hash))
     return res.status(401).json({ error: "Invalid email or password", code: "invalidCredentials" });
+  // Said only after the right password, so guessing passwords does not reveal a suspension.
+  if (user.suspended_at) return res.status(403).json({ error: SUSPENDED, code: "accountSuspended" });
 
   setSession(req, user);
   res.json({ id: user.id, name: user.name, email: user.email, isAdmin: isAdmin(user.id) });
@@ -102,7 +106,7 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
 
   const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
   // Always respond 200 to prevent email enumeration
-  if (!user || !user.password_hash) return res.json({ ok: true });
+  if (!user || !user.password_hash || user.suspended_at) return res.json({ ok: true });
 
   const token     = crypto.randomBytes(32).toString("hex");
   const expiresAt = Math.floor(Date.now() / 1000) + 3600; // 1 hour
@@ -139,6 +143,9 @@ router.post("/reset-password", resetPasswordLimiter, (req, res) => {
     "SELECT * FROM password_reset_tokens WHERE token = ? AND used = 0 AND expires_at > ?"
   ).get(token, now);
   if (!row) return res.status(400).json({ error: "Reset link is invalid or has expired", code: "resetInvalid" });
+
+  const suspended = db.prepare("SELECT suspended_at FROM users WHERE id = ?").get(row.user_id);
+  if (suspended && suspended.suspended_at) return res.status(403).json({ error: SUSPENDED, code: "accountSuspended" });
 
   const hash = bcrypt.hashSync(password, 10);
   db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, row.user_id);
@@ -221,6 +228,7 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
     if (!user) {
       // Try to match by email (link to existing account)
       user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
+      if (user && user.suspended_at) return res.redirect("/?auth_error=account_suspended");
       if (user) {
         db.prepare("UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?").run(googleId, picture, user.id);
         // Said on arrival, so a first Google sign-in to an email account is not a silent change.
@@ -235,6 +243,7 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
       }
     }
 
+    if (user.suspended_at) return res.redirect("/?auth_error=account_suspended");
     setSession(req, user);
     res.redirect("/");
   } catch (e) {

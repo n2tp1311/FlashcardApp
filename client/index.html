@@ -312,6 +312,7 @@
   <div class="admin-page">
     <div id="admin-error" class="empty-state hidden"><p></p></div>
     <div id="admin-stats" class="admin-stats"></div>
+    <p id="admin-suspended-line" class="admin-susline hidden"></p>
     <div class="admin-grid">
       <section class="admin-panel" aria-labelledby="admin-chart-title">
         <div class="admin-panel-head"><h3 id="admin-chart-title" data-i18n="admin.chartTitle">Last 12 weeks</h3>
@@ -326,7 +327,14 @@
     </div>
     <section class="admin-panel" aria-labelledby="admin-users-title">
       <div class="admin-panel-head"><h3 id="admin-users-title" data-i18n="admin.users">Users</h3>
-        <input type="search" id="admin-search" class="form-input admin-search" autocomplete="off" placeholder="Search by email" data-i18n-placeholder="admin.search" aria-label="Search by email" data-i18n-aria="admin.search"></div>
+        <div class="admin-tools">
+          <div class="admin-seg" id="admin-filter" role="group" aria-label="Show" data-i18n-aria="admin.filterAria">
+            <button type="button" data-status="all" aria-pressed="true"><span data-i18n="admin.filterAll">All</span> <span class="num" data-count="all"></span></button>
+            <button type="button" data-status="active" aria-pressed="false"><span data-i18n="admin.filterActive">Not suspended</span> <span class="num" data-count="active"></span></button>
+            <button type="button" data-status="suspended" aria-pressed="false"><span data-i18n="admin.filterSuspended">Suspended</span> <span class="num" data-count="suspended"></span></button>
+          </div>
+          <input type="search" id="admin-search" class="form-input admin-search" autocomplete="off" placeholder="Search by email" data-i18n-placeholder="admin.search" aria-label="Search by email" data-i18n-aria="admin.search">
+        </div></div>
       <div class="admin-table-wrap"><table class="admin-table">
         <thead><tr>
           <th data-i18n="admin.colUser">User</th><th data-i18n="admin.colCreated">Joined</th><th data-i18n="admin.colLast">Last studied</th>
@@ -336,6 +344,11 @@
         <tbody id="admin-rows"></tbody>
       </table></div>
       <p id="admin-users-more" class="plan-note hidden"></p>
+    </section>
+    <section class="admin-panel" aria-labelledby="admin-log-title">
+      <h3 id="admin-log-title" data-i18n="admin.logTitle">Account log</h3>
+      <p class="plan-note" data-i18n="admin.logNote">Every suspend, restore and delete, with who and why. Kept after a delete.</p>
+      <div id="admin-log"></div>
     </section>
   </div>
 </div>
@@ -1241,6 +1254,68 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="admin-pages" data-i18n="common.cancel">Cancel</button>
       <button type="button" class="btn btn-primary" id="btn-admin-pages-save" data-i18n="common.save">Save</button>
+    </div>
+  </div>
+
+  <div id="modal-admin-suspend" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="admin-suspend-title">
+    <div class="modal-header">
+      <h3 id="admin-suspend-title"></h3>
+      <button class="modal-close" data-modal="admin-suspend" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <ul class="admin-list">
+        <li data-i18n="admin.suspendWhat1">Signed out on every device; API tokens stop working.</li>
+        <li data-i18n="admin.suspendWhat2">Nothing is deleted. You can restore with one click.</li>
+      </ul>
+      <div id="admin-suspend-error" class="auth-error hidden"></div>
+      <label class="form-label" for="admin-suspend-note"><span data-i18n="admin.whyLabel">Why</span> <span class="admin-hint" data-i18n="admin.whyAdminsOnly">only admins see this</span></label>
+      <input type="text" id="admin-suspend-note" class="form-input" maxlength="200" autocomplete="off" placeholder="e.g. Signup spam" data-i18n-placeholder="admin.suspendPlaceholder">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="admin-suspend" data-i18n="common.cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="btn-admin-suspend-save" data-i18n="admin.suspend">Suspend</button>
+    </div>
+  </div>
+
+  <div id="modal-admin-restore" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="admin-restore-title">
+    <div class="modal-header">
+      <h3 id="admin-restore-title"></h3>
+      <button class="modal-close" data-modal="admin-restore" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p class="plan-note" data-i18n="admin.restoreWhat">They can sign in again and their share links work again. Their plan and pages are as they were.</p>
+      <div id="admin-restore-error" class="auth-error hidden"></div>
+      <label class="form-label" for="admin-restore-note"><span data-i18n="admin.whyLabel">Why</span> <span class="admin-hint" data-i18n="admin.optional">optional</span></label>
+      <input type="text" id="admin-restore-note" class="form-input" maxlength="200" autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="admin-restore" data-i18n="common.cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-admin-restore-save" data-i18n="admin.restore">Restore</button>
+    </div>
+  </div>
+
+  <div id="modal-admin-delete" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="admin-delete-title">
+    <div class="modal-header">
+      <h3 id="admin-delete-title"></h3>
+      <button class="modal-close" data-modal="admin-delete" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p class="admin-warn" data-i18n="admin.deleteWarn">This cannot be undone.</p>
+      <ul class="admin-list">
+        <li id="admin-delete-what"></li>
+        <li data-i18n="admin.deleteCopies">Copies other people made from their share links stay with those people.</li>
+        <li data-i18n="admin.deleteKept">Kept: one log line (email, by whom, why, when) and the number of pages they used.</li>
+        <li data-i18n="admin.deleteEmailFree">The email can be registered again.</li>
+      </ul>
+      <div id="admin-delete-error" class="auth-error hidden"></div>
+      <label class="form-label" for="admin-delete-note" data-i18n="admin.whyLabel">Why</label>
+      <input type="text" id="admin-delete-note" class="form-input" maxlength="200" autocomplete="off">
+      <label class="form-label" for="admin-delete-email" id="admin-delete-type-label"></label>
+      <input type="text" id="admin-delete-email" class="form-input" autocomplete="off" spellcheck="false" autocapitalize="off">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="admin-delete" data-i18n="common.cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="btn-admin-delete-save" data-i18n="admin.deleteBtn" disabled>Delete account</button>
     </div>
   </div>
 
