@@ -58,6 +58,7 @@ wrong, fix it and say so.
 | `lib/reminders.js` | §17 |
 | sharing, export, import, bulk paste | §18 |
 | `lib/plans.js`, `routes/plan.js`, `routes/admin.js`, `routes/pages.js`, `middleware/admin.js` | §18b |
+| `lib/accounts.js`, `sessionGuard` in `middleware/auth.js` | §18c |
 | test patterns | §19 |
 
 ## Commit + push rules

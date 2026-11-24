@@ -1,3 +1,17 @@
+## 2026-11-24 — Accounts are suspended first, deleted second
+
+The user asked for a way to revoke an account from the admin page. Three choices were agreed in turn.
+
+**Suspend, then delete as a separate step.** Suspending removes nothing, so a mistake costs one click to undo. Deleting is allowed only on a suspended account and needs its email typed, and the server checks the email too. A hard delete straight from the table was rejected because one slip would lose a user's whole library.
+
+**The suspended message only after the right password.** A wrong password gets the usual error, so someone guessing passwords cannot learn which accounts are suspended. The admin's reason is never shown to the user, so it can be written plainly. Plain "wrong email or password" for everyone was rejected because a real user would keep resetting a password that is not the problem.
+
+**Suspended users are out of the counts, and their share links stop.** The stats describe accounts that can use the app, with "N suspended" beside them. Share links answer "no longer available" while suspended and come back on restore, so content an admin is deciding about is not public meanwhile. Copies people already made stay theirs.
+
+**A delete keeps one log line.** `account_actions` has no foreign key to users, so the line (email, by whom, why, when, pages used) outlives the account. Deleting with no trace was rejected: an admin needs to know later who was removed and why.
+
+**Sessions end two ways.** The rows are deleted on suspend, and a guard reads the account on every signed-in request, because a request in flight can write its session back after the delete.
+
 ## 2026-09-24 — First-run tutorial is once-per-account and replayable
 
 The tutorial is an introduction, not a setup wizard: it never blocks normal app use and can be skipped or dismissed at any step. Store `tutorialCompleted` in the existing preferences JSON so the once-only decision follows an account across devices without schema work; also mark it in a user-namespaced localStorage fallback immediately so a failed preference request does not prompt again on every refresh. Preferences replays the same four steps but does not reset or unset completion. We defer marking the account complete until the user dismisses or finishes, avoiding lost onboarding when a first-run modal was merely presented but never seen.

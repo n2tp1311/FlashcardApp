@@ -149,6 +149,7 @@ Other tables, by owner:
 | `study_events`, `user_achievements` | the few facts achievements need that nothing else stores (§11) |
 | `push_subscriptions`, `reminder_log`, `app_secrets` | reminders (§17) |
 | `user_plans`, `plan_changes`, `page_ledger` | plans and pages: each user's plan, every change to it, every use of pages (§18b) |
+| `users.suspended_at`, `suspended_by`, `suspended_note`; `account_actions` | a suspended account, and every suspend, restore and delete; no foreign key, so a deleted account's line stays (§18c) |
 | `class_share_links`, `class_invites` | sharing (§18) |
 | `quiz_sessions` | finished quiz sessions; read only for the dashboard summary's `quizSessions`, which nothing shows since the hero card's Sessions count went (2026-11-23) |
 
@@ -2135,7 +2136,60 @@ reservation older than a day shows as returned, matching the count.
   days, classes and cards (archived classes and their cards left out), plan, end date or
   waiting downgrade, and pages used. **Change plan** takes a plan, an optional end date and
   a note; **Pages ±** takes a whole number (negative takes pages) and a reason, and warns
-  when it takes more than is left.
+  when it takes more than is left. Suspended users are left out of the counts, the chart
+  and users by plan (§18c).
+
+## 18c. Suspending and deleting accounts
+
+An admin can take an account away in two steps, from the user table on the admin page.
+**Suspend** comes first and removes nothing; **Delete** works only on an account that is
+already suspended, so the step that cannot be undone always follows one that can. The
+rules are in `server/lib/accounts.js` (`tests/accounts.test.js`), the routes are
+`POST /api/admin/users/:id/suspend | restore | delete`, and the log is
+`GET /api/admin/accounts/log`. Neither step works on your own account or another admin's
+(`is_admin`): an admin is named in `ADMIN_USER_IDS`, and nobody should be able to lock the
+only admin out from the page.
+
+**Suspending** sets `users.suspended_at` (with who and why) and nothing else changes in the
+user's data. Its effects:
+- **Every session ends.** The user's rows in `sessions` are deleted at once, and
+  `sessionGuard` (`middleware/auth.js`, after the session middleware) reads the account on
+  every signed-in request. The second is needed because a request already in flight can
+  write its session back after the delete. It also signs out a session whose account was
+  deleted. It costs one primary-key read per request.
+- **Signing in says why, but only after the right password** or a Google sign-in that
+  succeeds: `403 accountSuspended`, "This account is suspended. Contact the admin if you
+  think this is a mistake." A wrong password still gets the usual error, so guessing
+  passwords does not reveal that an account is suspended. The reason the admin wrote is
+  never shown to the user.
+- **No password reset.** Waiting reset links are deleted, a new request sends nothing, and
+  a link that slipped through is refused.
+- **API tokens answer `403 account_suspended`**, so KnowledgeApp's sync stops.
+- **The book worker's reserve answers `403 account_suspended`.** A book already running still
+  commits or refunds as usual.
+- **No reminders.**
+- **Share links answer `linkUnavailable`**, "This link is no longer available", and work
+  again on restore, because the link rows stay. Copies people already made are theirs.
+  Class invites are not touched.
+- **The email stays taken**, so nobody can register it while the account is suspended.
+
+**Restore** clears `suspended_at`. The plan, the pages and the share links come back
+exactly as they were; the sessions that ended do not, so the user signs in again.
+
+**Delete** needs the account's email typed in the dialog. The server checks it too
+(`email_mismatch`), so no request without it can delete. It deletes the `users` row, and
+foreign keys cascade to everything else: classes, cards, answers, sessions, tokens,
+reminders, the plan and the page ledger. Kept: the `account_actions` lines (email, by whom,
+why, when), with the pages the account used as one number on the delete line, so totals
+of pages used do not drop. Uploaded images are not tied to a user and stay on disk. The
+email is free to register again.
+
+On the admin page, suspended users stay in the table with a red **Suspended** pill and a
+line "Suspended {date} by {who}: {why}", and get **Restore** and **Delete…** instead of the
+plan buttons. A filter shows All, Not suspended or Suspended, with counts. The stats leave
+suspended users out (registered, active, the chart, users by plan), and a line under them
+says how many are suspended. Below the table, the **Account log** lists the last 50
+actions, with "(deleted)" beside accounts that no longer exist.
 
 ---
 
