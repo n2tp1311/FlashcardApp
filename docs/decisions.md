@@ -1513,3 +1513,11 @@ The user asked for FlashcardApp's subscription plans. KnowledgeApp's `docs/launc
 - **The worker gets reserve, commit and refund now**, keyed on a job id, rather than leaving only the admin's manual change. Then the rules about holding pages, giving them back and not charging twice are written and tested once. Top-up packs were left for later.
 - **A book longer than the pages left is refused whole** (402 with what it needs, what is left and the reset day), rather than converting the pages that fit: half a deck is harder to explain and to finish later. A reservation nobody settles stops counting after 24 hours.
 - **My plan is its own page in the sidebar** (option B of the preview), not a section of Preferences; the user chose it over the recommended section, which would sit mostly empty until the worker exists.
+
+## 2026-11-24 — Security audit: three holes closed first, the rest listed in the guide
+
+An audit of the server found two ways to run script as another user and one way to take over an account; all three were confirmed on a local server before fixing. The user asked for them to be fixed first, and the smaller findings are listed under "Still open" in GUIDE §15 rather than fixed in the same change.
+
+- **The config script is escaped, not the tokens validated.** Checking that a share or reset token looks like one would close those two routes, but the user's name goes through the same `<script>` tag, and any value added to the config later would reopen the hole. Writing `<` as `<` covers every value at once.
+- **An upload's type comes from its bytes.** The browser's stated type and the file name are both the uploader's choice. Files are held in memory (5 MB at most) so nothing unchecked reaches the disk. SVG stays refused: it is an image that can carry script. Old uploads are not scanned; instead `/uploads` serves only image extensions with `nosniff` and a sandbox CSP, which makes any page saved before the fix inert.
+- **Google sign-in got a `state`** bound to the session, rather than PKCE alone: PKCE stops a stolen code being used, while the attack here hands the victim a code the attacker obtained honestly. A sign-in that began before the deploy fails once with `state_mismatch` and works when tried again.

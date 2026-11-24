@@ -1725,7 +1725,26 @@ fail by stopping quietly. Uploaded images are not included, and restoring is by 
   container restart.
 - **Passwords** are bcrypt (cost 10). **Google sign-in** is a direct OAuth code exchange
   with `fetch`, not passport; its callback is rate-limited because each hit makes two
-  outbound calls.
+  outbound calls. `/api/auth/google` keeps a random `state` in the session and sends it to
+  Google, and the callback refuses any other, once (`reason=state_mismatch`). Without it a
+  page could send a signed-in user's browser through `?link=1` and then to the callback
+  with a code from the attacker's own Google account, linking that account to theirs: the
+  attacker could then sign in as them. A link also needs the session to be signed in as
+  the account that asked for it when the callback arrives.
+- **The page's config cannot run code.** `serveApp` writes `window.APP_CONFIG` into a
+  `<script>` tag, and it carries the share token and reset token from the URL and the
+  user's name. `JSON.stringify` leaves `<` as it is, so
+  `/reset-password?token=</script><script>…` ran its own script as whoever opened the
+  link (found by the 2026-11-24 audit). `lib/inlineJson.js` writes `<` as `<`, which
+  reads back the same.
+- **Uploads are images by their bytes.** `/api/upload` once kept the uploader's file name
+  and believed the type the browser stated, so an `.html` file sent as `image/png` was
+  served from `/uploads/` as a page on this origin. Files are now held in memory, kept
+  only when their first bytes are JPEG, PNG, GIF or WebP, and named by 24 random hex
+  characters plus the extension those bytes give. `/uploads` serves only image
+  extensions (and `.bin`, an old upload with no extension, which is a download), with
+  `X-Content-Type-Options: nosniff` and `Content-Security-Policy: default-src 'none';
+  sandbox`, so a file saved before the check cannot be opened as a page.
 - **API tokens** are stored as SHA-256 and shown once (§13). The **backup token** is
   separate (§14).
 - **Import cannot write into another account.** `POST /api/import` once resolved a
@@ -1745,6 +1764,18 @@ fail by stopping quietly. Uploaded images are not included, and restoring is by 
   spend another user's pages. Without the variable `/api/pages` is a 404.
 - **Parameterized SQL only** (`?` placeholders), a rule in `CLAUDE.md`. `IN (…)` lists go
   through `lib/batch.js` in chunks, since SQLite caps bound variables per statement.
+- **Still open from the 2026-11-24 audit**, in order of risk:
+  - A Google sign-in with an email that matches a password account joins that account and
+    keeps its password, though the password sign-up never proved the email.
+  - No security headers on the pages (no CSP, no `frame-ancestors`), so the app can be
+    framed.
+  - Share-link tokens come from `Math.random`.
+  - The session is not renewed at sign-in, and a password reset does not end other
+    sessions.
+  - The cookie has no `secure` flag, and a missing `SESSION_SECRET` falls back to a
+    default instead of stopping the server.
+  - An invite reveals whether an email is registered and has no rate limit.
+  - A card can name another user's upload as its image, and deleting the card deletes it.
 
 ---
 

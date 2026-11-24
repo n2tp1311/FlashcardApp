@@ -37,6 +37,7 @@
 - Forgot password → email reset link (SMTP/Gmail via env vars)
 - Reset password page at /reset-password?token=...
 - Production security: dev reset token suppressed when NODE_ENV=production
+- Security audit fixes (2026-11-24): a token in a reset or share link, or a user's name, can no longer run script through the page's config (`server/lib/inlineJson.js`); an image upload is kept only if its bytes are JPEG, PNG, GIF or WebP, and `/uploads` serves only images, with `nosniff` and a sandbox CSP; Google sign-in checks a `state` kept in the session, so someone else's Google account cannot be linked to yours (a mismatch shows the sign-in failure with `state_mismatch`). `tests/security.test.js`
 - Sessions persisted in SQLite (custom store replacing MemoryStore) — survives server restarts; expired rows cleaned up every 24 hours
 - Screen state persisted in localStorage — page refresh or re-login after session loss returns user to their last class or lesson screen
 
