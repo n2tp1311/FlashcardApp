@@ -12,6 +12,7 @@ const { startEventLoopWatchdog } = require("./middleware/watchdog");
 const { rateLimit }              = require("./middleware/rateLimit");
 const env                        = require("./config/env");
 const { isAdmin }                = require("./middleware/admin");
+const { inlineJson }             = require("./lib/inlineJson");
 
 const app    = express();
 // Railway terminates connections at its edge proxy — without this, req.ip is the
@@ -110,7 +111,7 @@ app.use("/api/achievements", require("./routes/achievements"));
 app.use("/api/crams",   require("./routes/crams"));
 app.use("/api/plan",    require("./routes/plan"));
 app.use("/api/admin",   require("./routes/admin"));
-app.use("/uploads",     require("express").static(UPLOADS, { index: false }));
+app.use("/uploads",     require("./routes/upload").serveUploads(UPLOADS));
 
 // ── Helper: inject APP_CONFIG and serve index.html ───────
 const indexHtml = path.join(CLIENT, "index.html");
@@ -119,7 +120,7 @@ function serveApp(res, config) {
   const html     = fs.readFileSync(indexHtml, "utf8");
   const injected = html.replace(
     "</head>",
-    `<script>window.APP_CONFIG = ${JSON.stringify(config)};</script>\n</head>`
+    `<script>window.APP_CONFIG = ${inlineJson(config)};</script>\n</head>`
   );
   res.send(injected);
 }

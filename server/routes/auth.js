@@ -166,7 +166,14 @@ router.get("/google", (req, res) => {
   // Store linkMode in session if requested (linking existing account)
   if (req.query.link === "1" && req.session.userId) {
     req.session.googleLinkUserId = req.session.userId;
+  } else {
+    delete req.session.googleLinkUserId;
   }
+  // The callback accepts only the state it was sent away with, in this browser's session.
+  // Without it, a page could send someone's browser to the callback with a code from the
+  // attacker's own Google account, and link that account to theirs.
+  const state = crypto.randomBytes(16).toString("hex");
+  req.session.googleState = state;
 
   const params = new URLSearchParams({
     client_id:     clientId,
@@ -174,15 +181,23 @@ router.get("/google", (req, res) => {
     response_type: "code",
     scope:         "openid email profile",
     access_type:   "offline",
-    prompt:        "select_account"
+    prompt:        "select_account",
+    state
   });
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
 });
 
 // GET /api/auth/google/callback
 router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
-  const { code, error } = req.query;
+  const { code, error, state } = req.query;
+  const want = req.session.googleState;
+  delete req.session.googleState;
   if (error || !code) return res.redirect("/?auth_error=google_cancelled");
+  const sha = (s) => crypto.createHash("sha256").update(String(s)).digest();
+  if (!want || typeof state !== "string" || !crypto.timingSafeEqual(sha(state), sha(want))) {
+    delete req.session.googleLinkUserId;
+    return res.redirect("/?auth_error=google_failed&reason=state_mismatch");
+  }
 
   const clientId     = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -216,7 +231,7 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
     const linkUserId = req.session.googleLinkUserId;
     delete req.session.googleLinkUserId;
 
-    if (linkUserId) {
+    if (linkUserId && linkUserId === req.session.userId) {
       const alreadyLinked = db.prepare("SELECT id FROM users WHERE google_id = ? AND id != ?").get(googleId, linkUserId);
       if (alreadyLinked) return res.redirect("/?auth_error=google_already_linked");
       db.prepare("UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?").run(googleId, picture, linkUserId);
