@@ -1720,7 +1720,8 @@ fail by stopping quietly. Uploaded images are not included, and restoring is by 
 
 ## 15. Security
 
-- **Sessions** are express-session cookies (30 days, `httpOnly`, `sameSite=lax`) stored in
+- **Sessions** are express-session cookies (30 days, `httpOnly`, `sameSite=lax`, `Secure`
+  whenever the request came over HTTPS, so localhost still works) stored in
   SQLite (`sessionStore.js`), because the original MemoryStore lost every login on each
   container restart. **Every sign-in gets a new session id** (`signIn()` in
   `routes/auth.js` regenerates it): an id planted in a browser before sign-in would
@@ -1785,12 +1786,20 @@ fail by stopping quietly. Uploaded images are not included, and restoring is by 
   spend another user's pages. Without the variable `/api/pages` is a 404.
 - **Parameterized SQL only** (`?` placeholders), a rule in `CLAUDE.md`. `IN (…)` lists go
   through `lib/batch.js` in chunks, since SQLite caps bound variables per statement.
-- **Still open from the 2026-11-24 audit**, in order of risk:
-  - No `script-src` in the page's CSP (above).
-  - The cookie has no `secure` flag, and a missing `SESSION_SECRET` falls back to a
-    default instead of stopping the server.
-  - An invite reveals whether an email is registered and has no rate limit.
-  - A card can name another user's upload as its image, and deleting the card deletes it.
+- **Production will not start without `SESSION_SECRET`** (`sessionSecret()` in
+  `config/env.js`). The fallback is written in this repository, and production ran on it
+  until 2026-11-24 because nothing complained. Changing the secret signs everyone out once.
+- **Invites are limited to 20 an hour** per user: whether an invite finds someone tells
+  whether that email has an account, so without a limit it could test a list of
+  addresses. **A name finds someone only when exactly one account has it**; before, an
+  invite to "Minh" went to whichever Minh the database returned first.
+- **A card's image is deleted only when no other card shows it.** A card may name any
+  upload, so deleting a card that named someone else's image deleted theirs; and a cloned
+  class's cards point at the original's files, so deleting the clone's card broke the
+  original. `unlinkUpload` looks for the file's name in other cards' data first; names are
+  random, so the match is exact. A file whose last card goes with a whole class or lesson
+  is left on disk, as before.
+- **Still open from the 2026-11-24 audit:** no `script-src` in the page's CSP (above).
 
 ---
 
@@ -2109,8 +2118,9 @@ iPhone, push works only for a Home Screen web app, and the setting says so.
 ## 18. Sharing, export, import
 
 - **Share links** (`class_share_links`): anyone with the token can view a class; a signed-in
-  user can clone it into their account. **Invites** share a class with a named user, who
-  can clone it. Clones copy content, never progress or pins.
+  user can clone it into their account. **Invites** share a class with a user found by
+  email, or by name when only one account has it (20 an hour, §15), who can clone it.
+  Clones copy content, never progress or pins; an image card's clone shows the same file.
 - **Export** (classes, lessons or cards as JSON) is content only; the class **Import file**
   reads it back. **Full backup** (Preferences → Account & data, `GET /api/export`) carries
   every class, lesson, card, attempt and schedule. Restoring it is not in the UI yet:
