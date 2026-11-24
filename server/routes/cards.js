@@ -40,9 +40,15 @@ function attachFsrsPreview(row, sched) {
   return row;
 }
 
-function unlinkUpload(imageUrl) {
+// The file goes only when no other card shows it. A card may name any upload, so deleting a
+// card that named someone else's image used to delete theirs; and a cloned or shared class's
+// cards point at the same files as the original's. Names are random, so a substring match on
+// the card's data finds exactly the cards that use one.
+function unlinkUpload(imageUrl, cardId) {
   if (!imageUrl || typeof imageUrl !== "string" || !imageUrl.startsWith("/uploads/")) return;
-  try { fs.unlinkSync(path.join(UPLOADS_DIR, path.basename(imageUrl))); } catch (_) {}
+  const name = path.basename(imageUrl);
+  if (db.prepare("SELECT 1 AS x FROM cards WHERE id != ? AND instr(data, ?) > 0 LIMIT 1").get(cardId, "/uploads/" + name)) return;
+  try { fs.unlinkSync(path.join(UPLOADS_DIR, name)); } catch (_) {}
 }
 
 function validateCardData(format, data) {
@@ -300,7 +306,7 @@ router.put("/cards/:id", requireAuth, (req, res) => {
     const validErr = validateCardData(existing.format, data);
     if (validErr) return res.status(400).json({ error: validErr });
     if (existing.format === "image-def" && existingData.imageUrl && data.imageUrl !== existingData.imageUrl)
-      unlinkUpload(existingData.imageUrl);
+      unlinkUpload(existingData.imageUrl, existing.id);
   }
   db.prepare("UPDATE cards SET data = ?, sort_order = ? WHERE id = ?")
     .run(
@@ -585,7 +591,7 @@ router.post("/cards/delete-removed", requireAuth, (req, res) => {
     });
   })();
   rows.forEach(r => {
-    if (r.format === "image-def") { try { unlinkUpload(JSON.parse(r.data).imageUrl); } catch (_) {} }
+    if (r.format === "image-def") { try { unlinkUpload(JSON.parse(r.data).imageUrl, r.id); } catch (_) {} }
   });
   res.json({ ok: true, deleted: rows.length, skipped: ids.length - rows.length });
 });
@@ -596,7 +602,7 @@ router.delete("/cards/:id", requireAuth, (req, res) => {
     return res.status(404).json({ error: "Not found" });
   const toDelete = db.prepare("SELECT format, data, external_id FROM cards WHERE id = ?").get(req.params.id);
   if (toDelete && toDelete.format === "image-def") {
-    try { unlinkUpload(JSON.parse(toDelete.data).imageUrl); } catch (_) {}
+    try { unlinkUpload(JSON.parse(toDelete.data).imageUrl, req.params.id); } catch (_) {}
   }
   db.transaction(() => {
     if (toDelete && toDelete.external_id) {

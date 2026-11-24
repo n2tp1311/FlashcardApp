@@ -77,13 +77,16 @@ app.use("/api/backup", require("./routes/backup")(BACKUPS));
 
 app.use(session({
   store: new SQLiteSessionStore(),
-  secret: process.env.SESSION_SECRET || "fc-dev-secret-change-in-prod",
+  secret: env.sessionSecret(),
   resave: false,
   saveUninitialized: false,
   cookie: {
     maxAge: 30 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    sameSite: "lax"
+    sameSite: "lax",
+    // "auto": Secure whenever the request came over HTTPS (behind Railway's proxy, through
+    // trust proxy), so the cookie never travels over plain http there, and localhost still works.
+    secure: "auto"
   }
 }));
 // After the session, before every route: a suspended or deleted account's session ends here.

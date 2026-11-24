@@ -181,16 +181,26 @@ router.post("/clone/:token", requireAuth, cloneLimiter, (req, res) => {
 // ── Username Invites ────────────────────────────────────────
 
 // POST /api/share/invite/:classId  — invite user by name or email
-router.post("/invite/:classId", requireAuth, (req, res) => {
+// Whether an invite finds someone says whether that email has an account, so invites are
+// limited: enough to share with a study group, too few to test a list of addresses.
+const inviteLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 20, message: "Too many invites. Try again later.", keyFn: byUser });
+
+router.post("/invite/:classId", requireAuth, inviteLimiter, (req, res) => {
   const cls = db.prepare("SELECT * FROM classes WHERE id = ? AND user_id = ?")
     .get(req.params.classId, req.session.userId);
   if (!cls) return res.status(404).json({ error: "Not found" });
 
   const { query } = req.body; // name or email
-  if (!query) return res.status(400).json({ error: "query is required" });
+  if (typeof query !== "string" || !query.trim()) return res.status(400).json({ error: "query is required" });
 
-  const target = db.prepare("SELECT id, name, email FROM users WHERE email = ? OR name = ? LIMIT 1")
-    .get(query.trim(), query.trim());
+  // A name finds someone only when one account has it; LIMIT 1 over a shared name gave the
+  // class to whichever "Minh" the database returned first.
+  const q = query.trim();
+  let target = db.prepare("SELECT id, name, email FROM users WHERE email = ?").get(q.toLowerCase());
+  if (!target) {
+    const named = db.prepare("SELECT id, name, email FROM users WHERE name = ? LIMIT 2").all(q);
+    if (named.length === 1) target = named[0];
+  }
   if (!target) return res.status(404).json({ error: "User not found", code: "userNotFound" });
   if (target.id === req.session.userId) return res.status(400).json({ error: "Cannot invite yourself", code: "cannotInviteSelf" });
 

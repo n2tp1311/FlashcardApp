@@ -9,10 +9,21 @@ function appUrl() {
   return /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
 }
 
+// The secret signs session cookies. In production it must be set: the fallback is in this
+// public file. Stopping at start is louder than running on a known secret for months, as
+// production did until 2026-11-24.
+const DEV_SECRET = "fc-dev-secret-change-in-prod";
+function sessionSecret() {
+  const s = process.env.SESSION_SECRET;
+  if (s) return s;
+  if (process.env.NODE_ENV === "production") throw new Error("SESSION_SECRET must be set in production");
+  return DEV_SECRET;
+}
+
 module.exports = {
   appUrl,
+  sessionSecret,
   PORT:            process.env.PORT            || 3000,
-  SESSION_SECRET:  process.env.SESSION_SECRET  || "fc-dev-secret-change-in-prod",
   APP_URL:         process.env.APP_URL         || null,
   GOOGLE_CLIENT_ID:     process.env.GOOGLE_CLIENT_ID     || null,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || null,

@@ -27,10 +27,13 @@ test("config JSON in a <script> cannot close the tag, and reads back unchanged",
 // ── Routes on an in-memory database, with sessions kept per x-sid as a browser would ─────
 const db = new Database();
 require(path.join(root, "server/lib/statements")).shimPrepare(db);
+db.transaction = (fn) => (...a) => { db.exec("BEGIN"); try { const r = fn(...a); db.exec("COMMIT"); return r; } catch (e) { db.exec("ROLLBACK"); throw e; } };
 const schema = fs.readFileSync(path.join(root, "server/db.js"), "utf8");
-for (const t of ["users", "password_reset_tokens", "sessions"])
-  db.exec(schema.match(new RegExp("CREATE TABLE IF NOT EXISTS " + t + " \\([\\s\\S]*?\\n  \\)"))[0]);
-for (const m of schema.match(/ALTER TABLE users ADD COLUMN \w+ \w+/g) || []) { try { db.exec(m); } catch (_) {} }
+for (const t of ["users", "password_reset_tokens", "sessions", "classes", "lessons", "cards", "class_invites"])
+  // The first schema's format CHECK predates image cards; a migration rebuilds it in production.
+  db.exec(schema.match(new RegExp("CREATE TABLE IF NOT EXISTS " + t + " \\([\\s\\S]*?\\n  \\)"))[0].replace(/CHECK\s*\(format IN \([^)]*\)\)/g, ""));
+for (const m of schema.match(/ALTER TABLE (users|classes|lessons|cards) ADD COLUMN [^"]+/g) || []) { try { db.exec(m); } catch (_) {} }
+db.exec(schema.match(/CREATE TABLE IF NOT EXISTS external_card_deletions \([\s\S]*?\n  \)/)[0]);
 const file = require.resolve(path.join(root, "server/db.js"));
 require.cache[file] = { id: file, filename: file, loaded: true, exports: db };
 
@@ -52,6 +55,8 @@ app.use((req, _res, next) => {
 });
 app.use("/api/auth", require(path.join(root, "server/routes/auth")));
 app.use("/api/upload", upload);
+app.use("/api/share", require(path.join(root, "server/routes/share")));
+app.use("/api", require(path.join(root, "server/routes/cards")));
 const served = fs.mkdtempSync(path.join(require("os").tmpdir(), "fc-uploads-"));
 app.use("/uploads", upload.serveUploads(served));
 
@@ -225,4 +230,58 @@ test("pages cannot be framed and keep tokens out of referrers; share links are u
   const gen = share.match(/function genToken\(\) \{[\s\S]*?\n\}/)[0];
   assert.match(gen, /randomBytes\(16\)/);
   assert.doesNotMatch(gen, /Math\.random/);
+});
+
+test("production will not start on the secret written in the code; the cookie is Secure over HTTPS", () => {
+  const env = require(path.join(root, "server/config/env"));
+  const saved = { s: process.env.SESSION_SECRET, n: process.env.NODE_ENV };
+  try {
+    delete process.env.SESSION_SECRET;
+    process.env.NODE_ENV = "production";
+    assert.throws(() => env.sessionSecret(), /SESSION_SECRET must be set/);
+    process.env.SESSION_SECRET = "s3cret";
+    assert.equal(env.sessionSecret(), "s3cret");
+    delete process.env.SESSION_SECRET;
+    delete process.env.NODE_ENV;
+    assert.equal(typeof env.sessionSecret(), "string", "local development still runs");
+  } finally {
+    if (saved.s === undefined) delete process.env.SESSION_SECRET; else process.env.SESSION_SECRET = saved.s;
+    if (saved.n === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = saved.n;
+  }
+  const index = fs.readFileSync(path.join(root, "server/index.js"), "utf8");
+  assert.match(index, /secret: env\.sessionSecret\(\)/);
+  assert.match(index, /secure: "auto"/);
+});
+
+test("invites: a shared name finds nobody, and twenty an hour is the limit", async () => {
+  db.prepare("INSERT INTO users (id, email, name) VALUES ('m1', 'm1@example.com', 'Minh'), ('m2', 'm2@example.com', 'Minh'), ('ha', 'ha@example.com', 'Hà')").run();
+  db.prepare("INSERT INTO classes (id, user_id, name) VALUES ('inv-c', 'lan', 'Class')").run();
+  sessions.set("inviter", { userId: "lan" });
+  const inv = (query) => post("/api/share/invite/inv-c", { query }, "inviter");
+  assert.equal((await inv("Minh")).body.code, "userNotFound", "two accounts are named Minh");
+  assert.equal((await inv("Hà")).status, 201);
+  assert.equal((await inv(" M1@Example.com ")).status, 201, "email in any case");
+  assert.equal((await inv(["x"])).status, 400);
+  let last;
+  for (let i = 0; i < 20; i++) last = await inv("nobody" + i + "@example.com");
+  assert.deepEqual([last.status, last.body.code], [429, "rateLimited"]);
+});
+
+test("deleting a card removes its image only when no other card shows it", async () => {
+  db.exec(`INSERT INTO classes (id, user_id, name) VALUES ('vc', 'nopass', 'Victim'), ('ac', 'lan', 'Attacker');
+    INSERT INTO lessons (id, class_id, title, format) VALUES ('vl', 'vc', 'L', 'image-def'), ('al', 'ac', 'L', 'image-def');`);
+  const name = "sec" + Date.now() + ".png";
+  const file = path.join(upload.UPLOADS_DIR, name);
+  fs.writeFileSync(file, PNG);
+  try {
+    const data = JSON.stringify({ imageUrl: "/uploads/" + name, def: "d" });
+    db.prepare("INSERT INTO cards (id, lesson_id, format, data) VALUES ('vcard', 'vl', 'image-def', ?), ('acard', 'al', 'image-def', ?)").run(data, data);
+    sessions.set("attacker", { userId: "lan" });
+    const del = (id, sid) => realFetch(base + "/api/cards/" + id, { method: "DELETE", headers: { "x-sid": sid } });
+    assert.equal((await del("acard", "attacker")).status, 204);
+    assert.ok(fs.existsSync(file), "the victim's card still shows it");
+    sessions.set("owner", { userId: "nopass" });
+    assert.equal((await del("vcard", "owner")).status, 204);
+    assert.ok(!fs.existsSync(file), "the last card to show it takes it with it");
+  } finally { fs.rmSync(file, { force: true }); }
 });
