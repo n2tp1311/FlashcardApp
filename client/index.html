@@ -115,6 +115,14 @@
       <span data-i18n="vocabulary.nav">Vocabulary</span>
       <span id="sidebar-vocabulary-badge" class="due-badge is-count hidden"></span>
     </li>
+    <li class="sidebar-nav-item hidden" tabindex="0" role="link" id="sidebar-plan-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg>
+      <span data-i18n="plan.nav">My plan</span>
+    </li>
+    <li class="sidebar-nav-item hidden" tabindex="0" role="link" id="sidebar-admin-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span data-i18n="admin.nav">Admin</span>
+    </li>
     
   </ul>
   <div class="sidebar-section-label hidden" id="sidebar-classes-label" data-i18n="sidebar.yourClasses">Lớp của bạn</div>
@@ -266,6 +274,70 @@
     <p class="empty-body" data-i18n="vocabulary.emptyHow">While studying, select a word on a card and choose "Save as English word", or use Add word above. KnowledgeApp makes cards from the words saved here.</p>
   </div>
   <div id="vocabulary-list" class="vocabulary-list"></div>
+</div>
+
+<!-- ===== SCREEN: My plan ===== -->
+<div id="screen-plan" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-plan-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+    <h2 class="screen-title" data-i18n="plan.nav">My plan</h2>
+  </header>
+  <div class="plan-page">
+    <div id="plan-loading" class="empty-state"><p data-i18n="plan.loading">Loading your plan…</p></div>
+    <div id="plan-error" class="empty-state hidden"><p></p></div>
+    <div id="plan-body" class="plan-body hidden">
+      <section class="plan-usage" aria-labelledby="plan-usage-title">
+        <div class="plan-usage-head"><h3 id="plan-usage-title" data-i18n="plan.pagesTitle">Pages</h3><span id="plan-current-pill" class="plan-pill"></span></div>
+        <p class="plan-left"><span id="plan-left-num" class="plan-left-num"></span> <span id="plan-left-of" class="plan-left-of"></span></p>
+        <div class="plan-bar" aria-hidden="true"><i id="plan-bar-fill"></i></div>
+        <p id="plan-reset-line" class="plan-line"></p>
+        <p id="plan-pending-line" class="plan-line hidden"></p>
+      </section>
+      <div id="plan-tiers" class="plan-tiers"></div>
+      <section class="plan-history" aria-labelledby="plan-history-title">
+        <h3 id="plan-history-title" data-i18n="plan.historyTitle">Pages used</h3>
+        <div id="plan-history"></div>
+        <p class="plan-note" data-i18n="plan.note">Studying, adding cards and syncing use no pages. To change your plan, contact the admin.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: Admin ===== -->
+<div id="screen-admin" class="screen">
+  <header class="app-header">
+    <button class="btn btn-ghost back-btn" id="btn-admin-back" data-i18n="common.back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+    <h2 class="screen-title" data-i18n="admin.nav">Admin</h2>
+  </header>
+  <div class="admin-page">
+    <div id="admin-error" class="empty-state hidden"><p></p></div>
+    <div id="admin-stats" class="admin-stats"></div>
+    <div class="admin-grid">
+      <section class="admin-panel" aria-labelledby="admin-chart-title">
+        <div class="admin-panel-head"><h3 id="admin-chart-title" data-i18n="admin.chartTitle">Last 12 weeks</h3>
+          <div class="admin-legend"><span class="admin-legend-reg" data-i18n="admin.registered">Registered</span><span class="admin-legend-act" data-i18n="admin.activeWeek">Active that week</span></div></div>
+        <div id="admin-chart"></div>
+      </section>
+      <section class="admin-panel" aria-labelledby="admin-byplan-title">
+        <h3 id="admin-byplan-title" data-i18n="admin.byPlan">Users by plan</h3>
+        <div id="admin-byplan"></div>
+        <p class="plan-note" data-i18n="admin.expiryNote">An expired plan returns to Free.</p>
+      </section>
+    </div>
+    <section class="admin-panel" aria-labelledby="admin-users-title">
+      <div class="admin-panel-head"><h3 id="admin-users-title" data-i18n="admin.users">Users</h3>
+        <input type="search" id="admin-search" class="form-input admin-search" autocomplete="off" placeholder="Search by email" data-i18n-placeholder="admin.search" aria-label="Search by email" data-i18n-aria="admin.search"></div>
+      <div class="admin-table-wrap"><table class="admin-table">
+        <thead><tr>
+          <th data-i18n="admin.colUser">User</th><th data-i18n="admin.colCreated">Joined</th><th data-i18n="admin.colLast">Last studied</th>
+          <th class="num" data-i18n="admin.colAnswers">Answers, 30 days</th><th class="num" data-i18n="admin.colClasses">Classes</th><th class="num" data-i18n="admin.colCards">Cards</th>
+          <th data-i18n="admin.colPlan">Plan</th><th data-i18n="admin.colPages">Pages</th><th class="admin-col-acts"><span class="admin-sr" data-i18n="admin.colActions">Actions</span></th>
+        </tr></thead>
+        <tbody id="admin-rows"></tbody>
+      </table></div>
+      <p id="admin-users-more" class="plan-note hidden"></p>
+    </section>
+  </div>
 </div>
 
 <!-- ===== SCREEN: Achievements ===== -->
@@ -1127,6 +1199,48 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" data-modal="vocabulary-add" data-i18n="common.cancel">Cancel</button>
       <button type="button" class="btn btn-primary" id="btn-vocabulary-add-save" data-i18n="vocabulary.add">Add word</button>
+    </div>
+  </div>
+
+  <div id="modal-admin-plan" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="admin-plan-title">
+    <div class="modal-header">
+      <h3 id="admin-plan-title"></h3>
+      <button class="modal-close" data-modal="admin-plan" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p id="admin-plan-sub" class="plan-note"></p>
+      <div id="admin-plan-error" class="auth-error hidden"></div>
+      <label class="form-label" for="admin-plan-select" data-i18n="admin.colPlan">Plan</label>
+      <select id="admin-plan-select" class="form-input"></select>
+      <label class="form-label" for="admin-plan-until" data-i18n="admin.until">Ends on (optional)</label>
+      <input type="date" id="admin-plan-until" class="form-input">
+      <label class="form-label" for="admin-plan-note" data-i18n="admin.noteLabel">Note</label>
+      <input type="text" id="admin-plan-note" class="form-input" maxlength="200" autocomplete="off" placeholder="e.g. PMP pilot" data-i18n-placeholder="admin.notePlaceholder">
+      <p class="plan-note" data-i18n="admin.planRules">An upgrade starts a new month now. A downgrade starts when the current month ends.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="admin-plan" data-i18n="common.cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-admin-plan-save" data-i18n="common.save">Save</button>
+    </div>
+  </div>
+
+  <div id="modal-admin-pages" class="modal hidden" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="admin-pages-title">
+    <div class="modal-header">
+      <h3 id="admin-pages-title" data-i18n="admin.pagesTitle">Take or give pages</h3>
+      <button class="modal-close" data-modal="admin-pages" title="Close" aria-label="Close" data-i18n-title="common.close" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p id="admin-pages-sub" class="plan-note"></p>
+      <div id="admin-pages-error" class="auth-error hidden"></div>
+      <label class="form-label" for="admin-pages-delta" data-i18n="admin.deltaLabel">Pages (negative takes)</label>
+      <input type="number" id="admin-pages-delta" class="form-input" step="1" inputmode="numeric">
+      <label class="form-label" for="admin-pages-note" data-i18n="admin.reasonLabel">Reason</label>
+      <input type="text" id="admin-pages-note" class="form-input" maxlength="200" autocomplete="off" placeholder="e.g. pilot, 200-page PMP book" data-i18n-placeholder="admin.reasonPlaceholder">
+      <p id="admin-pages-warn" class="admin-warn hidden" role="status"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-modal="admin-pages" data-i18n="common.cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-admin-pages-save" data-i18n="common.save">Save</button>
     </div>
   </div>
 

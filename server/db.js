@@ -679,4 +679,55 @@ runMigration("achievement_ladders_v2", function() {
   });
 });
 
+// Plans and pages (lib/plans.js). user_plans: one row per user who was ever given a plan;
+// a user without one is on Free. plan_changes: every change, by an admin or by the server
+// itself when a plan expires or a scheduled downgrade starts (by_user_id NULL).
+// page_ledger: every use of pages. A "job" row is a book the worker converts: reserved,
+// then committed or refunded; an "adjust" row is an admin's manual change.
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS user_plans (
+    user_id            TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    plan               TEXT NOT NULL,
+    anchor_at          INTEGER NOT NULL,
+    expires_at         INTEGER,
+    pending_plan       TEXT,
+    pending_at         INTEGER,
+    pending_expires_at INTEGER,
+    updated_at         INTEGER NOT NULL DEFAULT (unixepoch())
+  )`);
+} catch (_) {}
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS plan_changes (
+    id         INTEGER PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    by_user_id TEXT,
+    from_plan  TEXT NOT NULL,
+    to_plan    TEXT NOT NULL,
+    starts_at  INTEGER NOT NULL,
+    expires_at INTEGER,
+    note       TEXT,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_plan_changes_user ON plan_changes(user_id, id)"); } catch (_) {}
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS page_ledger (
+    id         INTEGER PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind       TEXT NOT NULL CHECK (kind IN ('job','adjust')),
+    plan       TEXT NOT NULL,
+    pages      INTEGER NOT NULL,
+    status     TEXT NOT NULL CHECK (status IN ('reserved','committed','refunded','done')),
+    job_id     TEXT UNIQUE,
+    title      TEXT,
+    note       TEXT,
+    by_user_id TEXT,
+    created_at INTEGER NOT NULL,
+    settled_at INTEGER
+  )`);
+} catch (_) {}
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_page_ledger_user ON page_ledger(user_id, created_at)"); } catch (_) {}
+// The admin page counts active users by attempts in a time window, across all users.
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_attempts_created ON attempts(created_at)"); } catch (_) {}
+
 module.exports = db;

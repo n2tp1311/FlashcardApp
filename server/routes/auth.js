@@ -6,6 +6,7 @@ const crypto   = require("crypto");
 const db       = require("../db");
 const { sendPasswordReset } = require("../services/mailer");
 const { requireAuth } = require("../middleware/auth");
+const { isAdmin } = require("../middleware/admin");
 const { rateLimit } = require("../middleware/rateLimit");
 const { appUrl } = require("../config/env");
 const router   = express.Router();
@@ -62,7 +63,7 @@ router.post("/register", registerLimiter, (req, res) => {
 
   const user = { id, name: name.trim(), email: email.toLowerCase() };
   setSession(req, user);
-  res.json(user);
+  res.json({ ...user, isAdmin: isAdmin(user.id) });
 });
 
 // POST /api/auth/login
@@ -78,7 +79,7 @@ router.post("/login", loginLimiter, (req, res) => {
     return res.status(401).json({ error: "Invalid email or password", code: "invalidCredentials" });
 
   setSession(req, user);
-  res.json({ id: user.id, name: user.name, email: user.email });
+  res.json({ id: user.id, name: user.name, email: user.email, isAdmin: isAdmin(user.id) });
 });
 
 // POST /api/auth/logout
@@ -89,7 +90,7 @@ router.post("/logout", (req, res) => {
 // GET /api/auth/me
 router.get("/me", (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: "Not authenticated" });
-  res.json({ id: req.session.userId, name: req.session.userName, email: req.session.userEmail });
+  res.json({ id: req.session.userId, name: req.session.userName, email: req.session.userEmail, isAdmin: isAdmin(req.session.userId) });
 });
 
 // ── Forgot / Reset Password ───────────────────────────────
@@ -145,7 +146,7 @@ router.post("/reset-password", resetPasswordLimiter, (req, res) => {
 
   const user = db.prepare("SELECT * FROM users WHERE id = ?").get(row.user_id);
   setSession(req, user);
-  res.json({ id: user.id, name: user.name, email: user.email });
+  res.json({ id: user.id, name: user.name, email: user.email, isAdmin: isAdmin(user.id) });
 });
 
 // ── Google OAuth ──────────────────────────────────────────

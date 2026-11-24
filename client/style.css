@@ -6011,3 +6011,75 @@ button.leech-pill:hover { filter: brightness(0.96); }
   .fc-scene { height: 340px; }
   .quiz-options:not(.tf-mode) { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 }
+
+/* My plan and Admin. Both span the window on a desktop like Vocabulary; on a phone they are
+   one column, and the admin table scrolls sideways inside its own box. */
+.plan-page, .admin-page { width: 100%; max-width: 900px; margin: 0 auto; display: grid; gap: 14px; }
+.plan-body { display: grid; gap: 14px; }
+.plan-usage, .plan-history, .admin-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.plan-usage h3, .plan-history h3, .admin-panel h3 { margin: 0; font-size: 1rem; }
+.plan-usage-head, .admin-panel-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.plan-left { margin: 0; }
+.plan-left-num { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.plan-left-of { color: var(--text2); }
+.plan-line, .plan-note { margin: 0; color: var(--text2); font-size: 0.875rem; }
+.plan-note { color: var(--text3); }
+.plan-bar { height: 8px; background: var(--surface2); border-radius: var(--radius-pill); overflow: hidden; }
+.plan-bar i { display: block; height: 100%; background: var(--primary); border-radius: var(--radius-pill); transition: width var(--bar-fill-transition); }
+.plan-bar.is-empty i { background: var(--danger); }
+.plan-pill { display: inline-block; border-radius: var(--radius-pill); padding: 2px 10px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; background: var(--surface2); color: var(--text2); }
+.plan-pill-tier1 { background: var(--primary-light); color: var(--primary); }
+.plan-pill-tier2 { background: var(--success-light); color: var(--success); }
+.plan-pill-tier3 { background: var(--warning-light); color: var(--warning); }
+.plan-tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.plan-tier { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: grid; gap: 4px; align-content: start; }
+.plan-tier.is-current { border: 2px solid var(--primary); padding: 13px; }
+.plan-tier-price { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.plan-tier-price span { font-size: 0.8rem; font-weight: 400; color: var(--text3); }
+.plan-tier-pages { color: var(--text2); }
+.plan-tier-blurb { color: var(--text3); font-size: 0.8rem; }
+.plan-history-table, .admin-table { border-collapse: collapse; width: 100%; }
+.plan-history-table th, .plan-history-table td, .admin-table th, .admin-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--surface2); vertical-align: middle; }
+.plan-history-table th, .admin-table th { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text3); }
+.plan-history-table .num, .admin-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { min-width: 980px; }
+.admin-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.admin-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 2px; }
+.admin-stat b { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.admin-stat-k { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text3); }
+.admin-stat-sub { font-size: 0.8rem; color: var(--text3); min-height: 1.2em; }
+.admin-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.admin-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.82rem; color: var(--text2); }
+.admin-legend span::before { content: ""; display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.admin-legend-reg::before { background: var(--primary); }
+.admin-legend-act::before { background: var(--success); }
+.admin-chart { width: 100%; height: auto; display: block; }
+.admin-chart text { fill: var(--text3); font-size: 11px; font-family: inherit; }
+.admin-chart-grid { stroke: var(--surface2); fill: none; }
+.admin-chart-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+.admin-chart-line.is-registered, .admin-chart-dot.is-registered { stroke: var(--primary); }
+.admin-chart-line.is-active, .admin-chart-dot.is-active { stroke: var(--success); }
+.admin-chart-dot.is-registered { fill: var(--primary); }
+.admin-chart-dot.is-active { fill: var(--success); }
+.admin-chart .admin-chart-end { font-weight: 600; font-size: 12px; }
+.admin-chart .admin-chart-end.is-registered { fill: var(--primary); }
+.admin-chart .admin-chart-end.is-active { fill: var(--success); }
+.admin-planrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--surface2); }
+.admin-planrow:last-child { border-bottom: 0; }
+.admin-planrow b { font-variant-numeric: tabular-nums; }
+.admin-search { width: 260px; max-width: 100%; }
+.admin-who b { display: block; }
+.admin-who span, .admin-sub { font-size: 0.8rem; color: var(--text3); }
+.admin-pages { display: grid; gap: 4px; min-width: 110px; }
+.admin-table .admin-pages .num { text-align: left; }
+.admin-pages .plan-bar { height: 6px; }
+.admin-acts { display: flex; flex-direction: column; align-items: stretch; gap: 4px; white-space: nowrap; }
+.admin-warn { margin: 0; background: var(--danger-light); color: var(--danger); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.875rem; }
+#modal-admin-plan .form-input + .form-label, #modal-admin-pages .form-input + .form-label { margin-top: 10px; }
+@media (min-width: 1100px) {
+  #screen-plan, #screen-admin { padding-left: 28px; padding-right: 28px; }
+  .plan-page, .admin-page { max-width: none; }
+  .admin-grid { grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); }
+}

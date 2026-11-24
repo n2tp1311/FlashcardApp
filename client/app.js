@@ -2704,6 +2704,172 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.reviewPrevNext": "Xem lại câu trước / câu sau đã trả lời"
 });
 
+// My plan and Admin (server mode). Plan names stay in English in both languages.
+Object.assign(TRANSLATIONS.en, {
+  "plan.nav": "My plan",
+  "plan.loading": "Loading your plan…",
+  "plan.loadFailed": "Couldn't load your plan: {message}",
+  "plan.pagesTitle": "Pages",
+  "plan.leftMonth": "/ {limit} pages left this month",
+  "plan.leftOnce": "/ {limit} pages left",
+  "plan.resets": "On {date} you get {limit} pages again.",
+  "plan.freeOnce": "Free has {limit} pages to use once. They do not reset.",
+  "plan.expires": "{name} · ends {date}",
+  "plan.pending": "From {date}: {name}.",
+  "plan.perMonth": "{n} pages a month",
+  "plan.once": "{n} pages, once",
+  "plan.priceMonth": "/month",
+  "plan.yours": "{name} · your plan",
+  "plan.blurb.free": "about one chapter",
+  "plan.blurb.tier1": "about one prep book",
+  "plan.blurb.tier2": "a study set",
+  "plan.blurb.tier3": "a CFA-sized curriculum",
+  "plan.historyTitle": "Pages used",
+  "plan.historyEmpty": "No pages used yet.",
+  "plan.colDate": "Date",
+  "plan.colWhat": "What",
+  "plan.colPages": "Pages",
+  "plan.jobDone": "{title}, made into cards",
+  "plan.jobRunning": "{title}, being made into cards",
+  "plan.jobRefunded": "{title}, failed, pages returned",
+  "plan.jobUntitled": "A book",
+  "plan.adjusted": "Changed by the admin",
+  "plan.note": "Studying, adding cards and syncing use no pages. To change your plan, contact the admin.",
+  "admin.nav": "Admin",
+  "admin.loadFailed": "Couldn't load the admin page: {message}",
+  "admin.registered": "Registered",
+  "admin.activeToday": "Active today",
+  "admin.active7": "Active 7 days",
+  "admin.active30": "Active 30 days",
+  "admin.new7": "New, 7 days",
+  "admin.newInWeek": "+{n} in 7 days",
+  "admin.share": "{pct}% of registered",
+  "admin.activeWeek": "Active that week",
+  "admin.chartTitle": "Last 12 weeks",
+  "admin.chartAria": "Registered users and users active each week, last 12 weeks",
+  "admin.thisWeek": "this week",
+  "admin.byPlan": "Users by plan",
+  "admin.expiryNote": "An expired plan returns to Free.",
+  "admin.users": "Users",
+  "admin.search": "Search by email",
+  "admin.colUser": "User",
+  "admin.colCreated": "Joined",
+  "admin.colLast": "Last studied",
+  "admin.colAnswers": "Answers, 30 days",
+  "admin.colClasses": "Classes",
+  "admin.colCards": "Cards",
+  "admin.colPlan": "Plan",
+  "admin.colPages": "Pages",
+  "admin.colActions": "Actions",
+  "admin.never": "never",
+  "admin.today": "today",
+  "admin.yesterday": "yesterday",
+  "admin.daysAgo": "{n} days ago",
+  "admin.until": "Ends on (optional)",
+  "admin.untilShort": "until {date}",
+  "admin.pendingShort": "{name} from {date}",
+  "admin.changePlan": "Change plan",
+  "admin.pagesBtn": "Pages ±",
+  "admin.planTitle": "Change plan for {name}",
+  "admin.planSub": "{email} · now {plan}",
+  "admin.noteLabel": "Note",
+  "admin.notePlaceholder": "e.g. PMP pilot",
+  "admin.planRules": "An upgrade starts a new month now. A downgrade starts when the current month ends.",
+  "admin.planSaved": "{name} is now on {plan}.",
+  "admin.planScheduled": "{name} moves to {plan} on {date}.",
+  "admin.pagesTitle": "Take or give pages",
+  "admin.pagesSub": "{name} · {n} pages left",
+  "admin.deltaLabel": "Pages (negative takes)",
+  "admin.reasonLabel": "Reason",
+  "admin.reasonPlaceholder": "e.g. pilot, 200-page PMP book",
+  "admin.overLimit": "This takes {n} pages more than are left. The user will see 0 pages left.",
+  "admin.deltaInvalid": "Enter a whole number other than 0.",
+  "admin.pagesSaved": "{name} has {n} pages left.",
+  "admin.showing": "Showing the newest {n} of {total}. Search by email to find others."
+});
+Object.assign(TRANSLATIONS.vi, {
+  "plan.nav": "Gói của tôi",
+  "plan.loading": "Đang tải gói của bạn…",
+  "plan.loadFailed": "Không tải được gói: {message}",
+  "plan.pagesTitle": "Trang",
+  "plan.leftMonth": "/ {limit} trang còn lại tháng này",
+  "plan.leftOnce": "/ {limit} trang còn lại",
+  "plan.resets": "Ngày {date} bạn có lại {limit} trang.",
+  "plan.freeOnce": "Gói Free có {limit} trang dùng một lần, không đặt lại.",
+  "plan.expires": "{name} · hết hạn {date}",
+  "plan.pending": "Từ {date}: {name}.",
+  "plan.perMonth": "{n} trang mỗi tháng",
+  "plan.once": "{n} trang, một lần",
+  "plan.priceMonth": "/tháng",
+  "plan.yours": "{name} · gói của bạn",
+  "plan.blurb.free": "khoảng một chương",
+  "plan.blurb.tier1": "khoảng một cuốn sách ôn thi",
+  "plan.blurb.tier2": "một bộ tài liệu ôn",
+  "plan.blurb.tier3": "cỡ cả chương trình CFA",
+  "plan.historyTitle": "Trang đã dùng",
+  "plan.historyEmpty": "Chưa dùng trang nào.",
+  "plan.colDate": "Ngày",
+  "plan.colWhat": "Việc",
+  "plan.colPages": "Trang",
+  "plan.jobDone": "{title}, chuyển thành thẻ",
+  "plan.jobRunning": "{title}, đang chuyển thành thẻ",
+  "plan.jobRefunded": "{title}, chuyển thất bại, đã hoàn lại",
+  "plan.jobUntitled": "Một cuốn sách",
+  "plan.adjusted": "Admin điều chỉnh",
+  "plan.note": "Học, thêm thẻ và đồng bộ không tốn trang. Muốn đổi gói, liên hệ admin.",
+  "admin.nav": "Admin",
+  "admin.loadFailed": "Không tải được trang admin: {message}",
+  "admin.registered": "Đã đăng ký",
+  "admin.activeToday": "Active hôm nay",
+  "admin.active7": "Active 7 ngày",
+  "admin.active30": "Active 30 ngày",
+  "admin.new7": "Mới 7 ngày",
+  "admin.newInWeek": "+{n} trong 7 ngày",
+  "admin.share": "{pct}% đã đăng ký",
+  "admin.activeWeek": "Active trong tuần",
+  "admin.chartTitle": "12 tuần qua",
+  "admin.chartAria": "Số user đã đăng ký và số user active mỗi tuần, 12 tuần qua",
+  "admin.thisWeek": "tuần này",
+  "admin.byPlan": "User theo gói",
+  "admin.expiryNote": "Gói hết hạn tự về Free.",
+  "admin.users": "Người dùng",
+  "admin.search": "Tìm theo email",
+  "admin.colUser": "Người dùng",
+  "admin.colCreated": "Ngày tạo",
+  "admin.colLast": "Học lần cuối",
+  "admin.colAnswers": "Câu trả lời 30 ngày",
+  "admin.colClasses": "Lớp",
+  "admin.colCards": "Thẻ",
+  "admin.colPlan": "Gói",
+  "admin.colPages": "Trang",
+  "admin.colActions": "Thao tác",
+  "admin.never": "chưa học",
+  "admin.today": "hôm nay",
+  "admin.yesterday": "hôm qua",
+  "admin.daysAgo": "{n} ngày trước",
+  "admin.until": "Hết hạn (không bắt buộc)",
+  "admin.untilShort": "đến {date}",
+  "admin.pendingShort": "{name} từ {date}",
+  "admin.changePlan": "Đổi gói",
+  "admin.pagesBtn": "Trang ±",
+  "admin.planTitle": "Đổi gói cho {name}",
+  "admin.planSub": "{email} · đang dùng {plan}",
+  "admin.noteLabel": "Ghi chú",
+  "admin.notePlaceholder": "Ví dụ: pilot PMP",
+  "admin.planRules": "Nâng gói: chu kỳ mới bắt đầu ngay. Hạ gói: có hiệu lực từ chu kỳ sau.",
+  "admin.planSaved": "{name} giờ dùng gói {plan}.",
+  "admin.planScheduled": "{name} sẽ chuyển sang {plan} ngày {date}.",
+  "admin.pagesTitle": "Trừ hoặc cộng trang",
+  "admin.pagesSub": "{name} · còn {n} trang",
+  "admin.deltaLabel": "Số trang (âm là trừ)",
+  "admin.reasonLabel": "Lý do",
+  "admin.reasonPlaceholder": "Ví dụ: pilot, sách PMP 200 trang",
+  "admin.overLimit": "Trừ vượt hạn mức {n} trang. Người dùng sẽ thấy còn 0 trang.",
+  "admin.deltaInvalid": "Nhập một số nguyên khác 0.",
+  "admin.pagesSaved": "{name} còn {n} trang.",
+  "admin.showing": "Đang hiện {n} người mới nhất trong {total}. Tìm theo email để thấy người khác."
+});
+
 function t(key, vars) {
   var lang = (typeof state !== "undefined" && state.language) || "en";
   var dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -3867,10 +4033,10 @@ function showScreen(id) {
 // Which screens show the sidebar: "home" docks it from 768px as before, "page" from 1024px,
 // where there is room beside a list. Study screens never: they are full-attention.
 var NAV_SCREENS = { home: "home", "class": "page", lesson: "page", dashboard: "page",
-  vocabulary: "page", achievements: "page", upstream: "page", cram: "page" };
+  vocabulary: "page", achievements: "page", upstream: "page", cram: "page", plan: "page", admin: "page" };
 var NAV_CURRENT = { home: "sidebar-home-link", dashboard: "sidebar-dashboard-link",
   achievements: "sidebar-achievements-link", upstream: "sidebar-upstream-link",
-  vocabulary: "sidebar-vocabulary-link" };
+  vocabulary: "sidebar-vocabulary-link", plan: "sidebar-plan-link", admin: "sidebar-admin-link" };
 
 function syncSidebar(id) {
   var nav = NAV_SCREENS[id];
@@ -15735,6 +15901,11 @@ var SQLiteAdapter = (function() {
     translateText: function(text, language) { return req("POST", "/translation", { text: text, language: language }); },
     saveVocabulary: function(payload) { return req("POST", "/vocabulary", payload); },
     getVocabularyRequests: function() { return req("GET", "/vocabulary"); },
+    getPlan: function() { return req("GET", "/plan"); },
+    adminOverview: function() { return req("GET", "/admin/overview"); },
+    adminUsers: function(q) { return req("GET", "/admin/users?q=" + encodeURIComponent(q || "")); },
+    adminSetPlan: function(id, plan, expiresOn, note) { return req("POST", "/admin/users/" + encodeURIComponent(id) + "/plan", { plan: plan, expiresOn: expiresOn, note: note }); },
+    adminAdjustPages: function(id, delta, note) { return req("POST", "/admin/users/" + encodeURIComponent(id) + "/pages", { delta: delta, note: note }); },
     deleteVocabularyRequest: function(id) { return req("DELETE", "/vocabulary/" + encodeURIComponent(id)); },
     importFlashcards: function(payload) { return req("POST", "/import/flashcards", payload); },
 
@@ -16246,6 +16417,8 @@ function initUserNav() {
   document.getElementById("sidebar-achievements-link").classList.remove("hidden");
   document.getElementById("sidebar-upstream-link").classList.remove("hidden");
   document.getElementById("sidebar-vocabulary-link").classList.remove("hidden");
+  document.getElementById("sidebar-plan-link").classList.remove("hidden");
+  document.getElementById("sidebar-admin-link").classList.toggle("hidden", !currentUser.isAdmin);
   document.getElementById("sidebar-classes-label").classList.remove("hidden");
   document.getElementById("sidebar-btn-new-class").classList.remove("hidden");
   var linkBtn = document.getElementById("btn-link-google");
@@ -17272,6 +17445,310 @@ if (IS_SERVER && !currentUser) {
 }
 
 /* ============================
+   MY PLAN AND ADMIN (server mode)
+   My plan shows the pages left for turning books into cards; nothing else is limited.
+   Admin is for the user ids in ADMIN_USER_IDS: the server answers 404 to anyone else, so
+   showing the link to them would only lead to an error.
+   ============================ */
+function planDate(sec) {
+  return new Date(sec * 1000).toLocaleDateString(appLocale(), { day: "numeric", month: "numeric", year: "numeric" });
+}
+
+function planNum(n) { return Number(n).toLocaleString(appLocale()); }
+
+function planPill(id, name) {
+  return '<span class="plan-pill plan-pill-' + escHtml(id) + '">' + escHtml(name) + '</span>';
+}
+
+function openPlanScreen() {
+  showScreen("plan");
+  var loading = document.getElementById("plan-loading");
+  var error = document.getElementById("plan-error");
+  var body = document.getElementById("plan-body");
+  loading.classList.remove("hidden");
+  error.classList.add("hidden");
+  body.classList.add("hidden");
+  store.getPlan().then(function(p) {
+    loading.classList.add("hidden");
+    renderPlan(p);
+    body.classList.remove("hidden");
+  }).catch(function(err) {
+    loading.classList.add("hidden");
+    error.querySelector("p").textContent = t("plan.loadFailed", { message: err.message });
+    error.classList.remove("hidden");
+  });
+}
+
+function planHistoryText(h, ttl) {
+  var title = h.title || t("plan.jobUntitled");
+  if (h.kind === "adjust") return t("plan.adjusted") + (h.note ? ": " + h.note : "");
+  if (h.status === "committed") return t("plan.jobDone", { title: title });
+  var stale = h.status === "reserved" && h.created_at <= Date.now() / 1000 - ttl;
+  if (h.status === "refunded" || stale) return t("plan.jobRefunded", { title: title });
+  return t("plan.jobRunning", { title: title });
+}
+
+function planHistoryPages(h, ttl) {
+  var counts = h.kind === "adjust" || h.status === "committed" ||
+    (h.status === "reserved" && h.created_at > Date.now() / 1000 - ttl);
+  if (!counts || !h.pages) return "0";
+  return (h.pages > 0 ? "−" : "+") + planNum(Math.abs(h.pages));
+}
+
+function renderPlan(p) {
+  var byId = {};
+  p.tiers.forEach(function(x) { byId[x.id] = x; });
+  var pill = document.getElementById("plan-current-pill");
+  pill.className = "plan-pill plan-pill-" + p.plan;
+  pill.textContent = p.expiresAt ? t("plan.expires", { name: p.name, date: planDate(p.expiresAt) }) : p.name;
+  document.getElementById("plan-left-num").textContent = planNum(p.remaining);
+  document.getElementById("plan-left-of").textContent =
+    t(p.resetsAt ? "plan.leftMonth" : "plan.leftOnce", { limit: planNum(p.limit) });
+  var usedPct = p.limit ? Math.min(100, Math.round(p.used / p.limit * 100)) : 100;
+  var fill = document.getElementById("plan-bar-fill");
+  fill.style.width = usedPct + "%";
+  fill.parentNode.classList.toggle("is-empty", p.remaining === 0);
+  document.getElementById("plan-reset-line").textContent = p.resetsAt
+    ? t("plan.resets", { date: planDate(p.resetsAt), limit: planNum(p.limit) })
+    : t("plan.freeOnce", { limit: planNum(p.limit) });
+  var pending = document.getElementById("plan-pending-line");
+  pending.classList.toggle("hidden", !p.pendingPlan);
+  if (p.pendingPlan) pending.textContent = t("plan.pending", { date: planDate(p.pendingAt), name: byId[p.pendingPlan].name });
+
+  document.getElementById("plan-tiers").innerHTML = p.tiers.map(function(x) {
+    var cur = x.id === p.plan;
+    return '<div class="plan-tier' + (cur ? ' is-current' : '') + '"' + (cur ? ' aria-current="true"' : '') + '>' +
+      '<b class="plan-tier-name">' + escHtml(cur ? t("plan.yours", { name: x.name }) : x.name) + '</b>' +
+      '<div class="plan-tier-price">$' + x.price + (x.once ? '' : '<span>' + escHtml(t("plan.priceMonth")) + '</span>') + '</div>' +
+      '<div class="plan-tier-pages">' + escHtml(t(x.once ? "plan.once" : "plan.perMonth", { n: planNum(x.pages) })) + '</div>' +
+      '<div class="plan-tier-blurb">' + escHtml(t("plan.blurb." + x.id)) + '</div></div>';
+  }).join("");
+
+  var hist = document.getElementById("plan-history");
+  if (!p.history.length) { hist.innerHTML = '<p class="plan-note">' + escHtml(t("plan.historyEmpty")) + '</p>'; return; }
+  hist.innerHTML = '<div class="admin-table-wrap"><table class="plan-history-table"><thead><tr><th>' + escHtml(t("plan.colDate")) +
+    '</th><th>' + escHtml(t("plan.colWhat")) + '</th><th class="num">' + escHtml(t("plan.colPages")) + '</th></tr></thead><tbody>' +
+    p.history.map(function(h) {
+      return '<tr><td class="num">' + planDate(h.created_at) + '</td><td>' + escHtml(planHistoryText(h, p.reserveTtl)) +
+        '</td><td class="num">' + planHistoryPages(h, p.reserveTtl) + '</td></tr>';
+    }).join("") + '</tbody></table></div>';
+}
+
+var adminState = { users: [], tiers: [], search: "", searchTimer: null, editing: null };
+
+function openAdminScreen() {
+  showScreen("admin");
+  document.getElementById("admin-error").classList.add("hidden");
+  loadAdminOverview();
+  loadAdminUsers();
+}
+
+function adminFail(err) {
+  var box = document.getElementById("admin-error");
+  box.querySelector("p").textContent = t("admin.loadFailed", { message: err.message });
+  box.classList.remove("hidden");
+}
+
+function loadAdminOverview() {
+  return store.adminOverview().then(renderAdminOverview).catch(adminFail);
+}
+
+function loadAdminUsers() {
+  var q = adminState.search;
+  return store.adminUsers(q).then(function(r) {
+    if (q !== adminState.search) return;
+    adminState.users = r.users;
+    renderAdminUsers(r.total);
+  }).catch(adminFail);
+}
+
+function renderAdminOverview(o) {
+  adminState.tiers = o.tiers;
+  var share = function(n) { return o.registered ? t("admin.share", { pct: Math.round(n / o.registered * 100) }) : ""; };
+  var stats = [
+    ["admin.registered", o.registered, t("admin.newInWeek", { n: o.new7 })],
+    ["admin.activeToday", o.activeToday, share(o.activeToday)],
+    ["admin.active7", o.active7, share(o.active7)],
+    ["admin.active30", o.active30, share(o.active30)],
+    ["admin.new7", o.new7, ""]
+  ];
+  document.getElementById("admin-stats").innerHTML = stats.map(function(s) {
+    return '<div class="admin-stat"><span class="admin-stat-k">' + escHtml(t(s[0])) + '</span><b>' + planNum(s[1]) +
+      '</b><span class="admin-stat-sub">' + escHtml(s[2]) + '</span></div>';
+  }).join("");
+  document.getElementById("admin-byplan").innerHTML = o.tiers.map(function(x) {
+    return '<div class="admin-planrow">' + planPill(x.id, x.name) + '<b>' + planNum(o.byPlan[x.id] || 0) + '</b></div>';
+  }).join("");
+  document.getElementById("admin-chart").innerHTML = adminChartSvg(o.weeks);
+}
+
+// Two lines on one scale: registered (cumulative) and active that week. The top of the
+// scale is the next round number over the registered count, so both always fit.
+function adminChartSvg(weeks) {
+  var W = 640, H = 220, L = 36, R = 14, T = 14, B = 26;
+  var top = Math.max(5, weeks.reduce(function(m, w) { return Math.max(m, w.registered, w.active); }, 0));
+  var step = Math.pow(10, Math.floor(Math.log10(top)));
+  var unit = [1, 2, 5, 10].map(function(k) { return k * step; }).find(function(u) { return top / u <= 5; });
+  var max = Math.ceil(top / unit) * unit;
+  var x = function(i) { return L + i * (W - L - R) / (weeks.length - 1); };
+  var y = function(v) { return T + (H - T - B) * (1 - v / max); };
+  var s = '<svg class="admin-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + escHtml(t("admin.chartAria")) + '">';
+  for (var v = 0; v <= max; v += unit) {
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" class="admin-chart-grid"/>' +
+      '<text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>';
+  }
+  weeks.forEach(function(w, i) {
+    // Every other week, and not the one before "this week", whose label would run into it.
+    if (i !== weeks.length - 1 && (i % 2 === 1 || i === weeks.length - 2)) return;
+    var label = i === weeks.length - 1 ? t("admin.thisWeek")
+      : new Date(w.end * 1000).toLocaleDateString(appLocale(), { day: "numeric", month: "numeric" });
+    s += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="' + (i === weeks.length - 1 ? 'end' : 'middle') + '">' + escHtml(label) + '</text>';
+  });
+  ["registered", "active"].forEach(function(k) {
+    var pts = weeks.map(function(w, i) { return x(i) + "," + y(w[k]); }).join(" ");
+    var last = weeks[weeks.length - 1][k];
+    s += '<polyline points="' + pts + '" class="admin-chart-line is-' + k + '"/>' +
+      '<circle cx="' + x(weeks.length - 1) + '" cy="' + y(last) + '" r="4" class="admin-chart-dot is-' + k + '"/>' +
+      '<text x="' + (x(weeks.length - 1) - 8) + '" y="' + (y(last) - 8) + '" text-anchor="end" class="admin-chart-end is-' + k + '">' + last + '</text>';
+  });
+  return s + '</svg>';
+}
+
+function adminLastStudied(sec) {
+  if (!sec) return t("admin.never");
+  var day = function(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
+  var n = Math.round((day(new Date()) - day(new Date(sec * 1000))) / 86400000);
+  if (n <= 0) return t("admin.today");
+  if (n === 1) return t("admin.yesterday");
+  return t("admin.daysAgo", { n: n });
+}
+
+function renderAdminUsers(total) {
+  var names = {};
+  adminState.tiers.forEach(function(x) { names[x.id] = x.name; });
+  document.getElementById("admin-rows").innerHTML = adminState.users.map(function(u, i) {
+    var p = u.plan;
+    var pct = p.limit ? Math.min(100, Math.round(p.used / p.limit * 100)) : 100;
+    var sub = p.pendingPlan ? t("admin.pendingShort", { name: names[p.pendingPlan] || p.pendingPlan, date: planDate(p.pendingAt) })
+      : p.expiresAt ? t("admin.untilShort", { date: planDate(p.expiresAt) }) : "";
+    return '<tr><td class="admin-who"><b>' + escHtml(u.name) + '</b><span>' + escHtml(u.email) + '</span></td>' +
+      '<td class="num">' + planDate(u.created_at) + '</td><td>' + escHtml(adminLastStudied(u.last_at)) + '</td>' +
+      '<td class="num">' + planNum(u.answers30) + '</td><td class="num">' + planNum(u.classes) + '</td><td class="num">' + planNum(u.cards) + '</td>' +
+      '<td>' + planPill(p.plan, p.name) + (sub ? '<div class="admin-sub">' + escHtml(sub) + '</div>' : '') + '</td>' +
+      '<td><div class="admin-pages"><span class="num">' + planNum(p.used) + ' / ' + planNum(p.limit) + '</span>' +
+      '<div class="plan-bar' + (p.remaining === 0 ? ' is-empty' : '') + '" aria-hidden="true"><i style="width:' + pct + '%"></i></div></div></td>' +
+      '<td><div class="admin-acts"><button type="button" class="btn btn-ghost btn-sm" data-admin-plan="' + i + '">' + escHtml(t("admin.changePlan")) +
+      '</button><button type="button" class="btn btn-ghost btn-sm" data-admin-pages="' + i + '">' + escHtml(t("admin.pagesBtn")) + '</button></div></td></tr>';
+  }).join("");
+  var more = document.getElementById("admin-users-more");
+  var hidden = !adminState.search && total > adminState.users.length;
+  more.classList.toggle("hidden", !hidden);
+  if (hidden) more.textContent = t("admin.showing", { n: adminState.users.length, total: total });
+}
+
+function openAdminPlanModal(u) {
+  adminState.editing = u;
+  document.getElementById("admin-plan-title").textContent = t("admin.planTitle", { name: u.name });
+  document.getElementById("admin-plan-sub").textContent = t("admin.planSub", { email: u.email, plan: u.plan.name });
+  var sel = document.getElementById("admin-plan-select");
+  sel.innerHTML = adminState.tiers.map(function(x) {
+    return '<option value="' + escHtml(x.id) + '"' + (x.id === u.plan.plan ? ' selected' : '') + '>' +
+      escHtml(x.name + " · " + t(x.once ? "plan.once" : "plan.perMonth", { n: planNum(x.pages) })) + '</option>';
+  }).join("");
+  document.getElementById("admin-plan-until").value = "";
+  document.getElementById("admin-plan-note").value = "";
+  document.getElementById("admin-plan-error").classList.add("hidden");
+  openModal("admin-plan");
+  sel.focus();
+}
+
+function saveAdminPlan() {
+  var u = adminState.editing;
+  var err = document.getElementById("admin-plan-error");
+  var btn = document.getElementById("btn-admin-plan-save");
+  var plan = document.getElementById("admin-plan-select").value;
+  btn.disabled = true;
+  store.adminSetPlan(u.id, plan, document.getElementById("admin-plan-until").value || null,
+    document.getElementById("admin-plan-note").value).then(function(r) {
+    closeModal("admin-plan");
+    var name = (adminState.tiers.find(function(x) { return x.id === plan; }) || {}).name || plan;
+    showToast(r.plan.pendingPlan ? t("admin.planScheduled", { name: u.name, plan: name, date: planDate(r.startsAt) })
+      : t("admin.planSaved", { name: u.name, plan: name }), "success");
+    loadAdminOverview();
+    loadAdminUsers();
+  }).catch(function(e) {
+    err.textContent = e.message;
+    err.classList.remove("hidden");
+  }).then(function() { btn.disabled = false; });
+}
+
+function adminPagesWarn() {
+  var u = adminState.editing;
+  var v = Number(document.getElementById("admin-pages-delta").value);
+  var warn = document.getElementById("admin-pages-warn");
+  var over = v < 0 ? -v - u.plan.remaining : 0;
+  warn.classList.toggle("hidden", !(over > 0));
+  if (over > 0) warn.textContent = t("admin.overLimit", { n: planNum(over) });
+}
+
+function openAdminPagesModal(u) {
+  adminState.editing = u;
+  document.getElementById("admin-pages-sub").textContent = t("admin.pagesSub", { name: u.name, n: planNum(u.plan.remaining) });
+  document.getElementById("admin-pages-delta").value = "";
+  document.getElementById("admin-pages-note").value = "";
+  document.getElementById("admin-pages-error").classList.add("hidden");
+  adminPagesWarn();
+  openModal("admin-pages");
+  document.getElementById("admin-pages-delta").focus();
+}
+
+function saveAdminPages() {
+  var u = adminState.editing;
+  var err = document.getElementById("admin-pages-error");
+  var raw = document.getElementById("admin-pages-delta").value.trim();
+  var delta = Number(raw);
+  if (!raw || !Number.isInteger(delta) || delta === 0) {
+    err.textContent = t("admin.deltaInvalid");
+    err.classList.remove("hidden");
+    return;
+  }
+  var btn = document.getElementById("btn-admin-pages-save");
+  btn.disabled = true;
+  store.adminAdjustPages(u.id, delta, document.getElementById("admin-pages-note").value).then(function(r) {
+    closeModal("admin-pages");
+    showToast(t("admin.pagesSaved", { name: u.name, n: planNum(r.plan.remaining) }), "success");
+    loadAdminUsers();
+  }).catch(function(e) {
+    err.textContent = e.message;
+    err.classList.remove("hidden");
+  }).then(function() { btn.disabled = false; });
+}
+
+if (IS_SERVER) {
+  document.getElementById("sidebar-plan-link").addEventListener("click", function() { closeSidebar(); openPlanScreen(); });
+  document.getElementById("sidebar-admin-link").addEventListener("click", function() { closeSidebar(); openAdminScreen(); });
+  ["btn-plan-back", "btn-admin-back"].forEach(function(id) {
+    document.getElementById(id).addEventListener("click", function() { renderHome(); showScreen("home"); });
+  });
+  document.getElementById("admin-search").addEventListener("input", function(e) {
+    clearTimeout(adminState.searchTimer);
+    adminState.searchTimer = setTimeout(function() {
+      adminState.search = e.target.value.trim().toLowerCase();
+      loadAdminUsers();
+    }, 250);
+  });
+  document.getElementById("admin-rows").addEventListener("click", function(e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.adminPlan !== undefined) openAdminPlanModal(adminState.users[b.dataset.adminPlan]);
+    else if (b.dataset.adminPages !== undefined) openAdminPagesModal(adminState.users[b.dataset.adminPages]);
+  });
+  document.getElementById("btn-admin-plan-save").addEventListener("click", saveAdminPlan);
+  document.getElementById("btn-admin-pages-save").addEventListener("click", saveAdminPages);
+  document.getElementById("admin-pages-delta").addEventListener("input", adminPagesWarn);
+}
+
+/* ============================
    SHARE FEATURE
    ============================ */
 
@@ -18060,6 +18537,9 @@ document.addEventListener("keydown", function(e) {
   else if (screen === "achievements") {
     if (e.key === "Escape") document.getElementById("btn-achievements-back").click();
   }
+  else if (screen === "plan" || screen === "admin") {
+    if (e.key === "Escape") document.getElementById("btn-" + screen + "-back").click();
+  }
 
 });
 
@@ -18128,6 +18608,8 @@ var SCREEN_BACK_BTN = {
   upstream:  "btn-upstream-back",
   vocabulary: "btn-vocabulary-back",
   achievements: "btn-achievements-back",
+  plan:      "btn-plan-back",
+  admin:     "btn-admin-back",
   "flashcard-summary": "btn-summary-back",
   cram:      "btn-cram-back"
 };

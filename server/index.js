@@ -11,6 +11,7 @@ const { requestLog }             = require("./middleware/requestLog");
 const { startEventLoopWatchdog } = require("./middleware/watchdog");
 const { rateLimit }              = require("./middleware/rateLimit");
 const env                        = require("./config/env");
+const { isAdmin }                = require("./middleware/admin");
 
 const app    = express();
 // Railway terminates connections at its edge proxy — without this, req.ip is the
@@ -68,6 +69,7 @@ app.get("/health", healthLimiter, (req, res) => {
 
 // Mounted before the session middleware: token-authenticated, so it must never create a session.
 app.use("/api/integrations/knowledge", require("./routes/integrations"));
+app.use("/api/pages", require("./routes/pages"));
 const BACKUPS = path.join(DATA, "backups");
 app.use("/api/backup", require("./routes/backup")(BACKUPS));
 
@@ -104,6 +106,8 @@ app.use("/api/translation", require("./routes/translation"));
 app.use("/api/vocabulary", require("./routes/vocabulary"));
 app.use("/api/achievements", require("./routes/achievements"));
 app.use("/api/crams",   require("./routes/crams"));
+app.use("/api/plan",    require("./routes/plan"));
+app.use("/api/admin",   require("./routes/admin"));
 app.use("/uploads",     require("express").static(UPLOADS, { index: false }));
 
 // ── Helper: inject APP_CONFIG and serve index.html ───────
@@ -125,7 +129,8 @@ function baseConfig(req) {
     aiSuggestEnabled: !!env.ANTHROPIC_API_KEY,
     translationEnabled: !!env.ANTHROPIC_API_KEY,
     user: req.session.userId
-      ? { id: req.session.userId, name: req.session.userName, email: req.session.userEmail }
+      ? { id: req.session.userId, name: req.session.userName, email: req.session.userEmail,
+          isAdmin: isAdmin(req.session.userId) }
       : null
   };
 }
