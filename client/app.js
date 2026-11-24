@@ -651,6 +651,8 @@ Object.assign(TRANSLATIONS.en, {
   "auth.googleLinked": "Google account linked. You can now sign in with Google.",
   "auth.googleFailed": "Google sign-in failed. Please try again.",
   "auth.googleAlreadyLinked": "This Google account is already linked to another user.",
+  "auth.googleEmailHasPassword": "An account with this email already signs in with a password. Sign in with it (or reset it with Forgot password), then link Google in Preferences.",
+  "auth.googleUnverified": "Google has not verified this account's email, so it can't be used to sign in.",
   "auth.genericError": "Authentication error.",
 
   "common.back": "Back",
@@ -1948,6 +1950,8 @@ Object.assign(TRANSLATIONS.vi, {
   "auth.googleLinked": "Đã liên kết tài khoản Google. Giờ bạn có thể đăng nhập bằng Google.",
   "auth.googleFailed": "Đăng nhập Google thất bại. Vui lòng thử lại.",
   "auth.googleAlreadyLinked": "Tài khoản Google này đã được liên kết với người dùng khác.",
+  "auth.googleEmailHasPassword": "Email này đã có tài khoản đăng nhập bằng mật khẩu. Hãy đăng nhập bằng mật khẩu (hoặc đặt lại qua Quên mật khẩu), rồi liên kết Google trong Tùy chọn.",
+  "auth.googleUnverified": "Google chưa xác minh email của tài khoản này, nên không thể dùng để đăng nhập.",
   "auth.genericError": "Lỗi xác thực.",
 
   "common.back": "Quay lại",
@@ -16744,6 +16748,8 @@ document.getElementById("btn-send-reset").addEventListener("click", function() {
       google_cancelled: t("auth.googleCancelled"),
       google_failed: t("auth.googleFailed"),
       google_already_linked: t("auth.googleAlreadyLinked"),
+      google_email_has_password: t("auth.googleEmailHasPassword"),
+      google_unverified: t("auth.googleUnverified"),
       account_suspended: t("error.accountSuspended")
     };
     var msg = msgs[params.get("auth_error")] || t("auth.genericError");

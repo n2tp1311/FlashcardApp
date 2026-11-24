@@ -33,6 +33,7 @@ if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
 
 // ── Middleware ────────────────────────────────────────────
 app.use(requestLog);
+app.use(require("./middleware/securityHeaders").securityHeaders(process.env.NODE_ENV === "production"));
 // gzip the response body — biggest win on GET /api/export (a full account dump can
 // run several MB as JSON) and the larger class/lesson/card list responses. Runs via
 // zlib's async binding (libuv thread pool), not the main thread, so it doesn't add

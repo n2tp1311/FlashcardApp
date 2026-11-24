@@ -9,6 +9,7 @@ const { requireAuth } = require("../middleware/auth");
 const { isAdmin } = require("../middleware/admin");
 const { rateLimit } = require("../middleware/rateLimit");
 const { appUrl } = require("../config/env");
+const { endSessions } = require("../lib/accounts");
 const router   = express.Router();
 
 const loginLimiter = rateLimit({
@@ -39,18 +40,28 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+// Express 4 does not catch a rejected promise, so a failed session write would leave the
+// request hanging; this passes it to the error handler instead.
+const safe = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 const SUSPENDED = "This account is suspended. Contact the admin if you think this is a mistake.";
 
-function setSession(req, user) {
-  req.session.userId    = user.id;
-  req.session.userName  = user.name;
-  req.session.userEmail = user.email;
+// A new session id at every sign-in: an id planted in the browser before it (by a script on
+// a sibling subdomain, or a shared computer) would otherwise become signed in with it.
+function signIn(req, user) {
+  return new Promise((ok, fail) => req.session.regenerate((err) => {
+    if (err) return fail(err);
+    req.session.userId    = user.id;
+    req.session.userName  = user.name;
+    req.session.userEmail = user.email;
+    ok();
+  }));
 }
 
 // POST /api/auth/register
-router.post("/register", registerLimiter, (req, res) => {
+router.post("/register", registerLimiter, safe(async (req, res) => {
   const { name, email, password } = req.body;
-  if (!name || !email || !password)
+  if (typeof name !== "string" || typeof email !== "string" || typeof password !== "string" || !name || !email || !password)
     return res.status(400).json({ error: "name, email and password are required", code: "missingFields" });
   if (password.length < 6)
     return res.status(400).json({ error: "Password must be at least 6 characters", code: "passwordTooShort" });
@@ -64,14 +75,14 @@ router.post("/register", registerLimiter, (req, res) => {
     .run(id, email.toLowerCase(), name.trim(), hash);
 
   const user = { id, name: name.trim(), email: email.toLowerCase() };
-  setSession(req, user);
+  await signIn(req, user);
   res.json({ ...user, isAdmin: isAdmin(user.id) });
-});
+}));
 
 // POST /api/auth/login
-router.post("/login", loginLimiter, (req, res) => {
+router.post("/login", loginLimiter, safe(async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password)
+  if (typeof email !== "string" || typeof password !== "string" || !email || !password)
     return res.status(400).json({ error: "email and password are required", code: "missingFields" });
 
   const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
@@ -82,9 +93,9 @@ router.post("/login", loginLimiter, (req, res) => {
   // Said only after the right password, so guessing passwords does not reveal a suspension.
   if (user.suspended_at) return res.status(403).json({ error: SUSPENDED, code: "accountSuspended" });
 
-  setSession(req, user);
+  await signIn(req, user);
   res.json({ id: user.id, name: user.name, email: user.email, isAdmin: isAdmin(user.id) });
-});
+}));
 
 // POST /api/auth/logout
 router.post("/logout", (req, res) => {
@@ -133,9 +144,9 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
 });
 
 // POST /api/auth/reset-password  { token, password }
-router.post("/reset-password", resetPasswordLimiter, (req, res) => {
+router.post("/reset-password", resetPasswordLimiter, safe(async (req, res) => {
   const { token, password } = req.body;
-  if (!token || !password) return res.status(400).json({ error: "token and password required" });
+  if (typeof token !== "string" || typeof password !== "string" || !token || !password) return res.status(400).json({ error: "token and password required" });
   if (password.length < 6)  return res.status(400).json({ error: "Password must be at least 6 characters", code: "passwordTooShort" });
 
   const now = Math.floor(Date.now() / 1000);
@@ -149,12 +160,15 @@ router.post("/reset-password", resetPasswordLimiter, (req, res) => {
 
   const hash = bcrypt.hashSync(password, 10);
   db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, row.user_id);
-  db.prepare("UPDATE password_reset_tokens SET used = 1 WHERE token = ?").run(token);
+  // A reset is how someone takes back an account whose password another person knows, so
+  // every other sign-in and every other reset link ends with it.
+  db.prepare("DELETE FROM password_reset_tokens WHERE user_id = ?").run(row.user_id);
+  endSessions(db, row.user_id);
 
   const user = db.prepare("SELECT * FROM users WHERE id = ?").get(row.user_id);
-  setSession(req, user);
+  await signIn(req, user);
   res.json({ id: user.id, name: user.name, email: user.email, isAdmin: isAdmin(user.id) });
-});
+}));
 
 // ── Google OAuth ──────────────────────────────────────────
 // GET /api/auth/google
@@ -226,6 +240,7 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
     const profile = await profileRes.json();
     const { id: googleId, email, name, picture } = profile;
     if (!googleId || !email) throw Object.assign(new Error("No id or email in the Google profile"), { reason: "no_profile" });
+    if (profile.verified_email !== true) return res.redirect("/?auth_error=google_unverified");
 
     // Link mode: attach Google account to currently logged-in user
     const linkUserId = req.session.googleLinkUserId;
@@ -244,10 +259,15 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
       // Try to match by email (link to existing account)
       user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
       if (user && user.suspended_at) return res.redirect("/?auth_error=account_suspended");
+      // Not joined to a password account: a password sign-up never proves its email, so
+      // someone could register yours first, wait for your Google sign-in to join it, and
+      // still sign in with their password. The owner signs in with the password (or resets
+      // it by email, which ends the other person's sessions) and links Google in Preferences.
+      if (user && user.password_hash) return res.redirect("/?auth_error=google_email_has_password");
       if (user) {
         db.prepare("UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?").run(googleId, picture, user.id);
         // Said on arrival, so a first Google sign-in to an email account is not a silent change.
-        setSession(req, user);
+        await signIn(req, user);
         return res.redirect("/?google_linked=1");
       } else {
         // Create new account
@@ -259,7 +279,7 @@ router.get("/google/callback", googleCallbackLimiter, async (req, res) => {
     }
 
     if (user.suspended_at) return res.redirect("/?auth_error=account_suspended");
-    setSession(req, user);
+    await signIn(req, user);
     res.redirect("/");
   } catch (e) {
     console.error("[google-oauth]", e.message);

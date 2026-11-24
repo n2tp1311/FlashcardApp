@@ -25,8 +25,11 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+// A share link is the only key to a class, so it comes from the system's random source:
+// Math.random's state can be worked out from enough of its outputs, such as the ids and
+// links an account is given, and the next links predicted. Links made before stay valid.
 function genToken() {
-  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  return require("crypto").randomBytes(16).toString("hex");
 }
 
 function parseClassTags(row) {

@@ -1,7 +1,9 @@
 "use strict";
-// Three holes found by the 2026-11-24 audit, each tried as an attacker would: a token in the
-// URL that closes the config <script> tag, a page uploaded as an "image", and a Google
-// sign-in callback driven with someone else's code.
+// Holes found by the 2026-11-24 audit, each tried as an attacker would: a token in the URL
+// that closes the config <script> tag, a page uploaded as an "image", a Google sign-in
+// callback driven with someone else's code, a Google sign-in joining a password account
+// whose email was never proved, a framed page, a guessable share link, and a session id
+// planted before sign-in.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const path = require("path");
@@ -26,7 +28,8 @@ test("config JSON in a <script> cannot close the tag, and reads back unchanged",
 const db = new Database();
 require(path.join(root, "server/lib/statements")).shimPrepare(db);
 const schema = fs.readFileSync(path.join(root, "server/db.js"), "utf8");
-db.exec(schema.match(/CREATE TABLE IF NOT EXISTS users \([\s\S]*?\n  \)/)[0]);
+for (const t of ["users", "password_reset_tokens", "sessions"])
+  db.exec(schema.match(new RegExp("CREATE TABLE IF NOT EXISTS " + t + " \\([\\s\\S]*?\\n  \\)"))[0]);
 for (const m of schema.match(/ALTER TABLE users ADD COLUMN \w+ \w+/g) || []) { try { db.exec(m); } catch (_) {} }
 const file = require.resolve(path.join(root, "server/db.js"));
 require.cache[file] = { id: file, filename: file, loaded: true, exports: db };
@@ -34,10 +37,17 @@ require.cache[file] = { id: file, filename: file, loaded: true, exports: db };
 const upload = require(path.join(root, "server/routes/upload"));
 const sessions = new Map();
 const app = express();
+app.use(express.json());
+// regenerate swaps in a fresh object under the same x-sid, as a new cookie would.
 app.use((req, _res, next) => {
   const sid = req.get("x-sid") || "anon";
   if (!sessions.has(sid)) sessions.set(sid, {});
   req.session = sessions.get(sid);
+  Object.defineProperty(req.session, "regenerate", { configurable: true, value(cb) {
+    req.session = {};
+    sessions.set(sid, req.session);
+    cb();
+  } });
   next();
 });
 app.use("/api/auth", require(path.join(root, "server/routes/auth")));
@@ -56,7 +66,8 @@ global.fetch = async (url, opts) => {
   }
   if (String(url).startsWith("https://www.googleapis.com/oauth2/v2/userinfo")) {
     const who = opts.headers.Authorization.replace("Bearer at-", "");
-    return { status: 200, json: async () => ({ id: "g-" + who, email: who + "@gmail.com", name: who, picture: null }) };
+    return { status: 200, json: async () => ({ id: "g-" + who, email: who + "@gmail.com", name: who, picture: null,
+      verified_email: !who.startsWith("unverified") }) };
   }
   return realFetch(url, opts);
 };
@@ -140,4 +151,78 @@ test("uploads serve images only, never as a page", async () => {
   assert.equal(r.headers.get("content-type"), "image/png");
   assert.equal(r.headers.get("x-content-type-options"), "nosniff");
   assert.match(r.headers.get("content-security-policy"), /sandbox/);
+});
+
+const post = async (url, body, sid) => {
+  const r = await realFetch(base + url, { method: "POST", body: JSON.stringify(body),
+    headers: { "content-type": "application/json", "x-sid": sid || "anon" }, redirect: "manual" });
+  return { status: r.status, body: await r.json().catch(() => null) };
+};
+const googleSignIn = async (sid, code) => {
+  const s = new URL((await get("/api/auth/google", sid)).headers.get("location")).searchParams.get("state");
+  return (await get("/api/auth/google/callback?code=" + code + "&state=" + s, sid)).headers.get("location");
+};
+
+test("Google sign-in does not join a password account, nor use an unproved email", async () => {
+  // Someone registered sam@gmail.com with a password before Sam ever signed in.
+  db.prepare("INSERT INTO users (id, email, name, password_hash) VALUES ('squat', 'sam@gmail.com', 'S', 'their-hash')").run();
+  assert.equal(await googleSignIn("sam", "sam"), "/?auth_error=google_email_has_password");
+  assert.equal(db.prepare("SELECT google_id FROM users WHERE id = 'squat'").get().google_id, null);
+  assert.equal(sessions.get("sam").userId, undefined, "Sam is not signed in to it");
+
+  // An account with no password (made by Google, link since removed) still joins.
+  db.prepare("INSERT INTO users (id, email, name) VALUES ('nopass', 'kim@gmail.com', 'K')").run();
+  assert.equal(await googleSignIn("kim", "kim"), "/?google_linked=1");
+  assert.equal(sessions.get("kim").userId, "nopass");
+
+  assert.equal(await googleSignIn("unv", "unverified1"), "/?auth_error=google_unverified");
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM users WHERE email = 'unverified1@gmail.com'").get().n, 0);
+
+  for (const k of ["auth.googleEmailHasPassword", "auth.googleUnverified"])
+    assert.equal(fs.readFileSync(path.join(root, "client/app.js"), "utf8").split('"' + k + '":').length - 1, 2, k);
+});
+
+test("every sign-in starts a new session; a password reset ends all the others", async () => {
+  const bcrypt = require("bcryptjs");
+  db.prepare("INSERT INTO users (id, email, name, password_hash) VALUES ('lan', 'lan@example.com', 'Lan', ?)").run(bcrypt.hashSync("old-pass", 4));
+  sessions.set("planted", { planted: true });
+  assert.equal((await post("/api/auth/login", { email: "lan@example.com", password: "old-pass" }, "planted")).status, 200);
+  assert.deepEqual([sessions.get("planted").planted, sessions.get("planted").userId], [undefined, "lan"]);
+
+  sessions.set("reg", { planted: true });
+  assert.equal((await post("/api/auth/register", { name: "Nam", email: "nam@example.com", password: "secret12" }, "reg")).status, 200);
+  assert.equal(sessions.get("reg").planted, undefined);
+  assert.equal((await post("/api/auth/register", { name: "X", email: ["a@b.c"], password: "secret12" })).status, 400, "an email that is not text is refused, not a 500");
+
+  // The person who knew the old password is signed in elsewhere, and asked for a reset link too.
+  const row = (sid) => db.prepare("INSERT INTO sessions (sid, sess, expired) VALUES (?, ?, 2e9)").run(sid, JSON.stringify({ cookie: {}, userId: "lan" }));
+  row("other-device"); row("intruder");
+  db.prepare("INSERT INTO sessions (sid, sess, expired) VALUES ('someone-else', ?, 2e9)").run(JSON.stringify({ cookie: {}, userId: "nam" }));
+  db.prepare("INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES ('t-mine', 'lan', 2e9), ('t-theirs', 'lan', 2e9)").run();
+  sessions.set("resetter", { planted: true });
+  const r = await post("/api/auth/reset-password", { token: "t-mine", password: "new-pass" }, "resetter");
+  assert.equal(r.status, 200);
+  assert.deepEqual(db.prepare("SELECT sid FROM sessions").all().map((x) => x.sid), ["someone-else"]);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM password_reset_tokens WHERE user_id = 'lan'").get().n, 0);
+  assert.deepEqual([sessions.get("resetter").planted, sessions.get("resetter").userId], [undefined, "lan"]);
+});
+
+test("pages cannot be framed and keep tokens out of referrers; share links are unguessable", async () => {
+  const { securityHeaders } = require(path.join(root, "server/middleware/securityHeaders"));
+  const h = {};
+  securityHeaders(true)({}, { setHeader: (k, v) => { h[k.toLowerCase()] = v; } }, () => {});
+  assert.equal(h["x-frame-options"], "DENY");
+  assert.match(h["content-security-policy"], /frame-ancestors 'none'/);
+  assert.equal(h["referrer-policy"], "strict-origin-when-cross-origin");
+  assert.match(h["strict-transport-security"], /max-age=\d+/);
+  const local = {};
+  securityHeaders(false)({}, { setHeader: (k, v) => { local[k.toLowerCase()] = v; } }, () => {});
+  assert.equal(local["strict-transport-security"], undefined, "no HSTS on localhost");
+  const index = fs.readFileSync(path.join(root, "server/index.js"), "utf8");
+  assert.ok(index.indexOf("securityHeaders(") < index.indexOf('app.use("/api/integrations'), "set before every route");
+
+  const share = fs.readFileSync(path.join(root, "server/routes/share.js"), "utf8");
+  const gen = share.match(/function genToken\(\) \{[\s\S]*?\n\}/)[0];
+  assert.match(gen, /randomBytes\(16\)/);
+  assert.doesNotMatch(gen, /Math\.random/);
 });
