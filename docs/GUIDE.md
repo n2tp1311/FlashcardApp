@@ -148,6 +148,7 @@ Other tables, by owner:
 | `class_layouts` | a KnowledgeApp class's two lesson layouts, by chapter and by concept, as KnowledgeApp sent them, and which one the class shows (`active`) (§13) |
 | `study_events`, `user_achievements` | the few facts achievements need that nothing else stores (§11) |
 | `push_subscriptions`, `reminder_log`, `app_secrets` | reminders (§17) |
+| `user_plans`, `plan_changes`, `page_ledger` | plans and pages: each user's plan, every change to it, every use of pages (§18b) |
 | `class_share_links`, `class_invites` | sharing (§18) |
 | `quiz_sessions` | finished quiz sessions; read only for the dashboard summary's `quizSessions`, which nothing shows since the hero card's Sessions count went (2026-11-23) |
 
@@ -1735,6 +1736,12 @@ fail by stopping quietly. Uploaded images are not included, and restoring is by 
 - **Server errors carry a `code`** the client translates (`error.<code>`), keeping the
   English `error` text for API clients. The server does not know the user's language on
   unauthenticated routes, and KnowledgeApp reads the text.
+- **Admins are user ids in `ADMIN_USER_IDS`**, not emails and not a database column
+  (§18b). A password sign-up does not prove it owns its address, so anyone could register
+  an admin's email first; and no bug that writes to the database can make an admin.
+  Everyone else gets a 404 from `/api/admin`, so the routes do not show they exist.
+- **The book worker has its own token**, `PAGES_WORKER_TOKEN`, so no user's API token can
+  spend another user's pages. Without the variable `/api/pages` is a 404.
 - **Parameterized SQL only** (`?` placeholders), a rule in `CLAUDE.md`. `IN (…)` lists go
   through `lib/batch.js` in chunks, since SQLite caps bound variables per statement.
 
@@ -2065,6 +2072,70 @@ iPhone, push works only for a Home Screen web app, and the setting says so.
 - **Bulk paste** reads `term | definition` lines (a tab when a line has no `|`, for
   spreadsheet pastes; `|` inside `$…$` keeps its meaning) and lists every skipped line with
   a reason.
+
+---
+
+## 18b. Plans, pages and the admin page
+
+A plan is a monthly allowance of **pages**: pages of a book turned into cards. Nothing
+else is limited; studying, adding cards and syncing from KnowledgeApp cost nothing. The
+book-to-cards worker is not built yet, so for now pages move only when an admin moves them.
+There is no payment either: an admin sets each plan by hand. The prices are the ones
+fixed in KnowledgeApp's `docs/launch-roadmap.md`.
+
+| Plan | Pages | Price |
+|---|---|---|
+| Free | 150, once | $0 |
+| Tier 1 | 500 a month | $7 |
+| Tier 2 | 1,500 a month | $14 |
+| Tier 3 | 3,000 a month | $24 |
+
+The rules live in `server/lib/plans.js`, which takes the database as an argument so
+`tests/plans.test.js` runs them on an in-memory one.
+
+- **A month starts on the day the plan started**, not on the 1st. A plan given on the 17th
+  resets on the 17th, and the 29th–31st fall back to a short month's last day. App stores
+  and RevenueCat count subscriptions this way, so real billing can take over without moving
+  anyone's reset day. The cost: the admin page cannot say "this month" for everyone at once.
+- **Free is 150 pages once and never resets.** It counts every page ever used on Free, so
+  a paid plan that expires back to Free does not bring another 150.
+- **An upgrade starts a new month at once**, and pages used before it do not count against
+  the new allowance. **A downgrade waits** for the current month to end (`pending_plan`,
+  `pending_at`). Choosing the current plan again only changes its end date and cancels a
+  waiting downgrade.
+- **An end date** (`expires_at`, 00:00 UTC on the chosen day) returns the user to Free.
+  Expiries and waiting downgrades are applied the first time the plan is read after they
+  come due, written back, and logged in `plan_changes` with no admin (`note` "expired" or
+  "scheduled"). Nothing runs on a timer.
+- **Every use of pages is a row** in `page_ledger`, and the pages left are always summed
+  from it. A `job` row is a book: the worker **reserves** its pages when it accepts the book
+  (`POST /api/pages/reserve`, `402` with `needed`, `remaining` and `resetsAt` when it does
+  not fit), then **commits** (`/commit`) when the deck is made or **refunds** (`/refund`)
+  when it fails. All three are keyed on `jobId`, so a retried call does not charge twice.
+  A book longer than the pages left is refused whole; a deck cut off halfway would be worse
+  than none.
+- **A reservation nobody settles stops counting after 24 hours** (`RESERVE_TTL`), so a
+  worker that crashed mid-book does not eat the allowance. Committing it later is refused
+  (`reservation_expired`): the user was already shown those pages as free again.
+- An `adjust` row is an admin's change by hand, for the hand-run pilot. It may take more
+  than is left; the user then sees 0.
+
+**My plan** (sidebar, server mode) shows the pages left with the reset day or "once" for
+Free, the four plans with the current one outlined, and the ledger as "Pages used". A
+reservation older than a day shows as returned, matching the count.
+
+**Admin** (sidebar, only for `ADMIN_USER_IDS`, §15) shows:
+- counts of registered users and of users **active** today (since 00:00 UTC), in 7 and in
+  30 days, each with its share of registered. Active means at least one answered card:
+  signing in alone does not count. An index on `attempts(created_at)` keeps these
+  counts from scanning the table per window;
+- a 12-week chart of registered users and users active each week;
+- users by plan;
+- the newest 200 users, searchable by email, with join date, last answer, answers in 30
+  days, classes and cards (archived classes and their cards left out), plan, end date or
+  waiting downgrade, and pages used. **Change plan** takes a plan, an optional end date and
+  a note; **Pages ±** takes a whole number (negative takes pages) and a reason, and warns
+  when it takes more than is left.
 
 ---
 
