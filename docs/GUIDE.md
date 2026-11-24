@@ -1722,7 +1722,21 @@ fail by stopping quietly. Uploaded images are not included, and restoring is by 
 
 - **Sessions** are express-session cookies (30 days, `httpOnly`, `sameSite=lax`) stored in
   SQLite (`sessionStore.js`), because the original MemoryStore lost every login on each
-  container restart.
+  container restart. **Every sign-in gets a new session id** (`signIn()` in
+  `routes/auth.js` regenerates it): an id planted in a browser before sign-in would
+  otherwise become a signed-in session its planter holds. **A password reset ends every
+  other session and reset link** of the account, since a reset is how someone takes back
+  an account whose password another person knows.
+- **Every response carries** `X-Frame-Options: DENY` and `frame-ancestors 'none'`, so no
+  other site can show the app in a hidden frame and steer clicks onto it (an admin's
+  Delete); `nosniff`; `Referrer-Policy: strict-origin-when-cross-origin`, which keeps a
+  reset token in the address out of requests to other sites; and in production HSTS
+  (`middleware/securityHeaders.js`). There is no `script-src` yet: the config is an inline
+  script and the client sets inline handlers and styles in many places, so a full policy
+  is a change of its own.
+- **Share-link tokens** are 128 random bits from `crypto.randomBytes`. They came from
+  `Math.random`, whose state can be worked out from enough of its outputs and the next
+  links predicted. Links made before stay valid.
 - **Passwords** are bcrypt (cost 10). **Google sign-in** is a direct OAuth code exchange
   with `fetch`, not passport; its callback is rate-limited because each hit makes two
   outbound calls. `/api/auth/google` keeps a random `state` in the session and sends it to
@@ -1730,7 +1744,14 @@ fail by stopping quietly. Uploaded images are not included, and restoring is by 
   page could send a signed-in user's browser through `?link=1` and then to the callback
   with a code from the attacker's own Google account, linking that account to theirs: the
   attacker could then sign in as them. A link also needs the session to be signed in as
-  the account that asked for it when the callback arrives.
+  the account that asked for it when the callback arrives. **A Google sign-in never joins
+  a password account** with the same email (`auth_error=google_email_has_password`): a
+  password sign-up never proves its email, so someone could register yours first, wait
+  for your first Google sign-in to join it, and still sign in with their password. The
+  owner signs in with the password, or resets it by email (which ends the other person's
+  sessions), and links Google in Preferences. The cost: a first Google sign-in to a
+  password account, which used to just work, now takes that step. An email Google has not
+  verified (`verified_email`) is refused (`google_unverified`).
 - **The page's config cannot run code.** `serveApp` writes `window.APP_CONFIG` into a
   `<script>` tag, and it carries the share token and reset token from the URL and the
   user's name. `JSON.stringify` leaves `<` as it is, so
@@ -1765,13 +1786,7 @@ fail by stopping quietly. Uploaded images are not included, and restoring is by 
 - **Parameterized SQL only** (`?` placeholders), a rule in `CLAUDE.md`. `IN (…)` lists go
   through `lib/batch.js` in chunks, since SQLite caps bound variables per statement.
 - **Still open from the 2026-11-24 audit**, in order of risk:
-  - A Google sign-in with an email that matches a password account joins that account and
-    keeps its password, though the password sign-up never proved the email.
-  - No security headers on the pages (no CSP, no `frame-ancestors`), so the app can be
-    framed.
-  - Share-link tokens come from `Math.random`.
-  - The session is not renewed at sign-in, and a password reset does not end other
-    sessions.
+  - No `script-src` in the page's CSP (above).
   - The cookie has no `secure` flag, and a missing `SESSION_SECRET` falls back to a
     default instead of stopping the server.
   - An invite reveals whether an email is registered and has no rate limit.
