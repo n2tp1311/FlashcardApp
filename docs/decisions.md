@@ -1,3 +1,13 @@
+## 2026-11-24 — Railway settings move from railway.toml to .railway/railway.ts
+
+Railway stops reading `railway.toml` on 2026-12-01, and the file was the only place the health check and restart policy lived: the service's own settings were empty. The file was replaced by `.railway/railway.ts`, applied to the service, then deleted.
+
+**Start from `railway config pull`, not `railway config migrate`.** The migrate output left out the 1.4 GB volume at `/app/data/`, and an apply that omits a volume deletes it. Pull included it. Both said the builder was Railpack, though every deploy built the Dockerfile, so the file names the Dockerfile.
+
+**The restart policy is not written in the file.** On failure with 10 retries is Railway's default, which Railway stores as null; writing it made every plan show a change that apply never cleared.
+
+**Variables stay unmanaged.** The file never holds `SESSION_SECRET` or the other secrets, which stay set on Railway.
+
 ## 2026-11-24 — Accounts are suspended first, deleted second
 
 The user asked for a way to revoke an account from the admin page. Three choices were agreed in turn.

@@ -59,7 +59,13 @@ Two ideas run through every part:
 **One process, one database file.** The server is a single Express process on
 Railway with a SQLite file on a Railway volume. SQLite is loaded through
 `node-sqlite3-wasm`, a WebAssembly build that needs no native compilation — chosen
-at the start so the Docker image (`node:20-alpine`) builds anywhere. Its cost shapes
+at the start so the Docker image (`node:20-alpine`) builds anywhere. The Railway
+service itself (the Dockerfile builder, the `/health` check, the volume at
+`/app/data/`) is described in `.railway/railway.ts` and changed with
+`railway config plan` then `railway config apply`; pushing to `main` deploys the code
+but does not apply that file. Its variables are left to Railway, so secrets never sit
+in it. A config that omits the volume would delete it on apply, so read every plan
+for a destroy line first. Its cost shapes
 much of the server: **every query is synchronous and runs on the event loop**. While
 one request is inside SQLite, no other request is answered. Most of §14 is about
 living with that.
