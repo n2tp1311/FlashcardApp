@@ -67,8 +67,11 @@ test("sounds off, no Web Audio, or a failing context all stay silent without thr
 });
 
 test("only checked answers play a sound; self-grades stay silent", function() {
-  const quiz = app.slice(app.indexOf("function answerQuiz("), app.indexOf("function answerQuiz(") + 1200);
+  const start = app.indexOf("function answerQuiz(");
+  const quiz = app.slice(start, app.indexOf("\n}\n", start));
   assert.match(quiz, /playSound\(cheer\.tone === "combo" \? "combo" : isCorrect \? "correct" : "wrong", state\.quizStreak - 1\)/);
+  // "I don't know" is not a mistake, so it does not buzz.
+  assert.match(quiz, /if \(!dontKnow\) \{\n    haptic\(isCorrect \? "success" : "error"\);\n    playSound\(/);
   const retype = app.slice(app.indexOf("function submitForcedRetype("), app.indexOf("function confirmLatexRetype("));
   assert.match(retype, /playSound\("correct"\)/);
   assert.match(retype, /playSound\("wrong"\)/);

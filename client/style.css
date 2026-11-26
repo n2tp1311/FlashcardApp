@@ -3077,6 +3077,29 @@ code {
   padding: 8px 12px;
   margin-top: 12px;
 }
+/* Below the options, dashed and quieter so it does not read as a fifth answer. */
+.quiz-idk {
+  margin-top: 12px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text2);
+  font: inherit;
+  font-size: 0.9375rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+.quiz-idk:hover { border-color: var(--text2); color: var(--text); }
+.quiz-idk .opt-num {
+  font-size: 0.75rem; font-weight: 700; background: var(--surface2); color: var(--text2);
+  border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
 .quiz-picked-note {
   font-size: 0.875rem;
   color: var(--text);

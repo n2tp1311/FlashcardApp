@@ -1412,6 +1412,9 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.voiceBlocked": "Microphone blocked.",
   "quiz.voiceBlockedSub": "Allow it for this site in the browser's settings, or answer by tapping.",
   "quiz.voiceUnavailable": "Voice answers aren't available right now · answer by tapping",
+  "quiz.idk": "I don't know",
+  "quiz.idkTitle": "Here's the answer",
+  "quiz.idkSub": "This card comes back soon for another look.",
   "quiz.pickedOf": "You picked the definition of {term}.",
   "quiz.pickedMarked": "That card is back in today's reviews too.",
   "quiz.cappedHint": "Correct — but this card needs a Flashcard-mode recall to move to a longer review interval.",
@@ -2692,6 +2695,9 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.voiceBlocked": "Micro bị chặn.",
   "quiz.voiceBlockedSub": "Hãy cho phép trang này dùng micro trong cài đặt trình duyệt, hoặc chạm để trả lời.",
   "quiz.voiceUnavailable": "Hiện không dùng được giọng nói · hãy chạm để trả lời",
+  "quiz.idk": "Không biết",
+  "quiz.idkTitle": "Đây là đáp án",
+  "quiz.idkSub": "Thẻ này sẽ quay lại sớm để ôn lại.",
   "quiz.pickedOf": "Bạn chọn định nghĩa của {term}.",
   "quiz.pickedMarked": "Thẻ đó cũng được đưa vào ôn lại hôm nay.",
   "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
@@ -12441,6 +12447,7 @@ function renderQuizCard() {
   var prevNotDue = document.getElementById("quiz-notdue-hint");
   if (prevNotDue) prevNotDue.remove();
   showQuizPickedNote(null);
+  removeQuizIdkButton();
   hideVocabularySelectionAction(true);
 
   if (i >= total) { showQuizResults(); return; }
@@ -12508,6 +12515,7 @@ function renderQuizCard() {
     }
     optsEl.appendChild(btn);
   });
+  if (!priorResult) showQuizIdkButton();
 
   if (priorResult && (card.format === "mcq" || card.format === "true-false") && card.data.explanation) {
     var expEl  = document.createElement("details");
@@ -12566,9 +12574,31 @@ function showQuizHint(id, textKey) {
   document.getElementById("quiz-nav").before(hintEl);
 }
 
+// With four options a guess is right one time in four and counts as remembered. "I don't
+// know" (key 0) lets the learner say so: Again on this card, like a wrong answer, but no
+// option was chosen, so no other card is marked forgotten (§5, step 8) and none turns red.
+var QUIZ_IDK = -1;
+function showQuizIdkButton() {
+  removeQuizIdkButton();
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.id = "quiz-idk-btn";
+  btn.className = "quiz-idk";
+  btn.innerHTML = '<span class="opt-num">0</span><span></span>';
+  btn.lastChild.textContent = t("quiz.idk");
+  btn.addEventListener("click", function() { answerQuiz(QUIZ_IDK); });
+  document.getElementById("quiz-options").after(btn);
+}
+function removeQuizIdkButton() {
+  var old = document.getElementById("quiz-idk-btn");
+  if (old) old.remove();
+}
+
 function answerQuiz(selectedIdx) {
   if (state.quizAnswered) return;
   state.quizAnswered = true;
+  removeQuizIdkButton();
+  var dontKnow = selectedIdx === QUIZ_IDK;
 
   var card    = state.quizCards[state.quizIndex];
   var opts    = state.quizOptions;
@@ -12577,22 +12607,26 @@ function answerQuiz(selectedIdx) {
     card.format === "image-def" ? card.data.def :
     card.format === "cloze" || card.format === "gapfill" ? clozeAnswer(quizClozeText(card)) :
     card.data.def;
-  var selectedVal = opts[selectedIdx];
-  var isCorrect   = selectedVal === correct;
+  var selectedVal = dontKnow ? null : opts[selectedIdx];
+  var isCorrect   = !dontKnow && selectedVal === correct;
 
   state.quizStreak = isCorrect ? (state.quizStreak || 0) + 1 : 0;
   state.quizBestStreak = Math.max(state.quizBestStreak || 0, state.quizStreak);
-  var cheer = quizEncouragement(isCorrect, state.quizStreak, state.quizResults.length + 1,
-    state.quizCards.length, state.quizLastPraise);
+  var cheer = dontKnow ? { tone: "wrong", title: t("quiz.idkTitle"), sub: t("quiz.idkSub") } :
+    quizEncouragement(isCorrect, state.quizStreak, state.quizResults.length + 1,
+      state.quizCards.length, state.quizLastPraise);
   if (cheer.praise) state.quizLastPraise = cheer.praise;
-  haptic(isCorrect ? "success" : "error");
-  playSound(cheer.tone === "combo" ? "combo" : isCorrect ? "correct" : "wrong", state.quizStreak - 1);
+  // Saying so is not a mistake: no error buzz or sound for it.
+  if (!dontKnow) {
+    haptic(isCorrect ? "success" : "error");
+    playSound(cheer.tone === "combo" ? "combo" : isCorrect ? "correct" : "wrong", state.quizStreak - 1);
+  }
   quizMusicAnswer(isCorrect);
   if (isCorrect) state.quizScore++;
 
   // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
   // selectedIdx — not just the value — is needed to mark "wrong" correctly when two options share text)
-  var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, capped: false, notDue: false };
+  var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, capped: false, notDue: false, dontKnow: dontKnow };
   state.quizResults.push(resultEntry);
 
   if (card.upstream_change === "updated") {
@@ -12600,7 +12634,7 @@ function answerQuiz(selectedIdx) {
     setUpstreamCount((state.upstreamCount || 0) - 1);
   }
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
-  var pickedId = !isCorrect && quizPickedCardId(card, selectedVal);
+  var pickedId = !isCorrect && !dontKnow && quizPickedCardId(card, selectedVal);
   if (pickedId) {
     quizAttemptFields.pickedCardId = pickedId;
     var pickedCard = quizPoolCard(pickedId);
@@ -18921,6 +18955,7 @@ document.addEventListener("keydown", function(e) {
     var num = parseInt(e.key, 10);
     var quizNextBtn = document.getElementById("quiz-next-btn");
     if (num >= 1 && num <= 5 && num <= state.quizOptions.length) answerQuiz(num - 1);
+    else if (num === 0 && document.getElementById("quiz-idk-btn")) answerQuiz(QUIZ_IDK);
     // A focused button or explanation summary handles Enter/Space itself.
     else if ((e.key === "Enter" || e.key === " ") && quizNextBtn && !e.target.closest("button, summary, a") &&
              document.getElementById("modal-keymap").classList.contains("hidden")) {

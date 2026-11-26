@@ -143,7 +143,7 @@ test("the quiz names the card a wrong definition came from, and sends it", () =>
   assert.equal(ctx.quizPickedCardId(ctx.state.quizCards[0], "D"), "d");
   assert.equal(ctx.quizPickedCardId(ctx.state.quizCards[0], "A"), null, "never the asked card");
   assert.equal(ctx.quizPickedCardId({ id: "m", format: "mcq", data: {} }, "B"), null, "an MCQ's wrong options are not cards");
-  assert.match(extract("answerQuiz"), /var pickedId = !isCorrect && quizPickedCardId\(card, selectedVal\);\n  if \(pickedId\) \{\n    quizAttemptFields\.pickedCardId = pickedId;/);
+  assert.match(extract("answerQuiz"), /var pickedId = !isCorrect && !dontKnow && quizPickedCardId\(card, selectedVal\);\n  if \(pickedId\) \{\n    quizAttemptFields\.pickedCardId = pickedId;/);
   assert.match(appJs, /if \(f\.pickedCardId\) body\.pickedCardId = f\.pickedCardId;/);
 });
 
