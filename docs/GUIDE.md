@@ -1923,6 +1923,15 @@ override about twenty component selectors by name, so a new component keeps Clas
 shape under a style until it is added there. Neo-brutalism also repaints the bars that use
 `--border` as their track, since solid ink made an empty bar look full.
 
+**A scrolling column must not shrink its rows.** A flex column with `overflow-y: auto`
+shrinks its children before it scrolls, down to their `min-height` (or to nothing for a
+button). With a dozen classes, the sidebar's two-line names were squeezed to 40px and ran
+into the next row (2026-11-26); in a short window, the dialogs' Add distractor and Choose
+image buttons were cut to half height. Class rows, and every child of a dialog and its
+body except the parts that scroll themselves, have `flex-shrink: 0`.
+`tests/flex-squeeze.test.js` opens the long class list and every dialog in a tall window and
+a short one and fails on any row that is shorter in the short one.
+
 ### Screens on a phone
 
 Most study happens on an iPhone, and several decisions are about it:
