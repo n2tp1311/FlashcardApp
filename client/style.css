@@ -817,7 +817,10 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
   overflow-y: auto;
 }
 
+/* flex-shrink 0: the list is a scrolling flex column, and with more classes than fit, the
+   rows shrank to min-height instead of scrolling, so a wrapped name ran into the next row. */
 .sidebar-class-item {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1731,6 +1734,12 @@ body[data-nav="page"] #sidebar-select-link { display: none; }
   border-radius: 4px;
 }
 .modal-close:hover { background: var(--surface2); color: var(--text); }
+
+/* A scrolling flex column shrinks its children before it scrolls, so on a short window the
+   footers lost their bottom edge and the pickers and hints were cut. Only the parts that
+   scroll themselves may shrink; tests/flex-squeeze.test.js opens every dialog to check. */
+.modal > :not(.modal-body, .week-recap-body, .prompt-guide-box, .search-results),
+.modal-body:not(.prefs-body) > * { flex-shrink: 0; }
 
 /* Only the body scrolls, so the header and the Save/Cancel footer stay on screen on a phone. */
 .modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
