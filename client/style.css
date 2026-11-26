@@ -5779,6 +5779,18 @@ button.leech-pill:hover { filter: brightness(0.96); }
 .source-body:has(.source-ctx:not(.hidden)) .source-core { color: var(--text); }
 .source-more { display: block; margin-top: 6px; padding: 0; border: 0; background: none; color: var(--primary); font: inherit; font-size: 0.82rem; cursor: pointer; }
 .source-more:hover { text-decoration: underline; }
+/* Related cards: folded like Read more; each row opens its definition in place */
+.related-panel { margin-top: 10px; display: grid; gap: 6px; font-size: 0.875rem; }
+.related-toggle { margin-top: 0; justify-self: start; }
+.related-list { display: grid; gap: 6px; }
+.related-row { display: grid; gap: 4px; width: 100%; text-align: left; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 11px; cursor: pointer; }
+.related-row:hover, .related-row:focus-visible { border-color: var(--primary); }
+.related-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.related-term { min-width: 0; overflow-wrap: anywhere; }
+.related-weak { color: var(--warning); font-weight: 600; }
+.related-dir { flex: none; font-size: 0.75rem; color: var(--text3); }
+.related-def { color: var(--text2); }
+.related-more { margin: 0; font-size: 0.8rem; color: var(--text3); }
 /* the card's own words in the passage: a tint of the palette's accent, so it follows every theme */
 .needs-offer { margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--primary); border-radius: var(--radius); background: var(--primary-light); display: grid; gap: 6px; font-size: 0.875rem; }
 .needs-title { margin: 0; font-weight: 600; color: var(--primary); }

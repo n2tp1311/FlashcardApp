@@ -1429,6 +1429,12 @@ Object.assign(TRANSLATIONS.en, {
   "study.sourceMore": "Read more",
   "study.sourceLess": "Show less",
   "study.sourceThisBook": "This book",
+  "study.related": "Related cards · {n}",
+  "study.relatedHide": "Hide related cards",
+  "study.relatedBuildsOn": "builds on",
+  "study.relatedUsedIn": "used in",
+  "study.relatedWeak": "still learning",
+  "study.relatedMore": "and {n} more cards use this one",
   "study.needsTitle": "You keep forgetting this card",
   "study.needsBody": "It builds on {n} cards you are not sure of yet: {names}. Review those first, then this card again?",
   "study.needsBody_one": "It builds on a card you are not sure of yet: {names}. Review it first, then this card again?",
@@ -2701,6 +2707,12 @@ Object.assign(TRANSLATIONS.vi, {
   "study.sourceMore": "Đọc thêm",
   "study.sourceLess": "Thu gọn",
   "study.sourceThisBook": "Sách này",
+  "study.related": "Thẻ liên quan · {n}",
+  "study.relatedHide": "Ẩn thẻ liên quan",
+  "study.relatedBuildsOn": "dựa trên",
+  "study.relatedUsedIn": "được dùng trong",
+  "study.relatedWeak": "đang học",
+  "study.relatedMore": "và {n} thẻ khác dùng thẻ này",
   "study.needsTitle": "Thẻ này hay quên",
   "study.needsBody": "Nó dựa trên {n} thẻ bạn chưa vững: {names}. Ôn những thẻ đó trước rồi quay lại thẻ này?",
   "study.needsSkip": "Bỏ qua",
@@ -10498,6 +10510,95 @@ function whyPanel(card) {
   return el;
 }
 
+// "Related cards" on a KnowledgeApp card's back: the cards its definition names and the cards
+// that name it, folded behind one button like Read more. KnowledgeApp's links are word
+// matches, so some are wrong; behind a tap a wrong one costs a line, not the learner's eye on
+// every card. Looked up as the card is shown, so the count is there by the time it is turned.
+function loadRelatedCards(card, index) {
+  if (!IS_SERVER || typeof store.cardRelated !== "function" || !card.external_id) return;
+  store.cardRelated(card.id).then(function(res) {
+    if (state.studyCards[state.studyIndex] !== card || state.studyIndex !== index ||
+        getActiveScreen() !== "flashcard") return;
+    var el = relatedPanel(res);
+    if (!el) return;
+    var exp = document.getElementById("fc-explanation");
+    exp.appendChild(el);
+    exp.classList.toggle("hidden", !state.studyFlipped);
+  }, function() {});
+}
+
+function relatedPanel(res) {
+  var buildsOn = (res && Array.isArray(res.builds_on)) ? res.builds_on : [];
+  var usedIn = (res && Array.isArray(res.used_in)) ? res.used_in : [];
+  var total = buildsOn.length + Math.max(usedIn.length, (res && res.used_in_total) || 0);
+  if (!total) return null;
+  var el = document.createElement("section");
+  el.className = "related-panel";
+  el.id = "fc-related";
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "source-more related-toggle";
+  btn.id = "btn-fc-related";
+  btn.setAttribute("aria-expanded", "false");
+  btn.textContent = t("study.related", { n: total });
+  var list = document.createElement("div");
+  list.className = "related-list hidden";
+  list.id = "fc-related-list";
+  function row(c, dir, weak) {
+    var item = document.createElement("button");
+    item.type = "button";
+    item.className = "related-row";
+    item.setAttribute("aria-expanded", "false");
+    var head = document.createElement("span");
+    head.className = "related-head";
+    var name = document.createElement("span");
+    name.className = "related-term";
+    name.textContent = needTerm(c);
+    if (weak) {
+      var w = document.createElement("span");
+      w.className = "related-weak";
+      w.textContent = " · " + t("study.relatedWeak");
+      name.appendChild(w);
+    }
+    var d = document.createElement("span");
+    d.className = "related-dir";
+    d.textContent = t(dir);
+    head.appendChild(name);
+    head.appendChild(d);
+    var def = document.createElement("span");
+    def.className = "related-def hidden";
+    var data = c.data || {};
+    // textContent, never innerHTML: a definition is book-derived text.
+    def.textContent = data.def || data.answer || data.explanation || "";
+    item.appendChild(head);
+    if (def.textContent) item.appendChild(def);
+    item.addEventListener("click", function() {
+      var open = item.getAttribute("aria-expanded") !== "true";
+      item.setAttribute("aria-expanded", String(open));
+      def.classList.toggle("hidden", !open);
+    });
+    list.appendChild(item);
+  }
+  buildsOn.forEach(function(c) { row(c, "study.relatedBuildsOn", c.weak); });
+  usedIn.forEach(function(c) { row(c, "study.relatedUsedIn", false); });
+  var rest = ((res && res.used_in_total) || 0) - usedIn.length;
+  if (rest > 0) {
+    var more = document.createElement("p");
+    more.className = "related-more";
+    more.textContent = t("study.relatedMore", { n: rest });
+    list.appendChild(more);
+  }
+  btn.addEventListener("click", function() {
+    var open = btn.getAttribute("aria-expanded") !== "true";
+    btn.setAttribute("aria-expanded", String(open));
+    list.classList.toggle("hidden", !open);
+    btn.textContent = open ? t("study.relatedHide") : t("study.related", { n: total });
+  });
+  el.appendChild(btn);
+  el.appendChild(list);
+  return el;
+}
+
 // The face turned away is only rotated out of sight, so VoiceOver read the answer before
 // the flip; inert drops it from Tab and pointer too, aria-hidden from readers that ignore inert.
 function setFlashcardFaces(flipped) {
@@ -10709,6 +10810,7 @@ function renderFlashcard() {
   }
   var fcWhy = whyPanel(card);
   if (fcWhy) expContainer.appendChild(fcWhy);
+  if (!isGapfill) loadRelatedCards(card, i);
 
   // Difficulty badge — read from the already-fetched studyStatsMap (server-backed accuracy
   // history), not localStorage's "fc-attempts" (only ever populated in local/offline mode).
@@ -16126,6 +16228,7 @@ var SQLiteAdapter = (function() {
       return req("POST", "/cards/" + id + "/source-feedback", note ? { verdict: verdict, note: note } : { verdict: verdict });
     },
     cardNeeds: function(id) { return req("GET", "/cards/" + id + "/needs"); },
+    cardRelated: function(id) { return req("GET", "/cards/" + id + "/related"); },
     // The server caps each request at 1000 ids, so larger selections go in sequential batches.
     acknowledgeCardUpdates: function(ids) {
       var p = Promise.resolve();

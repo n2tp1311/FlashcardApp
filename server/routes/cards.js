@@ -453,6 +453,44 @@ router.get("/cards/:id/needs", requireAuth, (req, res) => {
       weak: r.srs_due_at == null || r.fsrs_state !== 2 || r.srs_due_at <= now })) });
 });
 
+// GET /api/cards/:id/related — "Related cards" on a flashcard's back: the cards this card's
+// definition names (cards.needs, in that order),
+// and the cards in the same class whose definitions name this one. `weak` here leaves out cards
+// never studied: on a new class every row would say so, and the tag would mean nothing. A card that many build on
+// is named by over a hundred, so only the first few in study order come back, with the total.
+// The links are word matches made by KnowledgeApp, so they are offered behind a tap, not shown.
+const RELATED_USED_IN = 5;
+router.get("/cards/:id/related", requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  if (!ownCard(req.params.id, userId)) return res.status(404).json({ error: "Not found" });
+  const card = db.prepare("SELECT cards.needs, cards.external_id, l.class_id FROM cards JOIN lessons l ON l.id = cards.lesson_id WHERE cards.id = ?").get(req.params.id);
+  let ids = [];
+  try { ids = JSON.parse(card.needs || "[]"); } catch (_) {}
+  ids = Array.isArray(ids) ? ids.filter(x => typeof x === "string").slice(0, 10) : [];
+  const now = Math.floor(Date.now() / 1000);
+  const order = new Map(ids.map((x, i) => [x, i]));
+  const buildsOn = !ids.length ? [] : db.prepare(
+    "SELECT cards.id, cards.external_id, cards.data, cs.srs_due_at, cs.fsrs_state FROM cards " +
+    "JOIN lessons l ON cards.lesson_id = l.id LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
+    `WHERE l.class_id = ? AND cards.id != ? AND cards.external_id IN (${ids.map(() => "?").join(",")})`
+  ).all(userId, card.class_id, req.params.id, ...ids)
+    .sort((a, b) => order.get(a.external_id) - order.get(b.external_id))
+    .map(r => ({ id: r.id, data: JSON.parse(r.data),
+      weak: r.srs_due_at != null && (r.fsrs_state !== 2 || r.srs_due_at <= now) }));
+  let usedIn = [], usedInTotal = 0;
+  if (card.external_id) {
+    // The quoted id, so "s:1" does not match a list holding "s:12".
+    const needle = JSON.stringify(card.external_id);
+    const where = "FROM cards JOIN lessons l ON cards.lesson_id = l.id " +
+      "WHERE l.class_id = ? AND cards.id != ? AND cards.needs IS NOT NULL AND instr(cards.needs, ?) > 0";
+    usedInTotal = db.prepare("SELECT COUNT(*) AS n " + where).get(card.class_id, req.params.id, needle).n;
+    if (usedInTotal) usedIn = db.prepare(
+      "SELECT cards.id, cards.data " + where + " ORDER BY l.sort_order, cards.sort_order, cards.created_at LIMIT ?"
+    ).all(card.class_id, req.params.id, needle, RELATED_USED_IN).map(r => ({ id: r.id, data: JSON.parse(r.data) }));
+  }
+  res.json({ builds_on: buildsOn, used_in: usedIn, used_in_total: usedInTotal });
+});
+
 // POST /api/cards/:id/source-feedback { verdict: "good" | "bad" | null, note?: string }
 // "Did this passage help?" under a book passage. 'bad' takes the passage off the card at once
 // -- a wrong passage misleads, none does not -- and keeps it in source_rejected, which undo
