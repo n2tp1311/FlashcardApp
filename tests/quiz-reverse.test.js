@@ -50,7 +50,7 @@ test("backwards: the definition with its term blanked, the terms as options, the
       def: document.querySelector("#quiz-question .quiz-reverse-def").textContent,
       opts: state.quizOptions.slice().sort(),
       speech: quizSpeechText(state.quizCards[0]),
-      checked: [...document.querySelectorAll(".quiz-dir-item")].filter((b) => b.getAttribute("aria-checked") === "true").map((b) => b.dataset.dir),
+      checked: [...document.querySelectorAll("#quiz-settings-menu .quiz-dir-item")].filter((b) => b.getAttribute("aria-checked") === "true").map((b) => b.dataset.dir),
     }));
     assert.equal(q.ask, "Which term?");
     assert.equal(q.def, "____ defines how many checks may get worse before training stops.");
@@ -103,13 +103,13 @@ test("a new direction applies from the next question, never the one on screen", 
   try {
     await page.evaluate((cards) => { state.quizCards = cards.slice(0, 3); state.quizPool = cards; startQuiz(); }, CARDS);
     await page.click("#btn-quiz-settings");
-    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector(".quiz-dir-item")).paddingLeft), "40px",
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector("#quiz-settings-menu .quiz-dir-item")).paddingLeft), "40px",
       "room for the tick, not under it");
-    await page.click('.quiz-dir-item[data-dir="reverse"]');
+    await page.click('#quiz-settings-menu .quiz-dir-item[data-dir="reverse"]');
     const r = await page.evaluate(() => ({
       stored: localStorage.getItem("fc-quiz-direction"),
       current: state.quizReverse[state.quizCards[0].id],
-      checked: document.querySelector('.quiz-dir-item[data-dir="reverse"]').getAttribute("aria-checked"),
+      checked: document.querySelector('#quiz-settings-menu .quiz-dir-item[data-dir="reverse"]').getAttribute("aria-checked"),
     }));
     assert.deepEqual(r, { stored: "reverse", current: false, checked: "true" });
     await page.evaluate(() => { answerQuiz(0); state.quizIndex++; renderQuizCard(); });

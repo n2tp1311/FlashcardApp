@@ -9994,6 +9994,8 @@ function launchStudy(filtered, mode, order) {
    ============================ */
 
 function startFlashcards() {
+  state.fcReverse = {};
+  applyFcDirection();
   beginStudySession();
   // Screen must become visible before renderFlashcard() runs — it conditionally calls
   // .focus() on #fc-type-input, which is a silent no-op while still inside a display:none
@@ -10746,7 +10748,31 @@ function renderFlashcard() {
   var front, back;
 
   var frontAudioBtn = document.getElementById("btn-fc-audio-front");
-  if (card.format === "term-def") {
+  if (fcIsReversed(card)) {
+    // Backwards: the blanked definition asks, the term answers. The answer to type, hint
+    // and read aloud is the bare headword: a vocabulary term's /IPA/ cannot be typed back.
+    var masked = quizMaskTerm(card);
+    var headword = window.getVocabularySpeechText ? window.getVocabularySpeechText(card.data.term) : card.data.term;
+    state.studyFrontText = masked.split(QUIZ_MASK).join("…");
+    state.studyBackText  = headword;
+    frontEl.innerHTML = "";
+    var askEl = document.createElement("div");
+    askEl.className = "quiz-ask fc-ask";
+    askEl.textContent = t("quiz.whichTerm");
+    var defEl = document.createElement("div");
+    defEl.className = "fc-reverse-def";
+    renderLatex(masked, defEl);
+    frontEl.append(askEl, defEl);
+    backEl.innerHTML = "";
+    var termEl = document.createElement("div");
+    termEl.className = "fc-reverse-term";
+    renderVocabularyTerm(card.data.term, termEl, renderLatex);
+    var fullEl = document.createElement("div");
+    fullEl.className = "fc-reverse-full";
+    renderLatex(card.data.def, fullEl);
+    backEl.append(termEl, fullEl);
+    frontAudioBtn.parentNode.style.visibility = "";
+  } else if (card.format === "term-def") {
     front = card.data.term;
     back  = card.data.def;
     state.studyFrontText = front || "";
@@ -12107,20 +12133,31 @@ function quizDirection() {
   catch (_) { return "mixed"; }
 }
 function quizIsReversed(card) {
+  return drawReversed(card, state.quizReverse || (state.quizReverse = {}), quizDirection());
+}
+function drawReversed(card, memo, direction) {
   if (!card || card.format !== "term-def" || !card.data || !card.data.term || !card.data.def) return false;
-  var memo = state.quizReverse || (state.quizReverse = {});
-  if (memo[card.id] == null) {
-    var d = quizDirection();
-    memo[card.id] = d === "reverse" || (d === "mixed" && Math.random() < 0.5);
-  }
+  if (memo[card.id] == null) memo[card.id] = direction === "reverse" || (direction === "mixed" && Math.random() < 0.5);
   return memo[card.id];
 }
-function applyQuizDirection() {
-  var d = quizDirection();
-  document.querySelectorAll("#quiz-settings-menu .quiz-dir-item").forEach(function(btn) {
-    btn.setAttribute("aria-checked", btn.dataset.dir === d ? "true" : "false");
+function applyQuizDirection() { applyDirectionMenu("#quiz-settings-menu", quizDirection()); }
+function applyDirectionMenu(menu, direction) {
+  document.querySelectorAll(menu + " .quiz-dir-item").forEach(function(btn) {
+    btn.setAttribute("aria-checked", btn.dataset.dir === direction ? "true" : "false");
   });
 }
+
+// Flashcards have their own direction, Term → definition by default: the user wanted the
+// quiz mixed but cards kept as they were unless asked (2026-11-27). A backwards card shows
+// the blanked definition and asks the learner to recall the term.
+function fcDirection() {
+  try { var d = localStorage.getItem("fc-card-direction"); return QUIZ_DIRECTIONS.indexOf(d) >= 0 ? d : "forward"; }
+  catch (_) { return "forward"; }
+}
+function fcIsReversed(card) {
+  return drawReversed(card, state.fcReverse || (state.fcReverse = {}), fcDirection());
+}
+function applyFcDirection() { applyDirectionMenu("#fc-card-menu", fcDirection()); }
 
 // A definition often names its own term ("Patience defines the number of…"), which would
 // give a reversed question away to anyone matching words. The term's words, as the passage
@@ -12989,6 +13026,19 @@ document.getElementById("btn-quiz-review-next").addEventListener("click", functi
 
 // A new direction applies from the next question: the one on screen keeps its own, or its
 // answer would be checked against a question it was not asked.
+// As in the quiz, a new direction applies from the next card, never the one on screen.
+document.querySelectorAll("#fc-card-menu .quiz-dir-item").forEach(function(btn) {
+  btn.addEventListener("click", function() {
+    try { localStorage.setItem("fc-card-direction", btn.dataset.dir); } catch (_) {}
+    var current = state.studyCards && state.studyCards[state.studyIndex];
+    Object.keys(state.fcReverse || {}).forEach(function(id) {
+      if (!(current && current.id === id)) delete state.fcReverse[id];
+    });
+    applyFcDirection();
+  });
+});
+applyFcDirection();
+
 document.querySelectorAll("#quiz-settings-menu .quiz-dir-item").forEach(function(btn) {
   btn.addEventListener("click", function() {
     try { localStorage.setItem("fc-quiz-direction", btn.dataset.dir); } catch (_) {}
