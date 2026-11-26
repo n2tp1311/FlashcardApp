@@ -1,3 +1,9 @@
+## 2026-11-27 — Flashcards can be asked backwards, forward by default
+
+After the quiz's backwards questions, the same was previewed for flashcards: the blanked definition in front, the term then the full definition behind, and a choice in the card's ⋯ menu. Asked whether to share the quiz's setting and default to mixed, the user chose a separate setting, forward by default.
+
+**Same card, same schedule**, as in the quiz. **The headword is the typed answer**, so Flashcard & Write's near-exact check, which rarely matches a whole definition, works well backwards.
+
 ## 2026-11-27 — Answer speed does not change a quiz rating
 
 Rating a slow right answer Hard was proposed and dropped. A right quiz answer is already rated Hard unless the learner turned on "Quiz answers count as Know It", because choosing an option is recognition. A speed rule would change nothing by default and add a second, harder-to-explain rule. Rating a fast answer Good was also rejected: fast recognition is still recognition.

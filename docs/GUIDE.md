@@ -294,7 +294,8 @@ FSRS's four ratings:
 **A correct quiz answer is rated Hard** because picking the right option is
 recognition, and recognition is weaker evidence of memory than recalling the answer
 unprompted. FSRS's Hard always gives a shorter interval than Good for the same card,
-so quiz answers earn less without any clamp. This replaced an earlier clamp on the old
+so quiz answers earn less without any clamp. How fast the answer came does not change
+the rating: a slow right answer is already Hard by default, and a fast one is still recognition. This replaced an earlier clamp on the old
 step ladder (`RECOGNITION_CAP_STEP`) that did the same thing by arithmetic.
 
 The preference **Quiz answers count as Know It** makes the client send
@@ -584,6 +585,15 @@ was the other layout previewed; the eye had to jump between them.
 
 ### Flashcards
 
+- **Backwards cards.** A term-def card can be shown the other way: "Which term?" over its
+  definition, with the term's words blanked as in a backwards quiz question (§8 Quiz,
+  `quizMaskTerm`). The back shows the term, then the full definition below a rule. The
+  card's ⋯ menu picks Term → definition, Definition → term or Mix both, stored per device in
+  `localStorage["fc-card-direction"]`, apart from the quiz's: the user wanted the quiz mixed
+  by default but cards left forward unless asked. Each card's way is drawn once per session
+  (`state.fcReverse`), and a change applies from the next card. Backwards, the answer that
+  Flashcard & Write checks, hints and reads aloud is the bare headword, without a
+  vocabulary term's /IPA/, which cannot be typed back. The grade schedules the same card.
 - **Show answer first.** Until the card is flipped, the grade row is one Show answer
   button (`Space`), as in Anki. Grading a card sight-unseen contradicted the app's own
   advice to recall first, and four faded buttons read as broken. It is filled, between two
