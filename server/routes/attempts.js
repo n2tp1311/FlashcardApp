@@ -53,9 +53,31 @@ function balancedDue(userId, cardId, now, dueAt, tz) {
   return balanceDue({ now, dueAt, maxInterval: MAX_INTERVAL, tzOffset: normalizeTz(tz), settings, dueTimes });
 }
 
+// A wrong term-def quiz answer is another card's definition: the learner did not know which
+// term that definition belongs to either, so it counts as Again on that card too. Only when the
+// asked card's answer is a real review (cramming stays harmless), only on a card studied
+// before (picking an unseen card's definition is not forgetting it), and without an attempt
+// row of its own, so one question is still one answer in every count. Its old schedule is
+// kept on the answer for undo.
+function againOnPicked(userId, pickedId, now, tz) {
+  const row = db.prepare(
+    "SELECT " + STATE_FIELDS.join(", ") + " FROM card_states WHERE card_id = ? AND user_id = ?"
+  ).get(pickedId, userId);
+  if (!row || row.fsrs_stability == null) return null;
+  const nowDate = new Date(now * 1000);
+  const next = userScheduler(db, userId).next(cardFromState(row, nowDate), nowDate, ratingFor(false, null, "quiz")).card;
+  let dueAt = Math.floor(next.due.getTime() / 1000);
+  if (next.state === State.Review) dueAt = balancedDue(userId, pickedId, now, dueAt, tz);
+  db.prepare(
+    "UPDATE card_states SET srs_due_at = ?, fsrs_stability = ?, fsrs_difficulty = ?, fsrs_state = ?, " +
+    "fsrs_reps = ?, fsrs_lapses = ?, fsrs_learning_steps = ?, fsrs_last_review_at = ? WHERE card_id = ? AND user_id = ?"
+  ).run(dueAt, next.stability, next.difficulty, next.state, next.reps, next.lapses, next.learning_steps, now, pickedId, userId);
+  return { prev: snapshotState(row, false), dueAt };
+}
+
 // POST /api/attempts
 router.post("/", requireAuth, (req, res) => {
-  const { cardId, correct, source, grade, durationMs, clientId, typed, tz } = req.body;
+  const { cardId, correct, source, grade, durationMs, clientId, typed, tz, pickedCardId } = req.body;
   if (!cardId || correct === undefined || !source)
     return res.status(400).json({ error: "cardId, correct, source required" });
   if (clientId !== undefined && (typeof clientId !== "string" || !/^c[a-z0-9]{20}$/.test(clientId)))
@@ -71,6 +93,13 @@ router.post("/", requireAuth, (req, res) => {
     "WHERE cards.id = ? AND classes.user_id = ?"
   ).get(cardId, userId);
   if (!card) return res.status(404).json({ error: "Card not found" });
+  // Anything else -- a right answer, a flashcard, the card itself, another user's card -- is
+  // dropped rather than refused, so an answer is never lost over it.
+  const picked = source === "quiz" && !correct && typeof pickedCardId === "string" && pickedCardId !== cardId &&
+    db.prepare(
+      "SELECT cards.id FROM cards JOIN lessons ON cards.lesson_id = lessons.id " +
+      "JOIN classes ON lessons.class_id = classes.id WHERE cards.id = ? AND classes.user_id = ?"
+    ).get(pickedCardId, userId) ? pickedCardId : null;
 
   // The client resends an answer it couldn't confirm (offline, dropped response) under the same
   // clientId; one the server already recorded must not be scheduled a second time.
@@ -94,10 +123,11 @@ router.post("/", requireAuth, (req, res) => {
     const nowDate = new Date(now * 1000);
     const notDue = !!(stateRow && stateRow.srs_due_at && stateRow.srs_due_at > now);
 
+    const attemptId = clientId || genId();
     db.prepare(
-      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade, prev_state, typed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    ).run(clientId || genId(), cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null,
-          snapshotState(stateRow, notDue), typed === true ? 1 : null);
+      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade, prev_state, typed, picked_card_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).run(attemptId, cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null,
+          snapshotState(stateRow, notDue), typed === true ? 1 : null, picked);
 
     // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
     if (notDue) {
@@ -137,8 +167,12 @@ router.post("/", requireAuth, (req, res) => {
     const prevLapses = (stateRow && stateRow.fsrs_lapses) || 0;
     const becameLeech = nextCard.lapses > prevLapses && nextCard.lapses - base === LEECH_LAPSES;
 
+    const againPicked = picked ? againOnPicked(userId, picked, now, tz) : null;
+    if (againPicked) db.prepare("UPDATE attempts SET picked_prev_state = ? WHERE id = ?").run(againPicked.prev, attemptId);
+
     return { ok: true, srs_due_at: dueAt, capped: capped, notDue: false,
-             lapses: Math.max(0, nextCard.lapses - base), became_leech: becameLeech };
+             lapses: Math.max(0, nextCard.lapses - base), became_leech: becameLeech,
+             picked: againPicked ? { cardId: picked, srs_due_at: againPicked.dueAt } : null };
   })();
 
   recordDueZero(userId);
@@ -155,7 +189,7 @@ router.delete("/:id", requireAuth, (req, res) => {
   const userId = req.session.userId;
   const result = db.transaction(() => {
     const attempt = db.prepare(
-      "SELECT rowid, card_id, created_at, prev_state FROM attempts WHERE id = ? AND user_id = ?"
+      "SELECT rowid, card_id, created_at, prev_state, picked_card_id, picked_prev_state FROM attempts WHERE id = ? AND user_id = ?"
     ).get(req.params.id, userId);
     // rowid, not created_at: two answers in the same second must still be ordered.
     const later = attempt && db.prepare(
@@ -170,6 +204,17 @@ router.delete("/:id", requireAuth, (req, res) => {
         "UPDATE card_states SET " + STATE_FIELDS.map(f => f + " = ?").join(", ") +
         " WHERE card_id = ? AND user_id = ?"
       ).run(...STATE_FIELDS.map(f => restored[f]), attempt.card_id, userId);
+    }
+    // The Again it put on the picked card goes too, unless that card has moved on since: an
+    // answer of its own, or another wrong pick, and the old schedule would erase it.
+    const pickedRestored = attempt.picked_prev_state && restoredState(attempt.picked_prev_state);
+    if (pickedRestored && !db.prepare(
+      "SELECT 1 FROM attempts WHERE user_id = ? AND rowid > ? AND (card_id = ? OR (picked_card_id = ? AND picked_prev_state IS NOT NULL))"
+    ).get(userId, attempt.rowid, attempt.picked_card_id, attempt.picked_card_id)) {
+      db.prepare(
+        "UPDATE card_states SET " + STATE_FIELDS.map(f => f + " = ?").join(", ") +
+        " WHERE card_id = ? AND user_id = ?"
+      ).run(...STATE_FIELDS.map(f => pickedRestored[f]), attempt.picked_card_id, userId);
     }
     db.prepare("DELETE FROM attempts WHERE rowid = ?").run(attempt.rowid);
     return { ok: true, srs_due_at: restored ? restored.srs_due_at : undefined };

@@ -517,6 +517,10 @@ try { db.exec("ALTER TABLE users ADD COLUMN fsrs_last_fit TEXT"); } catch (_) {}
 // card looked back at after a wrong answer (second_look), a card edited during study
 // (card_fix) -- so a repeat of the same thing counts once.
 try { db.exec("ALTER TABLE attempts ADD COLUMN typed INTEGER"); } catch (_) {}
+// picked_card_id: a wrong quiz answer that was another card's definition names that card;
+// picked_prev_state is that card's schedule before the answer counted as Again on it, for undo.
+try { db.exec("ALTER TABLE attempts ADD COLUMN picked_card_id TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE attempts ADD COLUMN picked_prev_state TEXT"); } catch (_) {}
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS study_events (
     id         INTEGER PRIMARY KEY,

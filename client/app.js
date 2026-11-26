@@ -11963,6 +11963,19 @@ function quizDistractors(card, field) {
   return shuffle(pool).slice(0, 3);
 }
 
+// The card a wrong term-def or image-def answer came from: the first in the same pool, in the
+// same order, that quizDistractors drew that definition from. The server counts the answer as
+// Again on it too (POST /attempts, pickedCardId).
+function quizPickedCardId(card, value) {
+  if (card.format !== "term-def" && card.format !== "image-def") return null;
+  var pool = state.quizCards.concat(state.quizPool || [], state.currentLessonCards || []);
+  for (var i = 0; i < pool.length; i++) {
+    var c = pool[i];
+    if (c.id !== card.id && c.format === card.format && c.data && c.data.def === value) return c.id;
+  }
+  return null;
+}
+
 // A passage is asked one gap at a time: the rest stay filled in as context. The gap is drawn
 // once per session and kept, so Prev/Next replays the same question.
 function quizGapIndex(card) {
@@ -12545,6 +12558,8 @@ function answerQuiz(selectedIdx) {
     setUpstreamCount((state.upstreamCount || 0) - 1);
   }
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
+  var pickedId = !isCorrect && quizPickedCardId(card, selectedVal);
+  if (pickedId) quizAttemptFields.pickedCardId = pickedId;
   if (state.quizCountsAsKnown) {
     if (isCorrect) quizAttemptFields.grade = "medium";
     store.setCardKnown(card.id, isCorrect).catch(function() {});
@@ -12561,6 +12576,7 @@ function answerQuiz(selectedIdx) {
     quizTimes ? (isCorrect ? quizTimes.right : quizTimes.wrong) : null, !isCorrect, genId("mem"));
   store.recordAttempt(quizAttemptFields).then(function(res) {
     if (res && !res.notDue && res.srs_due_at != null && state.memStrip) state.memStrip.dueAt[card.id] = res.srs_due_at;
+    if (res && res.picked && state.memStrip) state.memStrip.dueAt[res.picked.cardId] = res.picked.srs_due_at;
     if (res && quizMem) quizMem.settle(res);
     if (res && state.quizCards[state.quizIndex] === card) {
       // A retry of a card answered minutes ago is not due on the server: nothing changed.
@@ -16154,6 +16170,7 @@ var SQLiteAdapter = (function() {
       if (f.grade) body.grade = f.grade;
       if (f.durationMs != null) body.durationMs = f.durationMs;
       if (f.typed) body.typed = true;
+      if (f.pickedCardId) body.pickedCardId = f.pickedCardId;
       // Load balancing counts days in the user's local time (server/lib/workload.js).
       body.tz = new Date().getTimezoneOffset();
       return queuedWrite({ method: "POST", path: "/attempts", body: body });
