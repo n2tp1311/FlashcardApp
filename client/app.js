@@ -11951,7 +11951,10 @@ function setQuizScoreDisplay() {
 }
 
 // Distractors come from the session and then the open lesson; with too few, the question
-// shows fewer choices rather than "—" padding, which gave the answer away.
+// shows fewer choices rather than "—" padding, which gave the answer away. The likeliest to be
+// mistaken go first: a definition from the same lesson, and one about as long as the answer,
+// since an option far shorter or longer than the rest can be ruled out without knowing the
+// term. A random part keeps the same three from coming back every time.
 function quizDistractors(card, field) {
   var value = typeof field === "function" ? field : function(c) { return c.data && c.data[field]; };
   var seen = {};
@@ -11962,9 +11965,18 @@ function quizDistractors(card, field) {
     var v = value(c);
     if (!v || seen[v]) return;
     seen[v] = true;
-    pool.push(v);
+    pool.push({ value: v, score: quizDistractorScore(card, value(card), c, v) + QUIZ_DISTRACTOR_JITTER * Math.random() });
   });
-  return shuffle(pool).slice(0, 3);
+  return pool.sort(function(a, b) { return b.score - a.score; }).slice(0, 3)
+    .map(function(p) { return p.value; });
+}
+
+var QUIZ_DISTRACTOR_JITTER = 0.35;
+function quizDistractorScore(card, answer, other, value) {
+  var a = String(answer || "").length, b = String(value).length;
+  var sameLength = a && b ? Math.min(a, b) / Math.max(a, b) : 0;
+  var sameLesson = card.lesson_id && other.lesson_id === card.lesson_id ? 1 : 0;
+  return 0.3 * sameLesson + 0.7 * sameLength;
 }
 
 // The card a wrong term-def or image-def answer came from: the first in the same pool, in the

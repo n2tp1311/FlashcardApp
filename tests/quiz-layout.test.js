@@ -84,10 +84,10 @@ test("sentence-length answers left-align in tiles and fall back to the list on a
   assert.match(css, /\.quiz-opt:last-child:nth-child\(odd\) \{ grid-column: 1 \/ -1; \}/);
 });
 
-function distractors(card, quizCards, lessonCards) {
-  const ctx = { state: { quizCards, currentLessonCards: lessonCards }, shuffle: function(a) { return a; } };
+function distractors(card, quizCards, lessonCards, jitter = 0) {
+  const ctx = { state: { quizCards, currentLessonCards: lessonCards }, QUIZ_DISTRACTOR_JITTER: jitter };
   vm.createContext(ctx);
-  vm.runInContext(fn("quizDistractors"), ctx);
+  vm.runInContext(fn("quizDistractors") + fn("quizDistractorScore"), ctx);
   return JSON.parse(JSON.stringify(ctx.quizDistractors(card, "def")));
 }
 
@@ -97,8 +97,31 @@ test("too few cards give fewer choices, never a dash, and draw on the open lesso
   assert.deepEqual(distractors(a, [a, b], []), ["B"]);
   const lesson = [a, b, { id: 3, format: "term-def", data: { def: "C" } }, { id: 4, format: "term-def", data: { def: "B" } },
                   { id: 5, format: "mcq", data: { def: "X" } }];
-  assert.deepEqual(distractors(a, [a, b], lesson), ["B", "C"]);
+  assert.deepEqual(distractors(a, [a, b], lesson).sort(), ["B", "C"]);
   assert.doesNotMatch(fn("buildQuizOptions"), /"—"/);
+});
+
+test("the wrong answers most likely to be mistaken are chosen: same lesson, about as long", function() {
+  const c = (id, def, lesson_id = "l1") => ({ id, lesson_id, format: "term-def", data: { def } });
+  const asked = c("q", "x".repeat(100));
+  const near = [c("n1", "a".repeat(95)), c("n2", "b".repeat(110)), c("n3", "c".repeat(90))];
+  const short = [c("s1", "tiny"), c("s2", "a few words")];
+  const other = c("o1", "d".repeat(100), "l2");
+  assert.deepEqual(distractors(asked, [asked], [...short, ...near, other]).sort(), near.map((x) => x.data.def).sort(),
+    "neither a one-word option nor another lesson's when this lesson has close ones");
+  const sameLen = c("o2", "e".repeat(100), "l2");
+  assert.ok(distractors(asked, [asked], [...short, sameLen]).includes(sameLen.data.def),
+    "another lesson's is still used when this lesson runs short");
+  // With the random part, the three vary, but a one-word option still almost never shows.
+  const pool = [...short, ...near, other, c("n4", "f".repeat(105)), c("n5", "g".repeat(98))];
+  const drawn = new Set(); let tiny = 0;
+  for (let i = 0; i < 300; i++) {
+    const got = distractors(asked, [asked], pool, 0.35);
+    got.forEach((d) => drawn.add(d));
+    if (got.includes("tiny")) tiny++;
+  }
+  assert.ok(drawn.size >= 5, "the three vary between questions");
+  assert.equal(tiny, 0);
 });
 
 test("the quiz header matches the flashcard one: Exit, progress, a check-mark score", function() {
