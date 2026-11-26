@@ -1,3 +1,9 @@
+## 2026-11-26 — A wrong pick is named in one line under the options
+
+A preview offered three ways to tell the learner whose definition they picked: a label inside the picked option (A), one sentence under the options (B), or a label under every wrong option (C). The user chose B.
+
+**The second sentence waits for the server.** The card is marked forgotten only when the asked card was due and the picked card had been studied, so "That card is back in today's reviews too" is shown only when the response says it happened.
+
 ## 2026-11-26 — A wrong quiz pick counts as Again on the picked card
 
 The user pointed out that choosing the wrong definition in a term-def quiz means not knowing the term of the card that definition belongs to either. Asked to choose between counting it as Again, as a softer Hard, or only recording it, the user chose Again, and to record which card was picked.

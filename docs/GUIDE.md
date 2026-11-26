@@ -739,6 +739,11 @@ answers. Such a card has to be edited.
 card whose definition the learner chose (same format, not the asked card, first in the
 session, pool, lesson order) and sends it with the answer, which marks that card
 forgotten as well (§5, step 8). An MCQ's wrong options are not cards, so they name none.
+A line under the options says so: "You picked the definition of *patience*." The second
+sentence, "That card is back in today's reviews too.", is added only when the response's
+`picked` says the card was marked, so it is not claimed for a cram answer, an unseen card,
+or an answer still waiting offline. Image cards have no term to name and get no line.
+The line is kept on the result, so Prev back to the question shows it again.
 
 **Bars pinned to the bottom sit on the visible bottom edge**, wherever the page is scrolled:
 the quiz answer sheet, the flashcard Prev/Next/grade row and the session-end buttons. In
