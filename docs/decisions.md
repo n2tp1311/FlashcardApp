@@ -1,3 +1,7 @@
+## 2026-11-27 — Answer speed does not change a quiz rating
+
+Rating a slow right answer Hard was proposed and dropped. A right quiz answer is already rated Hard unless the learner turned on "Quiz answers count as Know It", because choosing an option is recognition. A speed rule would change nothing by default and add a second, harder-to-explain rule. Rating a fast answer Good was also rejected: fast recognition is still recognition.
+
 ## 2026-11-27 — Quiz questions asked backwards, mixed by default
 
 A preview showed the choice in the quiz settings menu and a backwards question with and without the term blanked. The user chose Mix both as the default, and blanking.
