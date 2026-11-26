@@ -1412,6 +1412,8 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.voiceBlocked": "Microphone blocked.",
   "quiz.voiceBlockedSub": "Allow it for this site in the browser's settings, or answer by tapping.",
   "quiz.voiceUnavailable": "Voice answers aren't available right now · answer by tapping",
+  "quiz.pickedOf": "You picked the definition of {term}.",
+  "quiz.pickedMarked": "That card is back in today's reviews too.",
   "quiz.cappedHint": "Correct — but this card needs a Flashcard-mode recall to move to a longer review interval.",
   "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
@@ -2690,6 +2692,8 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.voiceBlocked": "Micro bị chặn.",
   "quiz.voiceBlockedSub": "Hãy cho phép trang này dùng micro trong cài đặt trình duyệt, hoặc chạm để trả lời.",
   "quiz.voiceUnavailable": "Hiện không dùng được giọng nói · hãy chạm để trả lời",
+  "quiz.pickedOf": "Bạn chọn định nghĩa của {term}.",
+  "quiz.pickedMarked": "Thẻ đó cũng được đưa vào ôn lại hôm nay.",
   "quiz.cappedHint": "Đúng — nhưng thẻ này cần trả lời đúng ở chế độ Thẻ ghi nhớ để chuyển sang khoảng ôn dài hơn.",
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
@@ -11976,6 +11980,30 @@ function quizPickedCardId(card, value) {
   return null;
 }
 
+function quizPoolCard(id) {
+  return state.quizCards.concat(state.quizPool || [], state.currentLessonCards || [])
+    .find(function(c) { return c.id === id; }) || null;
+}
+
+// Under the options of a wrong answer: whose definition was chosen, and, once the server
+// says so, that the card was marked forgotten. The second sentence waits for the server
+// because it skips cramming and never-studied cards, and offline it has not decided yet.
+// Image cards have no term to name, so they get no note.
+function showQuizPickedNote(picked) {
+  var old = document.getElementById("quiz-picked-note");
+  if (old) old.remove();
+  if (!picked || !picked.term) return;
+  var el = document.createElement("div");
+  el.id = "quiz-picked-note";
+  el.className = "quiz-picked-note";
+  var parts = t("quiz.pickedOf").split("{term}");
+  var term = document.createElement("b");
+  term.textContent = picked.term;
+  el.append(parts[0], term, parts[1] || "");
+  if (picked.marked) el.append(" " + t("quiz.pickedMarked"));
+  document.getElementById("quiz-options").after(el);
+}
+
 // A passage is asked one gap at a time: the rest stay filled in as context. The gap is drawn
 // once per session and kept, so Prev/Next replays the same question.
 function quizGapIndex(card) {
@@ -12400,6 +12428,7 @@ function renderQuizCard() {
   if (prevCap) prevCap.remove();
   var prevNotDue = document.getElementById("quiz-notdue-hint");
   if (prevNotDue) prevNotDue.remove();
+  showQuizPickedNote(null);
   hideVocabularySelectionAction(true);
 
   if (i >= total) { showQuizResults(); return; }
@@ -12484,6 +12513,7 @@ function renderQuizCard() {
   var replaySource = priorResult && sourcePanel(card, "quiz-source");
   if (replaySource && !priorResult.correct) replaySource.open = true;
   if (replaySource) (document.getElementById("quiz-explanation") || optsEl).after(replaySource);
+  if (priorResult) showQuizPickedNote(priorResult.picked);
 
   if (priorResult && priorResult.capped) showQuizHint("quiz-cap-hint", "quiz.cappedHint");
   if (priorResult && priorResult.notDue) showQuizHint("quiz-notdue-hint", "study.notDueHint");
@@ -12559,7 +12589,11 @@ function answerQuiz(selectedIdx) {
   }
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
   var pickedId = !isCorrect && quizPickedCardId(card, selectedVal);
-  if (pickedId) quizAttemptFields.pickedCardId = pickedId;
+  if (pickedId) {
+    quizAttemptFields.pickedCardId = pickedId;
+    var pickedCard = quizPoolCard(pickedId);
+    resultEntry.picked = { term: pickedCard && pickedCard.data.term, marked: false };
+  }
   if (state.quizCountsAsKnown) {
     if (isCorrect) quizAttemptFields.grade = "medium";
     store.setCardKnown(card.id, isCorrect).catch(function() {});
@@ -12577,6 +12611,10 @@ function answerQuiz(selectedIdx) {
   store.recordAttempt(quizAttemptFields).then(function(res) {
     if (res && !res.notDue && res.srs_due_at != null && state.memStrip) state.memStrip.dueAt[card.id] = res.srs_due_at;
     if (res && res.picked && state.memStrip) state.memStrip.dueAt[res.picked.cardId] = res.picked.srs_due_at;
+    if (res && res.picked && resultEntry.picked) {
+      resultEntry.picked.marked = true;
+      if (state.quizCards[state.quizIndex] === card) showQuizPickedNote(resultEntry.picked);
+    }
     if (res && quizMem) quizMem.settle(res);
     if (res && state.quizCards[state.quizIndex] === card) {
       // A retry of a card answered minutes ago is not due on the server: nothing changed.
@@ -12628,6 +12666,7 @@ function answerQuiz(selectedIdx) {
   // reading the book right after a miss is when it helps most. A right answer keeps it shut.
   if (answerSource && !isCorrect) answerSource.open = true;
   if (answerSource) (document.getElementById("quiz-explanation") || document.getElementById("quiz-options")).after(answerSource);
+  if (resultEntry.picked) showQuizPickedNote(resultEntry.picked);
 
   showQuizSheet(cheer);
 

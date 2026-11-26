@@ -3077,6 +3077,16 @@ code {
   padding: 8px 12px;
   margin-top: 12px;
 }
+.quiz-picked-note {
+  font-size: 0.875rem;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+.quiz-picked-note b { font-weight: 600; }
 /* A short label, so it sits centred under the card at its own width, not across the screen. */
 .fc-hint-cap { width: fit-content; max-width: 600px; margin: 12px auto 0; padding: 4px 12px; border-radius: var(--radius-pill); }
 

@@ -143,6 +143,37 @@ test("the quiz names the card a wrong definition came from, and sends it", () =>
   assert.equal(ctx.quizPickedCardId(ctx.state.quizCards[0], "D"), "d");
   assert.equal(ctx.quizPickedCardId(ctx.state.quizCards[0], "A"), null, "never the asked card");
   assert.equal(ctx.quizPickedCardId({ id: "m", format: "mcq", data: {} }, "B"), null, "an MCQ's wrong options are not cards");
-  assert.match(extract("answerQuiz"), /var pickedId = !isCorrect && quizPickedCardId\(card, selectedVal\);\n  if \(pickedId\) quizAttemptFields\.pickedCardId = pickedId;/);
+  assert.match(extract("answerQuiz"), /var pickedId = !isCorrect && quizPickedCardId\(card, selectedVal\);\n  if \(pickedId\) \{\n    quizAttemptFields\.pickedCardId = pickedId;/);
   assert.match(appJs, /if \(f\.pickedCardId\) body\.pickedCardId = f\.pickedCardId;/);
+});
+
+// The note under a wrong answer, in the real page.
+test("a wrong pick names the card it came from, and says it was marked once the server has", async () => {
+  const { chromium } = require("playwright");
+  const app = express();
+  app.use(express.static(path.join(root, "client")));
+  const l = await new Promise((ok) => { const s = app.listen(0, "127.0.0.1", () => ok(s)); });
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto("http://127.0.0.1:" + l.address().port + "/");
+    await page.waitForFunction(() => typeof window.showQuizPickedNote === "function");
+    const read = () => page.evaluate(() => {
+      const el = document.getElementById("quiz-picked-note");
+      return el && { text: el.textContent, bold: el.querySelector("b").textContent, afterOptions: el.previousElementSibling.id };
+    });
+    await page.evaluate(() => showQuizPickedNote({ term: "<i>patience</i>", marked: false }));
+    assert.deepEqual(await read(), { text: "You picked the definition of <i>patience</i>.", bold: "<i>patience</i>", afterOptions: "quiz-options" },
+      "the term is text, never markup");
+    await page.evaluate(() => showQuizPickedNote({ term: "patience", marked: true }));
+    assert.equal((await read()).text, "You picked the definition of patience. That card is back in today's reviews too.");
+    assert.equal(await page.evaluate(() => document.querySelectorAll("#quiz-picked-note").length), 1);
+    await page.evaluate(() => showQuizPickedNote({ term: undefined, marked: true }));
+    assert.equal(await read(), null, "an image card has no term to name");
+  } finally { await browser.close(); l.close(); }
+  const answer = extract("answerQuiz");
+  assert.match(answer, /resultEntry\.picked\.marked = true;/, "marked only on the server's word");
+  assert.match(answer, /if \(resultEntry\.picked\) showQuizPickedNote\(resultEntry\.picked\);/);
+  assert.match(extract("renderQuizCard"), /showQuizPickedNote\(null\);[\s\S]*if \(priorResult\) showQuizPickedNote\(priorResult\.picked\);/,
+    "cleared on the next question, shown again on a replay");
 });
