@@ -1392,6 +1392,12 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.exit": "Exit quiz",
   "quiz.scoreTitle": "{n} correct of {total} answered",
   "quiz.layoutGrid": "Show answers side by side",
+  "quiz.direction": "Ask",
+  "quiz.dirForward": "Term → definition",
+  "quiz.dirReverse": "Definition → term",
+  "quiz.dirMixed": "Mix both",
+  "quiz.whichTerm": "Which term?",
+  "quiz.pickedTerm": "You picked {term}, which means: {def}",
   "quiz.layoutList": "Show answers in a list",
   "quiz.voiceOn": "Turn on hands-free answers (V)",
   "quiz.voiceOff": "Turn off hands-free answers (V)",
@@ -2675,6 +2681,12 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.exit": "Thoát Trắc nghiệm",
   "quiz.scoreTitle": "Đúng {n} trên {total} câu đã trả lời",
   "quiz.layoutGrid": "Xếp đáp án cạnh nhau",
+  "quiz.direction": "Hỏi theo chiều",
+  "quiz.dirForward": "Thuật ngữ → định nghĩa",
+  "quiz.dirReverse": "Định nghĩa → thuật ngữ",
+  "quiz.dirMixed": "Trộn cả hai",
+  "quiz.whichTerm": "Thuật ngữ nào?",
+  "quiz.pickedTerm": "Bạn chọn {term}, nghĩa là: {def}",
   "quiz.layoutList": "Xếp đáp án thành danh sách",
   "quiz.voiceOn": "Bật trả lời bằng giọng nói (V)",
   "quiz.voiceOff": "Tắt trả lời bằng giọng nói (V)",
@@ -3285,6 +3297,8 @@ function renderCloze(text, el, reveal, all) {
 // not the options. A card without a term (multiple choice, true/false, image) has no button.
 function quizSpeechText(card) {
   if (!card || !card.data || card.format === "mcq" || card.format === "true-false" || card.format === "image-def" || card.format === "cloze" || card.format === "gapfill") return "";
+  // Backwards, the definition is the question, read with its blanks as pauses.
+  if (quizIsReversed(card)) return quizMaskTerm(card).split(QUIZ_MASK).join("…");
   var term = typeof card.data.term === "string" ? card.data.term.trim() : "";
   if (term && window.getVocabularySpeechText) term = window.getVocabularySpeechText(term);
   return term;
@@ -11937,6 +11951,8 @@ document.getElementById("btn-fc-back").addEventListener("click", function() {
 
 function startQuiz() {
   state.quizGaps = {};
+  state.quizReverse = {};
+  applyQuizDirection();
   state.quizIndex  = 0;
   state.quizScore  = 0;
   state.quizResults = [];
@@ -11988,12 +12004,13 @@ function quizDistractorScore(card, answer, other, value) {
 // The card a wrong term-def or image-def answer came from: the first in the same pool, in the
 // same order, that quizDistractors drew that definition from. The server counts the answer as
 // Again on it too (POST /attempts, pickedCardId).
-function quizPickedCardId(card, value) {
+function quizPickedCardId(card, value, field) {
+  field = field || "def";
   if (card.format !== "term-def" && card.format !== "image-def") return null;
   var pool = state.quizCards.concat(state.quizPool || [], state.currentLessonCards || []);
   for (var i = 0; i < pool.length; i++) {
     var c = pool[i];
-    if (c.id !== card.id && c.format === card.format && c.data && c.data.def === value) return c.id;
+    if (c.id !== card.id && c.format === card.format && c.data && c.data[field] === value) return c.id;
   }
   return null;
 }
@@ -12014,10 +12031,10 @@ function showQuizPickedNote(picked) {
   var el = document.createElement("div");
   el.id = "quiz-picked-note";
   el.className = "quiz-picked-note";
-  var parts = t("quiz.pickedOf").split("{term}");
+  var parts = t(picked.def ? "quiz.pickedTerm" : "quiz.pickedOf").split("{term}");
   var term = document.createElement("b");
   term.textContent = picked.term;
-  el.append(parts[0], term, parts[1] || "");
+  el.append(parts[0], term, (parts[1] || "").replace("{def}", picked.def || ""));
   if (picked.marked) el.append(" " + t("quiz.pickedMarked"));
   document.getElementById("quiz-options").after(el);
 }
@@ -12063,6 +12080,8 @@ function buildQuizOptions(card) {
       .forEach(function(w) { if (wrong.length < 3 && !seen[w.toLowerCase()]) { seen[w.toLowerCase()] = true; wrong.push(w); } });
     return shuffle([answer].concat(wrong));
   }
+  // Reversed: the other cards' terms are the wrong answers.
+  if (quizIsReversed(card)) return shuffle([card.data.term].concat(quizDistractors(card, "term")));
   // term-def and image-def: the other cards' definitions are the wrong answers.
   return shuffle([card.data.def].concat(quizDistractors(card, "def")));
 }
@@ -12077,6 +12096,43 @@ function quizLayout() {
 
 // The button shows the layout it switches TO, like the other header toggles. No aria-pressed:
 // with a label that already flips, VoiceOver read "Show answers as a list, pressed".
+// Term-def cards can be asked backwards: the definition shown, the term chosen. Recalling a
+// term from its meaning is a different, harder retrieval than recognising its meaning, and
+// practising both makes the card stick. "mixed" (the default) asks about half of them each
+// way. The choice is per device, like the layout; each card's direction is drawn once per
+// session so Prev/Next replays the same question.
+var QUIZ_DIRECTIONS = ["forward", "reverse", "mixed"];
+function quizDirection() {
+  try { var d = localStorage.getItem("fc-quiz-direction"); return QUIZ_DIRECTIONS.indexOf(d) >= 0 ? d : "mixed"; }
+  catch (_) { return "mixed"; }
+}
+function quizIsReversed(card) {
+  if (!card || card.format !== "term-def" || !card.data || !card.data.term || !card.data.def) return false;
+  var memo = state.quizReverse || (state.quizReverse = {});
+  if (memo[card.id] == null) {
+    var d = quizDirection();
+    memo[card.id] = d === "reverse" || (d === "mixed" && Math.random() < 0.5);
+  }
+  return memo[card.id];
+}
+function applyQuizDirection() {
+  var d = quizDirection();
+  document.querySelectorAll("#quiz-settings-menu .quiz-dir-item").forEach(function(btn) {
+    btn.setAttribute("aria-checked", btn.dataset.dir === d ? "true" : "false");
+  });
+}
+
+// A definition often names its own term ("Patience defines the number of…"), which would
+// give a reversed question away to anyone matching words. The term's words, as the passage
+// panel marks them (sourceTermPattern), are blanked outside LaTeX.
+var QUIZ_MASK = "____";
+function quizMaskTerm(card) {
+  var re = sourceTermPattern(card);
+  var def = card.data.def;
+  if (!re) return def;
+  return splitLatex(def).map(function(p) { return p.type === "text" ? p.content.replace(re, QUIZ_MASK) : p.raw; }).join("");
+}
+
 function applyQuizLayout() {
   var grid = quizLayout() === "grid";
   document.getElementById("quiz-options").classList.toggle("grid-mode", grid);
@@ -12483,6 +12539,14 @@ function renderQuizCard() {
     qEl.appendChild(qImg);
   } else if (card.format === "cloze" || card.format === "gapfill") {
     renderCloze(quizClozeText(card), qEl, false);
+  } else if (quizIsReversed(card)) {
+    var askEl = document.createElement("div");
+    askEl.className = "quiz-ask";
+    askEl.textContent = t("quiz.whichTerm");
+    var defEl = document.createElement("div");
+    defEl.className = "quiz-reverse-def";
+    renderLatex(quizMaskTerm(card), defEl);
+    qEl.append(askEl, defEl);
   } else {
     renderLatex(card.data.term, qEl);
   }
@@ -12606,6 +12670,7 @@ function answerQuiz(selectedIdx) {
     card.format === "true-false" ? (card.data.correct === "true" ? t("common.true") : t("common.false")) :
     card.format === "image-def" ? card.data.def :
     card.format === "cloze" || card.format === "gapfill" ? clozeAnswer(quizClozeText(card)) :
+    quizIsReversed(card) ? card.data.term :
     card.data.def;
   var selectedVal = dontKnow ? null : opts[selectedIdx];
   var isCorrect   = !dontKnow && selectedVal === correct;
@@ -12634,11 +12699,14 @@ function answerQuiz(selectedIdx) {
     setUpstreamCount((state.upstreamCount || 0) - 1);
   }
   var quizAttemptFields = { cardId: card.id, correct: isCorrect, source: "quiz" };
-  var pickedId = !isCorrect && !dontKnow && quizPickedCardId(card, selectedVal);
+  var reversed = quizIsReversed(card);
+  var pickedId = !isCorrect && !dontKnow && quizPickedCardId(card, selectedVal, reversed ? "term" : "def");
   if (pickedId) {
     quizAttemptFields.pickedCardId = pickedId;
     var pickedCard = quizPoolCard(pickedId);
     resultEntry.picked = { term: pickedCard && pickedCard.data.term, marked: false };
+    // Backwards, the term was the option; what it means is the useful part.
+    if (reversed && pickedCard) resultEntry.picked.def = pickedCard.data.def;
   }
   if (state.quizCountsAsKnown) {
     if (isCorrect) quizAttemptFields.grade = "medium";
@@ -12918,6 +12986,22 @@ document.getElementById("btn-quiz-review-next").addEventListener("click", functi
   renderQuizCard();
   noteQuizSecondLook();
 });
+
+// A new direction applies from the next question: the one on screen keeps its own, or its
+// answer would be checked against a question it was not asked.
+document.querySelectorAll("#quiz-settings-menu .quiz-dir-item").forEach(function(btn) {
+  btn.addEventListener("click", function() {
+    try { localStorage.setItem("fc-quiz-direction", btn.dataset.dir); } catch (_) {}
+    var current = state.quizCards && state.quizCards[state.quizIndex];
+    var answered = {};
+    (state.quizResults || []).forEach(function(r) { answered[r.card.id] = true; });
+    Object.keys(state.quizReverse || {}).forEach(function(id) {
+      if (!answered[id] && !(current && current.id === id)) delete state.quizReverse[id];
+    });
+    applyQuizDirection();
+  });
+});
+applyQuizDirection();
 
 document.getElementById("btn-quiz-layout").addEventListener("click", function() {
   try { localStorage.setItem("fc-quiz-layout", quizLayout() === "grid" ? "list" : "grid"); } catch (_) {}

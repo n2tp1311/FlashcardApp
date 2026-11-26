@@ -11,7 +11,8 @@ const html = fs.readFileSync(path.join(root, "client", "index.html"), "utf8");
 function load(withVocab) {
   const start = app.indexOf("\nfunction quizSpeechText(");
   assert.ok(start >= 0, "missing quizSpeechText");
-  const ctx = { window: withVocab ? { getVocabularySpeechText: function(s) { return s.replace(/\s*\/[^/]*\/\s*$/, ""); } } : {} };
+  const ctx = { window: withVocab ? { getVocabularySpeechText: function(s) { return s.replace(/\s*\/[^/]*\/\s*$/, ""); } } : {},
+    quizIsReversed: () => false };
   vm.createContext(ctx);
   vm.runInContext(app.slice(start, app.indexOf("\n}\n", start) + 3), ctx);
   return ctx;

@@ -2858,6 +2858,12 @@ code {
 .quiz-card-menu .dropdown-menu { left: 0; right: auto; }
 .study-menu { min-width: 250px; }
 #btn-quiz-music[aria-pressed="true"], #btn-quiz-voice.active { color: var(--primary); }
+.study-menu-label { padding: 6px 14px 4px; font-size: 0.75rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+/* A choice of three: the tick marks the one in use, in the space the other items give their icon. */
+/* Two classes: .dropdown-item comes later in this file and would win on padding. 40px lines the
+   text up with the items that have a 16px icon. */
+.dropdown-item.quiz-dir-item { position: relative; padding-left: 40px; }
+.dropdown-item.quiz-dir-item[aria-checked="true"]::before { content: "✓"; position: absolute; left: 18px; color: var(--primary); font-weight: 700; }
 .study-menu-volume { display: grid; grid-template-columns: auto 1fr 2.75rem; align-items: center; gap: 6px 10px;
   padding: 4px 16px 10px 38px; font-size: 0.8125rem; color: var(--text2); }
 .study-menu-volume input[type=range] { width: 100%; accent-color: var(--primary); }
@@ -3100,6 +3106,8 @@ code {
   font-size: 0.75rem; font-weight: 700; background: var(--surface2); color: var(--text2);
   border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+.quiz-ask { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text2); margin-bottom: 8px; }
+.quiz-reverse-def { font-size: 1.0625rem; line-height: 1.55; max-width: 760px; margin: 0 auto; }
 .quiz-picked-note {
   font-size: 0.875rem;
   color: var(--text);
