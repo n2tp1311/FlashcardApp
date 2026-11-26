@@ -1,3 +1,13 @@
+## 2026-11-27 — Quiz questions asked backwards, mixed by default
+
+A preview showed the choice in the quiz settings menu and a backwards question with and without the term blanked. The user chose Mix both as the default, and blanking.
+
+**Mixed by default.** Few learners would find a setting to turn it on, and both directions are what make a card stick.
+
+**Blanked.** Without it, "Patience defines…" answers "Early Stopping — patience" by matching a word. The blanking reuses the passage panel's term match rather than a second word list.
+
+**Same card, same schedule.** A backwards answer schedules the card as a forward one does. Separate schedules per direction would double the reviews.
+
 ## 2026-11-27 — An "I don't know" row in the quiz
 
 A preview offered the button as a dashed row under the options (A) or a small link at the right (B). The user chose A: the point is to stop guesses, and a link that is easy to miss would not.

@@ -724,6 +724,7 @@ was the other layout previewed; the eye had to jump between them.
 | `mcq` | the card's own `correct` + `distractors` |
 | `true-false` | True, False |
 | `term-def`, `image-def` | the definition + up to 3 other definitions of the same format, from the session, the quiz pool and the open lesson, the likeliest to be mistaken first (below) |
+| `term-def` asked backwards | the term + up to 3 other term-def cards' terms, chosen the same way |
 | `cloze` | what fills the other cloze cards' gaps |
 | `gapfill` | one gap asked, the others filled in; wrong words from the passage's own distractors first, then its other gaps, never another passage's |
 
@@ -761,6 +762,23 @@ other card is marked forgotten. The right option is shown, the sheet reads "Here
 answer", the streak resets, and it waits for Next like a wrong answer. It makes no error
 sound or buzz: saying so is not a mistake. The row is not shown on a replay of an answered
 question. The result keeps `dontKnow`; the server is not told the difference.
+
+**Backwards questions.** A term-def card can be asked the other way: "Which term?" over its
+definition, with terms as the options. Recalling a term from its meaning is a harder
+retrieval than recognising the meaning, and practising both makes the card stick. The quiz
+settings menu chooses Term → definition, Definition → term, or Mix both, the default, which
+asks about half each way (`localStorage["fc-quiz-direction"]`, per device). Each card's way
+is drawn once per session (`state.quizReverse`), so Prev/Next replays the same question;
+a new choice applies from the next question, never the one on screen, whose answer would
+otherwise be checked against a question it was not asked. The answer schedules the same
+card as a forward one.
+
+The definition often names its term ("Patience defines…"), which would give the answer to
+anyone matching words, so the term's words are blanked to `____` outside LaTeX, using the
+same word match that marks the term in the book passage (`sourceTermPattern`). A wrong pick
+is the card whose term was chosen, and its line says what that term means: "You picked
+*Retraining*, which means: …". The speaker reads the blanked definition. Other formats,
+image cards included, are always asked forward.
 
 **Bars pinned to the bottom sit on the visible bottom edge**, wherever the page is scrolled:
 the quiz answer sheet, the flashcard Prev/Next/grade row and the session-end buttons. In
