@@ -1,3 +1,13 @@
+## 2026-11-26 — A wrong quiz pick counts as Again on the picked card
+
+The user pointed out that choosing the wrong definition in a term-def quiz means not knowing the term of the card that definition belongs to either. Asked to choose between counting it as Again, as a softer Hard, or only recording it, the user chose Again, and to record which card was picked.
+
+**No attempt row for the picked card.** A second row would make one question count twice in accuracy, the daily goal and the streak. The picked card's change rides on the asked card's row (`picked_card_id`, `picked_prev_state`), and undo takes both back.
+
+**Not when cramming, not on unseen cards.** If the asked card was not due, nothing is scheduled, as for any not-due answer. A card never studied is left unseen: picking a definition you have not met is not forgetting it. The id is recorded in both cases, so whether picks predict lapses can be checked later.
+
+**Rescheduled even if not due.** The rule says the learner has forgotten the picked card now; waiting for its due date would ignore that.
+
 ## 2026-11-26 — KnowledgeApp's card links are shown on each card, folded
 
 The user asked whether learners can see KnowledgeApp's concept map. A preview offered three ways: links on each card, always shown (1A) or folded behind one button (1B), and a map of each lesson. The user chose 1B.

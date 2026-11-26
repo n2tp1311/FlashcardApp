@@ -260,6 +260,18 @@ This one route is where learning is recorded. It does, in one transaction:
    then move a review's due date to a quieter day within its fuzz range (§6).
 7. **Count lapses for leeches** and report `became_leech` on the one answer that
    crosses the line.
+8. **Mark the picked card forgotten too.** A wrong term-def or image-def quiz answer
+   is another card's definition, and the client sends that card as `pickedCardId`
+   (§8). Choosing it means the learner does not know that card's term either, so the
+   picked card is rated Again with the same scheduler, even if it is not due. It gets
+   no attempt row of its own: one question is one answer in every count. The asked
+   card's row records `picked_card_id`, and `picked_prev_state` holds the picked
+   card's snapshot for undo (§7). Nothing is rescheduled when the asked card was not
+   due (step 5: cramming stays harmless), or when the picked card was never studied:
+   choosing a definition you have not met yet is not forgetting it. The id is still
+   recorded then, so the rule can be measured later. An id that is not another of the
+   user's cards is dropped, never refused. The response's `picked` gives the card's
+   new due date, and the memory strip updates it.
 
 After the transaction it records `due_zero` if nothing is left due (§11), sends the
 response, and then — with `setImmediate`, so the next card is not held up — may start
@@ -519,6 +531,10 @@ A snapshot of `{"notDue":true}` says the answer changed nothing, so nothing is
 restored; `{"row":null}` says it was the card's first answer. A NULL `prev_state` is
 an answer from before the column existed and cannot be undone.
 
+Undoing an answer that also marked a picked card forgotten (§5, step 8) writes that
+card back from `picked_prev_state` too, unless the picked card has been answered, or
+picked again, since: its own later answer stands.
+
 ---
 
 ## 8. Studying, on the client
@@ -718,6 +734,11 @@ distractor pool, or two missed cards would make a two-option question.
 **MCQ options are only as good as the card.** The app never invents an MCQ distractor;
 if a card's own `distractors` contains a correct statement, the quiz will show two right
 answers. Such a card has to be edited.
+
+**A wrong pick names its card.** For term-def and image-def, `quizPickedCardId` finds the
+card whose definition the learner chose (same format, not the asked card, first in the
+session, pool, lesson order) and sends it with the answer, which marks that card
+forgotten as well (§5, step 8). An MCQ's wrong options are not cards, so they name none.
 
 **Bars pinned to the bottom sit on the visible bottom edge**, wherever the page is scrolled:
 the quiz answer sheet, the flashcard Prev/Next/grade row and the session-end buttons. In
