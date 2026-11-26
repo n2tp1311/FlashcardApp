@@ -1,3 +1,13 @@
+## 2026-11-27 — An "I don't know" row in the quiz
+
+A preview offered the button as a dashed row under the options (A) or a small link at the right (B). The user chose A: the point is to stop guesses, and a link that is easy to miss would not.
+
+**Again, but no picked card.** It counts as a wrong answer on the asked card, since the learner could not recall it. No other card is marked forgotten, because no definition was chosen.
+
+**No error sound.** An honest answer should not feel like a mistake, or learners would guess instead.
+
+**The server is not told.** The attempt is a plain wrong answer. Telling "didn't know" from "guessed wrong" in stats would need a new column; nothing reads it yet.
+
 ## 2026-11-26 — Quiz wrong answers: same lesson and similar length first
 
 Wrong answers were drawn at random from the session and the lesson, so a short option beside long ones, or one from an unrelated chapter, could be ruled out without knowing the term. They are now scored by lesson and by length closeness, with a random part so they still vary.

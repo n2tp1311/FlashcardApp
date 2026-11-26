@@ -284,7 +284,7 @@ FSRS's four ratings:
 
 | Answer | Rating |
 |---|---|
-| wrong (flashcard Learning, wrong quiz option) | Again |
+| wrong (flashcard Learning, wrong quiz option, quiz "I don't know") | Again |
 | flashcard Hard | Hard |
 | flashcard Know It (no grade sent) | Good |
 | flashcard Confident (`grade: "easy"`) | Easy |
@@ -752,6 +752,15 @@ sentence, "That card is back in today's reviews too.", is added only when the re
 `picked` says the card was marked, so it is not claimed for a cram answer, an unseen card,
 or an answer still waiting offline. Image cards have no term to name and get no line.
 The line is kept on the result, so Prev back to the question shows it again.
+
+**"I don't know" (key 0).** A dashed row under the options, in every quiz format. With
+four options a guess is right one time in four and counts as remembered; this lets the
+learner say they do not know instead. It is sent as a wrong answer (Again on the asked
+card), but no option was chosen, so none turns red, no `pickedCardId` is sent and no
+other card is marked forgotten. The right option is shown, the sheet reads "Here's the
+answer", the streak resets, and it waits for Next like a wrong answer. It makes no error
+sound or buzz: saying so is not a mistake. The row is not shown on a replay of an answered
+question. The result keeps `dontKnow`; the server is not told the difference.
 
 **Bars pinned to the bottom sit on the visible bottom edge**, wherever the page is scrolled:
 the quiz answer sheet, the flashcard Prev/Next/grade row and the session-end buttons. In
