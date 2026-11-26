@@ -723,13 +723,21 @@ was the other layout previewed; the eye had to jump between them.
 |---|---|
 | `mcq` | the card's own `correct` + `distractors` |
 | `true-false` | True, False |
-| `term-def`, `image-def` | the definition + up to 3 other definitions of the same format, from the session, then the quiz pool, then the open lesson |
+| `term-def`, `image-def` | the definition + up to 3 other definitions of the same format, from the session, the quiz pool and the open lesson, the likeliest to be mistaken first (below) |
 | `cloze` | what fills the other cloze cards' gaps |
 | `gapfill` | one gap asked, the others filled in; wrong words from the passage's own distractors first, then its other gaps, never another passage's |
 
 With too few other definitions a question shows fewer choices rather than padding with
 "—", which gave the answer away. A retry of missed cards keeps the whole session as the
 distractor pool, or two missed cards would make a two-option question.
+
+**The wrong answers are the ones likeliest to be mistaken.** `quizDistractors` scores each
+candidate: 0.3 for the asked card's own lesson, plus 0.7 times how close its length is to
+the answer's (shorter over longer), plus a random part up to 0.35, and takes the top three.
+Drawn at random, a two-word option beside three sentences could be ruled out without
+knowing the term. The random part keeps the same three from coming back every time; it is
+too small to let a one-word option in when sentence-length ones exist. Cloze answers are
+scored the same way.
 
 **MCQ options are only as good as the card.** The app never invents an MCQ distractor;
 if a card's own `distractors` contains a correct statement, the quiz will show two right

@@ -1,3 +1,9 @@
+## 2026-11-26 — Quiz wrong answers: same lesson and similar length first
+
+Wrong answers were drawn at random from the session and the lesson, so a short option beside long ones, or one from an unrelated chapter, could be ruled out without knowing the term. They are now scored by lesson and by length closeness, with a random part so they still vary.
+
+**Confused pairs later.** The next step agreed with the user is to prefer cards the learner has actually confused (`attempts.picked_card_id`, recorded since today). That waits until there is data to use.
+
 ## 2026-11-26 — A wrong pick is named in one line under the options
 
 A preview offered three ways to tell the learner whose definition they picked: a label inside the picked option (A), one sentence under the options (B), or a label under every wrong option (C). The user chose B.
