@@ -681,6 +681,18 @@ was the other layout previewed; the eye had to jump between them.
   or one answered after an undo or a move to another card, never holds the session.
   Flashcards only, and only on the server, where the links and the weak test live. The
   cost is a pause on those cards, and a session a few cards longer when the learner says yes.
+  **Related cards.** The same links, both ways, under one folded button on the back of a
+  KnowledgeApp flashcard: "Related cards · N", like Read more. `GET /cards/:id/related`
+  returns the cards this card's definition names (`builds on`, in `cards.needs` order) and the
+  cards in its class that name it (`used in`, the first five in study order, with the total:
+  one card is named by up to 139). The second list is found by searching each card's `needs`
+  for the quoted id, so `s:1` does not match `s:12`. A row opens its definition in place, as
+  text. "Still learning" marks a card studied and now learning, relearning or due; one never
+  studied is not marked, or a new class would mark every row. It is folded because the links
+  are word matches: one lesson's three "Early Stopping — …" cards were each linked to all four
+  cards that say "early stopping", so a wrong link should cost a line behind a tap, not a line
+  on every card. Looked up as the card is shown; a reply for a card already left is dropped.
+  Flashcards only, not gap-fill passages or the quiz.
   **The quiz still opens it only after a miss.** A wrong quiz answer opens the passage (a
   wrong answer waits for Next anyway); a right one keeps it folded, because a right answer
   moves on by itself and an open panel would stop it. Plain Flashcard mode adds no step
@@ -1537,7 +1549,8 @@ rejected (2026-10-19): of 38,044 links, 62% already follow book order and 26%
 point to a later lesson, but most of those reach more than ten lessons ahead and a sample
 of them was half word matches ("Kernel Trick" needing a convolution "Kernel") -- the rest
 were the book naming a concept before its chapter explains it, on purpose. Following them
-would pull chapter 18 into chapter 13. A knowledge map was considered at the same time and
+would pull chapter 18 into chapter 13. (The links are shown, folded, as each card's Related
+cards, §8.) A knowledge map was considered at the same time and
 not built: Khan Academy and Duolingo both moved to a linear path, and this data's 2-D map
 positions carry little meaning.
 

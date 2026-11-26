@@ -1,3 +1,13 @@
+## 2026-11-26 — KnowledgeApp's card links are shown on each card, folded
+
+The user asked whether learners can see KnowledgeApp's concept map. A preview offered three ways: links on each card, always shown (1A) or folded behind one button (1B), and a map of each lesson. The user chose 1B.
+
+**Not a lesson map.** On the live store, 61% of 4,147 lessons have no link between their own cards and 21% have one or two, so most maps would be empty. The links are word matches: in the Early Stopping lesson every card saying "early stopping" was linked to all three "Early Stopping — …" cards, twelve crossing arrows that look like structure and are not. This agrees with the 2026-10-19 decision not to build a knowledge map.
+
+**Folded, not always shown.** About a quarter of cards have links. Shown on every back, a wrong link is a line the learner reads each time; behind the button it is one row in a list they opened.
+
+**"Still learning" only on cards studied.** The same test as Learn these first marked every never-studied card weak, so on a new class every row said it. Here it marks cards studied and now learning, relearning or due.
+
 ## 2026-11-24 — Railway settings move from railway.toml to .railway/railway.ts
 
 Railway stops reading `railway.toml` on 2026-12-01, and the file was the only place the health check and restart policy lived: the service's own settings were empty. The file was replaced by `.railway/railway.ts`, applied to the service, then deleted.
