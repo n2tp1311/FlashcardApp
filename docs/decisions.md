@@ -1,3 +1,11 @@
+## 2026-11-27 — Quiz answers count as Know It; a guess is marked, not assumed
+
+From the list of study ideas the user picked "say how sure you are" first. A preview showed three ways to mark a guess; the user chose a Guessing switch above the options, off by default, over asking after every pick (a tap per question) and a button on each option (small, and it covered long text). Asked how a right guess should be scheduled, given that every right quiz answer was already Hard by default, the user removed that rule and its preference instead: a right answer is now Good, and a right guess Hard.
+
+**Why drop the Hard default.** It treated every right pick as a possible lucky guess, so answers the learner knew earned short intervals, and the opt-out was a setting few would find. Asking the learner is more precise than assuming.
+
+**Cost.** Recognition now earns the same interval as recall unless the learner says it was a guess. Needs Recall fills only from right guesses, so it will mostly hold cards answered before this change.
+
 ## 2026-11-27 — A backwards question's blanks are filled in once answered
 
 The user asked that, after a "Which term?" question, the blanked definition become the whole sentence again ("Relaxing the mind and forearm into the present while…"). The filled words are marked, not plain, so the learner sees which words the blanks were and links them to the term just answered. The marking reuses the blanking's word match, so what was hidden is exactly what is marked.
