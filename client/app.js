@@ -1394,7 +1394,7 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.dirReverse": "Definition → term",
   "quiz.dirMixed": "Mix both",
   "quiz.whichTerm": "Which term?",
-  "quiz.pickedTerm": "You picked {term}, which means: {def}",
+  "quiz.pickedTerm": "You picked {term}.",
   "quiz.layoutList": "Show answers in a list",
   "quiz.voiceOn": "Turn on hands-free answers (V)",
   "quiz.voiceOff": "Turn off hands-free answers (V)",
@@ -2684,7 +2684,7 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.dirReverse": "Định nghĩa → thuật ngữ",
   "quiz.dirMixed": "Trộn cả hai",
   "quiz.whichTerm": "Thuật ngữ nào?",
-  "quiz.pickedTerm": "Bạn chọn {term}, nghĩa là: {def}",
+  "quiz.pickedTerm": "Bạn chọn {term}.",
   "quiz.layoutList": "Xếp đáp án thành danh sách",
   "quiz.voiceOn": "Bật trả lời bằng giọng nói (V)",
   "quiz.voiceOff": "Tắt trả lời bằng giọng nói (V)",
@@ -12098,10 +12098,11 @@ function showQuizPickedNote(picked) {
   var el = document.createElement("div");
   el.id = "quiz-picked-note";
   el.className = "quiz-picked-note";
+  // Backwards the option was a term; what it means is in the compare panel below.
   var parts = t(picked.def ? "quiz.pickedTerm" : "quiz.pickedOf").split("{term}");
   var term = document.createElement("b");
   term.textContent = picked.term;
-  el.append(parts[0], term, (parts[1] || "").replace("{def}", picked.def || ""));
+  el.append(parts[0], term, parts[1] || "");
   if (picked.marked) el.append(" " + t("quiz.pickedMarked"));
   if (picked.compare) el.appendChild(quizComparePanel(picked.compare));
   document.getElementById("quiz-options").after(el);

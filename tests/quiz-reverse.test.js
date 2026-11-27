@@ -58,13 +58,13 @@ test("backwards: the definition with its term blanked, the terms as options, the
     assert.equal(q.speech, "… defines how many checks may get worse before training stops.");
     assert.deepEqual(q.checked, ["reverse"]);
     await page.evaluate(() => answerQuiz(state.quizOptions.indexOf("Retraining")));
-    await page.waitForFunction(() => /which means/.test((document.getElementById("quiz-picked-note") || {}).textContent || ""));
+    await page.waitForFunction(() => /back in today/.test((document.getElementById("quiz-picked-note") || {}).textContent || ""));
     const after = await page.evaluate(() => { const el = document.getElementById("quiz-picked-note"); return { sent: window.__sent[0],
       note: [...el.childNodes].filter((n) => !(n.classList && n.classList.contains("quiz-compare"))).map((n) => n.textContent).join(""),
       compared: [...el.querySelectorAll(".quiz-compare-term")].map((n) => n.textContent) }; });
     assert.equal(after.sent.correct, false);
     assert.equal(after.sent.pickedCardId, "r", "the card whose term was picked");
-    assert.equal(after.note, "You picked Retraining, which means: Training again on all the data for the same number of steps. That card is back in today's reviews too.");
+    assert.equal(after.note, "You picked Retraining. That card is back in today's reviews too.", "the definition is in the panel, not repeated in the line");
     assert.deepEqual(after.compared, ["Early Stopping — patience", "Retraining"], "the two cards side by side");
 
     await page.evaluate(() => { state.quizResults = []; state.quizAnswered = false; renderQuizCard(); answerQuiz(state.quizOptions.indexOf("Early Stopping — patience")); });
