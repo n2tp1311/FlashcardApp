@@ -295,6 +295,8 @@ Object.assign(TRANSLATIONS.en, {
   "setup.hintUpdated": "Cards KnowledgeApp changed since you last reviewed them",
   "setup.leeches": "Leeches",
   "setup.hintLeeches": "Cards you have forgotten 8 or more times since they were last edited. Edit them, or study them on their own.",
+  "setup.mixedUp": "Mixed up",
+  "setup.hintMixedUp": "Pairs of cards you have mixed up. Each question offers just the two, so you learn to tell them apart.",
   "leech.tag": "Leech",
   "leech.tagCount": "Leech · forgot {n}×",
   "leech.tooltip": "Forgotten {n} times since this card was last edited. Click for options.",
@@ -1418,6 +1420,10 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.idkSub": "This card comes back soon for another look.",
   "quiz.pickedOf": "You picked the definition of {term}.",
   "quiz.pickedMarked": "That card is back in today's reviews too.",
+  "quiz.mixTitle": "Tell them apart",
+  "quiz.mixTitleN": "Mixed up {n} times",
+  "quiz.mixDrill": "Tell them apart · mixed up {n} times",
+  "quiz.mixDrillOnce": "Tell them apart · mixed up once",
   "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
   "study.source": "From the book",
@@ -1625,6 +1631,8 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.hintUpdated": "Thẻ KnowledgeApp đã thay đổi kể từ lần bạn xem lại gần nhất",
   "setup.leeches": "Thẻ khó nhớ",
   "setup.hintLeeches": "Thẻ bạn đã quên từ 8 lần trở lên kể từ lần sửa gần nhất. Hãy sửa chúng, hoặc học riêng.",
+  "setup.mixedUp": "Hay nhầm",
+  "setup.hintMixedUp": "Các cặp thẻ bạn từng nhầm với nhau. Mỗi câu chỉ có hai đáp án là hai thẻ đó, để bạn tập phân biệt.",
   "leech.tag": "Thẻ khó nhớ",
   "leech.tagCount": "Thẻ khó nhớ · quên {n} lần",
   "leech.tooltip": "Đã quên {n} lần kể từ lần sửa thẻ gần nhất. Bấm để xem lựa chọn.",
@@ -2702,6 +2710,10 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.idkSub": "Thẻ này sẽ quay lại sớm để ôn lại.",
   "quiz.pickedOf": "Bạn chọn định nghĩa của {term}.",
   "quiz.pickedMarked": "Thẻ đó cũng được đưa vào ôn lại hôm nay.",
+  "quiz.mixTitle": "Phân biệt hai thẻ",
+  "quiz.mixTitleN": "Đã nhầm {n} lần",
+  "quiz.mixDrill": "Phân biệt hai thẻ · đã nhầm {n} lần",
+  "quiz.mixDrillOnce": "Phân biệt hai thẻ · đã nhầm một lần",
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
   "study.source": "Trích từ sách",
@@ -8512,6 +8524,28 @@ function openSetup(scope) {
   });
 }
 
+// The Mixed up pill shows only when a pair has both cards in the chosen lessons.
+function updateSetupMixedPill(cards) {
+  var pill = document.getElementById("setup-filter-mixedup");
+  if (!pill) return;
+  var pairs = mixedPairs(cards).length;
+  pill.classList.toggle("hidden", pairs === 0 && !pill.classList.contains("active"));
+  document.getElementById("setup-mixedup-count").textContent = pairs;
+}
+
+// Each mixed-up pair once, both cards present and studyable: [{a, b, n}].
+function mixedPairs(cards) {
+  var byId = {};
+  cards.forEach(function(c) { if (!c.rewrite_pending) byId[c.id] = c; });
+  var out = [];
+  Object.keys(byId).forEach(function(id) {
+    (byId[id].mixed_with || []).forEach(function(m) {
+      if (byId[m.id] && id < m.id) out.push({ a: byId[id], b: byId[m.id], n: m.n });
+    });
+  });
+  return out;
+}
+
 function updateSetupMatchCount(data) {
   var countEl = document.getElementById("setup-match-count");
   if (!countEl || !data) return;
@@ -8521,6 +8555,7 @@ function updateSetupMatchCount(data) {
     countEl.classList.add("setup-match-count-warn");
     return;
   }
+  updateSetupMixedPill(data.cards);
   var filterPill = document.querySelector("#setup-filter .pill.active");
   var filter = filterPill ? filterPill.dataset.value : "all";
   var matched = filterCardsBySetup(data.cards, filter, data.knownMap, data.statsMap, data.reviewsToday);
@@ -8867,7 +8902,8 @@ var FILTER_HINT_KEYS = {
   needsRecall: "setup.hintNeedsRecall",
   learning:    "setup.hintLearning",
   updated:     "setup.hintUpdated",
-  leeches:     "setup.hintLeeches"
+  leeches:     "setup.hintLeeches",
+  mixedUp:     "setup.hintMixedUp"
 };
 
 var MODE_HINT_KEYS = {
@@ -8890,6 +8926,15 @@ var MODE_HINT_KEYS = {
       if (hint) hint.textContent = key ? t(key) : "";
       // needsRecall cards are only ever confirmed via quiz recognition — default to
       // Flashcard so picking this filter doesn't silently produce a no-op session.
+      if (pill.dataset.value === "mixedUp") {
+        setPillGroup("setup-mode", "quiz");
+        var modeHintMix = document.getElementById("setup-mode-hint");
+        if (modeHintMix) modeHintMix.textContent = t(MODE_HINT_KEYS.quiz);
+        if (document.querySelector("#setup-order .pill.active").dataset.value === "cram") {
+          setPillGroup("setup-order", "shuffle");
+          setOrderHint("shuffle");
+        }
+      }
       if (pill.dataset.value === "needsRecall") {
         setPillGroup("setup-mode", "flashcard");
         var modeHintOnFilterSwitch = document.getElementById("setup-mode-hint");
@@ -9868,6 +9913,10 @@ function filterCardsBySetup(cards, filter, knownMap, statsMap, reviewsToday, ign
     return cards.filter(function(c) { return c.upstream_change === "updated"; });
   } else if (filter === "leeches") {
     return cards.filter(function(c) { return c.is_leech; });
+  } else if (filter === "mixedUp") {
+    var inPair = {};
+    mixedPairs(cards).forEach(function(p) { inPair[p.a.id] = inPair[p.b.id] = true; });
+    return cards.filter(function(c) { return inPair[c.id]; });
   }
   return cards;
 }
@@ -9928,6 +9977,7 @@ function startStudy(count, filter, mode, order) {
       if (count !== "all") filtered = filtered.slice(0, parseInt(count, 10));
     }
 
+    state.pendingMixedUp = filter === "mixedUp";
     launchStudy(filtered, mode, order);
   });
 }
@@ -9943,6 +9993,9 @@ function launchStudy(filtered, mode, order) {
   // Set by Study now just before it calls this; any other session starts without one.
   state.studyNowRun = state.pendingStudyNowRun || null;
   state.pendingStudyNowRun = null;
+  // Set by Study Setup's Mixed up filter; Study now and the other quizzes ask as usual.
+  state.quizMixedUp = !!state.pendingMixedUp && mode === "quiz";
+  state.pendingMixedUp = false;
 
   state.studyMode = mode;
   state.cram = order === "cram" && mode !== "quiz" ? newCram(filtered) : null;
@@ -12050,7 +12103,51 @@ function showQuizPickedNote(picked) {
   term.textContent = picked.term;
   el.append(parts[0], term, (parts[1] || "").replace("{def}", picked.def || ""));
   if (picked.marked) el.append(" " + t("quiz.pickedMarked"));
+  if (picked.compare) el.appendChild(quizComparePanel(picked.compare));
   document.getElementById("quiz-options").after(el);
+}
+
+// The two cards side by side, with the words of 4+ letters only one definition has marked:
+// that is where they differ, and shorter words are mostly "the" and "are".
+// A plain word comparison, no model. LaTeX is shown unmarked: split into words, it breaks.
+function quizComparePanel(cmp) {
+  var wrap = document.createElement("div");
+  wrap.className = "quiz-compare";
+  var head = document.createElement("div");
+  head.className = "quiz-compare-head";
+  head.textContent = cmp.n >= 2 ? t("quiz.mixTitleN", { n: cmp.n }) : t("quiz.mixTitle");
+  var cols = document.createElement("div");
+  cols.className = "quiz-compare-cols";
+  var words = function(s) {
+    var set = {};
+    String(s || "").toLowerCase().split(/[^\p{L}\p{N}]+/u).forEach(function(w) { if (w.length >= 4) set[w] = true; });
+    return set;
+  };
+  [[cmp.own, cmp.other], [cmp.other, cmp.own]].forEach(function(pair) {
+    var col = document.createElement("div");
+    col.className = "quiz-compare-col";
+    var term = document.createElement("div");
+    term.className = "quiz-compare-term";
+    term.textContent = pair[0].term;
+    var def = document.createElement("div");
+    def.className = "quiz-compare-def";
+    if (containsLatex(pair[0].def)) {
+      renderLatex(pair[0].def, def);
+    } else {
+      var otherWords = words(pair[1].def);
+      String(pair[0].def || "").split(/([\p{L}\p{N}]+)/u).forEach(function(part) {
+        if (part.length >= 4 && /[\p{L}\p{N}]/u.test(part) && !otherWords[part.toLowerCase()]) {
+          var mark = document.createElement("mark");
+          mark.textContent = part;
+          def.appendChild(mark);
+        } else if (part) def.append(part);
+      });
+    }
+    col.append(term, def);
+    cols.appendChild(col);
+  });
+  wrap.append(head, cols);
+  return wrap;
 }
 
 // A passage is asked one gap at a time: the rest stay filled in as context. The gap is drawn
@@ -12069,6 +12166,17 @@ function quizClozeText(card) {
   return card.data.text.replace(CLOZE_RE, function(_m, _n, answer) {
     return "{{c" + (k++ === chosen ? 1 : 2) + "::" + answer + "}}";
   });
+}
+
+// In a Mixed up quiz, the session's card that this one was most often confused with.
+function quizMixPartner(card) {
+  if (!state.quizMixedUp || card.format !== "term-def") return null;
+  var best = null;
+  (card.mixed_with || []).forEach(function(m) {
+    var other = state.quizCards.find(function(c) { return c.id === m.id; });
+    if (other && other.data[quizIsReversed(card) ? "term" : "def"] !== card.data[quizIsReversed(card) ? "term" : "def"] && (!best || m.n > best.n)) best = { card: other, n: m.n };
+  });
+  return best;
 }
 
 function buildQuizOptions(card) {
@@ -12093,6 +12201,12 @@ function buildQuizOptions(card) {
       .filter(function(p) { return p.gap; }).map(function(p) { return p.answer.trim(); })))
       .forEach(function(w) { if (wrong.length < 3 && !seen[w.toLowerCase()]) { seen[w.toLowerCase()] = true; wrong.push(w); } });
     return shuffle([answer].concat(wrong));
+  }
+  // Mixed up: only the card it was confused with, so the question is telling the two apart.
+  var mix = quizMixPartner(card);
+  if (mix) {
+    var side = quizIsReversed(card) ? "term" : "def";
+    return shuffle([card.data[side], mix.card.data[side]]);
   }
   // Reversed: the other cards' terms are the wrong answers.
   if (quizIsReversed(card)) return shuffle([card.data.term].concat(quizDistractors(card, "term")));
@@ -12590,6 +12704,13 @@ function renderQuizCard() {
   } else {
     renderLatex(card.data.term, qEl);
   }
+  var drillMix = quizMixPartner(card);
+  if (drillMix) {
+    var mixSub = document.createElement("div");
+    mixSub.className = "quiz-mix-sub";
+    mixSub.textContent = drillMix.n === 1 ? t("quiz.mixDrillOnce") : t("quiz.mixDrill", { n: drillMix.n });
+    qEl.appendChild(mixSub);
+  }
   document.getElementById("btn-quiz-audio").classList.toggle("hidden", !window.speechSynthesis || !quizSpeechText(card));
   // A replayed card shows what its answer did; its previews are from before that answer.
   setQuizOutcomes(priorResult && priorResult.notDue ? null : quizOutcomeTimes(card), priorResult ? priorResult.correct : null);
@@ -12746,6 +12867,10 @@ function answerQuiz(selectedIdx) {
     resultEntry.picked = { term: pickedCard && pickedCard.data.term, marked: false };
     // Backwards, the term was the option; what it means is the useful part.
     if (reversed && pickedCard) resultEntry.picked.def = pickedCard.data.def;
+    if (pickedCard && card.format === "term-def") {
+      var before = (card.mixed_with || []).find(function(m) { return m.id === pickedId; });
+      resultEntry.picked.compare = { own: card.data, other: pickedCard.data, n: (before ? before.n : 0) + 1 };
+    }
   }
   if (isCorrect) quizAttemptFields.grade = "medium";
   store.setCardKnown(card.id, isCorrect).catch(function() {});

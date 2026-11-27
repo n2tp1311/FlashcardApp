@@ -3123,6 +3123,14 @@ code {
   margin-top: 12px;
 }
 .quiz-picked-note b { font-weight: 600; }
+.quiz-compare { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+.quiz-compare-head { font-weight: 600; margin-bottom: 8px; }
+.quiz-compare-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.quiz-compare-term { font-weight: 600; margin-bottom: 4px; }
+.quiz-compare-def { line-height: 1.5; color: var(--text2); }
+.quiz-compare-def mark { background: var(--warning-light); color: var(--text); border-radius: 3px; padding: 0 2px; }
+.quiz-mix-sub { font-size: 0.875rem; font-weight: 400; color: var(--text2); margin-top: 8px; }
+.pill-badge { display: inline-block; min-width: 1.5em; padding: 0 6px; margin-left: 2px; border-radius: var(--radius-pill); background: var(--surface2); font-size: 0.75rem; }
 /* A short label, so it sits centred under the card at its own width, not across the screen. */
 .fc-hint-cap { width: fit-content; max-width: 600px; margin: 12px auto 0; padding: 4px 12px; border-radius: var(--radius-pill); }
 

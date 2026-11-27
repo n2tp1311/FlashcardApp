@@ -12,6 +12,7 @@ const { forEachBatch } = require("../lib/batch");
 const { isLeech, lapsesSinceEdit, resetLeech } = require("../lib/leech");
 const { userScheduler } = require("../lib/memory");
 const { UNSCHEDULED_SQL, notHeldSql } = require("../lib/mastery");
+const { mixedWith } = require("../lib/mixups");
 const router  = express.Router();
 
 const UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads");
@@ -131,7 +132,8 @@ router.get("/lessons/:lessonId/cards", requireAuth, (req, res) => {
   ).all(userId, lessonId);
 
   const lastStudiedMap = batchLastStudiedAt(cards.map(c => c.id), userId);
-  const rows = cards.map(c => ({ ...c, last_studied_at: lastStudiedMap[c.id] ?? null }));
+  const mixed = mixedWith(db, userId, cards.map(c => c.id));
+  const rows = cards.map(c => ({ ...c, last_studied_at: lastStudiedMap[c.id] ?? null, mixed_with: mixed[c.id] || [] }));
 
   const sched = userScheduler(db, userId);
   res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) }, sched)));
@@ -165,7 +167,8 @@ router.post("/cards/by-lessons", requireAuth, (req, res) => {
   ).all(userId, ...lessonIds);
 
   const lastStudiedMap = batchLastStudiedAt(cards.map(c => c.id), userId);
-  const rows = cards.map(c => ({ ...c, last_studied_at: lastStudiedMap[c.id] ?? null }));
+  const mixed = mixedWith(db, userId, cards.map(c => c.id));
+  const rows = cards.map(c => ({ ...c, last_studied_at: lastStudiedMap[c.id] ?? null, mixed_with: mixed[c.id] || [] }));
 
   const sched = userScheduler(db, userId);
   res.json(rows.map(r => attachFsrsPreview({ ...r, data: JSON.parse(r.data) }, sched)));

@@ -521,6 +521,8 @@ try { db.exec("ALTER TABLE attempts ADD COLUMN typed INTEGER"); } catch (_) {}
 // picked_prev_state is that card's schedule before the answer counted as Again on it, for undo.
 try { db.exec("ALTER TABLE attempts ADD COLUMN picked_card_id TEXT"); } catch (_) {}
 try { db.exec("ALTER TABLE attempts ADD COLUMN picked_prev_state TEXT"); } catch (_) {}
+// Mixed-up pairs (lib/mixups.js) read only the answers that picked another card.
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_attempts_picked ON attempts(user_id, picked_card_id) WHERE picked_card_id IS NOT NULL"); } catch (_) {}
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS study_events (
     id         INTEGER PRIMARY KEY,
