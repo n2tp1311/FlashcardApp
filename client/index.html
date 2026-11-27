@@ -877,7 +877,6 @@
     <div class="results-grade" id="results-grade"></div>
     <div class="results-detail" id="results-detail"></div>
     <div class="results-review-hint" id="results-review-hint"></div>
-    <div class="quiz-cap-hint hidden" id="results-cap-note"></div>
     <div class="results-actions">
       <button class="btn btn-primary hidden" id="btn-results-learn-new" data-primary></button>
       <button class="btn btn-primary hidden" id="btn-results-missed" data-primary><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> <span id="results-missed-label"></span></button>
@@ -970,14 +969,6 @@
           <button type="button" class="pref-nav-row" data-page="plan" id="pref-nav-plan"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupPlan">Daily plan</span></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
           <button type="button" class="pref-nav-row" data-page="memory" id="pref-nav-memory"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupMemory">Memory</span></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
           <button type="button" class="pref-nav-row" data-page="reminders" id="pref-nav-reminders"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupReminders">Reminders</span></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
-        <div class="pref-row pref-nav-toggle">
-          <label class="form-label" for="pref-quiz-known" data-i18n="pref.quizCountsAsKnown">Quiz answers count as Know It</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="pref-quiz-known">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <p class="pref-hint" data-i18n="pref.quizCountsAsKnownHint">Right answers move cards on like Know It, wrong ones like Learning. Off: only flashcards move cards on.</p>
         </div>
         <div class="pref-nav-group">
           <button type="button" class="pref-nav-row" data-page="sound" id="pref-nav-sound"><span class="pref-nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></span><span class="pref-nav-text"><span data-i18n="pref.groupSound">Sound &amp; speech</span></span><svg class="pref-nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -1879,6 +1870,7 @@ What does logistic regression model? | P(Y=1|X) | P(X|Y=1) | E[Y|X] | Var(Y|X)">
         <div class="keymap-row"><kbd class="kbd">P</kbd><span data-i18n="keymap.pronounceTerm">Pronounce the term</span></div>
         <div class="keymap-row"><kbd class="kbd">B</kbd><span data-i18n="keymap.fromTheBook">Open / close From the book (after answering)</span></div>
         <div class="keymap-row"><kbd class="kbd">V</kbd><span data-i18n="keymap.quizVoice">Hands-free answers on / off</span></div>
+        <div class="keymap-row"><kbd class="kbd">G</kbd><span data-i18n="keymap.quizGuess">Mark the answer as a guess</span></div>
         <div class="keymap-row"><kbd class="kbd">E</kbd><span data-i18n="study.editCard">Edit card</span></div>
         <div class="keymap-row"><kbd class="kbd">F</kbd><span data-i18n="flag.button">Report this card</span></div>
         <div class="keymap-row"><kbd class="kbd">D</kbd><span data-i18n="study.deleteCard">Delete card</span></div>

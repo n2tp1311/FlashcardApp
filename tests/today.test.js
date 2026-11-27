@@ -50,7 +50,7 @@ test("the streak caption says a rest day is available instead of a false reset c
 test("Daily goal is a saved preference, 20 by default, both languages", function() {
   assert.match(app, /\n  dailyGoal: 20,\n/);
   assert.match(html, /id="pref-daily-goal"[\s\S]{0,200}data-value="0"/);
-  assert.match(app, /dailyGoal: dailyGoal, quizCountsAsKnown/);
+  assert.match(app, /dailyGoal: dailyGoal \}/);
   assert.match(app, /typeof prefs\.dailyGoal === "number"/);
   for (const k of ["goal.progress", "goal.left", "goal.met", "week.restHint", "pref.dailyGoal", "stat.restDayAvailable"]) {
     assert.equal(app.split('"' + k + '":').length - 1, 2, k);

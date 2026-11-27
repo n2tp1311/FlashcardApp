@@ -956,7 +956,6 @@ test("the quiz card shows when it comes back if right and if wrong, before the a
         fsrs_preview_again: 600, fsrs_preview_hard: 15 * day, fsrs_preview_good: 30 * day });
       let reply = null;
       store.recordAttempt = () => new Promise((ok) => { reply = ok; });
-      state.quizCountsAsKnown = false;
       state.currentLesson = { id: "l1", title: "Quiz", format: "mcq" };
       state.quizCards = [seen(cards[0]), seen(cards[1]), Object.assign({}, cards[2], { srs_due_at: now + day, fsrs_preview_hard: 600, fsrs_preview_again: 60 })];
       startQuiz();
@@ -977,21 +976,22 @@ test("the quiz card shows when it comes back if right and if wrong, before the a
       out.notDuePad = getComputedStyle(document.querySelector(".quiz-question-wrap")).paddingBottom;
       state.quizIndex = 0; renderQuizCard();
       out.replay = read();
-      state.quizCountsAsKnown = true; state.quizResults = []; state.quizIndex = 0; renderQuizCard();
-      out.asKnown = read();
+      state.quizResults = []; state.quizIndex = 0; renderQuizCard();
+      document.getElementById("quiz-guess-btn").click();
+      out.guessing = read();
       return out;
     }, QUIZ4);
-    assert.deepEqual(r.before, ["✗ 10 min", "✓ 15d"]);
-    assert.equal(r.label, "If right: back in 15d");
+    assert.deepEqual(r.before, ["✗ 10 min", "✓ 1 mo"]);
+    assert.equal(r.label, "If right: back in 1 mo");
     assert.equal(r.glyphs, false, "drawn as the app's icons, not ✓ ✗ characters in a fallback font");
-    assert.deepEqual(r.right, ["✗ 10 min:off", "✓ 15d:on"]);
+    assert.deepEqual(r.right, ["✗ 10 min:off", "✓ 1 mo:on"]);
     assert.deepEqual(r.rightServer, ["✗ 10 min:off", "✓ 16d:on"], "the server's date wins once it arrives");
     assert.doesNotMatch(r.sheet, /15d|16d|was/, "the sheet no longer repeats it");
-    assert.deepEqual(r.wrong, ["✗ 10 min:on", "✓ 15d:off"]);
+    assert.deepEqual(r.wrong, ["✗ 10 min:on", "✓ 1 mo:off"]);
     assert.deepEqual(r.notDue, [], "a card not due keeps its schedule");
     assert.equal(r.notDuePad, "28px");
-    assert.deepEqual(r.replay, ["✗ 10 min:off", "✓ 15d:on"], "a replayed card shows what its answer did");
-    assert.deepEqual(r.asKnown, ["✗ 10 min", "✓ 1 mo"], "quiz answers counted as Know It are rated Good");
+    assert.deepEqual(r.replay, ["✗ 10 min:off", "✓ 1 mo:on"], "a replayed card shows what its answer did");
+    assert.deepEqual(r.guessing, ["✗ 10 min", "✓ 15d"], "a right answer marked as a guess is rated Hard");
   });
 });
 

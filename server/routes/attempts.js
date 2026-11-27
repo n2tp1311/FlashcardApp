@@ -77,7 +77,7 @@ function againOnPicked(userId, pickedId, now, tz) {
 
 // POST /api/attempts
 router.post("/", requireAuth, (req, res) => {
-  const { cardId, correct, source, grade, durationMs, clientId, typed, tz, pickedCardId } = req.body;
+  const { cardId, correct, source, grade, durationMs, clientId, typed, tz, pickedCardId, guessed } = req.body;
   if (!cardId || correct === undefined || !source)
     return res.status(400).json({ error: "cardId, correct, source required" });
   if (clientId !== undefined && (typeof clientId !== "string" || !/^c[a-z0-9]{20}$/.test(clientId)))
@@ -125,9 +125,9 @@ router.post("/", requireAuth, (req, res) => {
 
     const attemptId = clientId || genId();
     db.prepare(
-      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade, prev_state, typed, picked_card_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO attempts (id, card_id, user_id, correct, source, duration_ms, grade, prev_state, typed, picked_card_id, guessed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     ).run(attemptId, cardId, userId, correct ? 1 : 0, source, clampDuration(durationMs), grade || null,
-          snapshotState(stateRow, notDue), typed === true ? 1 : null, picked);
+          snapshotState(stateRow, notDue), typed === true ? 1 : null, picked, source === "quiz" && guessed === true ? 1 : null);
 
     // Card not yet due: record the attempt for analytics but leave the SRS schedule unchanged
     if (notDue) {
@@ -147,7 +147,8 @@ router.post("/", requireAuth, (req, res) => {
     // isn't capped and is recorded as a flashcard-strength answer to keep it out of Needs Recall.
     const capped = source === "quiz" && !!correct && !grade;
 
-    const correctSource = source === "quiz" && grade ? "flashcard" : source;
+    // A right guess is not recall: the card stays in Needs Recall.
+    const correctSource = source === "quiz" && grade && guessed !== true ? "flashcard" : source;
     const lastCorrectSource = correct ? correctSource : ((stateRow && stateRow.last_correct_source) || null);
 
     db.prepare(
