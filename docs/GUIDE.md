@@ -289,19 +289,16 @@ FSRS's four ratings:
 | flashcard Know It (no grade sent) | Good |
 | flashcard Confident (`grade: "easy"`) | Easy |
 | quiz correct (`grade: "medium"`) | Good |
-| quiz correct, marked as a guess (`grade: "hard"`, `guessed: true`) | Hard |
 | quiz correct, no grade (older clients) | Hard |
 
-**A right quiz answer is rated Good, and a right guess Hard.** Until 2026-11-27 every
-right quiz answer was Hard unless the learner turned on "Quiz answers count as Know
-It", on the grounds that choosing an option is recognition. The user removed that rule
-and the preference: the blunt rule penalised answers the learner knew, and what it was
-guarding against, a lucky pick, is better caught by asking. So the quiz has a
-**Guessing** switch (key G) above the options, off on every new question. Marked
-before choosing, a right answer is sent with `grade: "hard"` and `guessed: true`,
-stored in `attempts.guessed`, kept in Needs Recall and not marked Know It. The server
-still rates a right quiz answer with no grade Hard, for a client cached from before.
-How fast the answer came does not change the rating.
+**A right quiz answer is rated Good.** Until 2026-11-27 every right quiz answer was
+Hard unless the learner turned on "Quiz answers count as Know It", on the grounds that
+choosing an option is recognition. The user removed that rule and the preference: it
+penalised answers the learner knew. A Guessing switch to rate a lucky pick Hard was
+built and removed the same day; with "I don't know" under the options too there were
+two ways to say one thing, and the user kept "I don't know" (§8). So a lucky pick now
+counts as Good. The server still rates a right quiz answer with no grade Hard, for a
+client cached from before. How fast the answer came does not change the rating.
 
 The grade is the client's; the server trusted a client-sent grade on flashcards
 already, so this opens nothing new. The attempt keeps `source = "quiz"`, so the stats
@@ -312,7 +309,8 @@ can still tell the two apart.
 `last_correct_source` records whether a card's latest correct answer was a flashcard
 or a quiz. **Needs Recall** in Study Setup is the due cards whose latest correct answer
 was a quiz — known only by recognition. A graded quiz answer is stored as `flashcard`,
-since it is scheduled like one, except a right guess, which stays `quiz`. Choosing the filter switches the
+since it is scheduled like one. Every right answer from the current client is graded, so
+Needs Recall now holds only cards whose last right answer came before 2026-11-27. Choosing the filter switches the
 mode to Flashcard but does not lock it.
 
 ### Leeches
@@ -766,15 +764,6 @@ sentence, "That card is back in today's reviews too.", is added only when the re
 or an answer still waiting offline. Image cards have no term to name and get no line.
 The line is kept on the result, so Prev back to the question shows it again.
 
-**Guessing (key G).** A small switch above the options, off on every new question, so a
-sure answer costs no extra tap; it is gone once the question is answered and on a replay.
-The user chose it from three previews: this switch, "I was sure / I guessed" after every
-pick (honest but a tap per question), and a "guess?" button on each option (small, and it
-covered long options). A right guess is rated Hard (§5) and a line under the options says
-it comes back sooner. A wrong answer given without the switch is named as a sure mistake,
-the kind most worth a second look; "I don't know" is neither. Both lines stay on a replay.
-`showQuizGuessToggle`, `showQuizConfidenceNote`, `tests/quiz-guess.test.js`.
-
 **"I don't know" (key 0).** A dashed row under the options, in every quiz format. With
 four options a guess is right one time in four and counts as remembered; this lets the
 learner say they do not know instead. It is sent as a wrong answer (Again on the asked
@@ -834,8 +823,8 @@ read while thinking. The user chose this place from three previews (two chips un
 question, this line, the top bar): it adds no row, so the options stay where they were; the
 cost is small type. They also dropped "was 12d", the interval the card had been given, as
 noise. After answering, the outcome that happened is bold and the other struck through.
-Times come from the card's previews (a right quiz answer is rated Good, or Hard while
-Guessing is on, and the line follows the switch; a wrong one Again; `quizOutcomeTimes`), and the outcome that
+Times come from the card's previews (a right quiz answer is rated Good; a wrong one Again;
+`quizOutcomeTimes`), and the outcome that
 happened is replaced by the server's due date when the answer is saved, since load
 balancing may move a review by a day. A card not due yet keeps its schedule whatever the
 answer, so it shows no line and the not-due hint explains. A replayed card (Back) shows

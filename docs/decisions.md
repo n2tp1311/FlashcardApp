@@ -1,3 +1,9 @@
+## 2026-11-27 — The Guessing switch is removed; I don't know stays
+
+Seen in the app, the Guessing switch above the options and "I don't know" below them were two controls for one question: am I sure? The user wanted one. A preview offered "I don't know" as a two-step control (tap once to guess, again to see the answer), a long-press on an option to guess, and no guess at all; the user chose no guess. Right quiz answers stay Good, as decided earlier today.
+
+**Cost.** A lucky pick counts as knowing the card. "I don't know" is the way out for a learner who does not know.
+
 ## 2026-11-27 — Quiz answers count as Know It; a guess is marked, not assumed
 
 From the list of study ideas the user picked "say how sure you are" first. A preview showed three ways to mark a guess; the user chose a Guessing switch above the options, off by default, over asking after every pick (a tap per question) and a button on each option (small, and it covered long text). Asked how a right guess should be scheduled, given that every right quiz answer was already Hard by default, the user removed that rule and its preference instead: a right answer is now Good, and a right guess Hard.
