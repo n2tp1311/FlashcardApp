@@ -70,6 +70,27 @@ test("backwards: the definition with its term blanked, the terms as options, the
   } finally { await page.close(); }
 });
 
+test("once answered, the blanks are filled back in with the term's words marked, on replay too", async () => {
+  const { page, errors } = await open("reverse");
+  try {
+    await page.evaluate((cards) => {
+      state.quizCards = cards.slice(0, 1); state.quizPool = cards; state.currentLessonCards = [];
+      startQuiz();
+    }, CARDS);
+    const read = () => page.evaluate(() => {
+      const el = document.querySelector("#quiz-question .quiz-reverse-def");
+      return { text: el.textContent, marks: [...el.querySelectorAll("mark.quiz-fill")].map((m) => m.textContent) };
+    });
+    assert.deepEqual(await read(), { text: "____ defines how many checks may get worse before training stops.", marks: [] });
+    await page.evaluate(() => answerQuiz(state.quizOptions.indexOf("Retraining")));
+    const filled = { text: "Patience defines how many checks may get worse before training stops.", marks: ["Patience"] };
+    assert.deepEqual(await read(), filled, "a wrong answer fills it in too");
+    await page.evaluate(() => renderQuizCard());
+    assert.deepEqual(await read(), filled, "a replay shows it filled");
+    assert.deepEqual(errors, []);
+  } finally { await page.close(); }
+});
+
 test("the term's words are blanked outside LaTeX only", async () => {
   const { page } = await open("reverse");
   try {

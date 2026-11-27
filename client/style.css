@@ -3112,6 +3112,7 @@ code {
 .fc-reverse-term { font-size: 1.5rem; font-weight: 600; margin-bottom: 12px; }
 .fc-reverse-full { font-size: 0.9375rem; line-height: 1.55; color: var(--text2); border-top: 1px solid var(--border); padding-top: 10px; }
 .quiz-reverse-def { font-size: 1.0625rem; line-height: 1.55; max-width: 760px; margin: 0 auto; }
+.quiz-reverse-def .quiz-fill { background: none; color: var(--success); font-weight: 600; }
 .quiz-picked-note {
   font-size: 0.875rem;
   color: var(--text);

@@ -12170,6 +12170,31 @@ function quizMaskTerm(card) {
   return splitLatex(def).map(function(p) { return p.type === "text" ? p.content.replace(re, QUIZ_MASK) : p.raw; }).join("");
 }
 
+// Once answered, the blanks are filled back in: the book's sentence whole, the term's words
+// marked so the learner sees what the blanks were.
+function renderQuizReverseDef(card, el, filled) {
+  if (!filled) { renderLatex(quizMaskTerm(card), el); return; }
+  renderLatex(card.data.def, el);
+  var re = sourceTermPattern(card);
+  if (!re) return;
+  Array.prototype.slice.call(el.childNodes).forEach(function(node) {
+    if (node.nodeType !== 3) return;
+    var text = node.nodeValue, frag = document.createDocumentFragment(), last = 0, m;
+    re.lastIndex = 0;
+    while ((m = re.exec(text))) {
+      frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      var mark = document.createElement("mark");
+      mark.className = "quiz-fill";
+      mark.textContent = m[0];
+      frag.appendChild(mark);
+      last = m.index + m[0].length;
+    }
+    if (!last) return;
+    frag.appendChild(document.createTextNode(text.slice(last)));
+    node.replaceWith(frag);
+  });
+}
+
 function applyQuizLayout() {
   var grid = quizLayout() === "grid";
   document.getElementById("quiz-options").classList.toggle("grid-mode", grid);
@@ -12582,7 +12607,7 @@ function renderQuizCard() {
     askEl.textContent = t("quiz.whichTerm");
     var defEl = document.createElement("div");
     defEl.className = "quiz-reverse-def";
-    renderLatex(quizMaskTerm(card), defEl);
+    renderQuizReverseDef(card, defEl, !!priorResult);
     qEl.append(askEl, defEl);
   } else {
     renderLatex(card.data.term, qEl);
@@ -12795,6 +12820,9 @@ function answerQuiz(selectedIdx) {
     while (btn.firstChild) block.appendChild(btn.firstChild);
     btn.replaceWith(block);
   });
+
+  var reverseDefEl = reversed && document.querySelector("#quiz-question .quiz-reverse-def");
+  if (reverseDefEl) renderQuizReverseDef(card, reverseDefEl, true);
 
   setQuizScoreDisplay();
 
