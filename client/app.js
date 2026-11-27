@@ -12179,19 +12179,9 @@ function renderQuizReverseDef(card, el, filled) {
   if (!re) return;
   Array.prototype.slice.call(el.childNodes).forEach(function(node) {
     if (node.nodeType !== 3) return;
-    var text = node.nodeValue, frag = document.createDocumentFragment(), last = 0, m;
-    re.lastIndex = 0;
-    while ((m = re.exec(text))) {
-      frag.appendChild(document.createTextNode(text.slice(last, m.index)));
-      var mark = document.createElement("mark");
-      mark.className = "quiz-fill";
-      mark.textContent = m[0];
-      frag.appendChild(mark);
-      last = m.index + m[0].length;
-    }
-    if (!last) return;
-    frag.appendChild(document.createTextNode(text.slice(last)));
-    node.replaceWith(frag);
+    var tmp = document.createElement("span");
+    markSourceWords(tmp, node.nodeValue, re, null);
+    node.replaceWith.apply(node, Array.prototype.slice.call(tmp.childNodes));
   });
 }
 

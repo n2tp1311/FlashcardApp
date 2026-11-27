@@ -79,7 +79,7 @@ test("once answered, the blanks are filled back in with the term's words marked,
     }, CARDS);
     const read = () => page.evaluate(() => {
       const el = document.querySelector("#quiz-question .quiz-reverse-def");
-      return { text: el.textContent, marks: [...el.querySelectorAll("mark.quiz-fill")].map((m) => m.textContent) };
+      return { text: el.textContent, marks: [...el.querySelectorAll("mark.source-mark")].map((m) => m.textContent) };
     });
     assert.deepEqual(await read(), { text: "____ defines how many checks may get worse before training stops.", marks: [] });
     await page.evaluate(() => answerQuiz(state.quizOptions.indexOf("Retraining")));
