@@ -1353,11 +1353,17 @@
     <div class="modal-body">
       <div class="leech-card-term" id="leech-card-term"></div>
       <p class="leech-body" id="leech-body"></p>
+      <div class="leech-cause hidden" id="leech-cause">
+        <div class="leech-cause-kind" data-i18n="leech.causeKind">Likely cause</div>
+        <div class="leech-cause-head" id="leech-cause-head"></div>
+        <div class="leech-cause-body" id="leech-cause-body"></div>
+      </div>
     </div>
     <div class="modal-footer leech-actions">
       <button class="btn btn-ghost" data-modal="leech" data-i18n="leech.keepStudying">Keep studying</button>
       <button type="button" class="btn btn-outline hidden" id="btn-leech-rewrite" data-i18n="leech.askRewrite">Ask KnowledgeApp to rewrite</button>
       <button type="button" class="btn btn-primary" id="btn-leech-edit" data-i18n="leech.editCard">Edit card</button>
+      <button type="button" class="btn btn-primary hidden" id="btn-leech-fix"></button>
     </div>
   </div>
 

@@ -497,6 +497,11 @@ try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN note TEXT"); } catch (_) 
 try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN outcome_note TEXT"); } catch (_) {}
 // The wording before and after a rewrite, sent by KnowledgeApp when it closes the request, so
 // the learner sees what changed without having to remember the old card.
+// A leech request's likely cause (routes/cards.js leechCause): 'mixed', 'needs', 'long' or
+// 'unclear', and its detail as JSON, for KnowledgeApp's rewrite to address.
+for (const col of ["cause", "cause_detail"]) {
+  try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN " + col + " TEXT"); } catch (_) {}
+}
 for (const col of ["before_term", "before_def", "after_term", "after_def"]) {
   try { db.exec("ALTER TABLE rewrite_requests ADD COLUMN " + col + " TEXT"); } catch (_) {}
 }

@@ -3753,6 +3753,12 @@ button.leech-pill:hover { filter: brightness(0.96); }
 }
 .leech-card-term { font-weight: 600; padding: 10px 12px; border-radius: var(--radius); background: var(--surface2); margin-bottom: 10px; overflow-wrap: anywhere; }
 .leech-body { margin: 0; color: var(--text2); line-height: 1.5; }
+.leech-cause { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); }
+.leech-cause-kind { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text2); margin-bottom: 4px; }
+.leech-cause-head { font-weight: 600; margin-bottom: 4px; }
+.leech-cause-body { font-size: 0.875rem; color: var(--text2); line-height: 1.5; }
+.leech-cause-body b { color: var(--text); font-weight: 600; }
+.leech-cause .quiz-compare { margin-top: 10px; }
 .leech-actions { flex-wrap: wrap; }
 /* Stacked on a phone, the fix first: Edit card on top, Keep studying last. */
 @media (max-width: 600px) {

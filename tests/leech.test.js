@@ -389,12 +389,19 @@ test("the prompt fits a phone: every action on screen and none clipped", async f
       document.getElementById("btn-leech-rewrite").classList.remove("hidden");
       document.getElementById("leech-card-term").textContent = "Affine set";
       document.getElementById("leech-body").textContent = "You've forgotten it 8 times. Reviewing it again rarely helps.";
+      // The most a cause adds: its box and a fourth button.
+      document.getElementById("leech-cause").classList.remove("hidden");
+      document.getElementById("leech-cause-head").textContent = "It builds on 2 cards you're not sure of";
+      document.getElementById("leech-cause-body").textContent = "Treatment effect, Control group: learn these first, then this card.";
+      const fix = document.getElementById("btn-leech-fix");
+      fix.classList.remove("hidden");
+      fix.textContent = "Review 2 first";
       return Array.from(document.querySelectorAll("#modal-leech .modal-footer .btn")).map(function(b) {
         const x = b.getBoundingClientRect();
         return { left: x.left, right: x.right, bottom: x.bottom, w: x.width, sw: b.scrollWidth, cw: b.clientWidth };
       });
     });
-    assert.equal(r.length, 3);
+    assert.equal(r.length, 4);
     for (const b of r) {
       assert.ok(b.left >= 0 && b.right <= 360 && b.bottom <= 640, JSON.stringify(r));
       assert.ok(b.sw <= b.cw + 1, "label clipped: " + JSON.stringify(b));

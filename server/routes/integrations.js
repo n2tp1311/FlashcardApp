@@ -962,17 +962,19 @@ router.get("/rewrites", (req, res) => {
     return res.status(400).json({ error: "limit must be an integer from 1 to 100" });
 
   const rows = db.prepare(
-    "SELECT rr.id, rr.lapses, rr.issue, rr.note, rr.created_at, cards.external_id, cards.data " +
+    "SELECT rr.id, rr.lapses, rr.issue, rr.note, rr.cause, rr.cause_detail, rr.created_at, cards.external_id, cards.data " +
     "FROM rewrite_requests rr JOIN cards ON cards.id = rr.card_id " +
     "JOIN lessons ON lessons.id = cards.lesson_id JOIN classes ON classes.id = lessons.class_id " +
     "WHERE rr.user_id = ? AND classes.user_id = ? AND rr.status = 'pending' " +
     "ORDER BY rr.created_at, rr.id LIMIT ?"
   ).all(req.userId, req.userId, limit);
   const requests = rows.map(r => {
-    let data;
+    let data, detail = null;
     try { data = JSON.parse(r.data); } catch (_) { data = {}; }
+    try { detail = r.cause_detail ? JSON.parse(r.cause_detail) : null; } catch (_) {}
     return { id: r.id, external_id: r.external_id, term: data.term || "", def: data.def || "",
-             lapses: r.lapses, issues: (r.issue || "leech").split(","), note: r.note || "", created_at: r.created_at };
+             lapses: r.lapses, issues: (r.issue || "leech").split(","), note: r.note || "", created_at: r.created_at,
+             cause: r.cause || null, cause_detail: detail };
   });
   res.json({ requests });
 });

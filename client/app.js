@@ -308,6 +308,23 @@ Object.assign(TRANSLATIONS.en, {
   "leech.askRewrite": "Ask KnowledgeApp to rewrite",
   "leech.rewriteAlreadyRequested": "Rewrite requested",
   "leech.keepStudying": "Keep studying",
+  "leech.bodyShort": "You've forgotten it {n} times. Reviewing it again rarely helps.",
+  "leech.causeKind": "Likely cause",
+  "leech.causeMixed": "You mix it up with {term}",
+  "leech.causeMixedBody": "You picked {term} for it {n} times. Seeing the two side by side usually fixes this.",
+  "leech.causeMixedBody_one": "You picked {term} for it once. Seeing the two side by side usually fixes this.",
+  "leech.causeNeeds": "It builds on {n} cards you're not sure of",
+  "leech.causeNeeds_one": "It builds on a card you're not sure of",
+  "leech.causeNeedsBody": "{terms}: learn these first, then this card.",
+  "leech.causeNeedsBody_one": "{terms}: learn it first, then this card.",
+  "leech.causeLong": "The answer is long",
+  "leech.causeLongBody": "{n} words. A long answer is hard to recall whole. Keeping only what the front asks for usually helps.",
+  "leech.causeUnclear": "No clear cause found",
+  "leech.causeUnclearBody": "It isn't mixed up with another card, doesn't rest on shaky cards, and isn't long. The wording may be unclear: an example often helps.",
+  "leech.tellApart": "Tell them apart",
+  "leech.reviewNeeds": "Review {n} first",
+  "leech.reviewNeeds_one": "Review it first",
+  "leech.askShorten": "Ask KnowledgeApp to shorten it",
   "toast.rewriteRequested": "KnowledgeApp will rewrite this card on its next run.",
   "flag.button": "Report this card",
   "flag.pending": "Problem reported — KnowledgeApp will look at it on its next run",
@@ -1644,6 +1661,23 @@ Object.assign(TRANSLATIONS.vi, {
   "leech.askRewrite": "Nhờ KnowledgeApp viết lại",
   "leech.rewriteAlreadyRequested": "Đã yêu cầu viết lại",
   "leech.keepStudying": "Tiếp tục học",
+  "leech.bodyShort": "Bạn đã quên thẻ này {n} lần. Ôn lại thêm hiếm khi giúp được.",
+  "leech.causeKind": "Nguyên nhân có thể",
+  "leech.causeMixed": "Bạn hay nhầm với {term}",
+  "leech.causeMixedBody": "Bạn đã chọn {term} cho thẻ này {n} lần. Đặt hai thẻ cạnh nhau thường giúp phân biệt.",
+  "leech.causeMixedBody_one": "Bạn đã chọn {term} cho thẻ này một lần. Đặt hai thẻ cạnh nhau thường giúp phân biệt.",
+  "leech.causeNeeds": "Thẻ này dựa trên {n} thẻ bạn chưa vững",
+  "leech.causeNeeds_one": "Thẻ này dựa trên một thẻ bạn chưa vững",
+  "leech.causeNeedsBody": "{terms}: học những thẻ này trước, rồi đến thẻ này.",
+  "leech.causeNeedsBody_one": "{terms}: học thẻ này trước, rồi đến thẻ đang học.",
+  "leech.causeLong": "Đáp án dài",
+  "leech.causeLongBody": "{n} chữ. Đáp án dài khó nhớ trọn. Chỉ giữ phần mặt trước hỏi thường giúp được.",
+  "leech.causeUnclear": "Không thấy nguyên nhân rõ",
+  "leech.causeUnclearBody": "Thẻ không bị nhầm với thẻ khác, không dựa trên thẻ chưa vững, và không dài. Có thể cách viết chưa rõ: thêm một ví dụ thường giúp được.",
+  "leech.tellApart": "Phân biệt hai thẻ",
+  "leech.reviewNeeds": "Ôn {n} thẻ nền trước",
+  "leech.reviewNeeds_one": "Ôn thẻ nền trước",
+  "leech.askShorten": "Nhờ KnowledgeApp rút gọn",
   "toast.rewriteRequested": "KnowledgeApp sẽ viết lại thẻ này ở lần chạy tới.",
   "flag.button": "Báo lỗi thẻ",
   "flag.pending": "Đã báo lỗi — KnowledgeApp sẽ xem ở lần chạy tới",
@@ -7876,8 +7910,83 @@ function openLeechPrompt(card, fromStudy) {
   rewrite.classList.toggle("hidden", !canRewriteInKnowledge(card));
   rewrite.disabled = !!card.rewrite_pending;
   rewrite.textContent = t(card.rewrite_pending ? "leech.rewriteAlreadyRequested" : "leech.askRewrite");
+  showLeechCause(null);
   openModal("leech");
+  if (IS_SERVER && typeof store.leechCause === "function") {
+    store.leechCause(card.id).then(function(cause) {
+      if (state.leechPrompt && state.leechPrompt.card === card) showLeechCause(cause);
+    }, function() {});
+  }
 }
+
+// The dialog's "Likely cause" (GET /cards/:id/leech-cause) and the fix that matches it. Until
+// it arrives, or offline, the dialog reads as before. A mixed-up pair is compared right in the
+// dialog and weak base cards join the flashcard session, so neither ends the session open
+// behind it; a quiz has no place to put base cards, so there the cause is only named.
+function showLeechCause(cause) {
+  var p = state.leechPrompt;
+  var box = document.getElementById("leech-cause");
+  var fix = document.getElementById("btn-leech-fix");
+  var edit = document.getElementById("btn-leech-edit");
+  var old = box.querySelector(".quiz-compare");
+  if (old) old.remove();
+  state.leechCause = cause;
+  var n = p && p.card.leech_lapses || 8;
+  document.getElementById("leech-body").textContent = t(cause ? "leech.bodyShort" : "leech.body", { n: n });
+  box.classList.toggle("hidden", !cause);
+  var fixKey = null;
+  if (cause) {
+    var head = document.getElementById("leech-cause-head"), body = document.getElementById("leech-cause-body");
+    var bold = function(key, vars, term) {
+      var parts = t(key, vars).split("{term}");
+      var b = document.createElement("b");
+      b.textContent = term;
+      body.textContent = "";
+      body.append(parts[0], b, parts[1] || "");
+    };
+    if (cause.cause === "mixed") {
+      var other = cause.partner.data.term || "";
+      head.textContent = t("leech.causeMixed").split("{term}").join(other);
+      bold(cause.partner.n === 1 ? "leech.causeMixedBody_one" : "leech.causeMixedBody", { n: cause.partner.n, term: "{term}" }, other);
+      fixKey = "leech.tellApart";
+    } else if (cause.cause === "needs") {
+      var one = cause.needs.length === 1;
+      head.textContent = t(one ? "leech.causeNeeds_one" : "leech.causeNeeds", { n: cause.needs.length });
+      body.textContent = t(one ? "leech.causeNeedsBody_one" : "leech.causeNeedsBody", { terms: cause.needs.map(needTerm).join(", ") });
+      var inFlashcards = p.fromStudy && getActiveScreen() === "flashcard";
+      if (inFlashcards || !p.fromStudy) fixKey = one ? "leech.reviewNeeds_one" : "leech.reviewNeeds";
+    } else {
+      head.textContent = t(cause.cause === "long" ? "leech.causeLong" : "leech.causeUnclear");
+      body.textContent = t(cause.cause === "long" ? "leech.causeLongBody" : "leech.causeUnclearBody", { n: cause.words });
+    }
+    var rewrite = document.getElementById("btn-leech-rewrite");
+    if (cause.cause === "long" && !p.card.rewrite_pending) rewrite.textContent = t("leech.askShorten");
+  }
+  fix.classList.toggle("hidden", !fixKey);
+  if (fixKey) fix.textContent = t(fixKey, { n: cause.needs ? cause.needs.length : 0 });
+  edit.classList.toggle("btn-primary", !fixKey);
+  edit.classList.toggle("btn-outline", !!fixKey);
+}
+
+document.getElementById("btn-leech-fix").addEventListener("click", function() {
+  var p = state.leechPrompt, cause = state.leechCause;
+  if (!p || !cause) return;
+  if (cause.cause === "mixed") {
+    document.getElementById("leech-cause").appendChild(
+      quizComparePanel({ own: p.card.data, other: cause.partner.data, n: cause.partner.n }));
+    this.classList.add("hidden");
+    document.getElementById("btn-leech-edit").classList.replace("btn-outline", "btn-primary");
+    return;
+  }
+  closeModal("leech");
+  if (p.fromStudy) {
+    // The session's own "Learn these first" offer would ask again on advance.
+    state.fcNeedsOffer = null;
+    insertNeeds(p.card, cause.needs);
+  } else {
+    launchStudy(cause.needs.concat([p.card]), "flashcard", "in-order");
+  }
+});
 
 document.getElementById("btn-leech-edit").addEventListener("click", function() {
   var p = state.leechPrompt;
@@ -16587,6 +16696,7 @@ var SQLiteAdapter = (function() {
       return req("POST", "/cards/" + id + "/source-feedback", note ? { verdict: verdict, note: note } : { verdict: verdict });
     },
     cardNeeds: function(id) { return req("GET", "/cards/" + id + "/needs"); },
+    leechCause: function(id) { return req("GET", "/cards/" + id + "/leech-cause"); },
     cardRelated: function(id) { return req("GET", "/cards/" + id + "/related"); },
     // The server caps each request at 1000 ids, so larger selections go in sequential batches.
     acknowledgeCardUpdates: function(ids) {

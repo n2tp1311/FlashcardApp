@@ -376,8 +376,10 @@ router.post("/cards/:id/rewrite-request", requireAuth, (req, res) => {
   }
   const state = db.prepare("SELECT fsrs_lapses, leech_base FROM card_states WHERE card_id = ? AND user_id = ?").get(card.id, userId);
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  db.prepare("INSERT INTO rewrite_requests (id, user_id, card_id, lapses, issue, note) VALUES (?, ?, ?, ?, ?, ?)")
-    .run(id, userId, card.id, lapsesSinceEdit(state), issue, note);
+  // A leech goes with its likely cause, so KnowledgeApp fixes that rather than guessing.
+  const cause = isFlag ? null : leechCause(userId, card.id);
+  db.prepare("INSERT INTO rewrite_requests (id, user_id, card_id, lapses, issue, note, cause, cause_detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    .run(id, userId, card.id, lapsesSinceEdit(state), issue, note, cause && cause.cause, cause && JSON.stringify(cause.detail));
   res.status(201).json({ id, status: "pending" });
 });
 
@@ -433,11 +435,15 @@ router.get("/rewrite-requests", requireAuth, (req, res) => {
 router.get("/cards/:id/needs", requireAuth, (req, res) => {
   const userId = req.session.userId;
   if (!ownCard(req.params.id, userId)) return res.status(404).json({ error: "Not found" });
-  const card = db.prepare("SELECT cards.needs, l.class_id FROM cards JOIN lessons l ON l.id = cards.lesson_id WHERE cards.id = ?").get(req.params.id);
+  res.json({ cards: needsOf(userId, req.params.id) });
+});
+
+function needsOf(userId, cardId) {
+  const card = db.prepare("SELECT cards.needs, l.class_id FROM cards JOIN lessons l ON l.id = cards.lesson_id WHERE cards.id = ?").get(cardId);
   let ids = [];
   try { ids = JSON.parse(card.needs || "[]"); } catch (_) {}
   ids = Array.isArray(ids) ? ids.filter(x => typeof x === "string").slice(0, 10) : [];
-  if (!ids.length) return res.json({ cards: [] });
+  if (!ids.length) return [];
   const rows = db.prepare(
     "SELECT cards.*, cs.known, cs.last_seen_at, cs.srs_due_at, cs.last_correct_source, " +
     "cs.fsrs_stability, cs.fsrs_difficulty, cs.fsrs_state, cs.fsrs_reps, cs.fsrs_lapses, " +
@@ -446,14 +452,45 @@ router.get("/cards/:id/needs", requireAuth, (req, res) => {
     "FROM cards JOIN lessons l ON cards.lesson_id = l.id " +
     "LEFT JOIN card_states cs ON cs.card_id = cards.id AND cs.user_id = ? " +
     `WHERE l.class_id = ? AND cards.id != ? AND cards.external_id IN (${ids.map(() => "?").join(",")})`
-  ).all(userId, card.class_id, req.params.id, ...ids);
+  ).all(userId, card.class_id, cardId, ...ids);
   const now = Math.floor(Date.now() / 1000);
   const sched = userScheduler(db, userId);
   const order = new Map(ids.map((x, i) => [x, i]));
-  res.json({ cards: rows
+  return rows
     .sort((a, b) => order.get(a.external_id) - order.get(b.external_id))
     .map(r => ({ ...attachFsrsPreview({ ...r, data: JSON.parse(r.data) }, sched),
-      weak: r.srs_due_at == null || r.fsrs_state !== 2 || r.srs_due_at <= now })) });
+      weak: r.srs_due_at == null || r.fsrs_state !== 2 || r.srs_due_at <= now }));
+}
+
+// Why a leech keeps being forgotten: a guess from what is already recorded, no model. The
+// causes are tried in the order the learner can act on them during a session: mixed up with
+// another card (lib/mixups.js), resting on cards still weak (cards.needs), a long back; else
+// none found, and the wording is the likeliest suspect. `detail` is what KnowledgeApp's
+// rewrite reads (rewrite_requests.cause_detail).
+const LEECH_LONG_WORDS = 40;
+function leechCause(userId, cardId) {
+  const partners = (mixedWith(db, userId, [cardId])[cardId] || []).sort((a, b) => b.n - a.n);
+  for (const p of partners) {
+    const row = db.prepare("SELECT id, format, data FROM cards WHERE id = ?").get(p.id);
+    if (!row) continue;
+    const data = JSON.parse(row.data);
+    return { cause: "mixed", partner: { id: row.id, format: row.format, data, n: p.n },
+             detail: { term: data.term || "", def: data.def || "", times: p.n } };
+  }
+  const weak = needsOf(userId, cardId).filter(c => c.weak);
+  if (weak.length)
+    return { cause: "needs", needs: weak, detail: { terms: weak.map(c => c.data.term || "").filter(Boolean) } };
+  const data = JSON.parse(db.prepare("SELECT data FROM cards WHERE id = ?").get(cardId).data);
+  const words = String(data.def || "").split(/\s+/).filter(Boolean).length;
+  return { cause: words > LEECH_LONG_WORDS ? "long" : "unclear", detail: { words } };
+}
+
+// GET /api/cards/:id/leech-cause — the leech dialog's "Likely cause" (leechCause above).
+router.get("/cards/:id/leech-cause", requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  if (!ownCard(req.params.id, userId)) return res.status(404).json({ error: "Not found" });
+  const { detail, ...cause } = leechCause(userId, req.params.id);
+  res.json({ ...cause, words: detail.words });
 });
 
 // GET /api/cards/:id/related — "Related cards" on a flashcard's back: the cards this card's
