@@ -277,7 +277,9 @@ This one route is where learning is recorded. It does, in one transaction:
    §8 Quiz). One pick either way round makes the pair; it leaves once the last two quiz
    answers on either of its cards since its latest pick are both right. Nothing is stored
    for it: `mixedWith` reads `attempts` (index `idx_attempts_picked` over the rows with a
-   pick), so undoing the answer undoes the pair too. Both card lists, `GET
+   pick) in one query for all
+   the user's pairs, so undoing the answer undoes the pair too. A query per pair was slow
+   once a learner had hundreds. Both card lists, `GET
    /lessons/:id/cards` and `POST /cards/by-lessons`, give each card `mixed_with`, its
    partners as `[{id, n}]`, `n` counting the picks.
 
