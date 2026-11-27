@@ -1,3 +1,7 @@
+## 2026-11-27 — A backwards question's blanks are filled in once answered
+
+The user asked that, after a "Which term?" question, the blanked definition become the whole sentence again ("Relaxing the mind and forearm into the present while…"). The filled words are marked, not plain, so the learner sees which words the blanks were and links them to the term just answered. The marking reuses the blanking's word match, so what was hidden is exactly what is marked.
+
 ## 2026-11-27 — Flashcards can be asked backwards, forward by default
 
 After the quiz's backwards questions, the same was previewed for flashcards: the blanked definition in front, the term then the full definition behind, and a choice in the card's ⋯ menu. Asked whether to share the quiz's setting and default to mixed, the user chose a separate setting, forward by default.
