@@ -1,3 +1,13 @@
+## 2026-11-28 — Scenario questions arrive as one lesson at the end of each book
+
+From the list of study ideas (#12): a card that asks the learner to spot a concept at work, not recall its definition. KnowledgeApp writes them; this app only needed `add-cards` to take an `mcq` item. A preview showed two real scenario cards in the quiz and three placements; the user chose one Scenarios lesson at the end of each book.
+
+**Why one lesson at the end.** The book's own lessons stay as they are, the lesson layout KnowledgeApp sends does not need to name these cards (unnamed cards stay put), and a scenario is best met after its concept has been learned. One beside each lesson doubles the lessons; mixing them into a lesson puts multiple choice into flashcard sessions.
+
+**What the preview caught.** A price written with two dollar signs rendered as a red formula, and a backslash before them did not help. KnowledgeApp writes money in words and drops any scenario with a dollar sign. Cards from books that already have prices this way are untouched by this change.
+
+**Cost.** A scenario is never reworded: an `updated` event with `mcq` is ignored, so a bad one is fixed by editing or deleting it here.
+
 ## 2026-11-27 — A leech names its likely cause, and its rewrite is told
 
 From the list of study ideas: sort cards that keep failing by why they fail, and fix each cause its own way. The prerequisite half (#5) was already built as "Learn these first". A preview showed the leech dialog naming one cause, mixed up with another card, resting on weak base cards, a long answer, or none found, with the fix for it as the main button; the user chose to send the cause along with the rewrite request too, so KnowledgeApp addresses it.

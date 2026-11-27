@@ -1656,7 +1656,7 @@ when no removed card is shown.
 | Route | What it is for |
 |---|---|
 | `GET /classes`, `POST /classes` | list classes; create one for a book that has none |
-| `POST /add-cards` | add cards into an existing class, into a lesson, after a card, or into a new lesson |
+| `POST /add-cards` | add cards into an existing class, into a lesson, after a card, or into a new lesson; an item is term and def, `cloze`, `gapfill`, or `mcq` (a scenario question: `question`, `correct`, 1-4 `distractors`, optional `explanation`). KnowledgeApp sends its scenario questions as `mcq` into one **Scenarios** lesson at the end of the class; that lesson is term-def like the rest, and the study screens take each card by its own format. An `updated` event carrying `mcq` changes nothing: a scenario is added once |
 | `PUT /classes/:id/layout` | move linked cards into KnowledgeApp's current lessons, in its order; `lessons` is the by-chapter layout, an optional `concept` the by-concept one |
 | `PUT /lessons/:id` | rename a lesson in place |
 | `GET /classes/:id/cards` | every card with its position, for reconciling, the learner's verdict on its passage (`source_feedback`), and which layout the class shows (`lesson_layout`) |

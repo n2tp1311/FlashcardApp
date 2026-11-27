@@ -277,6 +277,7 @@
 - Bulk actions on the review screen: "Mark all shown as reviewed" (respects the current filter and class) and "Study updated cards" (opens Study Setup over the affected lessons with the Updated filter preselected, and returns to the review screen afterwards), and "Delete removed cards" (deletes every shown card flagged removed from the source, after one confirmation; hidden when none is shown)
 - Marking cards reviewed on the review screen restates what was cleared in a status line above the list — "“Photosynthesis” marked as reviewed." for one card, or the count plus the first five concept names for a bulk mark; it stays visible after the last card is cleared and resets when the screen is reopened
 - API tokens in Preferences: create a named token (shown once, copy button), see when each was last used, revoke any time
+- **Scenario questions**: KnowledgeApp adds, per book, a **Scenarios** lesson at the end of the class: multiple-choice cards that describe a situation without naming the concept, answered from four of the lesson's terms, with an explanation. Picked by the user from three placements (one lesson at the end, one after each lesson, inside each lesson). `add-cards` with `mcq`, `tests/scenario-cards.test.js`
 - Cards imported from a `ka export` file are linked automatically; cards imported before linking existed are matched once by exact term + definition (`ka sync --link`)
 
 ## Share
