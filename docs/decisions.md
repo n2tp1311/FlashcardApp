@@ -4,7 +4,9 @@ Second from the list of study ideas. Every wrong term-def pick already recorded 
 
 **Why read it from attempts.** The pairs are derived on each card list from `attempts.picked_card_id`, not stored, so undoing an answer removes its pair and there is no second record to keep in step. **Why mark words without a model.** The marked words only point at where two definitions differ; a word comparison does that instantly and offline, and the definitions are the book's, shown whole.
 
-**Cost.** Short shared words such as "the" are skipped by length (four letters or more), so a short distinguishing word can go unmarked. Card lists run one extra query, however many pairs there are.
+**Marking, revised the same day.** Seen on a real pair, marking the words only one definition had marked nearly everything, since two unlike definitions share almost no words, and the tint was faint in dark mode. A preview offered stronger underlines, dimming the shared words, or no marking; dimming was chosen, and only when the two share at least 40% of their longer words.
+
+**Cost.** Words are compared as written, so "learn" and "learns" count as different. Card lists run one extra query, however many pairs there are.
 
 ## 2026-11-27 — The Guessing switch is removed; I don't know stays
 

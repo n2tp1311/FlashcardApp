@@ -778,10 +778,13 @@ The line is kept on the result, so Prev back to the question shows it again.
 
 **Mixed-up pairs.** On a term-def card the line also sets the two cards side by side, the
 asked one first, headed "Mixed up N times" (from the card's `mixed_with`, plus this pick)
-or "Tell them apart" the first time. Words of four letters or more that only one
-definition has are marked: that is where the two differ. It is a plain word comparison,
-no model; a definition with LaTeX is shown unmarked, since splitting it into words breaks
-the formula (`quizComparePanel`). Study Setup's Mixed up filter starts a quiz of the
+or "Tell them apart" the first time. When the two share much of their wording (at least
+40% of the shorter definition's words of four letters or more, `QUIZ_COMPARE_OVERLAP`),
+every shared word is dimmed, short ones included, so the words that tell them apart stand
+out. Two unlike definitions are shown plain: marking the words only one had, the first
+version, marked nearly every word, and its tint was hard to see in dark mode. It is a plain
+word comparison, no model, so "learn" and "learns" count as different; a definition with
+LaTeX is shown as is, since splitting it into words breaks the formula (`quizComparePanel`). Study Setup's Mixed up filter starts a quiz of the
 paired cards in which each card offers only two options, its own answer and its partner's
 (the session's partner with the most picks, `quizMixPartner`), under the subtitle "Tell
 them apart · mixed up N times". The quiz direction still applies: backwards, the options
