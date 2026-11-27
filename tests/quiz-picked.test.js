@@ -177,20 +177,3 @@ test("a wrong pick names the card it came from, and says it was marked once the 
   assert.match(extract("renderQuizCard"), /showQuizPickedNote\(null\);[\s\S]*if \(priorResult\) showQuizPickedNote\(priorResult\.picked\);/,
     "cleared on the next question, shown again on a replay");
 });
-
-test("a right answer marked as a guess is stored as one, rated Hard, and stays in Needs Recall", async () => {
-  known("asked", -60);
-  const sure = await answer({ cardId: "asked", correct: true, grade: "medium" });
-  const sureDue = sure.body.srs_due_at;
-  assert.equal(db.prepare("SELECT last_correct_source AS s FROM card_states WHERE card_id = 'asked' AND user_id = 'u1'").get().s, "flashcard");
-  known("asked", -60);
-  const id = "c" + "g".repeat(20);
-  const guess = await answer({ cardId: "asked", correct: true, grade: "hard", guessed: true, clientId: id });
-  assert.equal(guess.status, 201);
-  assert.ok(guess.body.srs_due_at < sureDue, "a guess comes back sooner than a sure answer");
-  assert.equal(db.prepare("SELECT guessed FROM attempts WHERE id = ?").get(id).guessed, 1);
-  assert.equal(db.prepare("SELECT last_correct_source AS s FROM card_states WHERE card_id = 'asked' AND user_id = 'u1'").get().s, "quiz");
-  const plain = await answer({ cardId: "asked", correct: false, guessed: "yes" });
-  assert.equal(plain.status, 201);
-  assert.equal(db.prepare("SELECT guessed FROM attempts ORDER BY rowid DESC LIMIT 1").get().guessed, null, "only a literal true counts");
-});

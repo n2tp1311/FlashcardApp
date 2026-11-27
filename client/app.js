@@ -730,7 +730,7 @@ Object.assign(TRANSLATIONS.en, {
   "setup.cram": "Cram",
   "setup.hintCram": "For a test: a card you miss comes back a few cards later, and each card leaves the round after 3 correct answers.",
   "summary.cramNote": "{done} of {n} cards reached their goal · misses: {misses}",
-  "setup.hintQuizMode": "Faster. A right answer counts as Know It, or as Hard if you marked it a guess; a wrong one counts as Learning.",
+  "setup.hintQuizMode": "Faster. A right answer counts as Know It, a wrong one as Learning.",
   "setup.newCardEstimateLabel": "New cards recommended today",
   "dashboard.newCardsShortLabel": "Suggested new cards",
   "dashboard.futureDueTodayHint": "Includes cards already due or overdue",
@@ -1248,7 +1248,6 @@ Object.assign(TRANSLATIONS.en, {
   "keymap.pronounce": "Pronounce",
   "keymap.pronounceTerm": "Pronounce the term",
   "keymap.quizVoice": "Hands-free answers on / off",
-  "keymap.quizGuess": "Mark the answer as a guess",
   "keymap.fromTheBook": "Open / close From the book (after answering)",
   "keymap.undoGrade": "Undo the last grade",
   "keymap.selectOption": "Select option",
@@ -1419,10 +1418,6 @@ Object.assign(TRANSLATIONS.en, {
   "quiz.idkSub": "This card comes back soon for another look.",
   "quiz.pickedOf": "You picked the definition of {term}.",
   "quiz.pickedMarked": "That card is back in today's reviews too.",
-  "quiz.guessing": "Guessing",
-  "quiz.guessingKey": "Mark this answer as a guess (G)",
-  "quiz.guessedRight": "Right, but a guess: it comes back sooner, as Hard.",
-  "quiz.sureWrong": "You were sure, but it was wrong. Worth a closer look.",
   "study.notDueHint": "This card isn't due yet, so your answer didn't change its schedule.",
   "study.explanation": "Explanation",
   "study.source": "From the book",
@@ -2040,7 +2035,7 @@ Object.assign(TRANSLATIONS.vi, {
   "setup.cram": "Ôn cấp tốc",
   "setup.hintCram": "Ôn thi: thẻ trả lời sai sẽ quay lại sau vài thẻ, mỗi thẻ rời vòng sau 3 lần đúng.",
   "summary.cramNote": "{done}/{n} thẻ đạt mục tiêu · số lần sai: {misses}",
-  "setup.hintQuizMode": "Nhanh hơn. Trả lời đúng được tính là Đã thuộc, hoặc là Khó nếu bạn đánh dấu là đoán; trả lời sai được tính là Đang học.",
+  "setup.hintQuizMode": "Nhanh hơn. Trả lời đúng được tính là Đã thuộc, trả lời sai là Đang học.",
   "setup.newCardEstimateLabel": "Số thẻ mới nên học hôm nay",
   "dashboard.newCardsShortLabel": "Thẻ mới gợi ý",
   "dashboard.futureDueTodayHint": "Bao gồm cả thẻ đã đến hạn hoặc quá hạn",
@@ -2543,7 +2538,6 @@ Object.assign(TRANSLATIONS.vi, {
   "keymap.pronounce": "Phát âm",
   "keymap.pronounceTerm": "Đọc thuật ngữ",
   "keymap.quizVoice": "Bật / tắt trả lời bằng giọng nói",
-  "keymap.quizGuess": "Đánh dấu câu trả lời là đoán",
   "keymap.fromTheBook": "Mở / đóng Trích từ sách (sau khi trả lời)",
   "keymap.undoGrade": "Hoàn tác lần đánh dấu vừa rồi",
   "keymap.selectOption": "Chọn đáp án",
@@ -2708,10 +2702,6 @@ Object.assign(TRANSLATIONS.vi, {
   "quiz.idkSub": "Thẻ này sẽ quay lại sớm để ôn lại.",
   "quiz.pickedOf": "Bạn chọn định nghĩa của {term}.",
   "quiz.pickedMarked": "Thẻ đó cũng được đưa vào ôn lại hôm nay.",
-  "quiz.guessing": "Đang đoán",
-  "quiz.guessingKey": "Đánh dấu câu trả lời này là đoán (G)",
-  "quiz.guessedRight": "Đúng, nhưng là đoán: thẻ quay lại sớm hơn, như khi chấm Khó.",
-  "quiz.sureWrong": "Bạn chắc chắn nhưng lại sai. Nên xem kỹ thẻ này.",
   "study.notDueHint": "Thẻ này chưa đến hạn ôn, nên câu trả lời không ảnh hưởng đến lịch ôn.",
   "study.explanation": "Giải thích",
   "study.source": "Trích từ sách",
@@ -4055,7 +4045,6 @@ var state = {
   studyNowMode: "flashcard",
   studyNowFirst: "review",
   dailyGoal: 20,
-  quizGuessing: false,
   loadBalance: true,
   easyDays: [0, 0, 0, 0, 0, 0, 0],
   targetRecall: 90,
@@ -12630,7 +12619,7 @@ function renderQuizCard() {
     }
     optsEl.appendChild(btn);
   });
-  if (!priorResult) { showQuizIdkButton(); showQuizGuessToggle(); }
+  if (!priorResult) showQuizIdkButton();
 
   if (priorResult && (card.format === "mcq" || card.format === "true-false") && card.data.explanation) {
     var expEl  = document.createElement("details");
@@ -12650,7 +12639,6 @@ function renderQuizCard() {
   if (replaySource) (document.getElementById("quiz-explanation") || optsEl).after(replaySource);
   if (priorResult) showQuizPickedNote(priorResult.picked);
 
-  if (priorResult) showQuizConfidenceNote(priorResult);
   if (priorResult && priorResult.notDue) showQuizHint("quiz-notdue-hint", "study.notDueHint");
 
   document.getElementById("btn-quiz-prev").classList.toggle("hidden", i === 0);
@@ -12709,57 +12697,11 @@ function removeQuizIdkButton() {
   if (old) old.remove();
 }
 
-// A right guess is not knowing: marked before choosing (G), it is rated Hard, not Good, and
-// keeps the card in Needs Recall. Off by default and again on each question, so a sure answer
-// costs no extra tap.
-function showQuizGuessToggle() {
-  removeQuizGuessToggle();
-  state.quizGuessing = false;
-  var btn = document.createElement("button");
-  btn.type = "button";
-  btn.id = "quiz-guess-btn";
-  btn.className = "quiz-guess";
-  btn.setAttribute("aria-pressed", "false");
-  btn.title = t("quiz.guessingKey");
-  btn.textContent = t("quiz.guessing");
-  btn.addEventListener("click", toggleQuizGuessing);
-  document.getElementById("quiz-options").before(btn);
-}
-function removeQuizGuessToggle() {
-  var old = document.getElementById("quiz-guess-btn");
-  if (old) old.remove();
-}
-function toggleQuizGuessing() {
-  var btn = document.getElementById("quiz-guess-btn");
-  if (!btn || state.quizAnswered) return;
-  state.quizGuessing = !state.quizGuessing;
-  btn.setAttribute("aria-pressed", String(state.quizGuessing));
-  // The "if right" time follows: a guess is rated Hard.
-  setQuizOutcomes(quizOutcomeTimes(state.quizCards[state.quizIndex]), null);
-}
-
-// After the answer: a right guess says why it comes back sooner; a sure wrong answer, the
-// costliest kind of mistake, is named. "I don't know" is neither.
-function showQuizConfidenceNote(result) {
-  var old = document.getElementById("quiz-confidence-note");
-  if (old) old.remove();
-  var key = result.correct && result.guessed ? "quiz.guessedRight" :
-    !result.correct && !result.guessed && !result.dontKnow ? "quiz.sureWrong" : null;
-  if (!key) return;
-  var el = document.createElement("div");
-  el.id = "quiz-confidence-note";
-  el.className = "quiz-confidence-note";
-  el.textContent = t(key);
-  document.getElementById("quiz-options").after(el);
-}
-
 function answerQuiz(selectedIdx) {
   if (state.quizAnswered) return;
   state.quizAnswered = true;
   removeQuizIdkButton();
   var dontKnow = selectedIdx === QUIZ_IDK;
-  var guessed = !dontKnow && state.quizGuessing;
-  removeQuizGuessToggle();
 
   var card    = state.quizCards[state.quizIndex];
   var opts    = state.quizOptions;
@@ -12788,7 +12730,7 @@ function answerQuiz(selectedIdx) {
 
   // Save result (opts + correctVal preserved so a later review re-render shows the same shuffle;
   // selectedIdx — not just the value — is needed to mark "wrong" correctly when two options share text)
-  var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, notDue: false, dontKnow: dontKnow, guessed: guessed };
+  var resultEntry = { card: card, correct: isCorrect, selected: selectedVal, selectedIdx: selectedIdx, opts: opts, correctVal: correct, notDue: false, dontKnow: dontKnow };
   state.quizResults.push(resultEntry);
 
   if (card.upstream_change === "updated") {
@@ -12805,9 +12747,8 @@ function answerQuiz(selectedIdx) {
     // Backwards, the term was the option; what it means is the useful part.
     if (reversed && pickedCard) resultEntry.picked.def = pickedCard.data.def;
   }
-  if (isCorrect) quizAttemptFields.grade = guessed ? "hard" : "medium";
-  if (guessed) quizAttemptFields.guessed = true;
-  store.setCardKnown(card.id, isCorrect && !guessed).catch(function() {});
+  if (isCorrect) quizAttemptFields.grade = "medium";
+  store.setCardKnown(card.id, isCorrect).catch(function() {});
   if (state.quizCardShownAt) quizAttemptFields.durationMs = Date.now() - state.quizCardShownAt;
   addSessionTime(quizAttemptFields.durationMs);
   markQuizOutcome(isCorrect);
@@ -12876,7 +12817,6 @@ function answerQuiz(selectedIdx) {
   if (answerSource && !isCorrect) answerSource.open = true;
   if (answerSource) (document.getElementById("quiz-explanation") || document.getElementById("quiz-options")).after(answerSource);
   if (resultEntry.picked) showQuizPickedNote(resultEntry.picked);
-  showQuizConfidenceNote(resultEntry);
 
   showQuizSheet(cheer);
 
@@ -12970,12 +12910,12 @@ function quizEncouragement(isCorrect, streak, answered, total, lastPraise) {
 // Under the question, before it is answered: how long until the card comes back if the
 // answer is right, and if it is wrong. On the sheet after answering it was gone with a right
 // answer's 1.2-second auto-advance before it could be read. From the card's own previews (a
-// right quiz answer is rated Good, or Hard while marked as a guess; a wrong one Again); after answering, the outcome that happened is marked and takes the server's due
+// right quiz answer is rated Good; a wrong one Again); after answering, the outcome that happened is marked and takes the server's due
 // date, which may move a review a day to even out the load. A card not due yet keeps its
 // schedule whatever the answer, so it shows nothing.
 function quizOutcomeTimes(card) {
   if (card.srs_due_at && card.srs_due_at > Math.floor(Date.now() / 1000)) return null;
-  var right = state.quizGuessing ? card.fsrs_preview_hard : card.fsrs_preview_good;
+  var right = card.fsrs_preview_good;
   var wrong = card.fsrs_preview_again;
   return right == null || wrong == null ? null : { right: right, wrong: wrong };
 }
@@ -16436,7 +16376,6 @@ var SQLiteAdapter = (function() {
       if (f.durationMs != null) body.durationMs = f.durationMs;
       if (f.typed) body.typed = true;
       if (f.pickedCardId) body.pickedCardId = f.pickedCardId;
-      if (f.guessed) body.guessed = true;
       // Load balancing counts days in the user's local time (server/lib/workload.js).
       body.tz = new Date().getTimezoneOffset();
       return queuedWrite({ method: "POST", path: "/attempts", body: body });
@@ -19131,7 +19070,6 @@ document.addEventListener("keydown", function(e) {
     var quizNextBtn = document.getElementById("quiz-next-btn");
     if (num >= 1 && num <= 5 && num <= state.quizOptions.length) answerQuiz(num - 1);
     else if (num === 0 && document.getElementById("quiz-idk-btn")) answerQuiz(QUIZ_IDK);
-    else if ((e.key === "g" || e.key === "G") && !e.metaKey && !e.ctrlKey) toggleQuizGuessing();
     // A focused button or explanation summary handles Enter/Space itself.
     else if ((e.key === "Enter" || e.key === " ") && quizNextBtn && !e.target.closest("button, summary, a") &&
              document.getElementById("modal-keymap").classList.contains("hidden")) {

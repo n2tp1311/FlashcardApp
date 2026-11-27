@@ -976,9 +976,6 @@ test("the quiz card shows when it comes back if right and if wrong, before the a
       out.notDuePad = getComputedStyle(document.querySelector(".quiz-question-wrap")).paddingBottom;
       state.quizIndex = 0; renderQuizCard();
       out.replay = read();
-      state.quizResults = []; state.quizIndex = 0; renderQuizCard();
-      document.getElementById("quiz-guess-btn").click();
-      out.guessing = read();
       return out;
     }, QUIZ4);
     assert.deepEqual(r.before, ["✗ 10 min", "✓ 1 mo"]);
@@ -991,7 +988,6 @@ test("the quiz card shows when it comes back if right and if wrong, before the a
     assert.deepEqual(r.notDue, [], "a card not due keeps its schedule");
     assert.equal(r.notDuePad, "28px");
     assert.deepEqual(r.replay, ["✗ 10 min:off", "✓ 1 mo:on"], "a replayed card shows what its answer did");
-    assert.deepEqual(r.guessing, ["✗ 10 min", "✓ 15d"], "a right answer marked as a guess is rated Hard");
   });
 });
 
