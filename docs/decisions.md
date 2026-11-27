@@ -1,3 +1,11 @@
+## 2026-11-27 — Mixed-up pairs: compare on the spot, then drill the pair
+
+Second from the list of study ideas. Every wrong term-def pick already recorded which card's definition was chosen; a preview showed three uses of that: a side-by-side comparison right after the pick, a Mixed up filter in Study Setup, and a quiz whose questions offer only the two confused cards. The user chose all three. A pair enters on one pick either way round, and leaves when the last two quiz answers on either card since its latest pick are both right.
+
+**Why read it from attempts.** The pairs are derived on each card list from `attempts.picked_card_id`, not stored, so undoing an answer removes its pair and there is no second record to keep in step. **Why mark words without a model.** The marked words only point at where two definitions differ; a word comparison does that instantly and offline, and the definitions are the book's, shown whole.
+
+**Cost.** Short shared words such as "the" are skipped by length (four letters or more), so a short distinguishing word can go unmarked. Card lists run one extra query per pair.
+
 ## 2026-11-27 — The Guessing switch is removed; I don't know stays
 
 Seen in the app, the Guessing switch above the options and "I don't know" below them were two controls for one question: am I sure? The user wanted one. A preview offered "I don't know" as a two-step control (tap once to guess, again to see the answer), a long-press on an option to guess, and no guess at all; the user chose no guess. Right quiz answers stay Good, as decided earlier today.

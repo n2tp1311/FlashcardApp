@@ -273,6 +273,14 @@ This one route is where learning is recorded. It does, in one transaction:
    user's cards is dropped, never refused. The response's `picked` gives the card's
    new due date, and the memory strip updates it.
 
+   The recorded pick also pairs the two cards as **mixed up** (`server/lib/mixups.js`,
+   §8 Quiz). One pick either way round makes the pair; it leaves once the last two quiz
+   answers on either of its cards since its latest pick are both right. Nothing is stored
+   for it: `mixedWith` reads `attempts` (index `idx_attempts_picked` over the rows with a
+   pick), so undoing the answer undoes the pair too. Both card lists, `GET
+   /lessons/:id/cards` and `POST /cards/by-lessons`, give each card `mixed_with`, its
+   partners as `[{id, n}]`, `n` counting the picks.
+
 After the transaction it records `due_zero` if nothing is left due (§11), sends the
 response, and then — with `setImmediate`, so the next card is not held up — may start
 a background fit of the personal model (§6).
@@ -551,7 +559,9 @@ Four choices, saveable as named presets (server-stored, reorderable, keys 1–9)
 
 - **Count**: 10, 25, 50 or all.
 - **Filter**: All, Due Only, Needs Recall, Learning, Updated (changed by KnowledgeApp),
-  Leeches. The footer reads "Study N of M matching cards" and Start is disabled at 0.
+  Leeches, and Mixed up, which shows only when the chosen lessons hold both cards of a
+  mixed-up pair (§5, step 8), with the pair count on it. Picking it switches Mode to Quiz,
+  where its drill runs (§8 Quiz). The footer reads "Study N of M matching cards" and Start is disabled at 0.
   When Due Only finds nothing only because of the daily review cap, Setup says so
   instead of "No cards match": the Home badge is deliberately uncapped, so an empty
   result next to "20 due" looked like a bug (§9).
@@ -763,6 +773,19 @@ sentence, "That card is back in today's reviews too.", is added only when the re
 `picked` says the card was marked, so it is not claimed for a cram answer, an unseen card,
 or an answer still waiting offline. Image cards have no term to name and get no line.
 The line is kept on the result, so Prev back to the question shows it again.
+
+**Mixed-up pairs.** On a term-def card the line also sets the two cards side by side, the
+asked one first, headed "Mixed up N times" (from the card's `mixed_with`, plus this pick)
+or "Tell them apart" the first time. Words of four letters or more that only one
+definition has are marked: that is where the two differ. It is a plain word comparison,
+no model; a definition with LaTeX is shown unmarked, since splitting it into words breaks
+the formula (`quizComparePanel`). Study Setup's Mixed up filter starts a quiz of the
+paired cards in which each card offers only two options, its own answer and its partner's
+(the session's partner with the most picks, `quizMixPartner`), under the subtitle "Tell
+them apart · mixed up N times". The quiz direction still applies: backwards, the options
+are the two terms. A card whose partner is not in the session, or would show the same
+text, asks as usual. The drill is set only by that filter (`state.pendingMixedUp`, read by
+`launchStudy`); Study now and every other quiz ask with the normal distractors.
 
 **"I don't know" (key 0).** A dashed row under the options, in every quiz format. With
 four options a guess is right one time in four and counts as remembered; this lets the
