@@ -52,9 +52,23 @@ function isText(v) {
   return typeof v === "string" && v.trim().length > 0 && v.length <= MAX_TEXT_LEN;
 }
 
-// A card's text arrives as term + def, as `cloze` (one sentence with {{c1::…}} gaps), or as
-// `gapfill` (a passage, {text, distractors?, title?}). The kinds never mix on one item.
+// A card's text arrives as term + def, as `cloze` (one sentence with {{c1::…}} gaps), as
+// `gapfill` (a passage, {text, distractors?, title?}), or as `mcq` (a scenario question,
+// {question, correct, distractors: 1-4, explanation?}). The kinds never mix on one item.
+function validMcq(m) {
+  return !!m && isText(m.question) && isText(m.correct) && Array.isArray(m.distractors)
+    && m.distractors.length >= 1 && m.distractors.length <= 4 && m.distractors.every(isText)
+    && (m.explanation === undefined || isText(m.explanation));
+}
+
 function cardText(item) {
+  if (item.mcq !== undefined) {
+    const m = item.mcq;
+    if (item.term !== undefined || item.def !== undefined || item.cloze !== undefined || item.gapfill !== undefined || !validMcq(m)) return null;
+    const out = { question: m.question.trim(), correct: m.correct.trim(), distractors: m.distractors.map(w => w.trim()) };
+    if (m.explanation !== undefined) out.explanation = m.explanation.trim();
+    return { mcq: out };
+  }
   if (item.gapfill !== undefined) {
     const g = item.gapfill;
     if (item.term !== undefined || item.def !== undefined || item.cloze !== undefined || !validGapfill(g)) return null;
@@ -70,6 +84,7 @@ function cardText(item) {
 }
 
 function cardRow(text) {
+  if (text.mcq !== undefined) return { format: "mcq", data: JSON.stringify(text.mcq) };
   if (text.gapfill !== undefined) return { format: "gapfill", data: JSON.stringify(text.gapfill) };
   return text.cloze !== undefined
     ? { format: "cloze", data: JSON.stringify({ text: text.cloze }) }
@@ -107,6 +122,8 @@ function cardsForExternalId(userId, externalId) {
 }
 
 function applyUpdate(card, text, now, userId) {
+  // A scenario is added once and never reworded through events.
+  if (text.mcq !== undefined) return false;
   const cloze = text.cloze !== undefined, gapfill = text.gapfill !== undefined;
   if (card.format !== (gapfill ? "gapfill" : cloze ? "cloze" : "term-def")) return false;
   let old;
@@ -738,7 +755,7 @@ router.post("/convert-cards", (req, res) => {
 });
 
 // POST /api/integrations/knowledge/add-cards
-//   { class_id, cards: [{external_id, term, def | cloze | gapfill, lesson_id? | after_card_id? | new_lesson_title?}] }
+//   { class_id, cards: [{external_id, term, def | cloze | gapfill | mcq, lesson_id? | after_card_id? | new_lesson_title?}] }
 // Adds into an existing class. One transaction per request; replay-safe because an
 // external_id already in the class is `exists`, and a new lesson is only created
 // when at least one card will actually go into it.
@@ -751,7 +768,7 @@ router.post("/add-cards", (req, res) => {
   for (let i = 0; i < items.length; i++) {
     const c = items[i];
     if (!c || !isId(c.external_id) || !cardText(c))
-      return res.status(400).json({ error: "card " + i + ": external_id, and term and def, cloze or gapfill, required" });
+      return res.status(400).json({ error: "card " + i + ": external_id, and term and def, cloze, gapfill or mcq, required" });
     if (c.new_lesson_title != null) {
       const t = typeof c.new_lesson_title === "string" ? c.new_lesson_title.trim() : "";
       if (!t || t.length > MAX_TITLE_LEN || c.lesson_id != null || c.after_card_id != null)
