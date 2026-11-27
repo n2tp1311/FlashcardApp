@@ -12108,9 +12108,11 @@ function showQuizPickedNote(picked) {
   document.getElementById("quiz-options").after(el);
 }
 
-// The two cards side by side, with the words of 4+ letters only one definition has marked:
-// that is where they differ, and shorter words are mostly "the" and "are".
-// A plain word comparison, no model. LaTeX is shown unmarked: split into words, it breaks.
+// The two cards side by side. When they share much of their wording, the shared words are
+// dimmed so the ones that tell them apart stand out; two unlike definitions are shown plain,
+// since marking nearly every word marked nothing. A plain word comparison, no model. LaTeX is
+// shown as is: split into words, it breaks.
+var QUIZ_COMPARE_OVERLAP = 0.4;
 function quizComparePanel(cmp) {
   var wrap = document.createElement("div");
   wrap.className = "quiz-compare";
@@ -12121,9 +12123,15 @@ function quizComparePanel(cmp) {
   cols.className = "quiz-compare-cols";
   var words = function(s) {
     var set = {};
-    String(s || "").toLowerCase().split(/[^\p{L}\p{N}]+/u).forEach(function(w) { if (w.length >= 4) set[w] = true; });
+    String(s || "").toLowerCase().split(/[^\p{L}\p{N}]+/u).forEach(function(w) { if (w) set[w] = true; });
     return set;
   };
+  // Measured on words of 4+ letters: "the" and "of" are shared by nearly any two sentences.
+  var long = function(set) { return Object.keys(set).filter(function(w) { return w.length >= 4; }); };
+  var ownLong = long(words(cmp.own.def)), otherWords0 = words(cmp.other.def), otherLong = long(otherWords0);
+  var shared = ownLong.filter(function(w) { return otherWords0[w]; }).length;
+  var dim = Math.min(ownLong.length, otherLong.length) > 0 &&
+    shared / Math.min(ownLong.length, otherLong.length) >= QUIZ_COMPARE_OVERLAP;
   [[cmp.own, cmp.other], [cmp.other, cmp.own]].forEach(function(pair) {
     var col = document.createElement("div");
     col.className = "quiz-compare-col";
@@ -12134,13 +12142,16 @@ function quizComparePanel(cmp) {
     def.className = "quiz-compare-def";
     if (containsLatex(pair[0].def)) {
       renderLatex(pair[0].def, def);
+    } else if (!dim) {
+      def.textContent = pair[0].def || "";
     } else {
       var otherWords = words(pair[1].def);
       String(pair[0].def || "").split(/([\p{L}\p{N}]+)/u).forEach(function(part) {
-        if (part.length >= 4 && /[\p{L}\p{N}]/u.test(part) && !otherWords[part.toLowerCase()]) {
-          var mark = document.createElement("mark");
-          mark.textContent = part;
-          def.appendChild(mark);
+        if (otherWords[part.toLowerCase()]) {
+          var same = document.createElement("span");
+          same.className = "quiz-compare-same";
+          same.textContent = part;
+          def.appendChild(same);
         } else if (part) def.append(part);
       });
     }

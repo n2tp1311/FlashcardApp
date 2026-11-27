@@ -99,7 +99,11 @@ test("Setup's Mixed up pill, the two-option drill and the compare panel, in the 
       const panel = quizComparePanel({ own: cards[0].data, other: cards[1].data, n: 2 });
       out.head = panel.querySelector(".quiz-compare-head").textContent;
       out.terms = [...panel.querySelectorAll(".quiz-compare-term")].map((e) => e.textContent);
-      out.marks = [...panel.querySelectorAll(".quiz-compare-col")].map((col) => [...col.querySelectorAll("mark")].map((m) => m.textContent));
+      out.dimmed = [...panel.querySelectorAll(".quiz-compare-col")].map((col) => [...col.querySelectorAll(".quiz-compare-same")].map((m) => m.textContent));
+      const unlike = quizComparePanel({ n: 1,
+        own: { term: "Admitting the goal is unknown", def: "Admitting that the goal is unknown gives a person more chance to feel the need of their own being." },
+        other: { term: "The Inner Game beyond an individual", def: "The Inner Game has been going on well before any individual is born and will continue well after that individual dies." } });
+      out.unlikeDimmed = unlike.querySelectorAll(".quiz-compare-same").length;
       out.text = panel.querySelector(".quiz-compare-def").textContent;
       out.once = quizComparePanel({ own: cards[0].data, other: cards[1].data, n: 1 }).querySelector(".quiz-compare-head").textContent;
       return out;
@@ -113,8 +117,10 @@ test("Setup's Mixed up pill, the two-option drill and the compare panel, in the 
     assert.equal(r.head, "Mixed up 2 times");
     assert.equal(r.once, "Tell them apart");
     assert.deepEqual(r.terms, ["Recall", "Precision"], "the asked card first");
-    assert.deepEqual(r.marks, [["model", "finds"], ["predicted", "that"]], "the words only one definition has");
-    assert.equal(r.text, "share of real positives the model finds", "marking keeps the text whole");
+    assert.deepEqual(r.dimmed, [["share", "of", "real", "positives"], ["share", "of", "positives", "real"]],
+      "much shared wording: the shared words dim, the rest stand out");
+    assert.equal(r.text, "share of real positives the model finds", "dimming keeps the text whole");
+    assert.equal(r.unlikeDimmed, 0, "two unlike definitions are shown plain");
   } finally { await browser.close(); l.close(); }
 });
 
