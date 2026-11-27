@@ -788,7 +788,8 @@ anyone matching words, so the term's words are blanked to `____` outside LaTeX, 
 same word match that marks the term in the book passage (`sourceTermPattern`). Once the
 question is answered, right, wrong or "I don't know", and on a replay, the blanks are filled
 back in: the book's sentence shows whole with the term's words marked in green
-(`renderQuizReverseDef`), so the learner reads what the blanks hid. A wrong pick
+(`renderQuizReverseDef`, marking with the book passage's `markSourceWords`), so the learner
+reads what the blanks hid. A wrong pick
 is the card whose term was chosen, and its line says what that term means: "You picked
 *Retraining*, which means: …". The speaker reads the blanked definition. Other formats,
 image cards included, are always asked forward.
