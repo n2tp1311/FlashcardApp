@@ -815,8 +815,9 @@ question is answered, right, wrong or "I don't know", and on a replay, the blank
 back in: the book's sentence shows whole with the term's words marked in green
 (`renderQuizReverseDef`, marking with the book passage's `markSourceWords`), so the learner
 reads what the blanks hid. A wrong pick
-is the card whose term was chosen, and its line says what that term means: "You picked
-*Retraining*, which means: …". The speaker reads the blanked definition. Other formats,
+is the card whose term was chosen, and its line names it: "You picked *Retraining*." What
+that term means is in the compare panel under it (Mixed-up pairs, above); the line used to
+repeat it, which said the same definition twice. The speaker reads the blanked definition. Other formats,
 image cards included, are always asked forward.
 
 **Bars pinned to the bottom sit on the visible bottom edge**, wherever the page is scrolled:
