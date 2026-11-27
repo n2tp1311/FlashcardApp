@@ -341,6 +341,29 @@ pops it up out of context. **Nothing is suspended.** Anki suspends leeches by de
 here the fix is a better card, not fewer reviews, and a suspended card is easy to
 forget about.
 
+**Likely cause.** Reviewing a leech again rarely helps; fixing why it fails does. The
+dialog asks `GET /cards/:id/leech-cause` and names one cause, guessed from what is
+already recorded with no model call (`leechCause` in `routes/cards.js`). They are tried in
+the order the learner can act on them during a session:
+
+1. **Mixed up** with another card (§8 Quiz, mixed-up pairs; the partner picked most
+   often). **Tell them apart** sets the two side by side in the dialog.
+2. **Builds on weak cards**: the `cards.needs` the "Learn these first" offer uses (§8
+   Flashcards), only the weak ones. **Review N first** puts them, then this card, straight
+   after in a flashcard session; from the card list's tag it starts a flashcard session of
+   them. In a quiz there is no place for them, so the cause is only named.
+3. **The answer is long**: a back over 40 words (`LEECH_LONG_WORDS`). Ask KnowledgeApp to
+   rewrite reads **Ask KnowledgeApp to shorten it**.
+4. **No clear cause found**: the wording is the likeliest suspect; Edit and rewrite stay
+   as before.
+
+The fix for causes 1 and 2 becomes the main button and Edit card steps back to an outline.
+Neither ends the session open behind the dialog, which a new session would have (and with
+it the session's resume). Until the cause arrives, or offline, the dialog reads as before.
+A leech's rewrite request stores the cause it had then (`rewrite_requests.cause`,
+`cause_detail`: the partner's term and definition, the weak cards' terms, or the word
+count), so KnowledgeApp fixes that rather than guessing (§13).
+
 ### Moving a card
 
 **Move to…** in a lesson's Select bar moves the selected cards to another lesson, in the
@@ -1716,7 +1739,8 @@ keeps the cursor, so a lost response is simply read again.
   the card is how a word gets saved again.
 - **Leech rewrites and flags.** Ask KnowledgeApp to rewrite and ⚑ (§5) create a
   `rewrite_requests` row; `GET /rewrites` gives KnowledgeApp the card's current text,
-  `issues` and `note`, and the new wording comes back as an ordinary `updated` event,
+  `issues` and `note`, and for a leech its likely `cause` and `cause_detail` (§5 Leeches),
+  and the new wording comes back as an ordinary `updated` event,
   which also resets the leech count. `POST /rewrites/:id/complete` may carry `note`,
   KnowledgeApp's verdict for any outcome (300 characters at most), and for a rewrite
   `before` and `after`, each `{term, definition}`; anything else in those two is a 400. The rewrite goes through

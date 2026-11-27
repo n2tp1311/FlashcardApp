@@ -1,3 +1,13 @@
+## 2026-11-27 — A leech names its likely cause, and its rewrite is told
+
+From the list of study ideas: sort cards that keep failing by why they fail, and fix each cause its own way. The prerequisite half (#5) was already built as "Learn these first". A preview showed the leech dialog naming one cause, mixed up with another card, resting on weak base cards, a long answer, or none found, with the fix for it as the main button; the user chose to send the cause along with the rewrite request too, so KnowledgeApp addresses it.
+
+**Why guess without a model.** Each cause is already on record: the mixed-up pairs, `cards.needs` with the weak test, the word count. The dialog answers at once and costs nothing.
+
+**Why compare in the dialog rather than start a drill.** The preview's Tell them apart opened a two-option quiz, but the dialog opens over a running session, and starting another would end it and its resume. Side by side in the dialog teaches the same difference; the pair stays in Study Setup's Mixed up filter for a drill later.
+
+**Cost.** One guess per leech: a card that is both long and mixed up is shown only as mixed up. The 40-word line is a judgement, below KnowledgeApp's 60-word limit for a definition.
+
 ## 2026-11-27 — Mixed-up pairs: compare on the spot, then drill the pair
 
 Second from the list of study ideas. Every wrong term-def pick already recorded which card's definition was chosen; a preview showed three uses of that: a side-by-side comparison right after the pick, a Mixed up filter in Study Setup, and a quiz whose questions offer only the two confused cards. The user chose all three. A pair enters on one pick either way round, and leaves when the last two quiz answers on either card since its latest pick are both right.
