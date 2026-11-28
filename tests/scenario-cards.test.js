@@ -92,12 +92,20 @@ test("a scenario needs a question, an answer and 1-4 wrong answers, and nothing 
   assert.equal(mixed.status, 400);
 });
 
-test("an updated event carrying mcq never touches a card", async () => {
-  const r = await call("POST", "/api/integrations/knowledge/events", { events: [
-    { id: "e1", type: "updated", external_id: "s:40", mcq: MCQ },
-    { id: "e2", type: "updated", external_id: "s:s1", mcq: { ...MCQ, question: "changed?" } }] });
-  assert.deepEqual(r.body.results.map((x) => x.status), ["noop", "noop"]);
+test("an updated event carrying mcq rewords a scenario; a new explanation alone leaves its review state", async () => {
+  const send = (ev) => call("POST", "/api/integrations/knowledge/events", { events: [ev] });
+  const card = () => db.prepare("SELECT data, upstream_change FROM cards WHERE external_id = 's:s1'").get();
+  let r = await send({ id: "e1", type: "updated", external_id: "s:40", mcq: MCQ });
+  assert.equal(r.body.results[0].status, "noop", "a term-def card is never turned into a scenario");
   assert.equal(JSON.parse(db.prepare("SELECT data FROM cards WHERE external_id = 's:40'").get().data).term, "Momentum");
+  r = await send({ id: "e2", type: "updated", external_id: "s:s1", mcq: { ...MCQ, explanation: "The inflated figure anchors buyers." } });
+  assert.equal(r.body.results[0].status, "applied");
+  assert.equal(JSON.parse(card().data).explanation, "The inflated figure anchors buyers.");
+  assert.equal(card().upstream_change, null, "a new explanation is not a reworded card");
+  r = await send({ id: "e3", type: "updated", external_id: "s:s1", mcq: { ...MCQ, question: "changed?" } });
+  assert.equal(r.body.results[0].status, "applied");
+  assert.equal(JSON.parse(card().data).question, "changed?");
+  assert.equal(card().upstream_change, "updated", "a new question is flagged like any reworded card");
 });
 
 test("in the real page, a term-def lesson's mcq card quizzes as multiple choice and shows as a flashcard", async () => {

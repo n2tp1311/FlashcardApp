@@ -95,7 +95,7 @@ function validateEvent(ev) {
   if (!ev || !EVENT_TYPES.includes(ev.type)) return "type must be one of " + EVENT_TYPES.join(", ");
   if (!isId(ev.external_id)) return "external_id required";
   if (ev.type === "updated" || ev.type === "restored") {
-    if (!cardText(ev)) return "term and def, cloze with a {{c1::…}} gap, or gapfill with 2-8 gaps, required";
+    if (!cardText(ev)) return "term and def, cloze with a {{c1::…}} gap, gapfill with 2-8 gaps, or mcq, required";
   }
   if (ev.merged_into !== undefined) {
     if (ev.type !== "deleted" || !isId(ev.merged_into) || ev.merged_into === ev.external_id)
@@ -122,17 +122,23 @@ function cardsForExternalId(userId, externalId) {
 }
 
 function applyUpdate(card, text, now, userId) {
-  // A scenario is added once and never reworded through events.
-  if (text.mcq !== undefined) return false;
+  const mcq = text.mcq !== undefined;
   const cloze = text.cloze !== undefined, gapfill = text.gapfill !== undefined;
-  if (card.format !== (gapfill ? "gapfill" : cloze ? "cloze" : "term-def")) return false;
+  if (card.format !== (mcq ? "mcq" : gapfill ? "gapfill" : cloze ? "cloze" : "term-def")) return false;
   let old;
   try { old = JSON.parse(card.data); } catch (_) { old = {}; }
   const trimmed = v => (typeof v === "string" ? v.trim() : v);
-  // A passage is replaced whole: its wrong words and title belong to its text.
-  const nextData = gapfill ? JSON.stringify(text.gapfill)
+  // A passage or a scenario is replaced whole: its options belong to its text.
+  const nextData = mcq ? JSON.stringify(text.mcq) : gapfill ? JSON.stringify(text.gapfill)
     : JSON.stringify(cloze ? { ...old, text: text.cloze } : { ...old, term: text.term, def: text.def });
-  if (gapfill ? card.data === nextData
+  if (mcq && card.data !== nextData && old.question === text.mcq.question && old.correct === text.mcq.correct
+      && JSON.stringify(old.distractors) === JSON.stringify(text.mcq.distractors)) {
+    // Only the explanation changed: nothing the learner answers changed, so the schedule
+    // and the card's review state stay as they are.
+    db.prepare("UPDATE cards SET data = ? WHERE id = ?").run(nextData, card.id);
+    return true;
+  }
+  if (mcq || gapfill ? card.data === nextData
       : cloze ? trimmed(old.text) === text.cloze : trimmed(old.term) === text.term && trimmed(old.def) === text.def) return false;
   const prev = card.upstream_prev_data ?? card.data;
   if (prev === nextData) {
