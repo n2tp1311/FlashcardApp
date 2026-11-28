@@ -1,3 +1,11 @@
+## 2026-11-28 — A scenario's explanation can be corrected without touching its schedule
+
+Explanations in KnowledgeApp's first scenario cards cited "card 13", "card 14": the numbers the model was shown, which mean nothing here. 863 of 1,304 had them, all already added, and an `updated` event with `mcq` was ignored, so they could not be fixed from KnowledgeApp.
+
+**What changed.** An `updated` event with `mcq` now replaces the scenario. When the question, the answer and the wrong answers are the same and only the explanation differs, the data is replaced with no "updated" flag and no change to when the card is due: the learner answers the same question, so their review state still holds. Any other change is treated like a reworded card: flagged, and due now.
+
+**Cost.** Correcting 863 explanations is silent; a learner who read the old one is not told it changed.
+
 ## 2026-11-28 — Scenario questions arrive as one lesson at the end of each book
 
 From the list of study ideas (#12): a card that asks the learner to spot a concept at work, not recall its definition. KnowledgeApp writes them; this app only needed `add-cards` to take an `mcq` item. A preview showed two real scenario cards in the quiz and three placements; the user chose one Scenarios lesson at the end of each book.
@@ -6,7 +14,7 @@ From the list of study ideas (#12): a card that asks the learner to spot a conce
 
 **What the preview caught.** A price written with two dollar signs rendered as a red formula, and a backslash before them did not help. KnowledgeApp writes money in words and drops any scenario with a dollar sign. Cards from books that already have prices this way are untouched by this change.
 
-**Cost.** A scenario is never reworded: an `updated` event with `mcq` is ignored, so a bad one is fixed by editing or deleting it here.
+**Cost.** A scenario is never reworded: an `updated` event with `mcq` is ignored, so a bad one is fixed by editing or deleting it here. (Superseded the same day: see the entry above.)
 
 ## 2026-11-27 — A leech names its likely cause, and its rewrite is told
 
